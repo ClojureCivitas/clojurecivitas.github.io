@@ -3,7 +3,7 @@
  :deps  {org.scicloj/noj           {:mvn/version "2-beta18"}
          markdown-clj/markdown-clj {:mvn/version "1.12.3"}
          org.scicloj/clay          {:git/url "https://github.com/scicloj/clay"
-                                    :git/sha "dcdc6af43af16975e531f3e7241820975566cfdc"}}
+                                    :git/sha "0331de387f5ca24e1131415e9ae7b1c167641aab"}}
 
  :aliases
  ;; Build the site with `clojure -M:m`

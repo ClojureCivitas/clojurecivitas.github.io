@@ -1,5 +1,4 @@
-{
- :base-target-path "temp"
+{:base-target-path "temp"
  :base-source-path "content"
  :subdirs-to-sync  ["content"]
  :sync-as-subdirs  false
