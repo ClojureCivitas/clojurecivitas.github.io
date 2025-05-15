@@ -1,0 +1,240 @@
+{:topics
+ [{:id        :core
+   :desc      "Fundamental language concepts"
+   :color     "#E2F0CB"
+   :direction 0}
+  {:id   :core/syntax
+   :desc "Data structures, special forms, and syntax"}
+  {:id   :core/fp
+   :desc "Functional programming patterns"}
+  {:id   :core/async
+   :desc "Concurrency and core.async"}
+  {:id   :core/macros
+   :desc "Macros and metaprogramming"}
+
+  {:id        :web
+   :desc      "Web development"
+   :color     "#B5EAD7"
+   :direction 1}
+  {:id   :web/frontend
+   :desc "Browser-based applications"}
+  {:id   :web/backend
+   :desc "Server-side development"}
+
+  {:id        :data
+   :desc      "Data processing and analysis"
+   :color     "#C7CEEA"
+   :direction 2}
+  {:id   :data/analysis
+   :desc "Data transformation and ML"}
+  {:id   :data/viz
+   :desc "Data visualization"}
+
+  {:id        :systems
+   :desc      "System architecture and patterns"
+   :color     "#FF9AA2"
+   :direction 3}
+  {:id   :systems/observability
+   :desc "Monitoring and debugging"}
+  {:id   :systems/performance
+   :desc "Performance optimization"}
+  {:id   :systems/databases
+   :desc "Database interactions"}
+
+  {:id        :tooling
+   :desc      "Development tools and workflow"
+   :color     "#FFB7B2"
+   :direction 4}
+  {:id   :tooling/repl
+   :desc "REPL tooling and workflows"}
+  {:id   :tooling/build
+   :desc "Build systems and dependency management"}
+  {:id   :tooling/testing
+   :desc "Testing methodologies"}
+
+  {:id        :community
+   :desc      "Ecosystem and learning resources"
+   :color     "#FFDAC1"
+   :direction 5}
+  {:id   :community/events
+   :desc "Conferences and meetups"}]
+
+ :notebooks
+ [
+  ;; ===== CORE =====
+  {:id     "clj-docs"
+   :title  "Official Clojure Documentation"
+   :url    "https://clojure.org/guides/getting_started"
+   :format :reference
+   :topics [:core]
+   :level  0}
+
+  {:id     "brave-clojure"
+   :title  "Clojure for the Brave and True"
+   :url    "https://www.braveclojure.com/"
+   :format :interactive-book
+   :topics [:core :core/fp]
+   :level  1}
+
+  {:id         "transducers"
+   :title      "Transducers Explained"
+   :url        "https://www.youtube.com/watch?v=6mTbuzafcII"
+   :format     :video
+   :topics     [:core :core/fp]
+   :level      2
+   :depends-on ["clj-docs"]}
+
+  ;; ===== WEB =====
+  {:id     "reagent-docs"
+   :title  "Reagent Documentation"
+   :url    "https://reagent-project.github.io/"
+   :format :library-docs
+   :topics [:web :web/frontend]
+   :level  1}
+
+  {:id         "re-frame"
+   :title      "re-frame: A React Framework"
+   :url        "https://day8.github.io/re-frame/"
+   :format     :library-docs
+   :topics     [:web :web/frontend]
+   :level      2
+   :depends-on ["reagent-docs"]}
+
+  {:id     "luminus"
+   :title  "Luminus Web Framework"
+   :url    "https://luminusweb.com/"
+   :format :framework
+   :topics [:web :web/backend]
+   :level  2}
+
+  ;; ===== DATA =====
+  {:id     "tablecloth"
+   :title  "Tablecloth: Dataframe Library"
+   :url    "https://github.com/scicloj/tablecloth"
+   :format :library-docs
+   :topics [:data :data/analysis]
+   :level  1}
+
+  {:id     "notespace"
+   :title  "Notespace Live Notebooks"
+   :url    "https://github.com/scicloj/notespace"
+   :format :interactive-tool
+   :topics [:data :data/viz]
+   :level  2}
+
+  {:id     "tech.ml"
+   :title  "tech.ml Machine Learning"
+   :url    "https://github.com/techascent/tech.ml"
+   :format :library-docs
+   :topics [:data :data/ml]
+   :level  3}
+
+  ;; ===== TOOLING =====
+  {:id     "deps-edn"
+   :title  "deps.edn Reference"
+   :url    "https://clojure.org/reference/deps_and_cli"
+   :format :reference
+   :topics [:tooling]
+   :level  0}
+
+  {:id     "cider"
+   :title  "CIDER for Emacs"
+   :url    "https://docs.cider.mx/"
+   :format :tool-docs
+   :topics [:tooling :tooling/repl]
+   :level  1}
+
+  {:id     "shadow-cljs"
+   :title  "shadow-cljs Build Tool"
+   :url    "https://shadow-cljs.github.io/docs/UsersGuide.html"
+   :format :tool-docs
+   :topics [:tooling :tooling/build]
+   :level  2}
+
+  ;; ===== COMMUNITY =====
+  {:id     "scicloj"
+   :title  "SciCloj Community"
+   :url    "https://scicloj.github.io/"
+   :format :community
+   :topics [:community :community/orgs]
+   :level  0}
+
+  {:id     "clojure-camp"
+   :title  "ClojureCamp Events"
+   :url    "https://clojurecamp.berlin/"
+   :format :community
+   :topics [:community :community/events]
+   :level  1}
+
+  {:id     "clojure-tv"
+   :title  "ClojureTV YouTube"
+   :url    "https://www.youtube.com/user/ClojureTV"
+   :format :video-channel
+   :topics [:community :community/learning]
+   :level  0}
+
+  {:id     "clojurians"
+   :title  "Clojurians Slack"
+   :url    "https://clojurians.net/"
+   :format :community
+   :topics [:community :community/chat]
+   :level  0}
+
+  {:id     "practicalli"
+   :title  "Practicalli Tutorials"
+   :url    "https://practical.li/"
+   :format :tutorials
+   :topics [:community :community/learning]
+   :level  1}
+
+  ;; ===== SYSTEMS =====
+  {:id     "jvm-tuning"
+   :title  "JVM Performance Guide"
+   :url    "https://clojure.org/reference/jvm_programming"
+   :format :guide
+   :topics [:systems :systems/production]
+   :level  3}
+
+  {:id     "component"
+   :title  "Component Library"
+   :url    "https://github.com/stuartsierra/component"
+   :format :library-docs
+   :topics [:systems :systems/design]
+   :level  2}
+
+  {:id     "nrepl"
+   :title  "nREPL Protocol"
+   :url    "https://nrepl.org/"
+   :format :protocol
+   :topics [:systems :systems/tooling]
+   :level  2}
+
+  {:id     "datomic"
+   :title  "Datomic Database"
+   :url    "https://docs.datomic.com/cloud/"
+   :format :database
+   :topics [:systems :systems/data :data/db]
+   :level  3}
+
+  ;; ===== CROSS-CATEGORY =====
+  {:id     "clojurescript"
+   :title  "ClojureScript Guide"
+   :url    "https://clojurescript.org/"
+   :format :reference
+   :topics [:core :web :tooling]
+   :level  1}
+
+  {:id     "kaocha"
+   :title  "Kaocha Test Runner"
+   :url    "https://github.com/lambdaisland/kaocha"
+   :format :tool-docs
+   :topics [:tooling :tooling/testing]
+   :level  2}
+
+  {:id     "xtdb"
+   :title  "XTDB Documentation"
+   :url    "https://xtdb.com/"
+   :format :database
+   :topics [:systems :systems/data :data/db]
+   :level  3}
+  ]}

@@ -47,9 +47,10 @@ jobs:
         with:
           tinytex: true
 
-      - name: Publish to GitHub Pages (and render)
-        uses: quarto-dev/quarto-actions/publish@v2
+      - name: Quarto render the site
+        run: quarto render site
+
+      - name: Quarto publish the site
+        run: quarto publish gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          target: gh-pages

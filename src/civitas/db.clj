@@ -4,7 +4,7 @@
             [scicloj.kindly.v4.kind :as kind]
             [tablecloth.api :as tc]))
 
-(def db-file "site/db.edn")
+(def db-file "content/db.edn")
 
 (defn spit-edn [f content]
   (spit f (with-out-str (pprint/pprint content))))
