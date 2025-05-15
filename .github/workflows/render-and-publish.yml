@@ -48,9 +48,9 @@ jobs:
           tinytex: true
 
       - name: Quarto render the site
-        run: cd clojurecivitas/site && quarto render
+        run: cd site && quarto render
 
       - name: Quarto publish the site
-        run: cd clojurecivitas/site && quarto publish gh-pages
+        run: cd site && quarto publish gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
