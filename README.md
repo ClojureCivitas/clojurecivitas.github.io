@@ -4,7 +4,7 @@
 
 An open effort to structure learning resources with meaningful connections.
 
-Explore the [Clojure Civitas Website](https://timothypratley.github.io/civitas)
+Explore the [Clojure Civitas Website](https://timothypratley.github.io/clojurecivitas)
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 2rem 0;">
   <div style="border-left: 3px solid green; padding-left: 1rem;">
