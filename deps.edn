@@ -1,0 +1,24 @@
+{:paths ["src" "content/pages" "content/posts" "content/ideas" "content/talks" "content/tutorials"]
+
+ :deps  {org.scicloj/noj           {:mvn/version "2-beta18"}
+         markdown-clj/markdown-clj {:mvn/version "1.12.3"}
+         org.scicloj/clay          {:git/url "https://github.com/scicloj/clay"
+                                    :git/sha "dcdc6af43af16975e531f3e7241820975566cfdc"}}
+
+ :aliases
+ ;; Build the site with `clojure -M:m`
+ {:m     {:main-opts ["-m" "civitas.main"]}
+  ;; Run Clay in watch mode with `clojure -M:clay`
+  :clay  {:main-opts ["-m" "scicloj.clay.v2.main"]}
+  ;; When debugging libraries
+  :dev   {:override-deps {org.scicloj/clay {:local/root "../clay"}}}
+  ;; $ clojure -T:build test
+  ;; $ clojure -T:build ci
+  :build {:deps       {io.github.clojure/tools.build
+                       {:git/tag "v0.9.2" :git/sha "fe6b140"}}
+          :ns-default build}
+  :test  {:extra-paths ["test"]
+          :extra-deps  {org.clojure/test.check {:mvn/version "1.1.1"}
+                        io.github.cognitect-labs/test-runner
+                        {:git/tag "v0.5.1" :git/sha "dfb30dd"}}}
+  :neil  {:project {:name io.github.timothypratley/civitas}}}}
