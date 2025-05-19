@@ -1,6 +1,9 @@
 {:paths ["src" "content/pages" "content/posts" "content/ideas" "content/talks" "content/tutorials"]
 
- :deps  {org.scicloj/noj                           {:mvn/version "2-beta18"}
+ ;; Clojure Plus secretly needsclojure 1.12
+
+ :deps  {org.clojure/clojure                       {:mvn/version "1.12.0"}
+         org.scicloj/noj                           {:mvn/version "2-beta18"}
          markdown-clj/markdown-clj                 {:mvn/version "1.12.3"}
          org.clojure/core.async                    {:mvn/version "1.9.808-alpha1"}
          io.github.clojure/core.async.flow-monitor {:git/tag "v0.1.1" :git/sha "61e8d31"}
@@ -23,4 +26,4 @@
           :extra-deps  {org.clojure/test.check {:mvn/version "1.1.1"}
                         io.github.cognitect-labs/test-runner
                         {:git/tag "v0.5.1" :git/sha "dfb30dd"}}}
-  :neil  {:project {:name io.github.timothypratley/civitas}}}}
+  :neil  {:project {:name io.github.timothypratley/clojurecivitas}}}}

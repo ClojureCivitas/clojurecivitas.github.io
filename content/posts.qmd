@@ -1,0 +1,6 @@
+---
+title: "Blog"
+listing:
+  contents: posts
+  type: grid
+---

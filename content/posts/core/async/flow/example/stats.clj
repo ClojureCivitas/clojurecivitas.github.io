@@ -1,4 +1,8 @@
-(ns core.async.flow.example.stats)
+(ns core.async.flow.example.stats
+  (:require
+    [clojure.core.async :as a]
+    [clojure.core.async.flow :as flow]
+    [clojure.core.async.flow-monitor :as mon]))
 
 ;; # Core async flow stats example
 ;;
@@ -7,16 +11,6 @@
 ^:kind/video
 {:youtube-id   "lXFwf3O4BVY"
  :iframe-width "100%"}
-
-;; Necessary dependencies
-
-(clojure.repl.deps/add-libs '{org.clojure/core.async {:mvn/version "1.9.808-alpha1"}})
-(clojure.repl.deps/add-libs '{io.github.clojure/core.async.flow-monitor {:git/tag "v0.1.1" :git/sha "61e8d31"}})
-
-(require
-  '[clojure.core.async :as a]
-  '[clojure.core.async.flow :as flow]
-  '[clojure.core.async.flow-monitor :as mon])
 
 (defn stat-gen
   "Generates a random value between min (inclusive) and max (exclusive)
@@ -33,27 +27,27 @@
 (defn source
   "Source proc for random stats"
   ;; describe
-  ([] {:params {:min "Min value to generate"
-                :max "Max value to generate"
+  ([] {:params {:min  "Min value to generate"
+                :max  "Max value to generate"
                 :wait "Time in ms to wait between generating"}
-       :outs {:out "Output channel for stats"}})
+       :outs   {:out "Output channel for stats"}})
 
   ;; init
   ([args]
    (assoc args
-     ::flow/in-ports {:stat (a/chan 100)}
+     :clojure.core.async.flow/in-ports {:stat (a/chan 100)}
      :stop (atom false)))
 
   ;; transition
-  ([{:keys [min max wait ::flow/in-ports] :as state} transition]
+  ([{:keys [min max wait :clojure.core.async.flow/in-ports] :as state} transition]
    ;(println "transition" transition)
    (case transition
-     ::flow/resume
+     :clojure.core.async.flow/resume
      (let [stop-atom (atom false)]
        (future (stat-gen (:stat in-ports) min max wait stop-atom))
        (assoc state :stop stop-atom))
 
-     (::flow/pause ::flow/stop)
+     (:clojure.core.async.flow/pause :clojure.core.async.flow/stop)
      (do
        (reset! (:stop state) true)
        state)))
@@ -65,11 +59,11 @@
 
 (defn aggregator
   ;; describe
-  ([] {:params {:min "Min value, alert if lower"
-                :max "Max value, alert if higher"}
-       :ins {:stat "Channel to receive stat values"
-             :poke "Channel to poke when it is time to report a window of data to the log"}
-       :outs {:alert "Notify of value out of range {:val value, :error :high|:low"}
+  ([] {:params   {:min "Min value, alert if lower"
+                  :max "Max value, alert if higher"}
+       :ins      {:stat "Channel to receive stat values"
+                  :poke "Channel to poke when it is time to report a window of data to the log"}
+       :outs     {:alert "Notify of value out of range {:val value, :error :high|:low"}
        :workload :compute
        })
 
@@ -89,9 +83,9 @@
                         :else nil)]
              [state' msgs])
      :poke [(assoc state :vals [])
-            {::flow/report (if (empty? vals)
+            {:clojure.core.async.flow/report (if (empty? vals)
                              [{:count 0}]
-                             [{:avg (/ (double (reduce + vals)) (count vals))
+                             [{:avg   (/ (double (reduce + vals)) (count vals))
                                :count (count vals)}])}]
      [state nil])))
 
@@ -106,19 +100,19 @@
 (defn scheduler
   ;; describe
   ([] {:params {:wait "Time to wait between pokes"}
-       :outs {:out "Poke channel, will send true when the alarm goes off"}})
+       :outs   {:out "Poke channel, will send true when the alarm goes off"}})
 
   ;; init
   ([args]
    (assoc args
-     ::flow/in-ports {:alarm (a/chan 10)}
+     :clojure.core.async.flow/in-ports {:alarm (a/chan 10)}
      :stop (atom false)))
 
   ;; transition
-  ([{:keys [wait ::flow/in-ports] :as state} transition]
+  ([{:keys [wait :clojure.core.async.flow/in-ports] :as state} transition]
    ;(println "scheduler transition" transition state transition)
    (case transition
-     ::flow/resume
+     :clojure.core.async.flow/resume
      (let [stop-atom (atom false)]
        (future (loop []
                  (let [put (a/>!! (:alarm in-ports) true)]
@@ -127,7 +121,7 @@
                      (recur)))))
        (assoc state :stop stop-atom))
 
-     (::flow/pause ::flow/stop)
+     (:clojure.core.async.flow/pause :clojure.core.async.flow/stop)
      (do
        (reset! (:stop state) true)
        state)))
@@ -139,7 +133,7 @@
 (defn printer
   ;; describe
   ([] {:params {:prefix "Log message prefix"}
-       :ins {:in "Channel to receive messages"}})
+       :ins    {:in "Channel to receive messages"}})
 
   ;; init
   ([state] state)
@@ -177,7 +171,7 @@
   (mon/stop-server server)
 
   @(flow/inject f [:aggregator :poke] [true])
-  @(flow/inject f [:aggregator :stat] ["abc1000"]) ;; trigger an alert
+  @(flow/inject f [:aggregator :stat] ["abc1000"])          ;; trigger an alert
   @(flow/inject f [:notifier :in] [:sandwich])
 
   (def report-chan (:report-chan chs))

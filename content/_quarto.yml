@@ -3,14 +3,23 @@ project:
 
 website:
   title: "Clojure Civitas"
+  favicon: "favicon.ico"
   navbar:
+    logo: "images/civitas-icon.svg"
+    logo-alt: "Clojure Civitas Logo"
     right:
+      - posts.qmd
+      - ideas.qmd
+      - talks.qmd
+      - tutorials.qmd
+      - pages.qmd
       - about.qmd
       - icon: github
-        href: https://github.com/
-      - icon: twitter
-        href: https://twitter.com
+        href: https://github.com/timothypratley/clojurecivitas
+
 format:
   html:
-    theme: cosmo
-    css: styles.css
+    theme:
+      light: [ flatly ]
+      dark: [ darkly ]
+    respect-user-color-scheme: true

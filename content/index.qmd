@@ -1,0 +1,12 @@
+---
+title: "Clojure Civitas"
+image: "images/civitas-icon.svg"
+about:
+  template: jolla
+---
+[About](about.qmd)
+[Blog Posts](posts.qmd)
+[Pages](pages.qmd)
+[Ideas](ideas.qmd)
+[Talks](talks.qmd)
+[Tutorials](tutorials.qmd)

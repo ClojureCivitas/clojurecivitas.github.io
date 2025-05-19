@@ -1,0 +1,6 @@
+---
+title: "Ideas"
+listing:
+  contents: ideas
+  type: grid
+---

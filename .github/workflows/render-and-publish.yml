@@ -35,7 +35,6 @@ jobs:
             ~/.m2/repository
             ~/.gitlibs
             ~/.deps.clj
-          # List all files containing dependencies:
           key: cljdeps-${{ hashFiles('deps.edn') }}
           restore-keys: cljdeps-
 

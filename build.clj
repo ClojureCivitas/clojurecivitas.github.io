@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [test])
   (:require [clojure.tools.build.api :as b]))
 
-(def lib 'io.github.timothypratley/civitas)
+(def lib 'io.github.timothypratley/clojurecivitas)
 (def version "0.1.0-SNAPSHOT")
 (def main 'civitas.main)
 (def class-dir "target/classes")
