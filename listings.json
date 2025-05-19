@@ -1,0 +1,31 @@
+[
+  {
+    "listing": "/tutorials.html",
+    "items": []
+  },
+  {
+    "listing": "/ideas.html",
+    "items": [
+      "/ideas/clojure/plus/print/objects/objects_and_protocols.html"
+    ]
+  },
+  {
+    "listing": "/talks.html",
+    "items": []
+  },
+  {
+    "listing": "/pages.html",
+    "items": [
+      "/pages/civitas/view/index.html",
+      "/pages/scicloj/noj/intro/getting-started-noj.html"
+    ]
+  },
+  {
+    "listing": "/posts.html",
+    "items": [
+      "/posts/core/async/flow/example/stats.html",
+      "/posts/core/async/flow/exploration.html",
+      "/posts/beating_code_interviews_with_stupid_stuff/z_combinator_gambit.html"
+    ]
+  }
+]
