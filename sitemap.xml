@@ -6,7 +6,7 @@
   </url>
   <url>
     <loc>https://timothypratley.github.io/clojurecivitas/ideas/clojure/plus/print/objects/objects_and_protocols.html</loc>
-    <lastmod>2025-05-19T22:13:11.856Z</lastmod>
+    <lastmod>2025-05-23T07:11:32.854Z</lastmod>
   </url>
   <url>
     <loc>https://timothypratley.github.io/clojurecivitas/tutorials.html</loc>
@@ -21,16 +21,40 @@
     <lastmod>2025-05-19T20:31:59.654Z</lastmod>
   </url>
   <url>
-    <loc>https://timothypratley.github.io/clojurecivitas/posts/beating_code_interviews_with_stupid_stuff/z_combinator_gambit.html</loc>
-    <lastmod>2025-05-19T22:13:11.153Z</lastmod>
+    <loc>https://timothypratley.github.io/clojurecivitas/posts/timothypratley/beating_code_interviews_with_stupid_stuff/z_combinator_gambit.html</loc>
+    <lastmod>2025-05-23T07:11:32.458Z</lastmod>
   </url>
   <url>
-    <loc>https://timothypratley.github.io/clojurecivitas/posts/core/async/flow/exploration.html</loc>
-    <lastmod>2025-05-19T22:13:11.065Z</lastmod>
+    <loc>https://timothypratley.github.io/clojurecivitas/posts/util/print.html</loc>
+    <lastmod>2025-05-23T07:11:31.574Z</lastmod>
+  </url>
+  <url>
+    <loc>https://timothypratley.github.io/clojurecivitas/posts/util/elk.html</loc>
+    <lastmod>2025-05-23T07:11:32.352Z</lastmod>
   </url>
   <url>
     <loc>https://timothypratley.github.io/clojurecivitas/posts/core/async/flow/example/stats.html</loc>
-    <lastmod>2025-05-19T22:13:10.259Z</lastmod>
+    <lastmod>2025-05-23T07:11:30.829Z</lastmod>
+  </url>
+  <url>
+    <loc>https://timothypratley.github.io/clojurecivitas/posts/core/async/flow/visualization/flow_elk.html</loc>
+    <lastmod>2025-05-23T07:11:26.774Z</lastmod>
+  </url>
+  <url>
+    <loc>https://timothypratley.github.io/clojurecivitas/posts/core/async/flow/exploration.html</loc>
+    <lastmod>2025-05-23T07:11:31.529Z</lastmod>
+  </url>
+  <url>
+    <loc>https://timothypratley.github.io/clojurecivitas/posts/core/async/flow/visualization.html</loc>
+    <lastmod>2025-05-23T07:11:30.905Z</lastmod>
+  </url>
+  <url>
+    <loc>https://timothypratley.github.io/clojurecivitas/posts/util/elk_svg.html</loc>
+    <lastmod>2025-05-23T07:11:31.620Z</lastmod>
+  </url>
+  <url>
+    <loc>https://timothypratley.github.io/clojurecivitas/posts/beating_code_interviews_with_stupid_stuff/z_combinator_gambit.html</loc>
+    <lastmod>2025-05-21T03:57:54.041Z</lastmod>
   </url>
   <url>
     <loc>https://timothypratley.github.io/clojurecivitas/talks.html</loc>
@@ -50,6 +74,6 @@
   </url>
   <url>
     <loc>https://timothypratley.github.io/clojurecivitas/pages/civitas/view/index.html</loc>
-    <lastmod>2025-05-19T22:13:12.099Z</lastmod>
+    <lastmod>2025-05-23T07:11:42.695Z</lastmod>
   </url>
 </urlset>

@@ -25,6 +25,12 @@
     "items": [
       "/posts/core/async/flow/example/stats.html",
       "/posts/core/async/flow/exploration.html",
+      "/posts/core/async/flow/visualization.html",
+      "/posts/timothypratley/beating_code_interviews_with_stupid_stuff/z_combinator_gambit.html",
+      "/posts/core/async/flow/visualization/flow_elk.html",
+      "/posts/util/elk.html",
+      "/posts/util/elk_svg.html",
+      "/posts/util/print.html",
       "/posts/beating_code_interviews_with_stupid_stuff/z_combinator_gambit.html"
     ]
   }
