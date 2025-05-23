@@ -19,29 +19,22 @@
 
 ;; [clojure-plus](https://github.com/tonsky/clojure-plus) provides print-methods to improve printing many things.
 
-(require 'clojure+.print)
-^:kind/hidden
-(clojure+.print/install-printers!)
+(comment
+  (require 'clojure+.print)
+  (clojure+.print/install-printers!))
 
-;; Once activated, we can print functions, atoms, namespaces, and more sensibly
-
-inc
-(atom {})
-*ns*
-
+;; Once activated, we can print functions, atoms, namespaces, and more sensibly.
 ;; Clojure Plus adds printers for many types,
 ;; but no printer is provided for Object,
 ;; which remains as Clojure's default printing method.
 ;; There are plenty of objects left over that print messily.
-;; Going back to our channel example, it still prints the same:
-
-(async/chan)
 
 ;; It's not hard to provide an Object print-method:
 
 (defmethod print-method Object [x ^java.io.Writer w]
-  (.write w "#object ")
-  (.write w (.getName (class x))))
+  (.write w "#object [")
+  (.write w (.getName (class x)))
+  (.write w "]"))
 
 (async/chan)
 
@@ -93,60 +86,26 @@ inc
 
 ;; Looking better, I can actually see the (strange) name of the functions.
 
-;; Notice now that the string is not a valid symbol?
-;; That's a problem if we follow the style of `clojure-plus` because it prints as tagged literals.
-;;
-;; `#object clojure.plus.print.objects.objects-and-protocols/%%/%%%` is not a valid Clojure expression.
-;; In a sense it doesn't matter much if we are just printing, but it tends to confuse tools (and people).
-;; So I recommend replacing all slashes after the namespace delimiter with `$` instead.
-;; While we are at it... the namespace isn't helping us at all here.
-;; Let's just show the name without the namespace.
-
-(defn format-class-name [s]
+(defn format-class-name ^String [s]
   (let [[ns-str & names] (-> (remove-extraneous s)
                              (str/split #"/"))]
     (if (and ns-str names)
-      (str/join "$" names)
-      s)))
+      (str (str/join "$" names))
+      (-> s (str/split #"\.") (last)))))
 
 (-> (((fn aaa [] (fn bbb [] (fn ccc [])))))
     (class-name)
     (format-class-name))
 
-;; That's really all we need.
-;; Notice there is no `/` slash if we don't show the namespace, but we still can't use `/` because functions can nest arbitrarily.
-
-;; Side note about including or omitting the namespace.
-;; There are many ways to get whatever representation you want,
-;; so changing the printing behavior doesn't prevent anything.
-;; The question is just would you like to see it or not?
-;; I would argue that it's almost never useful, just a distraction.
-;; On the other hand, the current behavior for printing vars is fully qualified.
-;; Whatever your preference on showing the namespace, it should probably be consistent across printers.
-
-;; I'll assume you prefer including the namespace
-
-(defn format-class-name [s]
-  (let [[ns-str & names] (-> (remove-extraneous s)
-                             (str/split #"/"))]
-    (if (and ns-str names)
-      (str ns-str "/" (str/join "$" names))
-      s)))
-
 ;; Let's hook this up to the print-method for Object:
 
 (defmethod print-method Object [x ^java.io.Writer w]
-  (.write w "#object ")
-  (.write w (-> (class-name x) (format-class-name))))
+  (.write w "#object [")
+  (.write w (-> (class-name x) (format-class-name)))
+  (.write w "]"))
 
-;; Notably this doesn't change function etc... because they are still using the `clojure-plus` print-method:
-
+*ns*
 (((fn aaa [] (fn bbb [] (fn ccc [])))))
-
-;; In my opinion, the fn and multi print-methods of `clojure-plus` should be changed to the cleaner output.
-
-;; But it matters for our reify example:
-
 (stats/create-flow)
 
 ;; What is this? It's a reified object that implements protocols.
@@ -228,36 +187,17 @@ inc
 ;; But we can improve the print-method to show protocols,
 ;; bearing in mind it is a performance concern.
 
-(defmethod print-method Object [x ^java.io.Writer w]
-  (let [class-name (.getName (class x))
-        r (str/includes? class-name "$reify")
-        p (when r (first (protocol-ns-match-names x)))]
-    (.write w (if p
-                "#reify "
-                "#object "))
-    (.write w (if p
-                (str p)
-                class-name))))
-
-(stats/create-flow)
-
 ;; Showing the reified protocol isn't a big improvement, and probably not worth the performance.
 ;; Probably not worth including in `clojure-plus`.
 
 ;; Even if we don't care to improve reify (due to performance),
 ;; I think the Object printer should still be improved to align with the other printers.
-;; Let's go back to the basic Object print-method without protocol detection.
 
-(defmethod print-method Object [x ^java.io.Writer w]
-  (.write w "#object ")
-  (.write w (-> (class-name x) (format-class-name))))
-
-;; O.K.
 ;; Are we giving up anything?
 ;; Remember we removed the unique identifiers like `/evalNNNNN/`.
 ;; When would those be useful?
 ;; Hold onto your hats!
-;; We are about to try to find an Object by it's class-name:
+;; We are about to try to find an Object by a class-name:
 
 (defn find-class [class-name]
   (try

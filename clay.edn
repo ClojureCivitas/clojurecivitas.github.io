@@ -6,4 +6,9 @@
  :remote-repo      {:git-url "https://github.com/timothypratley/clojurecivitas"
                     :branch  "main"}
  :hide-info-line   true
- :hide-ui-header   true}
+ :hide-ui-header   true
+ :aliases {:markdown {:render true
+                      :base-target-path "site"
+                      :format [:quarto :html]
+                      :run-quarto false
+                      :hide-info-line false}}}

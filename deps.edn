@@ -1,14 +1,19 @@
 {:paths ["src" "content/pages" "content/posts" "content/ideas" "content/talks" "content/tutorials"]
 
- ;; Clojure Plus secretly needsclojure 1.12
-
- :deps  {org.clojure/clojure                       {:mvn/version "1.12.0"}
-         org.scicloj/noj                           {:mvn/version "2-beta18"}
-         markdown-clj/markdown-clj                 {:mvn/version "1.12.3"}
-         org.clojure/core.async                    {:mvn/version "1.9.808-alpha1"}
-         io.github.clojure/core.async.flow-monitor {:git/tag "v0.1.1" :git/sha "61e8d31"}
-         org.scicloj/clay                          {:git/url "https://github.com/scicloj/clay"
-                                                    :git/sha "0331de387f5ca24e1131415e9ae7b1c167641aab"}}
+ :deps  {org.clojure/clojure                         {:mvn/version "1.12.0"}
+         org.scicloj/noj                             {:mvn/version "2-beta18"}
+         markdown-clj/markdown-clj                   {:mvn/version "1.12.3"}
+         org.clojure/core.async                      {:mvn/version "1.9.808-alpha1"}
+         io.github.clojure/core.async.flow-monitor   {:git/tag "v0.1.1" :git/sha "61e8d31"}
+         metosin/malli                               {:mvn/version "0.18.0"}
+         clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
+         org.scicloj/clay                            {:git/url "https://github.com/scicloj/clay"
+                                                      :git/sha "ff0c65461f020b3a6f2ac0c60668bfda52fe8746"}
+         org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
+         org.eclipse.elk/org.eclipse.elk.graph       {:mvn/version "0.10.0"}
+         org.eclipse.elk/org.eclipse.elk.graph.json  {:mvn/version "0.10.0"}
+         org.eclipse.elk/org.eclipse.elk.alg.common  {:mvn/version "0.10.0"}
+         org.eclipse.elk/org.eclipse.elk.alg.layered {:mvn/version "0.10.0"}}
 
  :aliases
  ;; Build the site with `clojure -M:m`

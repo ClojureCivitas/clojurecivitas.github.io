@@ -1,9 +1,9 @@
 (ns core.async.flow.exploration
   (:require [clojure.core.async :as async]
-            [clojure.string :as str]
-            [core.async.flow.example.stats :as stats]
             [clojure.core.async.flow :as flow]
-            [clojure.datafy :as datafy]))
+            [clojure.datafy :as datafy]
+            [core.async.flow.example.stats :as stats]
+            [core.async.flow.visualization :as fv]))
 
 ;; # Visualizing core.async.flows
 
@@ -17,52 +17,12 @@
 ;; 2. Static visualization of a sample flow
 ;; 3. Evolution as the flow changes
 
-(defn id-for [x]
-  (cond (keyword? x) (str (symbol x))
-        (vector? x) (str/join "_" (map id-for x))
-        (string? x) x
-        :else (str x)))
-
-(defn conn-table [flow]
-  (let [{:keys [conns procs]} (datafy/datafy flow)
-        all-proc-chans (into #{} cat conns)]
-    ;; TODO: add channel state
-    ^:kind/table
-    {:row-maps (vec (for [[from to] conns]
-                      {:source (id-for from)
-                       :target (id-for to)}))}))
-
-(defn proc-table [flow]
-  (let [{:keys [conns procs]} (datafy/datafy flow)
-        all-proc-chans (into #{} cat conns)]
-    ^:kind/table
-    {:column-names ["process" "start params" "in chans" "out chans"]
-     :row-vectors  (for [[proc-key proc-chans] (group-by first all-proc-chans)]
-                     (let [{:keys [args proc]} (get procs proc-key)
-                           {:keys [desc]} proc
-                           {:keys [params ins outs]} desc]
-                       [(name proc-key)
-                        ^:kind/hiccup
-                        [:div
-                         (for [[k param] params]
-                           [:div
-                            [:div [:strong (name k)] ": " (get args k)]
-                            [:div param]])]
-                        ^:kind/hiccup
-                        [:div (for [[k v] ins]
-                                [:div [:strong (name k)] ": " v])]
-                        ^:kind/hiccup
-                        [:div (for [[k v] outs]
-                                [:div [:strong (name k)] ": " v])]]))}))
-
 (def stats-flow
   (flow/create-flow stats/config))
 
-(proc-table stats-flow)
+(fv/proc-table stats-flow)
 
-;; would be more interesting if we show the buffer state
-(conn-table stats-flow)
-
+(fv/conn-table stats-flow)
 
 (def chs (flow/start stats-flow))
 
