@@ -4,6 +4,9 @@ project:
 website:
   title: "Clojure Civitas"
   favicon: "favicon.ico"
+  site-url: "https://timothypratley.github.io/clojurecivitas"
+  image: "images/civitas-icon.svg"
+  open-graph: true
   navbar:
     logo: "images/civitas-icon.svg"
     logo-alt: "Clojure Civitas Logo"

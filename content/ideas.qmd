@@ -2,7 +2,8 @@
 title: "Ideas"
 listing:
   contents: idea
-  type: default
+  exclude: 
+    type: post
   sort: "title"
 ---
 Ideas, insights, and patterns in the Clojure world.

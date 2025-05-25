@@ -1,5 +1,7 @@
-^{:clay {:title "Clean object printing by removing extraneous"
+^{:clay {:title  "Clean object printing by removing extraneous"
          :quarto {:author   :timothypratley
+                  :type     :post
+                  :date     "2025-06-05"
                   :category :clojure
                   :tags     [:print-method :objects]}}}
 (ns idea.print.object.remove-extraneous

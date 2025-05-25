@@ -14,7 +14,7 @@
    :format           [:quarto :html]
    :run-quarto       false
    :hide-info-line   false
-   :quarto           {:format {:html {:theme nil}}}
+   :quarto           {:format {:html nil}}
    :quarto/expansions
    {:affiliation
     {:clojure.core {:name "Clojure.core" :url "https://clojure.org"}

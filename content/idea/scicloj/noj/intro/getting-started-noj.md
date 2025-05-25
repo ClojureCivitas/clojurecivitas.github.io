@@ -1,6 +1,6 @@
 ---
-author: 
-  - ref: timothypratley
+author: Timothy Pratley
+type: post
 date: 2025-05-06
 category: data
 tags: [data-science, noj]

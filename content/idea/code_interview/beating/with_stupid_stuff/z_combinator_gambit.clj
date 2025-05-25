@@ -1,5 +1,6 @@
 ^{:kindly/hide-code true
   :clay             {:quarto {:title    "The Z-Combinator Gambit"
+                              :type     :post
                               :author   [:chouser :timothypratley]
                               :date     "2025-05-25"
                               :category :clojure

@@ -41,7 +41,7 @@ notebook as you write it.
 ### Preview the full website
 
 ```sh
-clojure -M:m
+clojure -M:clay -a [:markdown]
 ```
 
 ```sh

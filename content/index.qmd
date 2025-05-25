@@ -8,3 +8,4 @@ about:
 [Blog Posts](posts.qmd)
 [Libraries and Tools](libs.qmd)
 [Ideas](ideas.qmd)
+[Filter](filter.qmd)

@@ -1,6 +1,7 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Core Async Flow Exploration"
                      :quarto {:author   [:daslu :timothypratley]
+                              :type     :post
                               :date     "2025-06-02"
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}

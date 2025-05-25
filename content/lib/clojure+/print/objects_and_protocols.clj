@@ -1,5 +1,7 @@
 ^{:kindly/hide-code true
-  :clay             {:title "Printing Objects in Clojure"
+  :clay             {:title  "Printing Objects in Clojure"
+                     :type   :post
+                     :date   "2025-06-09"
                      :quarto {:author :timothypratley}}}
 (ns lib.clojure+.print.objects-and-protocols
   (:require [clojure.core.async :as async]

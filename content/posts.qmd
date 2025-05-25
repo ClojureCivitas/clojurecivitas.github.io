@@ -1,9 +1,13 @@
 ---
 title: "Posts"
 listing:
-  contents: [idea lib]
-  type: default
-  sort: "date desc"
-  categories: false
+  contents: [idea, lib]
+  include:
+    type: post
+  sort:
+    - "date desc"
+    - "title desc"
   filter-ui: true
+  categories: true
+  feed: true
 ---

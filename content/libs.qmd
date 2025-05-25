@@ -2,7 +2,8 @@
 title: "Libraries and Tools"
 listing:
   contents: lib
-  type: default
+  exclude:
+    type: post
   sort: "title"
 ---
 Content related to Clojure libraries and tools.
