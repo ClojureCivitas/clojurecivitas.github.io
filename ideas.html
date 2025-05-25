@@ -134,6 +134,10 @@ window.Quarto = {
 };
 </script>
 
+<meta property="og:title" content="Ideas – Clojure Civitas">
+<meta property="og:description" content="">
+<meta property="og:image" content="https://timothypratley.github.io/clojurecivitas/images/civitas-icon.svg">
+<meta property="og:site_name" content="Clojure Civitas">
 </head>
 
 <body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -328,6 +332,10 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
+    <a class="nav-link" href="./about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
     <a class="nav-link" href="./posts.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
@@ -340,8 +348,8 @@ window.Quarto = {
 <span class="menu-text">Libraries and Tools</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
-<span class="menu-text">About</span></a>
+    <a class="nav-link" href="./filter.html"> 
+<span class="menu-text">Filter Notebooks</span></a>
   </li>  
   <li class="nav-item compact">
     <a class="nav-link" href="https://github.com/timothypratley/clojurecivitas"> <i class="bi bi-github" role="img">
@@ -391,7 +399,7 @@ window.Quarto = {
 
 <div class="quarto-listing quarto-listing-container-default" id="listing-listing">
 <div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-file-modified-sort="1748142094010" data-listing-reading-time-sort="5" data-listing-word-count-sort="882">
+<div class="quarto-post image-right" data-index="0" data-listing-file-modified-sort="1748150956791" data-listing-reading-time-sort="5" data-listing-word-count-sort="882">
 <div class="thumbnail"><a href="./idea/civitas/explorer.html" class="no-external">
 
 <div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
@@ -413,7 +421,7 @@ Timothy Pratley
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="1" data-listing-file-modified-sort="1748142094089" data-listing-reading-time-sort="7" data-listing-word-count-sort="1308">
+<div class="quarto-post image-right" data-index="1" data-listing-file-modified-sort="1748150956867" data-listing-reading-time-sort="7" data-listing-word-count-sort="1308">
 <div class="thumbnail"><a href="./idea/graph/layout/elk_svg.html" class="no-external">
 
 <div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
@@ -435,7 +443,7 @@ Timothy Pratley
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="2" data-listing-file-modified-sort="1748142094760" data-listing-reading-time-sort="5" data-listing-word-count-sort="900">
+<div class="quarto-post image-right" data-index="2" data-listing-file-modified-sort="1748150957519" data-listing-reading-time-sort="5" data-listing-word-count-sort="900">
 <div class="thumbnail"><a href="./idea/graph/layout/elk.html" class="no-external">
 
 <div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
@@ -545,7 +553,7 @@ Timothy Pratley
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/timothypratley\.github\.io\/clojurecivitas\/");
+        var filterRegex = new RegExp("https:\/\/timothypratley\.github\.io\/clojurecivitas");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

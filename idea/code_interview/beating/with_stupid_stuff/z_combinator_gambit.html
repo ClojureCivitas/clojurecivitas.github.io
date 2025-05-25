@@ -113,6 +113,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 
 
+<meta property="og:title" content="The Z-Combinator Gambit – Clojure Civitas">
+<meta property="og:description" content="">
+<meta property="og:image" content="https://timothypratley.github.io/clojurecivitas/idea/code_interview/beating/with_stupid_stuff/images/civitas-icon.svg">
+<meta property="og:site_name" content="Clojure Civitas">
 </head>
 
 <body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -307,6 +311,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
     <a class="nav-link" href="../../../../posts.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
@@ -319,8 +327,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">Libraries and Tools</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../../../about.html"> 
-<span class="menu-text">About</span></a>
+    <a class="nav-link" href="../../../../filter.html"> 
+<span class="menu-text">Filter Notebooks</span></a>
   </li>  
   <li class="nav-item compact">
     <a class="nav-link" href="https://github.com/timothypratley/clojurecivitas"> <i class="bi bi-github" role="img">
@@ -427,7 +435,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">fn</span> [SELF LIST])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval37107$fn__37108 <span class="bn">0x1cfb4971</span> <span class="st">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval37107$fn__37108@1cfb4971"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval37107$fn__37108 <span class="bn">0x6d15bf54</span> <span class="st">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval37107$fn__37108@6d15bf54"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>We’re just writing a function, and it only needs to take a list…</p>
@@ -535,7 +543,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(REV-LOGIC REV-LOGIC)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122 <span class="bn">0x1bad1731</span> <span class="st">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122@1bad1731"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122 <span class="bn">0x4549bae8</span> <span class="st">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122@4549bae8"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>Well, it’s a function! That much is clear…</p>
@@ -628,7 +636,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb25"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>(FIX REV-LOGIC)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb26"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122 <span class="bn">0x7f594c90</span> <span class="st">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122@7f594c90"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122 <span class="bn">0x67ff85f7</span> <span class="st">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122@67ff85f7"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>At least it didn’t blow up this time…</p>
@@ -908,7 +916,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/timothypratley\.github\.io\/clojurecivitas\/");
+        var filterRegex = new RegExp("https:\/\/timothypratley\.github\.io\/clojurecivitas");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

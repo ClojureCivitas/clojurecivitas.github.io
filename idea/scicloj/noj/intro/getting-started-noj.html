@@ -77,6 +77,10 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
+<meta property="og:title" content="Clojure Civitas">
+<meta property="og:description" content="">
+<meta property="og:image" content="https://timothypratley.github.io/clojurecivitas/idea/scicloj/noj/intro/images/civitas-icon.svg">
+<meta property="og:site_name" content="Clojure Civitas">
 </head>
 
 <body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -271,6 +275,10 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
+    <a class="nav-link" href="../../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
     <a class="nav-link" href="../../../../posts.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
@@ -283,8 +291,8 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">Libraries and Tools</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../../../about.html"> 
-<span class="menu-text">About</span></a>
+    <a class="nav-link" href="../../../../filter.html"> 
+<span class="menu-text">Filter Notebooks</span></a>
   </li>  
   <li class="nav-item compact">
     <a class="nav-link" href="https://github.com/timothypratley/clojurecivitas"> <i class="bi bi-github" role="img">
@@ -443,7 +451,7 @@ ul.task-list li input[type="checkbox"] {
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/timothypratley\.github\.io\/clojurecivitas\/");
+        var filterRegex = new RegExp("https:\/\/timothypratley\.github\.io\/clojurecivitas");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

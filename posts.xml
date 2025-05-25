@@ -9,6 +9,11 @@
 <link>https://timothypratley.github.io/clojurecivitas/posts.html</link>
 <atom:link href="https://timothypratley.github.io/clojurecivitas/posts.xml" rel="self" type="application/rss+xml"/>
 <description></description>
+<image>
+<url>https://timothypratley.github.io/clojurecivitas/images/civitas-icon.svg</url>
+<title>Clojure Civitas</title>
+<link>https://timothypratley.github.io/clojurecivitas/posts.html</link>
+</image>
 <generator>quarto-1.7.31</generator>
 <lastBuildDate>Thu, 05 Jun 2025 07:00:00 GMT</lastBuildDate>
 <item>
@@ -3140,9 +3145,9 @@ font-style: inherit;">fn</span> [SELF LIST])</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval37107$fn__37108 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x1cfb4971</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x6d15bf54</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval37107$fn__37108@1cfb4971"</span>]</span></code></pre></div>
+font-style: inherit;">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval37107$fn__37108@6d15bf54"</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>We’re just writing a function, and it only needs to take a list…</p>
@@ -3426,9 +3431,9 @@ font-style: inherit;">1</span></span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x1bad1731</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x4549bae8</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122@1bad1731"</span>]</span></code></pre></div>
+font-style: inherit;">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122@4549bae8"</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>Well, it’s a function! That much is clear…</p>
@@ -3573,9 +3578,9 @@ font-style: inherit;">fn</span> SELF [VALUE]</span>
 <div class="printedClojure">
 <div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1">#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x7f594c90</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x67ff85f7</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122@7f594c90"</span>]</span></code></pre></div>
+font-style: inherit;">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__37122@67ff85f7"</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>At least it didn’t blow up this time…</p>
