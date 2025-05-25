@@ -6,8 +6,11 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Timothy Pratley">
+<meta name="dcterms.date" content="2025-05-06">
+<meta name="keywords" content="noj">
 
-<title>Posts – Clojure Civitas</title>
+<title>getting-started-noj – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,30 +26,28 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./favicon.ico" rel="icon">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-8ef56b68f8fa1e9d2ba328e99e439f80.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-6bdd2aebeb936dcddaa5f935a5de481c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-ccd81253fefb92e9cd3f9eb5b5d87b54.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-6bdd2aebeb936dcddaa5f935a5de481c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../favicon.ico" rel="icon">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-8ef56b68f8fa1e9d2ba328e99e439f80.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-6bdd2aebeb936dcddaa5f935a5de481c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-ccd81253fefb92e9cd3f9eb5b5d87b54.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-6bdd2aebeb936dcddaa5f935a5de481c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -74,69 +75,11 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
 
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
 
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
+</head>
 
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="alternate" type="application/rss+xml" title="Clojure Civitas" href="posts.xml" data-external="1"></head>
-
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -314,10 +257,10 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./images/civitas-icon.svg" alt="Clojure Civitas Logo" class="navbar-logo">
+    <a href="../../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../../images/civitas-icon.svg" alt="Clojure Civitas Logo" class="navbar-logo">
     </a>
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../../../index.html">
     <span class="navbar-title">Clojure Civitas</span>
     </a>
   </div>
@@ -328,19 +271,19 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./posts.html" aria-current="page"> 
+    <a class="nav-link" href="../../../../posts.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./ideas.html"> 
+    <a class="nav-link" href="../../../../ideas.html"> 
 <span class="menu-text">Ideas</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./libs.html"> 
+    <a class="nav-link" href="../../../../libs.html"> 
 <span class="menu-text">Libraries and Tools</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -360,201 +303,61 @@ window.Quarto = {
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(6)</span></div></div></div>
+    
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Posts</h1>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Timothy Pratley </p>
+          </div>
+  </div>
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 6, 2025</p>
+    </div>
+  </div>
   
     
   </div>
   
 
+<div>
+  <div class="keywords">
+    <div class="block-title">Keywords</div>
+    <p>noj</p>
+  </div>
+</div>
 
 </header>
 
 
+<p>Transcript of <a href="https://youtu.be/tDz1x2d65C0">Noj reload executable</a></p>
+<p>Hello code champs, number ninjas and data divers!</p>
+<p>Imagine being able to experiment with Clojure without needing to install tooling, set up editors, or even know about deps.edn Sounds like a dream, right? Well, dream no more—meet Noj’s new Code Reload Executable!</p>
+<p>We can skip the Clojure tooling and editor setup, but we do need to install the recommended Adoptive Java. Now we download the latest Noj jar from the Scicloj Noj GitHub releases page. Let’s check the jar is in the Downloads directory, and that we have java installed by executing <code>java -version</code>.</p>
+<p>Launch Noj using <code>java -jar</code> and the path to the jar file. Pro tip, if you press tab while typing a path, it will autocomplete. Noj is running, it created a directory called notebooks, and it recommends we create a Clojure file there.</p>
+<p>I’ll create my file with Notepad, being careful to create a .clj file rather than a text file. When I saved that file, a browser window opened. Let’s put them side by side. Every time I save the file, the notebook updates.</p>
+<p>If I’m interested in one particular top-level form, I can narrow the output by adding ,, anywhere in the form. And removing it renders the full notebook. And check this out—comments are rendered as Markdown. How cool is that? What an easy way to get coding!</p>
+<p>Noj isn’t just a notebook—it’s a fully featured data science environment. It includes interesting datasets that can be queried and the results shown as tables or even better as charts.</p>
+<p>Noj makes experimenting with Clojure easier than ever. No setup headaches, no complicated tooling—just pure coding joy.</p>
+<p>Until next time, Keep on coding</p>
 
 
 
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="listing-actions-group">
-    <div class="input-group input-group-sm quarto-listing-filter">
-      <span class="input-group-text"><i class="bi bi-search"></i></span>
-      <input type="text" class="search form-control" placeholder="Filter">
-    </div>
-</div>
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-date-sort="1749106800000" data-listing-file-modified-sort="1748142094806" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="372">
-<div class="thumbnail"><a href="./idea/print/object/remove_extraneous.html" class="no-external">
-
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./idea/print/object/remove_extraneous.html" class="no-external">Clean object printing by removing extraneous</a>
-</h3>
-<div class="delink listing-description"><a href="./idea/print/object/remove_extraneous.html" class="no-external">
-.printedClojure .sourceCode {
-  background-color: transparent;
-  border-style: none;
-}
-
-</a></div>
-</div>
-<div class="metadata">
-<a href="./idea/print/object/remove_extraneous.html" class="no-external">
-<div class="listing-date">
-Jun 5, 2025
-</div>
-<div class="listing-author">
-Timothy Pratley
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-listing-date-sort="1748934000000" data-listing-file-modified-sort="1748142099691" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="11" data-listing-word-count-sort="2065">
-<div class="thumbnail"><a href="./lib/core/async/flow/visualization.html" class="no-external">
-
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./lib/core/async/flow/visualization.html" class="no-external">Core Async Flow Visualization</a>
-</h3>
-<div class="delink listing-description"><a href="./lib/core/async/flow/visualization.html" class="no-external">
-would be more interesting if we show the buffer state
-</a></div>
-</div>
-<div class="metadata">
-<a href="./lib/core/async/flow/visualization.html" class="no-external">
-<div class="listing-date">
-Jun 3, 2025
-</div>
-<div class="listing-author">
-Daniel Slutsky, Timothy Pratley
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-listing-date-sort="1748847600000" data-listing-file-modified-sort="1748142100795" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="21" data-listing-word-count-sort="4118">
-<div class="thumbnail"><a href="./lib/core/async/flow/exploration.html" class="no-external">
-
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./lib/core/async/flow/exploration.html" class="no-external">Core Async Flow Exploration</a>
-</h3>
-<div class="delink listing-description"><a href="./lib/core/async/flow/exploration.html" class="no-external">
-Clojure’s async flows are Directed Acyclic Graphs (DAGs) of channel operations. The new flow-monitor can visualize these flows.
-</a></div>
-</div>
-<div class="metadata">
-<a href="./lib/core/async/flow/exploration.html" class="no-external">
-<div class="listing-date">
-Jun 2, 2025
-</div>
-<div class="listing-author">
-Daniel Slutsky, Timothy Pratley
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-listing-date-sort="1748761200000" data-listing-file-modified-sort="1748142099573" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="8" data-listing-word-count-sort="1439">
-<div class="thumbnail"><a href="./lib/core/async/flow/example/stats.html" class="no-external">
-
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./lib/core/async/flow/example/stats.html" class="no-external">Core Async Flow Stats Example</a>
-</h3>
-<div class="delink listing-description"><a href="./lib/core/async/flow/example/stats.html" class="no-external">
-Adapted from https://github.com/puredanger/flow-example
-</a></div>
-</div>
-<div class="metadata">
-<a href="./lib/core/async/flow/example/stats.html" class="no-external">
-<div class="listing-date">
-Jun 1, 2025
-</div>
-<div class="listing-author">
-Alex Miller, Timothy Pratley
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="4" data-listing-date-sort="1748156400000" data-listing-file-modified-sort="1748142095013" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9" data-listing-word-count-sort="1747">
-<div class="thumbnail"><a href="./idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html" class="no-external">
-
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html" class="no-external">The Z-Combinator Gambit</a>
-</h3>
-<div class="delink listing-description"><a href="./idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html" class="no-external">
-Welcome back code champs, number ninjas, and data divers to our first episode of Beating Code Interviews with Stupid Stuff. People often send me emails asking, “How can I…
-</a></div>
-</div>
-<div class="metadata">
-<a href="./idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html" class="no-external">
-<div class="listing-date">
-May 25, 2025
-</div>
-<div class="listing-author">
-Chris Houser, Timothy Pratley
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="5" data-listing-date-sort="1746514800000" data-listing-file-modified-sort="1748135818834" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="255">
-<div class="thumbnail"><a href="./idea/scicloj/noj/intro/getting-started-noj.html" class="no-external">
-
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./idea/scicloj/noj/intro/getting-started-noj.html" class="no-external"></a>
-</h3>
-<div class="delink listing-description"><a href="./idea/scicloj/noj/intro/getting-started-noj.html" class="no-external">
-Transcript of Noj reload executable
-</a></div>
-</div>
-<div class="metadata">
-<a href="./idea/scicloj/noj/intro/getting-started-noj.html" class="no-external">
-<div class="listing-date">
-May 6, 2025
-</div>
-<div class="listing-author">
-Timothy Pratley
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
