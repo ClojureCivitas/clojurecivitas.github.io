@@ -46,10 +46,10 @@ jobs:
         with:
           tinytex: true
 
-      - name: Quarto render the site
-        run: cd site && quarto render
-
-      - name: Quarto publish the site
-        run: cd site && quarto publish gh-pages
+      - name: Render and Publish
+        uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+          path: site
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
