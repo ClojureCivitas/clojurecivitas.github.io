@@ -4,7 +4,7 @@ project:
 website:
   title: "Clojure Civitas"
   favicon: "favicon.ico"
-  site-url: "https://ClojureCivitas.github.io"
+  site-url: "https://clojurecivitas.github.io"
   image: "images/civitas-icon.svg"
   open-graph: true
   navbar:
@@ -17,7 +17,7 @@ website:
       - libs.qmd
       - filter.qmd
       - icon: github
-        href: "https://github.com/ClojureCivitas/ClojureCivitas"
+        href: "https://github.com/clojurecivitas/clojurecivitas"
 
 format:
   html:

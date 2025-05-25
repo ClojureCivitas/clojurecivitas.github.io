@@ -2,7 +2,7 @@
   (:require [clojure.data.json :as json]))
 
 (def ^:dynamic *ldns* "civitas")
-(def ^:dynamic *base* "https://ClojureCivitas.github.io/" *ldns* "/")
+(def ^:dynamic *base* "https://clojurecivitas.github.io/" *ldns* "/")
 
 (defn notebook-jsonld [{:keys [id title topics level] :as resource}]
   {"@id"    (str *base* "resource/" id),
