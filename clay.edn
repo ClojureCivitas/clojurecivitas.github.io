@@ -3,7 +3,7 @@
  :subdirs-to-sync  ["content"]
  :sync-as-subdirs  false
  :flatten-targets  false
- :remote-repo      {:git-url "https://github.com/clojurecivitas/clojurecivitas"
+ :remote-repo      {:git-url "https://github.com/ClojureCivitas/clojurecivitas.github.io"
                     :branch  "main"}
  :hide-info-line   true
  :hide-ui-header   true

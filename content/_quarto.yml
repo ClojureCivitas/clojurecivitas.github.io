@@ -17,7 +17,7 @@ website:
       - libs.qmd
       - filter.qmd
       - icon: github
-        href: "https://github.com/clojurecivitas/clojurecivitas"
+        href: "https://github.com/ClojureCivitas/clojurecivitas.github.io"
 
 format:
   html:
