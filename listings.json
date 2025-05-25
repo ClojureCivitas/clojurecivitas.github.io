@@ -1,5 +1,13 @@
 [
   {
+    "listing": "/ideas.html",
+    "items": [
+      "/idea/civitas/explorer.html",
+      "/idea/graph/layout/elk_svg.html",
+      "/idea/graph/layout/elk.html"
+    ]
+  },
+  {
     "listing": "/filter.html",
     "items": [
       "/idea/scicloj/noj/intro/getting-started-noj.html",
@@ -11,6 +19,13 @@
     ]
   },
   {
+    "listing": "/libs.html",
+    "items": [
+      "/lib/core/async/flow/visualization/flow_elk.html",
+      "/lib/clojure+/print/objects_and_protocols.html"
+    ]
+  },
+  {
     "listing": "/posts.html",
     "items": [
       "/idea/print/object/remove_extraneous.html",
@@ -19,44 +34,6 @@
       "/lib/core/async/flow/example/stats.html",
       "/idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html",
       "/idea/scicloj/noj/intro/getting-started-noj.html"
-    ]
-  },
-  {
-    "listing": "/ideas.html",
-    "items": [
-      "/idea/civitas/explorer.html",
-      "/idea/graph/layout/elk_svg.html",
-      "/idea/graph/layout/elk.html"
-    ]
-  },
-  {
-    "listing": "/libs.html",
-    "items": [
-      "/lib/core/async/flow/visualization/flow_elk.html",
-      "/lib/clojure+/print/objects_and_protocols.html"
-    ]
-  },
-  {
-    "listing": "/explore.html",
-    "items": [
-      "/ideas.html",
-      "/index.html",
-      "/about.html",
-      "/libs.html",
-      "/idea/civitas/explorer.html",
-      "/idea/graph/layout/elk.html",
-      "/idea/graph/layout/elk_svg.html",
-      "/lib/core/async/flow/visualization/flow_elk.html",
-      "/lib/clojure+/print/objects_and_protocols.html",
-      "/posts.html",
-      "/filter.html",
-      "/idea/print/object/remove_extraneous.html",
-      "/lib/core/async/flow/visualization.html",
-      "/lib/core/async/flow/exploration.html",
-      "/lib/core/async/flow/example/stats.html",
-      "/idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html",
-      "/idea/scicloj/noj/intro/getting-started-noj.html",
-      "/scicloj/noj/intro/getting-started-noj.html"
     ]
   }
 ]

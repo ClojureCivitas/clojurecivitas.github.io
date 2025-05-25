@@ -1,1 +1,1 @@
-Sitemap: https://timothypratley.github.io/clojurecivitas/sitemap.xml
+Sitemap: https://ClojureCivitas.github.io/sitemap.xml
