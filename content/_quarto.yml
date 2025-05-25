@@ -11,10 +11,11 @@ website:
     logo: "images/civitas-icon.svg"
     logo-alt: "Clojure Civitas Logo"
     right:
+      - about.qmd
       - posts.qmd
       - ideas.qmd
       - libs.qmd
-      - about.qmd
+      - filter.qmd
       - icon: github
         href: "https://github.com/timothypratley/clojurecivitas"
 

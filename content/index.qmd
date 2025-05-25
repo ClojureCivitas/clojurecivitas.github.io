@@ -6,6 +6,6 @@ about:
 ---
 [About](about.qmd)
 [Blog Posts](posts.qmd)
-[Libraries and Tools](libs.qmd)
 [Ideas](ideas.qmd)
+[Libraries and Tools](libs.qmd)
 [Filter](filter.qmd)
