@@ -19,7 +19,7 @@
  :aliases
  ;; Build the site with `clojure -M:m`
  {:m     {:main-opts ["-m" "civitas.main"]}
-  ;; Run Clay in watch mode with `clojure -M:clay`
+  ;; Run Clay in watch mode with `clojure -J-Dclojure.main.report=stderr -M:clay`
   :clay  {:main-opts ["-m" "scicloj.clay.v2.main"]}
   ;; When debugging libraries
   :dev   {:override-deps {org.scicloj/clay {:local/root "../clay"}}}

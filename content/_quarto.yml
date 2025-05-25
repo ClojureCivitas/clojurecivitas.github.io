@@ -22,6 +22,10 @@ website:
 format:
   html:
     theme:
-      light: [ flatly ]
-      dark: [ darkly ]
+      light: [ flatly, styles.scss ]
+      dark: [ darkly, styles.scss ]
     respect-user-color-scheme: true
+
+brand:
+  light: brand-light.yml
+  dark: brand-dark.yml

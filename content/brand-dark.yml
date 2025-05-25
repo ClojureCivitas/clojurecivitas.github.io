@@ -1,0 +1,29 @@
+color:
+  palette:
+    primary-blue: "#61B7B7"
+    primary-green: "#5881D8"
+    accent-violet: "#9D84E0"
+    dark-bg: "#121212"
+    soft-bg: "#1E1E1E"
+    text-light: "#F5F5F5"
+    text-muted: "#BBBBBB"
+    border-grey: "#333333"
+
+  background: dark-bg
+  foreground: text-light
+  primary: primary-green
+
+logo:
+  medium: images/civitas-icon.svg
+
+typography:
+  fonts:
+    - family: Fira Sans
+      source: google
+    - family: Fira Sans Code
+      source: google
+  base: Fira Sans
+  headings: Fira Sans
+  monospace: Fira Code
+  monospace-inline: Fira Code
+  monospace-block: Fira Code

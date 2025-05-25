@@ -1,0 +1,28 @@
+color:
+  palette:
+    primary-blue: "#61B7B7"   # Soft cyan from Clojure logo
+    primary-green: "#5881D8"  # Clojure green-blue
+    accent-violet: "#6A4FB3"
+    soft-grey: "#f5f7fa"
+    text-dark: "#222222"
+    text-muted: "#555555"
+    border-grey: "#DDEAF1"
+
+  background: soft-grey
+  foreground: text-dark
+  primary: primary-green
+
+logo:
+  medium: images/civitas-icon.svg
+
+typography:
+  fonts:
+    - family: Fira Sans
+      source: google
+    - family: Fira Code
+      source: google
+  base: Fira Sans
+  headings: Fira Sans
+  monospace: Fira Code
+  monospace-inline: Fira Code
+  monospace-block: Fira Code
