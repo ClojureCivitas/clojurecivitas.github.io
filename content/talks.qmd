@@ -1,6 +1,0 @@
----
-title: "Talks"
-listing:
-  contents: talks
-  type: grid
----

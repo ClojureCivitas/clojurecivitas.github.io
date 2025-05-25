@@ -1,8 +1,21 @@
 (ns civitas.db
   (:require [clojure.edn :as edn]
             [clojure.pprint :as pprint]
-            [scicloj.kindly.v4.kind :as kind]
-            [tablecloth.api :as tc]))
+            [clojure.walk :as walk]
+            [tablecloth.api :as tc]
+            [clj-yaml.core :as yaml]))
+
+(walk/postwalk
+  (fn [x]
+    (cond (map? x) (into {} x)
+          (seq? x) (into [] x)
+          :else x))
+  (yaml/parse-string (slurp "content/_quarto.yml")))
+
+;; TODO: it might be more convenient to use Quarto to gather the metadata
+;; ```
+;; quarto list --to json
+;; ```
 
 (def db-file "content/db.edn")
 

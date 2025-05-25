@@ -1,6 +1,0 @@
----
-title: "Tutorials"
-listing:
-  contents: tutorials
-  type: grid
----

@@ -1,6 +1,9 @@
 ---
-title: "Blog"
+title: "Posts"
 listing:
-  contents: posts
-  type: grid
+  contents: [idea lib]
+  type: default
+  sort: "date desc"
+  categories: false
+  filter-ui: true
 ---

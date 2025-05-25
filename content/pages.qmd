@@ -1,6 +1,0 @@
----
-title: "Pages"
-listing:
-  contents: pages
-  type: grid
----

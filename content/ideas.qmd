@@ -1,6 +1,9 @@
 ---
 title: "Ideas"
 listing:
-  contents: ideas
-  type: grid
+  contents: idea
+  type: default
+  sort: "title"
 ---
+Ideas, insights, and patterns in the Clojure world.
+This page collects evolving references rather than dated posts.

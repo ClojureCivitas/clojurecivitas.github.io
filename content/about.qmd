@@ -59,6 +59,10 @@ Exploramus, Communicamus, Crescimus<br>
 <small style="font-size: 1rem; color: #555;">We explore, we share, we grow.</small>
 </div>
 
+Civitas Clojure offers a hassle-free way to host and share your notebooks without the overhead of creating a new project each time.
+By providing a shared, well-organized platform, it lets you focus on your ideas and code while automatically publishing your work to GitHub Pages.
+This streamlines collaboration, increases visibility, and makes contributing simple and efficient—so you can spend less time on setup and more time creating.
+
 Learning technical subjects involves navigating complex webs of concepts.
 Currently, resources for learning Clojure exist as isolated articles, unconnected tutorials, or flat lists that do not
 capture how ideas relate to each other.
@@ -93,28 +97,24 @@ ClojureCivitas can be used as a library to simplify publishing your own garden o
 
 ### File system organization
 
-| Directory           | Description                                                 |
-|---------------------|-------------------------------------------------------------|
-| `src`               | Code for building a website and database                    |
-| `content`           | Notebooks (Clojure and Markdown), images, data files        |
-| `content/posts`     | Time-anchored content (blog posts, announcements, analyses) |
-| `content/pages`     | Timeless or evolving content related to this site           |
-| `content/tutorials` | Learning materials (tutorials, workshops, guides)           |
-| `content/talks`     | Presentation slides and related materials                   |
-| `content/ideas`     | Drafts, experiments, and work-in-progress content           |
-| `site`              | Quarto configuration for the website                        |
+| Directory      | Description                                                          |
+|----------------|----------------------------------------------------------------------|
+| `src`          | Code for building a website and database                             |
+| `content`      | Source root for notebooks (Clojure and Markdown), images, data files |
+| `content/idea` | The `idea` namespace hosts explorations, concepts and insights       |
+| `content/lib`  | The `lib` namespace is tied to libraries, tools, and projects        |
+| `site`         | Temporary build target for the Quarto website                        |
 
-Each of `posts`, `pages`, `tutorials`, `talks`, `ideas` is a source-root.
-These directories make it easier to distinguish blog posts from everything else.
+Shared images can go in `content/images`, but prefer images and data files as siblings to your namespace.
+
+The difference between a posts and a page is identified by the presence or absence of `date` metadata.
 
 Namespace selection for notebooks follow standard Clojure namespace conventions to avoid conflicts.
+Choose namespaces that fit with the content-first hierarchy.
+Files are grouped by what they’re about (not who wrote them or where they were presented).
+Author, date, tags and categories are included in metadata and will be used for grouping, filter of views.
 
-Library-related notebooks: Use the library’s namespace prefix (e.g., scicloj.clay.v2.guide.getting-started).
-
-Disambiguation: If a topic exists, qualify with additional context (e.g.,
-scicloj.clay.v2.guide.getting-started.intellij).
-
-Dependent utils/modules: Nest under a parent namespace (e.g., ...getting-started.index, ...getting-started.utils).
+Disambiguation: If a topic exists, qualify with additional context.
 
 Civitas invokes [Clay](https://github.com/scicloj/clay) to convert Clojure notebooks into Markdown files, placing them
 in the `site` directory.
@@ -132,18 +132,13 @@ Goal: Align with Clojure’s code organization while allowing organic, practical
 
 ### Topic organization
 
-Notebooks are tagged with a primary topic (first in list) and optional additional topics.
+Follow the Quarto convention of categories, tags, and keywords.
+Fixed categories; `community`, `clojure`, `data`, `system`, `tooling`, `web`.
+Tags; flexible, open-ended for finer-grained labeling (e.g. `frontend`, `reagent`).
+Keywords; for SEO or search indexing; typically fewer and focused on discoverability.
 
-Fixed top-level topics: `:community`, `:core`, `:data`, `:system`, `:tooling`, `:web`.
-
-Subtopics: Semi-open (e.g., :web/frontend implies :web). Expect these to evolve.
-
-Topics are one tagging method; others may emerge.
-
-Tags want to be free:
-https://gwern.net/doc/philosophy/ontology/2005-04-shirky-ontologyisoverratedcategorieslinksandtags.html
-
-But also we can help curate the content with a good set of top-level topics.
+Tags and metadata are the preferred organization principle:
+[Categories, Links, and Tags](https://gwern.net/doc/philosophy/ontology/2005-04-shirky-ontologyisoverratedcategorieslinksandtags.html)
 
 Goal: Constellations, not cabinets.
 

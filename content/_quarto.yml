@@ -10,12 +10,10 @@ website:
     right:
       - posts.qmd
       - ideas.qmd
-      - talks.qmd
-      - tutorials.qmd
-      - pages.qmd
+      - libs.qmd
       - about.qmd
       - icon: github
-        href: https://github.com/timothypratley/clojurecivitas
+        href: "https://github.com/timothypratley/clojurecivitas"
 
 format:
   html:

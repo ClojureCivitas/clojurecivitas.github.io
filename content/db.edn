@@ -1,10 +1,35 @@
-{:topics
+{:author
+ [{:id    :chouser
+   :name  "Chris Houser"
+   :url   "https://chouser.us/"
+   :links [{:icon "github" :text "GitHub" :href "https://github.com/chouser"}]}
+  {:id           :daslu
+   :name         "Daniel Slutsky"
+   :affiliation [:scicloj]
+   :links        [{:icon "github" :text "GitHub" :href "https://github.com/daslu"}]}
+  {:id           :alexmiller
+   :name         "Alex Miller"
+   :affiliation [:clojure.core]
+   :links        [{:icon "github" :text "GitHub" :href "https://github.com/puredanger"}]}
+  {:id           :timothypratley
+   :name         "Timothy Pratley"
+   :email        "timothypratley@gmail.com"
+   :url          "https://timothypratley.blogspot.com/p/httpswww.html"
+   :affiliation [:hummi :scicloj]
+   :links        [{:icon "github" :text "GitHub" :href "https://github.com/timothypratley"}]}]
+
+ :affiliation [{:id :clojure.core :name "Clojure.core" :url "https://clojure.org"}
+                {:id :scicloj :name "Scicloj" :url "https://scicloj.github.io/"}
+                {:id :clojurecamp :name "Clojure Camp" :url "https://clojure.camp/"}
+                {:id :hummi :name "Hummi" :url "https://hummi.app"}]
+
+ :topics
  [{:id        :core
    :desc      "Fundamental language concepts"
    :color     "#E2F0CB"
    :direction 0}
   {:id   :core/syntax
-   :desc "Data structures, special forms, and syntax"}
+   :desc "Data structures special forms and syntax"}
   {:id   :core/fp
    :desc "Functional programming patterns"}
   {:id   :core/async

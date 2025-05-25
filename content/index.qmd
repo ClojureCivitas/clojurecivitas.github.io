@@ -6,7 +6,5 @@ about:
 ---
 [About](about.qmd)
 [Blog Posts](posts.qmd)
-[Pages](pages.qmd)
+[Libraries and Tools](libs.qmd)
 [Ideas](ideas.qmd)
-[Talks](talks.qmd)
-[Tutorials](tutorials.qmd)

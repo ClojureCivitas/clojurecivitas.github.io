@@ -7,8 +7,36 @@
                     :branch  "main"}
  :hide-info-line   true
  :hide-ui-header   true
- :aliases {:markdown {:render true
-                      :base-target-path "site"
-                      :format [:quarto :html]
-                      :run-quarto false
-                      :hide-info-line false}}}
+ :aliases
+ {:markdown
+  {:render           true
+   :base-target-path "site"
+   :format           [:quarto :html]
+   :run-quarto       false
+   :hide-info-line   false
+   :quarto           {:format {:html {:theme nil}}}
+   :quarto/expansions
+   {:affiliation
+    {:clojure.core {:name "Clojure.core" :url "https://clojure.org"}
+     :scicloj      {:name "Scicloj" :url "https://scicloj.github.io/"}
+     :clojurecamp  {:name "Clojure Camp" :url "https://clojure.camp/"}
+     :hummi        {:name "Hummi" :url "https://hummi.app"}}
+    :author
+    {:chouser
+     {:name  "Chris Houser"
+      :url   "https://chouser.us/"
+      :links [{:icon "github" :text "GitHub" :href "https://github.com/chouser"}]}
+     :daslu
+     {:name        "Daniel Slutsky"
+      :affiliation [:scicloj]
+      :links       [{:icon "github" :text "GitHub" :href "https://github.com/daslu"}]}
+     :alexmiller
+     {:name        "Alex Miller"
+      :affiliation [:clojure.core]
+      :links       [{:icon "github" :text "GitHub" :href "https://github.com/puredanger"}]}
+     :timothypratley
+     {:name        "Timothy Pratley"
+      :email       "timothypratley@gmail.com"
+      :url         "https://timothypratley.blogspot.com/p/httpswww.html"
+      :affiliation [:hummi :scicloj]
+      :links       [{:icon "github" :text "GitHub" :href "https://github.com/timothypratley"}]}}}}}}
