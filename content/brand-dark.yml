@@ -12,7 +12,7 @@ typography:
   fonts:
     - family: Fira Sans
       source: google
-    - family: Fira Sans Code
+    - family: Fira Code
       source: google
   base: Fira Sans
   headings: Fira Sans

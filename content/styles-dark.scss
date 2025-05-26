@@ -1,19 +1,6 @@
 /*-- scss:defaults --*/
 
-$body-bg:        #222222;  // dark background
-$body-color:     #ddeaf1;  // soft light text
-
-$primary:        #78B159;  // Clojure green
-$secondary:      #4B8FD7;  // Clojure blue
-$tertiary:       #A4C49C;  // soft green
-$quaternary:     #294135;  // deep greenish slate
-$quinary:        #C4E5CA;  // pale minty green to pop gently
-
-$headings-color: $primary;
-$navbar-bg:      $quaternary;
-$navbar-fg:      $body-color;
-
-$code-bg:        $quaternary;
-$code-color:     $quinary;
-
+$code-bg:        #294135;
+$code-color:     #C4E5CA;
+$navbar-bg:      $code-bg;
 $text-muted:     #888888;
