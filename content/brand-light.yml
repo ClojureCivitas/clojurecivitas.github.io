@@ -1,16 +1,9 @@
 color:
-  palette:
-    primary-blue: "#61B7B7"   # Soft cyan from Clojure logo
-    primary-green: "#5881D8"  # Clojure green-blue
-    accent-violet: "#6A4FB3"
-    soft-grey: "#f5f7fa"
-    text-dark: "#222222"
-    text-muted: "#555555"
-    border-grey: "#DDEAF1"
-
-  background: soft-grey
-  foreground: text-dark
-  primary: primary-green
+  background: "#F0F4F8"    # Soft white
+  foreground: "#222222"    # Dark text
+  primary:    "#78B159"    # Clojure green (links, buttons)
+  secondary:  "#4B8FD7"    # Clojure blue (accents, hovers)
+  tertiary:   "#A4C49C"    # Soft green (callouts, highlights)
 
 logo:
   medium: images/civitas-icon.svg

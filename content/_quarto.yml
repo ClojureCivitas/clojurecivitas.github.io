@@ -22,8 +22,8 @@ website:
 format:
   html:
     theme:
-      light: [ flatly, styles.scss ]
-      dark: [ darkly, styles.scss ]
+      light: [ flatly, styles.scss, styles-light.scss ]
+      dark: [ darkly, styles.scss, styles-dark.scss ]
     respect-user-color-scheme: true
 
 brand:

@@ -1,11 +1,12 @@
 ---
-title: "Filter Notebooks"
+title: "Filter"
 listing:
   contents: idea
   type: default
   sort:
     - "title desc"
     - "date desc"
-  filter-ui: [title, author, date, categories, tags]
+  sort-ui: true
+  filter-ui: true
 ---
 Filter all notebooks.

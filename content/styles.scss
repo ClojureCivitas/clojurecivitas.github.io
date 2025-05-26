@@ -6,3 +6,21 @@ code {
 pre code {
   font-size: 0.98em;
 }
+
+.printedClojure .sourceCode pre {
+  background-color: $code-bg;
+}
+
+.navbar a:hover,
+.navbar .active {
+  color: $tertiary;
+  text-decoration: underline;
+}
+
+div.quarto-post h3 a {
+  color: $headings-color;
+}
+
+.quarto-listing .quarto-post {
+    border-bottom: none;
+}

@@ -5,6 +5,8 @@ listing:
   exclude:
     type: post
   sort: "title"
+  sort-ui: true
+  filter-ui: true
 ---
 Content related to Clojure libraries and tools.
 This section collects notebooks that aren’t time-sensitive posts.

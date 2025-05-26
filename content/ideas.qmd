@@ -5,6 +5,8 @@ listing:
   exclude: 
     type: post
   sort: "title"
+  sort-ui: true
+  filter-ui: true
 ---
 Ideas, insights, and patterns in the Clojure world.
 This page collects evolving references rather than dated posts.
