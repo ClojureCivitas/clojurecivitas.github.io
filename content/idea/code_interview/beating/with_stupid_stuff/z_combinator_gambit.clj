@@ -1,6 +1,7 @@
 ^{:kindly/hide-code true
   :clay             {:quarto {:title    "The Z-Combinator Gambit"
                               :type     :post
+                              :image    "z-combinator.jpg"
                               :author   [:chouser :timothypratley]
                               :date     "2025-05-25"
                               :category :clojure
@@ -11,6 +12,8 @@
 ;; Welcome back code champs, number ninjas, and data divers to our first episode of Beating Code Interviews with Stupid Stuff.
 ;; People often send me emails asking, "How can I use lambda calculus to impress people?"
 ;; Today, we find out.
+
+;; ![programmer staring at Z-combinator](z-combinator.jpg)
 
 ;; I have an interview with ZCorp lined up in 5 minutes,
 ;; and our challenge is to only use anonymous functions.
