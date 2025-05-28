@@ -9,7 +9,7 @@
   (:require [clojure.math :as m]))
 
 ;; Adapts the
-;; [Seive of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes)
+;; [Sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes)
 ;; to prime factorize numbers through `n`.
 
 (defn prime-factors [n]
