@@ -20,9 +20,15 @@ Exploramus, Communicamus, Crescimus<br>
 
 Your perspective matters.
 
-### Build the database
+🧪 Use Clay – Same REPL workflow, but with tables, charts, markdown, and hiccup.
 
-Add to or modify [db.edn](quarto/db.edn)
+✍️ Write as you code – Capture notes, results, and ideas as you go.
+
+⚡ No setup – Open Civitas, make a new namespace, start coding.
+
+🚀 Easy to share – Create a PR, and it gets published.
+
+🧠 Build shared knowledge – Your work becomes part of a growing community resource.
 
 ### Write notebooks
 
@@ -30,6 +36,11 @@ Add a notebook in the [`/notebooks`](notebooks) folder.
 
 See the [Clay Documentation](https://scicloj.github.io/clay) for information on how to interactively visualize the
 notebook as you write it.
+Author profile can be configured in [clay.edn](clay.edn).
+
+### Build the database
+
+Add to or modify [db.edn](quarto/db.edn)
 
 ### Preview the full website
 
