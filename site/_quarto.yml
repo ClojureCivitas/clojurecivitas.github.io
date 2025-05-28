@@ -13,9 +13,7 @@ website:
     right:
       - about.qmd
       - posts.qmd
-      - ideas.qmd
-      - libs.qmd
-      - filter.qmd
+      - pages.qmd
       - icon: github
         href: "https://github.com/ClojureCivitas/clojurecivitas.github.io"
 

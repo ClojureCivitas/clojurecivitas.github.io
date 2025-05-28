@@ -9,8 +9,8 @@
   (:require [clojure.core.async :as async]
             [clojure.core.async.flow :as flow]
             [clojure.datafy :as datafy]
-            [lib.core.async.flow.example.stats :as stats]
-            [lib.core.async.flow.visualization :as fv]))
+            [core.async.flow.example.stats :as stats]
+            [core.async.flow.visualization :as fv]))
 
 ;; # Visualizing core.async.flows
 

@@ -7,7 +7,7 @@
   (:require [clojure.core.async :as async]
             [clojure.datafy :as datafy]
             [clojure.string :as str]
-            [lib.core.async.flow.example.stats :as stats]))
+            [core.async.flow.example.stats :as stats]))
 
 ;; # Printing Objects in Clojure
 ;;

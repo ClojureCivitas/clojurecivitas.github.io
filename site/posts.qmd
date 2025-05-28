@@ -1,7 +1,7 @@
 ---
 title: "Posts"
 listing:
-  contents: [idea, lib]
+  contents: [".", "!./*.qmd"]
   include:
     type: post
   sort:

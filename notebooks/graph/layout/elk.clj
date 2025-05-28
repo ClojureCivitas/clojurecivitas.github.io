@@ -5,7 +5,7 @@
                               :tags     [:graphs :graph-layout]}}}
 (ns graph.layout.elk
   (:require [clojure.data.json :as json]
-            [idea.graph.layout.elk-svg :as elk-svg])
+            [graph.layout.elk-svg :as elk-svg])
   (:import (org.eclipse.elk.core RecursiveGraphLayoutEngine)
            (org.eclipse.elk.core.util BasicProgressMonitor)
            (org.eclipse.elk.graph ElkNode)
