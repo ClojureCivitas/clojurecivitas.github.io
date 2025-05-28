@@ -27,7 +27,6 @@
 /classes
 /target
 /temp
-/site
 /_site
-
+/site/*
 /.quarto/

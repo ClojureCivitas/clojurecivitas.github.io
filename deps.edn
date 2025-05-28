@@ -1,4 +1,4 @@
-{:paths ["src" "content"]
+{:paths ["src" "notebooks"]
 
  :deps
  {org.clojure/clojure                         {:mvn/version "1.12.0"}

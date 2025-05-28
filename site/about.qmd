@@ -1,0 +1,209 @@
+# About
+
+<img src="images/civitas-icon.svg" alt="Civitas Icon" align="right">
+
+An open effort to structure learning resources with meaningful connections.
+
+Explore the [Clojure Civitas Website](https://clojurecivitas.github.io)
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 2rem 0;">
+<div style="border-left: 3px solid green; padding-left: 1rem;">
+<h3>Non-linear exploration</h3>
+<p>Navigate your own path through interconnected topics.</p>
+</div>
+<div style="border-left: 3px solid blue; padding-left: 1rem;">
+<h3>Literate by design</h3>
+<p>Write notebooks and place them in context, linking knowledge.</p>
+</div>
+<div style="border-left: 3px solid orange; padding-left: 1rem;">
+<h3>Community supported growth</h3>
+<p>The best resources rise through collective refinement.</p>
+</div>
+</div>
+
+## Contribute
+
+Your perspective matters.
+
+### Build the database
+
+Add to or modify [db.edn](quarto/db.edn)
+
+### Write notebooks
+
+Add a notebook in the [`/notebooks`](notebooks) folder.
+
+See the [Clay Documentation](https://scicloj.github.io/clay) for information on how to interactively visualize the
+notebook as you write it.
+
+### Preview the full website
+
+```sh
+clojure -M:clay -a [:markdown]
+```
+
+```sh
+quarto preview site
+```
+
+### Publish
+
+Merged pull requests are shown on the website via a workflow.
+
+## Rationale
+
+<div style="text-align: center; font-family: 'Georgia', serif; font-size: 1.5rem; margin: 2rem 0; color: #2e7d32;">
+Exploramus, Communicamus, Crescimus<br>
+<small style="font-size: 1rem; color: #555;">We explore, we share, we grow.</small>
+</div>
+
+Civitas Clojure offers a hassle-free way to host and share your notebooks without the overhead of creating a new project
+each time.
+By providing a shared, well-organized platform, it lets you focus on your ideas and code while automatically publishing
+your work to GitHub Pages.
+This streamlines collaboration, increases visibility, and makes contributing simple and efficient—so you can spend less
+time on setup and more time creating.
+
+Learning technical subjects involves navigating complex webs of concepts.
+Currently, resources for learning Clojure exist as isolated articles, unconnected tutorials, or flat lists that do not
+capture how ideas relate to each other.
+This makes it difficult for learners to determine logical next steps or see how topics connect.
+Teachers and curriculum designers face similar challenges when trying to organize material in ways that reflect actual
+dependencies and alternatives.
+
+Civitas approaches this problem by implementing a structured knowledge base where resources are explicitly linked based
+on their conceptual relationships.
+The hexagonal grid interface provides a visual representation of these connections, allowing users to naturally discover
+related content.
+Each resource includes metadata to indicate prerequisites, alternatives, and deeper explorations.
+
+This structure serves several practical purposes.
+Learners can see multiple valid paths through the material.
+Teachers can construct guided sequences while maintaining visibility of adjacent concepts.
+The community can improve resources incrementally by adding or refining connections.
+The system is designed to grow organically as new relationships are identified and documented.
+
+The value lies not in any single feature, but in making the existing ecosystem of learning resources more navigable and
+interconnected.
+
+<img src="../images/bees.jpg" alt="Honey bees behive" style="width: 100%;">
+
+## Embracing alternatives
+
+It is not a goal to centralize Clojure knowledge creation.
+It is a goal to provide a welcoming pattern that works with other communities and users.
+ClojureCivitas can be used as a library to simplify publishing your own garden of content.
+
+## Design
+
+### Notebook Namespace Selection
+
+A notebook’s namespace serves as a clear, unique path to its content and follows **Clojure’s naming conventions**.
+
+The namespace should emphasize **what the notebook is about**, not how it is categorized.
+Think of it as a logical path that leads to a specific artifact or topic.
+Classification elements such as tags, author, document type, level, or publication date belong in **metadata**, not the
+namespace.
+
+- **Start with an organization** if the notebook is about a library or tool maintained by one.  
+  Examples: `scicloj`, `lambdaisland`.
+- **Follow with the specific library or concept.**  
+  Examples: `scicloj.clay`, `lambdaisland.kaocha`.
+- If there is **no organization**, start directly with the library or tool name.  
+  Examples: `hiccup`, `reagent`.
+  If the notebook refers to an alternative implementation, **include the organization** to disambiguate.  
+  Example: `lambdaisland.hiccup`.
+- For **core Clojure topics**, use `clojure` as the root.  
+  Examples: `clojure.lazy-sequences`, `clojure.transducers`.
+- Add **segments** to describe the notebook’s content. These segments should:
+    - Avoid name collisions.
+    - Not duplicate metadata.
+    - The last segment should be specific and descriptive. Prefer: `z-combinator-gambit`, avoid: `z-combinator`.
+- **Events, communities, or topics** may also be used as the top-level namespace when appropriate.  
+  Use discretion to determine whether a notebook is primarily about an artifact library,
+  a concept, or an event.
+- Namespaces must consist of more than one segment.
+
+#### Metadata and Navigation
+
+It may feel unintuitive not to group related content (e.g. an author’s blog series) by directory or namespace.
+But this structure is intentional.
+Linear sequences (e.g. blog posts by an author) will be **reconstructed from metadata**, not filenames or folders.
+For example, a page showing all blog posts by an author is generated by filtering for `author`, `type = post`, and
+`date`, and then ordering by date.
+
+Namespaces prioritize **logical addressing** over ontological hierarchy.
+This promotes flexibility at the cost of tidiness, but enables richer discovery through metadata and search.
+
+Differentiation between posts, pages, and presentations is by `type` metadata (a Quarto page type convention).
+
+#### Examples
+
+| Namespace                                                      | Description                                                   |
+|----------------------------------------------------------------|---------------------------------------------------------------|
+| `scicloj.clay.clojure-notebooks-for-pythonistas`               | Introduction to Clay for Python programmers.                  |
+| `lambdaisland.kaocha.customization-tips-and-tricks`            | Tips for fast iteration with Kaocha.                          |
+| `lambdaisland.kaocha.up-and-running-on-ubuntu`                 | Kaocha setup guide for Ubuntu.                                |
+| `clojure.transducers.how-it-works-explained-with-diagrams`     | Explains transducers with diagrams.                           |
+| `clojure.lazy-sequences.detailed-explanation-by-example`       | In-depth example-driven guide to lazy sequences.              |
+| `clojure-conj.2023.state-of-clojure.notes-from-the-backrow`    | Notes on the "State of Clojure" talk at Clojure/Conj 2023.    |
+| `hiccup.basic-html-generation`                                 | Tutorial on generating HTML with Hiccup.                      |
+| `algorithms.graph.layout.force-directed-spring-simulation`     | On force-directed graph layout algorithms (library-agnostic). |
+| `data-structures.datoms.all-about-eavt`                        | EAVT indexing, not tied to any vendor.                        |
+| `clojure.deps-edn.monorepo-setup-in-detail`                    | Monorepo setup using `deps.edn`.                              |
+| `cursive.super-easy-debugging-techniques`                      | Debugging in Cursive IDE, for beginners.                      |
+| `cognitect.datomic.cloud.how-we-scale-to-5million-users`       | Datomic Cloud scaling case study.                             |
+| `reagent.component-lifecycle.a-tale-of-life-death-and-rebirth` | A whimsical take on Reagent component lifecycles.             |
+
+### File system organization
+
+| Directory                      | Description                                                          |
+|--------------------------------|----------------------------------------------------------------------|
+| `src`                          | Code for building a website and database                             |
+| `notebooks`                    | Source root for notebooks (Clojure and Markdown), images, data files |
+| `site`                         | Static assets of the Quarto website                                  |
+
+Non-Clojure files in `notebooks` will be synced to `site`.
+Shared images can go in `images`, but prefer placing images and data files as siblings to your namespace under `notebooks`.
+All Clojure and Non-Clojure files in `notebooks` should go under a subdirectory,
+so that it is clear they are not part of the static configuration of `site`.
+When building the site, Clojure namespaces are built to markdown files under `site/{my/namespaced/notebook.qmd}`.
+Subdirectories of `site` are gitignored and considered temporary build artifacts, safe to clean up.
+Quarto builds all the markdown into HTML in `_site` for preview and deploy.
+While developing, Clay uses `temp` to build and serve HTML files.
+
+Goal: Align with Clojure’s code organization while allowing organic, practical growth.
+
+### Topic organization
+
+Follow the Quarto convention of categories, tags, and keywords.
+Fixed categories; `community`, `algorithms`, `data`, `systems`, `libs`, `concepts`.
+Tags; flexible, open-ended for finer-grained labeling (e.g. `frontend`, `reagent`).
+Keywords; for SEO or search indexing; typically fewer and focused on discoverability.
+
+Tags and metadata are the preferred organization principle:
+[Categories, Links, and Tags](https://gwern.net/doc/philosophy/ontology/2005-04-shirky-ontologyisoverratedcategorieslinksandtags.html)
+
+Goal: Constellations, not cabinets.
+
+### Dependency management
+
+A single `deps.edn` file is shared across all notebooks.
+
+Pros:
+
+* Simplifies website builds.
+* Works for authoring as well as building.
+
+Cons:
+
+* Version conflicts must be manually resolved.
+* Only one version per dependency.
+* Notebooks aren’t self-contained.
+
+Future:
+
+* Support additional directories under `standalone` with their own `deps.edn`.
+* Regression testing would help when versions update.
+
+Goal: Minimize friction in authoring while ensuring publishable reproducibility.
