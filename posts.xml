@@ -3151,9 +3151,9 @@ font-style: inherit;">fn</span> [SELF LIST])</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval49700$fn__49701 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x19ed42ea</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x4bcb2e3d</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval49700$fn__49701@19ed42ea"</span>]</span></code></pre></div>
+font-style: inherit;">"code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval49700$fn__49701@4bcb2e3d"</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>We’re just writing a function, and it only needs to take a list…</p>
@@ -3437,9 +3437,9 @@ font-style: inherit;">1</span></span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">#object[code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x6ba6d35a</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x79b3b0e0</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715@6ba6d35a"</span>]</span></code></pre></div>
+font-style: inherit;">"code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715@79b3b0e0"</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>Well, it’s a function! That much is clear…</p>
@@ -3584,9 +3584,9 @@ font-style: inherit;">fn</span> SELF [VALUE]</span>
 <div class="printedClojure">
 <div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1">#object[code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x22b94b5e</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x93a765f</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715@22b94b5e"</span>]</span></code></pre></div>
+font-style: inherit;">"code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715@93a765f"</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>At least it didn’t blow up this time…</p>

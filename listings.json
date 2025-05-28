@@ -9,5 +9,15 @@
       "/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html",
       "/scicloj/noj/intro/getting-started-noj.html"
     ]
+  },
+  {
+    "listing": "/pages.html",
+    "items": [
+      "/clojure+/print/objects_and_protocols.html",
+      "/core/async/flow/visualization/flow_elk.html",
+      "/graph/layout/elk.html",
+      "/graph/layout/elk_svg.html",
+      "/civitas/explorer.html"
+    ]
   }
 ]
