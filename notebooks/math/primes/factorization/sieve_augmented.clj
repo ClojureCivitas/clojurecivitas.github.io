@@ -2,7 +2,7 @@
   :clay             {:title  "Factorization of Eratosthenes"
                      :quarto {:author   [:timschafer]
                               :type     :post
-                              :date     "2025-06-01"
+                              :date     "2025-05-28"
                               :category :clojure
                               :tags     [:clojure.math]}}}
 (ns math.primes.factorization.sieve-augmented
