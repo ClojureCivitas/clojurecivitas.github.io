@@ -1,3 +1,10 @@
+^{:kindly/hide-code true
+  :clay             {:title  "Factorization of Eratosthenes"
+                     :quarto {:author   [:timschafer]
+                              :type     :post
+                              :date     "2025-06-01"
+                              :category :clojure
+                              :tags     [:clojure.math]}}}
 (ns math.primes.factorization.sieve-augmented
   (:require [clojure.math :as m]))
 
@@ -28,4 +35,4 @@
    (mapv list (range (inc n)))
    (range 2 (inc (m/sqrt n)))))
 
-(prime-factors 10)
+(prime-factors 13)
