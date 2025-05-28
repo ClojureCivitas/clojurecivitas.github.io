@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="timschafer">
+<meta name="dcterms.date" content="2025-06-01">
 
-<title>sieve_augmented – Clojure Civitas</title>
+<title>Factorization of Eratosthenes – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -110,7 +112,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
 
 
-<meta property="og:title" content="Clojure Civitas">
+<meta property="og:title" content="Factorization of Eratosthenes – Clojure Civitas">
 <meta property="og:description" content="">
 <meta property="og:image" content="https://clojurecivitas.github.io/math/primes/factorization/images/civitas-icon.svg">
 <meta property="og:site_name" content="Clojure Civitas">
@@ -338,10 +340,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- margin-sidebar -->
     
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Factorization of Eratosthenes</h1>
+</div>
 
 
 
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>timschafer </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 1, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
 
 
 <style></style>
@@ -356,40 +386,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 <script src="math/primes/factorization/sieve_augmented_files/md-default0.js" type="text/javascript"></script>
 <script src="math/primes/factorization/sieve_augmented_files/md-default1.js" type="text/javascript"></script>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> math.primes.factorization.sieve-augmented</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [clojure.math <span class="at">:as</span> m]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 <p>Adapts the <a href="https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes">Seive of Eratosthenes</a> to prime factorize numbers through <code>n</code>.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> prime-factors </span>[n]</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">reduce</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">fn</span> [factors prime]</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>     (<span class="kw">if</span> (<span class="kw">=</span> <span class="dv">1</span> (<span class="kw">count</span> (<span class="kw">nth</span> factors prime)))</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>       (<span class="kw">reduce</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">fn</span> [factors multiple]</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>          (<span class="kw">let</span> [[composite-divisor <span class="at">:as</span> divisors] (<span class="kw">nth</span> factors multiple)]</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">if</span> (<span class="kw">&lt;</span> prime composite-divisor)</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">let</span> [remaining-divisor (<span class="kw">/</span> composite-divisor prime)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                    remaining-divisors (<span class="kw">nth</span> factors remaining-divisor)</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>                    prime-divisors (<span class="kw">cons</span> prime (<span class="kw">rest</span> divisors))]</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                (<span class="kw">assoc</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                 factors multiple</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">if</span> (<span class="kw">&lt;</span> <span class="dv">1</span> (<span class="kw">count</span> remaining-divisors))</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">concat</span> remaining-divisors prime-divisors)</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">cons</span> remaining-divisor prime-divisors))))</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>              factors)))</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        factors</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">range</span> (<span class="kw">*</span> prime prime) (<span class="kw">inc</span> n) prime))</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>       factors))</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">mapv</span> <span class="kw">list</span> (<span class="kw">range</span> (<span class="kw">inc</span> n)))</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">range</span> <span class="dv">2</span> (<span class="kw">inc</span> (m/sqrt n)))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> prime-factors </span>[n]</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">reduce</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">fn</span> [factors prime]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>     (<span class="kw">if</span> (<span class="kw">=</span> <span class="dv">1</span> (<span class="kw">count</span> (<span class="kw">nth</span> factors prime)))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>       (<span class="kw">reduce</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">fn</span> [factors multiple]</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>          (<span class="kw">let</span> [[composite-divisor <span class="at">:as</span> divisors] (<span class="kw">nth</span> factors multiple)]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">if</span> (<span class="kw">&lt;</span> prime composite-divisor)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">let</span> [remaining-divisor (<span class="kw">/</span> composite-divisor prime)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                    remaining-divisors (<span class="kw">nth</span> factors remaining-divisor)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                    prime-divisors (<span class="kw">cons</span> prime (<span class="kw">rest</span> divisors))]</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                (<span class="kw">assoc</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>                 factors multiple</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">if</span> (<span class="kw">&lt;</span> <span class="dv">1</span> (<span class="kw">count</span> remaining-divisors))</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">concat</span> remaining-divisors prime-divisors)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>                   (<span class="kw">cons</span> remaining-divisor prime-divisors))))</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>              factors)))</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        factors</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">range</span> (<span class="kw">*</span> prime prime) (<span class="kw">inc</span> n) prime))</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>       factors))</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">mapv</span> <span class="kw">list</span> (<span class="kw">range</span> (<span class="kw">inc</span> n)))</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">range</span> <span class="dv">2</span> (<span class="kw">inc</span> (m/sqrt n)))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(prime-factors <span class="dv">10</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(prime-factors <span class="dv">13</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>[(<span class="dv">0</span>) (<span class="dv">1</span>) (<span class="dv">2</span>) (<span class="dv">3</span>) (<span class="dv">2</span> <span class="dv">2</span>) (<span class="dv">5</span>) (<span class="dv">3</span> <span class="dv">2</span>) (<span class="dv">7</span>) (<span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span>) (<span class="dv">3</span> <span class="dv">3</span>) (<span class="dv">5</span> <span class="dv">2</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>[(<span class="dv">0</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a> (<span class="dv">1</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a> (<span class="dv">2</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a> (<span class="dv">3</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a> (<span class="dv">2</span> <span class="dv">2</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a> (<span class="dv">5</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a> (<span class="dv">3</span> <span class="dv">2</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a> (<span class="dv">7</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a> (<span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a> (<span class="dv">3</span> <span class="dv">3</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a> (<span class="dv">5</span> <span class="dv">2</span>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a> (<span class="dv">11</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a> (<span class="dv">3</span> <span class="dv">2</span> <span class="dv">2</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a> (<span class="dv">13</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div style="background-color:grey;height:2px;width:100%;"></div>
 <div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/math/primes/factorization/sieve_augmented.clj">notebooks/math/primes/factorization/sieve_augmented.clj</a></small></small></pre></div>

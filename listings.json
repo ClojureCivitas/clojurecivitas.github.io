@@ -5,6 +5,7 @@
       "/print/object/remove_extraneous.html",
       "/core/async/flow/visualization.html",
       "/core/async/flow/exploration.html",
+      "/math/primes/factorization/sieve_augmented.html",
       "/core/async/flow/example/stats.html",
       "/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html",
       "/scicloj/noj/intro/getting-started-noj.html"
@@ -13,7 +14,6 @@
   {
     "listing": "/pages.html",
     "items": [
-      "/math/primes/factorization/sieve_augmented.html",
       "/clojure+/print/objects_and_protocols.html",
       "/core/async/flow/visualization/flow_elk.html",
       "/graph/layout/elk.html",
