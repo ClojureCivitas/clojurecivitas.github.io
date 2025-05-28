@@ -1,7 +1,7 @@
-.quarto/
 /temp
-_site/
 /site/*/**
+.quarto/
+_site/
 .calva/output-window/
 .classpath
 .clj-kondo/.cache
