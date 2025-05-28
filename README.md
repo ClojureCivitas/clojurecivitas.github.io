@@ -12,22 +12,22 @@ See [About Clojure Civitas](https://clojurecivitas.github.io/about).
 
 ## Contributing
 
+Your perspective matters.
+
 <div style="text-align: center; font-family: 'Georgia', serif; font-size: 1.5rem; margin: 2rem 0; color: #2e7d32;">
 Exploramus, Communicamus, Crescimus<br>
 <small style="font-size: 1rem; color: #555;">We explore, we share, we grow.</small>
 </div>
 
-Your perspective matters.
-
-🧪 Use Clay – Same REPL workflow, but with tables, charts, markdown, and hiccup.
+⚡ No setup – Open Civitas, make a new namespace, start coding.
 
 ✍️ Write as you code – Capture notes, results, and ideas as you go.
-
-⚡ No setup – Open Civitas, make a new namespace, start coding.
 
 🚀 Easy to share – Create a PR, and it gets published.
 
 🧠 Build shared knowledge – Your work becomes part of a growing community resource.
+
+🧪 Use Clay – Same REPL workflow, but with tables, charts, markdown, and hiccup.
 
 ### Write notebooks
 
