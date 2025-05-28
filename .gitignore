@@ -1,4 +1,7 @@
 .quarto/
+/temp
+_site/
+/site/*/**
 .calva/output-window/
 .classpath
 .clj-kondo/.cache
@@ -26,7 +29,3 @@
 /checkouts
 /classes
 /target
-/temp
-/_site
-/site/*/**
-/.quarto/
