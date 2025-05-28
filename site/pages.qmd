@@ -1,0 +1,10 @@
+---
+title: "Pages"
+listing:
+  contents: [".", "!./*.qmd"]
+  exclude:
+    type: post
+  sort: "title desc"
+  sort-ui: true
+  filter-ui: true
+---

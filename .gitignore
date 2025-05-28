@@ -28,5 +28,5 @@
 /target
 /temp
 /_site
-/site/*
+/site/*/**
 /.quarto/
