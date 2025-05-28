@@ -13,6 +13,7 @@
   {
     "listing": "/pages.html",
     "items": [
+      "/math/primes/factorization/sieve_augmented.html",
       "/clojure+/print/objects_and_protocols.html",
       "/core/async/flow/visualization/flow_elk.html",
       "/graph/layout/elk.html",
