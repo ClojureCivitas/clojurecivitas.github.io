@@ -19,7 +19,7 @@
 <item>
   <title>Clean object printing by removing extraneous</title>
   <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/idea/print/object/remove_extraneous.html</link>
+  <link>https://clojurecivitas.github.io/print/object/remove_extraneous.html</link>
   <description><![CDATA[ 
 
 
@@ -36,8 +36,8 @@
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="idea/print/object/remove_extraneous_files/md-default0.js" type="text/javascript"></script>
-<script src="idea/print/object/remove_extraneous_files/md-default1.js" type="text/javascript"></script>
+<script src="print/object/remove_extraneous_files/md-default0.js" type="text/javascript"></script>
+<script src="print/object/remove_extraneous_files/md-default1.js" type="text/javascript"></script>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1">^{<span class="at" style="color: #657422;
 background-color: null;
@@ -78,7 +78,7 @@ font-style: inherit;">:objects</span>]}}}</span>
 <span id="cb1-7">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">ns</span> idea.<span class="kw" style="color: #003B4F;
+font-style: inherit;">ns</span> <span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">print</span>.object.remove-extraneous</span>
@@ -263,19 +263,19 @@ background-color: null;
 font-style: inherit;">:-</span>)</span></code></pre></div>
 </div>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/content/idea/print/object/remove_extraneous.clj">content/idea/print/object/remove_extraneous.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/print/object/remove_extraneous.clj">notebooks/print/object/remove_extraneous.clj</a></small></small></pre></div>
 
 
 
  ]]></description>
-  <guid>https://clojurecivitas.github.io/idea/print/object/remove_extraneous.html</guid>
+  <guid>https://clojurecivitas.github.io/print/object/remove_extraneous.html</guid>
   <pubDate>Thu, 05 Jun 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Core Async Flow Visualization</title>
   <dc:creator>Daniel Slutsky</dc:creator>
   <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/lib/core/async/flow/visualization.html</link>
+  <link>https://clojurecivitas.github.io/core/async/flow/visualization.html</link>
   <description><![CDATA[ 
 
 
@@ -292,8 +292,8 @@ font-style: inherit;">:-</span>)</span></code></pre></div>
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="lib/core/async/flow/visualization_files/md-default0.js" type="text/javascript"></script>
-<script src="lib/core/async/flow/visualization_files/md-default1.js" type="text/javascript"></script>
+<script src="core/async/flow/visualization_files/md-default0.js" type="text/javascript"></script>
+<script src="core/async/flow/visualization_files/md-default1.js" type="text/javascript"></script>
 <section id="visualizing-core.async.flows" class="level1">
 <h1>Visualizing core.async.flows</h1>
 <div class="sourceClojure">
@@ -818,20 +818,20 @@ background-color: null;
 font-style: inherit;">:targets</span> [(id-for to)]}))}))</span></code></pre></div>
 </div>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/content/lib/core/async/flow/visualization.clj">content/lib/core/async/flow/visualization.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/core/async/flow/visualization.clj">notebooks/core/async/flow/visualization.clj</a></small></small></pre></div>
 
 
 </section>
 
  ]]></description>
-  <guid>https://clojurecivitas.github.io/lib/core/async/flow/visualization.html</guid>
+  <guid>https://clojurecivitas.github.io/core/async/flow/visualization.html</guid>
   <pubDate>Tue, 03 Jun 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Core Async Flow Exploration</title>
   <dc:creator>Daniel Slutsky</dc:creator>
   <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/lib/core/async/flow/exploration.html</link>
+  <link>https://clojurecivitas.github.io/core/async/flow/exploration.html</link>
   <description><![CDATA[ 
 
 
@@ -848,8 +848,8 @@ font-style: inherit;">:targets</span> [(id-for to)]}))}))</span></code></pre></d
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="lib/core/async/flow/exploration_files/md-default0.js" type="text/javascript"></script>
-<script src="lib/core/async/flow/exploration_files/md-default1.js" type="text/javascript"></script>
+<script src="core/async/flow/exploration_files/md-default0.js" type="text/javascript"></script>
+<script src="core/async/flow/exploration_files/md-default1.js" type="text/javascript"></script>
 <section id="visualizing-core.async.flows" class="level1">
 <h1>Visualizing core.async.flows</h1>
 <p>Clojure’s async flows are Directed Acyclic Graphs (DAGs) of channel operations. The new <a href="https://github.com/clojure/core.async.flow-monitor">flow-monitor</a> can visualize these flows.</p>
@@ -1207,14 +1207,14 @@ background-color: null;
 font-style: inherit;">3</span>}}}},</span>
 <span id="cb7-36"> <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:generator</span></span>
+font-style: inherit;">:notifier</span></span>
 <span id="cb7-37"> #<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:clojure.core.async.flow</span>{<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:pid</span> <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:generator</span>,</span>
+font-style: inherit;">:notifier</span>,</span>
 <span id="cb7-38">                           <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:status</span> <span class="at" style="color: #657422;
@@ -1225,218 +1225,218 @@ background-color: null;
 font-style: inherit;">:state</span></span>
 <span id="cb7-40">                           {<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:min</span> <span class="dv" style="color: #AD0000;
+font-style: inherit;">:prefix</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">0</span>,</span>
+font-style: inherit;">"Alert: "</span>,</span>
 <span id="cb7-41">                            <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:max</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">12</span>,</span>
-<span id="cb7-42">                            <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:wait</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">500</span>,</span>
-<span id="cb7-43">                            <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:clojure.core.async.flow/pid</span> <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:generator</span>,</span>
-<span id="cb7-44">                            <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:clojure.core.async.flow/in-ports</span></span>
-<span id="cb7-45">                            {<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:stat</span></span>
-<span id="cb7-46">                             {<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>,</span>
-<span id="cb7-47">                              <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>,</span>
-<span id="cb7-48">                              <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">false</span>,</span>
-<span id="cb7-49">                              <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:buffer</span></span>
-<span id="cb7-50">                              {<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:type</span> FixedBuffer,</span>
-<span id="cb7-51">                               <span class="at" style="color: #657422;
+font-style: inherit;">:notifier</span>},</span>
+<span id="cb7-42">                           <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb7-52">                               <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">100</span>}}},</span>
-<span id="cb7-53">                            <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:stop</span> [<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">false</span>]},</span>
-<span id="cb7-54">                           <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>,</span>
-<span id="cb7-55">                           <span class="at" style="color: #657422;
+<span id="cb7-43">                           <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:ins</span></span>
-<span id="cb7-56">                           {<span class="at" style="color: #657422;
+<span id="cb7-44">                           {<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:stat</span></span>
-<span id="cb7-57">                            {<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>,</span>
-<span id="cb7-58">                             <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>,</span>
-<span id="cb7-59">                             <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">false</span>,</span>
-<span id="cb7-60">                             <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:buffer</span></span>
-<span id="cb7-61">                             {<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:type</span> FixedBuffer,</span>
-<span id="cb7-62">                              <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>,</span>
-<span id="cb7-63">                              <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">100</span>}}},</span>
-<span id="cb7-64">                           <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:outs</span></span>
-<span id="cb7-65">                           {<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:out</span></span>
-<span id="cb7-66">                            {<span class="at" style="color: #657422;
+font-style: inherit;">:in</span></span>
+<span id="cb7-45">                            {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb7-67">                             <span class="at" style="color: #657422;
+<span id="cb7-46">                             <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb7-68">                             <span class="at" style="color: #657422;
+<span id="cb7-47">                             <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb7-69">                             <span class="at" style="color: #657422;
+<span id="cb7-48">                             <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span></span>
-<span id="cb7-70">                             {<span class="at" style="color: #657422;
+<span id="cb7-49">                             {<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:type</span> FixedBuffer,</span>
-<span id="cb7-71">                              <span class="at" style="color: #657422;
+font-style: inherit;">:type</span> SlidingBuffer,</span>
+<span id="cb7-50">                              <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb7-72">                              <span class="at" style="color: #657422;
+<span id="cb7-51">                              <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">10</span>}}}},</span>
-<span id="cb7-73"> <span class="at" style="color: #657422;
+font-style: inherit;">3</span>}}},</span>
+<span id="cb7-52">                           <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:notifier</span></span>
-<span id="cb7-74"> #<span class="at" style="color: #657422;
+font-style: inherit;">:outs</span> {}},</span>
+<span id="cb7-53"> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:generator</span></span>
+<span id="cb7-54"> #<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:clojure.core.async.flow</span>{<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:pid</span> <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:notifier</span>,</span>
-<span id="cb7-75">                           <span class="at" style="color: #657422;
+font-style: inherit;">:generator</span>,</span>
+<span id="cb7-55">                           <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:status</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:paused</span>,</span>
-<span id="cb7-76">                           <span class="at" style="color: #657422;
+<span id="cb7-56">                           <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:state</span></span>
-<span id="cb7-77">                           {<span class="at" style="color: #657422;
+<span id="cb7-57">                           {<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:prefix</span> <span class="st" style="color: #20794D;
+font-style: inherit;">:min</span> <span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">"Alert: "</span>,</span>
-<span id="cb7-78">                            <span class="at" style="color: #657422;
+font-style: inherit;">0</span>,</span>
+<span id="cb7-58">                            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:max</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">12</span>,</span>
+<span id="cb7-59">                            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:wait</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">500</span>,</span>
+<span id="cb7-60">                            <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:clojure.core.async.flow/pid</span> <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:notifier</span>},</span>
-<span id="cb7-79">                           <span class="at" style="color: #657422;
+font-style: inherit;">:generator</span>,</span>
+<span id="cb7-61">                            <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
+font-style: inherit;">:clojure.core.async.flow/in-ports</span></span>
+<span id="cb7-62">                            {<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">0</span>,</span>
-<span id="cb7-80">                           <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:ins</span></span>
-<span id="cb7-81">                           {<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:in</span></span>
-<span id="cb7-82">                            {<span class="at" style="color: #657422;
+font-style: inherit;">:stat</span></span>
+<span id="cb7-63">                             {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb7-83">                             <span class="at" style="color: #657422;
+<span id="cb7-64">                              <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb7-84">                             <span class="at" style="color: #657422;
+<span id="cb7-65">                              <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb7-85">                             <span class="at" style="color: #657422;
+<span id="cb7-66">                              <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span></span>
-<span id="cb7-86">                             {<span class="at" style="color: #657422;
+<span id="cb7-67">                              {<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:type</span> SlidingBuffer,</span>
-<span id="cb7-87">                              <span class="at" style="color: #657422;
+font-style: inherit;">:type</span> FixedBuffer,</span>
+<span id="cb7-68">                               <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb7-88">                              <span class="at" style="color: #657422;
+<span id="cb7-69">                               <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">3</span>}}},</span>
-<span id="cb7-89">                           <span class="at" style="color: #657422;
+font-style: inherit;">100</span>}}},</span>
+<span id="cb7-70">                            <span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:outs</span> {}},</span>
+font-style: inherit;">:stop</span> [<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">false</span>]},</span>
+<span id="cb7-71">                           <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,</span>
+<span id="cb7-72">                           <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:ins</span></span>
+<span id="cb7-73">                           {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:stat</span></span>
+<span id="cb7-74">                            {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,</span>
+<span id="cb7-75">                             <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,</span>
+<span id="cb7-76">                             <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">false</span>,</span>
+<span id="cb7-77">                             <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:buffer</span></span>
+<span id="cb7-78">                             {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:type</span> FixedBuffer,</span>
+<span id="cb7-79">                              <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,</span>
+<span id="cb7-80">                              <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span>}}},</span>
+<span id="cb7-81">                           <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:outs</span></span>
+<span id="cb7-82">                           {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:out</span></span>
+<span id="cb7-83">                            {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,</span>
+<span id="cb7-84">                             <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,</span>
+<span id="cb7-85">                             <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">false</span>,</span>
+<span id="cb7-86">                             <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:buffer</span></span>
+<span id="cb7-87">                             {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:type</span> FixedBuffer,</span>
+<span id="cb7-88">                              <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>,</span>
+<span id="cb7-89">                              <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span>}}}},</span>
 <span id="cb7-90"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:scheduler</span></span>
@@ -1644,7 +1644,7 @@ background-color: null;
 font-style: inherit;">:proc</span></span>
 <span id="cb14-5">   {<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:step</span> lib.core.async.flow.example.stats/source,</span>
+font-style: inherit;">:step</span> core.async.flow.example.stats/source,</span>
 <span id="cb14-6">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
@@ -1692,7 +1692,7 @@ background-color: null;
 font-style: inherit;">:proc</span></span>
 <span id="cb14-15">   {<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:step</span> lib.core.async.flow.example.stats/aggregator,</span>
+font-style: inherit;">:step</span> core.async.flow.example.stats/aggregator,</span>
 <span id="cb14-16">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
@@ -1752,7 +1752,7 @@ background-color: null;
 font-style: inherit;">:proc</span></span>
 <span id="cb14-31">   {<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:step</span> lib.core.async.flow.example.stats/scheduler,</span>
+font-style: inherit;">:step</span> core.async.flow.example.stats/scheduler,</span>
 <span id="cb14-32">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
@@ -1786,7 +1786,7 @@ background-color: null;
 font-style: inherit;">:proc</span></span>
 <span id="cb14-39">   {<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">:step</span> lib.core.async.flow.example.stats/printer,</span>
+font-style: inherit;">:step</span> core.async.flow.example.stats/printer,</span>
 <span id="cb14-40">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
@@ -2138,21 +2138,21 @@ background-color: null;
 font-style: inherit;">100</span>}}}}</span></code></pre></div>
 </div>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/content/lib/core/async/flow/exploration.clj">content/lib/core/async/flow/exploration.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/core/async/flow/exploration.clj">notebooks/core/async/flow/exploration.clj</a></small></small></pre></div>
 
 
 </section>
 </section>
 
  ]]></description>
-  <guid>https://clojurecivitas.github.io/lib/core/async/flow/exploration.html</guid>
+  <guid>https://clojurecivitas.github.io/core/async/flow/exploration.html</guid>
   <pubDate>Mon, 02 Jun 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Core Async Flow Stats Example</title>
   <dc:creator>Alex Miller</dc:creator>
   <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/lib/core/async/flow/example/stats.html</link>
+  <link>https://clojurecivitas.github.io/core/async/flow/example/stats.html</link>
   <description><![CDATA[ 
 
 
@@ -2169,8 +2169,8 @@ font-style: inherit;">100</span>}}}}</span></code></pre></div>
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="lib/core/async/flow/example/stats_files/md-default0.js" type="text/javascript"></script>
-<script src="lib/core/async/flow/example/stats_files/md-default1.js" type="text/javascript"></script>
+<script src="core/async/flow/example/stats_files/md-default0.js" type="text/javascript"></script>
+<script src="core/async/flow/example/stats_files/md-default1.js" type="text/javascript"></script>
 <section id="core-async-flow-stats-example" class="level1">
 <h1>Core async flow stats example</h1>
 <p>Adapted from https://github.com/puredanger/flow-example</p>
@@ -3093,20 +3093,20 @@ font-style: inherit;">:refer</span> [graph]])</span>
 <span id="cb10-32">  )</span></code></pre></div>
 </div>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/content/lib/core/async/flow/example/stats.clj">content/lib/core/async/flow/example/stats.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/core/async/flow/example/stats.clj">notebooks/core/async/flow/example/stats.clj</a></small></small></pre></div>
 
 
 </section>
 
  ]]></description>
-  <guid>https://clojurecivitas.github.io/lib/core/async/flow/example/stats.html</guid>
+  <guid>https://clojurecivitas.github.io/core/async/flow/example/stats.html</guid>
   <pubDate>Sun, 01 Jun 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The Z-Combinator Gambit</title>
   <dc:creator>Chris Houser</dc:creator>
   <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</link>
+  <link>https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</link>
   <description><![CDATA[ 
 
 
@@ -3123,12 +3123,12 @@ font-style: inherit;">:refer</span> [graph]])</span>
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit_files/md-default0.js" type="text/javascript"></script>
-<script src="idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit_files/md-default1.js" type="text/javascript"></script>
+<script src="code_interview/beating/with_stupid_stuff/z_combinator_gambit_files/md-default0.js" type="text/javascript"></script>
+<script src="code_interview/beating/with_stupid_stuff/z_combinator_gambit_files/md-default1.js" type="text/javascript"></script>
 <p>Welcome back code champs, number ninjas, and data divers to our first episode of Beating Code Interviews with Stupid Stuff. People often send me emails asking, “How can I use lambda calculus to impress people?” Today, we find out.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://clojurecivitas.github.io/idea/code_interview/beating/with_stupid_stuff/z-combinator.jpg" class="img-fluid figure-img"></p>
+<p><img src="https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z-combinator.jpg" class="img-fluid figure-img"></p>
 <figcaption>programmer staring at Z-combinator</figcaption>
 </figure>
 </div>
@@ -3149,11 +3149,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [SELF LIST])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval49700$fn__49701 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval49700$fn__49701 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x16efa1ef</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x19ed42ea</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval49700$fn__49701@16efa1ef"</span>]</span></code></pre></div>
+font-style: inherit;">"code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval49700$fn__49701@19ed42ea"</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>We’re just writing a function, and it only needs to take a list…</p>
@@ -3435,11 +3435,11 @@ font-style: inherit;">1</span></span></code></pre></div>
 <div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1">(REV-LOGIC REV-LOGIC)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">#object[code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x648e1f21</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x6ba6d35a</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715@648e1f21"</span>]</span></code></pre></div>
+font-style: inherit;">"code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715@6ba6d35a"</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>Well, it’s a function! That much is clear…</p>
@@ -3582,11 +3582,11 @@ font-style: inherit;">fn</span> SELF [VALUE]</span>
 <div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1">(FIX REV-LOGIC)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1">#object[idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1">#object[code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x74732aab</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x22b94b5e</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"idea.code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715@74732aab"</span>]</span></code></pre></div>
+font-style: inherit;">"code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__49715@22b94b5e"</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>At least it didn’t blow up this time…</p>
@@ -4121,14 +4121,14 @@ font-style: inherit;">6765</span>)</span></code></pre></div>
 </div>
 <p>That’s all for today. Until next time, keep on coding.</p>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/content/idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit.clj">content/idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/code_interview/beating/with_stupid_stuff/z_combinator_gambit.clj">notebooks/code_interview/beating/with_stupid_stuff/z_combinator_gambit.clj</a></small></small></pre></div>
 
 
 
  ]]></description>
-  <guid>https://clojurecivitas.github.io/idea/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</guid>
+  <guid>https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</guid>
   <pubDate>Sun, 25 May 2025 00:00:00 GMT</pubDate>
-  <media:content url="https://clojurecivitas.github.io/idea/code_interview/beating/with_stupid_stuff/z-combinator.jpg" medium="image" type="image/jpeg"/>
+  <media:content url="https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z-combinator.jpg" medium="image" type="image/jpeg"/>
 </item>
 </channel>
 </rss>
