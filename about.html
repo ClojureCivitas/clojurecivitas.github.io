@@ -20,41 +20,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -349,7 +314,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>About</h1>
 <p><img src="images/civitas-icon.svg" alt="Civitas Icon" align="right"></p>
 <p>An open effort to structure learning resources with meaningful connections.</p>
-<p>Explore the <a href="https://clojurecivitas.github.io">Clojure Civitas Website</a></p>
+<p>Clojure Civitas is a contributor-friendly platform that makes it easy for you to share Clojure ideas and explorations, without the overhead of setting up a new project, blog, or repo. Whether you’re sketching out a quick experiment or writing a deeper post, Civitas gives you a shared scratch space where publishing is simple. Just open a namespace, write, and submit. No infrastructure required.</p>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 2rem 0;">
 <div style="border-left: 3px solid green; padding-left: 1rem;">
 <h3 class="anchored">
@@ -364,7 +329,7 @@ Navigate your own path through interconnected topics.
 Literate by design
 </h3>
 <p>
-Write notebooks and place them in context, linking knowledge.
+Write notebooks and situate them in a broader context by linking ideas.
 </p>
 </div>
 <div style="border-left: 3px solid orange; padding-left: 1rem;">
@@ -376,203 +341,40 @@ The best resources rise through collective refinement.
 </p>
 </div>
 </div>
-<section id="contribute" class="level2">
-<h2 class="anchored" data-anchor-id="contribute">Contribute</h2>
-<p>Your perspective matters.</p>
-<section id="build-the-database" class="level3">
-<h3 class="anchored" data-anchor-id="build-the-database">Build the database</h3>
-<p>Add to or modify <a href="quarto/db.edn">db.edn</a></p>
-</section>
-<section id="write-notebooks" class="level3">
-<h3 class="anchored" data-anchor-id="write-notebooks">Write notebooks</h3>
-<p>Add a notebook in the <a href="notebooks"><code>/notebooks</code></a> folder.</p>
-<p>See the <a href="https://scicloj.github.io/clay">Clay Documentation</a> for information on how to interactively visualize the notebook as you write it.</p>
-</section>
-<section id="preview-the-full-website" class="level3">
-<h3 class="anchored" data-anchor-id="preview-the-full-website">Preview the full website</h3>
-<div class="sourceCode" id="cb1"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">clojure</span> <span class="at">-M:clay</span> <span class="at">-a</span> <span class="pp">[</span><span class="ss">:markdown</span><span class="pp">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> preview site</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</section>
-<section id="publish" class="level3">
-<h3 class="anchored" data-anchor-id="publish">Publish</h3>
-<p>Merged pull requests are shown on the website via a workflow.</p>
-</section>
-</section>
 <section id="rationale" class="level2">
 <h2 class="anchored" data-anchor-id="rationale">Rationale</h2>
-<div style="text-align: center; font-family: 'Georgia', serif; font-size: 1.5rem; margin: 2rem 0; color: #2e7d32;">
-<p>Exploramus, Communicamus, Crescimus<br> <small style="font-size: 1rem; color: #555;">We explore, we share, we grow.</small></p>
-</div>
-<p>Civitas Clojure offers a hassle-free way to host and share your notebooks without the overhead of creating a new project each time. By providing a shared, well-organized platform, it lets you focus on your ideas and code while automatically publishing your work to GitHub Pages. This streamlines collaboration, increases visibility, and makes contributing simple and efficient—so you can spend less time on setup and more time creating.</p>
-<p>Learning technical subjects involves navigating complex webs of concepts. Currently, resources for learning Clojure exist as isolated articles, unconnected tutorials, or flat lists that do not capture how ideas relate to each other. This makes it difficult for learners to determine logical next steps or see how topics connect. Teachers and curriculum designers face similar challenges when trying to organize material in ways that reflect actual dependencies and alternatives.</p>
-<p>Civitas approaches this problem by implementing a structured knowledge base where resources are explicitly linked based on their conceptual relationships. The hexagonal grid interface provides a visual representation of these connections, allowing users to naturally discover related content. Each resource includes metadata to indicate prerequisites, alternatives, and deeper explorations.</p>
-<p>This structure serves several practical purposes. Learners can see multiple valid paths through the material. Teachers can construct guided sequences while maintaining visibility of adjacent concepts. The community can improve resources incrementally by adding or refining connections. The system is designed to grow organically as new relationships are identified and documented.</p>
-<p>The value lies not in any single feature, but in making the existing ecosystem of learning resources more navigable and interconnected.</p>
-<p><img src="../images/bees.jpg" alt="Honey bees behive" style="width: 100%;"></p>
+<p>Clojure and markdown are a natural fit for interactive, literate programming. But there is incidental complexity in setup and publishing. Creating a new project, configuring a blog, choosing themes and styling, organizing files, adding analytics, and thinking about SEO all add overhead. This friction discourages experimentation and makes publishing harder than it needs to be.</p>
+<section id="make-publishing-notebooks-easy" class="level3">
+<h3 class="anchored" data-anchor-id="make-publishing-notebooks-easy">Make Publishing Notebooks Easy</h3>
+<p><a href="https://scicloj.github.io/clay/">Clay</a> notebooks combine Clojure and markdown for expressive, interactive literate programming. Compared to blogs, gists, or repos, they better support combining narrative, code, and results in a single document. Civitas removes the friction of publishing by letting anyone submit notebooks or markdown without setting up a new project or hosting workflow. It provides a shared, well-organized platform for short experiments, tutorials, notes, and blog posts.</p>
 </section>
-<section id="embracing-alternatives" class="level2">
-<h2 class="anchored" data-anchor-id="embracing-alternatives">Embracing alternatives</h2>
-<p>It is not a goal to centralize Clojure knowledge creation. It is a goal to provide a welcoming pattern that works with other communities and users. ClojureCivitas can be used as a library to simplify publishing your own garden of content.</p>
+<section id="build-a-database-of-knowledge" class="level3">
+<h3 class="anchored" data-anchor-id="build-a-database-of-knowledge">Build a Database of Knowledge</h3>
+<p>Civitas aggregates structured metadata about the content it hosts and links it to other Clojure resources. Instead of scattered, unstructured articles, Civitas supports a connected web of ideas, showing how concepts relate, what builds on what, and where to go next. Its <a href="https://clojurecivitas.github.io/civitas/explorer.html">hex-grid interface</a> presents these relationships visually. Each notebook can declare prerequisites, alternatives, and follow-ups. This helps learners discover next steps, helps educators design coherent learning paths, and enables the community to improve content over time. The goal is to make the Clojure knowledge ecosystem easier to explore and navigate.</p>
 </section>
-<section id="design" class="level2">
-<h2 class="anchored" data-anchor-id="design">Design</h2>
-<section id="notebook-namespace-selection" class="level3">
-<h3 class="anchored" data-anchor-id="notebook-namespace-selection">Notebook Namespace Selection</h3>
-<p>A notebook’s namespace serves as a clear, unique path to its content and follows <strong>Clojure’s naming conventions</strong>.</p>
-<p>The namespace should emphasize <strong>what the notebook is about</strong>, not how it is categorized. Think of it as a logical path that leads to a specific artifact or topic. Classification elements such as tags, author, document type, level, or publication date belong in <strong>metadata</strong>, not the namespace.</p>
-<ul>
-<li><strong>Start with an organization</strong> if the notebook is about a library or tool maintained by one.<br>
-Examples: <code>scicloj</code>, <code>lambdaisland</code>.</li>
-<li><strong>Follow with the specific library or concept.</strong><br>
-Examples: <code>scicloj.clay</code>, <code>lambdaisland.kaocha</code>.</li>
-<li>If there is <strong>no organization</strong>, start directly with the library or tool name.<br>
-Examples: <code>hiccup</code>, <code>reagent</code>. If the notebook refers to an alternative implementation, <strong>include the organization</strong> to disambiguate.<br>
-Example: <code>lambdaisland.hiccup</code>.</li>
-<li>For <strong>core Clojure topics</strong>, use <code>clojure</code> as the root.<br>
-Examples: <code>clojure.lazy-sequences</code>, <code>clojure.transducers</code>.</li>
-<li>Add <strong>segments</strong> to describe the notebook’s content. These segments should:
-<ul>
-<li>Avoid name collisions.</li>
-<li>Not duplicate metadata.</li>
-<li>The last segment should be specific and descriptive. Prefer: <code>z-combinator-gambit</code>, avoid: <code>z-combinator</code>.</li>
-</ul></li>
-<li><strong>Events, communities, or topics</strong> may also be used as the top-level namespace when appropriate.<br>
-Use discretion to determine whether a notebook is primarily about an artifact library, a concept, or an event.</li>
-<li>Namespaces must consist of more than one segment.</li>
-</ul>
-<section id="metadata-and-navigation" class="level4">
-<h4 class="anchored" data-anchor-id="metadata-and-navigation">Metadata and Navigation</h4>
-<p>It may feel unintuitive not to group related content (e.g.&nbsp;an author’s blog series) by directory or namespace. But this structure is intentional. Linear sequences (e.g.&nbsp;blog posts by an author) will be <strong>reconstructed from metadata</strong>, not filenames or folders. For example, a page showing all blog posts by an author is generated by filtering for <code>author</code>, <code>type = post</code>, and <code>date</code>, and then ordering by date.</p>
-<p>Namespaces prioritize <strong>logical addressing</strong> over ontological hierarchy. This promotes flexibility at the cost of tidiness, but enables richer discovery through metadata and search.</p>
-<p>Differentiation between posts, pages, and presentations is by <code>type</code> metadata (a Quarto page type convention).</p>
-</section>
-<section id="examples" class="level4">
-<h4 class="anchored" data-anchor-id="examples">Examples</h4>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 49%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Namespace</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>scicloj.clay.clojure-notebooks-for-pythonistas</code></td>
-<td>Introduction to Clay for Python programmers.</td>
-</tr>
-<tr class="even">
-<td><code>lambdaisland.kaocha.customization-tips-and-tricks</code></td>
-<td>Tips for fast iteration with Kaocha.</td>
-</tr>
-<tr class="odd">
-<td><code>lambdaisland.kaocha.up-and-running-on-ubuntu</code></td>
-<td>Kaocha setup guide for Ubuntu.</td>
-</tr>
-<tr class="even">
-<td><code>clojure.transducers.how-it-works-explained-with-diagrams</code></td>
-<td>Explains transducers with diagrams.</td>
-</tr>
-<tr class="odd">
-<td><code>clojure.lazy-sequences.detailed-explanation-by-example</code></td>
-<td>In-depth example-driven guide to lazy sequences.</td>
-</tr>
-<tr class="even">
-<td><code>clojure-conj.2023.state-of-clojure.notes-from-the-backrow</code></td>
-<td>Notes on the “State of Clojure” talk at Clojure/Conj 2023.</td>
-</tr>
-<tr class="odd">
-<td><code>hiccup.basic-html-generation</code></td>
-<td>Tutorial on generating HTML with Hiccup.</td>
-</tr>
-<tr class="even">
-<td><code>algorithms.graph.layout.force-directed-spring-simulation</code></td>
-<td>On force-directed graph layout algorithms (library-agnostic).</td>
-</tr>
-<tr class="odd">
-<td><code>data-structures.datoms.all-about-eavt</code></td>
-<td>EAVT indexing, not tied to any vendor.</td>
-</tr>
-<tr class="even">
-<td><code>clojure.deps-edn.monorepo-setup-in-detail</code></td>
-<td>Monorepo setup using <code>deps.edn</code>.</td>
-</tr>
-<tr class="odd">
-<td><code>cursive.super-easy-debugging-techniques</code></td>
-<td>Debugging in Cursive IDE, for beginners.</td>
-</tr>
-<tr class="even">
-<td><code>cognitect.datomic.cloud.how-we-scale-to-5million-users</code></td>
-<td>Datomic Cloud scaling case study.</td>
-</tr>
-<tr class="odd">
-<td><code>reagent.component-lifecycle.a-tale-of-life-death-and-rebirth</code></td>
-<td>A whimsical take on Reagent component lifecycles.</td>
-</tr>
-</tbody>
-</table>
+<section id="embrace-alternatives" class="level3">
+<h3 class="anchored" data-anchor-id="embrace-alternatives">Embrace Alternatives</h3>
+<p>Clojure Civitas does not aim to centralize all Clojure knowledge. Instead, it offers a flexible publishing pattern that individuals and communities can adopt. Civitas can also be used as a library to help you publish your own content garden, independent of the main site.</p>
+<p><img src="images/bees.jpg" alt="Honey bees beehive" style="width: 100%;"></p>
 </section>
 </section>
-<section id="file-system-organization" class="level3">
-<h3 class="anchored" data-anchor-id="file-system-organization">File system organization</h3>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 31%">
-<col style="width: 68%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Directory</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>src</code></td>
-<td>Code for building a website and database</td>
-</tr>
-<tr class="even">
-<td><code>notebooks</code></td>
-<td>Source root for notebooks (Clojure and Markdown), images, data files</td>
-</tr>
-<tr class="odd">
-<td><code>site</code></td>
-<td>Static assets of the Quarto website</td>
-</tr>
-</tbody>
-</table>
-<p>Non-Clojure files in <code>notebooks</code> will be synced to <code>site</code>. Shared images can go in <code>images</code>, but prefer placing images and data files as siblings to your namespace under <code>notebooks</code>. All Clojure and Non-Clojure files in <code>notebooks</code> should go under a subdirectory, so that it is clear they are not part of the static configuration of <code>site</code>. When building the site, Clojure namespaces are built to markdown files under <code>site/{my/namespaced/notebook.qmd}</code>. Subdirectories of <code>site</code> are gitignored and considered temporary build artifacts, safe to clean up. Quarto builds all the markdown into HTML in <code>_site</code> for preview and deploy. While developing, Clay uses <code>temp</code> to build and serve HTML files.</p>
-<p>Goal: Align with Clojure’s code organization while allowing organic, practical growth.</p>
+<section id="how-it-works" class="level2">
+<h2 class="anchored" data-anchor-id="how-it-works">How it Works</h2>
+<section id="moderation-and-curation" class="level3">
+<h3 class="anchored" data-anchor-id="moderation-and-curation">Moderation and Curation</h3>
+<p>All content is submitted via Pull Requests, which are reviewed to prevent abuse. A small team of reviewers ensures quick turnaround. Community representatives are available to assist and guide contributors.</p>
 </section>
-<section id="topic-organization" class="level3">
-<h3 class="anchored" data-anchor-id="topic-organization">Topic organization</h3>
-<p>Follow the Quarto convention of categories, tags, and keywords. Fixed categories; <code>community</code>, <code>algorithms</code>, <code>data</code>, <code>systems</code>, <code>libs</code>, <code>concepts</code>. Tags; flexible, open-ended for finer-grained labeling (e.g.&nbsp;<code>frontend</code>, <code>reagent</code>). Keywords; for SEO or search indexing; typically fewer and focused on discoverability.</p>
-<p>Tags and metadata are the preferred organization principle: <a href="https://gwern.net/doc/philosophy/ontology/2005-04-shirky-ontologyisoverratedcategorieslinksandtags.html">Categories, Links, and Tags</a></p>
-<p>Goal: Constellations, not cabinets.</p>
+<section id="metadata-creation" class="level3">
+<h3 class="anchored" data-anchor-id="metadata-creation">Metadata Creation</h3>
+<p>Metadata is currently provided by authors. Future improvements may include automated extraction and smarter linking to enrich the knowledge base.</p>
 </section>
-<section id="dependency-management" class="level3">
-<h3 class="anchored" data-anchor-id="dependency-management">Dependency management</h3>
-<p>A single <code>deps.edn</code> file is shared across all notebooks.</p>
-<p>Pros:</p>
-<ul>
-<li>Simplifies website builds.</li>
-<li>Works for authoring as well as building.</li>
-</ul>
-<p>Cons:</p>
-<ul>
-<li>Version conflicts must be manually resolved.</li>
-<li>Only one version per dependency.</li>
-<li>Notebooks aren’t self-contained.</li>
-</ul>
-<p>Future:</p>
-<ul>
-<li>Support additional directories under <code>standalone</code> with their own <code>deps.edn</code>.</li>
-<li>Regression testing would help when versions update.</li>
-</ul>
-<p>Goal: Minimize friction in authoring while ensuring publishable reproducibility.</p>
+<section id="analytics" class="level3">
+<h3 class="anchored" data-anchor-id="analytics">Analytics</h3>
+<p>Page view analytics are publicly available. See the <a href="https://clojurecivitas.goatcounter.com/">Clojure Civitas Analytics Dashboard</a>.</p>
+</section>
+<section id="technical-details" class="level3">
+<h3 class="anchored" data-anchor-id="technical-details">Technical Details</h3>
+<p>See the <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/README.md">README.md</a> in the repository for contribution guidelines and technical details.</p>
 
 
 </section>
