@@ -10,7 +10,6 @@ Visit the deployed [Clojure Civitas Website](https://clojurecivitas.github.io).
 
 See [About Clojure Civitas](https://clojurecivitas.github.io/about).
 
-
 ## Contributing
 
 <div style="text-align: center; font-family: 'Georgia', serif; font-size: 1.5rem; margin: 2rem 0; color: #2e7d32;">
