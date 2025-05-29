@@ -1,4 +1,5 @@
 ---
+title: "Noj Reload Executable"
 author: Timothy Pratley
 type: post
 date: 2025-05-06
@@ -7,13 +8,15 @@ tags: [data-science, noj]
 keywords: [noj]
 ---
 
-Transcript of [Noj reload executable](https://youtu.be/tDz1x2d65C0)
+Transcript of [Noj Reload Executable](https://youtu.be/tDz1x2d65C0)
 
 Hello code champs, number ninjas and data divers!
 
 Imagine being able to experiment with Clojure without needing to install tooling, set up editors, or even know about deps.edn
 Sounds like a dream, right?
 Well, dream no more—meet Noj's new Code Reload Executable!
+
+![Noj](Noj-icon.svg)
 
 We can skip the Clojure tooling and editor setup,
 but we do need to install the recommended Adoptive Java.
