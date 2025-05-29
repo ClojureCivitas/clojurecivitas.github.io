@@ -6,18 +6,17 @@
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}
 (ns core.async.flow.example.stats
-  (:require
-    [clojure.core.async :as a]
-    [clojure.core.async.flow :as flow]
-    [clojure.core.async.flow-monitor :as mon]))
+  (:require [clojure.core.async :as a]
+            [clojure.core.async.flow :as flow]
+            [clojure.core.async.flow-monitor :as mon]))
 
-;; # Core async flow stats example
-;;
-;; Adapted from https://github.com/puredanger/flow-example
+;; Recently Alex provided a video walkthrough on how to use `core.async.flow` to build a stats monitor.
 
-^:kind/video
+^:kind/video ^:kindly/hide-code
 {:youtube-id   "lXFwf3O4BVY"
  :iframe-width "100%"}
+
+;; This notebook is adapted from [his code](https://github.com/puredanger/flow-example).
 
 (defn stat-gen
   "Generates a random value between min (inclusive) and max (exclusive)
