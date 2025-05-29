@@ -55,7 +55,6 @@ quarto preview site
 
 Merged pull requests are shown on the website via a workflow.
 
-
 ## Design
 
 Align with Clojure's values: simplicity, community, and tooling that helps you think.
@@ -103,32 +102,33 @@ Differentiation between posts, pages, and presentations is by `type` metadata (a
 
 #### Examples
 
-| Namespace                                                      | Description                                                   |
-|----------------------------------------------------------------|---------------------------------------------------------------|
-| `scicloj.clay.clojure-notebooks-for-pythonistas`               | Introduction to Clay for Python programmers.                  |
-| `lambdaisland.kaocha.customization-tips-and-tricks`            | Tips for fast iteration with Kaocha.                          |
-| `lambdaisland.kaocha.up-and-running-on-ubuntu`                 | Kaocha setup guide for Ubuntu.                                |
-| `clojure.transducers.how-it-works-explained-with-diagrams`     | Explains transducers with diagrams.                           |
-| `clojure.lazy-sequences.detailed-explanation-by-example`       | In-depth example-driven guide to lazy sequences.              |
-| `clojure-conj.2023.state-of-clojure.notes-from-the-backrow`    | Notes on the "State of Clojure" talk at Clojure/Conj 2023.    |
-| `hiccup.basic-html-generation`                                 | Tutorial on generating HTML with Hiccup.                      |
-| `algorithms.graph.layout.force-directed-spring-simulation`     | On force-directed graph layout algorithms (library-agnostic). |
-| `data-structures.datoms.all-about-eavt`                        | EAVT indexing, not tied to any vendor.                        |
-| `clojure.deps-edn.monorepo-setup-in-detail`                    | Monorepo setup using `deps.edn`.                              |
-| `cursive.super-easy-debugging-techniques`                      | Debugging in Cursive IDE, for beginners.                      |
-| `cognitect.datomic.cloud.how-we-scale-to-5million-users`       | Datomic Cloud scaling case study.                             |
-| `reagent.component-lifecycle.a-tale-of-life-death-and-rebirth` | A whimsical take on Reagent component lifecycles.             |
+| Namespace                                                               | Description                                                   |
+|-------------------------------------------------------------------------|---------------------------------------------------------------|
+| `scicloj.clay.clojure-notebooks-for-pythonistas`                        | Introduction to Clay for Python programmers.                  |
+| `lambdaisland.kaocha.customization-tips-and-tricks`                     | Tips for fast iteration with Kaocha.                          |
+| `lambdaisland.kaocha.up-and-running-on-ubuntu`                          | Kaocha setup guide for Ubuntu.                                |
+| `clojure.transducers.how-it-works-explained-with-diagrams`              | Explains transducers with diagrams.                           |
+| `clojure.lazy-sequences.detailed-explanation-by-example`                | In-depth example-driven guide to lazy sequences.              |
+| `conferences.clojure-conj-2023.state-of-clojure.notes.from-the-backrow` | Notes on the "State of Clojure" talk at Clojure/Conj 2023.    |
+| `hiccup.basic-html-generation`                                          | Tutorial on generating HTML with Hiccup.                      |
+| `algorithms.graph.layout.force-directed-spring-simulation`              | On force-directed graph layout algorithms (library-agnostic). |
+| `data-structures.datoms.all-about-eavt`                                 | EAVT indexing, not tied to any vendor.                        |
+| `clojure.deps-edn.monorepo-setup-in-detail`                             | Monorepo setup using `deps.edn`.                              |
+| `cursive.super-easy-debugging-techniques`                               | Debugging in Cursive IDE, for beginners.                      |
+| `cognitect.datomic.cloud.how-we-scale-to-5million-users`                | Datomic Cloud scaling case study.                             |
+| `reagent.component-lifecycle.a-tale-of-life-death-and-rebirth`          | A whimsical take on Reagent component lifecycles.             |
 
 ### File system organization
 
-| Directory                      | Description                                                          |
-|--------------------------------|----------------------------------------------------------------------|
-| `src`                          | Code for building a website and database                             |
-| `notebooks`                    | Source root for notebooks (Clojure and Markdown), images, data files |
-| `site`                         | Static assets of the Quarto website                                  |
+| Directory   | Description                                                          |
+|-------------|----------------------------------------------------------------------|
+| `src`       | Code for building a website and database                             |
+| `notebooks` | Source root for notebooks (Clojure and Markdown), images, data files |
+| `site`      | Static assets of the Quarto website                                  |
 
 Non-Clojure files in `notebooks` will be synced to `site`.
-Shared images can go in `images`, but prefer placing images and data files as siblings to your namespace under `notebooks`.
+Shared images can go in `images`, but prefer placing images and data files as siblings to your namespace under
+`notebooks`.
 All Clojure and Non-Clojure files in `notebooks` should go under a subdirectory,
 so that it is clear they are not part of the static configuration of `site`.
 When building the site, Clojure namespaces are built to markdown files under `site/{my/namespaced/notebook.qmd}`.
