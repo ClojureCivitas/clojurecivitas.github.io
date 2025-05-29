@@ -2,66 +2,70 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://clojurecivitas.github.io/print/object/remove_extraneous.html</loc>
-    <lastmod>2025-05-28T22:47:17.438Z</lastmod>
+    <lastmod>2025-05-29T03:21:26.577Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/posts.html</loc>
-    <lastmod>2025-05-28T22:46:44.462Z</lastmod>
+    <lastmod>2025-05-29T03:20:57.276Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/pages.html</loc>
-    <lastmod>2025-05-28T22:46:44.462Z</lastmod>
+    <lastmod>2025-05-29T03:20:57.276Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/graph/layout/elk.html</loc>
-    <lastmod>2025-05-28T22:47:17.223Z</lastmod>
+    <lastmod>2025-05-29T03:21:26.346Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/civitas/explorer.html</loc>
-    <lastmod>2025-05-28T22:47:16.599Z</lastmod>
+    <lastmod>2025-05-29T03:21:25.730Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</loc>
-    <lastmod>2025-05-28T22:46:44.462Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/core/async/flow/visualization/flow_elk.html</loc>
-    <lastmod>2025-05-28T22:47:08.945Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/core/async/flow/visualization.html</loc>
-    <lastmod>2025-05-28T22:47:08.228Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/core/async/flow/example/stats.html</loc>
-    <lastmod>2025-05-28T22:47:08.127Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/core/async/flow/exploration.html</loc>
-    <lastmod>2025-05-28T22:47:08.918Z</lastmod>
+    <lastmod>2025-05-29T03:20:57.276Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/about.html</loc>
-    <lastmod>2025-05-28T22:46:44.462Z</lastmod>
+    <lastmod>2025-05-29T03:20:57.276Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/core/async/flow/exploration.html</loc>
+    <lastmod>2025-05-29T03:21:18.421Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/core/async/flow/example/stats.html</loc>
+    <lastmod>2025-05-29T03:21:17.618Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/core/async/flow/visualization.html</loc>
+    <lastmod>2025-05-29T03:21:17.716Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/core/async/flow/visualization/flow_elk.html</loc>
+    <lastmod>2025-05-29T03:21:18.446Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</loc>
+    <lastmod>2025-05-29T03:20:57.272Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/clojure+/print/objects_and_protocols.html</loc>
-    <lastmod>2025-05-28T22:47:09.333Z</lastmod>
+    <lastmod>2025-05-29T03:21:18.809Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/graph/layout/elk_svg.html</loc>
-    <lastmod>2025-05-28T22:47:17.275Z</lastmod>
+    <lastmod>2025-05-29T03:21:26.402Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/index.html</loc>
-    <lastmod>2025-05-28T22:46:44.462Z</lastmod>
+    <lastmod>2025-05-29T03:20:57.276Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/math/primes/factorization/sieve_augmented.html</loc>
-    <lastmod>2025-05-28T22:47:17.309Z</lastmod>
+    <lastmod>2025-05-29T03:21:26.435Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</loc>
-    <lastmod>2025-05-28T22:47:17.413Z</lastmod>
+    <lastmod>2025-05-29T03:21:26.535Z</lastmod>
   </url>
 </urlset>
