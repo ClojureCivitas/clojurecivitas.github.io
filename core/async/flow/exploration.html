@@ -411,22 +411,88 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 <script src="core/async/flow/exploration_files/md-default0.js" type="text/javascript"></script>
 <script src="core/async/flow/exploration_files/md-default1.js" type="text/javascript"></script>
-<section id="visualizing-core.async.flows" class="level1">
-<h1>Visualizing core.async.flows</h1>
-<p>Clojure’s async flows are Directed Acyclic Graphs (DAGs) of channel operations. The new <a href="https://github.com/clojure/core.async.flow-monitor">flow-monitor</a> can visualize these flows.</p>
+<p>One of Clojure’s superpowers is the ability to coordinate asynchronous operations using <code>core.async</code>. While powerful, these operations can become hard to reason about as they grow in complexity.</p>
+<p>The new <code>core.async.flow</code> library offers a higher-level abstraction for modeling async processes as a <strong>Directed Acyclic Graph (DAG)</strong>. And now, with <a href="https://github.com/clojure/core.async.flow-monitor">flow-monitor</a>, we can <em>visualize</em> and <em>analyze</em> those flows.</p>
+<p>Let’s walk through an exploration of such a flow.</p>
 <section id="what-well-explore" class="level2">
 <h2 class="anchored" data-anchor-id="what-well-explore">What We’ll Explore</h2>
+<p>In this notebook, we’ll take a look at:</p>
 <ol type="1">
-<li>Basic flow structure (processes, channels, connections)</li>
-<li>Static visualization of a sample flow</li>
-<li>Evolution as the flow changes</li>
+<li><strong>Basic flow structure</strong>: What does a flow look like under the hood?</li>
+<li><strong>Static visualization</strong>: How can we inspect its components?</li>
+<li><strong>Dynamic interaction</strong>: How do values move through the flow, and what happens when they do?</li>
 </ol>
+</section>
+<section id="creating-a-flow" class="level2">
+<h2 class="anchored" data-anchor-id="creating-a-flow">1. Creating a Flow</h2>
+<p>Flows are created from configuration</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> stats-flow</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (flow/create-flow stats/config))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>This flow models a small system involving aggregation, notification, and reporting. Internally, it consists of processes connected via channels.</p>
+</section>
+<section id="inspecting-the-flow" class="level2">
+<h2 class="anchored" data-anchor-id="inspecting-the-flow">2. Inspecting the Flow</h2>
+<p>Flows implement the <code>Datafy</code> protocol so we can inspect them as data.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(fv/proc-table stats-flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(datafy/datafy stats-flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:procs</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:generator</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:min</span> <span class="dv">0</span>, <span class="at">:max</span> <span class="dv">12</span>, <span class="at">:wait</span> <span class="dv">500</span>},</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.stats/source,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:min</span> <span class="st">"Min value to generate"</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">:max</span> <span class="st">"Max value to generate"</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">:wait</span> <span class="st">"Time in ms to wait between generating"</span>},</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span> {<span class="at">:out</span> <span class="st">"Output channel for stats"</span>}}}},</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aggregator</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:min</span> <span class="dv">1</span>, <span class="at">:max</span> <span class="dv">10</span>},</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.stats/aggregator,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:min</span> <span class="st">"Min value, alert if lower"</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">:max</span> <span class="st">"Max value, alert if higher"</span>},</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>     <span class="at">:ins</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:stat</span> <span class="st">"Channel to receive stat values"</span>,</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">:poke</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Channel to poke when it is time to report a window of data to the log"</span>},</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:alert</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Notify of value out of range {:val value, :error :high|:low"</span>},</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>     <span class="at">:workload</span> <span class="at">:compute</span>}}},</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">:scheduler</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:wait</span> <span class="dv">3000</span>},</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.stats/scheduler,</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span> {<span class="at">:wait</span> <span class="st">"Time to wait between pokes"</span>},</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:out</span> <span class="st">"Poke channel, will send true when the alarm goes off"</span>}}}},</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">:notifier</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:prefix</span> <span class="st">"Alert: "</span>},</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.stats/printer,</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span> {<span class="at">:prefix</span> <span class="st">"Log message prefix"</span>},</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>     <span class="at">:ins</span> {<span class="at">:in</span> <span class="st">"Channel to receive messages"</span>}}},</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>   <span class="at">:chan-opts</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:in</span> {<span class="at">:buf-or-n</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">3</span>}}}}},</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a> <span class="at">:conns</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a> [[[<span class="at">:generator</span> <span class="at">:out</span>] [<span class="at">:aggregator</span> <span class="at">:stat</span>]]</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>  [[<span class="at">:scheduler</span> <span class="at">:out</span>] [<span class="at">:aggregator</span> <span class="at">:poke</span>]]</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>  [[<span class="at">:aggregator</span> <span class="at">:alert</span>] [<span class="at">:notifier</span> <span class="at">:in</span>]]],</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a> <span class="at">:execs</span> {<span class="at">:mixed</span> <span class="va">nil</span>, <span class="at">:io</span> <span class="va">nil</span>, <span class="at">:compute</span> <span class="va">nil</span>},</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a> <span class="at">:chans</span> {}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>That’s a lot to take in! Fortunately, we can make things more digestible by viewing just the <strong>processes</strong> involved.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(fv/proc-table stats-flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="clay-table">
 <div class="table-responsive">
@@ -563,8 +629,10 @@ Time in ms to wait between generating
 </table>
 </div>
 </div>
+<p>This table gives us a clear list of components in the flow, including their names and behaviors.</p>
+<p>Next, let’s examine how these processes are <strong>connected</strong>.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(fv/conn-table stats-flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(fv/conn-table stats-flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="clay-table">
 <div class="table-responsive">
@@ -592,261 +660,184 @@ Time in ms to wait between generating
 </table>
 </div>
 </div>
+<p>Now we’re seeing the wiring: who talks to whom, and through what channels.</p>
+</section>
+<section id="running-the-flow" class="level2">
+<h2 class="anchored" data-anchor-id="running-the-flow">3. Running the Flow</h2>
+<p>Time to bring our flow to life! Calling <code>start</code> activates the processes and returns a map of the important channels for interaction.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> chs </span>(flow/start stats-flow))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> chs </span>(flow/start stats-flow))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>trigger an alert</p>
+<p>We can now <strong>inject values</strong> into specific points in the flow. Think of this like poking the system and watching how it reacts.</p>
+<p>We send a “poke” signal to the <code>aggregator</code> process.</p>
+<p>We send a stat string that is designed to trigger an alert.</p>
+<p>We send a notification message into the <code>notifier</code>.</p>
+</section>
+<section id="observing-the-results" class="level2">
+<h2 class="anchored" data-anchor-id="observing-the-results">4. Observing the Results</h2>
+<p>Our flow includes a <code>report-chan</code>, where summaries and reports might be sent.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> report-chan </span>(<span class="at">:report-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> report-chan </span>(<span class="at">:report-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(flow/ping stats-flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(flow/ping stats-flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:aggregator</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a> #<span class="at">:clojure.core.async.flow</span>{<span class="at">:pid</span> <span class="at">:aggregator</span>,</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:status</span> <span class="at">:paused</span>,</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:state</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:min</span> <span class="dv">1</span>,</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:max</span> <span class="dv">10</span>,</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/pid</span> <span class="at">:aggregator</span>,</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:vals</span> []},</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:ins</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:stat</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">10</span>}},</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:poke</span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">10</span>}}},</span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:outs</span></span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:alert</span></span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> SlidingBuffer,</span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">3</span>}}}},</span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a> <span class="at">:scheduler</span></span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a> #<span class="at">:clojure.core.async.flow</span>{<span class="at">:pid</span> <span class="at">:scheduler</span>,</span>
-<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:status</span> <span class="at">:paused</span>,</span>
-<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:state</span></span>
-<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:wait</span> <span class="dv">3000</span>,</span>
-<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/pid</span> <span class="at">:scheduler</span>,</span>
-<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/in-ports</span></span>
-<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:alarm</span></span>
-<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:buffer</span></span>
-<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>                              {<span class="at">:type</span> FixedBuffer,</span>
-<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>                               <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>                               <span class="at">:capacity</span> <span class="dv">10</span>}}},</span>
-<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:stop</span> [<span class="va">false</span>]},</span>
-<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:ins</span></span>
-<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:alarm</span></span>
-<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
-<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
-<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">10</span>}}},</span>
-<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:outs</span></span>
-<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:out</span></span>
-<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
-<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
-<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">10</span>}}}},</span>
-<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a> <span class="at">:notifier</span></span>
-<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a> #<span class="at">:clojure.core.async.flow</span>{<span class="at">:pid</span> <span class="at">:notifier</span>,</span>
-<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:status</span> <span class="at">:paused</span>,</span>
-<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:state</span></span>
-<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:prefix</span> <span class="st">"Alert: "</span>,</span>
-<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/pid</span> <span class="at">:notifier</span>},</span>
-<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:ins</span></span>
-<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:in</span></span>
-<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
-<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> SlidingBuffer,</span>
-<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">3</span>}}},</span>
-<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:outs</span> {}},</span>
-<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a> <span class="at">:generator</span></span>
-<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a> #<span class="at">:clojure.core.async.flow</span>{<span class="at">:pid</span> <span class="at">:generator</span>,</span>
-<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:status</span> <span class="at">:paused</span>,</span>
-<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:state</span></span>
-<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:min</span> <span class="dv">0</span>,</span>
-<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:max</span> <span class="dv">12</span>,</span>
-<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:wait</span> <span class="dv">500</span>,</span>
-<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/pid</span> <span class="at">:generator</span>,</span>
-<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/in-ports</span></span>
-<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:stat</span></span>
-<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:buffer</span></span>
-<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a>                              {<span class="at">:type</span> FixedBuffer,</span>
-<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a>                               <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a>                               <span class="at">:capacity</span> <span class="dv">100</span>}}},</span>
-<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:stop</span> [<span class="va">false</span>]},</span>
-<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:ins</span></span>
-<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:stat</span></span>
-<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
-<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
-<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">100</span>}}},</span>
-<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:outs</span></span>
-<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:out</span></span>
-<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
-<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
-<span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
-<span id="cb7-124"><a href="#cb7-124" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">10</span>}}}}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:aggregator</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> #<span class="at">:clojure.core.async.flow</span>{<span class="at">:pid</span> <span class="at">:aggregator</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:status</span> <span class="at">:paused</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:state</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:min</span> <span class="dv">1</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:max</span> <span class="dv">10</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/pid</span> <span class="at">:aggregator</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:vals</span> []},</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:ins</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:stat</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">10</span>}},</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:poke</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">10</span>}}},</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:outs</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:alert</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> SlidingBuffer,</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">3</span>}}}},</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a> <span class="at">:notifier</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a> #<span class="at">:clojure.core.async.flow</span>{<span class="at">:pid</span> <span class="at">:notifier</span>,</span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:status</span> <span class="at">:paused</span>,</span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:state</span></span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:prefix</span> <span class="st">"Alert: "</span>,</span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/pid</span> <span class="at">:notifier</span>},</span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:ins</span></span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:in</span></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> SlidingBuffer,</span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">3</span>}}},</span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:outs</span> {}},</span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a> <span class="at">:scheduler</span></span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a> #<span class="at">:clojure.core.async.flow</span>{<span class="at">:pid</span> <span class="at">:scheduler</span>,</span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:status</span> <span class="at">:paused</span>,</span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:state</span></span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:wait</span> <span class="dv">3000</span>,</span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/pid</span> <span class="at">:scheduler</span>,</span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/in-ports</span></span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:alarm</span></span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:buffer</span></span>
+<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a>                              {<span class="at">:type</span> FixedBuffer,</span>
+<span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a>                               <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a>                               <span class="at">:capacity</span> <span class="dv">10</span>}}},</span>
+<span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:stop</span> [<span class="va">false</span>]},</span>
+<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-70"><a href="#cb9-70" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:ins</span></span>
+<span id="cb9-71"><a href="#cb9-71" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:alarm</span></span>
+<span id="cb9-72"><a href="#cb9-72" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-73"><a href="#cb9-73" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-74"><a href="#cb9-74" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb9-75"><a href="#cb9-75" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
+<span id="cb9-76"><a href="#cb9-76" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
+<span id="cb9-77"><a href="#cb9-77" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-78"><a href="#cb9-78" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">10</span>}}},</span>
+<span id="cb9-79"><a href="#cb9-79" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:outs</span></span>
+<span id="cb9-80"><a href="#cb9-80" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:out</span></span>
+<span id="cb9-81"><a href="#cb9-81" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-82"><a href="#cb9-82" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-83"><a href="#cb9-83" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb9-84"><a href="#cb9-84" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
+<span id="cb9-85"><a href="#cb9-85" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
+<span id="cb9-86"><a href="#cb9-86" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-87"><a href="#cb9-87" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">10</span>}}}},</span>
+<span id="cb9-88"><a href="#cb9-88" aria-hidden="true" tabindex="-1"></a> <span class="at">:generator</span></span>
+<span id="cb9-89"><a href="#cb9-89" aria-hidden="true" tabindex="-1"></a> #<span class="at">:clojure.core.async.flow</span>{<span class="at">:pid</span> <span class="at">:generator</span>,</span>
+<span id="cb9-90"><a href="#cb9-90" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:status</span> <span class="at">:paused</span>,</span>
+<span id="cb9-91"><a href="#cb9-91" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:state</span></span>
+<span id="cb9-92"><a href="#cb9-92" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:min</span> <span class="dv">0</span>,</span>
+<span id="cb9-93"><a href="#cb9-93" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:max</span> <span class="dv">12</span>,</span>
+<span id="cb9-94"><a href="#cb9-94" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:wait</span> <span class="dv">500</span>,</span>
+<span id="cb9-95"><a href="#cb9-95" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/pid</span> <span class="at">:generator</span>,</span>
+<span id="cb9-96"><a href="#cb9-96" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:clojure.core.async.flow/in-ports</span></span>
+<span id="cb9-97"><a href="#cb9-97" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:stat</span></span>
+<span id="cb9-98"><a href="#cb9-98" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-99"><a href="#cb9-99" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-100"><a href="#cb9-100" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb9-101"><a href="#cb9-101" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:buffer</span></span>
+<span id="cb9-102"><a href="#cb9-102" aria-hidden="true" tabindex="-1"></a>                              {<span class="at">:type</span> FixedBuffer,</span>
+<span id="cb9-103"><a href="#cb9-103" aria-hidden="true" tabindex="-1"></a>                               <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-104"><a href="#cb9-104" aria-hidden="true" tabindex="-1"></a>                               <span class="at">:capacity</span> <span class="dv">100</span>}}},</span>
+<span id="cb9-105"><a href="#cb9-105" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:stop</span> [<span class="va">false</span>]},</span>
+<span id="cb9-106"><a href="#cb9-106" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-107"><a href="#cb9-107" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:ins</span></span>
+<span id="cb9-108"><a href="#cb9-108" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:stat</span></span>
+<span id="cb9-109"><a href="#cb9-109" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-110"><a href="#cb9-110" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-111"><a href="#cb9-111" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb9-112"><a href="#cb9-112" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
+<span id="cb9-113"><a href="#cb9-113" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
+<span id="cb9-114"><a href="#cb9-114" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-115"><a href="#cb9-115" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">100</span>}}},</span>
+<span id="cb9-116"><a href="#cb9-116" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:outs</span></span>
+<span id="cb9-117"><a href="#cb9-117" aria-hidden="true" tabindex="-1"></a>                           {<span class="at">:out</span></span>
+<span id="cb9-118"><a href="#cb9-118" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-119"><a href="#cb9-119" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb9-120"><a href="#cb9-120" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb9-121"><a href="#cb9-121" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:buffer</span></span>
+<span id="cb9-122"><a href="#cb9-122" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:type</span> FixedBuffer,</span>
+<span id="cb9-123"><a href="#cb9-123" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:count</span> <span class="dv">0</span>,</span>
+<span id="cb9-124"><a href="#cb9-124" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:capacity</span> <span class="dv">10</span>}}}}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(async/poll! report-chan)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(async/poll! report-chan)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>After pinging the system, we check if anything landed in the report channel.</p>
+<p>We can also inspect the <code>error-chan</code>, where any issues in the flow are reported.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> error-chan </span>(<span class="at">:error-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> error-chan </span>(<span class="at">:error-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(async/poll! error-chan)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(async/poll! error-chan)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>If something unexpected occurred (e.g., bad input or failed routing), this is where we’d find it.</p>
 <p>(flow/stop stats-flow) (async/close! stat-chan)</p>
 <p>@(flow/inject stats-flow [:aggregator :poke] [true])</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(datafy/datafy stats-flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:procs</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:generator</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:min</span> <span class="dv">0</span>, <span class="at">:max</span> <span class="dv">12</span>, <span class="at">:wait</span> <span class="dv">500</span>},</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.stats/source,</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:min</span> <span class="st">"Min value to generate"</span>,</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">:max</span> <span class="st">"Max value to generate"</span>,</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">:wait</span> <span class="st">"Time in ms to wait between generating"</span>},</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span> {<span class="at">:out</span> <span class="st">"Output channel for stats"</span>}}}},</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">:aggregator</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:min</span> <span class="dv">1</span>, <span class="at">:max</span> <span class="dv">10</span>},</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.stats/aggregator,</span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:min</span> <span class="st">"Min value, alert if lower"</span>,</span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">:max</span> <span class="st">"Max value, alert if higher"</span>},</span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>     <span class="at">:ins</span></span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:stat</span> <span class="st">"Channel to receive stat values"</span>,</span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">:poke</span></span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Channel to poke when it is time to report a window of data to the log"</span>},</span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span></span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:alert</span></span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Notify of value out of range {:val value, :error :high|:low"</span>},</span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>     <span class="at">:workload</span> <span class="at">:compute</span>}}},</span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">:scheduler</span></span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:wait</span> <span class="dv">3000</span>},</span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
-<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.stats/scheduler,</span>
-<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
-<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span> {<span class="at">:wait</span> <span class="st">"Time to wait between pokes"</span>},</span>
-<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span></span>
-<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:out</span> <span class="st">"Poke channel, will send true when the alarm goes off"</span>}}}},</span>
-<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">:notifier</span></span>
-<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:prefix</span> <span class="st">"Alert: "</span>},</span>
-<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
-<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.stats/printer,</span>
-<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
-<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span> {<span class="at">:prefix</span> <span class="st">"Log message prefix"</span>},</span>
-<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>     <span class="at">:ins</span> {<span class="at">:in</span> <span class="st">"Channel to receive messages"</span>}}},</span>
-<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>   <span class="at">:chan-opts</span></span>
-<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:in</span> {<span class="at">:buf-or-n</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">3</span>}}}}},</span>
-<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a> <span class="at">:conns</span></span>
-<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a> [[[<span class="at">:generator</span> <span class="at">:out</span>] [<span class="at">:aggregator</span> <span class="at">:stat</span>]]</span>
-<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>  [[<span class="at">:scheduler</span> <span class="at">:out</span>] [<span class="at">:aggregator</span> <span class="at">:poke</span>]]</span>
-<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a>  [[<span class="at">:aggregator</span> <span class="at">:alert</span>] [<span class="at">:notifier</span> <span class="at">:in</span>]]],</span>
-<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a> <span class="at">:execs</span> {<span class="at">:mixed</span> <span class="va">nil</span>, <span class="at">:io</span> <span class="va">nil</span>, <span class="at">:compute</span> <span class="va">nil</span>},</span>
-<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a> <span class="at">:chans</span></span>
-<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a> {<span class="at">:ins</span></span>
-<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a>  {[<span class="at">:aggregator</span> <span class="at">:stat</span>]</span>
-<span id="cb14-53"><a href="#cb14-53" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-54"><a href="#cb14-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-55"><a href="#cb14-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb14-56"><a href="#cb14-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}},</span>
-<span id="cb14-57"><a href="#cb14-57" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:aggregator</span> <span class="at">:poke</span>]</span>
-<span id="cb14-58"><a href="#cb14-58" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-59"><a href="#cb14-59" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-60"><a href="#cb14-60" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb14-61"><a href="#cb14-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}},</span>
-<span id="cb14-62"><a href="#cb14-62" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:notifier</span> <span class="at">:in</span>]</span>
-<span id="cb14-63"><a href="#cb14-63" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-64"><a href="#cb14-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-65"><a href="#cb14-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb14-66"><a href="#cb14-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">3</span>}}},</span>
-<span id="cb14-67"><a href="#cb14-67" aria-hidden="true" tabindex="-1"></a>  <span class="at">:outs</span></span>
-<span id="cb14-68"><a href="#cb14-68" aria-hidden="true" tabindex="-1"></a>  {[<span class="at">:generator</span> <span class="at">:out</span>]</span>
-<span id="cb14-69"><a href="#cb14-69" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-70"><a href="#cb14-70" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-71"><a href="#cb14-71" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb14-72"><a href="#cb14-72" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}},</span>
-<span id="cb14-73"><a href="#cb14-73" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:aggregator</span> <span class="at">:alert</span>]</span>
-<span id="cb14-74"><a href="#cb14-74" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-75"><a href="#cb14-75" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-76"><a href="#cb14-76" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb14-77"><a href="#cb14-77" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">3</span>}},</span>
-<span id="cb14-78"><a href="#cb14-78" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:scheduler</span> <span class="at">:out</span>]</span>
-<span id="cb14-79"><a href="#cb14-79" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-80"><a href="#cb14-80" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-81"><a href="#cb14-81" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb14-82"><a href="#cb14-82" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}}},</span>
-<span id="cb14-83"><a href="#cb14-83" aria-hidden="true" tabindex="-1"></a>  <span class="at">:error</span></span>
-<span id="cb14-84"><a href="#cb14-84" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-85"><a href="#cb14-85" aria-hidden="true" tabindex="-1"></a>   <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-86"><a href="#cb14-86" aria-hidden="true" tabindex="-1"></a>   <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb14-87"><a href="#cb14-87" aria-hidden="true" tabindex="-1"></a>   <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">100</span>}},</span>
-<span id="cb14-88"><a href="#cb14-88" aria-hidden="true" tabindex="-1"></a>  <span class="at">:report</span></span>
-<span id="cb14-89"><a href="#cb14-89" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-90"><a href="#cb14-90" aria-hidden="true" tabindex="-1"></a>   <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb14-91"><a href="#cb14-91" aria-hidden="true" tabindex="-1"></a>   <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb14-92"><a href="#cb14-92" aria-hidden="true" tabindex="-1"></a>   <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">100</span>}}}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<p>By constructing, inspecting, and interacting with a flow, we can understand the lifecycle and structure of asynchronous systems more clearly.</p>
+<p>This toolset provides a bridge between the abstract beauty of DAGs and the gritty realism of channel communication—unlocking both power and clarity in asynchronous Clojure code.</p>
+<p>Happy flowing!</p>
 <div style="background-color:grey;height:2px;width:100%;"></div>
 <div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/core/async/flow/exploration.clj">notebooks/core/async/flow/exploration.clj</a></small></small></pre></div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
