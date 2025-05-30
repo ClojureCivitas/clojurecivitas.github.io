@@ -14,7 +14,7 @@ Hello code champs, number ninjas and data divers!
 
 Imagine being able to experiment with Clojure without needing to install tooling, set up editors, or even know about deps.edn
 Sounds like a dream, right?
-Well, dream no more—meet Noj's new Code Reload Executable!
+Well, dream no more—meet [Noj's](https://scicloj.github.io/noj/) new Code Reload Executable!
 
 ![Noj](Noj-icon.svg)
 

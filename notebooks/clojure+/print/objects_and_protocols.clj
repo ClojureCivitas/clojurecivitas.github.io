@@ -1,5 +1,6 @@
 ^{:kindly/hide-code true
-  :clay             {:title  "Printing Objects in Clojure"
+  :clay             {:title  "Printing Objects and Protocols in Clojure"
+                     :draft  true
                      :type   :post
                      :date   "2025-06-09"
                      :quarto {:author :timothypratley}}}

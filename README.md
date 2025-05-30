@@ -26,22 +26,42 @@ See [About Clojure Civitas](https://clojurecivitas.github.io/about).
 Your perspective matters.
 Pull Requests invited, that's the point!
 
-### Write notebooks
+### Creating notebooks
 
-Add a notebook (Clojure namespace or markdown file) in the [`/notebooks`](notebooks) folder.
+Add a Clojure namespace or markdown file in the [`/notebooks`](notebooks) folder.
+
+Add metadata on your namespace to set the title, author, and tags.
+```clojure
+^{:kindly/hide-code true                 ; don't show this code in the notebook
+  :clay             {:title  "About Civitas Metadata"
+                     :quarto {:author   :my-unique-id
+                              :type     :post
+                              :date     "2025-06-05"
+                              :category :clojure
+                              :tags     [:metadata :civitas]}}}
+(ns my.namespace.example)
+```
 
 Configure your author profile in [clay.edn](clay.edn).
 
-**Optional:** Use [Kindly](https://scicloj.github.io/kindly-noted/kindly) annotations in your notebook to make visualizations
+Images can be added to the same folder as the namespace,
+and displayed in the notebook with markdown like `![caption](my-image.jpg)`.
+The first image on the page is used as a preview in the blog listing,
+unless a different image is listed in the metadata.
+
+[Kindly](https://scicloj.github.io/kindly-noted/kindly) annotations in your notebook are rendered as visualizations.
 
 ```clojure
-^kind/hiccup
-[:svg [:circle {:r 50}]]
+^kind/table
+{:tables      ["clean layout" "easy to scan" "communicates clearly"]
+ :charts      ["information-dense" "reveals insights" "pattern-focused"]
+ :hiccup      ["build anything" "custom layouts" "unlimited flexibility"]
+ :many-others ["see the examples" "creative uses" "visual variety"]}
 ```
 
-**Optional:** Use [Clay](https://scicloj.github.io/clay/#setup) to visualize the notebook as you write it.
+**Optional:** [Setup your editor with Clay shortcuts](https://scicloj.github.io/clay/#setup) to visualize the notebook as you write.
 
-**Optional:** Preview the final website
+**Optional:** Preview the final website.
 
 ```sh
 clojure -M:clay -a [:markdown]
@@ -51,12 +71,11 @@ clojure -M:clay -a [:markdown]
 quarto preview site
 ```
 
-[Quarto](https://quarto.org/) is a markdown publishing tool that enhances
-[Pandoc](https://pandoc.org/).
+[Quarto](https://quarto.org/) is the markdown publishing tool.
 
 ### Publish
 
-Merged pull requests are shown on the website via a workflow.
+Merged pull requests are automatically shown on the website.
 
 To create a pull request
 
@@ -64,6 +83,8 @@ To create a pull request
 2. make and commit changes in a new branch
 3. push the branch to your fork
 4. and then open a pull request on GitHub to propose merging your changes into the Civitas main branch.
+
+Please contact @timothypratley if you are having any difficulty submitting a notebook.
 
 ### Building the database
 

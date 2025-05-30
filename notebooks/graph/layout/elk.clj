@@ -1,6 +1,7 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Eclipse Layout Kernel"
                      :quarto {:author   :timothypratley
+                              :draft    true
                               :category :clojure
                               :tags     [:graphs :graph-layout]}}}
 (ns graph.layout.elk

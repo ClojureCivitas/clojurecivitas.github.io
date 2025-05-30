@@ -8,8 +8,7 @@
 (ns clojure.print-object.remove-extraneous
   (:require [clojure.core.async :as async]
             [clojure.string :as str])
-  (:import (clojure.lang MultiFn)
-           (java.io Writer)))
+  (:import (java.io Writer)))
 
 ^:kindly/hide-code ^:kind/hidden
 (set! *warn-on-reflection* true)
