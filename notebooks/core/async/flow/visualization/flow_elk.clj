@@ -1,6 +1,6 @@
 ^{:kindly/hide-code true
-  :clay             {:quarto {:title    "Flow to ELK data transformation"
-                              :author   :timothypratley
+  :clay             {:title    "Flow to ELK data transformation"
+                     :quarto {:author   :timothypratley
                               :draft    true
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}

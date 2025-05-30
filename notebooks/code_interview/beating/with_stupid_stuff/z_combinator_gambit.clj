@@ -1,6 +1,6 @@
 ^{:kindly/hide-code true
-  :clay             {:quarto {:title    "The Z-Combinator Gambit"
-                              :type     :post
+  :clay             {:title    "The Z-Combinator Gambit"
+                     :quarto {:type     :post
                               :image    "z-combinator.jpg"
                               :author   [:chouser :timothypratley]
                               :date     "2025-05-25"
