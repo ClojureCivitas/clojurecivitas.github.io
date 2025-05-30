@@ -1,9 +1,7 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Printing Objects and Protocols in Clojure"
-                     :draft  true
-                     :type   :post
-                     :date   "2025-06-09"
-                     :quarto {:author :timothypratley}}}
+                     :quarto {:author :timothypratley
+                              :draft  true}}}
 (ns clojure+.print.objects-and-protocols
   (:require [clojure.core.async :as async]
             [clojure.datafy :as datafy]

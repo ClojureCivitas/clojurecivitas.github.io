@@ -1,6 +1,7 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Core Async Flow Stats Example"
                      :quarto {:author   [:alexmiller :timothypratley]
+                              :draft    true
                               :type     :post
                               :date     "2025-05-15"
                               :category :clojure
