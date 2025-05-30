@@ -86,9 +86,14 @@ To create a pull request
 
 Please contact @timothypratley if you are having any difficulty submitting a notebook.
 
+### See your page views
+
+Publicly available [page view analytics](https://clojurecivitas.goatcounter.com/) indicate how widely your notebook is being shared.
+
 ### Building the database
 
-Add to or modify [db.edn](quarto/db.edn)
+Add to or modify [db.edn](quarto/db.edn).
+The goal is to create a database of resources for learning.
 
 ## Design
 
