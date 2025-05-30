@@ -1,7 +1,14 @@
-
+^{:clay
+  {:quarto {:title    "A few examples of Transducers"
+            :type     :post
+            :author   [:seancorfield :timothypratley]
+            :date     "2025-05-30"
+            :category :clojure
+            :tags     [:transducers :lazy-sequences :xforms]
+            :keywords [:transducers]}}}
 (ns clojure-camp.pairing)
 
-;; let's work on an algorithm together!
+;; let's work on a post together!
 
 ;; this produces a lazy sequence of strings:
 (map #(str "Hello, " % "!") ["Alice" "Bob" "Charlie"])
