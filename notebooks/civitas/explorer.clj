@@ -9,6 +9,9 @@
             [civitas.geometry :as geom]
             [civitas.svg :as svg]))
 
+;; We need a database of Clojure learning resources.
+
+^:kindly/hide-code
 (defn html [s content]
   [:foreignObject {:x      (- s)
                    :y      (- s)
@@ -36,10 +39,6 @@
                   (geom/hex (* 0.9 s)))
      (html s [:a {:href url}
               title])]))
-
-(comment
-  (kind/hiccup [:div (for [i (range 10)]
-                       (/ i 0))]))
 
 ^:kindly/hide-code
 (defn hex-grid [xs]
