@@ -28,6 +28,9 @@
 
 (async/chan)
 
+;; ![Objection!](objection.jpg)
+
+
 ;; Functions are printed as objects
 
 (fn [x] x)
@@ -96,6 +99,7 @@
 (format-class-name (remove-extraneous (class-name ((fn [] (fn [y] y))))))
 
 ;; So short, so sweet.
+;; If it's a function, why call it an object?
 
 (defn object-str ^String [x]
   (str (if (fn? x) "#fn" "#object")

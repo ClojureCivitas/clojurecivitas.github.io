@@ -92,7 +92,7 @@
 
 ;; > That's a confusing way to write it
 
-;; Quite right, because it's not obvious what (SELF SELF) is.
+;; Quite right, because it's not obvious what `(SELF SELF)` is.
 ;; We need to extract it out.
 ;; What we want is:
 
