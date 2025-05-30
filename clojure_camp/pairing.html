@@ -6,8 +6,12 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Sean Corfield">
+<meta name="author" content="Timothy Pratley">
+<meta name="dcterms.date" content="2025-05-30">
+<meta name="keywords" content="transducers">
 
-<title>pairing – Clojure Civitas</title>
+<title>A few examples of Transducers – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -110,7 +114,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
 
 
-<meta property="og:title" content="Clojure Civitas">
+<meta property="og:title" content="A few examples of Transducers – Clojure Civitas">
 <meta property="og:description" content="">
 <meta property="og:image" content="https://clojurecivitas.github.io/clojure_camp/images/civitas-icon.svg">
 <meta property="og:site_name" content="Clojure Civitas">
@@ -338,10 +342,63 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- margin-sidebar -->
     
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+<main class="content" id="quarto-document-content">
 
 
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">A few examples of Transducers</h1>
+</div>
 
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Authors</div>
+  <div class="quarto-title-meta-heading">Affiliations</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author"><a href="https://github.com/seancorfield">Sean Corfield</a> </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            <a href="https://clojure.camp/">
+            Clojure Camp
+            </a>
+          </p>
+      </div>
+    <div class="quarto-title-meta-contents">
+    <p class="author"><a href="https://timothypratley.blogspot.com/p/httpswww.html">Timothy Pratley</a> <a href="mailto:timothypratley@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            <a href="https://hummi.app">
+            Hummi
+            </a>
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 30, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+<div>
+  <div class="keywords">
+    <div class="block-title">Keywords</div>
+    <p>transducers</p>
+  </div>
+</div>
+
+</header>
 
 
 <style></style>
@@ -358,9 +415,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="clojure_camp/pairing_files/md-default1.js" type="text/javascript"></script>
 <script src="clojure_camp/pairing_files/portal2.js" type="text/javascript"></script>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> clojure-camp.pairing)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>^{<span class="at">:clay</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:quarto</span> {<span class="at">:title</span>    <span class="st">"A few examples of Transducers"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span>     <span class="at">:post</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">:author</span>   [<span class="at">:seancorfield</span> <span class="at">:timothypratley</span>]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">:date</span>     <span class="st">"2025-05-30"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">:category</span> <span class="at">:clojure</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">:tags</span>     [<span class="at">:transducers</span> <span class="at">:lazy-sequences</span> <span class="at">:xforms</span>]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">:keywords</span> [<span class="at">:transducers</span>]}}}</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> clojure-camp.pairing)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>let’s work on an algorithm together!</p>
+<p>let’s work on a post together!</p>
 <p>this produces a lazy sequence of strings:</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">map</span> #(<span class="kw">str</span> <span class="st">"Hello, "</span> <span class="va">%</span> <span class="st">"!"</span>) [<span class="st">"Alice"</span> <span class="st">"Bob"</span> <span class="st">"Charlie"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

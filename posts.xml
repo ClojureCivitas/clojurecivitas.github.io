@@ -52,9 +52,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x3eb022c2</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x45456cd1</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@3eb022c2"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@45456cd1"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -62,9 +62,9 @@ font-style: inherit;">"clojure.lang.MultiFn@3eb022c2"</span>]</span></code></pre
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x232f05b0</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x63c7beef</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@232f05b0"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@63c7beef"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -73,9 +73,9 @@ font-style: inherit;">"java.lang.Object@232f05b0"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x40a0c58c</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x259e235e</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@40a0c58c"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@259e235e"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -93,9 +93,9 @@ font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22346$fn__22347 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x43f3ff50</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x5b2e4796</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22346$fn__22347@43f3ff50"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22346$fn__22347@5b2e4796"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -113,9 +113,9 @@ font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22350$fn__22351$fn__22352 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x677f0c10</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x6b94ada6</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22350$fn__22351$fn__22352@677f0c10"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22350$fn__22351$fn__22352@6b94ada6"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -400,6 +400,414 @@ font-style: inherit;">fn</span> [y] y)))</span></code></pre></div>
  ]]></description>
   <guid>https://clojurecivitas.github.io/clojure/print_object/remove_extraneous.html</guid>
   <pubDate>Thu, 05 Jun 2025 00:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>A few examples of Transducers</title>
+  <dc:creator>Sean Corfield</dc:creator>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/clojure_camp/pairing.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="clojure_camp/pairing_files/md-default0.js" type="text/javascript"></script>
+<script src="clojure_camp/pairing_files/md-default1.js" type="text/javascript"></script>
+<script src="clojure_camp/pairing_files/portal2.js" type="text/javascript"></script>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1">^{<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:clay</span></span>
+<span id="cb1-2">  {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:quarto</span> {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:title</span>    <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"A few examples of Transducers"</span></span>
+<span id="cb1-3">            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:type</span>     <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:post</span></span>
+<span id="cb1-4">            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:author</span>   [<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:seancorfield</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:timothypratley</span>]</span>
+<span id="cb1-5">            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:date</span>     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"2025-05-30"</span></span>
+<span id="cb1-6">            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:category</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:clojure</span></span>
+<span id="cb1-7">            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:tags</span>     [<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:transducers</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:lazy-sequences</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:xforms</span>]</span>
+<span id="cb1-8">            <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:keywords</span> [<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:transducers</span>]}}}</span>
+<span id="cb1-9">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">ns</span> clojure-camp.pairing)</span></code></pre></div>
+</div>
+<p>let’s work on a post together!</p>
+<p>this produces a lazy sequence of strings:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">map</span> #(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">str</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, "</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">%</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"!"</span>) [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Alice"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Bob"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Charlie"</span>])</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, Alice!"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, Bob!"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, Charlie!"</span>)</span></code></pre></div>
+</div>
+<p>here’s the non-lazy transducer-based version:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">into</span> []</span>
+<span id="cb4-2">      (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">map</span> #(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">str</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, "</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">%</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"!"</span>))</span>
+<span id="cb4-3">      [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Alice"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Bob"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Charlie"</span>])</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1">[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, Alice!"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, Bob!"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, Charlie!"</span>]</span></code></pre></div>
+</div>
+<p>map with a single function argument produces a transducer:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">map</span> #(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">str</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, "</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">%</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"!"</span>))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1">#object [map$fn]</span></code></pre></div>
+</div>
+<p>we can build up xforms (transformers) using the <code>comp</code> function:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> xf </span>(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">comp</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">filter</span> #(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">&gt;</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">count</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">%</span>) <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>))</span>
+<span id="cb8-2">              (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">map</span> #(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">str</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, "</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">%</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"!"</span>))))</span></code></pre></div>
+</div>
+<p>and now use it with <code>into</code>:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">into</span> []</span>
+<span id="cb9-2">      xf <span class="co" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">; Bob gets filtered out</span></span>
+<span id="cb9-3">      [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Alice"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Bob"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Charlie"</span>])</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, Alice!"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, Charlie!"</span>]</span></code></pre></div>
+</div>
+<p>“traditional” SQL-like rows of columns:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1">^<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:kind/table</span></span>
+<span id="cb11-2">[{<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:name</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Alice"</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:age</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">30</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:city</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Wonderland"</span>}</span>
+<span id="cb11-3"> {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:name</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Bob"</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:age</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">25</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:city</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Builderland"</span>}</span>
+<span id="cb11-4"> {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:name</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Charlie"</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:age</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">35</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:city</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Chocolate Factory"</span>}]</span></code></pre></div>
+</div>
+<div class="clay-table">
+<div class="table-responsive">
+<table class="table table-hover clay-table caption-top" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">name</th>
+<th data-quarto-table-cell-role="th">age</th>
+<th data-quarto-table-cell-role="th">city</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Alice</td>
+<td>30</td>
+<td>Wonderland</td>
+</tr>
+<tr class="even">
+<td>Bob</td>
+<td>25</td>
+<td>Builderland</td>
+</tr>
+<tr class="odd">
+<td>Charlie</td>
+<td>35</td>
+<td>Chocolate Factory</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>more columnar format:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1">^<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:kind/table</span></span>
+<span id="cb12-2">{<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:name</span> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Alice"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Bob"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Charlie"</span>]</span>
+<span id="cb12-3"> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:age</span> [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">30</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">25</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">35</span>]</span>
+<span id="cb12-4"> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:city</span> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Wonderland"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Builderland"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Chocolate Factory"</span>]}</span></code></pre></div>
+</div>
+<div class="clay-table">
+<div class="table-responsive">
+<table class="table table-hover clay-table caption-top" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">name</th>
+<th data-quarto-table-cell-role="th">age</th>
+<th data-quarto-table-cell-role="th">city</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Alice</td>
+<td>30</td>
+<td>Wonderland</td>
+</tr>
+<tr class="even">
+<td>Bob</td>
+<td>25</td>
+<td>Builderland</td>
+</tr>
+<tr class="odd">
+<td>Charlie</td>
+<td>35</td>
+<td>Chocolate Factory</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>and display it as a portal widget:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1">^<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:kind/portal</span></span>
+<span id="cb13-2">{<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:name</span> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Alice"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Bob"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Charlie"</span>]</span>
+<span id="cb13-3"> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:age</span> [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">30</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">25</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">35</span>]</span>
+<span id="cb13-4"> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:city</span> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Wonderland"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Builderland"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Chocolate Factory"</span>]}</span></code></pre></div>
+</div>
+<div><script>portal_api.embed().renderOutputItem(
+                {'mime': 'x-application/edn',
+                 'text': (() => "^#:portal.viewer{:default :portal.viewer/hiccup} [:div [:p \"unimplemented kind\" [:code \":kind/portal\"]] [:portal.viewer/inspector ^#:kind{:portal true} {:name [\"Alice\" \"Bob\" \"Charlie\"], :age [30 25 35], :city [\"Wonderland\" \"Builderland\" \"Chocolate Factory\"]}]]")}
+                , document.currentScript.parentElement);</script></div>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/clojure_camp/pairing.clj">notebooks/clojure_camp/pairing.clj</a></small></small></pre></div>
+
+
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/clojure_camp/pairing.html</guid>
+  <pubDate>Fri, 30 May 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The Hallway Track: SciNoj Light #1 Data Analysis Stories</title>
