@@ -2,7 +2,7 @@
   :clay             {:title  "Core Async Flow Exploration"
                      :quarto {:author   [:daslu :timothypratley]
                               :type     :post
-                              :date     "2025-06-02"
+                              :date     "2025-05-16"
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}
 (ns core.async.flow.exploration

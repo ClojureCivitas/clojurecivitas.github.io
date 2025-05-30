@@ -2,7 +2,7 @@
   :clay             {:title  "Core Async Flow Stats Example"
                      :quarto {:author   [:alexmiller :timothypratley]
                               :type     :post
-                              :date     "2025-06-01"
+                              :date     "2025-05-15"
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}
 (ns core.async.flow.example.stats

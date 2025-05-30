@@ -9,9 +9,11 @@
             [clojure.string :as str]
             [core.async.flow.example.stats :as stats]))
 
-;; # Printing Objects in Clojure
-;;
-;; The Clojure default for printing objects is noisy:
+;; The Clojure default for printing objects is noisy.
+;; Clojure's `print-method` for `Object` delegates to `clojure.core/print-object`
+
+(defmethod print-method Object [x ^java.io.Writer w]
+  (#'clojure.core/print-object x w))
 
 (Object.)
 
@@ -240,9 +242,3 @@
 ;; All of that to say, do we really want those unique identifiers printed out?
 ;; No! If we need to find them, we can always look them up another way.
 ;; We don't need them polluting our REPL output.
-
-^:kindly/hide-code
-(comment "reset the printer back for testing")
-^:kind/hidden ^:kindly/hide-code
-(defmethod print-method Object [x ^java.io.Writer w]
-  (#'clojure.core/print-object x w))

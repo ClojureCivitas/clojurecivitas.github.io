@@ -7,7 +7,8 @@
                               :category :clojure
                               :tags     [:lambda-calculus :code-interview]
                               :keywords [:z-combinator]}}}
-(ns code-interview.beating.with-stupid-stuff.z-combinator-gambit)
+(ns code-interview.beating.with-stupid-stuff.z-combinator-gambit
+  (:require [clojure.print-object.remove-extraneous]))
 
 ;; Welcome back code champs, number ninjas, and data divers to our first episode of Beating Code Interviews with Stupid Stuff.
 ;; People often send me emails asking, "How can I use lambda calculus to impress people?"
