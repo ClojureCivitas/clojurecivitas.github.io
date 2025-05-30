@@ -200,7 +200,7 @@
 
   {:id     "clojurians"
    :title  "Clojurians Slack"
-   :url    "https://clojurians.net/"
+   :url    "http://clojurians.net/"
    :format :community
    :topics [:community :community/chat]
    :level  0}
