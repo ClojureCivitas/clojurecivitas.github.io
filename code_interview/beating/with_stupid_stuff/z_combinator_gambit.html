@@ -417,7 +417,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="z-combinator.jpg" class="img-fluid figure-img"></p>
-<figcaption>programmer staring at Z-combinator</figcaption>
+<figcaption>Programmer staring at Z-combinator</figcaption>
 </figure>
 </div>
 <p>I have an interview with ZCorp lined up in 5 minutes, and our challenge is to only use anonymous functions. No defn, no loops, and definitely no self-reference. I’ll allow myself the occasional def for brevity, but beyond that, we’ll be running on pure lambda calculus.</p>
@@ -454,7 +454,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">5</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; [5 4 3 2 1]</p>
 <p><code>SELF</code> is an input to itself, the logic of reversal.</p>
 <blockquote class="blockquote">
 <p>Ok let’s just move on to the next problem, creating a Fibonacci sequence.</p>
@@ -470,7 +469,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">conj</span> (SELF (<span class="kw">rest</span> LIST))</span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">first</span> LIST))))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<pre><code>((REV' REV') [1 2 3 4 5])</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>((REV' REV') [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">5</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><strong>error</strong></p>
 <p>Oh, no… <code>SELF</code> doesn’t take <code>LIST</code>, it’s a function that returns a function that operates on <code>LIST</code>, and the argument to <code>SELF</code> is… <code>SELF</code>. Therefore, we need to give it <code>(SELF SELF)</code>.</p>
 <div class="sourceClojure">
@@ -488,7 +487,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">5</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; [5 4 3 2 1]</p>
 <blockquote class="blockquote">
 <p>That’s a confusing way to write it</p>
 </blockquote>
@@ -516,14 +514,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; 1</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>((<span class="kw">identity</span> <span class="kw">identity</span>) <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; 1</p>
 <blockquote class="blockquote">
 <p>O.K. sure, but that’s a special case.</p>
 </blockquote>
@@ -533,7 +529,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; 1</p>
 <blockquote class="blockquote">
 <p>This is an identity crisis.</p>
 </blockquote>
@@ -590,7 +585,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Obviously. <strong>raises hands in dispair</strong></p>
 </blockquote>
 <p>Because <code>(FIX F) = ((FIX F) (FIX F))</code>, it was your idea to refactor remember?</p>
-<pre><code>(FIX REV-LOGIC)</code></pre>
+<div class="sourceCode" id="cb23"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(FIX REV-LOGIC)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><strong>stack overflow</strong></p>
 <blockquote class="blockquote">
 <p>Everything looks to be inside out now.</p>
@@ -646,7 +641,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb28"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">5</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; [5 4 3 2 1]</p>
 <blockquote class="blockquote">
 <p>Nice, that’s the right answer.</p>
 </blockquote>
@@ -657,14 +651,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb30"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">5</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; [5 4 3 2 1]</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb31"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>((REV-LOGIC (REV-LOGIC (FIX REV-LOGIC))) [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">5</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb32"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">5</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; [5 4 3 2 1]</p>
 <blockquote class="blockquote">
 <p>I can’t believe something so ridiculous actually works.</p>
 </blockquote>
@@ -684,7 +676,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb35"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">5</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; [5 4 3 2 1]</p>
 <blockquote class="blockquote">
 <p>Wait, we are meant to be doing Fibonacci, remember?</p>
 </blockquote>
@@ -692,7 +683,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <blockquote class="blockquote">
 <p>It looks to me like you doubled the code, that’s not great refactoring. Using single letters make it totally unreadable.</p>
 </blockquote>
-<p>Hmmm you got me there, there does seem to be a lot of doubling. What if we had a function for <code>f =&gt; (f f)</code></p>
+<p>Hmmm, there does seem to be a lot of doubling. We can factor out a function for <code>f =&gt; (f f)</code>.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb36"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> REPLICATE </span><span class="st">"Omega, the self-devouring serpent"</span></span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">fn</span> [F]</span>
@@ -705,9 +696,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb38"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; 1</p>
 <p>But test not the serpent lightly</p>
-<pre><code>(REPLICATE REPLICATE)</code></pre>
+<div class="sourceCode" id="cb39"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>(REPLICATE REPLICATE)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><strong>stack overflow</strong></p>
 <p>The replication of replication is eternal. Now we can clean up that duplication.</p>
 <div class="sourceClojure">
@@ -722,7 +712,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb42"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">5</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; [5 4 3 2 1]</p>
 <blockquote class="blockquote">
 <p>That’s not really any clearer…</p>
 </blockquote>
@@ -747,7 +736,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb46"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">5</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; [5 4 3 2 1]</p>
 <p>That’s much nicer, I’m so glad you suggested using longer names.</p>
 <blockquote class="blockquote">
 <p>Can we write Fibonacci, <em>please</em>?</p>
@@ -767,7 +755,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb49"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">13</span> <span class="dv">8</span> <span class="dv">8</span> <span class="dv">5</span> <span class="dv">5</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; (13 8 8 5 5 3 3 2 2 1 1 1)</p>
 <blockquote class="blockquote">
 <p>That’s all backward!!</p>
 </blockquote>
@@ -778,7 +765,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb51"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">5</span> <span class="dv">5</span> <span class="dv">8</span> <span class="dv">8</span> <span class="dv">13</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; [1 1 1 2 2 3 3 5 5 8 8 13]</p>
 <blockquote class="blockquote">
 <p>You can’t be serious… This is ridiculous. We’ll be here forever if you keep this up.</p>
 </blockquote>
@@ -797,12 +783,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb54"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">5</span> <span class="dv">8</span> <span class="dv">13</span> <span class="dv">21</span> <span class="dv">34</span> <span class="dv">55</span> <span class="dv">89</span> <span class="dv">144</span> <span class="dv">233</span> <span class="dv">377</span> <span class="dv">610</span> <span class="dv">987</span> <span class="dv">1597</span> <span class="dv">2584</span> <span class="dv">4181</span> <span class="dv">6765</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>=&gt; (1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765)</p>
 <p>That’s so nice.</p>
 <blockquote class="blockquote">
 <p>Oh look at the time! I have a more important meeting to go to! <strong>disconnects</strong></p>
 </blockquote>
-<p>Ouch, Rough. ZCorp never got back to me, so let’s update the scoreboard as a loss without a GG.</p>
+<p>Ouch, Rough. ZCorp never got back to me, so let’s update the scoreboard as a loss.</p>
 <div class="clay-table">
 <div class="table-responsive">
 <table class="table table-hover clay-table caption-top" data-quarto-postprocess="true">
