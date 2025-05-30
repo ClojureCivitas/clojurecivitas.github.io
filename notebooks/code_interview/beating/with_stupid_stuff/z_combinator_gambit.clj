@@ -130,7 +130,10 @@
 
 ;; > Well, it's a function! That much is clear...
 
-#_((REV-LOGIC REV-LOGIC) [1 2 3 4 5])
+;; ```clojure
+;; ((REV-LOGIC REV-LOGIC) [1 2 3 4 5])
+;; ```
+;; **Error**
 
 ;; But it doesn't work, because `(REV-LOGIC REV-LOGIC) =/= REV-LOGIC.`
 ;; Let's try something easier:
@@ -204,8 +207,10 @@
 
 ;; `LOGIC` is a function of itself, returning a function that acts on a value:
 
-#_(LOGIC (fn SELF [VALUE]
-           ((FIXED FIXED) VALUE)))
+;; ```clojure
+;; (LOGIC (fn SELF [VALUE]
+;;          ((FIXED FIXED) VALUE)))
+;; ```
 
 ;; > didn't you say that `(FIXED FIXED) = FIXED`?
 
