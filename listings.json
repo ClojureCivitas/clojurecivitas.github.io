@@ -2,6 +2,7 @@
   {
     "listing": "/pages.html",
     "items": [
+      "/clojure_camp/pairing.html",
       "/civitas/explorer.html"
     ]
   },

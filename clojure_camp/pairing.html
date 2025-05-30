@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Posts – Clojure Civitas</title>
+<title>pairing – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,33 +20,66 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./favicon.ico" rel="icon">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-516395c8ec564ed6a55db079f0ce3af9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-914863421d4fe038092d1dcc16faf7b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-516395c8ec564ed6a55db079f0ce3af9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-fab5cf0db713840dc2d18afc76739257.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-3df09a7cad352b3cb4390f3a9723c380.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-fab5cf0db713840dc2d18afc76739257.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../favicon.ico" rel="icon">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-516395c8ec564ed6a55db079f0ce3af9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-914863421d4fe038092d1dcc16faf7b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-516395c8ec564ed6a55db079f0ce3af9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-fab5cf0db713840dc2d18afc76739257.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-3df09a7cad352b3cb4390f3a9723c380.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-fab5cf0db713840dc2d18afc76739257.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -74,72 +107,13 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
-
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="alternate" type="application/rss+xml" title="Clojure Civitas" href="posts.xml" data-external="1"><meta property="og:title" content="Posts – Clojure Civitas">
-<meta property="og:image" content="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/noj_components.png">
+<meta property="og:title" content="Clojure Civitas">
+<meta property="og:description" content="">
+<meta property="og:image" content="https://clojurecivitas.github.io/clojure_camp/images/civitas-icon.svg">
 <meta property="og:site_name" content="Clojure Civitas">
-<meta property="og:image:height" content="740">
-<meta property="og:image:width" content="1420">
 </head>
 
 <body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -320,10 +294,10 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./images/civitas-icon.svg" alt="" class="navbar-logo">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../images/civitas-icon.svg" alt="" class="navbar-logo">
     </a>
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">Clojure Civitas</span>
     </a>
   </div>
@@ -334,15 +308,15 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="./posts.html" aria-current="page"> 
+    <a class="nav-link" href="../posts.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./pages.html"> 
+    <a class="nav-link" href="../pages.html"> 
 <span class="menu-text">Pages</span></a>
   </li>  
   <li class="nav-item compact">
@@ -364,187 +338,157 @@ window.Quarto = {
 <!-- margin-sidebar -->
     
 <!-- main -->
-<main class="content" id="quarto-document-content">
-
-
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Posts</h1>
-</div>
-
-
-
-<div class="quarto-title-meta">
-
-    
-  
-    
-  </div>
-  
-
-
-</header>
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
 
 
 
 
 
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="clojure_camp/pairing_files/md-default0.js" type="text/javascript"></script>
+<script src="clojure_camp/pairing_files/md-default1.js" type="text/javascript"></script>
+<script src="clojure_camp/pairing_files/portal2.js" type="text/javascript"></script>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> clojure-camp.pairing)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>let’s work on an algorithm together!</p>
+<p>this produces a lazy sequence of strings:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">map</span> #(<span class="kw">str</span> <span class="st">"Hello, "</span> <span class="va">%</span> <span class="st">"!"</span>) [<span class="st">"Alice"</span> <span class="st">"Bob"</span> <span class="st">"Charlie"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="st">"Hello, Alice!"</span> <span class="st">"Hello, Bob!"</span> <span class="st">"Hello, Charlie!"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>here’s the non-lazy transducer-based version:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">into</span> []</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">map</span> #(<span class="kw">str</span> <span class="st">"Hello, "</span> <span class="va">%</span> <span class="st">"!"</span>))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>      [<span class="st">"Alice"</span> <span class="st">"Bob"</span> <span class="st">"Charlie"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>[<span class="st">"Hello, Alice!"</span> <span class="st">"Hello, Bob!"</span> <span class="st">"Hello, Charlie!"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>map with a single function argument produces a transducer:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">map</span> #(<span class="kw">str</span> <span class="st">"Hello, "</span> <span class="va">%</span> <span class="st">"!"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>#object [map$fn]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>we can build up xforms (transformers) using the <code>comp</code> function:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> xf </span>(<span class="kw">comp</span> (<span class="kw">filter</span> #(<span class="kw">&gt;</span> (<span class="kw">count</span> <span class="va">%</span>) <span class="dv">3</span>))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">map</span> #(<span class="kw">str</span> <span class="st">"Hello, "</span> <span class="va">%</span> <span class="st">"!"</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>and now use it with <code>into</code>:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">into</span> []</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>      xf <span class="co">; Bob gets filtered out</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>      [<span class="st">"Alice"</span> <span class="st">"Bob"</span> <span class="st">"Charlie"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>[<span class="st">"Hello, Alice!"</span> <span class="st">"Hello, Charlie!"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>“traditional” SQL-like rows of columns:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kind/table</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>[{<span class="at">:name</span> <span class="st">"Alice"</span> <span class="at">:age</span> <span class="dv">30</span> <span class="at">:city</span> <span class="st">"Wonderland"</span>}</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a> {<span class="at">:name</span> <span class="st">"Bob"</span> <span class="at">:age</span> <span class="dv">25</span> <span class="at">:city</span> <span class="st">"Builderland"</span>}</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a> {<span class="at">:name</span> <span class="st">"Charlie"</span> <span class="at">:age</span> <span class="dv">35</span> <span class="at">:city</span> <span class="st">"Chocolate Factory"</span>}]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="clay-table">
+<div class="table-responsive">
+<table class="table table-hover clay-table caption-top" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">name</th>
+<th data-quarto-table-cell-role="th">age</th>
+<th data-quarto-table-cell-role="th">city</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Alice</td>
+<td>30</td>
+<td>Wonderland</td>
+</tr>
+<tr class="even">
+<td>Bob</td>
+<td>25</td>
+<td>Builderland</td>
+</tr>
+<tr class="odd">
+<td>Charlie</td>
+<td>35</td>
+<td>Chocolate Factory</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>more columnar format:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kind/table</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>{<span class="at">:name</span> [<span class="st">"Alice"</span> <span class="st">"Bob"</span> <span class="st">"Charlie"</span>]</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:age</span> [<span class="dv">30</span> <span class="dv">25</span> <span class="dv">35</span>]</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:city</span> [<span class="st">"Wonderland"</span> <span class="st">"Builderland"</span> <span class="st">"Chocolate Factory"</span>]}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="clay-table">
+<div class="table-responsive">
+<table class="table table-hover clay-table caption-top" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">name</th>
+<th data-quarto-table-cell-role="th">age</th>
+<th data-quarto-table-cell-role="th">city</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Alice</td>
+<td>30</td>
+<td>Wonderland</td>
+</tr>
+<tr class="even">
+<td>Bob</td>
+<td>25</td>
+<td>Builderland</td>
+</tr>
+<tr class="odd">
+<td>Charlie</td>
+<td>35</td>
+<td>Chocolate Factory</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>and display it as a portal widget:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kind/portal</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>{<span class="at">:name</span> [<span class="st">"Alice"</span> <span class="st">"Bob"</span> <span class="st">"Charlie"</span>]</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:age</span> [<span class="dv">30</span> <span class="dv">25</span> <span class="dv">35</span>]</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:city</span> [<span class="st">"Wonderland"</span> <span class="st">"Builderland"</span> <span class="st">"Chocolate Factory"</span>]}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div><script>portal_api.embed().renderOutputItem(
+                {'mime': 'x-application/edn',
+                 'text': (() => "^#:portal.viewer{:default :portal.viewer/hiccup} [:div [:p \"unimplemented kind\" [:code \":kind/portal\"]] [:portal.viewer/inspector ^#:kind{:portal true} {:name [\"Alice\" \"Bob\" \"Charlie\"], :age [30 25 35], :city [\"Wonderland\" \"Builderland\" \"Chocolate Factory\"]}]]")}
+                , document.currentScript.parentElement);</script></div>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/clojure_camp/pairing.clj">notebooks/clojure_camp/pairing.clj</a></small></small></pre></div>
 
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="listing-actions-group">
-   <div class="input-group input-group-sm quarto-listing-sort">
-    <span class="input-group-text"><i class="bi bi-sort-down"></i></span>
-    <select id="listing-listing-sort" class="form-select" aria-label="Order By" onchange="window['quarto-listings']['listing-listing'].sort(this.options[this.selectedIndex].value, { order: this.options[this.selectedIndex].getAttribute('data-direction')})">
-      <option value="" disabled="" selected="" hidden="">Order By</option>
-      <option value="index" data-direction="asc">Default</option>
-      <option value="listing-title" data-direction="asc">
-        Title
-      </option>
-      <option value="listing-date-sort" data-direction="asc">
-        Date - Oldest
-      </option>
-      <option value="listing-date-sort" data-direction="desc">
-        Date - Newest
-      </option>
-      <option value="listing-author" data-direction="asc">
-        Author
-      </option>
-    </select>
-  </div>
-    <div class="input-group input-group-sm quarto-listing-filter">
-      <span class="input-group-text"><i class="bi bi-search"></i></span>
-      <input type="text" class="search form-control" placeholder="Filter">
-    </div>
-</div>
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-date-sort="1749081600000" data-listing-file-modified-sort="1748631310837" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="696">
-<div class="thumbnail"><a href="./clojure/print_object/remove_extraneous.html" class="no-external">
 
-<p class="card-img-top"><img src="clojure/print_object/objection.jpg"  class="thumbnail-image card-img"/></p>
 
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./clojure/print_object/remove_extraneous.html" class="no-external">Clean object printing by removing extraneous</a>
-</h3>
-<div class="delink listing-description"><a href="./clojure/print_object/remove_extraneous.html" class="no-external">
-The Clojure default for printing objects is noisy. Clojure’s <code>print-method</code> for <code>Object</code> delegates to <code>clojure.core/print-object</code>
-</a></div>
-</div>
-<div class="metadata">
-<a href="./clojure/print_object/remove_extraneous.html" class="no-external">
-<div class="listing-date">
-Jun 5, 2025
-</div>
-<div class="listing-author">
-Timothy Pratley
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-listing-date-sort="1748390400000" data-listing-file-modified-sort="1748631290088" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="12" data-listing-word-count-sort="2276">
-<div class="thumbnail"><a href="./conferences/scinoj_light_1/notes/hallway_track.html" class="no-external">
-
-<img loading="lazy" src="./conferences/scinoj_light_1/notes/noj_components.png" class="thumbnail-image">
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./conferences/scinoj_light_1/notes/hallway_track.html" class="no-external">The Hallway Track: SciNoj Light #1 Data Analysis Stories</a>
-</h3>
-<div class="delink listing-description"><a href="./conferences/scinoj_light_1/notes/hallway_track.html" class="no-external">
-The SciNoj Light #1 Conference brought together Clojure enthusiasts, data scientists, and researchers for an engaging exploration of data analysis stories. The event…
-</a></div>
-</div>
-<div class="metadata">
-<a href="./conferences/scinoj_light_1/notes/hallway_track.html" class="no-external">
-<div class="listing-date">
-May 28, 2025
-</div>
-<div class="listing-author">
-Timothy Pratley
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-listing-date-sort="1748390400000" data-listing-file-modified-sort="1748631320977" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="345">
-<div class="thumbnail"><a href="./math/primes/factorization/sieve_augmented.html" class="no-external">
-
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./math/primes/factorization/sieve_augmented.html" class="no-external">Factorization of Eratosthenes</a>
-</h3>
-<div class="delink listing-description"><a href="./math/primes/factorization/sieve_augmented.html" class="no-external">
-Adapts the Sieve of Eratosthenes to prime factorize numbers through <code>n</code>.
-</a></div>
-</div>
-<div class="metadata">
-<a href="./math/primes/factorization/sieve_augmented.html" class="no-external">
-<div class="listing-date">
-May 28, 2025
-</div>
-<div class="listing-author">
-Tim Schafer
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-listing-date-sort="1748131200000" data-listing-file-modified-sort="1748631321057" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="9" data-listing-word-count-sort="1672">
-<div class="thumbnail"><a href="./code_interview/beating/with_stupid_stuff/z_combinator_gambit.html" class="no-external">
-
-<img loading="lazy" src="./code_interview/beating/with_stupid_stuff/z-combinator.jpg" class="thumbnail-image">
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./code_interview/beating/with_stupid_stuff/z_combinator_gambit.html" class="no-external">The Z-Combinator Gambit</a>
-</h3>
-<div class="delink listing-description"><a href="./code_interview/beating/with_stupid_stuff/z_combinator_gambit.html" class="no-external">
-Welcome back code champs, number ninjas, and data divers to our first episode of Beating Code Interviews with Stupid Stuff. People often send me emails asking, “How can I…
-</a></div>
-</div>
-<div class="metadata">
-<a href="./code_interview/beating/with_stupid_stuff/z_combinator_gambit.html" class="no-external">
-<div class="listing-date">
-May 25, 2025
-</div>
-<div class="listing-author">
-Chris Houser, Timothy Pratley
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="4" data-listing-date-sort="1746489600000" data-listing-file-modified-sort="1748631290091" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="255">
-<div class="thumbnail"><a href="./scicloj/noj/intro/getting-started-noj.html" class="no-external">
-
-<p class="card-img-top"><img src="scicloj/noj/intro/Noj-icon.svg"  class="thumbnail-image card-img"/></p>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./scicloj/noj/intro/getting-started-noj.html" class="no-external">Noj Reload Executable</a>
-</h3>
-<div class="delink listing-description"><a href="./scicloj/noj/intro/getting-started-noj.html" class="no-external">
-Transcript of Noj Reload Executable
-</a></div>
-</div>
-<div class="metadata">
-<a href="./scicloj/noj/intro/getting-started-noj.html" class="no-external">
-<div class="listing-date">
-May 6, 2025
-</div>
-<div class="listing-author">
-Timothy Pratley
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
