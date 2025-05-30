@@ -140,11 +140,11 @@
    :topics [:data :data/analysis]
    :level  1}
 
-  {:id     "notespace"
-   :title  "Notespace Live Notebooks"
-   :url    "https://github.com/scicloj/notespace"
-   :format :interactive-tool
-   :topics [:data :data/viz]
+  {:id     "clay"
+   :title  "Clay Documentation"
+   :url    "https://scicloj.github.io/clay/"
+   :format :publishing-tool
+   :topics [:data]
    :level  2}
 
   {:id     "tech.ml"
