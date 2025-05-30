@@ -52,9 +52,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0xae4e733</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x45456cd1</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@ae4e733"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@45456cd1"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -62,9 +62,9 @@ font-style: inherit;">"clojure.lang.MultiFn@ae4e733"</span>]</span></code></pre>
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x5412a7c6</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x63c7beef</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@5412a7c6"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@63c7beef"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -73,9 +73,9 @@ font-style: inherit;">"java.lang.Object@5412a7c6"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x4abcb7a5</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x259e235e</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@4abcb7a5"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@259e235e"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -93,9 +93,9 @@ font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22346$fn__22347 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x51d64d67</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x5b2e4796</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22346$fn__22347@51d64d67"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22346$fn__22347@5b2e4796"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -113,9 +113,9 @@ font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22350$fn__22351$fn__22352 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x12f1cdab</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x6b94ada6</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22350$fn__22351$fn__22352@12f1cdab"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22350$fn__22351$fn__22352@6b94ada6"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -1089,21 +1089,33 @@ font-style: inherit;">1</span></span></code></pre></div>
 <blockquote class="blockquote">
 <p>Well, it’s a function! That much is clear…</p>
 </blockquote>
+<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1">((REV-LOGIC REV-LOGIC) [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>])</span></code></pre></div>
+<p><strong>Error</strong></p>
 <p>But it doesn’t work, because <code>(REV-LOGIC REV-LOGIC) =/= REV-LOGIC.</code> Let’s try something easier:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> FIX</span></span>
-<span id="cb20-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb21-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb20-3">    <span class="co" style="color: #5E5E5E;
+<span id="cb21-3">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">;; return something like identity where self application does not change it</span></span>
-<span id="cb20-4">    <span class="co" style="color: #5E5E5E;
+<span id="cb21-4">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#_</span>FIXED))</span></code></pre></div>
 </div>
@@ -1121,19 +1133,6 @@ font-style: inherit;">#_</span>FIXED))</span></code></pre></div>
 <p>I’m starting to think that you are the broken one.</p>
 </blockquote>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1">(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;"> FIX</span></span>
-<span id="cb21-2">  (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb21-3">    ((FIX LOGIC) (FIX LOGIC))))</span></code></pre></div>
-</div>
-<p>But <code>FIX</code> can still see itself. We need to parameterize the use of <code>FIXED</code></p>
-<div class="sourceClojure">
 <div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
@@ -1143,16 +1142,29 @@ font-style: inherit;"> FIX</span></span>
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb22-3">    ((<span class="kw" style="color: #003B4F;
+<span id="cb22-3">    ((FIX LOGIC) (FIX LOGIC))))</span></code></pre></div>
+</div>
+<p>But <code>FIX</code> can still see itself. We need to parameterize the use of <code>FIXED</code></p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> FIX</span></span>
+<span id="cb23-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [LOGIC]</span>
+<span id="cb23-3">    ((<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [FIXED]</span>
-<span id="cb22-4">       (LOGIC (FIXED FIXED)))</span>
-<span id="cb22-5">     (<span class="kw" style="color: #003B4F;
+<span id="cb23-4">       (LOGIC (FIXED FIXED)))</span>
+<span id="cb23-5">     (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [FIXED]</span>
-<span id="cb22-6">       (LOGIC (FIXED FIXED))))))</span></code></pre></div>
+<span id="cb23-6">       (LOGIC (FIXED FIXED))))))</span></code></pre></div>
 </div>
 <p>There, I fixed it.</p>
 <blockquote class="blockquote">
@@ -1163,7 +1175,7 @@ font-style: inherit;">fn</span> [FIXED]</span>
 <p>Obviously. <strong>raises hands in dispair</strong></p>
 </blockquote>
 <p>Because <code>(FIX F) = ((FIX F) (FIX F))</code>, it was your idea to refactor remember?</p>
-<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1">(FIX REV-LOGIC)</span></code></pre></div>
+<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1">(FIX REV-LOGIC)</span></code></pre></div>
 <p><strong>stack overflow</strong></p>
 <blockquote class="blockquote">
 <p>Everything looks to be inside out now.</p>
@@ -1177,6 +1189,11 @@ font-style: inherit;">fn</span> [FIXED]</span>
 <p>That actually sounds logical.</p>
 </blockquote>
 <p><code>LOGIC</code> is a function of itself, returning a function that acts on a value:</p>
+<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1">(LOGIC (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> SELF [VALUE]</span>
+<span id="cb25-2">         ((FIXED FIXED) VALUE)))</span></code></pre></div>
 <blockquote class="blockquote">
 <p>didn’t you say that <code>(FIXED FIXED) = FIXED</code>?</p>
 </blockquote>
@@ -1186,33 +1203,33 @@ font-style: inherit;">fn</span> [FIXED]</span>
 </blockquote>
 <p>So while we are fixing logic, let’s replace <code>(LOGIC (FIXED FIXED))</code> with our deferring function.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> FIX</span></span>
-<span id="cb24-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb26-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb24-3">    ((<span class="kw" style="color: #003B4F;
+<span id="cb26-3">    ((<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [FIXED]</span>
-<span id="cb24-4">       (LOGIC (<span class="kw" style="color: #003B4F;
+<span id="cb26-4">       (LOGIC (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> SELF [VALUE]</span>
-<span id="cb24-5">                ((FIXED FIXED) VALUE))))</span>
-<span id="cb24-6">     (<span class="kw" style="color: #003B4F;
+<span id="cb26-5">                ((FIXED FIXED) VALUE))))</span>
+<span id="cb26-6">     (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [FIXED]</span>
-<span id="cb24-7">       (LOGIC (<span class="kw" style="color: #003B4F;
+<span id="cb26-7">       (LOGIC (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> SELF [VALUE]</span>
-<span id="cb24-8">                ((FIXED FIXED) VALUE)))))))</span></code></pre></div>
+<span id="cb26-8">                ((FIXED FIXED) VALUE)))))))</span></code></pre></div>
 </div>
 <p>Did you know this is called continuation passing style?</p>
 <blockquote class="blockquote">
@@ -1224,46 +1241,16 @@ font-style: inherit;">fn</span> SELF [VALUE]</span>
 </blockquote>
 <p>Isn’t it!? Fortunately, we are about to be unconfused.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1">(FIX REV-LOGIC)</span></code></pre></div>
+<div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1">(FIX REV-LOGIC)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1">#object [REV-LOGIC$fn]</span></code></pre></div>
+<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1">#object [REV-LOGIC$fn]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>At least it didn’t blow up this time…</p>
 </blockquote>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1">((FIX REV-LOGIC) [<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>])</span></code></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1">[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]</span></code></pre></div>
-</div>
-<blockquote class="blockquote">
-<p>Nice, that’s the right answer.</p>
-</blockquote>
-<p>Even nicer is that our fixed logic behaves like identity now:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1">((REV-LOGIC (FIX REV-LOGIC)) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1">((FIX REV-LOGIC) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1288,8 +1275,12 @@ font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>]</span></code></pre></div>
 </div>
+<blockquote class="blockquote">
+<p>Nice, that’s the right answer.</p>
+</blockquote>
+<p>Even nicer is that our fixed logic behaves like identity now:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1">((REV-LOGIC (REV-LOGIC (FIX REV-LOGIC))) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1">((REV-LOGIC (FIX REV-LOGIC)) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1314,40 +1305,8 @@ font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>]</span></code></pre></div>
 </div>
-<blockquote class="blockquote">
-<p>I can’t believe something so ridiculous actually works.</p>
-</blockquote>
-<p>Yes it is ridiculous to have all those silly names. Let’s fix that:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1">(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;"> Z</span></span>
-<span id="cb33-2">  (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [F]</span>
-<span id="cb33-3">    ((<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [X]</span>
-<span id="cb33-4">       (F (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [V] ((X X) V))))</span>
-<span id="cb33-5">     (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [X]</span>
-<span id="cb33-6">       (F (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [V] ((X X) V)))))))</span></code></pre></div>
-</div>
-<p>You are not your variables. Rename them, rebind them. Your essence is invariant.</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1">((Z REV-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1">((REV-LOGIC (REV-LOGIC (FIX REV-LOGIC))) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1360,7 +1319,65 @@ background-color: null;
 font-style: inherit;">5</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1">[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]</span></code></pre></div>
+</div>
+<blockquote class="blockquote">
+<p>I can’t believe something so ridiculous actually works.</p>
+</blockquote>
+<p>Yes it is ridiculous to have all those silly names. Let’s fix that:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> Z</span></span>
+<span id="cb35-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [F]</span>
+<span id="cb35-3">    ((<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [X]</span>
+<span id="cb35-4">       (F (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [V] ((X X) V))))</span>
+<span id="cb35-5">     (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [X]</span>
+<span id="cb35-6">       (F (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [V] ((X X) V)))))))</span></code></pre></div>
+</div>
+<p>You are not your variables. Rename them, rebind them. Your essence is invariant.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1">((Z REV-LOGIC) [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>])</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1381,22 +1398,22 @@ font-style: inherit;">1</span>]</span></code></pre></div>
 </blockquote>
 <p>Hmmm, there does seem to be a lot of doubling. We can factor out a function for <code>f =&gt; (f f)</code>.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb38-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> REPLICATE </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Omega, the self-devouring serpent"</span></span>
-<span id="cb36-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb38-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [F]</span>
-<span id="cb36-3">    (F F)))</span></code></pre></div>
+<span id="cb38-3">    (F F)))</span></code></pre></div>
 </div>
 <p>The replication of identity is itself.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1">((REPLICATE <span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1">((REPLICATE <span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">identity</span>) <span class="dv" style="color: #AD0000;
@@ -1404,35 +1421,35 @@ background-color: null;
 font-style: inherit;">1</span>)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb38-1"><span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb40-1"><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span></span></code></pre></div>
 </div>
 <p>But test not the serpent lightly</p>
-<div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1">(REPLICATE REPLICATE)</span></code></pre></div>
+<div class="sourceCode" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb41-1">(REPLICATE REPLICATE)</span></code></pre></div>
 <p><strong>stack overflow</strong></p>
 <p>The replication of replication is eternal. Now we can clean up that duplication.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb40-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb42-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> Z</span></span>
-<span id="cb40-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb42-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb40-3">    (REPLICATE (<span class="kw" style="color: #003B4F;
+<span id="cb42-3">    (REPLICATE (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [X]</span>
-<span id="cb40-4">                 (LOGIC (<span class="kw" style="color: #003B4F;
+<span id="cb42-4">                 (LOGIC (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [V] ((X X) V)))))))</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb41-1">((Z REV-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb43-1">((Z REV-LOGIC) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1445,7 +1462,7 @@ background-color: null;
 font-style: inherit;">5</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb42-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb44-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1462,45 +1479,45 @@ font-style: inherit;">1</span>]</span></code></pre></div>
 </blockquote>
 <p>Very well, we can keep extracting.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb43-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb45-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> DEFER </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Eta, the patient one"</span></span>
-<span id="cb43-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb45-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb43-3">    (<span class="kw" style="color: #003B4F;
+<span id="cb45-3">    (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [VALUE]</span>
-<span id="cb43-4">      ((REPLICATE LOGIC) VALUE))))</span></code></pre></div>
+<span id="cb45-4">      ((REPLICATE LOGIC) VALUE))))</span></code></pre></div>
 </div>
 <p>If the infinite is deferred, is it infinite?</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb44-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb46-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> FOLD </span><span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Zeta, weaver of logic, bringer of finitude"</span></span>
-<span id="cb44-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb46-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb44-3">    (REPLICATE (<span class="kw" style="color: #003B4F;
+<span id="cb46-3">    (REPLICATE (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [SELF]</span>
-<span id="cb44-4">                 (LOGIC (DEFER SELF))))))</span></code></pre></div>
+<span id="cb46-4">                 (LOGIC (DEFER SELF))))))</span></code></pre></div>
 </div>
 <p>OMEGA diverges, ZETA folds, LOGIC writes QED.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb45-1">((FOLD REV-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb47-1">((FOLD REV-LOGIC) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1513,7 +1530,7 @@ background-color: null;
 font-style: inherit;">5</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb46-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb48-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1531,22 +1548,22 @@ font-style: inherit;">1</span>]</span></code></pre></div>
 </blockquote>
 <p>Oh, that’s easy now!</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb47-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> FIB-LOGIC</span></span>
-<span id="cb47-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb49-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [SELF]</span>
-<span id="cb47-3">    (<span class="kw" style="color: #003B4F;
+<span id="cb49-3">    (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [[B A <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:as</span> FIBS]]</span>
-<span id="cb47-4">      (<span class="kw" style="color: #003B4F;
+<span id="cb49-4">      (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
@@ -1555,8 +1572,8 @@ font-weight: bold;
 font-style: inherit;">&gt;</span> B <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>)</span>
-<span id="cb47-5">        FIBS</span>
-<span id="cb47-6">        (SELF (<span class="kw" style="color: #003B4F;
+<span id="cb49-5">        FIBS</span>
+<span id="cb49-6">        (SELF (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">concat</span> [(<span class="kw" style="color: #003B4F;
@@ -1565,14 +1582,14 @@ font-weight: bold;
 font-style: inherit;">+</span> A B) B] FIBS))))))</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb48-1">((FOLD FIB-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1">((FOLD FIB-LOGIC) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1">(<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb51" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb51-1">(<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">13</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1603,14 +1620,14 @@ font-style: inherit;">1</span>)</span></code></pre></div>
 </blockquote>
 <p>Oh, my mistake</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1">((FOLD REV-LOGIC) ((FOLD FIB-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb52" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb52-1">((FOLD REV-LOGIC) ((FOLD FIB-LOGIC) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>]))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb51" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb51-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb53-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1641,28 +1658,28 @@ font-style: inherit;">13</span>]</span></code></pre></div>
 </blockquote>
 <p>I love that idea! An infinite sequence is exactly what we need…</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb52" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb52-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb54" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb54-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> FIB-LOGIC-FOREVER</span></span>
-<span id="cb52-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb54-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [SELF]</span>
-<span id="cb52-3">    (<span class="kw" style="color: #003B4F;
+<span id="cb54-3">    (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [A]</span>
-<span id="cb52-4">      (<span class="kw" style="color: #003B4F;
+<span id="cb54-4">      (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [B]</span>
-<span id="cb52-5">        (<span class="kw" style="color: #003B4F;
+<span id="cb54-5">        (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">lazy-seq</span></span>
-<span id="cb52-6">          (<span class="kw" style="color: #003B4F;
+<span id="cb54-6">          (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">cons</span> A ((SELF B) (<span class="kw" style="color: #003B4F;
@@ -1671,7 +1688,7 @@ font-weight: bold;
 font-style: inherit;">+</span> A B))))))))</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb53-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb55" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb55-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">take</span> <span class="dv" style="color: #AD0000;
@@ -1683,7 +1700,7 @@ background-color: null;
 font-style: inherit;">1</span>))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb54" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb54-1">(<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb56" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb56-1">(<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
