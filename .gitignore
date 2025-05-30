@@ -29,3 +29,6 @@ _site/
 /checkouts
 /classes
 /target
+.calva/repl.calva-repl
+.calva/mcp-server/port
+.portal/vs-code.edn
