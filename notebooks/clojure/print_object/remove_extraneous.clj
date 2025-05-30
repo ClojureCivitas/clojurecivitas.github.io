@@ -58,9 +58,10 @@
 ;; That is **very** useful information.
 ;; It tells us that the exception was inside `add2`, which is inside `caesar-cipher`.
 ;; The stack trace doesn't print functions as objects,
-;; I'm just pointing out that the thing that we care about for functions is really just that they are a function,
+;; but it illustrates that the thing that we care about is that they are a function,
 ;; what their name is, and whether they were created from inside another function.
-;; Let's go back to why printing a function as an object.
+
+;; Let's return to printing a function as an object.
 ;; An easy improvement is to demunge from Java names to Clojure names.
 ;; Demunging converts `_` to `-` and `$` to `/`, and munged characters like `+` which is `PLUS` in Java.
 
@@ -85,9 +86,11 @@
 
 ;; Much nicer.
 ;; I can actually read that!
-;; I'm not particularly fond of the long namespace shown,
-;; and multiple slashes form invalid symbols,
-;; so I prefer using $ as the name level delimiter.
+;; I'm not particularly fond of the long namespace shown as the name is either defined in this namespace,
+;; referred, or part of `clojure.core`.
+;; The multiple slashes form invalid symbols which annoy me;
+;; I prefer using `/` only for `namespace/name` separation and `$` as the name level delimiter:
+;; `my.namespace/my$nested$name`.
 
 (defn format-class-name ^String [s]
   (let [[ns-str & names] (-> (remove-extraneous s)
