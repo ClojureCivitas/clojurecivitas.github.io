@@ -4,44 +4,44 @@
 
 An open effort to structure learning resources with meaningful connections.
 
-Visit the deployed [Clojure Civitas Website](https://clojurecivitas.github.io).
+⚡ No setup – Clone this repo, make a new namespace, start coding.
+
+✍️ Write as you code – Capture notes, results, and ideas as you go as comments.
+
+🚀 Easy to share – Create a Pull Request, once merged it appears on the [Clojure Civitas Website](https://clojurecivitas.github.io).
+
+🧠 Build shared knowledge – Your work becomes part of a community resource.
+
+🧪 Use Clay – Your normal REPL workflow, but with tables, charts, markdown, and hiccup.
 
 ## Rationale
+
+*Exploramus, Communicamus, Crescimus*<br>
+<small>We explore, we share, we grow.</small>
 
 See [About Clojure Civitas](https://clojurecivitas.github.io/about).
 
 ## Contributing
 
 Your perspective matters.
-
-<div style="text-align: center; font-family: 'Georgia', serif; font-size: 1.5rem; margin: 2rem 0; color: #2e7d32;">
-Exploramus, Communicamus, Crescimus<br>
-<small style="font-size: 1rem; color: #555;">We explore, we share, we grow.</small>
-</div>
-
-⚡ No setup – Open Civitas, make a new namespace, start coding.
-
-✍️ Write as you code – Capture notes, results, and ideas as you go.
-
-🚀 Easy to share – Create a PR, and it gets published.
-
-🧠 Build shared knowledge – Your work becomes part of a growing community resource.
-
-🧪 Use Clay – Same REPL workflow, but with tables, charts, markdown, and hiccup.
+Pull Requests invited, that's the point!
 
 ### Write notebooks
 
-Add a notebook in the [`/notebooks`](notebooks) folder.
+Add a notebook (Clojure namespace or markdown file) in the [`/notebooks`](notebooks) folder.
 
-See the [Clay Documentation](https://scicloj.github.io/clay) for information on how to interactively visualize the
-notebook as you write it.
-Author profile can be configured in [clay.edn](clay.edn).
+Configure your author profile in [clay.edn](clay.edn).
 
-### Build the database
+**Optional:** Use [Kindly](https://scicloj.github.io/kindly-noted/kindly) annotations in your notebook to make visualizations
 
-Add to or modify [db.edn](quarto/db.edn)
+```clojure
+^kind/hiccup
+[:svg [:circle {:r 50}]]
+```
 
-### Preview the full website
+**Optional:** Use [Clay](https://scicloj.github.io/clay/#setup) to visualize the notebook as you write it.
+
+**Optional:** Preview the final website
 
 ```sh
 clojure -M:clay -a [:markdown]
@@ -51,9 +51,23 @@ clojure -M:clay -a [:markdown]
 quarto preview site
 ```
 
+[Quarto](https://quarto.org/) is a markdown publishing tool that enhances
+[Pandoc](https://pandoc.org/).
+
 ### Publish
 
 Merged pull requests are shown on the website via a workflow.
+
+To create a pull request
+
+1. fork the repository
+2. make and commit changes in a new branch
+3. push the branch to your fork
+4. and then open a pull request on GitHub to propose merging your changes into the Civitas main branch.
+
+### Building the database
+
+Add to or modify [db.edn](quarto/db.edn)
 
 ## Design
 

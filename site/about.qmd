@@ -26,6 +26,13 @@ No infrastructure required.
 </div>
 </div>
 
+"Civitas" refers to a community of citizens, encompassing the rights, duties, and privileges associated with belonging.
+It's a term that signifies citizenship, not just a physical city, but also the political and social fabric of the community.
+
+## Usage
+
+See [README.md](https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/README.md).
+
 ## Rationale
 
 Clojure and markdown are a natural fit for interactive, literate programming.
@@ -35,9 +42,9 @@ This friction discourages experimentation and makes publishing harder than it ne
 
 ### Make Publishing Notebooks Easy
 
-[Clay](https://scicloj.github.io/clay/) notebooks combine Clojure and markdown for expressive, interactive literate programming.
+Notebooks combine Clojure and markdown for expressive, interactive literate programming.
 Compared to blogs, gists, or repos, they better support combining narrative, code, and results in a single document.
-Civitas removes the friction of publishing by letting anyone submit notebooks or markdown without setting up a new project or hosting workflow.
+Civitas removes the friction of publishing by enabling you to submit notebooks or markdown without setting up a new project or hosting workflow.
 It provides a shared, well-organized platform for short experiments, tutorials, notes, and blog posts.
 
 ### Build a Database of Knowledge
@@ -78,4 +85,5 @@ See the [Clojure Civitas Analytics Dashboard](https://clojurecivitas.goatcounter
 
 ### Technical Details
 
+Made with [Clay](https://scicloj.github.io/clay/).
 See the [README.md](https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/README.md) in the repository for contribution guidelines and technical details.
