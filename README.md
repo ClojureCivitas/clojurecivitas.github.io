@@ -84,7 +84,7 @@ To create a pull request
 3. push the branch to your fork
 4. and then open a pull request on GitHub to propose merging your changes into the Civitas main branch.
 
-Please contact @timothypratley if you are having any difficulty submitting a notebook.
+Please contact [@timothypratley](https://github.com/timothypratley) if you are having any difficulty submitting a notebook.
 
 ### See your page views
 
