@@ -22,7 +22,7 @@
   ;; Run Clay in watch mode with `clojure -J-Dclojure.main.report=stderr -M:clay`
   :clay  {:main-opts ["-m" "scicloj.clay.v2.main"]}
   ;; When debugging libraries
-  :dev   {:override-deps {org.scicloj/clay {:local/root "../clay"}}}
+  :local {:override-deps {org.scicloj/clay {:local/root "../clay"}}}
   ;; $ clojure -T:build test
   ;; $ clojure -T:build ci
   :build {:deps       {io.github.clojure/tools.build
