@@ -28,19 +28,22 @@
       :links [{:icon "github" :text "GitHub" :href "https://github.com/chouser"}]}
      :daslu
      {:name        "Daniel Slutsky"
+      :url         "https://github.com/daslu"
       :affiliation [:scicloj]
       :links       [{:icon "github" :text "GitHub" :href "https://github.com/daslu"}]}
      :alexmiller
      {:name        "Alex Miller"
+      :url         "https://github.com/puredanger"
       :affiliation [:clojure.core]
       :links       [{:icon "github" :text "GitHub" :href "https://github.com/puredanger"}]}
      :timschafer
      {:name        "Tim Schafer"
+      :url         "https://github.com/srcerer"
       :affiliation [:clojurecamp]
       :links       [{:icon "github" :text "GitHub" :href "https://github.com/srcerer"}]}
      :timothypratley
      {:name        "Timothy Pratley"
-      :email       "timothypratley@gmail.com"
       :url         "https://timothypratley.blogspot.com/p/httpswww.html"
-      :affiliation [:hummi :scicloj]
+      :email       "timothypratley@gmail.com"
+      :affiliation [:hummi]
       :links       [{:icon "github" :text "GitHub" :href "https://github.com/timothypratley"}]}}}}}}
