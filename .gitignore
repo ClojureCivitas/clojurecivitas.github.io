@@ -1,5 +1,6 @@
 /temp
 /site/*/**
+.clj-kondo/
 .quarto/
 _site/
 .calva/output-window/
