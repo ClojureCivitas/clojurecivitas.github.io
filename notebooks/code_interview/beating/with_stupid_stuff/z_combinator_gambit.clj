@@ -14,7 +14,7 @@
 ;; People often send me emails asking, "How can I use lambda calculus to impress people?"
 ;; Today, we find out.
 
-;; ![programmer staring at Z-combinator](z-combinator.jpg)
+;; ![Programmer staring at Z-combinator](z-combinator.jpg)
 
 ;; I have an interview with ZCorp lined up in 5 minutes,
 ;; and our challenge is to only use anonymous functions.
@@ -52,7 +52,6 @@
       (conj (SELF SELF (rest LIST))
             (first LIST)))))
 (REV REV [1 2 3 4 5])
-;;=> [5 4 3 2 1]
 
 ;; `SELF` is an input to itself, the logic of reversal.
 
@@ -70,7 +69,7 @@
         []
         (conj (SELF (rest LIST))
               (first LIST))))))
-;; ```
+;; ```clojure
 ;; ((REV' REV') [1 2 3 4 5])
 ;; ```
 ;; **error**
@@ -90,7 +89,6 @@
               (first LIST))))))
 
 ((REV'' REV'') [1 2 3 4 5])
-;;=> [5 4 3 2 1]
 
 ;; > That's a confusing way to write it
 
@@ -116,15 +114,12 @@
 ;; But identity is the identity of itself:
 
 (identity 1)
-;;=> 1
 
 ((identity identity) 1)
-;;=> 1
 
 ;; > O.K. sure, but that's a special case.
 
 (((identity identity) (identity identity)) 1)
-;;=> 1
 
 ;; > This is an identity crisis.
 
@@ -187,7 +182,7 @@
 
 ;; Because `(FIX F) = ((FIX F) (FIX F))`, it was your idea to refactor remember?
 
-;; ```
+;; ```clojure
 ;; (FIX REV-LOGIC)
 ;; ```
 ;; **stack overflow**
@@ -246,17 +241,14 @@
 ;; > At least it didn't blow up this time...
 
 ((FIX REV-LOGIC) [1 2 3 4 5])
-;;=> [5 4 3 2 1]
 
 ;; > Nice, that's the right answer.
 
 ;; Even nicer is that our fixed logic behaves like identity now:
 
 ((REV-LOGIC (FIX REV-LOGIC)) [1 2 3 4 5])
-;;=> [5 4 3 2 1]
 
 ((REV-LOGIC (REV-LOGIC (FIX REV-LOGIC))) [1 2 3 4 5])
-;;=> [5 4 3 2 1]
 
 ;; > I can't believe something so ridiculous actually works.
 
@@ -274,7 +266,6 @@
 ;; Your essence is invariant.
 
 ((Z REV-LOGIC) [1 2 3 4 5])
-;;=> [5 4 3 2 1]
 
 ;; > Wait, we are meant to be doing Fibonacci, remember?
 
@@ -283,8 +274,8 @@
 ;; > It looks to me like you doubled the code, that's not great refactoring.
 ;; > Using single letters make it totally unreadable.
 
-;; Hmmm you got me there, there does seem to be a lot of doubling.
-;; What if we had a function for `f => (f f)`
+;; Hmmm, there does seem to be a lot of doubling.
+;; We can factor out a function for `f => (f f)`.
 
 (def REPLICATE "Omega, the self-devouring serpent"
   (fn [F]
@@ -293,11 +284,10 @@
 ;; The replication of identity is itself.
 
 ((REPLICATE identity) 1)
-;;=> 1
 
 ;; But test not the serpent lightly
 
-;; ```
+;; ```clojure
 ;; (REPLICATE REPLICATE)
 ;; ```
 ;; **stack overflow**
@@ -311,7 +301,6 @@
                  (LOGIC (fn [V] ((X X) V)))))))
 
 ((Z REV-LOGIC) [1 2 3 4 5])
-;;=> [5 4 3 2 1]
 
 ;; > That's not really any clearer...
 
@@ -332,7 +321,6 @@
 ;; OMEGA diverges, ZETA folds, LOGIC writes QED.
 
 ((FOLD REV-LOGIC) [1 2 3 4 5])
-;;=> [5 4 3 2 1]
 
 ;; That's much nicer, I'm so glad you suggested using longer names.
 
@@ -348,14 +336,12 @@
         (SELF (concat [(+ A B) B] FIBS))))))
 
 ((FOLD FIB-LOGIC) [1 1])
-;;=> (13 8 8 5 5 3 3 2 2 1 1 1)
 
 ;; > That's all backward!!
 
 ;; Oh, my mistake
 
 ((FOLD REV-LOGIC) ((FOLD FIB-LOGIC) [1 1]))
-;;=> [1 1 1 2 2 3 3 5 5 8 8 13]
 
 ;; > You can't be serious...
 ;; > This is ridiculous.
@@ -372,15 +358,14 @@
           (cons A ((SELF B) (+ A B))))))))
 
 (take 20 (((FOLD FIB-LOGIC-FOREVER) 1) 1))
-;;=> (1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765)
 
 ;; That's so nice.
 
 ;; > Oh look at the time! I have a more important meeting to go to!
 ;; **disconnects**
-;;
+
 ;; Ouch, Rough.
-;; ZCorp never got back to me, so let’s update the scoreboard as a loss without a GG.
+;; ZCorp never got back to me, so let’s update the scoreboard as a loss.
 
 ^:kind/table ^:kindly/hide-code
 {:Interviews [1]
