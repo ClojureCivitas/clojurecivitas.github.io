@@ -36,6 +36,10 @@
       :url         "https://github.com/puredanger"
       :affiliation [:clojure.core]
       :links       [{:icon "github" :text "GitHub" :href "https://github.com/puredanger"}]}
+     :seancorfield
+     {:name        "Sean Corfield"
+      :affiliation [:clojurecamp]
+      :url         "https://github.com/seancorfield"}
      :timschafer
      {:name        "Tim Schafer"
       :url         "https://github.com/srcerer"
