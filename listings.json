@@ -3,9 +3,6 @@
     "listing": "/pages.html",
     "items": [
       "/clojure+/print/objects_and_protocols.html",
-      "/core/async/flow/visualization/flow_elk.html",
-      "/graph/layout/elk.html",
-      "/graph/layout/elk_svg.html",
       "/civitas/explorer.html"
     ]
   },
@@ -16,8 +13,6 @@
       "/conferences/scinoj_light_1/notes/hallway_track.html",
       "/math/primes/factorization/sieve_augmented.html",
       "/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html",
-      "/core/async/flow/visualization.html",
-      "/core/async/flow/exploration.html",
       "/core/async/flow/example/stats.html",
       "/scicloj/noj/intro/getting-started-noj.html"
     ]
