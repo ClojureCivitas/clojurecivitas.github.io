@@ -1,3 +1,4 @@
+^{:clay {:quarto {:draft true}}}
 (ns civitas.svg
   (:require [civitas.geometry :as geom]
             [clojure.string :as str]

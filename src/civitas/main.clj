@@ -1,3 +1,4 @@
+^{:clay {:quarto {:draft true}}}
 (ns civitas.main
   (:require [civitas.make :as make])
   (:gen-class))

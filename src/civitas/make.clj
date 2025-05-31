@@ -1,3 +1,4 @@
+^{:clay {:quarto {:draft true}}}
 (ns civitas.make
   (:require [civitas.db :as db]
             [civitas.metadata :as metadata]

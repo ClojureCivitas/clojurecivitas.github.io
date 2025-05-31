@@ -1,3 +1,4 @@
+^{:clay {:quarto {:draft true}}}
 (ns civitas.layout
   (:require [hiccup.core :as hiccup]
             [scicloj.kindly.v4.kind :as kind]
