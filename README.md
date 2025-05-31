@@ -8,8 +8,7 @@ An open effort to structure learning resources with meaningful connections.
 
 ✍️ Write as you code – Capture notes, results, and ideas as you go as comments.
 
-🚀 Easy to share – Create a Pull Request, once merged it appears on
-the [Clojure Civitas Website](https://clojurecivitas.github.io).
+🚀 Easy to share – Create a Pull Request, once merged it appears on the [Clojure Civitas Website](https://clojurecivitas.github.io).
 
 🧠 Build shared knowledge – Your work becomes part of a community resource.
 
