@@ -9,6 +9,7 @@
     "listing": "/posts.html",
     "items": [
       "/clojure/print_object/remove_extraneous.html",
+      "/clojure/transducers/what_if.html",
       "/conferences/scinoj_light_1/notes/hallway_track.html",
       "/math/primes/factorization/sieve_augmented.html",
       "/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html",
