@@ -1,3 +1,4 @@
+^{:clay {:quarto {:draft true}}}
 (ns civitas.metadata
   (:require [babashka.fs :as fs]
             [clj-yaml.core :as yaml]

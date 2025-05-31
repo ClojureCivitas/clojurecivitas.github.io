@@ -1,3 +1,4 @@
+^{:clay {:quarto {:draft true}}}
 (ns civitas.validator
   (:require [clojure.spec.alpha :as s]))
 

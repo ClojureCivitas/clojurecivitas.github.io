@@ -1,3 +1,4 @@
+^{:clay {:quarto {:draft true}}}
 (ns civitas.json-ld
   (:require [clojure.data.json :as json]))
 

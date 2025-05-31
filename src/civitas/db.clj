@@ -1,3 +1,4 @@
+^{:clay {:quarto {:draft true}}}
 (ns civitas.db
   (:require [clojure.edn :as edn]
             [clojure.pprint :as pprint]

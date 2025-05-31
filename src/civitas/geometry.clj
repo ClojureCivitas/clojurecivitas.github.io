@@ -1,3 +1,4 @@
+^{:clay {:quarto {:draft true}}}
 (ns civitas.geometry
   (:require [clojure.math :as math]))
 
