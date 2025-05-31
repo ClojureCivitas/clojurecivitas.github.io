@@ -38,8 +38,11 @@
       :links       [{:icon "github" :text "GitHub" :href "https://github.com/puredanger"}]}
      :seancorfield
      {:name        "Sean Corfield"
+      :email       "sean@corfield.org"
+      :url         "https://corfield.org"
       :affiliation [:clojurecamp]
-      :url         "https://github.com/seancorfield"}
+      :links       [{:icon "github" :text "GitHub" :href "https://github.com/seancorfield"}
+                    {:icon "mastodon" :text "Mastodon" :href "https://tech.lgbt/@seancorfield"}]}
      :timschafer
      {:name        "Tim Schafer"
       :url         "https://github.com/srcerer"
