@@ -10,7 +10,7 @@
 
 (defn source-path-for [{:keys [topics id] :as notebook}]
   {:pre [id (seq topics)]}
-  (str (fs/path "notebooks"
+  (str (fs/path "src"
                 (str (symbol (first topics)))
                 (str id ".md"))))
 
@@ -35,22 +35,21 @@
    [:url {:optional true} :string]])
 
 (def BlogPostFrontmatter
-  (def BlogPostFrontmatter
-    [:map {:closed true}
-     [:title :string]
-     [:authors {:optional true} [:vector Author]]
-     [:author {:optional true} Author]
-     [:image {:optional true} :string]
-     [:draft {:optional true} :boolean]
-     [:publish-date {:optional true} inst?]
-     [:last-modified-date {:optional true} inst?]
-     [:tags {:optional true} [:vector :string]]
-     [:categories {:optional true} [:vector :string]]
-     [:description {:optional true} :string]
-     [:slug {:optional true} :string]
-     [:canonical-url {:optional true} :string]
-     [:keywords {:optional true} [:vector :string]]
-     [:layout {:optional true} :string]]))
+  [:map {:closed true}
+   [:title :string]
+   [:authors {:optional true} [:vector Author]]
+   [:author {:optional true} Author]
+   [:image {:optional true} :string]
+   [:draft {:optional true} :boolean]
+   [:publish-date {:optional true} inst?]
+   [:last-modified-date {:optional true} inst?]
+   [:tags {:optional true} [:vector :string]]
+   [:categories {:optional true} [:vector :string]]
+   [:description {:optional true} :string]
+   [:slug {:optional true} :string]
+   [:canonical-url {:optional true} :string]
+   [:keywords {:optional true} [:vector :string]]
+   [:layout {:optional true} :string]])
 
 (def key-descriptions
   {:title              "The title of the blog post. Essential for SEO and user understanding."
