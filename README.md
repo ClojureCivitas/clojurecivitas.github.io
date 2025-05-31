@@ -60,8 +60,7 @@ unless a different image is listed in the metadata.
  :many-others ["see the examples" "creative uses" "visual variety"]}
 ```
 
-**Optional:** [Setup your editor with Clay shortcuts](https://scicloj.github.io/clay/#setup) to visualize the notebook
-as you write.
+**Optional:** [Setup your editor with Clay shortcuts](https://scicloj.github.io/clay/#setup) to visualize the notebook as you write.
 
 **Optional:** Preview the final website.
 
@@ -91,8 +90,7 @@ notebook.
 
 ### See your page views
 
-Publicly available [page view analytics](https://clojurecivitas.goatcounter.com/) indicate how widely your notebook is
-being shared.
+Publicly available [page view analytics](https://clojurecivitas.goatcounter.com/) indicate how widely your notebook is being shared.
 
 ### Building the database
 
