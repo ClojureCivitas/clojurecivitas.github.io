@@ -1,4 +1,4 @@
-{:paths ["src" "notebooks"]
+{:paths ["src"]
 
  :deps
  {org.clojure/clojure                         {:mvn/version "1.12.0"}
@@ -22,7 +22,8 @@
   ;; Run Clay in watch mode with `clojure -J-Dclojure.main.report=stderr -M:clay`
   :clay  {:main-opts ["-m" "scicloj.clay.v2.main"]}
   ;; When debugging libraries
-  :local {:override-deps {org.scicloj/clay {:local/root "../clay"}}}
+  :local {:override-deps {org.scicloj/clay          {:local/root "../clay"}
+                          org.scicloj/kindly-advice {:local/root "../kindly-advice"}}}
   ;; $ clojure -T:build test
   ;; $ clojure -T:build ci
   :build {:deps       {io.github.clojure/tools.build
