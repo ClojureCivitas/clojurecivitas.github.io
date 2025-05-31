@@ -2,7 +2,7 @@
 
 <img src="src/images/civitas-icon.svg" alt="Civitas Icon" align="right">
 
-An open effort to structure learning resources with meaningful connections.
+Your scratchpad
 
 ⚡ No setup – Clone this repo, make a new namespace, start coding.
 
@@ -93,6 +93,7 @@ Publicly available [page view analytics](https://clojurecivitas.goatcounter.com/
 
 ### Building the database
 
+An open effort to structure learning resources with meaningful connections.
 Add to or modify [db.edn](quarto/db.edn).
 The goal is to create a database of resources for learning.
 
