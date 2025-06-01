@@ -122,6 +122,7 @@
 
 ;; For example, transducers can be used in several different ways with
 ;; `core.async` channels:
+
 ;; * [on a `chan`nel](https://clojure.github.io/core.async/clojure.core.async.html#var-chan)
 ;; * [in a `pipeline`](https://clojure.github.io/core.async/clojure.core.async.html#var-pipeline)
 ;; * [or consumed with `transduce`](https://clojure.github.io/core.async/clojure.core.async.html#var-transduce)
