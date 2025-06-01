@@ -519,7 +519,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb35"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">comp</span> (<span class="kw">filter</span> <span class="kw">even?</span>) (<span class="kw">map</span> <span class="kw">inc</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb36"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>#object[clojure.core$comp$fn__5895 <span class="bn">0x2222aa18</span> <span class="st">"clojure.core$comp$fn__5895@2222aa18"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>#object[clojure.core$comp$fn__5895 <span class="bn">0x1931d9f3</span> <span class="st">"clojure.core$comp$fn__5895@1931d9f3"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s give this a name:</p>
 <div class="sourceClojure">
@@ -552,7 +552,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Because it is a “reducible”, it only does work when it is consumed, so it is “lazy” in that sense, but it is not a lazy sequence. We can get a lazy sequence from a transducer using <code>sequence</code>, if we want, or we can rely on <code>into</code> and <code>transduce</code> etc being eager.</p>
 <p>In conclusion, by separating the transformation from the input and the output, we gain expressive power, flexibility, and reuse: we can compose transducers, we can apply them to any input that produces values, and consume the results in any way we like.</p>
-<p>For example, transducers can be used in several different ways with <code>core.async</code> channels: * <a href="https://clojure.github.io/core.async/clojure.core.async.html#var-chan">on a <code>chan</code>nel</a> * <a href="https://clojure.github.io/core.async/clojure.core.async.html#var-pipeline">in a <code>pipeline</code></a> * <a href="https://clojure.github.io/core.async/clojure.core.async.html#var-transduce">or consumed with <code>transduce</code></a></p>
+<p>For example, transducers can be used in several different ways with <code>core.async</code> channels:</p>
+<ul>
+<li><a href="https://clojure.github.io/core.async/clojure.core.async.html#var-chan">on a <code>chan</code>nel</a></li>
+<li><a href="https://clojure.github.io/core.async/clojure.core.async.html#var-pipeline">in a <code>pipeline</code></a></li>
+<li><a href="https://clojure.github.io/core.async/clojure.core.async.html#var-transduce">or consumed with <code>transduce</code></a></li>
+</ul>
 <div style="background-color:grey;height:2px;width:100%;"></div>
 <div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/clojure/transducers/what_if.clj">notebooks/clojure/transducers/what_if.clj</a></small></small></pre></div>
 
