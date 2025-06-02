@@ -84,3 +84,8 @@ See the [Clojure Civitas Analytics Dashboard](https://clojurecivitas.goatcounter
 
 Made with [Clay](https://scicloj.github.io/clay/).
 See the [README.md](https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/README.md) in the repository for contribution guidelines and technical details.
+
+## Why markdown in code?
+
+We value reproducible artifacts.
+Start with code. Make it work. Then tell the story.

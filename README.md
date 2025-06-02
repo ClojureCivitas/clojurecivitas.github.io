@@ -2,7 +2,7 @@
 
 <img src="src/images/civitas-icon.svg" alt="Civitas Icon" align="right">
 
-Your scratchpad
+Think. Code. Share.
 
 ⚡ No setup – Clone this repo, make a new namespace, start coding.
 
@@ -12,7 +12,7 @@ Your scratchpad
 
 🧠 Build shared knowledge – Your work becomes part of a community resource.
 
-🧪 Use Clay – Your normal REPL workflow, but with tables, charts, markdown, and hiccup.
+🧪 Visualize – Your normal REPL workflow, but with tables, charts, markdown, and hiccup.
 
 ## Rationale
 
@@ -21,21 +21,24 @@ Your scratchpad
 
 See [About Clojure Civitas](https://clojurecivitas.github.io/about).
 
+Why markdown in code? We value reproducible artifacts.
+
 ## Contributing
 
 Your perspective matters.
 Pull Requests invited, that's the point!
 
-### Creating posts and pages
+### Creating Posts and Pages
 
 Add a Clojure namespace or markdown file in the [`/src`](src) folder.
 
 Add metadata on your namespace to set the title, author, and tags.
 
 ```clojure
-^{:kindly/hide-code true                 ; don't show this code in the notebook
+^{:kindly/hide-code true     ; don't render this code to the HTML document
   :clay             {:title  "About Civitas Metadata"
                      :quarto {:author   :my-unique-id
+                              :draft    true           ; remove to publish
                               :type     :post
                               :date     "2025-06-05"
                               :category :clojure
@@ -60,9 +63,14 @@ unless a different image is listed in the metadata.
  :many-others ["see the examples" "creative uses" "visual variety"]}
 ```
 
-**Optional:** [Set up your editor with Clay shortcuts](https://scicloj.github.io/clay/#setup) to visualize the notebook as you write.
+## Preview the Website **(Optional)**
 
-**Optional:** Preview the final website.
+[Set up your editor with Clay REPL commands](https://scicloj.github.io/clay/#setup) to visualize the notebook as you write.
+
+Building is delegated to Clay and Quarto.
+
+When using Clay interactively it render directly to HTML for speed.
+The published site goes through a longer process of producing markdown then HTML.
 
 ```sh
 clojure -M:clay -a [:markdown]
@@ -76,26 +84,28 @@ quarto preview site
 
 ### Publish
 
-Merged pull requests are automatically shown on the website.
-
-To create a pull request
+Create a pull request:
 
 1. fork the repository
-2. make and commit changes in a new branch
+2. make changes in a new branch and commit them
 3. push the branch to your fork
-4. and then open a pull request on GitHub to propose merging your changes into the Civitas main branch.
+4. open a pull request
+
+Your pull request will be reviewed to prevent abuse and then merged.
+Once merged, namespaces are automatically published to the website.
 
 Please contact [@timothypratley](https://github.com/timothypratley) if you are having any difficulty submitting a notebook.
 
-### See your page views
+### Check Your Page Views
 
 Publicly available [page view analytics](https://clojurecivitas.goatcounter.com/) indicate how widely your notebook is being shared.
 
-### Building the database
+### Editing the Civitas Explorer Database
 
 An open effort to structure learning resources with meaningful connections.
-Add to or modify [db.edn](quarto/db.edn).
+Add to or modify [site/db.edn](site/db.edn).
 The goal is to create a database of resources for learning.
+See the [explorer](https://clojurecivitas.github.io/civitas/explorer.html).
 
 ## Design
 
