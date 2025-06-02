@@ -1,3 +1,4 @@
+^{:clay {:quarto {:draft true}}}
 (ns klipse.interactive-test.can-clay-klipse)
 
 ;; [Klipse](https://github.com/viebel/klipse)
