@@ -1,5 +1,5 @@
 ^{:clay {:quarto {:draft true}}}
-(ns civitas.metadata
+(ns civitas.explorer.metadata
   (:require [babashka.fs :as fs]
             [clj-yaml.core :as yaml]
             [clojure.java.io :as io]

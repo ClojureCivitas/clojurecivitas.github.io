@@ -1,5 +1,5 @@
 ^{:clay {:quarto {:draft true}}}
-(ns civitas.geometry
+(ns civitas.explorer.geometry
   (:require [clojure.math :as math]))
 
 ;; Height of isosceles triangle with edge length 2

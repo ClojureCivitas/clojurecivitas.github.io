@@ -1,6 +1,6 @@
 ^{:clay {:quarto {:draft true}}}
-(ns civitas.svg
-  (:require [civitas.geometry :as geom]
+(ns civitas.explorer.svg
+  (:require [civitas.explorer.geometry :as geom]
             [clojure.string :as str]
             [scicloj.kindly.v4.kind :as kind]))
 

@@ -1,5 +1,5 @@
 ^{:clay {:quarto {:draft true}}}
-(ns civitas.db
+(ns civitas.explorer.db
   (:require [clojure.edn :as edn]
             [clojure.pprint :as pprint]
             [clojure.walk :as walk]
