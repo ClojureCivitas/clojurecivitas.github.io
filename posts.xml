@@ -52,9 +52,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x1f829ef1</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x5c40e398</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@1f829ef1"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@5c40e398"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -62,9 +62,9 @@ font-style: inherit;">"clojure.lang.MultiFn@1f829ef1"</span>]</span></code></pre
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x1645fba9</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x4ad1ca85</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@1645fba9"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@4ad1ca85"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -73,9 +73,9 @@ font-style: inherit;">"java.lang.Object@1645fba9"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x25f0affe</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x4b935a8b</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@25f0affe"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@4b935a8b"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -91,11 +91,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22418$fn__22419 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22436$fn__22437 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x60157e9c</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x7fed08c6</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22418$fn__22419@60157e9c"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22436$fn__22437@7fed08c6"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -111,11 +111,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22422$fn__22423$fn__22424 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22440$fn__22441$fn__22442 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x56a0b769</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x23b91667</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22422$fn__22423$fn__22424@56a0b769"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22440$fn__22441$fn__22442@23b91667"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -169,7 +169,7 @@ background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3747</span>]</span>
-<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__22430 invoke <span class="st" style="color: #20794D;
+<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__22448 invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -209,7 +209,7 @@ font-style: inherit;">fn</span> [y] y))))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print-object.remove-extraneous/eval22436/fn--22437/fn--22438"</span></span></code></pre></div>
+font-style: inherit;">"clojure.print-object.remove-extraneous/eval22454/fn--22455/fn--22456"</span></span></code></pre></div>
 </div>
 <p>Next, we don’t need the eval identities.</p>
 <div class="sourceClojure">
@@ -393,7 +393,7 @@ font-style: inherit;">fn</span> [y] y)))</span></code></pre></div>
 <p>You can require this namespace from other notebooks to turn on this nice, concise mode of object printing.</p>
 <p>Happy notebooking!</p>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/clojure/print_object/remove_extraneous.clj">notebooks/clojure/print_object/remove_extraneous.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/clojure/print_object/remove_extraneous.clj">src/clojure/print_object/remove_extraneous.clj</a></small></small></pre></div>
 
 
 
@@ -849,7 +849,7 @@ font-style: inherit;">e</span>)))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval13888/fn--13889"</span></span></code></pre></div>
+font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval13906/fn--13907"</span></span></code></pre></div>
 </div>
 <p>Why is it trying to call <code>cons</code> with a single argument? In addition to separating the transformation from the output, <code>transduce</code> also has a “completion” step, which is performed on the final result. A convenience function called <code>completing</code> can be used to wrap the function here to provide a “no-op” completion:</p>
 <div class="sourceClojure">
@@ -1029,9 +1029,9 @@ font-style: inherit;">inc</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1">#object[clojure.core$comp$fn__5895 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x1931d9f3</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x4463d9b7</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core$comp$fn__5895@1931d9f3"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core$comp$fn__5895@4463d9b7"</span>]</span></code></pre></div>
 </div>
 <p>Let’s give this a name:</p>
 <div class="sourceClojure">
@@ -1180,7 +1180,7 @@ font-style: inherit;">9</span>]</span></code></pre></div>
 <li><a href="https://clojure.github.io/core.async/clojure.core.async.html#var-transduce">or consumed with <code>transduce</code></a></li>
 </ul>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/clojure/transducers/what_if.clj">notebooks/clojure/transducers/what_if.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/clojure/transducers/what_if.clj">src/clojure/transducers/what_if.clj</a></small></small></pre></div>
 
 
 
@@ -1526,7 +1526,7 @@ background-color: null;
 font-style: inherit;">13</span>)]</span></code></pre></div>
 </div>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/math/primes/factorization/sieve_augmented.clj">notebooks/math/primes/factorization/sieve_augmented.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/math/primes/factorization/sieve_augmented.clj">src/math/primes/factorization/sieve_augmented.clj</a></small></small></pre></div>
 
 
 
@@ -2556,7 +2556,7 @@ font-style: inherit;">6765</span>)</span></code></pre></div>
 </div>
 <p>That’s all for today. Until next time, keep on coding.</p>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/code_interview/beating/with_stupid_stuff/z_combinator_gambit.clj">notebooks/code_interview/beating/with_stupid_stuff/z_combinator_gambit.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/code_interview/beating/with_stupid_stuff/z_combinator_gambit.clj">src/code_interview/beating/with_stupid_stuff/z_combinator_gambit.clj</a></small></small></pre></div>
 
 
 
