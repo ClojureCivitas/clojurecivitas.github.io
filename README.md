@@ -49,11 +49,11 @@ Add metadata on your namespace to set the title, author, and tags.
 Configure your author profile in [clay.edn](clay.edn).
 
 Images can be added to the same folder as the namespace,
-and displayed in the notebook with markdown like `![caption](my-image.jpg)`.
+and displayed with markdown like `;; ![caption](my-image.jpg)`.
 The first image on the page is used as a preview in the blog listing,
 unless a different image is listed in the metadata.
 
-[Kindly](https://scicloj.github.io/kindly-noted/kindly) annotations in your notebook are rendered as visualizations.
+[Kindly](https://scicloj.github.io/kindly-noted/kindly) annotations are rendered as visualizations.
 
 ```clojure
 ^kind/table
@@ -65,11 +65,11 @@ unless a different image is listed in the metadata.
 
 ## Preview the Website **(Optional)**
 
-[Set up your editor with Clay REPL commands](https://scicloj.github.io/clay/#setup) to visualize the notebook as you write.
+[Use Clay REPL commands](https://scicloj.github.io/clay/#setup) to visualize the namespace as you write.
 
 Building is delegated to Clay and Quarto.
 
-When using Clay interactively it render directly to HTML for speed.
+When using Clay interactively it renders directly to HTML for speed.
 The published site goes through a longer process of producing markdown then HTML.
 
 ```sh
@@ -94,11 +94,11 @@ Create a pull request:
 Your pull request will be reviewed to prevent abuse and then merged.
 Once merged, namespaces are automatically published to the website.
 
-Please contact [@timothypratley](https://github.com/timothypratley) if you are having any difficulty submitting a notebook.
+Please contact [@timothypratley](https://github.com/timothypratley) if you are having any difficulty submitting a PR.
 
 ### Check Your Page Views
 
-Publicly available [page view analytics](https://clojurecivitas.goatcounter.com/) indicate how widely your notebook is being shared.
+Publicly available [page view analytics](https://clojurecivitas.goatcounter.com/) indicate how widely your idea is being shared.
 
 ### Editing the Civitas Explorer Database
 
@@ -111,32 +111,29 @@ See the [explorer](https://clojurecivitas.github.io/civitas/explorer.html).
 
 Align with Clojure's values: simplicity, community, and tooling that helps you think.
 
-### Notebook Namespace Selection
+### Namespace Selection
 
-A notebook’s namespace serves as a clear, unique path to its content and follows **Clojure’s naming conventions**.
+A namespace serves as a clear, unique path to its content and follows **Clojure’s naming conventions**.
 
-The namespace should emphasize **what the notebook is about**, not how it is categorized.
+The namespace should emphasize **what the narrative is about**, not how it is categorized.
 Think of it as a logical path that leads to a specific artifact or topic.
 Classification elements such as tags, author, document type, level, or publication date belong in **metadata**, not the
 namespace.
 
-- **Start with an organization** if the notebook is about a library or tool maintained by one.  
+- **Start with an organization** if the narrative is about a library or tool maintained by one.  
   Examples: `scicloj`, `lambdaisland`.
 - **Follow with the specific library or concept.**  
-  Examples: `scicloj.clay`, `lambdaisland.kaocha`.
+  Examples: `scicloj.clay`, `lambdaisland.kaocha`, `lambdaisland.hiccup`.
 - If there is **no organization**, start directly with the library or tool name.  
   Examples: `hiccup`, `reagent`.
-  If the notebook refers to an alternative implementation, **include the organization** to disambiguate.  
-  Example: `lambdaisland.hiccup`.
 - For **core Clojure topics**, use `clojure` as the root.  
   Examples: `clojure.lazy-sequences`, `clojure.transducers`.
-- Add **segments** to describe the notebook’s content. These segments should:
+- Add **segments** to further qualify the namespace. These segments should:
     - Avoid name collisions.
     - Not duplicate metadata.
-    - The last segment should be specific and descriptive. Prefer: `z-combinator-gambit`, avoid: `z-combinator`.
+    - The last segment should be extra specific and descriptive. Prefer: `z-combinator-gambit`, avoid: `z-combinator`.
 - **Events, communities, or topics** may also be used as the top-level namespace when appropriate.  
-  Use discretion to determine whether a notebook is primarily about an artifact library,
-  a concept, or an event.
+  Use discretion to determine if the narrative is primarily about an artifact library, a concept, or an event.
 - Namespaces must consist of more than one segment.
 
 #### Metadata and Navigation
@@ -172,17 +169,17 @@ Differentiation between posts, pages, and presentations is by `type` metadata (a
 
 ### File system organization
 
-| Directory | Description                                                          |
-|-----------|----------------------------------------------------------------------|
-| `src`     | Source root for notebooks (Clojure and Markdown), images, data files |
-| `site`    | Static assets of the Quarto website                                  |
+| Directory | Description                                                  |
+|-----------|--------------------------------------------------------------|
+| `src`     | Source root for namespaces, markdown, images, and data files |
+| `site`    | Static assets of the Quarto website                          |
 
 Non-Clojure files in `src` will be synced to `site`.
 Shared images can go in `src/images`,
 but prefer placing images and data files as siblings to your namespace under `src`.
 All files in `src` should go under a subdirectory,
 so that it is clear they are not part of the static configuration of `site`.
-Clojure namespaces are built to markdown files under `site/{my/namespaced/notebook.qmd}`.
+Clojure namespaces are built to markdown files under `site/{my/namespaced/awesome-idea.qmd}`.
 Subdirectories of `site` are git ignored and considered temporary build artifacts, safe to clean up.
 Quarto builds all the markdown into HTML in `_site` for preview and deploy.
 While developing, Clay uses `temp` to build and serve HTML files.
@@ -203,7 +200,7 @@ Goal: Constellations, not cabinets.
 
 ### Dependency management
 
-A single `deps.edn` file is shared across all notebooks.
+A single `deps.edn` file is shared.
 
 Pros:
 
@@ -214,7 +211,7 @@ Cons:
 
 * Version conflicts must be manually resolved.
 * Only one version per dependency.
-* Notebooks aren’t self-contained.
+* Pages and posts aren’t self-contained.
 
 Future:
 
