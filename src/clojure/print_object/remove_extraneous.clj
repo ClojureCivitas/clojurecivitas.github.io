@@ -2,7 +2,7 @@
   :clay             {:title  "Clean object printing by removing extraneous"
                      :quarto {:author   :timothypratley
                               :type     :post
-                              :date     "2025-06-05"
+                              :date     "2025-05-26"
                               :category :clojure
                               :tags     [:print-method :objects]}}}
 (ns clojure.print-object.remove-extraneous
