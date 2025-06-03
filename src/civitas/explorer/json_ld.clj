@@ -1,4 +1,5 @@
-(ns civitas.json-ld
+^{:clay {:quarto {:draft true}}}
+(ns civitas.explorer.json-ld
   (:require [clojure.data.json :as json]))
 
 (def ^:dynamic *ldns* "civitas")

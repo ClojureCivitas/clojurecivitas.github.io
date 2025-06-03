@@ -5,9 +5,9 @@
                               :format {:html {:page-layout :full}}}}}
 (ns civitas.explorer
   (:require [scicloj.kindly.v4.kind :as kind]
-            [civitas.db :as db]
-            [civitas.geometry :as geom]
-            [civitas.svg :as svg]))
+            [civitas.explorer.db :as db]
+            [civitas.explorer.geometry :as geom]
+            [civitas.explorer.svg :as svg]))
 
 ;; We need a database of Clojure learning resources.
 

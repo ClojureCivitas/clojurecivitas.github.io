@@ -1,4 +1,5 @@
-(ns civitas.validator
+^{:clay {:quarto {:draft true}}}
+(ns civitas.explorer.validator
   (:require [clojure.spec.alpha :as s]))
 
 (s/def ::level #{0 1 2 3})

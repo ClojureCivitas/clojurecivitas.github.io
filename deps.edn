@@ -1,4 +1,4 @@
-{:paths ["src" "notebooks"]
+{:paths ["src"]
 
  :deps
  {org.clojure/clojure                         {:mvn/version "1.12.0"}
@@ -17,19 +17,11 @@
   org.eclipse.elk/org.eclipse.elk.alg.layered {:mvn/version "0.10.0"}}
 
  :aliases
- ;; Build the site with `clojure -M:m`
- {:m     {:main-opts ["-m" "civitas.main"]}
-  ;; Run Clay in watch mode with `clojure -J-Dclojure.main.report=stderr -M:clay`
-  :clay  {:main-opts ["-m" "scicloj.clay.v2.main"]}
+ {;; Build the site with `clojure -M:clay -a [:markdown]`
+  ;; Run Clay in watch mode with `clojure -M:clay`
+  :clay  {:main-opts ["-m" "scicloj.clay.v2.main"]
+          :jvm-opts ["-Dclojure.main.report=stderr"]}
   ;; When debugging libraries
-  :local {:override-deps {org.scicloj/clay {:local/root "../clay"}}}
-  ;; $ clojure -T:build test
-  ;; $ clojure -T:build ci
-  :build {:deps       {io.github.clojure/tools.build
-                       {:git/tag "v0.10.8" :git/sha "2fdfd66b"}}
-          :ns-default build}
-  :test  {:extra-paths ["test"]
-          :extra-deps  {org.clojure/test.check {:mvn/version "1.1.1"}
-                        io.github.cognitect-labs/test-runner
-                        {:git/tag "v0.5.1" :git/sha "dfb30dd"}}}
+  :local {:override-deps {org.scicloj/clay          {:local/root "../clay"}
+                          org.scicloj/kindly-advice {:local/root "../kindly-advice"}}}
   :neil  {:project {:name io.github.timothypratley/clojurecivitas}}}}
