@@ -3,7 +3,7 @@
                      :quarto {:author   [:daslu :timothypratley]
                               :type     :post
                               :draft    true
-                              :date     "2025-05-16"
+                              :date     "2025-05-1"
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}
 (ns core.async.flow.exploration
@@ -39,14 +39,12 @@
 (def stats-flow
   (flow/create-flow stats/config))
 
+(fv/flow-svg stats-flow)
+
 ;; This flow models a small system involving aggregation, notification, and reporting.
 ;; Internally, it consists of processes connected via channels.
 
 ;; ## 2. Inspecting the Flow
-
-;; Flows implement the `Datafy` protocol so we can inspect them as data.
-
-(datafy/datafy stats-flow)
 
 ;; That's a lot to take in! Fortunately, we can make things more digestible
 ;; by viewing just the **processes** involved.
@@ -61,6 +59,13 @@
 (fv/conn-table stats-flow)
 
 ;; Now we’re seeing the wiring: who talks to whom, and through what channels.
+
+;; Flows implement the `Datafy` protocol so we can inspect them as data...
+;; Good luck with that, there's a lot of it
+
+^:kind/portal
+(datafy/datafy stats-flow)
+
 
 ;; ## 3. Running the Flow
 

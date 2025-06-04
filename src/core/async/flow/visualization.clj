@@ -8,7 +8,9 @@
                               :tags     [:core.async :core.async.flow]}}}
 (ns core.async.flow.visualization
   (:require [clojure.datafy :as datafy]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [graph.layout.elk :as elk]
+            [graph.layout.elk-svg :as elk-svg]))
 
 ;; # Visualizing core.async.flows
 
@@ -103,3 +105,8 @@
             {:id      (id-for [from to])
              :sources [(id-for from)]
              :targets [(id-for to)]}))}))
+
+(defn flow-svg [flow]
+  (-> (elkg flow)
+      (elk/layout)
+      (elk-svg/render-graph)))
