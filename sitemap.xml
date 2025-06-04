@@ -2,50 +2,50 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</loc>
-    <lastmod>2025-06-03T16:50:27.147Z</lastmod>
+    <lastmod>2025-06-04T06:12:52.962Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/math/primes/factorization/sieve_augmented.html</loc>
-    <lastmod>2025-06-03T16:50:27.074Z</lastmod>
+    <lastmod>2025-06-04T06:12:52.888Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/index.html</loc>
-    <lastmod>2025-06-03T16:49:50.910Z</lastmod>
+    <lastmod>2025-06-04T06:12:20.186Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/civitas/authors.html</loc>
-    <lastmod>2025-06-03T16:50:18.408Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</loc>
-    <lastmod>2025-06-03T16:49:50.913Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/clojure/print_object/remove_extraneous.html</loc>
-    <lastmod>2025-06-03T16:50:15.784Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/clojure/transducers/what_if.html</loc>
-    <lastmod>2025-06-03T16:50:13.100Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/about.html</loc>
-    <lastmod>2025-06-03T16:49:50.910Z</lastmod>
+    <lastmod>2025-06-04T06:12:52.043Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</loc>
-    <lastmod>2025-06-03T16:49:50.917Z</lastmod>
+    <lastmod>2025-06-04T06:12:20.193Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/about.html</loc>
+    <lastmod>2025-06-04T06:12:20.186Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/clojure/transducers/what_if.html</loc>
+    <lastmod>2025-06-04T06:12:34.678Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/clojure/print_object/remove_extraneous.html</loc>
+    <lastmod>2025-06-04T06:12:36.956Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</loc>
+    <lastmod>2025-06-04T06:12:20.189Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/civitas/explorer.html</loc>
-    <lastmod>2025-06-03T16:50:25.350Z</lastmod>
+    <lastmod>2025-06-04T06:12:52.236Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/pages.html</loc>
-    <lastmod>2025-06-03T16:49:50.910Z</lastmod>
+    <lastmod>2025-06-04T06:12:20.186Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/posts.html</loc>
-    <lastmod>2025-06-03T16:49:50.910Z</lastmod>
+    <lastmod>2025-06-04T06:12:20.186Z</lastmod>
   </url>
 </urlset>
