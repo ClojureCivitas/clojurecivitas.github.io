@@ -31,7 +31,8 @@
 (sequence (map *) (range 5) (range 5) (range 5))
 (sequence (map vector) (range 5) (range 5) (range 5))
 
-;; How about chaining several transformations together? We can use `eduction`:
+;; How about chaining several transformations together? We can use `eduction`
+;; (but see the caveats below about `eduction`):
 
 (eduction (filter even?) (map inc) (range 10))
 
@@ -84,6 +85,18 @@
 (transduce (map inc) + 0 (range 5))
 (transduce (map inc) * 1 (range 5))
 
+;; The way `(transduce xf f init coll)` works is pretty much like this:
+
+;; ``` clojure
+;; (let [rf (xf f)]
+;;   (rf (reduce rf init coll)))
+;; ```
+
+;; Note how `xf` and `f` are combined to create a single "reducing function"
+;; (which is a 2-arity function that takes an accumulator and a value), for
+;; the `reduce` and then also applied to the result as a 1-arity function,
+;; which is what `completing` does for us in the above example.
+
 ;; Now let's circle back to chaining transformations, while also controlling
 ;; the output type. We can use `comp` for this. As a recap, here's our
 ;; `eduction` from earlier:
@@ -112,7 +125,22 @@
 ;; Because it is a "reducible", it only does work when it is consumed, so it
 ;; is "lazy" in that sense, but it is not a lazy sequence. We can get a lazy
 ;; sequence from a transducer using `sequence`, if we want, or we can rely
-;; on `into` and `transduce` etc being eager.
+;; on `into` and `transduce` etc being eager. In addition, `eduction` performs
+;; the transformations each time it is consumed:
+
+(let [s (eduction (map #(inc (doto % println))) (range 5))]
+  [(into [] s)
+   (into [] s)])
+
+;; That will print 0 1 2 3 4 twice, because the `eduction` is consumed twice.
+;; Compare that behavior to `sequence`, which produces a lazy sequence and
+;; caches its results:
+
+(let [s (sequence (map #(inc (doto % println))) (range 5))]
+  [(into [] s)
+   (into [] s)])
+
+;; This will only print 0 1 2 3 4 once.
 
 ;; In conclusion,
 ;; by separating the transformation from the input and the output, we gain
