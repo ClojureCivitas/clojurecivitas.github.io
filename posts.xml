@@ -173,7 +173,7 @@ font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">4</span>])</span></code></pre></div>
 </div>
-<p>How about chaining several transformations together? We can use <code>eduction</code>:</p>
+<p>How about chaining several transformations together? We can use <code>eduction</code> (but see the caveats below about <code>eduction</code>):</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1">(eduction (<span class="kw" style="color: #003B4F;
 background-color: null;
@@ -464,7 +464,7 @@ font-style: inherit;">e</span>)))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval13906/fn--13907"</span></span></code></pre></div>
+font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval13908/fn--13909"</span></span></code></pre></div>
 </div>
 <p>Why is it trying to call <code>cons</code> with a single argument? In addition to separating the transformation from the output, <code>transduce</code> also has a “completion” step, which is performed on the final result. A convenience function called <code>completing</code> can be used to wrap the function here to provide a “no-op” completion:</p>
 <div class="sourceClojure">
@@ -588,9 +588,19 @@ font-style: inherit;">5</span>))</span></code></pre></div>
 background-color: null;
 font-style: inherit;">120</span></span></code></pre></div>
 </div>
+<p>The way <code>(transduce xf f init coll)</code> works is pretty much like this:</p>
+<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [rf (xf f)]</span>
+<span id="cb33-2">  (rf (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">reduce</span> rf init coll)))</span></code></pre></div>
+<p>Note how <code>xf</code> and <code>f</code> are combined to create a single “reducing function” (which is a 2-arity function that takes an accumulator and a value), for the <code>reduce</code> and then also applied to the result as a 1-arity function, which is what <code>completing</code> does for us in the above example.</p>
 <p>Now let’s circle back to chaining transformations, while also controlling the output type. We can use <code>comp</code> for this. As a recap, here’s our <code>eduction</code> from earlier:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1">(eduction (<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1">(eduction (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">filter</span> <span class="kw" style="color: #003B4F;
@@ -610,7 +620,7 @@ background-color: null;
 font-style: inherit;">10</span>))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1">(<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1">(<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -624,7 +634,7 @@ font-style: inherit;">9</span>)</span></code></pre></div>
 </div>
 <p>We can compose multiple transducers:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">comp</span> (<span class="kw" style="color: #003B4F;
@@ -642,15 +652,15 @@ font-weight: bold;
 font-style: inherit;">inc</span>))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1">#object[clojure.core$comp$fn__5895 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1">#object[clojure.core$comp$fn__5895 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x4463d9b7</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x55a0cc83</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core$comp$fn__5895@4463d9b7"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core$comp$fn__5895@55a0cc83"</span>]</span></code></pre></div>
 </div>
 <p>Let’s give this a name:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb38-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -672,7 +682,7 @@ font-weight: bold;
 font-style: inherit;">inc</span>)))</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb38-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> [] evens+<span class="dv" style="color: #AD0000;
@@ -685,7 +695,7 @@ background-color: null;
 font-style: inherit;">10</span>))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb40-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -698,7 +708,7 @@ background-color: null;
 font-style: inherit;">9</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb40-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb41-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> #{} evens+<span class="dv" style="color: #AD0000;
@@ -711,7 +721,7 @@ background-color: null;
 font-style: inherit;">10</span>))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb41-1">#{<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb42-1">#{<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">7</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -725,7 +735,7 @@ font-style: inherit;">5</span>}</span></code></pre></div>
 </div>
 <p>We glossed over the result of <code>eduction</code> earlier – it produced a sequence because we printed it out, but it is a “reducible” that has captured both its input and the series of transformations to apply, so we could pass it directly to <code>into</code> or <code>transduce</code> as if it were a collection:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb42-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb43-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> [] (eduction (<span class="kw" style="color: #003B4F;
@@ -748,7 +758,7 @@ background-color: null;
 font-style: inherit;">10</span>)))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb43-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb44-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -761,7 +771,7 @@ background-color: null;
 font-style: inherit;">9</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb44-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb45-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> [] (eduction evens+<span class="dv" style="color: #AD0000;
@@ -774,7 +784,7 @@ background-color: null;
 font-style: inherit;">10</span>)))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb45-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb46-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -786,7 +796,124 @@ font-style: inherit;">7</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">9</span>]</span></code></pre></div>
 </div>
-<p>Because it is a “reducible”, it only does work when it is consumed, so it is “lazy” in that sense, but it is not a lazy sequence. We can get a lazy sequence from a transducer using <code>sequence</code>, if we want, or we can rely on <code>into</code> and <code>transduce</code> etc being eager.</p>
+<p>Because it is a “reducible”, it only does work when it is consumed, so it is “lazy” in that sense, but it is not a lazy sequence. We can get a lazy sequence from a transducer using <code>sequence</code>, if we want, or we can rely on <code>into</code> and <code>transduce</code> etc being eager. In addition, <code>eduction</code> performs the transformations each time it is consumed:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb47-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [s (eduction (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">map</span> #(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inc</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">doto</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">%</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">println</span>))) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">range</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>))]</span>
+<span id="cb47-2">  [(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">into</span> [] s)</span>
+<span id="cb47-3">   (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">into</span> [] s)])</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb48-1">[[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>]]</span></code></pre></div>
+</div>
+<p>That will print 0 1 2 3 4 twice, because the <code>eduction</code> is consumed twice. Compare that behavior to <code>sequence</code>, which produces a lazy sequence and caches its results:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [s (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">sequence</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">map</span> #(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inc</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">doto</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">%</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">println</span>))) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">range</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>))]</span>
+<span id="cb49-2">  [(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">into</span> [] s)</span>
+<span id="cb49-3">   (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">into</span> [] s)])</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1">[[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>]]</span></code></pre></div>
+</div>
+<p>This will only print 0 1 2 3 4 once.</p>
 <p>In conclusion, by separating the transformation from the input and the output, we gain expressive power, flexibility, and reuse: we can compose transducers, we can apply them to any input that produces values, and consume the results in any way we like.</p>
 <p>For example, transducers can be used in several different ways with <code>core.async</code> channels:</p>
 <ul>
@@ -1185,9 +1312,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0xad7cc4c</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x419046e3</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@ad7cc4c"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@419046e3"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -1195,9 +1322,9 @@ font-style: inherit;">"clojure.lang.MultiFn@ad7cc4c"</span>]</span></code></pre>
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x18105d14</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x3f2f83d5</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@18105d14"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@3f2f83d5"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -1206,9 +1333,9 @@ font-style: inherit;">"java.lang.Object@18105d14"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x674fee6d</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x43f97ed</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@674fee6d"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@43f97ed"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1224,11 +1351,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22436$fn__22437 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22450$fn__22451 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x54e1dc9a</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x6bb35b0e</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22436$fn__22437@54e1dc9a"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22450$fn__22451@6bb35b0e"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -1244,11 +1371,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22440$fn__22441$fn__22442 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22454$fn__22455$fn__22456 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x1d763ab2</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x6a544178</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22440$fn__22441$fn__22442@1d763ab2"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22454$fn__22455$fn__22456@6a544178"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -1302,7 +1429,7 @@ background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3747</span>]</span>
-<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__22448 invoke <span class="st" style="color: #20794D;
+<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__22462 invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1342,7 +1469,7 @@ font-style: inherit;">fn</span> [y] y))))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print-object.remove-extraneous/eval22454/fn--22455/fn--22456"</span></span></code></pre></div>
+font-style: inherit;">"clojure.print-object.remove-extraneous/eval22468/fn--22469/fn--22470"</span></span></code></pre></div>
 </div>
 <p>Next, we don’t need the eval identities.</p>
 <div class="sourceClojure">
@@ -1581,7 +1708,7 @@ font-weight: bold;
 font-style: inherit;">fn</span> [SELF LIST])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object [code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval71847$fn__71848]</span></code></pre></div>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object [code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval71861$fn__71862]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>We’re just writing a function, and it only needs to take a list…</p>
@@ -1868,7 +1995,7 @@ font-style: inherit;">1</span></span></code></pre></div>
 <div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1">(REV-LOGIC REV-LOGIC)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">#object [code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__71862]</span></code></pre></div>
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">#object [code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__71876]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>Well, it’s a function! That much is clear…</p>
@@ -2028,7 +2155,7 @@ font-style: inherit;">fn</span> SELF [VALUE]</span>
 <div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1">(FIX REV-LOGIC)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1">#object [code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__71862]</span></code></pre></div>
+<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1">#object [code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__71876]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>At least it didn’t blow up this time…</p>
