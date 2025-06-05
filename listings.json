@@ -1,21 +1,30 @@
 [
   {
-    "listing": "/pages.html",
-    "items": [
-      "/civitas/explorer.html",
-      "/civitas/authors.html"
-    ]
-  },
-  {
     "listing": "/posts.html",
     "items": [
       "/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html",
+      "/print/object/remove_extraneous.html",
+      "/print_object/remove_extraneous.html",
       "/clojure/transducers/what_if.html",
+      "/notes/hallway_track.html",
+      "/conferences/scinoj_light_1/notes/hallway_track.html",
       "/src/conferences/scinoj_light_1/notes/hallway_track.html",
+      "/factorization/sieve_augmented.html",
       "/math/primes/factorization/sieve_augmented.html",
       "/clojure/print_object/remove_extraneous.html",
       "/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html",
+      "/intro/getting-started-noj.html",
+      "/scicloj/noj/intro/getting-started-noj.html",
       "/src/scicloj/noj/intro/getting-started-noj.html"
+    ]
+  },
+  {
+    "listing": "/pages.html",
+    "items": [
+      "/civitas/sync.html",
+      "/interactive_test/can_clay_klipse.html",
+      "/civitas/explorer.html",
+      "/civitas/authors.html"
     ]
   }
 ]

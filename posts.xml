@@ -15,7 +15,7 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.31</generator>
-<lastBuildDate>Thu, 05 Jun 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Thu, 05 Jun 2025 07:00:00 GMT</lastBuildDate>
 <item>
   <title>The Hidden Geometry of Dice</title>
   <dc:creator>Timothy Pratley</dc:creator>
@@ -329,7 +329,647 @@ font-style: inherit;">210</span>]</span></code></pre></div>
 
  ]]></description>
   <guid>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html</guid>
-  <pubDate>Thu, 05 Jun 2025 00:00:00 GMT</pubDate>
+  <pubDate>Thu, 05 Jun 2025 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Clean object printing by removing extraneous</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/print/object/remove_extraneous.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="print/object/remove_extraneous_files/md-default0.js" type="text/javascript"></script>
+<script src="print/object/remove_extraneous_files/md-default1.js" type="text/javascript"></script>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1">^{<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:clay</span> {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:title</span>  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Clean object printing by removing extraneous"</span></span>
+<span id="cb1-2">         <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:quarto</span> {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:author</span>   <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:timothypratley</span></span>
+<span id="cb1-3">                  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:type</span>     <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:post</span></span>
+<span id="cb1-4">                  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:date</span>     <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"2025-06-05"</span></span>
+<span id="cb1-5">                  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:category</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:clojure</span></span>
+<span id="cb1-6">                  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:tags</span>     [<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:print-method</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:objects</span>]}}}</span>
+<span id="cb1-7">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">ns</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">print</span>.object.remove-extraneous</span>
+<span id="cb1-8">  (<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:require</span> [clojure.string <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:as</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">str</span>])</span>
+<span id="cb1-9">  (<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:import</span> (clojure.lang MultiFn)</span>
+<span id="cb1-10">           (java.io Writer)))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">(set! <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">*warn-on-reflection*</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">true</span>)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">true</span></span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> remove-extraneous</span></span>
+<span id="cb4-2">  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Clojure compiles with unique names that include things like `/eval32352/` and `--4321`.</span></span>
+<span id="cb4-3"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  These are rarely useful when printing a function.</span></span>
+<span id="cb4-4"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  They can still be accessed via (class x) or similar."</span></span>
+<span id="cb4-5">  [s]</span>
+<span id="cb4-6">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-&gt;</span> s</span>
+<span id="cb4-7">      (str/replace <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">#"/eval\d+/"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"/"</span>)</span>
+<span id="cb4-8">      (str/replace <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">#"--\d+(/|$)"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"$1"</span>)))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> format-class-name </span>^String [s]</span>
+<span id="cb5-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [[ns-str &amp; names] (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-&gt;</span> (remove-extraneous s)</span>
+<span id="cb5-3">                             (str/split <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">#"/"</span>))]</span>
+<span id="cb5-4">    (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">and</span> ns-str names)</span>
+<span id="cb5-5">      (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">str</span> (str/join <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"$"</span> names))</span>
+<span id="cb5-6">      (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-&gt;</span> s (str/split <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">#"\."</span>) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">last</span>)))))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> class-name</span></span>
+<span id="cb6-2">  [x]</span>
+<span id="cb6-3">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-&gt;</span> x <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> .getName Compiler/demunge))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> object-str </span>^String [x]</span>
+<span id="cb7-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">str</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#object ["</span> (format-class-name (class-name x)) <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"]"</span>))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> object-writer </span>[x ^Writer w]</span>
+<span id="cb8-2">  (.write w (object-str x)))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> pr-str* </span>[x]</span>
+<span id="cb9-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [original-method (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">get-method</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">print-method</span> Object)]</span>
+<span id="cb9-3">    (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">try</span></span>
+<span id="cb9-4">      (.addMethod ^MultiFn <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">print-method</span> Object object-writer)</span>
+<span id="cb9-5">      (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">pr-str</span> x)</span>
+<span id="cb9-6">      (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">finally</span></span>
+<span id="cb9-7">        (.addMethod ^MultiFn <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">print-method</span> Object original-method)))))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">comment</span></span>
+<span id="cb10-2">  (pr-str* pr-str*)</span>
+<span id="cb10-3">  <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:-</span>)</span></code></pre></div>
+</div>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/notebooks/print/object/remove_extraneous.clj">notebooks/print/object/remove_extraneous.clj</a></small></small></pre></div>
+
+
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/print/object/remove_extraneous.html</guid>
+  <pubDate>Thu, 05 Jun 2025 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Clean object printing by removing extraneous</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/print_object/remove_extraneous.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="print_object/remove_extraneous_files/md-default0.js" type="text/javascript"></script>
+<script src="print_object/remove_extraneous_files/md-default1.js" type="text/javascript"></script>
+<p>The Clojure default for printing objects is noisy. Clojure’s <code>print-method</code> for <code>Object</code> delegates to <code>clojure.core/print-object</code></p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defmethod</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> print-method </span>Object [x ^java.io.Writer w]</span>
+<span id="cb1-2">  (<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0x2b9b5e22</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"clojure.lang.MultiFn@2b9b5e22"</span>]</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0x1e82dad5</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"java.lang.Object@1e82dad5"</span>]</span></code></pre></div>
+</div>
+<p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1">(async/chan)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0x42b07e49</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@42b07e49"</span>]</span></code></pre></div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://clojurecivitas.github.io/print_object/objection.jpg" class="img-fluid figure-img"></p>
+<figcaption>Objection!</figcaption>
+</figure>
+</div>
+<p>Functions are printed as objects</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval51396$fn__51397 <span class="bn" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0x5875c7d8</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval51396$fn__51397@5875c7d8"</span>]</span></code></pre></div>
+</div>
+<p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1">((<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [x] (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [v] ((x x) v))) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval51400$fn__51401$fn__51402 <span class="bn" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0x2f6a50c3</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval51400$fn__51401$fn__51402@2f6a50c3"</span>]</span></code></pre></div>
+</div>
+<p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> caesar-cipher </span>[s]</span>
+<span id="cb11-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">mapv</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> add2 [x] (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">+</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> x)) s))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">try</span> (caesar-cipher <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"hello world"</span>)</span>
+<span id="cb12-2">     (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">catch</span> Exception ex</span>
+<span id="cb12-3">       (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">vec</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">take</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> (.getStackTrace ex)))))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1">[[clojure.lang.Numbers add <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">155</span>]</span>
+<span id="cb13-2"> [clojure.lang.Numbers add <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3747</span>]</span>
+<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__51408 invoke <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]</span>
+<span id="cb13-4"> [clojure.core$mapv$fn__8565 invoke <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"core.clj"</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">7059</span>]]</span></code></pre></div>
+</div>
+<p>See that part <code>caesar_cipher$add2</code>? That is <strong>very</strong> useful information. It tells us that the exception was inside <code>add2</code>, which is inside <code>caesar-cipher</code>. The stack trace doesn’t print functions as objects, but it illustrates that the thing that we care about is that they are a function, what their name is, and whether they were created from inside another function.</p>
+<p>Let’s return to printing a function as an object. An easy improvement is to demunge from Java names to Clojure names. Demunging converts <code>_</code> to <code>-</code> and <code>$</code> to <code>/</code>, and munged characters like <code>+</code> which is <code>PLUS</code> in Java.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> class-name</span></span>
+<span id="cb14-2">  [x]</span>
+<span id="cb14-3">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-&gt;</span> x <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">class</span> .getName Compiler/demunge))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1">(class-name ((<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [] (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [y] y))))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"clojure.print-object.remove-extraneous/eval51414/fn--51415/fn--51416"</span></span></code></pre></div>
+</div>
+<p>Next, we don’t need the eval identities.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> remove-extraneous</span></span>
+<span id="cb17-2">  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Clojure compiles with unique names that include things like `/eval32352/` and `--4321`.</span></span>
+<span id="cb17-3"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  These are rarely useful when printing a function.</span></span>
+<span id="cb17-4"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  They can still be accessed via (class x) or similar."</span></span>
+<span id="cb17-5">  [s]</span>
+<span id="cb17-6">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-&gt;</span> s</span>
+<span id="cb17-7">      (str/replace <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">#"/eval\d+/"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"/"</span>)</span>
+<span id="cb17-8">      (str/replace <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">#"--\d+(/|$)"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"$1"</span>)))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1">(remove-extraneous (class-name ((<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [] (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [y] y)))))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"clojure.print-object.remove-extraneous/fn/fn"</span></span></code></pre></div>
+</div>
+<p>Much nicer. I can actually read that! I’m not particularly fond of the long namespace shown as the name is either defined in this namespace, referred, or part of <code>clojure.core</code>. The multiple slashes form invalid symbols which annoy me; I prefer using <code>/</code> only for <code>namespace/name</code> separation and <code>$</code> as the name level delimiter: <code>my.namespace/my$nested$name</code>.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> format-class-name </span>^String [s]</span>
+<span id="cb20-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [[ns-str &amp; names] (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-&gt;</span> (remove-extraneous s)</span>
+<span id="cb20-3">                             (str/split <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">#"/"</span>))]</span>
+<span id="cb20-4">    (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">and</span> ns-str names)</span>
+<span id="cb20-5">      (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">str</span> (str/join <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"$"</span> names))</span>
+<span id="cb20-6">      (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-&gt;</span> s (str/split <span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">#"\."</span>) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">last</span>)))))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1">(format-class-name (remove-extraneous (class-name ((<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [] (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [y] y))))))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"fn$fn"</span></span></code></pre></div>
+</div>
+<p>So short, so sweet. If it’s a function, why call it an object?</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> object-str </span>^String [x]</span>
+<span id="cb23-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">str</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn?</span> x) <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#fn"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#object"</span>)</span>
+<span id="cb23-3">       <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">" ["</span> (format-class-name (class-name x)) <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"]"</span>))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1">(object-str ((<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [] (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [y] y))))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#fn [fn$fn]"</span></span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1">(object-str (async/chan))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"#object [ManyToManyChannel]"</span></span></code></pre></div>
+</div>
+<p>This is really all I care to know about when printing objects and functions, and it matters inside notebooks, where we want to print things, eval things that return objects and functions, and datafy complex objects that contain other objects. To print things without knowing if they are objects, functions, or data, we can extend Clojure’s <code>print-method</code>.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defmethod</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> print-method </span>Object [x ^Writer w]</span>
+<span id="cb28-2">  (.write w (object-str x)))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1">#object [MultiFn]</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1">((<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [] (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [y] y)))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1">#fn [fn$fn]</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb32-1">(async/chan)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1">#object [ManyToManyChannel]</span></code></pre></div>
+</div>
+<p>You can require this namespace from other notebooks to turn on this nice, concise mode of object printing.</p>
+<p>Happy notebooking!</p>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/print_object/remove_extraneous.clj">src/print_object/remove_extraneous.clj</a></small></small></pre></div>
+
+
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/print_object/remove_extraneous.html</guid>
+  <pubDate>Thu, 05 Jun 2025 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>What if… we were taught transducers first?</title>
@@ -488,7 +1128,7 @@ font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">4</span>])</span></code></pre></div>
 </div>
-<p>How about chaining several transformations together? We can use <code>eduction</code> (but see the caveats below about <code>eduction</code>):</p>
+<p>How about chaining several transformations together? We can use <code>eduction</code>:</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1">(eduction (<span class="kw" style="color: #003B4F;
 background-color: null;
@@ -779,7 +1419,7 @@ font-style: inherit;">e</span>)))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval13931/fn--13932"</span></span></code></pre></div>
+font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval71761/fn--71762"</span></span></code></pre></div>
 </div>
 <p>Why is it trying to call <code>cons</code> with a single argument? In addition to separating the transformation from the output, <code>transduce</code> also has a “completion” step, which is performed on the final result. A convenience function called <code>completing</code> can be used to wrap the function here to provide a “no-op” completion:</p>
 <div class="sourceClojure">
@@ -903,19 +1543,9 @@ font-style: inherit;">5</span>))</span></code></pre></div>
 background-color: null;
 font-style: inherit;">120</span></span></code></pre></div>
 </div>
-<p>The way <code>(transduce xf f init coll)</code> works is pretty much like this:</p>
-<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1">(<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">let</span> [rf (xf f)]</span>
-<span id="cb33-2">  (rf (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">reduce</span> rf init coll)))</span></code></pre></div>
-<p>Note how <code>xf</code> and <code>f</code> are combined to create a single “reducing function” (which is a 2-arity function that takes an accumulator and a value), for the <code>reduce</code> and then also applied to the result as a 1-arity function, which is what <code>completing</code> does for us in the above example.</p>
 <p>Now let’s circle back to chaining transformations, while also controlling the output type. We can use <code>comp</code> for this. As a recap, here’s our <code>eduction</code> from earlier:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1">(eduction (<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1">(eduction (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">filter</span> <span class="kw" style="color: #003B4F;
@@ -935,7 +1565,7 @@ background-color: null;
 font-style: inherit;">10</span>))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1">(<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1">(<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -949,7 +1579,7 @@ font-style: inherit;">9</span>)</span></code></pre></div>
 </div>
 <p>We can compose multiple transducers:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">comp</span> (<span class="kw" style="color: #003B4F;
@@ -967,15 +1597,11 @@ font-weight: bold;
 font-style: inherit;">inc</span>))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1">#object[clojure.core$comp$fn__5895 <span class="bn" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0x6e46f5c1</span> <span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"clojure.core$comp$fn__5895@6e46f5c1"</span>]</span></code></pre></div>
+<div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1">#fn [comp$fn]</span></code></pre></div>
 </div>
 <p>Let’s give this a name:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb38-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
@@ -997,7 +1623,7 @@ font-weight: bold;
 font-style: inherit;">inc</span>)))</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb38-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> [] evens+<span class="dv" style="color: #AD0000;
@@ -1010,7 +1636,7 @@ background-color: null;
 font-style: inherit;">10</span>))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb40-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1023,7 +1649,7 @@ background-color: null;
 font-style: inherit;">9</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb41-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb40-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> #{} evens+<span class="dv" style="color: #AD0000;
@@ -1036,7 +1662,7 @@ background-color: null;
 font-style: inherit;">10</span>))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb42-1">#{<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb41-1">#{<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">7</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1050,7 +1676,7 @@ font-style: inherit;">5</span>}</span></code></pre></div>
 </div>
 <p>We glossed over the result of <code>eduction</code> earlier – it produced a sequence because we printed it out, but it is a “reducible” that has captured both its input and the series of transformations to apply, so we could pass it directly to <code>into</code> or <code>transduce</code> as if it were a collection:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb43-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb42-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> [] (eduction (<span class="kw" style="color: #003B4F;
@@ -1073,7 +1699,7 @@ background-color: null;
 font-style: inherit;">10</span>)))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb44-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb43-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1086,7 +1712,7 @@ background-color: null;
 font-style: inherit;">9</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb45-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb44-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> [] (eduction evens+<span class="dv" style="color: #AD0000;
@@ -1099,7 +1725,7 @@ background-color: null;
 font-style: inherit;">10</span>)))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb46-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb45-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1111,130 +1737,7 @@ font-style: inherit;">7</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">9</span>]</span></code></pre></div>
 </div>
-<p>Because it is a “reducible”, it only does work when it is consumed, so it is “lazy” in that sense, but it is not a lazy sequence. We can get a lazy sequence from a transducer using <code>sequence</code>, if we want, or we can rely on <code>into</code> and <code>transduce</code> etc being eager. In addition, <code>eduction</code> performs the transformations each time it is consumed:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb47-1">(<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">let</span> [s (eduction (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">map</span> #(<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">inc</span> (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">doto</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">%</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">println</span>))) (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">range</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>))]</span>
-<span id="cb47-2">  [(<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">into</span> [] s)</span>
-<span id="cb47-3">   (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">into</span> [] s)])</span></code></pre></div>
-</div>
-<div data-lst-cap="OUT:">
-<p>0 1 2 3 4 0 1 2 3 4</p>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb48-1">[[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>] [<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>]]</span></code></pre></div>
-</div>
-<p>That will print 0 1 2 3 4 twice, because the <code>eduction</code> is consumed twice. Compare that behavior to <code>sequence</code>, which produces a lazy sequence and caches its results:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1">(<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">let</span> [s (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">sequence</span> (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">map</span> #(<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">inc</span> (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">doto</span> <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">%</span> <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">println</span>))) (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">range</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>))]</span>
-<span id="cb49-2">  [(<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">into</span> [] s)</span>
-<span id="cb49-3">   (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">into</span> [] s)])</span></code></pre></div>
-</div>
-<div data-lst-cap="OUT:">
-<p>0 1 2 3 4</p>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1">[[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>] [<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>]]</span></code></pre></div>
-</div>
-<p>This will only print 0 1 2 3 4 once.</p>
+<p>Because it is a “reducible”, it only does work when it is consumed, so it is “lazy” in that sense, but it is not a lazy sequence. We can get a lazy sequence from a transducer using <code>sequence</code>, if we want, or we can rely on <code>into</code> and <code>transduce</code> etc being eager.</p>
 <p>In conclusion, by separating the transformation from the input and the output, we gain expressive power, flexibility, and reuse: we can compose transducers, we can apply them to any input that produces values, and consume the results in any way we like.</p>
 <p>For example, transducers can be used in several different ways with <code>core.async</code> channels:</p>
 <ul>
@@ -1249,7 +1752,241 @@ font-style: inherit;">5</span>]]</span></code></pre></div>
 
  ]]></description>
   <guid>https://clojurecivitas.github.io/clojure/transducers/what_if.html</guid>
-  <pubDate>Sat, 31 May 2025 00:00:00 GMT</pubDate>
+  <pubDate>Sat, 31 May 2025 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>The Hallway Track: SciNoj Light #1 Data Analysis Stories</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/notes/hallway_track.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>The <a href="https://scicloj.github.io/scinoj-light-1">SciNoj Light #1</a> Conference brought together Clojure enthusiasts, data scientists, and researchers for an engaging exploration of data analysis stories. The event fostered a collaborative, informal atmosphere where participants exchanged ideas across disciplines from cognitive psychology to urban planning.</p>
+<p>If you missed it, you can view the talks on the <a href="https://www.youtube.com/playlist?list=PLb_VRZPxjMAAaoAPnk8ClWET3baRV1Whv">conference sessions playlist</a>. The <a href="https://scicloj.github.io/scinoj-light-1/speakers.html">conference website</a> has detailed information about the talks and speakers. Links to the notebook code presented are on the <a href="https://scicloj.github.io/scinoj-light-1/sessions">sessions page</a>, and available as data in the <a href="https://github.com/scicloj/scinoj-light-1/blob/main/info.edn">info.edn file</a>.</p>
+<p>The <a href="https://youtu.be/3HZ5rngHzWM">concluding talk on lane reductions</a> stood out as my favorite because it blended data-driven insights with relatable, human-interest storytelling. As a cyclist, I immediately connected with how lane reductions and protected bike lanes are impactful to my safety. The talk’s compelling visuals, grounded in real case studies, made the story very tangible. Heather’s personal perspective as a car-free parent added emotional weight. She illustrated how community advocacy and smart urban design saves lives, and makes more livable spaces. The mix of passion, rigor, and optimism left me inspired; data analysis can drive tangible, life-improving change.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://clojurecivitas.github.io/notes/crashes.png" class="img-fluid figure-img"></p>
+<figcaption>Bike lane improvements reduce crashes</figcaption>
+</figure>
+</div>
+<p>A major focus of the conference was the development of Clojure’s data science <a href="https://github.com/scicloj/noj">Noj</a> toolkit. This suite of libraries demonstrated how Clojure combines functional programming elegance with practical performance. Speakers highlighted Noj’s interoperability with Python and Java ecosystems while emphasizing its advantages for reproducible and maintainable workflows. The community’s collaborative energy was evident throughout.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://clojurecivitas.github.io/notes/noj_components.png" class="img-fluid figure-img"></p>
+<figcaption>Noj core components</figcaption>
+</figure>
+</div>
+<p>Artificial intelligence emerged as a recurring theme, with several talks exploring hybrid approaches to enhance reliability. One discussion centered on Retrieval-Augmented Generation (RAG) systems, where combining large language models with Clojure’s logic programming capabilities could improve accuracy in structured domains like government Q&amp;A. Another session delved into probabilistic programming with Inferme, illustrating Bayesian methods for modeling uncertainty. These technical deep dives were balanced by ethical considerations and reflections on technology’s societal implications.</p>
+<p>Scientific applications showcased Clojure’s versatility. One talk explored simulating fluid dynamics. Another focused on forecasting tropical cyclone paths using physics-informed machine learning. Cognitive science experiments were also featured, using collaborative games and puzzles to study human planning behavior, and brain wave monitors. The conference also highlighted social impact work, such as data-driven advocacy for safer street designs, proving that technical tools can drive urban change.</p>
+<p>What stood out to me was how effectively the SciCloj community uses Clojure notebooks for collaborative work. Presenters shared their research through executable notebooks that cleanly combined code, visualizations and explanations. It’s a practical pattern broadly applicable for sharing ideas and knowledge.</p>
+<p>Throughout the event, a sense of optimism prevailed about Clojure’s untapped potential. While acknowledging gaps in ML tooling compared to Python, speakers demonstrated that Clojure’s functional rigor and JVM scalability make it a good fit for data science. Attendee discussions envisioned collaborating further on logic-guided AI and semantic web ontologies. There was a recurring theme of bridging the gap between academic theory and real-world engineering. SciNoj Light ultimately painted a picture of Clojure not just as a language, but as a catalyst for interdisciplinary innovation.</p>
+<blockquote class="blockquote">
+<p>You can have the cake of Clojure’s immutable persistent data structures and eat it too;<br>
+Get your answers fast and make your customers happy.<br>
+— Harold</p>
+</blockquote>
+<p>A big thank you to the organizers! The event was an overwhelming success with high quality presentations and valuable discussions. I’m looking forward to the next SciNoj, it’s a rare and valuable blend of science, technology, community and code.</p>
+<p>Below are my notes about the sessions and conversations from the conference.</p>
+<section id="pre-conference-interview" class="level3">
+<h3 class="anchored" data-anchor-id="pre-conference-interview">Pre-conference interview</h3>
+<p>Engaging to have a taste of what’s to come, got me really enthusiastic about the coming event. Game as a Research Tool: “Tik Tik” is a controlled environment for studying human cognition and collaboration. Combines cognitive psychology, game design, and data analysis.</p>
+</section>
+<section id="hello" class="level3">
+<h3 class="anchored" data-anchor-id="hello">1.1: Hello</h3>
+<p>Community-driven event. Informal, interactive, and welcoming. Focus on Clojure for data workflows. Tools and libraries have matured, and the conference shares these advancements. <a href="https://www.clojurians-zulip.org/">Zulip</a> is the main forum, attendees are encouraged to engage via structured topic threads. The macroexpand session invites ideas for expanding Clojure adoption in various fields. Hosts encourage questions, jokes, and relaxed participation. Sets the tone for an inclusive, engaging, and slightly nerdy gathering of Clojure enthusiasts.</p>
+</section>
+<section id="an-intro-to-the-noj-toolkit" class="level3">
+<h3 class="anchored" data-anchor-id="an-intro-to-the-noj-toolkit">1.2: An intro to the Noj toolkit</h3>
+<p>Noj is a Clojure-based data science toolkit integrating libraries for data analysis, visualization, and machine learning. Designed for functional, efficient data processing with compatibility across libraries (e.g., Tablecloth, FastMath, Metamorph). Inspired by tools like R’s dplyr/ggplot and Python’s pandas/Plotly, but with a Clojure-centric approach. Tablecloth for tabular data manipulation (similar to pandas/dplyr). TablePlot grammar-of-graphics-inspired visualization (like ggplot). FastMath stats and statistical modeling (logistic regression and more). Metamorph for machine learning workflows. Worked example of predicting success in Kickstarter projects. Data loading/cleaning, exploratory analysis (grouping, aggregation, bar plots), predictive modeling, evaluation (train/test split, accuracy checks). Functional &amp; Immutable, Noj leverages Clojure’s strengths. Efficient columnar storage with zero-copy operations.</p>
+</section>
+<section id="probability-and-statistics---daniel-slutsky" class="level3">
+<h3 class="anchored" data-anchor-id="probability-and-statistics---daniel-slutsky">1.3: Probability and statistics - Daniel Slutsky</h3>
+<p>Generating pseudo-random numbers using seeds for reproducibility in research. Simulating dice rolls to explore distributions. Used histograms and scatter plots to visualize distributions. Computed mean, standard deviation and z-scores for comparison. Bayesian inference for probabilistic models with parameters. Conditioned models on observed data to infer posterior distributions. Highlighted constraints and efficient sampling algorithms. Avoid lazy sequences for large simulations; consider dtype-next or transducers. Visualization matters, histograms and scatter plots reveal patterns. Probabilistic programming models uncertainty and updates beliefs with data. Balanced foundational stats with advanced topics, emphasizing Clojure’s tools for data science.</p>
+</section>
+<section id="customer-churn-analysis-llms-logic-programming---siavash-mohammady" class="level3">
+<h3 class="anchored" data-anchor-id="customer-churn-analysis-llms-logic-programming---siavash-mohammady">1.4: Customer churn analysis, LLMs &amp; logic programming - Siavash Mohammady</h3>
+<p>Customers leaving significantly impacts revenue. Exploring factors like course format, teacher experience, and registration patterns. High churn in early months, newer teachers correlated with higher churn. User prompt → NLP entity recognition → LLM generates high-level DSL → Clara rule engine translates to low-level DSL → Execution. Mentorship for new teachers can reduce churn. Pairing LLMs abstract reasoning with logic engines concrete execution optimizes complex data tasks. A forward-looking talk blending data science, AI, and Clojure, emphasizing doing less.</p>
+</section>
+<section id="linear-foundations-nonlinear-frontiers---jelena-losic" class="level3">
+<h3 class="anchored" data-anchor-id="linear-foundations-nonlinear-frontiers---jelena-losic">1.5: Linear Foundations &amp; Nonlinear Frontiers - Jelena Losic</h3>
+<p>Linear systems rely on superposition, the whole is the sum of parts. Vector spaces, linear regression, Fourier analysis. Real-world systems are often nonlinear. Linear methods fail when data lies on curved manifolds or exhibits complex interactions. Techniques like t-SNE, UMAP, and autoencoders handle nonlinearity by preserving structures or learning manifold geometry. Nonlinear systems can be deterministic yet unpredictable. Nonlinear methods unlock richer patterns but sacrifice interpretability and require more data. Dimensionality reduction illustrates the trade-off between simplicity and accuracy. Embeddings leverage linear algebra but rely on nonlinear transformations for deeper semantics.</p>
+</section>
+<section id="raggedy-anns-big-adventure---paula-gearon" class="level3">
+<h3 class="anchored" data-anchor-id="raggedy-anns-big-adventure---paula-gearon">1.6: RAGgedy Ann’s Big Adventure - Paula Gearon</h3>
+<p>Vectors represent concepts in multidimensional space. Embeddings convert text into vectors, capturing meaning. Similarity between vectors is measurable. Neural networks process inputs through weighted connections and activation functions. Transformers contextualize words in sentences. Combining LLMs with vector databases to reduce hallucinations. Augmenting queries with retrieved context. LLMs are built from modular math operations. Vector databases enable semantic search. RAG improves accuracy by grounding LLM outputs in verified data.</p>
+</section>
+<section id="parliamentary-questions---rag-evaluation---eoin-carney" class="level3">
+<h3 class="anchored" data-anchor-id="parliamentary-questions---rag-evaluation---eoin-carney">1.7: Parliamentary Questions - RAG Evaluation - Eoin Carney</h3>
+<p>Can RAG effectively answer parliamentary style questions using Irish government data? 10k publicly available Irish parliamentary questions and answers. Compared sentence-based chunking with full document retrieval. Tested multiple LLMs for generation and evaluation. Retrieval Matters More Than Prompting. Smaller, precise chunks of 3–5 sentences improved precision over full document retrieval. Direct answer retrieval outperformed matching questions to answers. Deterministic metrics like word overlap failed to capture nuance. LLM as judge worked better for correctness. Clay notebook visualization helped explore vector embeddings interactively. Government answers should be plain and factual. LLMs are oddly well-suited for that.</p>
+</section>
+<section id="discussion-rags-and-structured-knowledge" class="level3">
+<h3 class="anchored" data-anchor-id="discussion-rags-and-structured-knowledge">1.8 - Discussion: RAGs and Structured Knowledge</h3>
+<p>Shared experiences using Clojure for AI projects. Exploring logic programming as a superset of reasoning techniques and unifying them with embeddings and vector logic. Foundational ontologies and their role in structuring knowledge for AI, particularly in medical domains. The conversation fluidly shifted from technical to philosophical and practical.</p>
+</section>
+<section id="noj-deep-dive---harold-daniel-slutsky" class="level3">
+<h3 class="anchored" data-anchor-id="noj-deep-dive---harold-daniel-slutsky">1.9: Noj Deep Dive - Harold &amp; Daniel Slutsky</h3>
+<p>Using Clojure for functional data science, contrasting it with Python tools like Pandas. The focus is on immutability, performance, and leveraging Clojure’s strengths for data processing. Tech.ml.dataset for tabular data processing. Columnar storage for efficiency and integrates with other libraries in the ecosystem. Layered Architecture. Hamfisted high-performance, immutable collections optimized for JVM memory/CPU. Dtype-next array random access and lazy, non-caching transformations. Tablecloth high-level tabular data tools built atop these foundations. Challenges and solutions for integrating with Python via libpython-clj and stdlang. Hamfisted and Dtype-next enable Clojure to match Java/Python performance while retaining functional idioms. 20x speedup in lazy sequences. Columnar storage in TMD reduces memory overhead. Libraries like FastMath, MetamorphML, and Tableplot extend the stack. Real-world applications in consulting and open-source collaboration. Frequent shoutouts to contributors and emphasis on community input via Zulip. If you think data science needs software engineering, you’re right. A blend of technical rigor, community spirit, and practical focus on building scalable, functional data tools.</p>
+</section>
+<section id="brain-data-in-clojure---lorelai-lyons" class="level3">
+<h3 class="anchored" data-anchor-id="brain-data-in-clojure---lorelai-lyons">1.10: Brain data in Clojure - Lorelai Lyons</h3>
+<p>Ethical and Historical Context of Brain-Computer Interfaces. Morally questionable history of neuroscience. Need for ethical considerations in modern BCIs. The goal is to bridge the gap between continuous human thought and discrete computing. Neurons generate electrical signals that can be recorded and digitized. EEG measures brainwave frequencies via electrodes placed on the scalp. EEG data from a motor imagery study. Applied filters to isolate frequency bands. Developing a low-cost binary file system for efficient EEG data storage. Exploring brain-controlled interfaces for creative applications. Consumer EEG devices make brain data collection feasible for programmers. BCIs require collaboration across neuroscience, hardware, and software. Mixed technical depth with ethical reflection.</p>
+</section>
+<section id="d-viscous-fluid-flow-data-analysis-burgers-equation---siyoung-byun" class="level3">
+<h3 class="anchored" data-anchor-id="d-viscous-fluid-flow-data-analysis-burgers-equation---siyoung-byun">2.1: 1D Viscous Fluid Flow Data Analysis, Burgers’ Equation - Siyoung Byun</h3>
+<p>Fluid dynamics is complex, involving variables like friction, pressure, and momentum. CFD uses computational methods to simulate fluid behavior, crucial for fields like aerospace, healthcare, and astrophysics. Astrophysics simulations of binary star collisions use CFD. Burgers’ Equation combines nonlinear convection (steepening fluid motion) and viscosity (smoothing/diffusion). Demonstrated via simulations of a shock in a 1D fluid, visualized over time. Used mutable Java arrays for performance. Extending to 2D/3D simulations and incorporate the Navier-Stokes equations for full fluid dynamics. Visualization Matters. Plotting data is critical for interpreting simulations. Siyoung emphasizes the learning process and invites collaboration. Technical but accessible, viscosity effects are explained with analogies. Passion for both astrophysics, fluid dynamics and Clojure shines through. Simulations of white dwarf collisions brought home the realization that star interactions are fluid. Korean ondol floor heating as an analogy for convection.</p>
+</section>
+<section id="uk-electricity-demand-time-series-forecasting---anton-lobach" class="level3">
+<h3 class="anchored" data-anchor-id="uk-electricity-demand-time-series-forecasting---anton-lobach">2.2: UK Electricity Demand Time Series Forecasting - Anton Lobach</h3>
+<p>The Taylor dataset contains electricity demand in Wales/England. Extract day of week, minute of day, weekend flag. Ridge regression regularized linear regression to prevent overfitting. Use rolling origin cross-validation. Root Mean Squared Error to measure forecast accuracy. Clojure has expressive, modular workflows with strong data processing capabilities. Seasonality matters. Minute-of-day was the most predictive feature. Ridge regression achieved reasonable accuracy. Split data into train/test sets before exploratory analysis to avoid bias. Use rolling windows for temporal data. The tutorial is available as an interactive notebook.</p>
+</section>
+<section id="tropical-cyclone-trajectory-modelling---k-ram-narayan-naimish-mani-b" class="level3">
+<h3 class="anchored" data-anchor-id="tropical-cyclone-trajectory-modelling---k-ram-narayan-naimish-mani-b">2.3: Tropical cyclone trajectory modelling - K Ram Narayan, Naimish Mani B</h3>
+<p>Accurate trajectory forecasting is crucial for disaster preparedness, evacuation planning, and minimizing loss of life and property. Forecasting relies on a mix of satellite data, computer simulations, and aircraft reconnaissance. Using SINDy (Sparse Identification of Nonlinear Dynamics), to extract governing equations from cyclone trajectory data to predict future paths. Global cyclone track dataset. Satellite imagery used to compute wind velocity and shear via optical flow. Incorporates cyclone dynamics to refine SINDy’s candidate equations. Cyclone movement is driven by steering winds, Coriolis force, beta drift, and interactions with pressure systems. Collect trajectory and satellite data. Construct a candidate library of possible dynamical terms. Use Lasso regression to sparsely select the most relevant terms. Derive interpretable differential equations for forecasting. SINDy achieved a 43.71 km mean absolute error, acceptable in cyclone forecasting. Outperformed by gradient boosting, and random forest in single-step prediction but excels in full trajectory forecasting. Bay of Bengal cyclones curve unpredictably due to land effects. Bridges meteorology, physics, and machine learning for cyclone prediction.</p>
+</section>
+<section id="studying-planning-with-a-novel-video-game---cvetomir-dimov" class="level3">
+<h3 class="anchored" data-anchor-id="studying-planning-with-a-novel-video-game---cvetomir-dimov">2.4: Studying planning with a novel video game - Cvetomir Dimov</h3>
+<p>Planning is a fundamental cognitive ability used in everyday tasks. “Tik Tik” game is designed to study planning. Players control a fireball and an ice cube that must collaborate to navigate obstacles and reach targets. A custom program was developed to generate and solve game levels, identifying optimal paths and measuring problem difficulty. Goal is to understand what incentivizes planning. Difficulty influenced by the number of barriers and their intersections. Problem difficulty predictors were the minimum moves needed and the number of possible paths up to the optimal length. Study 1 high dropout rates, large individual differences in planning ability. Study 2 time limits and stricter move limits reduced dropouts and reinforced planning incentives. Tight constraints encourage planning. Problem difficulty can be systematically manipulated for cognitive research. Demonstrations of the game and solver make abstract concepts tangible. Credits multiple software tools, emphasizing a community-driven approach to research.</p>
+</section>
+<section id="building-a-data-science-ecosystem-in-clojure---kira-howe" class="level3">
+<h3 class="anchored" data-anchor-id="building-a-data-science-ecosystem-in-clojure---kira-howe">2.5: Building a Data Science Ecosystem in Clojure - Kira Howe</h3>
+<p>Inspiration from the Tidyverse (R). A cohesive ecosystem with shared design principles on data and composable tools. Standardized data structures and streamline workflows. Fragmented tools create glue code overhead. Immutable data and pure functions enable reproducibility. JVM handles large-scale data efficiently. Engineering culture emphasis on stability and interoperability. Explosive data growth demands scalable, deterministic tools. Noj as a Clojure based ecosystem inspired by Tidyverse but optimized for scalability and engineering. Simplify onboarding through Jupyter support and Clojure in a box. Need for Shiny-like tools for rapid prototyping. Emphasized grassroots community building and learning together. Data quality should be a philosophy, not an afterthought.</p>
+</section>
+<section id="macroexpand-1" class="level3">
+<h3 class="anchored" data-anchor-id="macroexpand-1">2.6: Macroexpand-1</h3>
+<p>Ways to broaden Clojure’s impact beyond its traditional domains by fostering interdisciplinary collaboration. Need to make Clojure more accessible and visible in fields like data science, education, and specialized industries. Improve tooling, documentation, and community outreach. Developer intuitive libraries, enhancing interoperability with other languages. Lowering barriers for newcomers. Importance of geospatial analysis and modern programming practices. Sustainable community efforts and cross-disciplinary knowledge sharing.</p>
+</section>
+<section id="the-impact-of-lane-reductions---heather-moore-farley" class="level3">
+<h3 class="anchored" data-anchor-id="the-impact-of-lane-reductions---heather-moore-farley">2.7: The Impact of Lane Reductions - Heather Moore-Farley</h3>
+<p>Reducing car lanes, protected bike lanes, and pedestrian crossings decrease traffic injuries and fatalities. California’s crash data used to visualize collision hotspots to push for safer street redesigns. High injury corridors 6% of streets cause 60% of severe/fatal crashes. Correlated lane reductions, protected bike lanes, and raised bus stops led to fewer crashes over time. Local groups use data to advocate for safer streets. Police reported crash data has missing ages, locations and underreporting driver fault. Heather shares her lived experience as a car-free parent in Oakland, tying data to safety. Design solutions and community action work. Advocating for upcoming redesigns. A compelling mix of data science, urbanism, and grassroots advocacy. Number crunching can drive tangible change.</p>
+
+
+</section>
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/notes/hallway_track.html</guid>
+  <pubDate>Wed, 28 May 2025 07:00:00 GMT</pubDate>
+  <media:content url="https://clojurecivitas.github.io/notes/noj_components.png" medium="image" type="image/png" height="75" width="144"/>
+</item>
+<item>
+  <title>The Hallway Track: SciNoj Light #1 Data Analysis Stories</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>The <a href="https://scicloj.github.io/scinoj-light-1">SciNoj Light #1</a> Conference brought together Clojure enthusiasts, data scientists, and researchers for an engaging exploration of data analysis stories. The event fostered a collaborative, informal atmosphere where participants exchanged ideas across disciplines from cognitive psychology to urban planning.</p>
+<p>If you missed it, you can view the talks on the <a href="https://www.youtube.com/playlist?list=PLb_VRZPxjMAAaoAPnk8ClWET3baRV1Whv">conference sessions playlist</a>. The <a href="https://scicloj.github.io/scinoj-light-1/speakers.html">conference website</a> has detailed information about the talks and speakers. Links to the notebook code presented are on the <a href="https://scicloj.github.io/scinoj-light-1/sessions">sessions page</a>, and available as data in the <a href="https://github.com/scicloj/scinoj-light-1/blob/main/info.edn">info.edn file</a>.</p>
+<p>The <a href="https://youtu.be/3HZ5rngHzWM">concluding talk on lane reductions</a> stood out as my favorite because it blended data-driven insights with relatable, human-interest storytelling. As a cyclist, I immediately connected with how lane reductions and protected bike lanes are impactful to my safety. The talk’s compelling visuals, grounded in real case studies, made the story very tangible. Heather’s personal perspective as a car-free parent added emotional weight. She illustrated how community advocacy and smart urban design saves lives, and makes more livable spaces. The mix of passion, rigor, and optimism left me inspired; data analysis can drive tangible, life-improving change.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/crashes.png" class="img-fluid figure-img"></p>
+<figcaption>Bike lane improvements reduce crashes</figcaption>
+</figure>
+</div>
+<p>A major focus of the conference was the development of Clojure’s data science <a href="https://github.com/scicloj/noj">Noj</a> toolkit. This suite of libraries demonstrated how Clojure combines functional programming elegance with practical performance. Speakers highlighted Noj’s interoperability with Python and Java ecosystems while emphasizing its advantages for reproducible and maintainable workflows. The community’s collaborative energy was evident throughout.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/noj_components.png" class="img-fluid figure-img"></p>
+<figcaption>Noj core components</figcaption>
+</figure>
+</div>
+<p>Artificial intelligence emerged as a recurring theme, with several talks exploring hybrid approaches to enhance reliability. One discussion centered on Retrieval-Augmented Generation (RAG) systems, where combining large language models with Clojure’s logic programming capabilities could improve accuracy in structured domains like government Q&amp;A. Another session delved into probabilistic programming with Inferme, illustrating Bayesian methods for modeling uncertainty. These technical deep dives were balanced by ethical considerations and reflections on technology’s societal implications.</p>
+<p>Scientific applications showcased Clojure’s versatility. One talk explored simulating fluid dynamics. Another focused on forecasting tropical cyclone paths using physics-informed machine learning. Cognitive science experiments were also featured, using collaborative games and puzzles to study human planning behavior, and brain wave monitors. The conference also highlighted social impact work, such as data-driven advocacy for safer street designs, proving that technical tools can drive urban change.</p>
+<p>What stood out to me was how effectively the SciCloj community uses Clojure notebooks for collaborative work. Presenters shared their research through executable notebooks that cleanly combined code, visualizations and explanations. It’s a practical pattern broadly applicable for sharing ideas and knowledge.</p>
+<p>Throughout the event, a sense of optimism prevailed about Clojure’s untapped potential. While acknowledging gaps in ML tooling compared to Python, speakers demonstrated that Clojure’s functional rigor and JVM scalability make it a good fit for data science. Attendee discussions envisioned collaborating further on logic-guided AI and semantic web ontologies. There was a recurring theme of bridging the gap between academic theory and real-world engineering. SciNoj Light ultimately painted a picture of Clojure not just as a language, but as a catalyst for interdisciplinary innovation.</p>
+<blockquote class="blockquote">
+<p>You can have the cake of Clojure’s immutable persistent data structures and eat it too;<br>
+Get your answers fast and make your customers happy.<br>
+— Harold</p>
+</blockquote>
+<p>A big thank you to the organizers! The event was an overwhelming success with high quality presentations and valuable discussions. I’m looking forward to the next SciNoj, it’s a rare and valuable blend of science, technology, community and code.</p>
+<p>Below are my notes about the sessions and conversations from the conference.</p>
+<section id="pre-conference-interview" class="level3">
+<h3 class="anchored" data-anchor-id="pre-conference-interview">Pre-conference interview</h3>
+<p>Engaging to have a taste of what’s to come, got me really enthusiastic about the coming event. Game as a Research Tool: “Tik Tik” is a controlled environment for studying human cognition and collaboration. Combines cognitive psychology, game design, and data analysis.</p>
+</section>
+<section id="hello" class="level3">
+<h3 class="anchored" data-anchor-id="hello">1.1: Hello</h3>
+<p>Community-driven event. Informal, interactive, and welcoming. Focus on Clojure for data workflows. Tools and libraries have matured, and the conference shares these advancements. <a href="https://www.clojurians-zulip.org/">Zulip</a> is the main forum, attendees are encouraged to engage via structured topic threads. The macroexpand session invites ideas for expanding Clojure adoption in various fields. Hosts encourage questions, jokes, and relaxed participation. Sets the tone for an inclusive, engaging, and slightly nerdy gathering of Clojure enthusiasts.</p>
+</section>
+<section id="an-intro-to-the-noj-toolkit" class="level3">
+<h3 class="anchored" data-anchor-id="an-intro-to-the-noj-toolkit">1.2: An intro to the Noj toolkit</h3>
+<p>Noj is a Clojure-based data science toolkit integrating libraries for data analysis, visualization, and machine learning. Designed for functional, efficient data processing with compatibility across libraries (e.g., Tablecloth, FastMath, Metamorph). Inspired by tools like R’s dplyr/ggplot and Python’s pandas/Plotly, but with a Clojure-centric approach. Tablecloth for tabular data manipulation (similar to pandas/dplyr). TablePlot grammar-of-graphics-inspired visualization (like ggplot). FastMath stats and statistical modeling (logistic regression and more). Metamorph for machine learning workflows. Worked example of predicting success in Kickstarter projects. Data loading/cleaning, exploratory analysis (grouping, aggregation, bar plots), predictive modeling, evaluation (train/test split, accuracy checks). Functional &amp; Immutable, Noj leverages Clojure’s strengths. Efficient columnar storage with zero-copy operations.</p>
+</section>
+<section id="probability-and-statistics---daniel-slutsky" class="level3">
+<h3 class="anchored" data-anchor-id="probability-and-statistics---daniel-slutsky">1.3: Probability and statistics - Daniel Slutsky</h3>
+<p>Generating pseudo-random numbers using seeds for reproducibility in research. Simulating dice rolls to explore distributions. Used histograms and scatter plots to visualize distributions. Computed mean, standard deviation and z-scores for comparison. Bayesian inference for probabilistic models with parameters. Conditioned models on observed data to infer posterior distributions. Highlighted constraints and efficient sampling algorithms. Avoid lazy sequences for large simulations; consider dtype-next or transducers. Visualization matters, histograms and scatter plots reveal patterns. Probabilistic programming models uncertainty and updates beliefs with data. Balanced foundational stats with advanced topics, emphasizing Clojure’s tools for data science.</p>
+</section>
+<section id="customer-churn-analysis-llms-logic-programming---siavash-mohammady" class="level3">
+<h3 class="anchored" data-anchor-id="customer-churn-analysis-llms-logic-programming---siavash-mohammady">1.4: Customer churn analysis, LLMs &amp; logic programming - Siavash Mohammady</h3>
+<p>Customers leaving significantly impacts revenue. Exploring factors like course format, teacher experience, and registration patterns. High churn in early months, newer teachers correlated with higher churn. User prompt → NLP entity recognition → LLM generates high-level DSL → Clara rule engine translates to low-level DSL → Execution. Mentorship for new teachers can reduce churn. Pairing LLMs abstract reasoning with logic engines concrete execution optimizes complex data tasks. A forward-looking talk blending data science, AI, and Clojure, emphasizing doing less.</p>
+</section>
+<section id="linear-foundations-nonlinear-frontiers---jelena-losic" class="level3">
+<h3 class="anchored" data-anchor-id="linear-foundations-nonlinear-frontiers---jelena-losic">1.5: Linear Foundations &amp; Nonlinear Frontiers - Jelena Losic</h3>
+<p>Linear systems rely on superposition, the whole is the sum of parts. Vector spaces, linear regression, Fourier analysis. Real-world systems are often nonlinear. Linear methods fail when data lies on curved manifolds or exhibits complex interactions. Techniques like t-SNE, UMAP, and autoencoders handle nonlinearity by preserving structures or learning manifold geometry. Nonlinear systems can be deterministic yet unpredictable. Nonlinear methods unlock richer patterns but sacrifice interpretability and require more data. Dimensionality reduction illustrates the trade-off between simplicity and accuracy. Embeddings leverage linear algebra but rely on nonlinear transformations for deeper semantics.</p>
+</section>
+<section id="raggedy-anns-big-adventure---paula-gearon" class="level3">
+<h3 class="anchored" data-anchor-id="raggedy-anns-big-adventure---paula-gearon">1.6: RAGgedy Ann’s Big Adventure - Paula Gearon</h3>
+<p>Vectors represent concepts in multidimensional space. Embeddings convert text into vectors, capturing meaning. Similarity between vectors is measurable. Neural networks process inputs through weighted connections and activation functions. Transformers contextualize words in sentences. Combining LLMs with vector databases to reduce hallucinations. Augmenting queries with retrieved context. LLMs are built from modular math operations. Vector databases enable semantic search. RAG improves accuracy by grounding LLM outputs in verified data.</p>
+</section>
+<section id="parliamentary-questions---rag-evaluation---eoin-carney" class="level3">
+<h3 class="anchored" data-anchor-id="parliamentary-questions---rag-evaluation---eoin-carney">1.7: Parliamentary Questions - RAG Evaluation - Eoin Carney</h3>
+<p>Can RAG effectively answer parliamentary style questions using Irish government data? 10k publicly available Irish parliamentary questions and answers. Compared sentence-based chunking with full document retrieval. Tested multiple LLMs for generation and evaluation. Retrieval Matters More Than Prompting. Smaller, precise chunks of 3–5 sentences improved precision over full document retrieval. Direct answer retrieval outperformed matching questions to answers. Deterministic metrics like word overlap failed to capture nuance. LLM as judge worked better for correctness. Clay notebook visualization helped explore vector embeddings interactively. Government answers should be plain and factual. LLMs are oddly well-suited for that.</p>
+</section>
+<section id="discussion-rags-and-structured-knowledge" class="level3">
+<h3 class="anchored" data-anchor-id="discussion-rags-and-structured-knowledge">1.8 - Discussion: RAGs and Structured Knowledge</h3>
+<p>Shared experiences using Clojure for AI projects. Exploring logic programming as a superset of reasoning techniques and unifying them with embeddings and vector logic. Foundational ontologies and their role in structuring knowledge for AI, particularly in medical domains. The conversation fluidly shifted from technical to philosophical and practical.</p>
+</section>
+<section id="noj-deep-dive---harold-daniel-slutsky" class="level3">
+<h3 class="anchored" data-anchor-id="noj-deep-dive---harold-daniel-slutsky">1.9: Noj Deep Dive - Harold &amp; Daniel Slutsky</h3>
+<p>Using Clojure for functional data science, contrasting it with Python tools like Pandas. The focus is on immutability, performance, and leveraging Clojure’s strengths for data processing. Tech.ml.dataset for tabular data processing. Columnar storage for efficiency and integrates with other libraries in the ecosystem. Layered Architecture. Hamfisted high-performance, immutable collections optimized for JVM memory/CPU. Dtype-next array random access and lazy, non-caching transformations. Tablecloth high-level tabular data tools built atop these foundations. Challenges and solutions for integrating with Python via libpython-clj and stdlang. Hamfisted and Dtype-next enable Clojure to match Java/Python performance while retaining functional idioms. 20x speedup in lazy sequences. Columnar storage in TMD reduces memory overhead. Libraries like FastMath, MetamorphML, and Tableplot extend the stack. Real-world applications in consulting and open-source collaboration. Frequent shoutouts to contributors and emphasis on community input via Zulip. If you think data science needs software engineering, you’re right. A blend of technical rigor, community spirit, and practical focus on building scalable, functional data tools.</p>
+</section>
+<section id="brain-data-in-clojure---lorelai-lyons" class="level3">
+<h3 class="anchored" data-anchor-id="brain-data-in-clojure---lorelai-lyons">1.10: Brain data in Clojure - Lorelai Lyons</h3>
+<p>Ethical and Historical Context of Brain-Computer Interfaces. Morally questionable history of neuroscience. Need for ethical considerations in modern BCIs. The goal is to bridge the gap between continuous human thought and discrete computing. Neurons generate electrical signals that can be recorded and digitized. EEG measures brainwave frequencies via electrodes placed on the scalp. EEG data from a motor imagery study. Applied filters to isolate frequency bands. Developing a low-cost binary file system for efficient EEG data storage. Exploring brain-controlled interfaces for creative applications. Consumer EEG devices make brain data collection feasible for programmers. BCIs require collaboration across neuroscience, hardware, and software. Mixed technical depth with ethical reflection.</p>
+</section>
+<section id="d-viscous-fluid-flow-data-analysis-burgers-equation---siyoung-byun" class="level3">
+<h3 class="anchored" data-anchor-id="d-viscous-fluid-flow-data-analysis-burgers-equation---siyoung-byun">2.1: 1D Viscous Fluid Flow Data Analysis, Burgers’ Equation - Siyoung Byun</h3>
+<p>Fluid dynamics is complex, involving variables like friction, pressure, and momentum. CFD uses computational methods to simulate fluid behavior, crucial for fields like aerospace, healthcare, and astrophysics. Astrophysics simulations of binary star collisions use CFD. Burgers’ Equation combines nonlinear convection (steepening fluid motion) and viscosity (smoothing/diffusion). Demonstrated via simulations of a shock in a 1D fluid, visualized over time. Used mutable Java arrays for performance. Extending to 2D/3D simulations and incorporate the Navier-Stokes equations for full fluid dynamics. Visualization Matters. Plotting data is critical for interpreting simulations. Siyoung emphasizes the learning process and invites collaboration. Technical but accessible, viscosity effects are explained with analogies. Passion for both astrophysics, fluid dynamics and Clojure shines through. Simulations of white dwarf collisions brought home the realization that star interactions are fluid. Korean ondol floor heating as an analogy for convection.</p>
+</section>
+<section id="uk-electricity-demand-time-series-forecasting---anton-lobach" class="level3">
+<h3 class="anchored" data-anchor-id="uk-electricity-demand-time-series-forecasting---anton-lobach">2.2: UK Electricity Demand Time Series Forecasting - Anton Lobach</h3>
+<p>The Taylor dataset contains electricity demand in Wales/England. Extract day of week, minute of day, weekend flag. Ridge regression regularized linear regression to prevent overfitting. Use rolling origin cross-validation. Root Mean Squared Error to measure forecast accuracy. Clojure has expressive, modular workflows with strong data processing capabilities. Seasonality matters. Minute-of-day was the most predictive feature. Ridge regression achieved reasonable accuracy. Split data into train/test sets before exploratory analysis to avoid bias. Use rolling windows for temporal data. The tutorial is available as an interactive notebook.</p>
+</section>
+<section id="tropical-cyclone-trajectory-modelling---k-ram-narayan-naimish-mani-b" class="level3">
+<h3 class="anchored" data-anchor-id="tropical-cyclone-trajectory-modelling---k-ram-narayan-naimish-mani-b">2.3: Tropical cyclone trajectory modelling - K Ram Narayan, Naimish Mani B</h3>
+<p>Accurate trajectory forecasting is crucial for disaster preparedness, evacuation planning, and minimizing loss of life and property. Forecasting relies on a mix of satellite data, computer simulations, and aircraft reconnaissance. Using SINDy (Sparse Identification of Nonlinear Dynamics), to extract governing equations from cyclone trajectory data to predict future paths. Global cyclone track dataset. Satellite imagery used to compute wind velocity and shear via optical flow. Incorporates cyclone dynamics to refine SINDy’s candidate equations. Cyclone movement is driven by steering winds, Coriolis force, beta drift, and interactions with pressure systems. Collect trajectory and satellite data. Construct a candidate library of possible dynamical terms. Use Lasso regression to sparsely select the most relevant terms. Derive interpretable differential equations for forecasting. SINDy achieved a 43.71 km mean absolute error, acceptable in cyclone forecasting. Outperformed by gradient boosting, and random forest in single-step prediction but excels in full trajectory forecasting. Bay of Bengal cyclones curve unpredictably due to land effects. Bridges meteorology, physics, and machine learning for cyclone prediction.</p>
+</section>
+<section id="studying-planning-with-a-novel-video-game---cvetomir-dimov" class="level3">
+<h3 class="anchored" data-anchor-id="studying-planning-with-a-novel-video-game---cvetomir-dimov">2.4: Studying planning with a novel video game - Cvetomir Dimov</h3>
+<p>Planning is a fundamental cognitive ability used in everyday tasks. “Tik Tik” game is designed to study planning. Players control a fireball and an ice cube that must collaborate to navigate obstacles and reach targets. A custom program was developed to generate and solve game levels, identifying optimal paths and measuring problem difficulty. Goal is to understand what incentivizes planning. Difficulty influenced by the number of barriers and their intersections. Problem difficulty predictors were the minimum moves needed and the number of possible paths up to the optimal length. Study 1 high dropout rates, large individual differences in planning ability. Study 2 time limits and stricter move limits reduced dropouts and reinforced planning incentives. Tight constraints encourage planning. Problem difficulty can be systematically manipulated for cognitive research. Demonstrations of the game and solver make abstract concepts tangible. Credits multiple software tools, emphasizing a community-driven approach to research.</p>
+</section>
+<section id="building-a-data-science-ecosystem-in-clojure---kira-howe" class="level3">
+<h3 class="anchored" data-anchor-id="building-a-data-science-ecosystem-in-clojure---kira-howe">2.5: Building a Data Science Ecosystem in Clojure - Kira Howe</h3>
+<p>Inspiration from the Tidyverse (R). A cohesive ecosystem with shared design principles on data and composable tools. Standardized data structures and streamline workflows. Fragmented tools create glue code overhead. Immutable data and pure functions enable reproducibility. JVM handles large-scale data efficiently. Engineering culture emphasis on stability and interoperability. Explosive data growth demands scalable, deterministic tools. Noj as a Clojure based ecosystem inspired by Tidyverse but optimized for scalability and engineering. Simplify onboarding through Jupyter support and Clojure in a box. Need for Shiny-like tools for rapid prototyping. Emphasized grassroots community building and learning together. Data quality should be a philosophy, not an afterthought.</p>
+</section>
+<section id="macroexpand-1" class="level3">
+<h3 class="anchored" data-anchor-id="macroexpand-1">2.6: Macroexpand-1</h3>
+<p>Ways to broaden Clojure’s impact beyond its traditional domains by fostering interdisciplinary collaboration. Need to make Clojure more accessible and visible in fields like data science, education, and specialized industries. Improve tooling, documentation, and community outreach. Developer intuitive libraries, enhancing interoperability with other languages. Lowering barriers for newcomers. Importance of geospatial analysis and modern programming practices. Sustainable community efforts and cross-disciplinary knowledge sharing.</p>
+</section>
+<section id="the-impact-of-lane-reductions---heather-moore-farley" class="level3">
+<h3 class="anchored" data-anchor-id="the-impact-of-lane-reductions---heather-moore-farley">2.7: The Impact of Lane Reductions - Heather Moore-Farley</h3>
+<p>Reducing car lanes, protected bike lanes, and pedestrian crossings decrease traffic injuries and fatalities. California’s crash data used to visualize collision hotspots to push for safer street redesigns. High injury corridors 6% of streets cause 60% of severe/fatal crashes. Correlated lane reductions, protected bike lanes, and raised bus stops led to fewer crashes over time. Local groups use data to advocate for safer streets. Police reported crash data has missing ages, locations and underreporting driver fault. Heather shares her lived experience as a car-free parent in Oakland, tying data to safety. Design solutions and community action work. Advocating for upcoming redesigns. A compelling mix of data science, urbanism, and grassroots advocacy. Number crunching can drive tangible change.</p>
+
+
+</section>
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</guid>
+  <pubDate>Wed, 28 May 2025 07:00:00 GMT</pubDate>
+  <media:content url="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/noj_components.png" medium="image" type="image/png" height="75" width="144"/>
 </item>
 <item>
   <title>The Hallway Track: SciNoj Light #1 Data Analysis Stories</title>
@@ -1365,8 +2102,237 @@ Get your answers fast and make your customers happy.<br>
 
  ]]></description>
   <guid>https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/hallway_track.html</guid>
-  <pubDate>Wed, 28 May 2025 00:00:00 GMT</pubDate>
+  <pubDate>Wed, 28 May 2025 07:00:00 GMT</pubDate>
   <media:content url="https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/noj_components.png" medium="image" type="image/png" height="75" width="144"/>
+</item>
+<item>
+  <title>Factorization of Eratosthenes</title>
+  <dc:creator>Tim Schafer</dc:creator>
+  <link>https://clojurecivitas.github.io/factorization/sieve_augmented.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="factorization/sieve_augmented_files/md-default0.js" type="text/javascript"></script>
+<script src="factorization/sieve_augmented_files/md-default1.js" type="text/javascript"></script>
+<p>Adapts the <a href="https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes">Sieve of Eratosthenes</a> to prime factorize numbers through <code>n</code>.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> prime-factors </span>[n]</span>
+<span id="cb1-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">reduce</span></span>
+<span id="cb1-3">   (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [factors prime]</span>
+<span id="cb1-4">     (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">=</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">count</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">nth</span> factors prime)))</span>
+<span id="cb1-5">       (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">reduce</span></span>
+<span id="cb1-6">        (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [factors multiple]</span>
+<span id="cb1-7">          (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [[composite-divisor <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:as</span> divisors] (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">nth</span> factors multiple)]</span>
+<span id="cb1-8">            (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">&lt;</span> prime composite-divisor)</span>
+<span id="cb1-9">              (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [remaining-divisor (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">/</span> composite-divisor prime)</span>
+<span id="cb1-10">                    remaining-divisors (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">nth</span> factors remaining-divisor)</span>
+<span id="cb1-11">                    prime-divisors (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">cons</span> prime (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">rest</span> divisors))]</span>
+<span id="cb1-12">                (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">assoc</span></span>
+<span id="cb1-13">                 factors multiple</span>
+<span id="cb1-14">                 (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">&lt;</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">count</span> remaining-divisors))</span>
+<span id="cb1-15">                   (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">concat</span> remaining-divisors prime-divisors)</span>
+<span id="cb1-16">                   (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">cons</span> remaining-divisor prime-divisors))))</span>
+<span id="cb1-17">              factors)))</span>
+<span id="cb1-18">        factors</span>
+<span id="cb1-19">        (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">range</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">*</span> prime prime) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inc</span> n) prime))</span>
+<span id="cb1-20">       factors))</span>
+<span id="cb1-21">   (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">mapv</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">list</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">range</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inc</span> n)))</span>
+<span id="cb1-22">   (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">range</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inc</span> (m/sqrt n)))))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">(prime-factors <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">13</span>)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">[(<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>)</span>
+<span id="cb3-2"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span>
+<span id="cb3-3"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)</span>
+<span id="cb3-4"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>)</span>
+<span id="cb3-5"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)</span>
+<span id="cb3-6"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>)</span>
+<span id="cb3-7"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)</span>
+<span id="cb3-8"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">7</span>)</span>
+<span id="cb3-9"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)</span>
+<span id="cb3-10"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>)</span>
+<span id="cb3-11"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)</span>
+<span id="cb3-12"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">11</span>)</span>
+<span id="cb3-13"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)</span>
+<span id="cb3-14"> (<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">13</span>)]</span></code></pre></div>
+</div>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/factorization/sieve_augmented.clj">src/factorization/sieve_augmented.clj</a></small></small></pre></div>
+
+
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/factorization/sieve_augmented.html</guid>
+  <pubDate>Wed, 28 May 2025 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Factorization of Eratosthenes</title>
@@ -1595,7 +2561,7 @@ font-style: inherit;">13</span>)]</span></code></pre></div>
 
  ]]></description>
   <guid>https://clojurecivitas.github.io/math/primes/factorization/sieve_augmented.html</guid>
-  <pubDate>Wed, 28 May 2025 00:00:00 GMT</pubDate>
+  <pubDate>Wed, 28 May 2025 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Clean object printing by removing extraneous</title>
@@ -1633,9 +2599,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x5fa32af4</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x595559c8</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@5fa32af4"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@595559c8"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -1643,9 +2609,9 @@ font-style: inherit;">"clojure.lang.MultiFn@5fa32af4"</span>]</span></code></pre
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x67a0e690</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x4649caf2</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@67a0e690"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@4649caf2"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -1654,9 +2620,9 @@ font-style: inherit;">"java.lang.Object@67a0e690"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x20789365</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x10750551</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@20789365"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@10750551"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1672,11 +2638,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22473$fn__22474 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval71658$fn__71659 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x44bff65c</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0xd33ca2a</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22473$fn__22474@44bff65c"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval71658$fn__71659@d33ca2a"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -1692,11 +2658,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval71662$fn__71663$fn__71664 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x16165af2</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x2aabfa50</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479@16165af2"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval71662$fn__71663$fn__71664@2aabfa50"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -1750,7 +2716,7 @@ background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3747</span>]</span>
-<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__22485 invoke <span class="st" style="color: #20794D;
+<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__71670 invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1790,7 +2756,7 @@ font-style: inherit;">fn</span> [y] y))))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print-object.remove-extraneous/eval22491/fn--22492/fn--22493"</span></span></code></pre></div>
+font-style: inherit;">"clojure.print-object.remove-extraneous/eval71676/fn--71677/fn--71678"</span></span></code></pre></div>
 </div>
 <p>Next, we don’t need the eval identities.</p>
 <div class="sourceClojure">
@@ -1980,7 +2946,7 @@ font-style: inherit;">fn</span> [y] y)))</span></code></pre></div>
 
  ]]></description>
   <guid>https://clojurecivitas.github.io/clojure/print_object/remove_extraneous.html</guid>
-  <pubDate>Mon, 26 May 2025 00:00:00 GMT</pubDate>
+  <pubDate>Mon, 26 May 2025 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>The Z-Combinator Gambit</title>
@@ -3010,8 +3976,74 @@ font-style: inherit;">6765</span>)</span></code></pre></div>
 
  ]]></description>
   <guid>https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</guid>
-  <pubDate>Sun, 25 May 2025 00:00:00 GMT</pubDate>
+  <pubDate>Sun, 25 May 2025 07:00:00 GMT</pubDate>
   <media:content url="https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z-combinator.jpg" medium="image" type="image/jpeg"/>
+</item>
+<item>
+  <title>Noj Reload Executable</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/intro/getting-started-noj.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>Transcript of <a href="https://youtu.be/tDz1x2d65C0">Noj Reload Executable</a></p>
+<p>Hello code champs, number ninjas and data divers!</p>
+<p>Imagine being able to experiment with Clojure without needing to install tooling, set up editors, or even know about deps.edn Sounds like a dream, right? Well, dream no more—meet <a href="https://scicloj.github.io/noj/">Noj’s</a> new Code Reload Executable!</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://clojurecivitas.github.io/intro/Noj-icon.svg" class="img-fluid figure-img"></p>
+<figcaption>Noj</figcaption>
+</figure>
+</div>
+<p>We can skip the Clojure tooling and editor setup, but we do need to install the recommended Adoptive Java. Now we download the latest Noj jar from the Scicloj Noj GitHub releases page. Let’s check the jar is in the Downloads directory, and that we have java installed by executing <code>java -version</code>.</p>
+<p>Launch Noj using <code>java -jar</code> and the path to the jar file. Pro tip, if you press tab while typing a path, it will autocomplete. Noj is running, it created a directory called notebooks, and it recommends we create a Clojure file there.</p>
+<p>I’ll create my file with Notepad, being careful to create a .clj file rather than a text file. When I saved that file, a browser window opened. Let’s put them side by side. Every time I save the file, the notebook updates.</p>
+<p>If I’m interested in one particular top-level form, I can narrow the output by adding ,, anywhere in the form. And removing it renders the full notebook. And check this out—comments are rendered as Markdown. How cool is that? What an easy way to get coding!</p>
+<p>Noj isn’t just a notebook—it’s a fully featured data science environment. It includes interesting datasets that can be queried and the results shown as tables or even better as charts.</p>
+<p>Noj makes experimenting with Clojure easier than ever. No setup headaches, no complicated tooling—just pure coding joy.</p>
+<p>Until next time, Keep on coding</p>
+
+
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/intro/getting-started-noj.html</guid>
+  <pubDate>Tue, 06 May 2025 07:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>Noj Reload Executable</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<p>Transcript of <a href="https://youtu.be/tDz1x2d65C0">Noj Reload Executable</a></p>
+<p>Hello code champs, number ninjas and data divers!</p>
+<p>Imagine being able to experiment with Clojure without needing to install tooling, set up editors, or even know about deps.edn Sounds like a dream, right? Well, dream no more—meet <a href="https://scicloj.github.io/noj/">Noj’s</a> new Code Reload Executable!</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://clojurecivitas.github.io/scicloj/noj/intro/Noj-icon.svg" class="img-fluid figure-img"></p>
+<figcaption>Noj</figcaption>
+</figure>
+</div>
+<p>We can skip the Clojure tooling and editor setup, but we do need to install the recommended Adoptive Java. Now we download the latest Noj jar from the Scicloj Noj GitHub releases page. Let’s check the jar is in the Downloads directory, and that we have java installed by executing <code>java -version</code>.</p>
+<p>Launch Noj using <code>java -jar</code> and the path to the jar file. Pro tip, if you press tab while typing a path, it will autocomplete. Noj is running, it created a directory called notebooks, and it recommends we create a Clojure file there.</p>
+<p>I’ll create my file with Notepad, being careful to create a .clj file rather than a text file. When I saved that file, a browser window opened. Let’s put them side by side. Every time I save the file, the notebook updates.</p>
+<p>If I’m interested in one particular top-level form, I can narrow the output by adding ,, anywhere in the form. And removing it renders the full notebook. And check this out—comments are rendered as Markdown. How cool is that? What an easy way to get coding!</p>
+<p>Noj isn’t just a notebook—it’s a fully featured data science environment. It includes interesting datasets that can be queried and the results shown as tables or even better as charts.</p>
+<p>Noj makes experimenting with Clojure easier than ever. No setup headaches, no complicated tooling—just pure coding joy.</p>
+<p>Until next time, Keep on coding</p>
+
+
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</guid>
+  <pubDate>Tue, 06 May 2025 07:00:00 GMT</pubDate>
 </item>
 <item>
   <title>Noj Reload Executable</title>
@@ -3044,7 +4076,7 @@ font-style: inherit;">6765</span>)</span></code></pre></div>
 
  ]]></description>
   <guid>https://clojurecivitas.github.io/src/scicloj/noj/intro/getting-started-noj.html</guid>
-  <pubDate>Tue, 06 May 2025 00:00:00 GMT</pubDate>
+  <pubDate>Tue, 06 May 2025 07:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
