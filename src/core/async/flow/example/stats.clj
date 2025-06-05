@@ -1,7 +1,6 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Stats and Signals in the Flow of Asynctopolis"
                      :quarto {:author   [:alexmiller :timothypratley]
-                              :draft    true
                               :type     :post
                               :date     "2025-05-1"
                               :category :clojure
