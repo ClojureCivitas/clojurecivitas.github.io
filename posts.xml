@@ -15,7 +15,322 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.31</generator>
-<lastBuildDate>Sat, 31 May 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Thu, 05 Jun 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>The Hidden Geometry of Dice</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice_files/md-default0.js" type="text/javascript"></script>
+<script src="math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice_files/md-default1.js" type="text/javascript"></script>
+<p>Welcome to What Are the Odds? The show where we answer life’s important questions, like can I outsmart a six-sided die? Today we’re starting small. Two rolls of the dice and one burning question. No magic formulas, just curiosity, some patient counting, and a faint hope that math is on our side. Let’s roll.</p>
+<blockquote class="blockquote">
+<p><em>Pop quiz:</em> You roll a fair 6-sided die twice. Calculate the probability that the value of the first roll is strictly less than the value of the second roll.</p>
+</blockquote>
+<p>As I always like to say to my niece, “the secret to answering any probability question is to enumerate the outcomes and count the ones we care about.”</p>
+<p><img src="https://latex.codecogs.com/png.latex?P(Interesting)%20=%20InterestingOutcomes%20/%20TotalOutcomes"></p>
+<p>Rolling 1 die once has 6 outcomes: 1 2 3 4 5 6.</p>
+<p>Rolling 1 die twice gives us a combination of outcomes, let’s write out a few.</p>
+<pre><code>[1 1] [1 2] '... [1 6]
+[2 1] [2 2] '...</code></pre>
+<p>Following this pattern would produce 6 rows of 6 columns, so there must be <code>36</code> outcomes. We write down just enough of the pattern to figure out the best way to count it. Now we count how many of those meet the criteria.</p>
+<pre><code>[1 1 :no] [1 2 :yes] '...
+[2 1 :no] [2 2 :no] [2 3 :yes] '...</code></pre>
+<p>Logically we should see 5 yeses on the first row, then 4, 3, 2, 1, and 0, which we can ignore. Add them all up and we get <code>15</code>.</p>
+<p>So the answer to the question is <code>15/36</code> which reduces to <code>5/12</code>, dividing top and bottom by the greatest common divisor 3.</p>
+<p>You might be thinking that it’s not practical to enumerate everything all the time, I should use the formulas of probability. That’s true, those are marvelous. However, in my experience it is also easy to go wrong reasoning from formulas. It’s harder to go wrong starting with a counting problem, then improving your method of counting. You end up in the same place, but more confident in the answer.</p>
+<p>The full enumeration of our simple 2 roll question as a counting problem is just big enough to be too tedious to use only counting.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [roll [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span>]]</span>
+<span id="cb3-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> [i roll]</span>
+<span id="cb3-3">    (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">for</span> [j roll]</span>
+<span id="cb3-4">      [i j])))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">(([<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span>])</span>
+<span id="cb4-2"> ([<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span>])</span>
+<span id="cb4-3"> ([<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span>])</span>
+<span id="cb4-4"> ([<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span>])</span>
+<span id="cb4-5"> ([<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span>])</span>
+<span id="cb4-6"> ([<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span>]))</span></code></pre></div>
+</div>
+<p>Identifying the pattern is enough to realize the answer</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">+</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">15</span></span></code></pre></div>
+</div>
+<p>What a marvelous pattern it is! Predictable, but not flat. Smooth, but not boring. Recursive, and not obvious.</p>
+<div class="printedClojure">
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1">[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">6</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">10</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">15</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">21</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">28</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">36</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">45</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">55</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">66</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">78</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">91</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">105</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">120</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">136</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">153</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">171</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">190</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">210</span>]</span></code></pre></div>
+</div>
+<p>There’s something special about this sequence. Aren’t those numbers just… pleasing in some way?</p>
+<p>This sequence is called the triangular numbers.</p>
+<pre><code>            .
+           . .
+          . . .
+         . . . .</code></pre>
+<p>You can find the first 10 or so numbers in your head, and with some paper many more quite quickly.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.jpg" class="img-fluid figure-img"></p>
+<figcaption>So many dots</figcaption>
+</figure>
+</div>
+<p>There is a formula for calculating the nth triangular number: <img src="https://latex.codecogs.com/png.latex?T_n%20=%201%20+%202%20+%203%20+%20%5Cdots%20+%20n%20=%20%5Cfrac%7Bn(n%20+%201)%7D%7B2%7D"></p>
+<p>The 20th triangular number is <code>(20x21)/2 = (400+20)/2 = 210</code>. Isn’t it wonderful how there’s so many different ways to find the same answer in math?</p>
+<p>There is something curious about the formula; it divides by 2 but only produces integers. How can we be certain we will only ever get an integer? So mysterious. <code>n(n+1)</code> is always even! Let’s think about that a bit more, if n is odd, then n+1 is even. If n is even, then n+1 is odd. One of the multiples is always even, meaning that 2 is a factor, so the multiple must always have a factor 2, and be even.</p>
+<p>It’s easy now to imagine if we had a 1000 sided dice what the answer would be. But be careful! For a 1000 side die, we want the 999nth triangular number: <img src="https://latex.codecogs.com/png.latex?(999%20%5Ctimes%201000)/2%20=%20(1000000-1000)/2%20=%20500000-500%20=%20499500"> and the total outcomes would be <code>1000x1000</code>, so the answer would be <code>0.4995</code>. It’s comforting to see that for a large range, we land closer to 50%.</p>
+<p>The point is that once we know what we are counting, it feels more obvious that we used the right formula to count it.</p>
+<p>Triangular numbers show up in many situations, my favorite is that they can be used to lay out hexagons. The <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/civitas/explorer/geometry.clj">code that draws Clojure Civitas hexagons</a> is based on the triangular number formula.</p>
+<svg viewbox="-640 -640 1280 1280" width="100%" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0.0,0.0)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,-69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,-138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,-69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,0.0)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,-138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,-277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,-138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,0.0)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,277.1281292110204)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,346.4101615137755)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,415.69219381653056)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,346.4101615137754)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,69.28203230275511)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,-69.28203230275507)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,-277.1281292110204)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,-346.4101615137755)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,-415.69219381653056)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,-346.4101615137754)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,-277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,-69.28203230275511)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,69.28203230275507)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g></svg>
+<p>Triangular numbers also show up in the number of pairs, handshakes, edges in a complete graph, diagonals sum to triangular numbers, square numbers as sums of consecutive odd numbers, differences of triangulars, acceleration frames, smooth transitions, spacing. Such a beautiful pattern that can be found in so many situations!</p>
+<p>Until next time, may your dice be fair and your outcomes interesting.</p>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.clj">src/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.clj</a></small></small></pre></div>
+
+
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html</guid>
+  <pubDate>Thu, 05 Jun 2025 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>What if… we were taught transducers first?</title>
   <dc:creator>Sean Corfield</dc:creator>
@@ -464,7 +779,7 @@ font-style: inherit;">e</span>)))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval13908/fn--13909"</span></span></code></pre></div>
+font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval13931/fn--13932"</span></span></code></pre></div>
 </div>
 <p>Why is it trying to call <code>cons</code> with a single argument? In addition to separating the transformation from the output, <code>transduce</code> also has a “completion” step, which is performed on the final result. A convenience function called <code>completing</code> can be used to wrap the function here to provide a “no-op” completion:</p>
 <div class="sourceClojure">
@@ -654,9 +969,9 @@ font-style: inherit;">inc</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1">#object[clojure.core$comp$fn__5895 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x55a0cc83</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x6e46f5c1</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core$comp$fn__5895@55a0cc83"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core$comp$fn__5895@6e46f5c1"</span>]</span></code></pre></div>
 </div>
 <p>Let’s give this a name:</p>
 <div class="sourceClojure">
@@ -830,6 +1145,9 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> [] s)])</span></code></pre></div>
 </div>
+<div data-lst-cap="OUT:">
+<p>0 1 2 3 4 0 1 2 3 4</p>
+</div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb48-1">[[<span class="dv" style="color: #AD0000;
 background-color: null;
@@ -890,6 +1208,9 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> [] s)])</span></code></pre></div>
 </div>
+<div data-lst-cap="OUT:">
+<p>0 1 2 3 4</p>
+</div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1">[[<span class="dv" style="color: #AD0000;
 background-color: null;
@@ -933,7 +1254,7 @@ font-style: inherit;">5</span>]]</span></code></pre></div>
 <item>
   <title>The Hallway Track: SciNoj Light #1 Data Analysis Stories</title>
   <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</link>
+  <link>https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/hallway_track.html</link>
   <description><![CDATA[ 
 
 
@@ -945,14 +1266,14 @@ font-style: inherit;">5</span>]]</span></code></pre></div>
 <p>The <a href="https://youtu.be/3HZ5rngHzWM">concluding talk on lane reductions</a> stood out as my favorite because it blended data-driven insights with relatable, human-interest storytelling. As a cyclist, I immediately connected with how lane reductions and protected bike lanes are impactful to my safety. The talk’s compelling visuals, grounded in real case studies, made the story very tangible. Heather’s personal perspective as a car-free parent added emotional weight. She illustrated how community advocacy and smart urban design saves lives, and makes more livable spaces. The mix of passion, rigor, and optimism left me inspired; data analysis can drive tangible, life-improving change.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/crashes.png" class="img-fluid figure-img"></p>
+<p><img src="https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/crashes.png" class="img-fluid figure-img"></p>
 <figcaption>Bike lane improvements reduce crashes</figcaption>
 </figure>
 </div>
 <p>A major focus of the conference was the development of Clojure’s data science <a href="https://github.com/scicloj/noj">Noj</a> toolkit. This suite of libraries demonstrated how Clojure combines functional programming elegance with practical performance. Speakers highlighted Noj’s interoperability with Python and Java ecosystems while emphasizing its advantages for reproducible and maintainable workflows. The community’s collaborative energy was evident throughout.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/noj_components.png" class="img-fluid figure-img"></p>
+<p><img src="https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/noj_components.png" class="img-fluid figure-img"></p>
 <figcaption>Noj core components</figcaption>
 </figure>
 </div>
@@ -1043,9 +1364,9 @@ Get your answers fast and make your customers happy.<br>
 </section>
 
  ]]></description>
-  <guid>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</guid>
+  <guid>https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/hallway_track.html</guid>
   <pubDate>Wed, 28 May 2025 00:00:00 GMT</pubDate>
-  <media:content url="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/noj_components.png" medium="image" type="image/png" height="75" width="144"/>
+  <media:content url="https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/noj_components.png" medium="image" type="image/png" height="75" width="144"/>
 </item>
 <item>
   <title>Factorization of Eratosthenes</title>
@@ -1312,9 +1633,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x419046e3</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x5fa32af4</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@419046e3"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@5fa32af4"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -1322,9 +1643,9 @@ font-style: inherit;">"clojure.lang.MultiFn@419046e3"</span>]</span></code></pre
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x3f2f83d5</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x67a0e690</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@3f2f83d5"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@67a0e690"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -1333,9 +1654,9 @@ font-style: inherit;">"java.lang.Object@3f2f83d5"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x43f97ed</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x20789365</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@43f97ed"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@20789365"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1351,11 +1672,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22450$fn__22451 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22473$fn__22474 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x6bb35b0e</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x44bff65c</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22450$fn__22451@6bb35b0e"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22473$fn__22474@44bff65c"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -1371,11 +1692,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22454$fn__22455$fn__22456 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x6a544178</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x16165af2</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22454$fn__22455$fn__22456@6a544178"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479@16165af2"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -1429,7 +1750,7 @@ background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3747</span>]</span>
-<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__22462 invoke <span class="st" style="color: #20794D;
+<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__22485 invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -1469,7 +1790,7 @@ font-style: inherit;">fn</span> [y] y))))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print-object.remove-extraneous/eval22468/fn--22469/fn--22470"</span></span></code></pre></div>
+font-style: inherit;">"clojure.print-object.remove-extraneous/eval22491/fn--22492/fn--22493"</span></span></code></pre></div>
 </div>
 <p>Next, we don’t need the eval identities.</p>
 <div class="sourceClojure">
@@ -1708,7 +2029,10 @@ font-weight: bold;
 font-style: inherit;">fn</span> [SELF LIST])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object [code_interview.beating.with_stupid_stuff.z_combinator_gambit$eval71861$fn__71862]</span></code></pre></div>
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object [<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>We’re just writing a function, and it only needs to take a list…</p>
@@ -1995,7 +2319,7 @@ font-style: inherit;">1</span></span></code></pre></div>
 <div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1">(REV-LOGIC REV-LOGIC)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">#object [code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__71876]</span></code></pre></div>
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">#object [REV-LOGIC$fn]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>Well, it’s a function! That much is clear…</p>
@@ -2155,7 +2479,7 @@ font-style: inherit;">fn</span> SELF [VALUE]</span>
 <div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1">(FIX REV-LOGIC)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1">#object [code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__71876]</span></code></pre></div>
+<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1">#object [REV-LOGIC$fn]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>At least it didn’t blow up this time…</p>
@@ -2692,7 +3016,7 @@ font-style: inherit;">6765</span>)</span></code></pre></div>
 <item>
   <title>Noj Reload Executable</title>
   <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</link>
+  <link>https://clojurecivitas.github.io/src/scicloj/noj/intro/getting-started-noj.html</link>
   <description><![CDATA[ 
 
 
@@ -2704,7 +3028,7 @@ font-style: inherit;">6765</span>)</span></code></pre></div>
 <p>Imagine being able to experiment with Clojure without needing to install tooling, set up editors, or even know about deps.edn Sounds like a dream, right? Well, dream no more—meet <a href="https://scicloj.github.io/noj/">Noj’s</a> new Code Reload Executable!</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://clojurecivitas.github.io/scicloj/noj/intro/Noj-icon.svg" class="img-fluid figure-img"></p>
+<p><img src="https://clojurecivitas.github.io/src/scicloj/noj/intro/Noj-icon.svg" class="img-fluid figure-img"></p>
 <figcaption>Noj</figcaption>
 </figure>
 </div>
@@ -2719,7 +3043,7 @@ font-style: inherit;">6765</span>)</span></code></pre></div>
 
 
  ]]></description>
-  <guid>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</guid>
+  <guid>https://clojurecivitas.github.io/src/scicloj/noj/intro/getting-started-noj.html</guid>
   <pubDate>Tue, 06 May 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>

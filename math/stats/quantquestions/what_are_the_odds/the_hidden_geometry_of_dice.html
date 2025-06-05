@@ -7,10 +7,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Timothy Pratley">
-<meta name="dcterms.date" content="2025-05-28">
-<meta name="keywords" content="noj">
+<meta name="dcterms.date" content="2025-06-05">
+<meta name="keywords" content="quantquestions">
+<meta name="description" content="A simple probability puzzle turns into a journey through triangular numbers and tessellated hexagons.">
 
-<title>The Hallway Track: SciNoj Light #1 Data Analysis Stories – Clojure Civitas</title>
+<title>The Hidden Geometry of Dice – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,31 +24,66 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../../../">
-<link href="../../../favicon.ico" rel="icon">
-<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="../../../site_libs/quarto-html/popper.min.js"></script>
-<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-516395c8ec564ed6a55db079f0ce3af9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-914863421d4fe038092d1dcc16faf7b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-516395c8ec564ed6a55db079f0ce3af9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-fab5cf0db713840dc2d18afc76739257.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../site_libs/bootstrap/bootstrap-dark-3df09a7cad352b3cb4390f3a9723c380.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../site_libs/bootstrap/bootstrap-fab5cf0db713840dc2d18afc76739257.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../../">
+<link href="../../../../favicon.ico" rel="icon">
+<script src="../../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-516395c8ec564ed6a55db079f0ce3af9.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-914863421d4fe038092d1dcc16faf7b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-516395c8ec564ed6a55db079f0ce3af9.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../../site_libs/bootstrap/bootstrap-fab5cf0db713840dc2d18afc76739257.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-3df09a7cad352b3cb4390f3a9723c380.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-fab5cf0db713840dc2d18afc76739257.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -77,13 +113,40 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
-<meta property="og:title" content="The Hallway Track: SciNoj Light #1 Data Analysis Stories – Clojure Civitas">
-<meta property="og:description" content="">
-<meta property="og:image" content="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/noj_components.png">
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="The Hidden Geometry of Dice – Clojure Civitas">
+<meta property="og:description" content="A simple probability puzzle turns into a journey through triangular numbers and tessellated hexagons.">
+<meta property="og:image" content="https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.jpg">
 <meta property="og:site_name" content="Clojure Civitas">
-<meta property="og:image:height" content="740">
-<meta property="og:image:width" content="1420">
 </head>
 
 <body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -264,10 +327,10 @@ ul.task-list li input[type="checkbox"] {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
-    <img src="../../../images/civitas-icon.svg" alt="" class="navbar-logo">
+    <a href="../../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../../images/civitas-icon.svg" alt="" class="navbar-logo">
     </a>
-    <a class="navbar-brand" href="../../../index.html">
+    <a class="navbar-brand" href="../../../../index.html">
     <span class="navbar-title">Clojure Civitas</span>
     </a>
   </div>
@@ -278,15 +341,15 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../../about.html"> 
+    <a class="nav-link" href="../../../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../../posts.html"> 
+    <a class="nav-link" href="../../../../posts.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../../pages.html"> 
+    <a class="nav-link" href="../../../../pages.html"> 
 <span class="menu-text">Pages</span></a>
   </li>  
   <li class="nav-item compact">
@@ -313,24 +376,38 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">The Hallway Track: SciNoj Light #1 Data Analysis Stories</h1>
+<h1 class="title">The Hidden Geometry of Dice</h1>
 </div>
 
+<div>
+  <div class="description">
+    A simple probability puzzle turns into a journey through triangular numbers and tessellated hexagons.
+  </div>
+</div>
 
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author"><a href="https://timothypratley.blogspot.com/p/httpswww.html">Timothy Pratley</a> <a href="mailto:timothypratley@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            <a href="https://hummi.app">
+            Hummi
+            </a>
+          </p>
+      </div>
+  </div>
 
 <div class="quarto-title-meta">
 
-    <div>
-    <div class="quarto-title-meta-heading">Author</div>
-    <div class="quarto-title-meta-contents">
-             <p>Timothy Pratley </p>
-          </div>
-  </div>
-    
+      
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">May 28, 2025</p>
+      <p class="date">June 5, 2025</p>
     </div>
   </div>
   
@@ -341,114 +418,93 @@ ul.task-list li input[type="checkbox"] {
 <div>
   <div class="keywords">
     <div class="block-title">Keywords</div>
-    <p>noj</p>
+    <p>quantquestions</p>
   </div>
 </div>
 
 </header>
 
 
-<p>The <a href="https://scicloj.github.io/scinoj-light-1">SciNoj Light #1</a> Conference brought together Clojure enthusiasts, data scientists, and researchers for an engaging exploration of data analysis stories. The event fostered a collaborative, informal atmosphere where participants exchanged ideas across disciplines from cognitive psychology to urban planning.</p>
-<p>If you missed it, you can view the talks on the <a href="https://www.youtube.com/playlist?list=PLb_VRZPxjMAAaoAPnk8ClWET3baRV1Whv">conference sessions playlist</a>. The <a href="https://scicloj.github.io/scinoj-light-1/speakers.html">conference website</a> has detailed information about the talks and speakers. Links to the notebook code presented are on the <a href="https://scicloj.github.io/scinoj-light-1/sessions">sessions page</a>, and available as data in the <a href="https://github.com/scicloj/scinoj-light-1/blob/main/info.edn">info.edn file</a>.</p>
-<p>The <a href="https://youtu.be/3HZ5rngHzWM">concluding talk on lane reductions</a> stood out as my favorite because it blended data-driven insights with relatable, human-interest storytelling. As a cyclist, I immediately connected with how lane reductions and protected bike lanes are impactful to my safety. The talk’s compelling visuals, grounded in real case studies, made the story very tangible. Heather’s personal perspective as a car-free parent added emotional weight. She illustrated how community advocacy and smart urban design saves lives, and makes more livable spaces. The mix of passion, rigor, and optimism left me inspired; data analysis can drive tangible, life-improving change.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="crashes.png" class="img-fluid figure-img"></p>
-<figcaption>Bike lane improvements reduce crashes</figcaption>
-</figure>
-</div>
-<p>A major focus of the conference was the development of Clojure’s data science <a href="https://github.com/scicloj/noj">Noj</a> toolkit. This suite of libraries demonstrated how Clojure combines functional programming elegance with practical performance. Speakers highlighted Noj’s interoperability with Python and Java ecosystems while emphasizing its advantages for reproducible and maintainable workflows. The community’s collaborative energy was evident throughout.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="noj_components.png" class="img-fluid figure-img"></p>
-<figcaption>Noj core components</figcaption>
-</figure>
-</div>
-<p>Artificial intelligence emerged as a recurring theme, with several talks exploring hybrid approaches to enhance reliability. One discussion centered on Retrieval-Augmented Generation (RAG) systems, where combining large language models with Clojure’s logic programming capabilities could improve accuracy in structured domains like government Q&amp;A. Another session delved into probabilistic programming with Inferme, illustrating Bayesian methods for modeling uncertainty. These technical deep dives were balanced by ethical considerations and reflections on technology’s societal implications.</p>
-<p>Scientific applications showcased Clojure’s versatility. One talk explored simulating fluid dynamics. Another focused on forecasting tropical cyclone paths using physics-informed machine learning. Cognitive science experiments were also featured, using collaborative games and puzzles to study human planning behavior, and brain wave monitors. The conference also highlighted social impact work, such as data-driven advocacy for safer street designs, proving that technical tools can drive urban change.</p>
-<p>What stood out to me was how effectively the SciCloj community uses Clojure notebooks for collaborative work. Presenters shared their research through executable notebooks that cleanly combined code, visualizations and explanations. It’s a practical pattern broadly applicable for sharing ideas and knowledge.</p>
-<p>Throughout the event, a sense of optimism prevailed about Clojure’s untapped potential. While acknowledging gaps in ML tooling compared to Python, speakers demonstrated that Clojure’s functional rigor and JVM scalability make it a good fit for data science. Attendee discussions envisioned collaborating further on logic-guided AI and semantic web ontologies. There was a recurring theme of bridging the gap between academic theory and real-world engineering. SciNoj Light ultimately painted a picture of Clojure not just as a language, but as a catalyst for interdisciplinary innovation.</p>
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice_files/md-default0.js" type="text/javascript"></script>
+<script src="math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice_files/md-default1.js" type="text/javascript"></script>
+<p>Welcome to What Are the Odds? The show where we answer life’s important questions, like can I outsmart a six-sided die? Today we’re starting small. Two rolls of the dice and one burning question. No magic formulas, just curiosity, some patient counting, and a faint hope that math is on our side. Let’s roll.</p>
 <blockquote class="blockquote">
-<p>You can have the cake of Clojure’s immutable persistent data structures and eat it too;<br>
-Get your answers fast and make your customers happy.<br>
-— Harold</p>
+<p><em>Pop quiz:</em> You roll a fair 6-sided die twice. Calculate the probability that the value of the first roll is strictly less than the value of the second roll.</p>
 </blockquote>
-<p>A big thank you to the organizers! The event was an overwhelming success with high quality presentations and valuable discussions. I’m looking forward to the next SciNoj, it’s a rare and valuable blend of science, technology, community and code.</p>
-<p>Below are my notes about the sessions and conversations from the conference.</p>
-<section id="pre-conference-interview" class="level3">
-<h3 class="anchored" data-anchor-id="pre-conference-interview">Pre-conference interview</h3>
-<p>Engaging to have a taste of what’s to come, got me really enthusiastic about the coming event. Game as a Research Tool: “Tik Tik” is a controlled environment for studying human cognition and collaboration. Combines cognitive psychology, game design, and data analysis.</p>
-</section>
-<section id="hello" class="level3">
-<h3 class="anchored" data-anchor-id="hello">1.1: Hello</h3>
-<p>Community-driven event. Informal, interactive, and welcoming. Focus on Clojure for data workflows. Tools and libraries have matured, and the conference shares these advancements. <a href="https://www.clojurians-zulip.org/">Zulip</a> is the main forum, attendees are encouraged to engage via structured topic threads. The macroexpand session invites ideas for expanding Clojure adoption in various fields. Hosts encourage questions, jokes, and relaxed participation. Sets the tone for an inclusive, engaging, and slightly nerdy gathering of Clojure enthusiasts.</p>
-</section>
-<section id="an-intro-to-the-noj-toolkit" class="level3">
-<h3 class="anchored" data-anchor-id="an-intro-to-the-noj-toolkit">1.2: An intro to the Noj toolkit</h3>
-<p>Noj is a Clojure-based data science toolkit integrating libraries for data analysis, visualization, and machine learning. Designed for functional, efficient data processing with compatibility across libraries (e.g., Tablecloth, FastMath, Metamorph). Inspired by tools like R’s dplyr/ggplot and Python’s pandas/Plotly, but with a Clojure-centric approach. Tablecloth for tabular data manipulation (similar to pandas/dplyr). TablePlot grammar-of-graphics-inspired visualization (like ggplot). FastMath stats and statistical modeling (logistic regression and more). Metamorph for machine learning workflows. Worked example of predicting success in Kickstarter projects. Data loading/cleaning, exploratory analysis (grouping, aggregation, bar plots), predictive modeling, evaluation (train/test split, accuracy checks). Functional &amp; Immutable, Noj leverages Clojure’s strengths. Efficient columnar storage with zero-copy operations.</p>
-</section>
-<section id="probability-and-statistics---daniel-slutsky" class="level3">
-<h3 class="anchored" data-anchor-id="probability-and-statistics---daniel-slutsky">1.3: Probability and statistics - Daniel Slutsky</h3>
-<p>Generating pseudo-random numbers using seeds for reproducibility in research. Simulating dice rolls to explore distributions. Used histograms and scatter plots to visualize distributions. Computed mean, standard deviation and z-scores for comparison. Bayesian inference for probabilistic models with parameters. Conditioned models on observed data to infer posterior distributions. Highlighted constraints and efficient sampling algorithms. Avoid lazy sequences for large simulations; consider dtype-next or transducers. Visualization matters, histograms and scatter plots reveal patterns. Probabilistic programming models uncertainty and updates beliefs with data. Balanced foundational stats with advanced topics, emphasizing Clojure’s tools for data science.</p>
-</section>
-<section id="customer-churn-analysis-llms-logic-programming---siavash-mohammady" class="level3">
-<h3 class="anchored" data-anchor-id="customer-churn-analysis-llms-logic-programming---siavash-mohammady">1.4: Customer churn analysis, LLMs &amp; logic programming - Siavash Mohammady</h3>
-<p>Customers leaving significantly impacts revenue. Exploring factors like course format, teacher experience, and registration patterns. High churn in early months, newer teachers correlated with higher churn. User prompt → NLP entity recognition → LLM generates high-level DSL → Clara rule engine translates to low-level DSL → Execution. Mentorship for new teachers can reduce churn. Pairing LLMs abstract reasoning with logic engines concrete execution optimizes complex data tasks. A forward-looking talk blending data science, AI, and Clojure, emphasizing doing less.</p>
-</section>
-<section id="linear-foundations-nonlinear-frontiers---jelena-losic" class="level3">
-<h3 class="anchored" data-anchor-id="linear-foundations-nonlinear-frontiers---jelena-losic">1.5: Linear Foundations &amp; Nonlinear Frontiers - Jelena Losic</h3>
-<p>Linear systems rely on superposition, the whole is the sum of parts. Vector spaces, linear regression, Fourier analysis. Real-world systems are often nonlinear. Linear methods fail when data lies on curved manifolds or exhibits complex interactions. Techniques like t-SNE, UMAP, and autoencoders handle nonlinearity by preserving structures or learning manifold geometry. Nonlinear systems can be deterministic yet unpredictable. Nonlinear methods unlock richer patterns but sacrifice interpretability and require more data. Dimensionality reduction illustrates the trade-off between simplicity and accuracy. Embeddings leverage linear algebra but rely on nonlinear transformations for deeper semantics.</p>
-</section>
-<section id="raggedy-anns-big-adventure---paula-gearon" class="level3">
-<h3 class="anchored" data-anchor-id="raggedy-anns-big-adventure---paula-gearon">1.6: RAGgedy Ann’s Big Adventure - Paula Gearon</h3>
-<p>Vectors represent concepts in multidimensional space. Embeddings convert text into vectors, capturing meaning. Similarity between vectors is measurable. Neural networks process inputs through weighted connections and activation functions. Transformers contextualize words in sentences. Combining LLMs with vector databases to reduce hallucinations. Augmenting queries with retrieved context. LLMs are built from modular math operations. Vector databases enable semantic search. RAG improves accuracy by grounding LLM outputs in verified data.</p>
-</section>
-<section id="parliamentary-questions---rag-evaluation---eoin-carney" class="level3">
-<h3 class="anchored" data-anchor-id="parliamentary-questions---rag-evaluation---eoin-carney">1.7: Parliamentary Questions - RAG Evaluation - Eoin Carney</h3>
-<p>Can RAG effectively answer parliamentary style questions using Irish government data? 10k publicly available Irish parliamentary questions and answers. Compared sentence-based chunking with full document retrieval. Tested multiple LLMs for generation and evaluation. Retrieval Matters More Than Prompting. Smaller, precise chunks of 3–5 sentences improved precision over full document retrieval. Direct answer retrieval outperformed matching questions to answers. Deterministic metrics like word overlap failed to capture nuance. LLM as judge worked better for correctness. Clay notebook visualization helped explore vector embeddings interactively. Government answers should be plain and factual. LLMs are oddly well-suited for that.</p>
-</section>
-<section id="discussion-rags-and-structured-knowledge" class="level3">
-<h3 class="anchored" data-anchor-id="discussion-rags-and-structured-knowledge">1.8 - Discussion: RAGs and Structured Knowledge</h3>
-<p>Shared experiences using Clojure for AI projects. Exploring logic programming as a superset of reasoning techniques and unifying them with embeddings and vector logic. Foundational ontologies and their role in structuring knowledge for AI, particularly in medical domains. The conversation fluidly shifted from technical to philosophical and practical.</p>
-</section>
-<section id="noj-deep-dive---harold-daniel-slutsky" class="level3">
-<h3 class="anchored" data-anchor-id="noj-deep-dive---harold-daniel-slutsky">1.9: Noj Deep Dive - Harold &amp; Daniel Slutsky</h3>
-<p>Using Clojure for functional data science, contrasting it with Python tools like Pandas. The focus is on immutability, performance, and leveraging Clojure’s strengths for data processing. Tech.ml.dataset for tabular data processing. Columnar storage for efficiency and integrates with other libraries in the ecosystem. Layered Architecture. Hamfisted high-performance, immutable collections optimized for JVM memory/CPU. Dtype-next array random access and lazy, non-caching transformations. Tablecloth high-level tabular data tools built atop these foundations. Challenges and solutions for integrating with Python via libpython-clj and stdlang. Hamfisted and Dtype-next enable Clojure to match Java/Python performance while retaining functional idioms. 20x speedup in lazy sequences. Columnar storage in TMD reduces memory overhead. Libraries like FastMath, MetamorphML, and Tableplot extend the stack. Real-world applications in consulting and open-source collaboration. Frequent shoutouts to contributors and emphasis on community input via Zulip. If you think data science needs software engineering, you’re right. A blend of technical rigor, community spirit, and practical focus on building scalable, functional data tools.</p>
-</section>
-<section id="brain-data-in-clojure---lorelai-lyons" class="level3">
-<h3 class="anchored" data-anchor-id="brain-data-in-clojure---lorelai-lyons">1.10: Brain data in Clojure - Lorelai Lyons</h3>
-<p>Ethical and Historical Context of Brain-Computer Interfaces. Morally questionable history of neuroscience. Need for ethical considerations in modern BCIs. The goal is to bridge the gap between continuous human thought and discrete computing. Neurons generate electrical signals that can be recorded and digitized. EEG measures brainwave frequencies via electrodes placed on the scalp. EEG data from a motor imagery study. Applied filters to isolate frequency bands. Developing a low-cost binary file system for efficient EEG data storage. Exploring brain-controlled interfaces for creative applications. Consumer EEG devices make brain data collection feasible for programmers. BCIs require collaboration across neuroscience, hardware, and software. Mixed technical depth with ethical reflection.</p>
-</section>
-<section id="d-viscous-fluid-flow-data-analysis-burgers-equation---siyoung-byun" class="level3">
-<h3 class="anchored" data-anchor-id="d-viscous-fluid-flow-data-analysis-burgers-equation---siyoung-byun">2.1: 1D Viscous Fluid Flow Data Analysis, Burgers’ Equation - Siyoung Byun</h3>
-<p>Fluid dynamics is complex, involving variables like friction, pressure, and momentum. CFD uses computational methods to simulate fluid behavior, crucial for fields like aerospace, healthcare, and astrophysics. Astrophysics simulations of binary star collisions use CFD. Burgers’ Equation combines nonlinear convection (steepening fluid motion) and viscosity (smoothing/diffusion). Demonstrated via simulations of a shock in a 1D fluid, visualized over time. Used mutable Java arrays for performance. Extending to 2D/3D simulations and incorporate the Navier-Stokes equations for full fluid dynamics. Visualization Matters. Plotting data is critical for interpreting simulations. Siyoung emphasizes the learning process and invites collaboration. Technical but accessible, viscosity effects are explained with analogies. Passion for both astrophysics, fluid dynamics and Clojure shines through. Simulations of white dwarf collisions brought home the realization that star interactions are fluid. Korean ondol floor heating as an analogy for convection.</p>
-</section>
-<section id="uk-electricity-demand-time-series-forecasting---anton-lobach" class="level3">
-<h3 class="anchored" data-anchor-id="uk-electricity-demand-time-series-forecasting---anton-lobach">2.2: UK Electricity Demand Time Series Forecasting - Anton Lobach</h3>
-<p>The Taylor dataset contains electricity demand in Wales/England. Extract day of week, minute of day, weekend flag. Ridge regression regularized linear regression to prevent overfitting. Use rolling origin cross-validation. Root Mean Squared Error to measure forecast accuracy. Clojure has expressive, modular workflows with strong data processing capabilities. Seasonality matters. Minute-of-day was the most predictive feature. Ridge regression achieved reasonable accuracy. Split data into train/test sets before exploratory analysis to avoid bias. Use rolling windows for temporal data. The tutorial is available as an interactive notebook.</p>
-</section>
-<section id="tropical-cyclone-trajectory-modelling---k-ram-narayan-naimish-mani-b" class="level3">
-<h3 class="anchored" data-anchor-id="tropical-cyclone-trajectory-modelling---k-ram-narayan-naimish-mani-b">2.3: Tropical cyclone trajectory modelling - K Ram Narayan, Naimish Mani B</h3>
-<p>Accurate trajectory forecasting is crucial for disaster preparedness, evacuation planning, and minimizing loss of life and property. Forecasting relies on a mix of satellite data, computer simulations, and aircraft reconnaissance. Using SINDy (Sparse Identification of Nonlinear Dynamics), to extract governing equations from cyclone trajectory data to predict future paths. Global cyclone track dataset. Satellite imagery used to compute wind velocity and shear via optical flow. Incorporates cyclone dynamics to refine SINDy’s candidate equations. Cyclone movement is driven by steering winds, Coriolis force, beta drift, and interactions with pressure systems. Collect trajectory and satellite data. Construct a candidate library of possible dynamical terms. Use Lasso regression to sparsely select the most relevant terms. Derive interpretable differential equations for forecasting. SINDy achieved a 43.71 km mean absolute error, acceptable in cyclone forecasting. Outperformed by gradient boosting, and random forest in single-step prediction but excels in full trajectory forecasting. Bay of Bengal cyclones curve unpredictably due to land effects. Bridges meteorology, physics, and machine learning for cyclone prediction.</p>
-</section>
-<section id="studying-planning-with-a-novel-video-game---cvetomir-dimov" class="level3">
-<h3 class="anchored" data-anchor-id="studying-planning-with-a-novel-video-game---cvetomir-dimov">2.4: Studying planning with a novel video game - Cvetomir Dimov</h3>
-<p>Planning is a fundamental cognitive ability used in everyday tasks. “Tik Tik” game is designed to study planning. Players control a fireball and an ice cube that must collaborate to navigate obstacles and reach targets. A custom program was developed to generate and solve game levels, identifying optimal paths and measuring problem difficulty. Goal is to understand what incentivizes planning. Difficulty influenced by the number of barriers and their intersections. Problem difficulty predictors were the minimum moves needed and the number of possible paths up to the optimal length. Study 1 high dropout rates, large individual differences in planning ability. Study 2 time limits and stricter move limits reduced dropouts and reinforced planning incentives. Tight constraints encourage planning. Problem difficulty can be systematically manipulated for cognitive research. Demonstrations of the game and solver make abstract concepts tangible. Credits multiple software tools, emphasizing a community-driven approach to research.</p>
-</section>
-<section id="building-a-data-science-ecosystem-in-clojure---kira-howe" class="level3">
-<h3 class="anchored" data-anchor-id="building-a-data-science-ecosystem-in-clojure---kira-howe">2.5: Building a Data Science Ecosystem in Clojure - Kira Howe</h3>
-<p>Inspiration from the Tidyverse (R). A cohesive ecosystem with shared design principles on data and composable tools. Standardized data structures and streamline workflows. Fragmented tools create glue code overhead. Immutable data and pure functions enable reproducibility. JVM handles large-scale data efficiently. Engineering culture emphasis on stability and interoperability. Explosive data growth demands scalable, deterministic tools. Noj as a Clojure based ecosystem inspired by Tidyverse but optimized for scalability and engineering. Simplify onboarding through Jupyter support and Clojure in a box. Need for Shiny-like tools for rapid prototyping. Emphasized grassroots community building and learning together. Data quality should be a philosophy, not an afterthought.</p>
-</section>
-<section id="macroexpand-1" class="level3">
-<h3 class="anchored" data-anchor-id="macroexpand-1">2.6: Macroexpand-1</h3>
-<p>Ways to broaden Clojure’s impact beyond its traditional domains by fostering interdisciplinary collaboration. Need to make Clojure more accessible and visible in fields like data science, education, and specialized industries. Improve tooling, documentation, and community outreach. Developer intuitive libraries, enhancing interoperability with other languages. Lowering barriers for newcomers. Importance of geospatial analysis and modern programming practices. Sustainable community efforts and cross-disciplinary knowledge sharing.</p>
-</section>
-<section id="the-impact-of-lane-reductions---heather-moore-farley" class="level3">
-<h3 class="anchored" data-anchor-id="the-impact-of-lane-reductions---heather-moore-farley">2.7: The Impact of Lane Reductions - Heather Moore-Farley</h3>
-<p>Reducing car lanes, protected bike lanes, and pedestrian crossings decrease traffic injuries and fatalities. California’s crash data used to visualize collision hotspots to push for safer street redesigns. High injury corridors 6% of streets cause 60% of severe/fatal crashes. Correlated lane reductions, protected bike lanes, and raised bus stops led to fewer crashes over time. Local groups use data to advocate for safer streets. Police reported crash data has missing ages, locations and underreporting driver fault. Heather shares her lived experience as a car-free parent in Oakland, tying data to safety. Design solutions and community action work. Advocating for upcoming redesigns. A compelling mix of data science, urbanism, and grassroots advocacy. Number crunching can drive tangible change.</p>
+<p>As I always like to say to my niece, “the secret to answering any probability question is to enumerate the outcomes and count the ones we care about.”</p>
+<p><span class="math inline">\(P(Interesting) = InterestingOutcomes / TotalOutcomes\)</span></p>
+<p>Rolling 1 die once has 6 outcomes: 1 2 3 4 5 6.</p>
+<p>Rolling 1 die twice gives us a combination of outcomes, let’s write out a few.</p>
+<pre><code>[1 1] [1 2] '... [1 6]
+[2 1] [2 2] '...</code></pre>
+<p>Following this pattern would produce 6 rows of 6 columns, so there must be <code>36</code> outcomes. We write down just enough of the pattern to figure out the best way to count it. Now we count how many of those meet the criteria.</p>
+<pre><code>[1 1 :no] [1 2 :yes] '...
+[2 1 :no] [2 2 :no] [2 3 :yes] '...</code></pre>
+<p>Logically we should see 5 yeses on the first row, then 4, 3, 2, 1, and 0, which we can ignore. Add them all up and we get <code>15</code>.</p>
+<p>So the answer to the question is <code>15/36</code> which reduces to <code>5/12</code>, dividing top and bottom by the greatest common divisor 3.</p>
+<p>You might be thinking that it’s not practical to enumerate everything all the time, I should use the formulas of probability. That’s true, those are marvelous. However, in my experience it is also easy to go wrong reasoning from formulas. It’s harder to go wrong starting with a counting problem, then improving your method of counting. You end up in the same place, but more confident in the answer.</p>
+<p>The full enumeration of our simple 2 roll question as a counting problem is just big enough to be too tedious to use only counting.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> [roll [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">5</span> <span class="dv">6</span>]]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">for</span> [i roll]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">for</span> [j roll]</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>      [i j])))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(([<span class="dv">1</span> <span class="dv">1</span>] [<span class="dv">1</span> <span class="dv">2</span>] [<span class="dv">1</span> <span class="dv">3</span>] [<span class="dv">1</span> <span class="dv">4</span>] [<span class="dv">1</span> <span class="dv">5</span>] [<span class="dv">1</span> <span class="dv">6</span>])</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a> ([<span class="dv">2</span> <span class="dv">1</span>] [<span class="dv">2</span> <span class="dv">2</span>] [<span class="dv">2</span> <span class="dv">3</span>] [<span class="dv">2</span> <span class="dv">4</span>] [<span class="dv">2</span> <span class="dv">5</span>] [<span class="dv">2</span> <span class="dv">6</span>])</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a> ([<span class="dv">3</span> <span class="dv">1</span>] [<span class="dv">3</span> <span class="dv">2</span>] [<span class="dv">3</span> <span class="dv">3</span>] [<span class="dv">3</span> <span class="dv">4</span>] [<span class="dv">3</span> <span class="dv">5</span>] [<span class="dv">3</span> <span class="dv">6</span>])</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a> ([<span class="dv">4</span> <span class="dv">1</span>] [<span class="dv">4</span> <span class="dv">2</span>] [<span class="dv">4</span> <span class="dv">3</span>] [<span class="dv">4</span> <span class="dv">4</span>] [<span class="dv">4</span> <span class="dv">5</span>] [<span class="dv">4</span> <span class="dv">6</span>])</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a> ([<span class="dv">5</span> <span class="dv">1</span>] [<span class="dv">5</span> <span class="dv">2</span>] [<span class="dv">5</span> <span class="dv">3</span>] [<span class="dv">5</span> <span class="dv">4</span>] [<span class="dv">5</span> <span class="dv">5</span>] [<span class="dv">5</span> <span class="dv">6</span>])</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a> ([<span class="dv">6</span> <span class="dv">1</span>] [<span class="dv">6</span> <span class="dv">2</span>] [<span class="dv">6</span> <span class="dv">3</span>] [<span class="dv">6</span> <span class="dv">4</span>] [<span class="dv">6</span> <span class="dv">5</span>] [<span class="dv">6</span> <span class="dv">6</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Identifying the pattern is enough to realize the answer</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">+</span> <span class="dv">5</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dv">15</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>What a marvelous pattern it is! Predictable, but not flat. Smooth, but not boring. Recursive, and not obvious.</p>
+<div class="printedClojure">
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span> <span class="dv">3</span> <span class="dv">6</span> <span class="dv">10</span> <span class="dv">15</span> <span class="dv">21</span> <span class="dv">28</span> <span class="dv">36</span> <span class="dv">45</span> <span class="dv">55</span> <span class="dv">66</span> <span class="dv">78</span> <span class="dv">91</span> <span class="dv">105</span> <span class="dv">120</span> <span class="dv">136</span> <span class="dv">153</span> <span class="dv">171</span> <span class="dv">190</span> <span class="dv">210</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>There’s something special about this sequence. Aren’t those numbers just… pleasing in some way?</p>
+<p>This sequence is called the triangular numbers.</p>
+<pre><code>            .
+           . .
+          . . .
+         . . . .</code></pre>
+<p>You can find the first 10 or so numbers in your head, and with some paper many more quite quickly.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="the_hidden_geometry_of_dice.jpg" class="img-fluid figure-img"></p>
+<figcaption>So many dots</figcaption>
+</figure>
+</div>
+<p>There is a formula for calculating the nth triangular number: <span class="math inline">\(T_n = 1 + 2 + 3 + \dots + n = \frac{n(n + 1)}{2}\)</span></p>
+<p>The 20th triangular number is <code>(20x21)/2 = (400+20)/2 = 210</code>. Isn’t it wonderful how there’s so many different ways to find the same answer in math?</p>
+<p>There is something curious about the formula; it divides by 2 but only produces integers. How can we be certain we will only ever get an integer? So mysterious. <code>n(n+1)</code> is always even! Let’s think about that a bit more, if n is odd, then n+1 is even. If n is even, then n+1 is odd. One of the multiples is always even, meaning that 2 is a factor, so the multiple must always have a factor 2, and be even.</p>
+<p>It’s easy now to imagine if we had a 1000 sided dice what the answer would be. But be careful! For a 1000 side die, we want the 999nth triangular number: <span class="math inline">\((999 \times 1000)/2 = (1000000-1000)/2 = 500000-500 = 499500\)</span> and the total outcomes would be <code>1000x1000</code>, so the answer would be <code>0.4995</code>. It’s comforting to see that for a large range, we land closer to 50%.</p>
+<p>The point is that once we know what we are counting, it feels more obvious that we used the right formula to count it.</p>
+<p>Triangular numbers show up in many situations, my favorite is that they can be used to lay out hexagons. The <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/civitas/explorer/geometry.clj">code that draws Clojure Civitas hexagons</a> is based on the triangular number formula.</p>
+<svg viewbox="-640 -640 1280 1280" width="100%" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0.0,0.0)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,-69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,-138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,-69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,0.0)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,-138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,-277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,-138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,0.0)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,277.1281292110204)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,346.4101615137755)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,415.69219381653056)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,346.4101615137754)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,69.28203230275511)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,-69.28203230275507)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,-277.1281292110204)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,-346.4101615137755)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,-415.69219381653056)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,-346.4101615137754)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,-277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,-69.28203230275511)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,69.28203230275507)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g></svg>
+<p>Triangular numbers also show up in the number of pairs, handshakes, edges in a complete graph, diagonals sum to triangular numbers, square numbers as sums of consecutive odd numbers, differences of triangulars, acceleration frames, smooth transitions, spacing. Such a beautiful pattern that can be found in so many situations!</p>
+<p>Until next time, may your dice be fair and your outcomes interesting.</p>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.clj">src/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.clj</a></small></small></pre></div>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
