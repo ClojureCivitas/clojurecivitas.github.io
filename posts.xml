@@ -969,9 +969,9 @@ font-style: inherit;">inc</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1">#object[clojure.core$comp$fn__5895 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x5a1dda88</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x4d44f385</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core$comp$fn__5895@5a1dda88"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core$comp$fn__5895@4d44f385"</span>]</span></code></pre></div>
 </div>
 <p>Let’s give this a name:</p>
 <div class="sourceClojure">
@@ -1254,7 +1254,7 @@ font-style: inherit;">5</span>]]</span></code></pre></div>
 <item>
   <title>The Hallway Track: SciNoj Light #1 Data Analysis Stories</title>
   <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/hallway_track.html</link>
+  <link>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</link>
   <description><![CDATA[ 
 
 
@@ -1266,14 +1266,14 @@ font-style: inherit;">5</span>]]</span></code></pre></div>
 <p>The <a href="https://youtu.be/3HZ5rngHzWM">concluding talk on lane reductions</a> stood out as my favorite because it blended data-driven insights with relatable, human-interest storytelling. As a cyclist, I immediately connected with how lane reductions and protected bike lanes are impactful to my safety. The talk’s compelling visuals, grounded in real case studies, made the story very tangible. Heather’s personal perspective as a car-free parent added emotional weight. She illustrated how community advocacy and smart urban design saves lives, and makes more livable spaces. The mix of passion, rigor, and optimism left me inspired; data analysis can drive tangible, life-improving change.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/crashes.png" class="img-fluid figure-img"></p>
+<p><img src="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/crashes.png" class="img-fluid figure-img"></p>
 <figcaption>Bike lane improvements reduce crashes</figcaption>
 </figure>
 </div>
 <p>A major focus of the conference was the development of Clojure’s data science <a href="https://github.com/scicloj/noj">Noj</a> toolkit. This suite of libraries demonstrated how Clojure combines functional programming elegance with practical performance. Speakers highlighted Noj’s interoperability with Python and Java ecosystems while emphasizing its advantages for reproducible and maintainable workflows. The community’s collaborative energy was evident throughout.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/noj_components.png" class="img-fluid figure-img"></p>
+<p><img src="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/noj_components.png" class="img-fluid figure-img"></p>
 <figcaption>Noj core components</figcaption>
 </figure>
 </div>
@@ -1364,9 +1364,9 @@ Get your answers fast and make your customers happy.<br>
 </section>
 
  ]]></description>
-  <guid>https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/hallway_track.html</guid>
+  <guid>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</guid>
   <pubDate>Wed, 28 May 2025 00:00:00 GMT</pubDate>
-  <media:content url="https://clojurecivitas.github.io/src/conferences/scinoj_light_1/notes/noj_components.png" medium="image" type="image/png" height="75" width="144"/>
+  <media:content url="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/noj_components.png" medium="image" type="image/png" height="75" width="144"/>
 </item>
 <item>
   <title>Factorization of Eratosthenes</title>
@@ -1633,9 +1633,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x2b91f658</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x6b954f0e</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@2b91f658"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@6b954f0e"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -1643,9 +1643,9 @@ font-style: inherit;">"clojure.lang.MultiFn@2b91f658"</span>]</span></code></pre
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x23a354a1</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x65113eab</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@23a354a1"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@65113eab"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -1654,9 +1654,9 @@ font-style: inherit;">"java.lang.Object@23a354a1"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x80ee766</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0xff65dc5</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@80ee766"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@ff65dc5"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1674,9 +1674,9 @@ font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22473$fn__22474 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x5256c05e</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x46a95286</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22473$fn__22474@5256c05e"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22473$fn__22474@46a95286"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -1694,9 +1694,9 @@ font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x5d078ac3</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x4cbf61e4</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479@5d078ac3"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479@4cbf61e4"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -3016,7 +3016,7 @@ font-style: inherit;">6765</span>)</span></code></pre></div>
 <item>
   <title>Noj Reload Executable</title>
   <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/src/scicloj/noj/intro/getting-started-noj.html</link>
+  <link>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</link>
   <description><![CDATA[ 
 
 
@@ -3028,7 +3028,7 @@ font-style: inherit;">6765</span>)</span></code></pre></div>
 <p>Imagine being able to experiment with Clojure without needing to install tooling, set up editors, or even know about deps.edn Sounds like a dream, right? Well, dream no more—meet <a href="https://scicloj.github.io/noj/">Noj’s</a> new Code Reload Executable!</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="https://clojurecivitas.github.io/src/scicloj/noj/intro/Noj-icon.svg" class="img-fluid figure-img"></p>
+<p><img src="https://clojurecivitas.github.io/scicloj/noj/intro/Noj-icon.svg" class="img-fluid figure-img"></p>
 <figcaption>Noj</figcaption>
 </figure>
 </div>
@@ -3043,7 +3043,7 @@ font-style: inherit;">6765</span>)</span></code></pre></div>
 
 
  ]]></description>
-  <guid>https://clojurecivitas.github.io/src/scicloj/noj/intro/getting-started-noj.html</guid>
+  <guid>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</guid>
   <pubDate>Tue, 06 May 2025 00:00:00 GMT</pubDate>
 </item>
 <item>
@@ -3217,7 +3217,7 @@ font-style: inherit;">"The prey of Talon"</span>})</span>
 <span id="cb2-12">        (plotly/layer-point))))</span></code></pre></div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[1,2,0,4,1,19,15,6,9,3,4,4,19,5,10,5,17,14,1,6,3,7,2,5,18,17,5,2,1,13,2,4,5,7,6,6,19,17,15,2,19,13,5,0,15,2,8,12,18,12,14,18,8,4,4,2,11,12,18,5,14,15,18,8,9,7,14,4,13,10,11,5,7,0,9,12,15,2,14,2,6,7,11,16,12,15,10,0,16,1,16,17,10,14,19,17,9,15,16,2],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"index","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sample","showgrid":true},"title":"The prey of Talon"}, {});</script></div>
+               [{"y":[10,7,11,11,19,5,7,10,1,19,6,2,8,5,17,12,3,19,1,18,15,8,19,4,13,4,19,13,16,6,11,2,5,14,4,16,7,2,8,3,12,19,19,8,5,14,3,17,14,11,9,17,10,17,9,1,13,18,17,7,0,10,13,7,13,3,15,15,17,13,3,4,1,9,8,12,17,6,4,19,15,11,13,14,12,14,15,13,4,16,17,7,12,1,0,10,8,13,12,7],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"index","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sample","showgrid":true},"title":"The prey of Talon"}, {});</script></div>
 <p>You have sampled fairly, Talon.</p>
 <p>Talon operates at the behest of the city’s Generator.</p>
 <section id="meet-randomius-maximus-the-generator" class="level2">
@@ -3458,7 +3458,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]}, <span class="at
 background-color: null;
 font-style: inherit;">:stop</span> #object[clojure.lang.Atom <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x38edd5a7</span> {<span class="at" style="color: #657422;
+font-style: inherit;">0x187bdc01</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:status</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -3502,7 +3502,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]},</span>
 background-color: null;
 font-style: inherit;">:stop</span> #&lt;Atom<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">@6316c3be:</span> false&gt;}</span></code></pre></div>
+font-style: inherit;">@38ce921b:</span> false&gt;}</span></code></pre></div>
 </div>
 <p>Talon is flying.</p>
 <div class="sourceClojure">
@@ -3522,7 +3522,7 @@ font-style: inherit;">:stat</span>)</span>
 <div class="printedClojure">
 <div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">16</span></span></code></pre></div>
+font-style: inherit;">11</span></span></code></pre></div>
 </div>
 <p>Transform with purpose.</p>
 <div class="sourceClojure">
@@ -3576,7 +3576,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]},</span>
 background-color: null;
 font-style: inherit;">:stop</span> #&lt;Atom<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">@6316c3be:</span> false&gt;}</span></code></pre></div>
+font-style: inherit;">@38ce921b:</span> false&gt;}</span></code></pre></div>
 </div>
 <p>I see you wish to send a message to <code>stat</code>. Be wary in the future, speak only numbers to those who seek stats.</p>
 <p>Well done, Randomius. You are a true citizen. Now rest.</p>
@@ -3613,7 +3613,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]},</span>
 background-color: null;
 font-style: inherit;">:stop</span> #&lt;Atom<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">@6316c3be:</span> true&gt;}</span></code></pre></div>
+font-style: inherit;">@38ce921b:</span> true&gt;}</span></code></pre></div>
 </div>
 </section>
 <section id="meet-tallystrix-the-whispering-aggregator" class="level2">
