@@ -1,8 +1,7 @@
-^{:kindly/hide-code true
-  :clay             {:title  "Civitas Explorer"
-                     :type   :page
-                     :quarto {:author :timothypratley
-                              :format {:html {:page-layout :full}}}}}
+^:kindly/hide-code
+^{:clay {:title  "Civitas Explorer"
+         :quarto {:type   :page
+                  :format {:html {:page-layout :full}}}}}
 (ns civitas.explorer
   (:require [scicloj.kindly.v4.kind :as kind]
             [civitas.explorer.db :as db]

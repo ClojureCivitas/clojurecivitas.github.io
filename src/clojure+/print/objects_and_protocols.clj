@@ -4,6 +4,7 @@
                               :draft  true}}}
 (ns clojure+.print.objects-and-protocols
   (:require [clojure.core.async :as async]
+            [clojure.core.async.flow :as flow]
             [clojure.datafy :as datafy]
             [clojure.string :as str]
             [core.async.flow.example.stats :as stats]))
@@ -47,7 +48,7 @@
 ;; Especially in the world of notebooks where we like to show things as we go,
 ;; but also just keeping a tidy REPL or looking into data that contains objects.
 
-(stats/create-flow)
+(flow/create-flow stats/config)
 
 ;; Hmmmm. not so nice. We'll dig into this further below.
 ;; But we also need to be aware that Clojure munges it's names to make Java valid names.
@@ -111,7 +112,7 @@
 
 *ns*
 (((fn aaa [] (fn bbb [] (fn ccc [])))))
-(stats/create-flow)
+(flow/create-flow stats/config)
 
 ;; What is this? It's a reified object that implements protocols.
 ;; We can see this by the $reify part at the end.
@@ -135,7 +136,7 @@
 ;; Leaving aside those concerns, it returns quite a long list...
 
 (def stats-flow
-  (stats/create-flow))
+  (flow/create-flow stats/config))
 
 (all-protocol-vars stats-flow)
 

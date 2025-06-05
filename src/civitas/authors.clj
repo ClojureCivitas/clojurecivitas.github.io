@@ -1,9 +1,13 @@
 ^:kindly/hide-code
-^{:clay {:quarto {:title "Authors"
-                  :type :page}}}
+^{:clay {:title "Authors"
+         :quarto {:type :page}}}
 (ns civitas.authors
   (:require [clojure.edn :as edn]
             [scicloj.kindly.v4.kind :as kind]))
+
+;; You belong here!
+
+;; Thank you for sharing your ideas.
 
 ^:kindly/hide-code
 (defn card [{:keys [name url links affiliation email image]}]
