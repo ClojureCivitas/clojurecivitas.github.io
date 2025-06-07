@@ -7,7 +7,7 @@
             [clojure.core.async.flow :as flow]
             [clojure.datafy :as datafy]
             [clojure.string :as str]
-            [core.async.flow.example.stats :as stats]))
+            [core.async.flow.example.asynctopolis :as asynctopolis]))
 
 ;; The Clojure default for printing objects is noisy.
 ;; Clojure's `print-method` for `Object` delegates to `clojure.core/print-object`
@@ -48,7 +48,7 @@
 ;; Especially in the world of notebooks where we like to show things as we go,
 ;; but also just keeping a tidy REPL or looking into data that contains objects.
 
-(flow/create-flow stats/config)
+asynctopolis/flow
 
 ;; Hmmmm. not so nice. We'll dig into this further below.
 ;; But we also need to be aware that Clojure munges it's names to make Java valid names.
@@ -112,7 +112,7 @@
 
 *ns*
 (((fn aaa [] (fn bbb [] (fn ccc [])))))
-(flow/create-flow stats/config)
+asynctopolis/flow
 
 ;; What is this? It's a reified object that implements protocols.
 ;; We can see this by the $reify part at the end.
@@ -135,10 +135,7 @@
 ;; On the other hand, at my REPL I don't care about that, it's faster than I can notice.
 ;; Leaving aside those concerns, it returns quite a long list...
 
-(def stats-flow
-  (flow/create-flow stats/config))
-
-(all-protocol-vars stats-flow)
+(all-protocol-vars asynctopolis/flow)
 
 ;; But notice that one of them; `#'clojure.core.async.flow.impl.graph/Graph`
 ;; just feels like it is the one we care about most.
@@ -155,7 +152,7 @@
 (defn protocol-ns-matches [x]
   (filter #(ns-match? % x) (all-protocol-vars x)))
 
-(protocol-ns-matches stats-flow)
+(protocol-ns-matches asynctopolis/flow)
 
 ;; Nice.
 ;; In my opinion this is more representative of the object.
@@ -169,12 +166,12 @@
   (->> (protocol-ns-matches x)
        (map var-sym)))
 
-(protocol-ns-match-names stats-flow)
+(protocol-ns-match-names asynctopolis/flow)
 
 ;; The other protocol of interest is Datafiable,
 ;; because it indicates I can get a data representation if I would like to.
 
-(datafy/datafy stats-flow)
+(datafy/datafy asynctopolis/flow)
 
 ;; I think this one is so helpful that it should always be shown on objects,
 ;; regardless of their type of other protocols,
@@ -182,7 +179,7 @@
 ;; I wouldn't want to print them as data by default, because it would be too spammy.
 ;; And checking Datafiable is much less of a performance concern.
 
-(satisfies? clojure.core.protocols/Datafiable stats-flow)
+(satisfies? clojure.core.protocols/Datafiable asynctopolis/flow)
 
 ;; But there is a big problem... **everything** is Datafiable...
 

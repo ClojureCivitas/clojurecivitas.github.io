@@ -1,27 +1,52 @@
 ^{:kindly/hide-code true
-  :clay             {:title  "Core Async Flow Exploration"
+  :clay             {:title  "What He Saw Before His Wings Melted"
                      :quarto {:author   [:daslu :timothypratley]
                               :type     :post
                               :draft    true
                               :date     "2025-05-1"
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}
-(ns core.async.flow.exploration
+(ns core.async.flow.example.before-his-wings-melted
   (:require [clojure.core.async :as async]
             [clojure.core.async.flow :as flow]
             [clojure.datafy :as datafy]
-            [core.async.flow.example.stats :as stats]
-            [core.async.flow.visualization :as fv]))
+            [core.async.flow.example.asynctopolis :as asynctopolis]
+            [core.async.flow.example.flow-show :as show]))
 
-;; One of Clojure’s superpowers is the ability to coordinate asynchronous operations
-;; using `core.async`.
+;; Long before he flew too high,
+;; before the wax gave way and the world remembered only his fall,
+;; Iccarus flew *low*.
+;; They often leave out this part of his misadventures,
+;; when curiosity, not hubris, guided his wings.
+;; He flew not to ascend to Olympus,
+;; but rather to get a good view of the lesser known Asynctopolis.
+
+;; A city pulsing with signals, stitched together by invisible threads.
+;; From above, its patterns unfolded like a diagram.
+;; Flows of information, agents in silent collaboration,
+;; each unaware of the others, yet perfectly aligned.
+
+;; This is what he saw.
+
+;; ## Asynctopolis from the Clouds
+
+(show/flow-svg asynctopolis/flow {:show-chans   false
+                                  :with-content false})
+
+;; Coordinate asynchronous operations using `core.async`.
 ;; While powerful, these operations can become hard to reason about as they grow in complexity.
+;; The `core.async.flow` library is a higher-level abstraction for modeling async processes as a Directed Acyclic Graph (DAG).
+;; We can visualize flows [flow-monitor](https://github.com/clojure/core.async.flow-monitor).
 
-;; The new `core.async.flow` library offers a higher-level abstraction for modeling
-;; async processes as a **Directed Acyclic Graph (DAG)**.
-;; And now, with [flow-monitor](https://github.com/clojure/core.async.flow-monitor),
-;; we can *visualize* and *analyze* those flows.
-;;
+;; He circled the skyline.
+;; He watched the channels breathe.
+;; And slowly, he spiraled down,
+;; drawn not by ambition, but fascination—
+;; closer to each process,
+;; each transformation,
+;; each role in the great asynchronous allegiance.
+
+
 ;; Let's walk through an exploration of such a flow.
 
 ;; ## What We'll Explore
@@ -32,31 +57,23 @@
 ;; 2. **Static visualization**: How can we inspect its components?
 ;; 3. **Dynamic interaction**: How do values move through the flow, and what happens when they do?
 
-;; ## 1. Creating a Flow
-
-;; Flows are created from configuration
-
-(def stats-flow
-  (flow/create-flow stats/config))
-
-(fv/flow-svg stats-flow)
-
 ;; This flow models a small system involving aggregation, notification, and reporting.
 ;; Internally, it consists of processes connected via channels.
+(show/flow-svg asynctopolis/flow {:chans-as-ports true
+                                  :with-content   false})
 
-;; ## 2. Inspecting the Flow
+(show/flow-svg asynctopolis/flow {:chans-as-ports false
+                                  :with-content   false})
 
-;; That's a lot to take in! Fortunately, we can make things more digestible
-;; by viewing just the **processes** involved.
 
-(fv/proc-table stats-flow)
+(show/proc-table asynctopolis/flow)
 
 ;; This table gives us a clear list of components in the flow, including their names
 ;; and behaviors.
 
 ;; Next, let’s examine how these processes are **connected**.
 
-(fv/conn-table stats-flow)
+(show/conn-table asynctopolis/flow)
 
 ;; Now we’re seeing the wiring: who talks to whom, and through what channels.
 
@@ -64,7 +81,7 @@
 ;; Good luck with that, there's a lot of it
 
 ^:kind/portal
-(datafy/datafy stats-flow)
+(datafy/datafy asynctopolis/flow)
 
 
 ;; ## 3. Running the Flow
@@ -72,30 +89,28 @@
 ;; Time to bring our flow to life!
 ;; Calling `start` activates the processes and returns a map of the important channels for interaction.
 
-(def chs (flow/start stats-flow))
-
 ;; We can now **inject values** into specific points in the flow.
 ;; Think of this like poking the system and watching how it reacts.
 
 ;; We send a “poke” signal to the `aggregator` process.
 
-@(flow/inject stats-flow [:aggregator :poke] [true])
+@(flow/inject asynctopolis/flow [:Tallystrix :poke] [true])
 
 ;; We send a stat string that is designed to trigger an alert.
 
-@(flow/inject stats-flow [:aggregator :stat] ["abc1000"])
+@(flow/inject asynctopolis/flow [:Tallystrix :stat] ["abc1000"])
 
 ;; We send a notification message into the `notifier`.
 
-@(flow/inject stats-flow [:notifier :in] [:sandwich])
+@(flow/inject asynctopolis/flow [:Claxxus :in] [:sandwich])
 
 ;; ## 4. Observing the Results
 
 ;; Our flow includes a `report-chan`, where summaries and reports might be sent.
 
-(def report-chan (:report-chan chs))
+(def report-chan (:report-chan asynctopolis/chs))
 
-(flow/ping stats-flow)
+(flow/ping asynctopolis/flow)
 
 (async/poll! report-chan)
 
@@ -103,7 +118,7 @@
 
 ;; We can also inspect the `error-chan`, where any issues in the flow are reported.
 
-(def error-chan (:error-chan chs))
+(def error-chan (:error-chan asynctopolis/chs))
 
 (async/poll! error-chan)
 

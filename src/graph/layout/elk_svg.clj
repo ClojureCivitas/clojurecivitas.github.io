@@ -113,8 +113,7 @@
 (defn render-graph [{:as g :keys [x y width height]}]
   (kind/hiccup
     [:svg {:viewBox (str (or x 0) " " (or y 0) " " width " " height)
-           :width   "100%"
-           :height  800}
+           :width   "100%"}
      [:defs (edge-defs)]
 
      (node g)]))

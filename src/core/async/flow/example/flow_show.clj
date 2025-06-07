@@ -6,7 +6,7 @@
                               :date     "2025-05-17"
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}
-(ns core.async.flow.visualization
+(ns core.async.flow.example.flow-show
   (:require [clojure.datafy :as datafy]
             [clojure.string :as str]
             [graph.layout.elk :as elk]
@@ -53,22 +53,25 @@
                         [:div (for [[k v] outs]
                                 [:div [:strong (name k)] ": " v])]]))}))
 
-(defn elkg [flow]
+(defn elkg [flow {:keys [show-chans chans-as-ports with-content]
+                  :or   {show-chans     true
+                         chans-as-ports true
+                         with-content   false}}]
   (let [{:keys [conns procs]} (datafy/datafy flow)
-        all-proc-chans (into #{} cat conns)
-        chans-as-ports true
-        with-content false]
+        all-proc-chans (into #{} cat conns)]
     {:id            "G"
      :layoutOptions {:elk.algorithm         "layered"
-                     :elk.direction         "DOWN"
+                     :elk.direction         "RIGHT"
                      :elk.hierarchyHandling "INCLUDE_CHILDREN"}
      :children
      (for [[proc-key proc-chans] (group-by first all-proc-chans)]
        (let [{:keys [args proc]} (get procs proc-key)
              {:keys [desc]} proc
              {:keys [params ins outs]} desc
-             width 100
-             height 100
+             width 60
+             height 30
+             port-width 20
+             port-height 12
              content (when with-content
                        [{:id            (str (name proc-key) "_content")
                          :width         (- width 5)
@@ -77,36 +80,46 @@
                          :layoutOptions {:content (str/join \newline
                                                             (for [[k param] params]
                                                               (str (name k) " (" (get args k) ") " param)))}}])
-             children (for [[_ chan :as proc-chan] proc-chans]
-                        {:id       (id-for proc-chan)
-                         :width    20
-                         :height   20
-                         :labels   [{:text (name chan)}]
-                         :children (vec (when with-content
-                                          [{:id            (str (id-for proc-chan) "_content")
-                                            :width         20
-                                            :height        20
-                                            ;; nope, do it by id
-                                            :layoutOptions {:content (str (name chan)
-                                                                          \newline \newline
-                                                                          (or (get outs chan)
-                                                                              (get ins chan)))}}]))})]
+             children (when show-chans
+                        (for [[_ chan :as proc-chan] proc-chans]
+                          {:id       (id-for proc-chan)
+                           :width    port-width
+                           :height   port-height
+                           :labels   [{:text (name chan)}]
+                           :children (if with-content
+                                       [{:id            (str (id-for proc-chan) "_content")
+                                         :width         port-width
+                                         :height        port-height
+                                         ;; nope, do it by id
+                                         :layoutOptions {:content (str (name chan)
+                                                                       \newline \newline
+                                                                       (or (get outs chan)
+                                                                           (get ins chan)))}}]
+                                       [])}))]
          {:id            (id-for proc-key)
-          :width         100
-          :height        100
+          :width         width
+          :height        height
           :layoutOptions {:org.eclipse.elk.nodeLabels.placement "OUTSIDE V_TOP H_LEFT"}
           :labels        [{:text (name proc-key)}]
-          :children      (vec (concat content (when (not chans-as-ports) children)))
+          :children      (vec (concat content
+                                      (when (and show-chans (not chans-as-ports))
+                                        children)))
 
           :ports
-          (vec (when chans-as-ports children))}))
+          (vec (when (and show-chans chans-as-ports)
+                 children))}))
      :edges
-     (vec (for [[from to] conns]
-            {:id      (id-for [from to])
-             :sources [(id-for from)]
-             :targets [(id-for to)]}))}))
+     (vec (if show-chans
+            (for [[from to] conns]
+              {:id      (id-for [from to])
+               :sources [(id-for from)]
+               :targets [(id-for to)]})
+            (for [[[from] [to]] conns]
+              {:id      (id-for [from to])
+               :sources [(id-for from)]
+               :targets [(id-for to)]})))}))
 
-(defn flow-svg [flow]
-  (-> (elkg flow)
+(defn flow-svg [flow options]
+  (-> (elkg flow options)
       (elk/layout)
       (elk-svg/render-graph)))

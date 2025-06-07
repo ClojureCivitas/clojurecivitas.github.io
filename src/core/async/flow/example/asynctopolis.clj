@@ -2,10 +2,11 @@
   :clay             {:title  "Stats and Signals in the Flow of Asynctopolis"
                      :quarto {:author   [:alexmiller :timothypratley]
                               :type     :post
+                              :draft    true
                               :date     "2025-05-1"
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}
-(ns core.async.flow.example.stats
+(ns core.async.flow.example.asynctopolis
   (:require [clojure.core.async :as a]
             [clojure.core.async.flow :as flow]
             [clojure.core.async.flow-static :as flow-static]
@@ -311,18 +312,18 @@
 ;; Held together by channels, purpose, and trust.
 
 (def config
-  {:procs {:generator  {:args {:min 0 :max 12 :wait 500}
+  {:procs {:Randomius  {:args {:min 0 :max 12 :wait 500}
                         :proc (flow/process #'Randomius)}
-           :aggregator {:args {:min 1 :max 10}
+           :Tallystrix {:args {:min 1 :max 10}
                         :proc (flow/process #'Tallystrix)}
-           :scheduler  {:args {:wait 3000}
+           :Chronon    {:args {:wait 3000}
                         :proc (flow/process #'Chronon)}
-           :notifier   {:args      {:prefix "Alert: "}
+           :Claxxus    {:args      {:prefix "Alert: "}
                         :proc      (flow/process #'Claxxus)
                         :chan-opts {:in {:buf-or-n (a/sliding-buffer 3)}}}}
-   :conns [[[:generator :out] [:aggregator :stat]]
-           [[:scheduler :out] [:aggregator :poke]]
-           [[:aggregator :alert] [:notifier :in]]]})
+   :conns [[[:Randomius :out] [:Tallystrix :stat]]
+           [[:Chronon :out] [:Tallystrix :poke]]
+           [[:Tallystrix :alert] [:Claxxus :in]]]})
 
 ^:kind/hiccup
 [:iframe {:width  "100%"
@@ -333,13 +334,13 @@
 ;; Describe your duties.
 ;; Initialize your station.
 
-(def f (flow/create-flow config))
+(def flow (flow/create-flow config))
 
 ;; The city is ready, but not yet in action.
 
-(datafy/datafy f)
+(datafy/datafy flow)
 
-(def chs (flow/start f))
+(def chs (flow/start flow))
 
 chs
 
@@ -354,22 +355,22 @@ chs
 ;; The city breathes, the asynchronous allegiance stirs.
 ;; Transition with order.
 
-(flow/resume f)
+(flow/resume flow)
 
 ;; Transform with purpose.
 
-(flow/inject f [:aggregator :poke] [true])
-(flow/inject f [:aggregator :stat] ["abc1000"])             ;; trigger an alert
-(flow/inject f [:notifier :in] [:sandwich])
+(flow/inject flow [:Tallystrix :poke] [true])
+(flow/inject flow [:Tallystrix :stat] ["abc1000"])             ;; trigger an alert
+(flow/inject flow [:Claxxus :in] [:sandwich])
 
 (a/poll! (:report-chan chs))
 (a/poll! (:error-chan chs))
 
 ;; The flow can coordinate peace.
 
-(flow/pause f)
+(flow/pause flow)
 
-(flow/stop f)
+(flow/stop flow)
 
 ;; The city falls silent.
 

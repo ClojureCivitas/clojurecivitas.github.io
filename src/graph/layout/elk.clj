@@ -6,7 +6,8 @@
                               :tags     [:graphs :graph-layout]}}}
 (ns graph.layout.elk
   (:require [clojure.data.json :as json]
-            [graph.layout.elk-svg :as elk-svg])
+            [graph.layout.elk-svg :as elk-svg]
+            [graph.layout.structural :as structural])
   (:import (org.eclipse.elk.core RecursiveGraphLayoutEngine)
            (org.eclipse.elk.core.util BasicProgressMonitor)
            (org.eclipse.elk.graph ElkNode)
@@ -22,16 +23,17 @@
       (.toJson)
       (json/read-str {:key-fn keyword})))
 
-(defn layout [g]
-  (let [g (elk g)]
-    (.layout (RecursiveGraphLayoutEngine.) g (BasicProgressMonitor.))
-    (unelk g)))
+(defn layout [orig]
+  (let [G (elk orig)]
+    (.layout (RecursiveGraphLayoutEngine.) G (BasicProgressMonitor.))
+    (->> (unelk G)
+         (structural/merge-structure orig))))
 
 ;; Example
 
 (-> {:id            "root",
      :layoutOptions {:elk.algorithm         "layered"
-                     :elk.direction         "DOWN"
+                     :elk.direction         "RIGHT"
                      :elk.hierarchyHandling "INCLUDE_CHILDREN"},
      :children      [{:id       "node1",
                       ;; node1 label is hidden under node2
