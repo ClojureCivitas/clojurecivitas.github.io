@@ -5,7 +5,7 @@
 Clojure Civitas makes it easy for you to publish Clojure ideas and explorations
 without the overhead of setting up a new project, blog, or repo.
 Whether you're sketching out a quick experiment or writing a deeper post,
-just create a namespace, write, commit and submit.
+just fork this repo, create a namespace, write, commit and submit a pull request.
 This is your shared scratch space.
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 2rem 0;">

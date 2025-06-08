@@ -2,6 +2,12 @@
 
 <img src="src/images/civitas-icon.svg" alt="Civitas Icon" align="right">
 
+Clojure Civitas makes it easy for you to publish Clojure ideas and explorations
+without the overhead of setting up a new project, blog, or repo.
+Whether you're sketching out a quick experiment or writing a deeper post,
+just fork this repo, create a namespace, write, commit and submit a pull request.
+This is your shared scratch space.
+
 Think. Code. Share.
 
 ⚡ No setup – Clone this repo, make a new namespace, start coding.
@@ -16,14 +22,15 @@ Think. Code. Share.
 
 ## Rationale
 
-*Exploramus, Communicamus, Crescimus*<br>
-<small>We explore, we share, we grow.</small>
-
-See [About Clojure Civitas](https://clojurecivitas.github.io/about).
-
 Why markdown in code? We value reproducible artifacts.
 
+See [Clojure Civitas Rationale](https://clojurecivitas.github.io/about#rationale).
+
+
 ## Contributing
+
+*Exploramus, Communicamus, Crescimus*<br>
+<small>We explore, we share, we grow.</small>
 
 Your perspective matters.
 Pull Requests invited, that's the point!
