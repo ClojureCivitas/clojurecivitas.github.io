@@ -128,8 +128,8 @@
     (merge-with merge-replace a b)
 
     (and (sequential? a) (sequential? b))
-    (let [a-map (pairs a)
-          b-map (pairs b)
+    (let [a-map (into {} (pairs a))
+          b-map (into {} (pairs b))
           keys  (distinct (concat (keys a-map) (keys b-map)))]
       (mapv (fn [k]
               (if (contains? b-map k)
@@ -169,8 +169,8 @@
       a removals)
 
     (and (sequential? a) (sequential? removals))
-    (let [a-map (pairs a)
-          r-map (pairs removals)
+    (let [a-map (into {} (pairs a))
+          r-map (into {} (pairs removals))
           result (reduce-kv
                    (fn [m k v]
                      (if (contains? m k)

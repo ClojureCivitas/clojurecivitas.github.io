@@ -62,9 +62,13 @@
 (show/flow-svg asynctopolis/flow {:chans-as-ports true
                                   :with-content   false})
 
+;; Are channels part of a process or not?
+;; You decide
+
 (show/flow-svg asynctopolis/flow {:chans-as-ports false
                                   :with-content   false})
 
+;; Let's dig deeper into the details
 
 (show/proc-table asynctopolis/flow)
 
@@ -77,17 +81,12 @@
 
 ;; Now we’re seeing the wiring: who talks to whom, and through what channels.
 
-;; Flows implement the `Datafy` protocol so we can inspect them as data...
-;; Good luck with that, there's a lot of it
-
-^:kind/portal
-(datafy/datafy asynctopolis/flow)
-
-
 ;; ## 3. Running the Flow
 
 ;; Time to bring our flow to life!
 ;; Calling `start` activates the processes and returns a map of the important channels for interaction.
+
+(flow/start asynctopolis/flow)
 
 ;; We can now **inject values** into specific points in the flow.
 ;; Think of this like poking the system and watching how it reacts.
@@ -96,6 +95,11 @@
 
 @(flow/inject asynctopolis/flow [:Tallystrix :poke] [true])
 
+;; Flows implement the `Datafy` protocol so we can inspect them as data...
+;; Good luck with that, there's a lot of it
+
+(datafy/datafy asynctopolis/flow)
+
 ;; We send a stat string that is designed to trigger an alert.
 
 @(flow/inject asynctopolis/flow [:Tallystrix :stat] ["abc1000"])
@@ -103,6 +107,12 @@
 ;; We send a notification message into the `notifier`.
 
 @(flow/inject asynctopolis/flow [:Claxxus :in] [:sandwich])
+
+;; TODO: show something changed
+
+(show/flow-svg asynctopolis/flow {:chans-as-ports false
+                                  :with-content   false})
+
 
 ;; ## 4. Observing the Results
 
@@ -132,6 +142,21 @@
 
 ;; @(flow/inject stats-flow [:aggregator :poke] [true])
 
+
+
+; ## Flow
+
+; At its core, flow is a library for building concurrent, event-driven systems
+; using simple, communication-free functions.
+; It lets you wire up processes and connect them through channels,
+; while keeping control, error handling, and monitoring centralized and declarative.
+;
+;You define the structure as a directed graph—processes,
+; their inputs and outputs, and how they connect—and the flow system takes care of orchestration.
+; Your logic remains focused, while flow handles execution, coordination, and lifecycle concerns.
+;
+;All processes can be inspected or observed, and flows are fully data-driven, making them easy to reason about and visualize.
+; It's concurrent programming with structure—without the chaos.
 
 ; ## Summary
 
