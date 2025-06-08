@@ -15,7 +15,279 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.31</generator>
-<lastBuildDate>Thu, 05 Jun 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 08 Jun 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>About Transliteration</title>
+  <dc:creator>Elango Cheran</dc:creator>
+  <link>https://clojurecivitas.github.io/internationalization/transliteration.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="internationalization/transliteration_files/md-default0.js" type="text/javascript"></script>
+<script src="internationalization/transliteration_files/md-default1.js" type="text/javascript"></script>
+<p>Transliteration is about systematically converting the way in which text encodes language (or information) from one writing system (or convention or format) to another.</p>
+<p>We most commonly think of this for human languages, when converting the sounds spoken in a language from one writing system to another (ex: Chinese language sounds written as ideographs into English language sounds written in the Latin script).</p>
+<p>The idea of transliteration can be thought of more generically for computers that need to transform text or even file formats.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> translit-map</span></span>
+<span id="cb1-2">  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"This map defines a transliteration scheme for transforming text, in this case,</span></span>
+<span id="cb1-3"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  from Latin script character sequences (of English words) into emojis.</span></span>
+<span id="cb1-4"></span>
+<span id="cb1-5"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  We define our transformation mappings in a map. In this way, it looks a lot like an</span></span>
+<span id="cb1-6"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  input to the Clojure `replace` function. This map will be used as an input for the prefix tree</span></span>
+<span id="cb1-7"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  (a.k.a. trie) data struture used to convert."</span></span>
+<span id="cb1-8">  {<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"happy"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"🙂"</span></span>
+<span id="cb1-9">   <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"happier"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"😀"</span></span>
+<span id="cb1-10">   <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"happiest"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"😄"</span>})</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> translit-trie</span></span>
+<span id="cb2-2">  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Create the prefix tree (a.k.a. trie) data structure based on our transliteration mappings</span></span>
+<span id="cb2-3"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">  map that defines our transliteration."</span></span>
+<span id="cb2-4">  (fmt/make-trie translit-map))</span></code></pre></div>
+</div>
+<p>A prefix tree is also called a trie. A prefix tree is a way to store a collection of sequences (ex: strings) efficiently when there is a lot of overlapping prefixes among the strings.</p>
+<p>A dictionary for an alphabetic language is a good example of when a prefix tree is efficient in space. Imagine all of the words in a single page of the dictionary. It could look like “cat”, “catamaran”, “catamount”, “category”, “caternary”, etc. It could instead be stored as:</p>
+<pre><code>c - a - t *
+           a - m
+                  a - r - a - n *
+                  o - u - n - t *
+           e
+              g - o - r - y *
+              r - n - a - r - y *</code></pre>
+<p>Why would we use a prefix tree? Even if the source text patterns in the replacement rules are overlapping, we could perform replacement without a tree if we order the replacement rules by the source text pattern, such that a pattern that contains another pattern is applied earlier. However, to perform this ordering in a globally scalable way would effectively require constructing a prefix tree. Furthermore, a map of rules better models the notion of rules being independent data that are not complected with other rules. Also, as the number of rules increases, there may be performance benefits in terms of lookup in a prefix tree versus attempting to apply all rules in the ruleset sequentially.</p>
+<p>Let’s introspect into our prefix tree. Let’s see which input strings have a</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">(fmt/in-trie? translit-trie <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"hap"</span>)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">false</span></span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">(fmt/in-trie? translit-trie <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"happy"</span>)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">true</span></span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">(fmt/in-trie? translit-trie <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"happier"</span>)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">true</span></span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">(fmt/in-trie? translit-trie <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"happiest"</span>)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">true</span></span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1">(fmt/in-trie? translit-trie <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"happiest!"</span>)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">false</span></span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> s </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, world! Happiness is not being happiest or happier than the rest, but instead just being happy."</span>)</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> convert</span></span>
+<span id="cb15-2">  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Use our translit-trie to convert the input string into the output string"</span></span>
+<span id="cb15-3">  [s]</span>
+<span id="cb15-4">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-&gt;&gt;</span> (fmt/str-&gt;elems translit-trie s)</span>
+<span id="cb15-5">       (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">apply</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">str</span>)))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> converted</span></span>
+<span id="cb16-2">  <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Create the converted string according to our transliteration rules."</span></span>
+<span id="cb16-3">  (convert s))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1">converted</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Hello, world! Happiness is not being 😄 or 😀 than the rest, but instead just being 🙂."</span></span></code></pre></div>
+</div>
+<p>It’s worth noting that a prefix tree, when used to do transliteration conversions, is effectively the finite state machine (FSM) needed to parse and transform.</p>
+<p>For next time: What if we implicitly did that same conversion by constructing a regular expression (regex) that can match on the input patterns. Could that be equally fast, or faster than our naive Clojure implementation? A regex might work like so:</p>
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript"><span id="cb19-1"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> text <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"this is a test"</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb19-2"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">const</span> replacementMap <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> { <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'th'</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'X'</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'t'</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">:</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">'Y'</span> }<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb19-3"></span>
+<span id="cb19-4"><span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> result <span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">=</span> text<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">replace</span>(<span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">/th</span><span class="sc" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">|</span><span class="ss" style="color: #20794D;
+background-color: null;
+font-style: inherit;">t/g</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">,</span> (match) <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">=&gt;</span> {</span>
+<span id="cb19-5">                                               <span class="cf" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">return</span> replacementMap[match]<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb19-6">                                               })<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span>
+<span id="cb19-7"></span>
+<span id="cb19-8"><span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">console</span><span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">.</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;">log</span>(result)<span class="op" style="color: #5E5E5E;
+background-color: null;
+font-style: inherit;">;</span></span></code></pre></div>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/internationalization/transliteration.clj">src/internationalization/transliteration.clj</a></small></small></pre></div>
+
+
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/internationalization/transliteration.html</guid>
+  <pubDate>Sun, 08 Jun 2025 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>The Hidden Geometry of Dice</title>
   <dc:creator>Timothy Pratley</dc:creator>
@@ -969,9 +1241,9 @@ font-style: inherit;">inc</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1">#object[clojure.core$comp$fn__5895 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x63e67888</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x61ad4b83</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core$comp$fn__5895@63e67888"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core$comp$fn__5895@61ad4b83"</span>]</span></code></pre></div>
 </div>
 <p>Let’s give this a name:</p>
 <div class="sourceClojure">
@@ -1633,9 +1905,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x65113eab</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x40d8e4f6</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@65113eab"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@40d8e4f6"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -1643,9 +1915,9 @@ font-style: inherit;">"clojure.lang.MultiFn@65113eab"</span>]</span></code></pre
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x4ca4995c</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x20789365</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@4ca4995c"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@20789365"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -1654,9 +1926,9 @@ font-style: inherit;">"java.lang.Object@4ca4995c"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x6e96492b</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x44bff65c</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@6e96492b"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@44bff65c"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1674,9 +1946,9 @@ font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22473$fn__22474 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x4b0b12b0</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x34fdd1d0</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22473$fn__22474@4b0b12b0"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22473$fn__22474@34fdd1d0"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -1694,9 +1966,9 @@ font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x454e6931</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x18547b0b</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479@454e6931"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479@18547b0b"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">

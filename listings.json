@@ -9,6 +9,7 @@
   {
     "listing": "/posts.html",
     "items": [
+      "/internationalization/transliteration.html",
       "/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html",
       "/clojure/transducers/what_if.html",
       "/conferences/scinoj_light_1/notes/hallway_track.html",
