@@ -969,9 +969,9 @@ font-style: inherit;">inc</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1">#object[clojure.core$comp$fn__5895 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x3a99aa17</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x6456fcc4</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core$comp$fn__5895@3a99aa17"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core$comp$fn__5895@6456fcc4"</span>]</span></code></pre></div>
 </div>
 <p>Let’s give this a name:</p>
 <div class="sourceClojure">
@@ -1633,9 +1633,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x4608876e</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x23a354a1</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@4608876e"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@23a354a1"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -1643,9 +1643,9 @@ font-style: inherit;">"clojure.lang.MultiFn@4608876e"</span>]</span></code></pre
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x7967b127</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x2c507e20</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@7967b127"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@2c507e20"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -1654,9 +1654,9 @@ font-style: inherit;">"java.lang.Object@7967b127"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x48fe904f</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0xa1100b7</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@48fe904f"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@a1100b7"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1674,9 +1674,9 @@ font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval22473$fn__22474 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x183c30f1</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x70bd17ed</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22473$fn__22474@183c30f1"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22473$fn__22474@70bd17ed"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -1694,9 +1694,9 @@ font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x371c40ee</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x612b6e2c</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479@371c40ee"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval22477$fn__22478$fn__22479@612b6e2c"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
