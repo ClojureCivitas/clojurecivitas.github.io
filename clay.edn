@@ -39,6 +39,13 @@
       :url         "https://github.com/puredanger"
       :affiliation [:clojure.core]
       :links       [{:icon "github" :text "GitHub" :href "https://github.com/puredanger"}]}
+     :echeran
+     {:name        "Elango Cheran"
+      :image       "https://www.unicode.org/consortium/img/cheran-150px.jpg"
+      :url         "https://github.com/echeran"
+      :affiliation []
+      :links       [{:icon "github" :text "GitHub" :href "https://github.com/echeran"}
+                    {:icon "home" :text "Personal site" :href "https://www.elangocheran.com"}]}
      :seancorfield
      {:name        "Sean Corfield"
       :image       "https://avatars.githubusercontent.com/u/43875?v=4"

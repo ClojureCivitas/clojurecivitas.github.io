@@ -8,6 +8,7 @@
   io.github.clojure/core.async.flow-monitor   {:git/tag "v0.1.1" :git/sha "61e8d31"}
   metosin/malli                               {:mvn/version "0.18.0"}
   clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
+  clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
   org.scicloj/clay                            {:git/url "https://github.com/scicloj/clay"
                                                :git/sha "d64df566e3dd0e90ac9360d86a481a7be7587eaf"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
