@@ -19,9 +19,9 @@
 ;; Here, unseen agents pass messages, track patterns, and sound alarms when the moment calls.
 ;; No one oversees the whole city, yet everything flows.
 ;;
-;; Beneath it all hums the Stats Core Async Flow,
+;; Beneath it all hums the Core Async Flow,
 ;; a network of processes working together without ever meeting.
-;; Today, you'll meet the agents of this asynchronous allegiance.
+;; Today, you'll observe the agents of this asynchronous allegiance.
 
 ;; This code is adapted from [Alex's stats flow example](https://github.com/puredanger/flow-example),
 ;; used for his video walkthrough.
@@ -29,6 +29,13 @@
 ^:kind/video ^:kindly/hide-code
 {:youtube-id   "lXFwf3O4BVY"
  :iframe-width "100%"}
+
+;; In Asynctopolis, there are often races to print messages,
+;; which for the sake of clarity we shall serialize.
+
+(defn println* [& args]
+  (locking println*
+    (apply println args)))
 
 ;; Above us in the sky flies Talon the Stat Hawk.
 ;; Sleek, silent, and tireless.
@@ -41,18 +48,18 @@
 
 (defn Talon
   "Generates a random value between min (inclusive) and max (exclusive)
-  and writes it to out chan, waiting wait ms between until stop-atom is flagged."
-  ([out min max wait stop-atom]
-   (loop []
-     (let [val (+ min (rand-int (- max min)))
-           put (a/>!! out val)]
-       (when (and put (not @stop-atom))
-         (^[long] Thread/sleep wait)
-         (recur))))))
+  and writes it to out chan, waiting wait ms between until running becomes false."
+  [out min max wait flying]
+  (while @flying
+    (let [val (+ min (rand-int (- max min)))]
+      (println* "SQUARK:" val)
+      (if (a/>!! out val)
+        (Thread/sleep ^long wait)
+        (reset! flying false)))))
 
 ;; Born of wind and randomness, Talon is no ordinary bird.
 ;; He executes his mission with the rhythm and the grace of chance incarnate.
-;; Talon embodies the eternal recurrence of the loop.
+;; Talon embodies an ongoing loop.
 ;; An autonomous creature of purpose, relentless and unthinking.
 ;; To be a process is to endure.
 ;; Ever watchful, speaking in channels.
@@ -60,11 +67,11 @@
 ;; Fly Talon! Collect samples. Let's see what distribution you bring.
 
 (let [c (a/chan)
-      stop (atom false)
-      n 100]
-  (future (Talon c 0 20 0 stop))
+      flying (atom true)
+      n 20]
+  (future (Talon c 0 12 0 flying))
   (let [samples (vec (repeatedly n (fn [] (a/<!! c))))]
-    (reset! stop true)
+    (reset! flying false)
     (-> (tc/dataset {:index  (range n)
                      :sample samples})
         (plotly/base {:=x     :index
@@ -98,33 +105,43 @@
 (defn Randomius
   "Source proc for random stats"
   ;; describe
-  ([] {:params {:min  "Min value to generate"
-                :max  "Max value to generate"
-                :wait "Time in ms to wait between generating"}
-       :outs   {:out "Output channel for stats"}})
+  ([]
+   (println* "I am Randomius, I take numbers from Talon and send them out.")
+   {:params {:min  "Min value to generate"
+             :max  "Max value to generate"
+             :wait "Time in ms to wait between generating"}
+    :outs   {:out "Output channel for stats"}})
 
   ;; init
   ([args]
+   (println* "Randomius initialing")
    (assoc args
      :clojure.core.async.flow/in-ports {:stat (a/chan 100)}
-     :stop (atom false)))
+     :flying (atom false)))
 
   ;; transition
-  ([{:keys [min max wait :clojure.core.async.flow/in-ports] :as state} transition]
+  ([{:keys [min max wait flying clojure.core.async.flow/in-ports] :as state} transition]
+   (println* "Randomius transitioning" transition)
    (case transition
      :clojure.core.async.flow/resume
-     (let [stop-atom (atom false)]
-       (future (Talon (:stat in-ports) min max wait stop-atom))
-       (assoc state :stop stop-atom))
+     (do
+       (when (not @flying)
+         (println* "Talon, set flight!")
+         (reset! flying true)
+         (future (Talon (:stat in-ports) min max wait flying)))
+       state)
 
      (:clojure.core.async.flow/pause :clojure.core.async.flow/stop)
      (do
-       (reset! (:stop state) true)
+       (when @flying
+         (println* "Talon, rest!")
+         (reset! flying false))
        state)))
 
   ;; transform
-  ([state in msg]
-   [state (when (= in :stat) {:out [msg]})]))
+  ([state input-id msg]
+   (println* "Randomius transform" msg "from" input-id "to" :out)
+   [state {:out [msg]}]))
 
 ;; Randomius, describe your duties!
 (Randomius)
@@ -146,18 +163,20 @@
     (a/<!!))
 
 ;; Transform with purpose.
+
 (swap! state
        (fn [state]
          (let [[state step] (Randomius state :stat "I transform, therefore I am")]
-           (println step)
+           (println* step)
            state)))
-;; I see you wish to send a message to `stat`.
-;; Be wary in the future, speak only numbers to those who seek stats.
 
+;; I see you wish to send a missive to `out`.
+;; Be wary in the future, send only numbers to those who seek stats.
 
 ;; Well done, Randomius.
 ;; You are a true citizen.
 ;; Now rest.
+
 (swap! state Randomius :clojure.core.async.flow/stop)
 
 
@@ -178,21 +197,28 @@
 
 (defn Tallystrix
   ;; describe
-  ([] {:params   {:min "Min value, alert if lower"
-                  :max "Max value, alert if higher"}
-       :ins      {:stat "Channel to receive stat values"
-                  :poke "Channel to poke when it is time to report a window of data to the log"}
-       :outs     {:alert "Notify of value out of range {:val value, :error :high|:low"}
-       :workload :compute})
+  ([]
+   (println* "I am Tallystrix, I take from stats or poke, and put to alert and notify")
+   {:params   {:min "Min value, alert if lower"
+               :max "Max value, alert if higher"}
+    :ins      {:stat "Channel to receive stat values"
+               :poke "Channel to poke when it is time to report a window of data to the log"}
+    :outs     {:alert "Notify of value out of range {:val value, :error :high|:low"}
+    :workload :compute})
 
   ;; init
-  ([args] (assoc args :vals []))
+  ([args]
+   (println* "Tallystrix initializing")
+   (assoc args :vals []))
 
   ;; transition
-  ([state transition] state)
+  ([state transition]
+   (println* "Tallystrix transitioning" transition)
+   state)
 
   ;; transform
   ([{:keys [min max vals] :as state} input-id msg]
+   (println* "Tallystrix transforming" input-id msg)
    (case input-id
      :stat (let [state' (assoc state :vals (conj vals msg))
                  msgs (cond
@@ -204,13 +230,12 @@
             {:clojure.core.async.flow/report (if (empty? vals)
                                                [{:count 0}]
                                                [{:avg   (/ (double (reduce + vals)) (count vals))
-                                                 :count (count vals)}])}]
-     [state nil])))
+                                                 :count (count vals)}])}])))
 
 ;; Tallystrix, what messages have you?
 
 (let [state {:min 1 :max 5 :vals []}
-      [state' msgs'] (Tallystrix state :stat 100)]
+      [state' msgs'] (Tallystrix state :stat 7)]
   msgs')
 
 ;; Well alerted.
@@ -229,38 +254,47 @@
 
 (defn Chronon
   ;; describe
-  ([] {:params {:wait "Time to wait between pokes"}
-       :outs   {:out "Poke channel, will send true when the alarm goes off"}})
+  ([]
+   (println* "I am Chronon, I poke out periodically")
+   {:params {:wait "Time to wait between pokes"}
+    :outs   {:out "Poke channel, will send true when the alarm goes off"}})
 
   ;; init
   ([args]
+   (println* "Chronon initializing")
    (assoc args
      :clojure.core.async.flow/in-ports {:alarm (a/chan 10)}
-     :stop (atom false)))
+     :running (atom false)))
 
   ;; transition
-  ([{:keys [wait :clojure.core.async.flow/in-ports] :as state} transition]
+  ([{:keys [wait running clojure.core.async.flow/in-ports] :as state} transition]
+   (println* "Chronon transitioning" transition)
    (case transition
      :clojure.core.async.flow/resume
-     (let [stop-atom (atom false)]
-       (future (loop []
-                 (let [put (a/>!! (:alarm in-ports) true)]
-                   (when (and put (not @stop-atom))
-                     (^[long] Thread/sleep wait)
-                     (recur)))))
-       (assoc state :stop stop-atom))
+     (do
+       (when (not @running)
+         (println* "Chronon running")
+         (reset! running true)
+         (future (while @running
+                   (if (a/>!! (:alarm in-ports) true)
+                     (Thread/sleep ^long wait)
+                     (reset! running false)))))
+       state)
 
      (:clojure.core.async.flow/pause :clojure.core.async.flow/stop)
      (do
-       (reset! (:stop state) true)
+       (when @running
+         (println* "Chronon rests.")
+         (reset! running false))
        state)))
 
   ;; transform
-  ([state in msg]
-   [state (when (= in :alarm) {:out [true]})]))
+  ([state input-id msg]
+   (println* "Chronon transforms" input-id msg "to" :out)
+   [state {:out [msg]}]))
 
 ;; Chronon has no familiar to do his work,
-;; and listens to no-one.
+;; and listens only to himself.
 
 ;; ## Meet Claxxus, the Notifier, the Herald
 
@@ -276,18 +310,25 @@
 
 (defn Claxxus
   ;; describe
-  ([] {:params {:prefix "Log message prefix"}
-       :ins    {:in "Channel to receive messages"}})
+  ([]
+   (println* "I am Claxxus, I shout what I hear from in")
+   {:params {:prefix "Log message prefix"}
+    :ins    {:in "Channel to receive messages"}})
 
   ;; init
-  ([state] state)
+  ([state]
+   (println* "Claxxus initializing")
+   state)
 
   ;; transition
-  ([state _transition] state)
+  ([state transition]
+   (println* "Claxxus transitioning" transition)
+   state)
 
   ;; transform
-  ([{:keys [prefix] :as state} _in msg]
-   (println prefix msg)
+  ([{:keys [prefix] :as state} input-id msg]
+   (println* "Claxxus transforming" input-id msg)
+   (println* prefix msg)
    [state nil]))
 
 ;; Cursed to know only how to shout.
@@ -338,8 +379,6 @@
 
 ;; The city is ready, but not yet in action.
 
-(datafy/datafy flow)
-
 (def chs (flow/start flow))
 
 chs
@@ -348,29 +387,53 @@ chs
 ;; Tallystrix sends her summaries to `report`, dutifully.
 ;; When something breaks it flows to `error`.
 
+(a/poll! (:report-chan chs))
+
+;; Start initialized, but transitioning has not occurred yet.
+;; Transition with order.
+
+(flow/resume flow)
+(Thread/sleep 1)
+
+;; The city breathes, the asynchronous allegiance stirs.
+
+;; Transform with purpose.
+
+(a/poll! (:report-chan chs))
+
+(a/poll! (:report-chan chs))
+
+(flow/inject flow [:Tallystrix :poke] [true])
+
+(a/poll! (:report-chan chs))
+
+;; Mischief is afoot.
+
+(flow/inject flow [:Tallystrix :stat] ["abc1000"])
+(a/poll! (:error-chan chs))
+
 ;; Claxxus does not speak of such failures.
 ;; He is for alerts.
 ;; Thresholds breached, events of note, things the city must hear.
 
-;; The city breathes, the asynchronous allegiance stirs.
-;; Transition with order.
-
-(flow/resume flow)
-
-;; Transform with purpose.
-
-(flow/inject flow [:Tallystrix :poke] [true])
-(flow/inject flow [:Tallystrix :stat] ["abc1000"])             ;; trigger an alert
 (flow/inject flow [:Claxxus :in] [:sandwich])
+(Thread/sleep 1)
 
-(a/poll! (:report-chan chs))
-(a/poll! (:error-chan chs))
+;; Fluxus est graphum, fluxus est processus, fluxus est data.
 
-;; The flow can coordinate peace.
+(datafy/datafy flow)
+
+;; The flow may coordinate peace.
 
 (flow/pause flow)
+(Thread/sleep 1)
+
+;; Pax optima rerum.
+
+;; The flow may cease.
 
 (flow/stop flow)
+(Thread/sleep 1)
 
 ;; The city falls silent.
 

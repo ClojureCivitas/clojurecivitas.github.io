@@ -30,8 +30,10 @@
 
 ;; ## Asynctopolis from the Clouds
 
-(show/flow-svg asynctopolis/flow {:show-chans   false
-                                  :with-content false})
+(def asynctopolis (flow/create-flow asynctopolis/config))
+
+(show/flow-svg asynctopolis {:show-chans   false
+                             :with-content false})
 
 ;; Coordinate asynchronous operations using `core.async`.
 ;; While powerful, these operations can become hard to reason about as they grow in complexity.
@@ -59,68 +61,75 @@
 
 ;; This flow models a small system involving aggregation, notification, and reporting.
 ;; Internally, it consists of processes connected via channels.
-(show/flow-svg asynctopolis/flow {:chans-as-ports true
-                                  :with-content   false})
+(show/flow-svg asynctopolis {:chans-as-ports true
+                             :with-content   false})
 
 ;; Are channels part of a process or not?
 ;; You decide
 
-(show/flow-svg asynctopolis/flow {:chans-as-ports false
-                                  :with-content   false})
+(show/flow-svg asynctopolis {:chans-as-ports false
+                             :with-content   false})
 
 ;; Let's dig deeper into the details
 
-(show/proc-table asynctopolis/flow)
+(show/proc-table asynctopolis)
 
 ;; This table gives us a clear list of components in the flow, including their names
 ;; and behaviors.
 
 ;; Next, let’s examine how these processes are **connected**.
 
-(show/conn-table asynctopolis/flow)
+(show/conn-table asynctopolis)
 
 ;; Now we’re seeing the wiring: who talks to whom, and through what channels.
+
+
+;; There are 2 global channels, `report` and `error`:
+
+(show/flow-svg asynctopolis {:chans-as-ports    false
+                             :with-content      false
+                             :show-global-chans true})
+
+;; Any process can put messages on `report` and `error`,
+;; which is why we didn't show them until now.
+
 
 ;; ## 3. Running the Flow
 
 ;; Time to bring our flow to life!
 ;; Calling `start` activates the processes and returns a map of the important channels for interaction.
 
-(flow/start asynctopolis/flow)
+(def chs (flow/start asynctopolis))
+(flow/resume asynctopolis)
 
 ;; We can now **inject values** into specific points in the flow.
 ;; Think of this like poking the system and watching how it reacts.
 
 ;; We send a “poke” signal to the `aggregator` process.
 
-@(flow/inject asynctopolis/flow [:Tallystrix :poke] [true])
+(show/flow-svg asynctopolis {:chans-as-ports false
+                             :with-content   false})
 
-;; Flows implement the `Datafy` protocol so we can inspect them as data...
-;; Good luck with that, there's a lot of it
+(flow/inject asynctopolis [:Tallystrix :poke] [true])
 
-(datafy/datafy asynctopolis/flow)
+(show/flow-svg asynctopolis {:chans-as-ports false
+                             :with-content   false})
 
 ;; We send a stat string that is designed to trigger an alert.
 
-@(flow/inject asynctopolis/flow [:Tallystrix :stat] ["abc1000"])
+(flow/inject asynctopolis [:Tallystrix :stat] ["abc1000"])
 
 ;; We send a notification message into the `notifier`.
 
-@(flow/inject asynctopolis/flow [:Claxxus :in] [:sandwich])
-
-;; TODO: show something changed
-
-(show/flow-svg asynctopolis/flow {:chans-as-ports false
-                                  :with-content   false})
-
+(flow/inject asynctopolis [:Claxxus :in] [:sandwich])
 
 ;; ## 4. Observing the Results
 
 ;; Our flow includes a `report-chan`, where summaries and reports might be sent.
 
-(def report-chan (:report-chan asynctopolis/chs))
+(def report-chan (:report-chan chs))
 
-(flow/ping asynctopolis/flow)
+(flow/ping asynctopolis)
 
 (async/poll! report-chan)
 
@@ -128,19 +137,29 @@
 
 ;; We can also inspect the `error-chan`, where any issues in the flow are reported.
 
-(def error-chan (:error-chan asynctopolis/chs))
+(def error-chan (:error-chan chs))
 
 (async/poll! error-chan)
 
+
 ;; If something unexpected occurred (e.g., bad input or failed routing),
 ;; this is where we’d find it.
-;;
-;;
-;;
-;;(flow/stop stats-flow)
-;;(async/close! stat-chan)
 
-;; @(flow/inject stats-flow [:aggregator :poke] [true])
+(show/flow-svg asynctopolis {:chans-as-ports false
+                             :with-content   false})
+
+
+
+(flow/stop asynctopolis)
+(Thread/sleep 1)
+
+;; TODO: wait for the report and error !<
+
+
+;; Flows implement the `Datafy` protocol so we can inspect them as data...
+;; Good luck with that, there's a lot of it
+
+(datafy/datafy asynctopolis)
 
 
 
