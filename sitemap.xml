@@ -1,59 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</loc>
-    <lastmod>2025-06-08T18:39:28.011Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html</loc>
-    <lastmod>2025-06-08T18:39:27.958Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/pages.html</loc>
-    <lastmod>2025-06-08T18:38:54.582Z</lastmod>
+    <loc>https://clojurecivitas.github.io/clojure/transducers/what_if.html</loc>
+    <lastmod>2025-06-11T04:48:13.836Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/civitas/explorer.html</loc>
-    <lastmod>2025-06-08T18:39:27.391Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</loc>
-    <lastmod>2025-06-08T18:38:54.590Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/about.html</loc>
-    <lastmod>2025-06-08T18:38:54.582Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/internationalization/transliteration.html</loc>
-    <lastmod>2025-06-08T18:39:11.652Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/clojure/transducers/what_if.html</loc>
-    <lastmod>2025-06-08T18:39:09.435Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/clojure/print_object/remove_extraneous.html</loc>
-    <lastmod>2025-06-08T18:39:11.558Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</loc>
-    <lastmod>2025-06-08T18:38:54.585Z</lastmod>
+    <lastmod>2025-06-11T04:48:13.745Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/civitas/authors.html</loc>
-    <lastmod>2025-06-08T18:39:27.273Z</lastmod>
+    <lastmod>2025-06-11T04:48:13.770Z</lastmod>
   </url>
   <url>
-    <loc>https://clojurecivitas.github.io/index.html</loc>
-    <lastmod>2025-06-08T18:38:54.582Z</lastmod>
+    <loc>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html</loc>
+    <lastmod>2025-06-11T04:48:13.105Z</lastmod>
   </url>
   <url>
-    <loc>https://clojurecivitas.github.io/math/primes/factorization/sieve_augmented.html</loc>
-    <lastmod>2025-06-08T18:39:27.906Z</lastmod>
+    <loc>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</loc>
+    <lastmod>2025-06-11T04:47:38.473Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</loc>
+    <lastmod>2025-06-11T04:47:38.477Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/about.html</loc>
+    <lastmod>2025-06-11T04:47:38.469Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/pages.html</loc>
+    <lastmod>2025-06-11T04:47:38.470Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</loc>
+    <lastmod>2025-06-11T04:47:57.321Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/posts.html</loc>
-    <lastmod>2025-06-08T18:38:54.582Z</lastmod>
+    <lastmod>2025-06-11T04:47:38.470Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/math/primes/factorization/sieve_augmented.html</loc>
+    <lastmod>2025-06-11T04:48:13.131Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/index.html</loc>
+    <lastmod>2025-06-11T04:47:38.470Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/clojure/print_object/remove_extraneous.html</loc>
+    <lastmod>2025-06-11T04:48:13.911Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/internationalization/transliteration.html</loc>
+    <lastmod>2025-06-11T04:48:13.995Z</lastmod>
   </url>
 </urlset>
