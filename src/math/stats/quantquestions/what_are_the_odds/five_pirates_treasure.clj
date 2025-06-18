@@ -1,3 +1,11 @@
+^{:kindly/hide-code true
+  :clay             {:title  "Five Pirates Treasure Splitting"
+                     :quarto {:type     :post
+                              :author   [:timothypratley]
+                              :date     "2025-06-18"
+                              :category :math
+                              :tags     [:probability :stats]
+                              :keywords [:quantquestions]}}}
 (ns math.stats.quantquestions.what-are-the-odds.five-pirates-treasure)
 
 (def pirates
