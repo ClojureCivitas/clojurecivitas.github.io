@@ -7,11 +7,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Timothy Pratley">
-<meta name="dcterms.date" content="2025-06-05">
+<meta name="dcterms.date" content="2025-06-18">
 <meta name="keywords" content="quantquestions">
-<meta name="description" content="A simple probability puzzle turns into a journey through triangular numbers and tessellated hexagons.">
 
-<title>The Hidden Geometry of Dice – Clojure Civitas</title>
+<title>Five Pirates Treasure Splitting – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -113,39 +112,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<meta property="og:title" content="The Hidden Geometry of Dice – Clojure Civitas">
-<meta property="og:description" content="A simple probability puzzle turns into a journey through triangular numbers and tessellated hexagons.">
-<meta property="og:image" content="https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.jpg">
+<meta property="og:title" content="Five Pirates Treasure Splitting – Clojure Civitas">
+<meta property="og:description" content="">
+<meta property="og:image" content="https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/images/civitas-icon.svg">
 <meta property="og:site_name" content="Clojure Civitas">
 </head>
 
@@ -376,14 +346,9 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">The Hidden Geometry of Dice</h1>
+<h1 class="title">Five Pirates Treasure Splitting</h1>
 </div>
 
-<div>
-  <div class="description">
-    A simple probability puzzle turns into a journey through triangular numbers and tessellated hexagons.
-  </div>
-</div>
 
 <div class="quarto-title-meta-author">
   <div class="quarto-title-meta-heading">Author</div>
@@ -407,7 +372,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 5, 2025</p>
+      <p class="date">June 18, 2025</p>
     </div>
   </div>
   
@@ -435,74 +400,70 @@ window.Quarto = {
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice_files/md-default0.js" type="text/javascript"></script>
-<script src="math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice_files/md-default1.js" type="text/javascript"></script>
-<p>Welcome to What Are the Odds? The show where we answer life’s important questions, like can I outsmart a six-sided die? Today we’re starting small. Two rolls of the dice and one burning question. No magic formulas, just curiosity, some patient counting, and a faint hope that math is on our side. Let’s roll.</p>
-<blockquote class="blockquote">
-<p><em>Pop quiz:</em> You roll a fair 6-sided die twice. Calculate the probability that the value of the first roll is strictly less than the value of the second roll.</p>
-</blockquote>
-<p>As I always like to say to my niece, “the secret to answering any probability question is to enumerate the outcomes and count the ones we care about.”</p>
-<p><span class="math inline">\(P(Interesting) = InterestingOutcomes / TotalOutcomes\)</span></p>
-<p>Rolling 1 die once has 6 outcomes: 1 2 3 4 5 6.</p>
-<p>Rolling 1 die twice gives us a combination of outcomes, let’s write out a few.</p>
-<pre><code>[1 1] [1 2] '... [1 6]
-[2 1] [2 2] '...</code></pre>
-<p>Following this pattern would produce 6 rows of 6 columns, so there must be <code>36</code> outcomes. We write down just enough of the pattern to figure out the best way to count it. Now we count how many of those meet the criteria.</p>
-<pre><code>[1 1 :no] [1 2 :yes] '...
-[2 1 :no] [2 2 :no] [2 3 :yes] '...</code></pre>
-<p>Logically we should see 5 yeses on the first row, then 4, 3, 2, 1, and 0, which we can ignore. Add them all up and we get <code>15</code>.</p>
-<p>So the answer to the question is <code>15/36</code> which reduces to <code>5/12</code>, dividing top and bottom by the greatest common divisor 3.</p>
-<p>You might be thinking that it’s not practical to enumerate everything all the time, I should use the formulas of probability. That’s true, those are marvelous. However, in my experience it is also easy to go wrong reasoning from formulas. It’s harder to go wrong starting with a counting problem, then improving your method of counting. You end up in the same place, but more confident in the answer.</p>
-<p>The full enumeration of our simple 2 roll question as a counting problem is just big enough to be too tedious to use only counting.</p>
+<script src="math/stats/quantquestions/what_are_the_odds/five_pirates_treasure_files/md-default0.js" type="text/javascript"></script>
+<script src="math/stats/quantquestions/what_are_the_odds/five_pirates_treasure_files/md-default1.js" type="text/javascript"></script>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> [roll [<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">5</span> <span class="dv">6</span>]]</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">for</span> [i roll]</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">for</span> [j roll]</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>      [i j])))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> pirates</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  [<span class="st">"Green Boots"</span> <span class="st">"Red Rackham"</span> <span class="st">"Blue Thunder"</span> <span class="st">"Black Beard"</span> <span class="st">"Tim"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(([<span class="dv">1</span> <span class="dv">1</span>] [<span class="dv">1</span> <span class="dv">2</span>] [<span class="dv">1</span> <span class="dv">3</span>] [<span class="dv">1</span> <span class="dv">4</span>] [<span class="dv">1</span> <span class="dv">5</span>] [<span class="dv">1</span> <span class="dv">6</span>])</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a> ([<span class="dv">2</span> <span class="dv">1</span>] [<span class="dv">2</span> <span class="dv">2</span>] [<span class="dv">2</span> <span class="dv">3</span>] [<span class="dv">2</span> <span class="dv">4</span>] [<span class="dv">2</span> <span class="dv">5</span>] [<span class="dv">2</span> <span class="dv">6</span>])</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a> ([<span class="dv">3</span> <span class="dv">1</span>] [<span class="dv">3</span> <span class="dv">2</span>] [<span class="dv">3</span> <span class="dv">3</span>] [<span class="dv">3</span> <span class="dv">4</span>] [<span class="dv">3</span> <span class="dv">5</span>] [<span class="dv">3</span> <span class="dv">6</span>])</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a> ([<span class="dv">4</span> <span class="dv">1</span>] [<span class="dv">4</span> <span class="dv">2</span>] [<span class="dv">4</span> <span class="dv">3</span>] [<span class="dv">4</span> <span class="dv">4</span>] [<span class="dv">4</span> <span class="dv">5</span>] [<span class="dv">4</span> <span class="dv">6</span>])</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a> ([<span class="dv">5</span> <span class="dv">1</span>] [<span class="dv">5</span> <span class="dv">2</span>] [<span class="dv">5</span> <span class="dv">3</span>] [<span class="dv">5</span> <span class="dv">4</span>] [<span class="dv">5</span> <span class="dv">5</span>] [<span class="dv">5</span> <span class="dv">6</span>])</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a> ([<span class="dv">6</span> <span class="dv">1</span>] [<span class="dv">6</span> <span class="dv">2</span>] [<span class="dv">6</span> <span class="dv">3</span>] [<span class="dv">6</span> <span class="dv">4</span>] [<span class="dv">6</span> <span class="dv">5</span>] [<span class="dv">6</span> <span class="dv">6</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Identifying the pattern is enough to realize the answer</p>
+<p>With only one pirate, they get all the booty * Green Boots: 100</p>
+<p>With 2 pirates, whoever proposes the split gets all the booty * Red Rackham 100 * Green Boots 0</p>
+<p>With 3 pirates, the pirate who would miss out in the next round is incentivised by 1 coin * Blue Thunder 99 * Red Rackham 0 * Green Boots 1</p>
+<p>With 4 pirates, 1 vote needed, the pirate who would miss out is incentivised by 1 coin * Black Beard 99 * Blue Thunder 0 * Red Rackham 1 * Green Boots 0</p>
+<p>With 5 pirates, 2 votes needed, the 2 pirates who would miss out in the next round get a coin each * Tim 98 * Black Beard 0 * Blue Thunder 1 * Red Rackham 0 * Green Boots 1</p>
+<p>Probably you can spot a pattern emerging here…</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">+</span> <span class="dv">5</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> split </span>[coins pirates]</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [n (<span class="kw">count</span> pirates)]</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">-&gt;</span> (<span class="kw">mapv</span> <span class="kw">vector</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">reverse</span> pirates)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">cycle</span> (<span class="kw">if</span> (<span class="kw">odd?</span> n) [<span class="dv">1</span> <span class="dv">0</span>] [<span class="dv">0</span> <span class="dv">1</span>])))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">assoc-in</span> [<span class="dv">0</span> <span class="dv">1</span>] (<span class="kw">-</span> coins (<span class="kw">/</span> (<span class="kw">if</span> (<span class="kw">odd?</span> n) (<span class="kw">dec</span> n) n) <span class="dv">2</span>))))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(split <span class="dv">100</span> pirates)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dv">15</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>[[<span class="st">"Tim"</span> <span class="dv">98</span>]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a> [<span class="st">"Black Beard"</span> <span class="dv">0</span>]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a> [<span class="st">"Blue Thunder"</span> <span class="dv">1</span>]</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a> [<span class="st">"Red Rackham"</span> <span class="dv">0</span>]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a> [<span class="st">"Green Boots"</span> <span class="dv">1</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>What a marvelous pattern it is! Predictable, but not flat. Smooth, but not boring. Recursive, and not obvious.</p>
-<div class="printedClojure">
-<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>[<span class="dv">1</span> <span class="dv">3</span> <span class="dv">6</span> <span class="dv">10</span> <span class="dv">15</span> <span class="dv">21</span> <span class="dv">28</span> <span class="dv">36</span> <span class="dv">45</span> <span class="dv">55</span> <span class="dv">66</span> <span class="dv">78</span> <span class="dv">91</span> <span class="dv">105</span> <span class="dv">120</span> <span class="dv">136</span> <span class="dv">153</span> <span class="dv">171</span> <span class="dv">190</span> <span class="dv">210</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kind/table</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>(split <span class="dv">100</span> pirates)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>There’s something special about this sequence. Aren’t those numbers just… pleasing in some way?</p>
-<p>This sequence is called the triangular numbers.</p>
-<pre><code>            .
-           . .
-          . . .
-         . . . .</code></pre>
-<p>You can find the first 10 or so numbers in your head, and with some paper many more quite quickly.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="the_hidden_geometry_of_dice.jpg" class="img-fluid figure-img"></p>
-<figcaption>So many dots</figcaption>
-</figure>
+<div class="clay-table">
+<div class="table-responsive">
+<table class="table table-hover clay-table caption-top" data-quarto-postprocess="true">
+<tbody>
+<tr class="odd">
+<td>Tim</td>
+<td>98</td>
+</tr>
+<tr class="even">
+<td>Black Beard</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>Blue Thunder</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>Red Rackham</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>Green Boots</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
 </div>
-<p>There is a formula for calculating the nth triangular number: <span class="math inline">\(T_n = 1 + 2 + 3 + \dots + n = \frac{n(n + 1)}{2}\)</span></p>
-<p>The 20th triangular number is <code>(20x21)/2 = (400+20)/2 = 210</code>. Isn’t it wonderful how there’s so many different ways to find the same answer in math?</p>
-<p>There is something curious about the formula; it divides by 2 but only produces integers. How can we be certain we will only ever get an integer? So mysterious. <code>n(n+1)</code> is always even! Let’s think about that a bit more, if n is odd, then n+1 is even. If n is even, then n+1 is odd. One of the multiples is always even, meaning that 2 is a factor, so the multiple must always have a factor 2, and be even.</p>
-<p>It’s easy now to imagine if we had a 1000 sided dice what the answer would be. But be careful! For a 1000 side die, we want the 999nth triangular number: <span class="math inline">\((999 \times 1000)/2 = (1000000-1000)/2 = 500000-500 = 499500\)</span> and the total outcomes would be <code>1000x1000</code>, so the answer would be <code>0.4995</code>. It’s comforting to see that for a large range, we land closer to 50%.</p>
-<p>The point is that once we know what we are counting, it feels more obvious that we used the right formula to count it.</p>
-<p>Triangular numbers show up in many situations, my favorite is that they can be used to lay out hexagons. The <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/civitas/explorer/geometry.clj">code that draws Clojure Civitas hexagons</a> is based on the triangular number formula.</p>
-<svg viewbox="-640 -640 1280 1280" width="100%" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0.0,0.0)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,-69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,-138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,-69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,69.28203230275508)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,0.0)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,-138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,-277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,-138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,0.0)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,138.56406460551017)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,277.1281292110204)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,346.4101615137755)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,415.69219381653056)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,346.4101615137754)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,69.28203230275511)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,-69.28203230275507)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(360.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(240.0,-277.1281292110204)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(120.0,-346.4101615137755)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(0.0,-415.69219381653056)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-120.0,-346.4101615137754)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-240.0,-277.12812921102034)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,-207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,-69.28203230275511)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,69.28203230275507)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g><g transform="translate(-360.0,207.84609690826528)"><polygon fill="lightblue" points="72.0,0.0 36.0,62.35382907247958 -36.0,62.35382907247958 -72.0,0.0 -36.0,-62.35382907247958 36.0,-62.35382907247958"></polygon></g></svg>
-<p>Triangular numbers also show up in the number of pairs, handshakes, edges in a complete graph, diagonals sum to triangular numbers, square numbers as sums of consecutive odd numbers, differences of triangulars, acceleration frames, smooth transitions, spacing. Such a beautiful pattern that can be found in so many situations!</p>
-<p>Until next time, may your dice be fair and your outcomes interesting.</p>
+</div>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.clj">src/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.clj">src/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.clj</a></small></small></pre></div>
 
 
 

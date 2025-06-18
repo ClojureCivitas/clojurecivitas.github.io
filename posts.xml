@@ -14,8 +14,202 @@
 <title>Clojure Civitas</title>
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
-<generator>quarto-1.7.31</generator>
-<lastBuildDate>Sun, 08 Jun 2025 00:00:00 GMT</lastBuildDate>
+<generator>quarto-1.7.32</generator>
+<lastBuildDate>Wed, 18 Jun 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Five Pirates Treasure Splitting</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="math/stats/quantquestions/what_are_the_odds/five_pirates_treasure_files/md-default0.js" type="text/javascript"></script>
+<script src="math/stats/quantquestions/what_are_the_odds/five_pirates_treasure_files/md-default1.js" type="text/javascript"></script>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> pirates</span></span>
+<span id="cb1-2">  [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Green Boots"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Red Rackham"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Blue Thunder"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Black Beard"</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Tim"</span>])</span></code></pre></div>
+</div>
+<p>With only one pirate, they get all the booty * Green Boots: 100</p>
+<p>With 2 pirates, whoever proposes the split gets all the booty * Red Rackham 100 * Green Boots 0</p>
+<p>With 3 pirates, the pirate who would miss out in the next round is incentivised by 1 coin * Blue Thunder 99 * Red Rackham 0 * Green Boots 1</p>
+<p>With 4 pirates, 1 vote needed, the pirate who would miss out is incentivised by 1 coin * Black Beard 99 * Blue Thunder 0 * Red Rackham 1 * Green Boots 0</p>
+<p>With 5 pirates, 2 votes needed, the 2 pirates who would miss out in the next round get a coin each * Tim 98 * Black Beard 0 * Blue Thunder 1 * Red Rackham 0 * Green Boots 1</p>
+<p>Probably you can spot a pattern emerging here…</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> split </span>[coins pirates]</span>
+<span id="cb2-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [n (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">count</span> pirates)]</span>
+<span id="cb2-3">    (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-&gt;</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">mapv</span> <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">vector</span></span>
+<span id="cb2-4">              (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">reverse</span> pirates)</span>
+<span id="cb2-5">              (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">cycle</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">odd?</span> n) [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>] [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>])))</span>
+<span id="cb2-6">        (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">assoc-in</span> [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>] (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span> coins (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">/</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">odd?</span> n) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">dec</span> n) n) <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>))))))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(split <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span> pirates)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">[[<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Tim"</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">98</span>]</span>
+<span id="cb4-2"> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Black Beard"</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]</span>
+<span id="cb4-3"> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Blue Thunder"</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]</span>
+<span id="cb4-4"> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Red Rackham"</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]</span>
+<span id="cb4-5"> [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Green Boots"</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]]</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1">^<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:kind/table</span></span>
+<span id="cb5-2">(split <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">100</span> pirates)</span></code></pre></div>
+</div>
+<div class="clay-table">
+<div class="table-responsive">
+<table class="table table-hover clay-table caption-top" data-quarto-postprocess="true">
+<tbody>
+<tr class="odd">
+<td>Tim</td>
+<td>98</td>
+</tr>
+<tr class="even">
+<td>Black Beard</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>Blue Thunder</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>Red Rackham</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>Green Boots</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.clj">src/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.clj</a></small></small></pre></div>
+
+
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.html</guid>
+  <pubDate>Wed, 18 Jun 2025 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>About Transliteration</title>
   <dc:creator>Elango Cheran</dc:creator>
@@ -1051,7 +1245,7 @@ font-style: inherit;">e</span>)))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval72332/fn--72333"</span></span></code></pre></div>
+font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval72347/fn--72348"</span></span></code></pre></div>
 </div>
 <p>Why is it trying to call <code>cons</code> with a single argument? In addition to separating the transformation from the output, <code>transduce</code> also has a “completion” step, which is performed on the final result. A convenience function called <code>completing</code> can be used to wrap the function here to provide a “no-op” completion:</p>
 <div class="sourceClojure">
@@ -1901,9 +2095,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x34cb3811</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x4b568d71</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@34cb3811"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@4b568d71"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -1911,9 +2105,9 @@ font-style: inherit;">"clojure.lang.MultiFn@34cb3811"</span>]</span></code></pre
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x47838a1</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x3dc6a91f</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@47838a1"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@3dc6a91f"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -1922,9 +2116,9 @@ font-style: inherit;">"java.lang.Object@47838a1"</span>]</span></code></pre></di
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x3d807650</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x313dd9ac</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@3d807650"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@313dd9ac"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1940,11 +2134,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval72396$fn__72397 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval72411$fn__72412 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x8ff983a</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x2acc5b62</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval72396$fn__72397@8ff983a"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval72411$fn__72412@2acc5b62"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -1960,11 +2154,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval72400$fn__72401$fn__72402 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval72415$fn__72416$fn__72417 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x143d2b20</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0xbee770c</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval72400$fn__72401$fn__72402@143d2b20"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval72415$fn__72416$fn__72417@bee770c"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -2018,7 +2212,7 @@ background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3747</span>]</span>
-<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__72408 invoke <span class="st" style="color: #20794D;
+<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__72423 invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -2058,7 +2252,7 @@ font-style: inherit;">fn</span> [y] y))))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print-object.remove-extraneous/eval72414/fn--72415/fn--72416"</span></span></code></pre></div>
+font-style: inherit;">"clojure.print-object.remove-extraneous/eval72429/fn--72430/fn--72431"</span></span></code></pre></div>
 </div>
 <p>Next, we don’t need the eval identities.</p>
 <div class="sourceClojure">
