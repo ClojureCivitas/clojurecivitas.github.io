@@ -9,6 +9,7 @@
 <meta name="author" content="Timothy Pratley">
 <meta name="dcterms.date" content="2025-06-18">
 <meta name="keywords" content="quantquestions">
+<meta name="description" content="Sharing ideas and pirate treasure with ClojureCivitas.">
 
 <title>Five Pirates Treasure Splitting – Clojure Civitas</title>
 <style>
@@ -114,8 +115,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <meta property="og:title" content="Five Pirates Treasure Splitting – Clojure Civitas">
-<meta property="og:description" content="">
-<meta property="og:image" content="https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/images/civitas-icon.svg">
+<meta property="og:description" content="Sharing ideas and pirate treasure with ClojureCivitas.">
+<meta property="og:image" content="https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.jpg">
 <meta property="og:site_name" content="Clojure Civitas">
 </head>
 
@@ -349,6 +350,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1 class="title">Five Pirates Treasure Splitting</h1>
 </div>
 
+<div>
+  <div class="description">
+    Sharing ideas and pirate treasure with ClojureCivitas.
+  </div>
+</div>
 
 <div class="quarto-title-meta-author">
   <div class="quarto-title-meta-heading">Author</div>
@@ -402,15 +408,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 <script src="math/stats/quantquestions/what_are_the_odds/five_pirates_treasure_files/md-default0.js" type="text/javascript"></script>
 <script src="math/stats/quantquestions/what_are_the_odds/five_pirates_treasure_files/md-default1.js" type="text/javascript"></script>
+<p>Welcome back code champs, number ninjas, and data divers to the second episode of “What are the Odds?” where we answer life’s important questions.</p>
+<iframe allowfullscreen="allowfullscreen" src="https://www.youtube.com/embed/lceazLPcSZg" width="100%"></iframe>
+<p>I was out treasure hunting with four friends the other day, and we found 100 gold coins. To split the booty, I came up with a genius plan. We take turns proposing how to divide the gold, and if half the crew agrees, we go with it. But if not I get nothing and the next person makes a proposal and so on. To my surprise, the others loved the idea! “A democracy of pirates!” said one. “A fair and logical system!” said another. Even our parrot nodded in approval. Can you guess how many coins I walked away with?</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> pirates</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  [<span class="st">"Green Boots"</span> <span class="st">"Red Rackham"</span> <span class="st">"Blue Thunder"</span> <span class="st">"Black Beard"</span> <span class="st">"Tim"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>With only one pirate, they get all the booty * Green Boots: 100</p>
-<p>With 2 pirates, whoever proposes the split gets all the booty * Red Rackham 100 * Green Boots 0</p>
-<p>With 3 pirates, the pirate who would miss out in the next round is incentivised by 1 coin * Blue Thunder 99 * Red Rackham 0 * Green Boots 1</p>
-<p>With 4 pirates, 1 vote needed, the pirate who would miss out is incentivised by 1 coin * Black Beard 99 * Blue Thunder 0 * Red Rackham 1 * Green Boots 0</p>
-<p>With 5 pirates, 2 votes needed, the 2 pirates who would miss out in the next round get a coin each * Tim 98 * Black Beard 0 * Blue Thunder 1 * Red Rackham 0 * Green Boots 1</p>
+<p>With only one pirate, they get all the booty</p>
+<ul>
+<li>Green Boots: 100</li>
+</ul>
+<p>With 2 pirates, whoever proposes the split gets all the booty</p>
+<ul>
+<li>Red Rackham 100</li>
+<li>Green Boots 0</li>
+</ul>
+<p>With 3 pirates, the pirate who would miss out in the next round is incentivised by 1 coin</p>
+<ul>
+<li>Blue Thunder 99</li>
+<li>Red Rackham 0</li>
+<li>Green Boots 1</li>
+</ul>
+<p>With 4 pirates, 1 vote needed, the pirate who would miss out is incentivised by 1 coin</p>
+<ul>
+<li>Black Beard 99</li>
+<li>Blue Thunder 0</li>
+<li>Red Rackham 1</li>
+<li>Green Boots 0</li>
+</ul>
+<p>With 5 pirates, 2 votes needed, the 2 pirates who would miss out in the next round get a coin each</p>
+<ul>
+<li>Tim 98</li>
+<li>Black Beard 0</li>
+<li>Blue Thunder 1</li>
+<li>Red Rackham 0</li>
+<li>Green Boots 1</li>
+</ul>
 <p>Probably you can spot a pattern emerging here…</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> split </span>[coins pirates]</span>
@@ -462,6 +496,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 </div>
 </div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="five_pirates_treasure.jpg" class="img-fluid figure-img"></p>
+<figcaption>Scallywag Pirate</figcaption>
+</figure>
+</div>
+<p>Well, it got me thinking, what if sharing your ideas was as easy as tricking treasure hunters? No sword fights. No mutiny. Just a fork, some code, a few comments, and a pull request. Let’s try it out. First I fork ClojureCivitas, Open the project, add a namespace, write some code, add some comments. Commit. Push. Pull request. Once it is merged, it is automatically published to the website. Doesn’t that look nice? I can even track how many people are reading my idea in these <a href="https://clojurecivitas.goatcounter.com/">public analytics</a>. If I want a quick preview, I use Clay to render the code and results to HTML. I hope you have an idea to share with me, Why not start a namespace and publish it this way?</p>
+<p>Until next time, may your treasure split be fair and your adventures interesting.</p>
 <div style="background-color:grey;height:2px;width:100%;"></div>
 <div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.clj">src/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.clj</a></small></small></pre></div>
 
