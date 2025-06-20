@@ -3,10 +3,12 @@
  :deps
  {org.clojure/clojure                         {:mvn/version "1.12.0"}
   org.scicloj/noj                             {:mvn/version "2-beta18"}
-  markdown-clj/markdown-clj                   {:mvn/version "1.12.3"}
+  markdown-clj/markdown-clj                   {:mvn/version "1.12.4"}
   org.clojure/core.async                      {:mvn/version "1.9.808-alpha1"}
-  io.github.clojure/core.async.flow-monitor   {:git/tag "v0.1.1" :git/sha "61e8d31"}
-  metosin/malli                               {:mvn/version "0.18.0"}
+  io.github.clojure/core.async.flow-monitor   {:git/tag "v0.1.2"
+                                               :git/url "https://github.com/clojure/core.async.flow-monitor"
+                                               :git/sha "6248a5d"}
+  metosin/malli                               {:mvn/version "0.19.1"}
   clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
   clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
   org.scicloj/clay                            {:git/url "https://github.com/scicloj/clay"
@@ -15,14 +17,15 @@
   org.eclipse.elk/org.eclipse.elk.graph       {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph.json  {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.alg.common  {:mvn/version "0.10.0"}
-  org.eclipse.elk/org.eclipse.elk.alg.layered {:mvn/version "0.10.0"}}
+  org.eclipse.elk/org.eclipse.elk.alg.layered {:mvn/version "0.10.0"}
+  org.slf4j/slf4j-simple                      {:mvn/version "2.0.17"}}
 
  :aliases
  {;; Build the site with `clojure -M:clay -a [:markdown]`
   ;; Run Clay in watch mode with `clojure -M:clay`
-  :clay  {:main-opts ["-m" "scicloj.clay.v2.main"]
-          :jvm-opts ["-Dclojure.main.report=stderr"]}
+  :clay       {:main-opts ["-m" "scicloj.clay.v2.main"]
+               :jvm-opts  ["-Dclojure.main.report=stderr"]}
   ;; When debugging libraries
   :local-deps {:override-deps {org.scicloj/clay          {:local/root "../clay"}
                                org.scicloj/kindly-advice {:local/root "../kindly-advice"}}}
-  :neil  {:project {:name io.github.timothypratley/clojurecivitas}}}}
+  :neil       {:project {:name io.github.timothypratley/clojurecivitas}}}}
