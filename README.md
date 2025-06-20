@@ -53,7 +53,7 @@ Add metadata on your namespace to set the title, author, and tags.
 (ns my.namespace.example)
 ```
 
-Configure your author profile in [clay.edn](clay.edn).
+Configure your author profile in [site/db.edn](site/db.edn).
 
 Images can be added to the same folder as the namespace,
 and displayed with markdown like `;; ![caption](my-image.jpg)`.

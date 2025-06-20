@@ -2,7 +2,7 @@
 ^{:clay {:title "Authors"
          :quarto {:type :page}}}
 (ns civitas.authors
-  (:require [clojure.edn :as edn]
+  (:require [civitas.explorer.db :as db]
             [scicloj.kindly.v4.kind :as kind]))
 
 ;; You belong here!
@@ -10,21 +10,31 @@
 ;; Thank you for sharing your ideas.
 
 ^:kindly/hide-code
-(defn card [{:keys [name url links affiliation email image]}]
+(defn card-link [href icon text]
+  [:a.card-link {:href href}
+   (if text
+     text
+     [:i {:class (str "bi bi-" (or icon "box-arrow-up-right"))}])])
+
+^:kindly/hide-code
+(defn card [{:keys [name url links affiliation image]} affiliations]
   (kind/hiccup
     [:div.card
      (when image [:img.card-img-top {:src image}])
      [:div.card-body
-      [:h5.card-title [:a {:href url} name]]
-      #_[:p email]]
-     (for [{:keys [href icon text]} links]
-       [:a {:href href} [:i {:class icon}] text])
-     (for [a affiliation]
-       (pr-str a))]))
+      [:h5.card-title name]
+      [:div
+       (when url (card-link url nil nil))
+       (for [{:keys [href icon]} links]
+         (card-link href icon nil))]
+      (for [{:keys [name url]} (map affiliations affiliation)]
+        (card-link url nil name))]]))
 
 ^:kindly/hide-code
-(->> (slurp "clay.edn")
-     (edn/read-string)
-     :aliases :markdown :quarto/expansions :author vals
-     (sort-by :name)
-     (into ^:kind/hiccup [:div.card-group] (map card)))
+(let [affiliations (db/index-by :id (:affiliation @db/db))]
+  (into ^:kind/hiccup [:div]
+        (comp (map #(card % affiliations))
+              (partition-all 4)
+              (map #(into [:div.card-group] %)))
+        (->> (:author @db/db)
+             (sort-by :name))))

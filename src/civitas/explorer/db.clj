@@ -31,7 +31,7 @@
 ;; TODO: what if the front matter doesn't match existing?
 
 (defn set-notebooks [notebooks]
-  (->> {:notebooks notebooks}
+  (->> {:notebook notebooks}
        (reset! db)
        (spit-edn db-file)))
 
@@ -45,26 +45,29 @@
       (transient {}) coll)))
 
 (defn notebooks-ds []
-  (tc/dataset (:notebooks @db)))
+  (tc/dataset (:notebook @db)))
 
 (defn notebooks []
-  (:notebooks @db))
+  (:notebook @db))
 
-(defn topics-ds []
-  (tc/dataset (:topics @db)))
+(defn authors []
+  (tc/dataset (:author @db)))
+
+(defn topic-ds []
+  (tc/dataset (:topic @db)))
 
 (defn topics []
-  (:topics @db))
+  (:topic @db))
 
 ;; TODO: this is a terrible way to do it
 (def get-topic
-  (index-by :id (:topics @db)))
+  (index-by :id (:topic @db)))
 
 (defn get-notebooks-by-topic []
-  (-> (group-by (comp first :topics) (:notebooks @db))
+  (-> (group-by (comp first :topic) (:notebook @db))
       (update-vals #(map-indexed (fn [idx x]
                                    (assoc x :position idx))
                                  %))))
 
 (def get-colors
-  (vec (keep :color (:topics @db))))
+  (vec (keep :color (:topic @db))))

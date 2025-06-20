@@ -7,63 +7,18 @@
                     :branch  "main"}
  :hide-info-line   true
  :hide-ui-header   true
- :aliases
- {:markdown
-  {:render           true
-   :base-target-path "site"
-   :format           [:quarto :html]
-   :run-quarto       false
-   :hide-info-line   false
-   :quarto           {:format {:html nil}}
-   :quarto/expansions
-   {:affiliation
-    {:clojure.core {:name "Clojure.core" :url "https://clojure.org"}
-     :scicloj      {:name "Scicloj" :url "https://scicloj.github.io/"}
-     :clojurecamp  {:name "Clojure Camp" :url "https://clojure.camp/"}
-     :hummi        {:name "Hummi" :url "https://hummi.app"}}
-    :author
-    {:chouser
-     {:name  "Chris Houser"
-      :image "https://avatars.githubusercontent.com/u/36110?v=4"
-      :url   "https://chouser.us/"
-      :links [{:icon "github" :text "GitHub" :href "https://github.com/chouser"}]}
-     :daslu
-     {:name        "Daniel Slutsky"
-      :image       "https://avatars.githubusercontent.com/u/5673102?v=4"
-      :url         "https://github.com/daslu"
-      :affiliation [:scicloj]
-      :links       [{:icon "github" :text "GitHub" :href "https://github.com/daslu"}]}
-     :alexmiller
-     {:name        "Alex Miller"
-      :image       "https://avatars.githubusercontent.com/u/171129?v=4"
-      :url         "https://github.com/puredanger"
-      :affiliation [:clojure.core]
-      :links       [{:icon "github" :text "GitHub" :href "https://github.com/puredanger"}]}
-     :echeran
-     {:name        "Elango Cheran"
-      :image       "https://www.unicode.org/consortium/img/cheran-150px.jpg"
-      :url         "https://github.com/echeran"
-      :affiliation []
-      :links       [{:icon "github" :text "GitHub" :href "https://github.com/echeran"}
-                    {:icon "home" :text "Personal site" :href "https://www.elangocheran.com"}]}
-     :seancorfield
-     {:name        "Sean Corfield"
-      :image       "https://avatars.githubusercontent.com/u/43875?v=4"
-      :email       "sean@corfield.org"
-      :url         "https://corfield.org"
-      :affiliation [:clojurecamp]
-      :links       [{:icon "github" :text "GitHub" :href "https://github.com/seancorfield"}
-                    {:icon "mastodon" :text "Mastodon" :href "https://tech.lgbt/@seancorfield"}]}
-     :timschafer
-     {:name        "Tim Schafer"
-      :image       "https://media.licdn.com/dms/image/v2/D4E03AQGuYEubu1rpeA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1681232451970?e=1754524800&v=beta&t=YbMtki98RI584h2kge6dLdg8PF79uNb7NKt59wrpyVs"
-      :url         "https://github.com/srcerer"
-      :affiliation [:clojurecamp]
-      :links       [{:icon "github" :text "GitHub" :href "https://github.com/srcerer"}]}
-     :timothypratley
-     {:name        "Timothy Pratley"
-      :url         "https://timothypratley.blogspot.com/p/httpswww.html"
-      :image       "https://avatars.githubusercontent.com/u/49298?v=4"
-      :email       "timothypratley@gmail.com"
-      :affiliation [:hummi]
-      :links       [{:icon "github" :text "GitHub" :href "https://github.com/timothypratley"}]}}}}}}
+
+ ;; aliases
+ :markdown
+ {:render           true
+  :base-target-path "site"
+  :format           [:quarto :html]
+  :run-quarto       false
+  :hide-info-line   false
+  :quarto           ^:replace {}
+  :quarto/expand    (-> (slurp "site/db.edn")
+                      (clojure.edn/read-string)
+                      (mapcat [:author :affiliation])
+                      (->> (group-by :id))
+                      (update-vals first)
+                      (update-vals (fn [x] (dissoc x :id))))}}

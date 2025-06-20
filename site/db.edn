@@ -1,29 +1,65 @@
 {:author
  [{:id    :chouser
    :name  "Chris Houser"
+   :image "https://avatars.githubusercontent.com/u/36110?v=4"
    :url   "https://chouser.us/"
-   :links [{:icon "github" :text "GitHub" :href "https://github.com/chouser"}]}
-  {:id           :daslu
-   :name         "Daniel Slutsky"
+   :links [{:icon "github" :href "https://github.com/chouser"}]}
+  {:id          :daslu
+   :name        "Daniel Slutsky"
+   :image       "https://avatars.githubusercontent.com/u/5673102?v=4"
+   :url         "https://scicloj.github.io/contributors/daslu/"
    :affiliation [:scicloj]
-   :links        [{:icon "github" :text "GitHub" :href "https://github.com/daslu"}]}
-  {:id           :alexmiller
-   :name         "Alex Miller"
+   :links       [{:icon "github" :href "https://github.com/daslu"}]}
+  {:id          :alexmiller
+   :name        "Alex Miller"
+   :image       "https://avatars.githubusercontent.com/u/171129?v=4"
+   :url         "https://insideclojure.org/"
    :affiliation [:clojure.core]
-   :links        [{:icon "github" :text "GitHub" :href "https://github.com/puredanger"}]}
-  {:id           :timothypratley
-   :name         "Timothy Pratley"
-   :email        "timothypratley@gmail.com"
-   :url          "https://timothypratley.blogspot.com/p/httpswww.html"
-   :affiliation [:hummi :scicloj]
-   :links        [{:icon "github" :text "GitHub" :href "https://github.com/timothypratley"}]}]
+   :links       [{:icon "github" :href "https://github.com/puredanger"}]}
+  {:id          :echeran
+   :name        "Elango Cheran"
+   :image       "https://www.unicode.org/consortium/img/cheran-150px.jpg"
+   :url         "https://www.elangocheran.com"
+   :affiliation []
+   :links       [{:icon "github" :href "https://github.com/echeran"}]}
+  {:id          :seancorfield
+   :name        "Sean Corfield"
+   :image       "https://avatars.githubusercontent.com/u/43875?v=4"
+   :email       "sean@corfield.org"
+   :url         "https://corfield.org"
+   :affiliation [:clojurecamp]
+   :links       [{:icon "github" :href "https://github.com/seancorfield"}
+                 {:icon "mastodon" :text "Mastodon" :href "https://tech.lgbt/@seancorfield"}]}
+  {:id          :timschafer
+   :name        "Tim Schafer"
+   :image       "https://media.licdn.com/dms/image/v2/D4E03AQGuYEubu1rpeA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1681232451970?e=1754524800&v=beta&t=YbMtki98RI584h2kge6dLdg8PF79uNb7NKt59wrpyVs"
+   :url         "https://github.com/srcerer"
+   :affiliation [:clojurecamp]
+   :links       [{:icon "github" :href "https://github.com/srcerer"}]}
+  {:id          :timothypratley
+   :name        "Timothy Pratley"
+   :url         "https://timothypratley.blogspot.com/p/httpswww.html"
+   :image       "https://avatars.githubusercontent.com/u/49298?v=4"
+   :email       "timothypratley@gmail.com"
+   :affiliation [:hummi]
+   :links       [{:icon "github" :href "https://github.com/timothypratley"}]}]
 
- :affiliation [{:id :clojure.core :name "Clojure.core" :url "https://clojure.org"}
-                {:id :scicloj :name "Scicloj" :url "https://scicloj.github.io/"}
-                {:id :clojurecamp :name "Clojure Camp" :url "https://clojure.camp/"}
-                {:id :hummi :name "Hummi" :url "https://hummi.app"}]
+ :affiliation
+ [{:id   :clojure.core
+   :name "Clojure.core"
+   :url  "https://clojure.org"}
+  {:id   :scicloj
+   :name "Scicloj"
+   :url  "https://scicloj.github.io/"}
+  {:id   :clojurecamp
+   :name "Clojure Camp"
+   :url  "https://clojure.camp/"}
+  {:id   :hummi
+   :name "Hummi"
+   ;; TODO: as icons
+   :url  "https://hummi.app"}]
 
- :topics
+ :topic
  [{:id        :core
    :desc      "Fundamental language concepts"
    :color     "#E2F0CB"
@@ -84,28 +120,28 @@
   {:id   :community/events
    :desc "Conferences and meetups"}]
 
- :notebooks
+ :notebook
  [
   ;; ===== CORE =====
   {:id     "clj-docs"
    :title  "Official Clojure Documentation"
    :url    "https://clojure.org/guides/getting_started"
    :format :reference
-   :topics [:core]
+   :topic  [:core]
    :level  0}
 
   {:id     "brave-clojure"
    :title  "Clojure for the Brave and True"
    :url    "https://www.braveclojure.com/"
    :format :interactive-book
-   :topics [:core :core/fp]
+   :topic  [:core :core/fp]
    :level  1}
 
   {:id         "transducers"
    :title      "Transducers Explained"
    :url        "https://www.youtube.com/watch?v=6mTbuzafcII"
    :format     :video
-   :topics     [:core :core/fp]
+   :topic      [:core :core/fp]
    :level      2
    :depends-on ["clj-docs"]}
 
@@ -114,14 +150,14 @@
    :title  "Reagent Documentation"
    :url    "https://reagent-project.github.io/"
    :format :library-docs
-   :topics [:web :web/frontend]
+   :topic  [:web :web/frontend]
    :level  1}
 
   {:id         "re-frame"
    :title      "re-frame: A React Framework"
    :url        "https://day8.github.io/re-frame/"
    :format     :library-docs
-   :topics     [:web :web/frontend]
+   :topic      [:web :web/frontend]
    :level      2
    :depends-on ["reagent-docs"]}
 
@@ -129,7 +165,7 @@
    :title  "Luminus Web Framework"
    :url    "https://luminusweb.com/"
    :format :framework
-   :topics [:web :web/backend]
+   :topic  [:web :web/backend]
    :level  2}
 
   ;; ===== DATA =====
@@ -137,21 +173,21 @@
    :title  "Tablecloth: Dataframe Library"
    :url    "https://github.com/scicloj/tablecloth"
    :format :library-docs
-   :topics [:data :data/analysis]
+   :topic  [:data :data/analysis]
    :level  1}
 
   {:id     "clay"
    :title  "Clay Documentation"
    :url    "https://scicloj.github.io/clay/"
    :format :publishing-tool
-   :topics [:data]
+   :topic  [:data]
    :level  2}
 
   {:id     "tech.ml"
    :title  "tech.ml Machine Learning"
    :url    "https://github.com/techascent/tech.ml"
    :format :library-docs
-   :topics [:data :data/ml]
+   :topic  [:data :data/ml]
    :level  3}
 
   ;; ===== TOOLING =====
@@ -159,21 +195,21 @@
    :title  "deps.edn Reference"
    :url    "https://clojure.org/reference/deps_and_cli"
    :format :reference
-   :topics [:tooling]
+   :topic  [:tooling]
    :level  0}
 
   {:id     "cider"
    :title  "CIDER for Emacs"
    :url    "https://docs.cider.mx/"
    :format :tool-docs
-   :topics [:tooling :tooling/repl]
+   :topic  [:tooling :tooling/repl]
    :level  1}
 
   {:id     "shadow-cljs"
    :title  "shadow-cljs Build Tool"
    :url    "https://shadow-cljs.github.io/docs/UsersGuide.html"
    :format :tool-docs
-   :topics [:tooling :tooling/build]
+   :topic  [:tooling :tooling/build]
    :level  2}
 
   ;; ===== COMMUNITY =====
@@ -181,35 +217,35 @@
    :title  "SciCloj Community"
    :url    "https://scicloj.github.io/"
    :format :community
-   :topics [:community :community/orgs]
+   :topic  [:community :community/orgs]
    :level  0}
 
   {:id     "clojure-camp"
    :title  "ClojureCamp Events"
    :url    "https://clojurecamp.berlin/"
    :format :community
-   :topics [:community :community/events]
+   :topic  [:community :community/events]
    :level  1}
 
   {:id     "clojure-tv"
    :title  "ClojureTV YouTube"
    :url    "https://www.youtube.com/user/ClojureTV"
    :format :video-channel
-   :topics [:community :community/learning]
+   :topic  [:community :community/learning]
    :level  0}
 
   {:id     "clojurians"
    :title  "Clojurians Slack"
    :url    "http://clojurians.net/"
    :format :community
-   :topics [:community :community/chat]
+   :topic  [:community :community/chat]
    :level  0}
 
   {:id     "practicalli"
    :title  "Practicalli Tutorials"
    :url    "https://practical.li/"
    :format :tutorials
-   :topics [:community :community/learning]
+   :topic  [:community :community/learning]
    :level  1}
 
   ;; ===== SYSTEMS =====
@@ -217,28 +253,28 @@
    :title  "JVM Performance Guide"
    :url    "https://clojure.org/reference/jvm_programming"
    :format :guide
-   :topics [:systems :systems/production]
+   :topic  [:systems :systems/production]
    :level  3}
 
   {:id     "component"
    :title  "Component Library"
    :url    "https://github.com/stuartsierra/component"
    :format :library-docs
-   :topics [:systems :systems/design]
+   :topic  [:systems :systems/design]
    :level  2}
 
   {:id     "nrepl"
    :title  "nREPL Protocol"
    :url    "https://nrepl.org/"
    :format :protocol
-   :topics [:systems :systems/tooling]
+   :topic  [:systems :systems/tooling]
    :level  2}
 
   {:id     "datomic"
    :title  "Datomic Database"
    :url    "https://docs.datomic.com/cloud/"
    :format :database
-   :topics [:systems :systems/data :data/db]
+   :topic  [:systems :systems/data :data/db]
    :level  3}
 
   ;; ===== CROSS-CATEGORY =====
@@ -246,20 +282,19 @@
    :title  "ClojureScript Guide"
    :url    "https://clojurescript.org/"
    :format :reference
-   :topics [:core :web :tooling]
+   :topic  [:core :web :tooling]
    :level  1}
 
   {:id     "kaocha"
    :title  "Kaocha Test Runner"
    :url    "https://github.com/lambdaisland/kaocha"
    :format :tool-docs
-   :topics [:tooling :tooling/testing]
+   :topic  [:tooling :tooling/testing]
    :level  2}
 
   {:id     "xtdb"
    :title  "XTDB Documentation"
    :url    "https://xtdb.com/"
    :format :database
-   :topics [:systems :systems/data :data/db]
-   :level  3}
-  ]}
+   :topic  [:systems :systems/data :data/db]
+   :level  3}]}

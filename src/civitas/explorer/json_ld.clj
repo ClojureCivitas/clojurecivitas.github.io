@@ -5,11 +5,11 @@
 (def ^:dynamic *ldns* "civitas")
 (def ^:dynamic *base* (str "https://clojurecivitas.github.io/" *ldns* "/"))
 
-(defn notebook-jsonld [{:keys [id title topics level] :as resource}]
+(defn notebook-jsonld [{:keys [id title topic level] :as resource}]
   {"@id"    (str *base* "resource/" id),
    "@type"  (str *ldns* ":Notebook"),
    "title"  title,
-   "topics" (mapv #(str *ldns* "topic/" (name %)) topics),
+   "topics" (mapv #(str *ldns* "topic/" (name %)) topic),
    "level"  level})
 
 (defn write-jsonld [target resources]

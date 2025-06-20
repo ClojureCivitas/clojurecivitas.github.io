@@ -15,7 +15,7 @@
 
 ;; Long before he flew too high,
 ;; before the wax gave way and the world remembered only his fall,
-;; Iccarus flew *low*.
+;; Icarus flew *low*.
 ;; They often leave out this part of his misadventures,
 ;; when curiosity, not hubris, guided his wings.
 ;; He flew not to ascend to Olympus,
@@ -147,8 +147,6 @@
 
 (show/flow-svg asynctopolis {:chans-as-ports false
                              :with-content   false})
-
-
 
 (flow/stop asynctopolis)
 (Thread/sleep 1)

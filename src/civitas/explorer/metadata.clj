@@ -9,10 +9,10 @@
             [markdown.core :as md]
             [clj-fuzzy.metrics :as fuzzy]))
 
-(defn source-path-for [{:keys [topics id] :as notebook}]
-  {:pre [id (seq topics)]}
+(defn source-path-for [{:keys [topic id] :as notebook}]
+  {:pre [id (seq topic)]}
   (str (fs/path "src"
-                (str (symbol (first topics)))
+                (str (symbol (first topic)))
                 (str id ".md"))))
 
 (defn spit-md [notebook]
@@ -93,11 +93,7 @@
 (defn front-matter [md-file]
   (-> (slurp md-file)
       (md/md-to-meta)
-      (dissoc :format :code-block-background)
-      (assoc :source-path md-file
-             :base-source-path nil
-             :id (-> (fs/file-name md-file)
-                     (fs/strip-ext)))
+      (assoc :source-path md-file)
       (doto (warn! md-file))))
 
 (defn front-matters [site-dir]

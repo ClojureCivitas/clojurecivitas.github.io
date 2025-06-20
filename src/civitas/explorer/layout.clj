@@ -7,9 +7,9 @@
             [civitas.explorer.svg :as svg]))
 
 (def colors
-  (vec (remove nil? (map :color (:topics @db/db)))))
+  (vec (remove nil? (map :color (:topic @db/db)))))
 
-(defn notebook-view [{:keys [title topics position level url] :as notebook}
+(defn notebook-view [{:keys [title topic position level url] :as notebook}
                      {:keys [direction color] :as topic}]
   (let [s 80
         [x y] (nth (geom/sectors direction) position)
