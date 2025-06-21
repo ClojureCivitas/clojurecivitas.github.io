@@ -1281,7 +1281,7 @@ font-style: inherit;">e</span>)))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval72402/fn--72403"</span></span></code></pre></div>
+font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval72410/fn--72411"</span></span></code></pre></div>
 </div>
 <p>Why is it trying to call <code>cons</code> with a single argument? In addition to separating the transformation from the output, <code>transduce</code> also has a “completion” step, which is performed on the final result. A convenience function called <code>completing</code> can be used to wrap the function here to provide a “no-op” completion:</p>
 <div class="sourceClojure">
@@ -2131,9 +2131,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x79e488ae</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x5de576b3</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@79e488ae"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@5de576b3"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -2141,9 +2141,9 @@ font-style: inherit;">"clojure.lang.MultiFn@79e488ae"</span>]</span></code></pre
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0xf6e4003</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x427bdb54</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@f6e4003"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@427bdb54"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -2152,9 +2152,9 @@ font-style: inherit;">"java.lang.Object@f6e4003"</span>]</span></code></pre></di
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x76471247</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x521a0dc8</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@76471247"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@521a0dc8"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -2170,11 +2170,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval72466$fn__72467 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval72474$fn__72475 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x40fcf8a3</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x75585e7c</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval72466$fn__72467@40fcf8a3"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval72474$fn__72475@75585e7c"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -2190,11 +2190,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval72470$fn__72471$fn__72472 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval72478$fn__72479$fn__72480 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x5de576b3</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x3bd0e64f</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval72470$fn__72471$fn__72472@5de576b3"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval72478$fn__72479$fn__72480@3bd0e64f"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -2248,7 +2248,7 @@ background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3747</span>]</span>
-<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__72478 invoke <span class="st" style="color: #20794D;
+<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__72486 invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -2288,7 +2288,7 @@ font-style: inherit;">fn</span> [y] y))))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print-object.remove-extraneous/eval72484/fn--72485/fn--72486"</span></span></code></pre></div>
+font-style: inherit;">"clojure.print-object.remove-extraneous/eval72492/fn--72493/fn--72494"</span></span></code></pre></div>
 </div>
 <p>Next, we don’t need the eval identities.</p>
 <div class="sourceClojure">
@@ -2632,6 +2632,7 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">first</span> LIST))))))</span></code></pre></div>
 </div>
+<div class="sourceClojure">
 <div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1">((REV' REV') [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
@@ -2643,44 +2644,105 @@ background-color: null;
 font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span>])</span></code></pre></div>
-<p><strong>error</strong></p>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+ClassCastException
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<pre><code>
+#error {
+ :class   java.lang.ClassCastException
+ :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45746 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45746 is in unnamed module of loader clojure.lang.DynamicClassLoader @6fe1643; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
+ :trace
+ [[clojure.core/conj                                                     "core.clj" 84]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REV'/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/eval]
+  [Compiler.eval                                                         "Compiler.java" 7700]
+  [Compiler.eval                                                         "Compiler.java" 7655]
+  [clojure.core/eval                                                     "core.clj" 3232]
+  [scicloj.clay.v2.notebook/read-eval-capture/fn/fn                      "notebook.clj" 62]
+  [scicloj.clay.v2.notebook/read-eval-capture/fn                         "notebook.clj" 60]
+  [scicloj.clay.v2.notebook/read-eval-capture                            "notebook.clj" 59]
+  [scicloj.clay.v2.notebook/complete                                     "notebook.clj" 92]
+  [scicloj.clay.v2.notebook/complete-notes/fn                            "notebook.clj" 291]
+  [ArrayChunk.reduce                                                     "ArrayChunk.java" 65]
+  [clojure.core.protocols/fn                                             "protocols.clj" 135]
+  [clojure.core.protocols/fn/G                                           "protocols.clj" 19]
+  [clojure.core.protocols/seq-reduce                                     "protocols.clj" 31]
+  [clojure.core.protocols/fn                                             "protocols.clj" 74]
+  [clojure.core.protocols/fn/G                                           "protocols.clj" 13]
+  [clojure.core/reduce                                                   "core.clj" 6965]
+  [scicloj.clay.v2.notebook/complete-notes                               "notebook.clj" 286]
+  [scicloj.clay.v2.notebook/items-and-test-forms/fn                      "notebook.clj" 396]
+  [clojure.core/with-redefs-fn                                           "core.clj" 7706]
+  [scicloj.clay.v2.notebook/items-and-test-forms                         "notebook.clj" 397]
+  [scicloj.clay.v2.make/handle-single-source-spec!                       "make.clj" 336]
+  [clojure.core/mapv/fn                                                  "core.clj" 7059]
+  [ArrayChunk.reduce                                                     "ArrayChunk.java" 60]
+  [clojure.core.protocols/fn                                             "protocols.clj" 135]
+  [clojure.core.protocols/fn/G                                           "protocols.clj" 19]
+  [clojure.core.protocols/seq-reduce                                     "protocols.clj" 31]
+  [clojure.core.protocols/fn                                             "protocols.clj" 74]
+  [clojure.core.protocols/fn/G                                           "protocols.clj" 13]
+  [clojure.core/reduce                                                   "core.clj" 6965]
+  [clojure.core/mapv                                                     "core.clj" 7050]
+  [scicloj.clay.v2.make/make!                                            "make.clj" 427]
+  [scicloj.clay.v2.api/make!                                             "api.clj" 35]
+  [scicloj.clay.v2.main/-main                                            "main.clj" 52]
+  [Var.applyTo                                                           "Var.java" 707]
+  [clojure.core/apply                                                    "core.clj" 667]
+  [clojure.main/main-opt                                                 "main.clj" 515]
+  [clojure.main/main                                                     "main.clj" 665]
+  [Var.applyTo                                                           "Var.java" 707]
+  [main.main                                                             "main.java" 40]]}</code></pre>
+</div>
+</div>
+</div>
 <p>Oh, no… <code>SELF</code> doesn’t take <code>LIST</code>, it’s a function that returns a function that operates on <code>LIST</code>, and the argument to <code>SELF</code> is… <code>SELF</code>. Therefore, we need to give it <code>(SELF SELF)</code>.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> REV''</span></span>
-<span id="cb8-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb9-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [SELF]</span>
-<span id="cb8-3">    (<span class="kw" style="color: #003B4F;
+<span id="cb9-3">    (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LIST]</span>
-<span id="cb8-4">      (<span class="kw" style="color: #003B4F;
+<span id="cb9-4">      (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">empty?</span> LIST)</span>
-<span id="cb8-5">        []</span>
-<span id="cb8-6">        (<span class="kw" style="color: #003B4F;
+<span id="cb9-5">        []</span>
+<span id="cb9-6">        (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">conj</span> ((SELF SELF) (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">rest</span> LIST))</span>
-<span id="cb8-7">              (<span class="kw" style="color: #003B4F;
+<span id="cb9-7">              (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">first</span> LIST))))))</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1">((REV<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">((REV<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">''</span> REV<span class="at" style="color: #657422;
 background-color: null;
@@ -2697,7 +2759,7 @@ background-color: null;
 font-style: inherit;">5</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -2714,35 +2776,35 @@ font-style: inherit;">1</span>]</span></code></pre></div>
 </blockquote>
 <p>Quite right, because it’s not obvious what <code>(SELF SELF)</code> is. We need to extract it out. What we want is:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> REV-LOGIC</span></span>
-<span id="cb11-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb12-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [SELF]</span>
-<span id="cb11-3">    (<span class="kw" style="color: #003B4F;
+<span id="cb12-3">    (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LIST]</span>
-<span id="cb11-4">      (<span class="kw" style="color: #003B4F;
+<span id="cb12-4">      (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">empty?</span> LIST)</span>
-<span id="cb11-5">        []</span>
-<span id="cb11-6">        (<span class="kw" style="color: #003B4F;
+<span id="cb12-5">        []</span>
+<span id="cb12-6">        (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">conj</span> (SELF (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">rest</span> LIST))</span>
-<span id="cb11-7">              (<span class="kw" style="color: #003B4F;
+<span id="cb12-7">              (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">first</span> LIST))))))</span></code></pre></div>
@@ -2756,7 +2818,7 @@ font-style: inherit;">first</span> LIST))))))</span></code></pre></div>
 </blockquote>
 <p>But identity is the identity of itself:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">identity</span> <span class="dv" style="color: #AD0000;
@@ -2764,12 +2826,12 @@ background-color: null;
 font-style: inherit;">1</span>)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1">((<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1">((<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">identity</span> <span class="kw" style="color: #003B4F;
@@ -2780,7 +2842,7 @@ background-color: null;
 font-style: inherit;">1</span>)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span></span></code></pre></div>
 </div>
@@ -2788,7 +2850,7 @@ font-style: inherit;">1</span></span></code></pre></div>
 <p>O.K. sure, but that’s a special case.</p>
 </blockquote>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1">(((<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1">(((<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">identity</span> <span class="kw" style="color: #003B4F;
@@ -2805,7 +2867,7 @@ background-color: null;
 font-style: inherit;">1</span>)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span></span></code></pre></div>
 </div>
@@ -2814,15 +2876,16 @@ font-style: inherit;">1</span></span></code></pre></div>
 </blockquote>
 <p>We just need to find the right conditions for <code>(SELF SELF) = SELF</code>.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1">(REV-LOGIC REV-LOGIC)</span></code></pre></div>
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">(REV-LOGIC REV-LOGIC)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">#fn [REV-LOGIC$fn]</span></code></pre></div>
+<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1">#fn [REV-LOGIC$fn]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>Well, it’s a function! That much is clear…</p>
 </blockquote>
-<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1">((REV-LOGIC REV-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceClojure">
+<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1">((REV-LOGIC REV-LOGIC) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -2833,22 +2896,83 @@ background-color: null;
 font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span>])</span></code></pre></div>
-<p><strong>Error</strong></p>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+ClassCastException
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<pre><code>
+#error {
+ :class   java.lang.ClassCastException
+ :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45756 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45756 is in unnamed module of loader clojure.lang.DynamicClassLoader @549f5306; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
+ :trace
+ [[clojure.core/conj                                                          "core.clj" 84]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REV-LOGIC/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/eval]
+  [Compiler.eval                                                              "Compiler.java" 7700]
+  [Compiler.eval                                                              "Compiler.java" 7655]
+  [clojure.core/eval                                                          "core.clj" 3232]
+  [scicloj.clay.v2.notebook/read-eval-capture/fn/fn                           "notebook.clj" 62]
+  [scicloj.clay.v2.notebook/read-eval-capture/fn                              "notebook.clj" 60]
+  [scicloj.clay.v2.notebook/read-eval-capture                                 "notebook.clj" 59]
+  [scicloj.clay.v2.notebook/complete                                          "notebook.clj" 92]
+  [scicloj.clay.v2.notebook/complete-notes/fn                                 "notebook.clj" 291]
+  [ArrayChunk.reduce                                                          "ArrayChunk.java" 65]
+  [clojure.core.protocols/fn                                                  "protocols.clj" 135]
+  [clojure.core.protocols/fn/G                                                "protocols.clj" 19]
+  [clojure.core.protocols/seq-reduce                                          "protocols.clj" 31]
+  [clojure.core.protocols/fn                                                  "protocols.clj" 74]
+  [clojure.core.protocols/fn/G                                                "protocols.clj" 13]
+  [clojure.core/reduce                                                        "core.clj" 6965]
+  [scicloj.clay.v2.notebook/complete-notes                                    "notebook.clj" 286]
+  [scicloj.clay.v2.notebook/items-and-test-forms/fn                           "notebook.clj" 396]
+  [clojure.core/with-redefs-fn                                                "core.clj" 7706]
+  [scicloj.clay.v2.notebook/items-and-test-forms                              "notebook.clj" 397]
+  [scicloj.clay.v2.make/handle-single-source-spec!                            "make.clj" 336]
+  [clojure.core/mapv/fn                                                       "core.clj" 7059]
+  [ArrayChunk.reduce                                                          "ArrayChunk.java" 60]
+  [clojure.core.protocols/fn                                                  "protocols.clj" 135]
+  [clojure.core.protocols/fn/G                                                "protocols.clj" 19]
+  [clojure.core.protocols/seq-reduce                                          "protocols.clj" 31]
+  [clojure.core.protocols/fn                                                  "protocols.clj" 74]
+  [clojure.core.protocols/fn/G                                                "protocols.clj" 13]
+  [clojure.core/reduce                                                        "core.clj" 6965]
+  [clojure.core/mapv                                                          "core.clj" 7050]
+  [scicloj.clay.v2.make/make!                                                 "make.clj" 427]
+  [scicloj.clay.v2.api/make!                                                  "api.clj" 35]
+  [scicloj.clay.v2.main/-main                                                 "main.clj" 52]
+  [Var.applyTo                                                                "Var.java" 707]
+  [clojure.core/apply                                                         "core.clj" 667]
+  [clojure.main/main-opt                                                      "main.clj" 515]
+  [clojure.main/main                                                          "main.clj" 665]
+  [Var.applyTo                                                                "Var.java" 707]
+  [main.main                                                                  "main.java" 40]]}</code></pre>
+</div>
+</div>
+</div>
 <p>But it doesn’t work, because <code>(REV-LOGIC REV-LOGIC) =/= REV-LOGIC.</code> Let’s try something easier:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> FIX</span></span>
-<span id="cb21-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb23-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb21-3">    <span class="co" style="color: #5E5E5E;
+<span id="cb23-3">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">;; return something like identity where self application does not change it</span></span>
-<span id="cb21-4">    <span class="co" style="color: #5E5E5E;
+<span id="cb23-4">    <span class="co" style="color: #5E5E5E;
 background-color: null;
 font-style: inherit;">#_</span>FIXED))</span></code></pre></div>
 </div>
@@ -2866,38 +2990,38 @@ font-style: inherit;">#_</span>FIXED))</span></code></pre></div>
 <p>I’m starting to think that you are the broken one.</p>
 </blockquote>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> FIX</span></span>
-<span id="cb22-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb24-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb22-3">    ((FIX LOGIC) (FIX LOGIC))))</span></code></pre></div>
+<span id="cb24-3">    ((FIX LOGIC) (FIX LOGIC))))</span></code></pre></div>
 </div>
 <p>But <code>FIX</code> can still see itself. We need to parameterize the use of <code>FIXED</code></p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> FIX</span></span>
-<span id="cb23-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb25-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb23-3">    ((<span class="kw" style="color: #003B4F;
+<span id="cb25-3">    ((<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [FIXED]</span>
-<span id="cb23-4">       (LOGIC (FIXED FIXED)))</span>
-<span id="cb23-5">     (<span class="kw" style="color: #003B4F;
+<span id="cb25-4">       (LOGIC (FIXED FIXED)))</span>
+<span id="cb25-5">     (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [FIXED]</span>
-<span id="cb23-6">       (LOGIC (FIXED FIXED))))))</span></code></pre></div>
+<span id="cb25-6">       (LOGIC (FIXED FIXED))))))</span></code></pre></div>
 </div>
 <p>There, I fixed it.</p>
 <blockquote class="blockquote">
@@ -2908,8 +3032,1052 @@ font-style: inherit;">fn</span> [FIXED]</span>
 <p>Obviously. <strong>raises hands in dispair</strong></p>
 </blockquote>
 <p>Because <code>(FIX F) = ((FIX F) (FIX F))</code>, it was your idea to refactor remember?</p>
-<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1">(FIX REV-LOGIC)</span></code></pre></div>
-<p><strong>stack overflow</strong></p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1">(FIX REV-LOGIC)</span></code></pre></div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+StackOverflowError
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<pre><code>
+#error {
+ :class   java.lang.StackOverflowError
+ :trace
+ [[code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/FIX/fn]]}</code></pre>
+</div>
+</div>
+</div>
 <blockquote class="blockquote">
 <p>Everything looks to be inside out now.</p>
 </blockquote>
@@ -2922,11 +4090,11 @@ font-style: inherit;">fn</span> [FIXED]</span>
 <p>That actually sounds logical.</p>
 </blockquote>
 <p><code>LOGIC</code> is a function of itself, returning a function that acts on a value:</p>
-<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1">(LOGIC (<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1">(LOGIC (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> SELF [VALUE]</span>
-<span id="cb25-2">         ((FIXED FIXED) VALUE)))</span></code></pre></div>
+<span id="cb28-2">         ((FIXED FIXED) VALUE)))</span></code></pre></div>
 <blockquote class="blockquote">
 <p>didn’t you say that <code>(FIXED FIXED) = FIXED</code>?</p>
 </blockquote>
@@ -2936,33 +4104,33 @@ font-style: inherit;">fn</span> SELF [VALUE]</span>
 </blockquote>
 <p>So while we are fixing logic, let’s replace <code>(LOGIC (FIXED FIXED))</code> with our deferring function.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> FIX</span></span>
-<span id="cb26-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb29-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb26-3">    ((<span class="kw" style="color: #003B4F;
+<span id="cb29-3">    ((<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [FIXED]</span>
-<span id="cb26-4">       (LOGIC (<span class="kw" style="color: #003B4F;
+<span id="cb29-4">       (LOGIC (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> SELF [VALUE]</span>
-<span id="cb26-5">                ((FIXED FIXED) VALUE))))</span>
-<span id="cb26-6">     (<span class="kw" style="color: #003B4F;
+<span id="cb29-5">                ((FIXED FIXED) VALUE))))</span>
+<span id="cb29-6">     (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [FIXED]</span>
-<span id="cb26-7">       (LOGIC (<span class="kw" style="color: #003B4F;
+<span id="cb29-7">       (LOGIC (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> SELF [VALUE]</span>
-<span id="cb26-8">                ((FIXED FIXED) VALUE)))))))</span></code></pre></div>
+<span id="cb29-8">                ((FIXED FIXED) VALUE)))))))</span></code></pre></div>
 </div>
 <p>Did you know this is called continuation passing style?</p>
 <blockquote class="blockquote">
@@ -2974,16 +4142,16 @@ font-style: inherit;">fn</span> SELF [VALUE]</span>
 </blockquote>
 <p>Isn’t it!? Fortunately, we are about to be unconfused.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1">(FIX REV-LOGIC)</span></code></pre></div>
+<div class="sourceCode" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1">(FIX REV-LOGIC)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1">#fn [REV-LOGIC$fn]</span></code></pre></div>
+<div class="sourceCode" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1">#fn [REV-LOGIC$fn]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
 <p>At least it didn’t blow up this time…</p>
 </blockquote>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1">((FIX REV-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb32-1">((FIX REV-LOGIC) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -2996,7 +4164,7 @@ background-color: null;
 font-style: inherit;">5</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3013,7 +4181,7 @@ font-style: inherit;">1</span>]</span></code></pre></div>
 </blockquote>
 <p>Even nicer is that our fixed logic behaves like identity now:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1">((REV-LOGIC (FIX REV-LOGIC)) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1">((REV-LOGIC (FIX REV-LOGIC)) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3026,7 +4194,7 @@ background-color: null;
 font-style: inherit;">5</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb32-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3039,65 +4207,7 @@ background-color: null;
 font-style: inherit;">1</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1">((REV-LOGIC (REV-LOGIC (FIX REV-LOGIC))) [<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span>])</span></code></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1">[<span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>]</span></code></pre></div>
-</div>
-<blockquote class="blockquote">
-<p>I can’t believe something so ridiculous actually works.</p>
-</blockquote>
-<p>Yes it is ridiculous to have all those silly names. Let’s fix that:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1">(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;"> Z</span></span>
-<span id="cb35-2">  (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [F]</span>
-<span id="cb35-3">    ((<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [X]</span>
-<span id="cb35-4">       (F (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [V] ((X X) V))))</span>
-<span id="cb35-5">     (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [X]</span>
-<span id="cb35-6">       (F (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [V] ((X X) V)))))))</span></code></pre></div>
-</div>
-<p>You are not your variables. Rename them, rebind them. Your essence is invariant.</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1">((Z REV-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1">((REV-LOGIC (REV-LOGIC (FIX REV-LOGIC))) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3123,66 +4233,39 @@ background-color: null;
 font-style: inherit;">1</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
-<p>Wait, we are meant to be doing Fibonacci, remember?</p>
+<p>I can’t believe something so ridiculous actually works.</p>
 </blockquote>
-<p>We are factoring out our <code>LOGIC</code>.</p>
-<blockquote class="blockquote">
-<p>It looks to me like you doubled the code, that’s not great refactoring. Using single letters make it totally unreadable.</p>
-</blockquote>
-<p>Hmmm, there does seem to be a lot of doubling. We can factor out a function for <code>f =&gt; (f f)</code>.</p>
+<p>Yes it is ridiculous to have all those silly names. Let’s fix that:</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb38" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb38-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;"> REPLICATE </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"Omega, the self-devouring serpent"</span></span>
+font-style: inherit;"> Z</span></span>
 <span id="cb38-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [F]</span>
-<span id="cb38-3">    (F F)))</span></code></pre></div>
-</div>
-<p>The replication of identity is itself.</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1">((REPLICATE <span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">identity</span>) <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>)</span></code></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb40-1"><span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span></span></code></pre></div>
-</div>
-<p>But test not the serpent lightly</p>
-<div class="sourceCode" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb41-1">(REPLICATE REPLICATE)</span></code></pre></div>
-<p><strong>stack overflow</strong></p>
-<p>The replication of replication is eternal. Now we can clean up that duplication.</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb42-1">(<span class="bu" style="color: null;
-background-color: null;
-font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
-background-color: null;
-font-style: inherit;"> Z</span></span>
-<span id="cb42-2">  (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb42-3">    (REPLICATE (<span class="kw" style="color: #003B4F;
+<span id="cb38-3">    ((<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [X]</span>
-<span id="cb42-4">                 (LOGIC (<span class="kw" style="color: #003B4F;
+<span id="cb38-4">       (F (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [V] ((X X) V))))</span>
+<span id="cb38-5">     (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [X]</span>
+<span id="cb38-6">       (F (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [V] ((X X) V)))))))</span></code></pre></div>
 </div>
+<p>You are not your variables. Rename them, rebind them. Your essence is invariant.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb43-1">((Z REV-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1">((Z REV-LOGIC) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3195,7 +4278,7 @@ background-color: null;
 font-style: inherit;">5</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb44-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb40" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb40-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3208,36 +4291,583 @@ background-color: null;
 font-style: inherit;">1</span>]</span></code></pre></div>
 </div>
 <blockquote class="blockquote">
-<p>That’s not really any clearer…</p>
+<p>Wait, we are meant to be doing Fibonacci, remember?</p>
 </blockquote>
-<p>Very well, we can keep extracting.</p>
+<p>We are factoring out our <code>LOGIC</code>.</p>
+<blockquote class="blockquote">
+<p>It looks to me like you doubled the code, that’s not great refactoring. Using single letters make it totally unreadable.</p>
+</blockquote>
+<p>Hmmm, there does seem to be a lot of doubling. We can factor out a function for <code>f =&gt; (f f)</code>.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb45" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb45-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb41" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb41-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;"> DEFER </span><span class="st" style="color: #20794D;
+font-style: inherit;"> REPLICATE </span><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"Eta, the patient one"</span></span>
-<span id="cb45-2">  (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">fn</span> [LOGIC]</span>
-<span id="cb45-3">    (<span class="kw" style="color: #003B4F;
+font-style: inherit;">"Omega, the self-devouring serpent"</span></span>
+<span id="cb41-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">fn</span> [VALUE]</span>
-<span id="cb45-4">      ((REPLICATE LOGIC) VALUE))))</span></code></pre></div>
+font-style: inherit;">fn</span> [F]</span>
+<span id="cb41-3">    (F F)))</span></code></pre></div>
 </div>
-<p>If the infinite is deferred, is it infinite?</p>
+<p>The replication of identity is itself.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb42" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb42-1">((REPLICATE <span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">identity</span>) <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb43" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb43-1"><span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span></span></code></pre></div>
+</div>
+<p>But test not the serpent lightly</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb44" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb44-1">(REPLICATE REPLICATE)</span></code></pre></div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+StackOverflowError
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<pre><code>
+#error {
+ :class   java.lang.StackOverflowError
+ :trace
+ [[code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
+  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]]}</code></pre>
+</div>
+</div>
+</div>
+<p>The replication of replication is eternal. Now we can clean up that duplication.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb46-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
-font-style: inherit;"> FOLD </span><span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"Zeta, weaver of logic, bringer of finitude"</span></span>
+font-style: inherit;"> Z</span></span>
 <span id="cb46-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
@@ -3245,12 +4875,14 @@ font-style: inherit;">fn</span> [LOGIC]</span>
 <span id="cb46-3">    (REPLICATE (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
-font-style: inherit;">fn</span> [SELF]</span>
-<span id="cb46-4">                 (LOGIC (DEFER SELF))))))</span></code></pre></div>
+font-style: inherit;">fn</span> [X]</span>
+<span id="cb46-4">                 (LOGIC (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [V] ((X X) V)))))))</span></code></pre></div>
 </div>
-<p>OMEGA diverges, ZETA folds, LOGIC writes QED.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb47-1">((FOLD REV-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb47" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb47-1">((Z REV-LOGIC) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3275,28 +4907,96 @@ font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>]</span></code></pre></div>
 </div>
+<blockquote class="blockquote">
+<p>That’s not really any clearer…</p>
+</blockquote>
+<p>Very well, we can keep extracting.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> DEFER </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Eta, the patient one"</span></span>
+<span id="cb49-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [LOGIC]</span>
+<span id="cb49-3">    (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [VALUE]</span>
+<span id="cb49-4">      ((REPLICATE LOGIC) VALUE))))</span></code></pre></div>
+</div>
+<p>If the infinite is deferred, is it infinite?</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> FOLD </span><span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"Zeta, weaver of logic, bringer of finitude"</span></span>
+<span id="cb50-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [LOGIC]</span>
+<span id="cb50-3">    (REPLICATE (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">fn</span> [SELF]</span>
+<span id="cb50-4">                 (LOGIC (DEFER SELF))))))</span></code></pre></div>
+</div>
+<p>OMEGA diverges, ZETA folds, LOGIC writes QED.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb51" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb51-1">((FOLD REV-LOGIC) [<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span>])</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb52" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb52-1">[<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">5</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">4</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">3</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>]</span></code></pre></div>
+</div>
 <p>That’s much nicer, I’m so glad you suggested using longer names.</p>
 <blockquote class="blockquote">
 <p>Can we write Fibonacci, <em>please</em>?</p>
 </blockquote>
 <p>Oh, that’s easy now!</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb53-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> FIB-LOGIC</span></span>
-<span id="cb49-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb53-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [SELF]</span>
-<span id="cb49-3">    (<span class="kw" style="color: #003B4F;
+<span id="cb53-3">    (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [[B A <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:as</span> FIBS]]</span>
-<span id="cb49-4">      (<span class="kw" style="color: #003B4F;
+<span id="cb53-4">      (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
@@ -3305,8 +5005,8 @@ font-weight: bold;
 font-style: inherit;">&gt;</span> B <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>)</span>
-<span id="cb49-5">        FIBS</span>
-<span id="cb49-6">        (SELF (<span class="kw" style="color: #003B4F;
+<span id="cb53-5">        FIBS</span>
+<span id="cb53-6">        (SELF (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">concat</span> [(<span class="kw" style="color: #003B4F;
@@ -3315,14 +5015,14 @@ font-weight: bold;
 font-style: inherit;">+</span> A B) B] FIBS))))))</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1">((FOLD FIB-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb54" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb54-1">((FOLD FIB-LOGIC) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb51" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb51-1">(<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb55" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb55-1">(<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">13</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3353,14 +5053,14 @@ font-style: inherit;">1</span>)</span></code></pre></div>
 </blockquote>
 <p>Oh, my mistake</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb52" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb52-1">((FOLD REV-LOGIC) ((FOLD FIB-LOGIC) [<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb56" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb56-1">((FOLD REV-LOGIC) ((FOLD FIB-LOGIC) [<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>]))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb53-1">[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb57" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb57-1">[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3391,28 +5091,28 @@ font-style: inherit;">13</span>]</span></code></pre></div>
 </blockquote>
 <p>I love that idea! An infinite sequence is exactly what we need…</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb54" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb54-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb58" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb58-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> FIB-LOGIC-FOREVER</span></span>
-<span id="cb54-2">  (<span class="kw" style="color: #003B4F;
+<span id="cb58-2">  (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [SELF]</span>
-<span id="cb54-3">    (<span class="kw" style="color: #003B4F;
+<span id="cb58-3">    (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [A]</span>
-<span id="cb54-4">      (<span class="kw" style="color: #003B4F;
+<span id="cb58-4">      (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">fn</span> [B]</span>
-<span id="cb54-5">        (<span class="kw" style="color: #003B4F;
+<span id="cb58-5">        (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">lazy-seq</span></span>
-<span id="cb54-6">          (<span class="kw" style="color: #003B4F;
+<span id="cb58-6">          (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">cons</span> A ((SELF B) (<span class="kw" style="color: #003B4F;
@@ -3421,7 +5121,7 @@ font-weight: bold;
 font-style: inherit;">+</span> A B))))))))</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb55" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb55-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb59" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb59-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">take</span> <span class="dv" style="color: #AD0000;
@@ -3433,7 +5133,7 @@ background-color: null;
 font-style: inherit;">1</span>))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb56" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb56-1">(<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb60" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb60-1">(<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
