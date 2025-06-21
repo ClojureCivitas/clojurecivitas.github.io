@@ -6,7 +6,8 @@
                               :date     "2025-05-25"
                               :category :clojure
                               :tags     [:lambda-calculus :code-interview]
-                              :keywords [:z-combinator]}}}
+                              :keywords [:z-combinator]}
+                     :exception-continue true}}
 (ns code-interview.beating.with-stupid-stuff.z-combinator-gambit
   (:require [clojure.print-object.remove-extraneous]))
 
@@ -69,10 +70,8 @@
         []
         (conj (SELF (rest LIST))
               (first LIST))))))
-;; ```clojure
-;; ((REV' REV') [1 2 3 4 5])
-;; ```
-;; **error**
+
+((REV' REV') [1 2 3 4 5])
 
 ;; Oh, no...
 ;; `SELF` doesn't take `LIST`,
@@ -130,10 +129,7 @@
 
 ;; > Well, it's a function! That much is clear...
 
-;; ```clojure
-;; ((REV-LOGIC REV-LOGIC) [1 2 3 4 5])
-;; ```
-;; **Error**
+((REV-LOGIC REV-LOGIC) [1 2 3 4 5])
 
 ;; But it doesn't work, because `(REV-LOGIC REV-LOGIC) =/= REV-LOGIC.`
 ;; Let's try something easier:
@@ -185,10 +181,7 @@
 
 ;; Because `(FIX F) = ((FIX F) (FIX F))`, it was your idea to refactor remember?
 
-;; ```clojure
-;; (FIX REV-LOGIC)
-;; ```
-;; **stack overflow**
+(FIX REV-LOGIC)
 
 ;; > Everything looks to be inside out now.
 
@@ -292,10 +285,7 @@
 
 ;; But test not the serpent lightly
 
-;; ```clojure
-;; (REPLICATE REPLICATE)
-;; ```
-;; **stack overflow**
+(REPLICATE REPLICATE)
 
 ;; The replication of replication is eternal.
 ;; Now we can clean up that duplication.

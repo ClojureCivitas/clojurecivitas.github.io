@@ -16,4 +16,4 @@
   :format           [:quarto :html]
   :run-quarto       false
   :hide-info-line   false
-  :quarto           ^:replace {}}}
+  :quarto           []}}

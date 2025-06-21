@@ -26,5 +26,6 @@
                :jvm-opts  ["-Dclojure.main.report=stderr"]}
   ;; When debugging libraries
   :local-deps {:override-deps {org.scicloj/clay          {:local/root "../clay"}
+                               org.scicloj/kindly        {:local/root "../kindly"}
                                org.scicloj/kindly-advice {:local/root "../kindly-advice"}}}
   :neil       {:project {:name io.github.timothypratley/clojurecivitas}}}}
