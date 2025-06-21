@@ -87,6 +87,11 @@
     (println "Front-matter warning:" md-file)
     (run! println ws)))
 
+;; TODO: it might be more convenient to use Quarto to gather the metadata
+;; ```
+;; quarto list --to json
+;; ```
+
 (defn find-mds [site-dir]
   (map str (fs/glob site-dir "**.qmd")))
 

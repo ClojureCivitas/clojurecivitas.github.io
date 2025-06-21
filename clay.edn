@@ -1,12 +1,13 @@
-{:base-target-path "temp"
- :base-source-path "src"
- :subdirs-to-sync  ["src"]
- :keep-sync-root   false
- :flatten-targets  false
- :remote-repo      {:git-url "https://github.com/ClojureCivitas/clojurecivitas.github.io"
-                    :branch  "main"}
- :hide-info-line   true
- :hide-ui-header   true
+{:base-target-path    "temp"
+ :base-source-path    "src"
+ :subdirs-to-sync     ["src"]
+ :keep-sync-root      false
+ :flatten-targets     false
+ :remote-repo         {:git-url "https://github.com/ClojureCivitas/clojurecivitas.github.io"
+                       :branch  "main"}
+ :hide-info-line      true
+ :hide-ui-header      true
+ :config/transform civitas.db/expand-authors
 
  ;; aliases
  :markdown
@@ -15,10 +16,4 @@
   :format           [:quarto :html]
   :run-quarto       false
   :hide-info-line   false
-  :quarto           ^:replace {}
-  :quarto/expand    (-> (slurp "site/db.edn")
-                      (clojure.edn/read-string)
-                      (mapcat [:author :affiliation])
-                      (->> (group-by :id))
-                      (update-vals first)
-                      (update-vals (fn [x] (dissoc x :id))))}}
+  :quarto           ^:replace {}}}

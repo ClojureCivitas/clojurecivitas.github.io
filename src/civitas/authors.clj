@@ -2,7 +2,7 @@
 ^{:clay {:title "Authors"
          :quarto {:type :page}}}
 (ns civitas.authors
-  (:require [civitas.explorer.db :as db]
+  (:require [civitas.db :as db]
             [scicloj.kindly.v4.kind :as kind]))
 
 ;; You belong here!

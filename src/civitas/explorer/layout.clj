@@ -2,7 +2,7 @@
 (ns civitas.explorer.layout
   (:require [hiccup.core :as hiccup]
             [scicloj.kindly.v4.kind :as kind]
-            [civitas.explorer.db :as db]
+            [civitas.db :as db]
             [civitas.explorer.geometry :as geom]
             [civitas.explorer.svg :as svg]))
 
