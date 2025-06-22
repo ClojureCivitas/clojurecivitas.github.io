@@ -43,11 +43,11 @@
    [:path {:d    "M0,0 L0,6 L6,3 z"
            :fill (:edge-shape-stroke default-styles)}]])
 
-(defn shape [{:keys [x y width height]}]
+(defn shape [{:keys [x y width height fill]}]
   [:rect {:width  width
           :height height
           :stroke (:node-shape-stroke default-styles)
-          :fill   (:node-shape-fill default-styles)}])
+          :fill   (or fill (:node-shape-fill default-styles))}])
 
 ;; TODO: good? bad?
 (defn fo-div [width height content]

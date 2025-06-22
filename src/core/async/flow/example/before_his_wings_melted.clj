@@ -32,13 +32,8 @@
 
 (def asynctopolis (flow/create-flow asynctopolis/config))
 
-(show/flow-svg asynctopolis {:show-chans   false
-                             :with-content false})
-
-;; Coordinate asynchronous operations using `core.async`.
-;; While powerful, these operations can become hard to reason about as they grow in complexity.
-;; The `core.async.flow` library is a higher-level abstraction for modeling async processes as a Directed Acyclic Graph (DAG).
-;; We can visualize flows [flow-monitor](https://github.com/clojure/core.async.flow-monitor).
+(show/flow-svg asynctopolis nil {:show-chans   false
+                                 :with-content false})
 
 ;; He circled the skyline.
 ;; He watched the channels breathe.
@@ -49,139 +44,73 @@
 ;; each role in the great asynchronous allegiance.
 
 
-;; Let's walk through an exploration of such a flow.
+;; As he flew lower he saw that processes are connected via channels.
 
-;; ## What We'll Explore
+(show/flow-svg asynctopolis nil {:chans-as-ports true
+                                 :with-content   false})
 
-;; In this notebook, we'll take a look at:
+;; Are channels attached to a process, or are they part of it?
+;; You can choose to visualize them as distinct connectors,
+;; or as embedded roles within each process.
+;; Both perspectives reveal useful insights.
 
-;; 1. **Basic flow structure**: What does a flow look like under the hood?
-;; 2. **Static visualization**: How can we inspect its components?
-;; 3. **Dynamic interaction**: How do values move through the flow, and what happens when they do?
+(show/flow-svg asynctopolis nil {:chans-as-ports false
+                                 :with-content   false})
 
-;; This flow models a small system involving aggregation, notification, and reporting.
-;; Internally, it consists of processes connected via channels.
-(show/flow-svg asynctopolis {:chans-as-ports true
-                             :with-content   false})
-
-;; Are channels part of a process or not?
-;; You decide
-
-(show/flow-svg asynctopolis {:chans-as-ports false
-                             :with-content   false})
-
-;; Let's dig deeper into the details
+;; Wanting to see more, Icarus swooped even lower to survey the processes.
 
 (show/proc-table asynctopolis)
 
-;; This table gives us a clear list of components in the flow, including their names
-;; and behaviors.
-
-;; Next, let’s examine how these processes are **connected**.
+;; With a clearer understanding of the processes,
+;; he pondered how these processes are connected.
 
 (show/conn-table asynctopolis)
 
-;; Now we’re seeing the wiring: who talks to whom, and through what channels.
+;; In doing so he realized there are also 2 global channels,
+;; `report` and `error`:
 
+(show/flow-svg asynctopolis nil {:chans-as-ports    false
+                                 :with-content      false
+                                 :show-global-chans true})
 
-;; There are 2 global channels, `report` and `error`:
+;; Any process can put messages on `report` and `error`.
 
-(show/flow-svg asynctopolis {:chans-as-ports    false
-                             :with-content      false
-                             :show-global-chans true})
+;; ## Street Level
 
-;; Any process can put messages on `report` and `error`,
-;; which is why we didn't show them until now.
-
-
-;; ## 3. Running the Flow
-
-;; Time to bring our flow to life!
-;; Calling `start` activates the processes and returns a map of the important channels for interaction.
+;; Reaching street level, he called out `start`!
+;; The flow responded, handing him report and error channels in a map.
 
 (def chs (flow/start asynctopolis))
+
+;; But still, nothing stirred. So he yelled `resume`!
+
 (flow/resume asynctopolis)
-
-;; We can now **inject values** into specific points in the flow.
-;; Think of this like poking the system and watching how it reacts.
-
-;; We send a “poke” signal to the `aggregator` process.
-
-(show/flow-svg asynctopolis {:chans-as-ports false
-                             :with-content   false})
-
-(flow/inject asynctopolis [:Tallystrix :poke] [true])
-
-(show/flow-svg asynctopolis {:chans-as-ports false
-                             :with-content   false})
-
-;; We send a stat string that is designed to trigger an alert.
-
-(flow/inject asynctopolis [:Tallystrix :stat] ["abc1000"])
-
-;; We send a notification message into the `notifier`.
-
-(flow/inject asynctopolis [:Claxxus :in] [:sandwich])
-
-;; ## 4. Observing the Results
-
-;; Our flow includes a `report-chan`, where summaries and reports might be sent.
 
 (def report-chan (:report-chan chs))
 
-(flow/ping asynctopolis)
-
 (async/poll! report-chan)
 
-;; After pinging the system, we check if anything landed in the report channel.
+(flow/inject asynctopolis [:Tallystrix :poke] [true])
 
-;; We can also inspect the `error-chan`, where any issues in the flow are reported.
+(flow/inject asynctopolis [:Tallystrix :stat] ["abc1000"])
 
-(def error-chan (:error-chan chs))
+(show/flow-svg asynctopolis chs {:chans-as-ports false
+                                 :with-content   false})
 
-(async/poll! error-chan)
+;; Tallystrix takes only numbers, `"abc1000"` was not acceptable.
 
+;; ## Conclusion
 
-;; If something unexpected occurred (e.g., bad input or failed routing),
-;; this is where we’d find it.
-
-(show/flow-svg asynctopolis {:chans-as-ports false
-                             :with-content   false})
-
-(flow/stop asynctopolis)
+        (flow/stop asynctopolis)
 (Thread/sleep 1)
 
-;; TODO: wait for the report and error !<
+;; Icarus realized that
+;; Flow is a library for building concurrent, event-driven systems
+;; out of simple, communication-free functions.
+;; Processes connect through channels.
+;; You define the structure as a directed graph.
+;; Flow takes care of orchestration.
+;; Flows are data-driven, easy to inspect, reason about and visualize.
+;; Then he wondered just how high could he fly?
 
-
-;; Flows implement the `Datafy` protocol so we can inspect them as data...
-;; Good luck with that, there's a lot of it
-
-(datafy/datafy asynctopolis)
-
-
-
-; ## Flow
-
-; At its core, flow is a library for building concurrent, event-driven systems
-; using simple, communication-free functions.
-; It lets you wire up processes and connect them through channels,
-; while keeping control, error handling, and monitoring centralized and declarative.
-;
-;You define the structure as a directed graph—processes,
-; their inputs and outputs, and how they connect—and the flow system takes care of orchestration.
-; Your logic remains focused, while flow handles execution, coordination, and lifecycle concerns.
-;
-;All processes can be inspected or observed, and flows are fully data-driven, making them easy to reason about and visualize.
-; It's concurrent programming with structure—without the chaos.
-
-; ## Summary
-
-;; By constructing, inspecting, and interacting with a flow, we can understand the
-;; lifecycle and structure of asynchronous systems more clearly.
-;;
-;; This toolset provides a bridge between the abstract beauty of DAGs and the
-;; gritty realism of channel communication—unlocking both power and clarity
-;; in asynchronous Clojure code.
-
-;; Happy flowing!
+;; Happy flowing, and keep your feathers waxed!

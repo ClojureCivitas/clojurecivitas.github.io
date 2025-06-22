@@ -7,7 +7,8 @@
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}
 (ns core.async.flow.example.flow-show
-  (:require [clojure.datafy :as datafy]
+  (:require [clojure.core.async :as async]
+            [clojure.datafy :as datafy]
             [clojure.string :as str]
             [graph.layout.elk :as elk]
             [graph.layout.elk-svg :as elk-svg]))
@@ -53,36 +54,39 @@
                         [:div (for [[k v] outs]
                                 [:div [:strong (name k)] ": " v])]]))}))
 
-(defn elkg [flow {:keys [show-chans
-                         show-global-chans
-                         chans-as-ports
-                         with-content
-                         proc-width
-                         proc-height
-                         chan-width
-                         chan-height]
-                  :or   {show-chans        true
-                         show-global-chans false
-                         chans-as-ports    true
-                         with-content      false
-                         proc-width        60
-                         proc-height       30
-                         chan-width        30
-                         chan-height       12}}]
+(defn elkg [flow
+            {:keys [error-chan report-chan]}
+            {:keys [show-chans
+                    show-global-chans
+                    chans-as-ports
+                    with-content
+                    proc-width
+                    proc-height
+                    chan-width
+                    chan-height]
+             :or   {show-chans        true
+                    show-global-chans false
+                    chans-as-ports    true
+                    with-content      false
+                    proc-width        60
+                    proc-height       30
+                    chan-width        30
+                    chan-height       12}}]
   (let [{:keys [conns procs chans]} (datafy/datafy flow)
         {:keys [ins outs error report]} chans
+        err (some-> error-chan (async/poll!))
         all-proc-chans (into #{} cat conns)
         global-chans (when show-global-chans
                        [{:id            "report"
                          :layoutOptions {:elk.layered.layering.layerConstraint "LAST_SEPARATE"}
                          :width         chan-width
                          :height        chan-height
-                         :labels        [{:text (str "report" "(" (-> report :buffer :count) ")")}]}
+                         :labels        [{:text "report"}]}
                         {:id            "error"
                          :layoutOptions {:elk.layered.layering.layerConstraint "LAST_SEPARATE"}
                          :width         chan-width
                          :height        chan-height
-                         :labels        [{:text (str "error" "(" (-> error :buffer :count) ")")}]}])
+                         :labels        [{:text "error"}]}])
         proc-nodes (vec (for [[proc-key proc-chans] (group-by first all-proc-chans)]
                           (let [{:keys [args proc]} (get procs proc-key)
                                 {:keys [desc]} proc
@@ -98,11 +102,11 @@
                                 chans (for [[p chan-k :as proc-chan] proc-chans
                                             :let [chan-name (name chan-k)
                                                   {:as c :keys [buffer]} (or (get outs [p chan-k])
-                                                                       (get ins [p chan-k]))]]
+                                                                             (get ins [p chan-k]))]]
                                         {:id     (id-for proc-chan)
                                          :width  chan-width
                                          :height chan-height
-                                         :labels [{:text (str chan-name " (" (:count buffer) ")")}]})]
+                                         :labels [{:text chan-name}]})]
                             {:id            (id-for proc-key)
                              :width         proc-width
                              :height        proc-height
@@ -116,6 +120,7 @@
                              (vec (when (and show-chans chans-as-ports)
                                     chans))})))]
     {:id            "G"
+     :fill          (when err "red")
      :layoutOptions {:elk.algorithm         "layered"
                      :elk.direction         "RIGHT"
                      :elk.hierarchyHandling "INCLUDE_CHILDREN"}
@@ -137,7 +142,7 @@
                :sources [(id-for from)]
                :targets [(id-for to)]})))}))
 
-(defn flow-svg [flow options]
-  (-> (elkg flow options)
+(defn flow-svg [flow chs options]
+  (-> (elkg flow chs options)
       (elk/layout)
       (elk-svg/render-graph)))
