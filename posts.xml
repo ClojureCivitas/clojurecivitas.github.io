@@ -1281,7 +1281,7 @@ font-style: inherit;">e</span>)))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval72410/fn--72411"</span></span></code></pre></div>
+font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval72403/fn--72404"</span></span></code></pre></div>
 </div>
 <p>Why is it trying to call <code>cons</code> with a single argument? In addition to separating the transformation from the output, <code>transduce</code> also has a “completion” step, which is performed on the final result. A convenience function called <code>completing</code> can be used to wrap the function here to provide a “no-op” completion:</p>
 <div class="sourceClojure">
@@ -2131,9 +2131,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x5de576b3</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x472ea1e8</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@5de576b3"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@472ea1e8"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -2141,9 +2141,9 @@ font-style: inherit;">"clojure.lang.MultiFn@5de576b3"</span>]</span></code></pre
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x427bdb54</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x158a3c54</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@427bdb54"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@158a3c54"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -2152,9 +2152,9 @@ font-style: inherit;">"java.lang.Object@427bdb54"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x521a0dc8</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x2ffab10d</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@521a0dc8"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@2ffab10d"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -2170,11 +2170,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval72474$fn__72475 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval72467$fn__72468 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x75585e7c</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x2ecdd727</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval72474$fn__72475@75585e7c"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval72467$fn__72468@2ecdd727"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -2190,11 +2190,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval72478$fn__72479$fn__72480 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval72471$fn__72472$fn__72473 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x3bd0e64f</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x5199b326</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval72478$fn__72479$fn__72480@3bd0e64f"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval72471$fn__72472$fn__72473@5199b326"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -2248,7 +2248,7 @@ background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3747</span>]</span>
-<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__72486 invoke <span class="st" style="color: #20794D;
+<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__72479 invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -2288,7 +2288,7 @@ font-style: inherit;">fn</span> [y] y))))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print-object.remove-extraneous/eval72492/fn--72493/fn--72494"</span></span></code></pre></div>
+font-style: inherit;">"clojure.print-object.remove-extraneous/eval72485/fn--72486/fn--72487"</span></span></code></pre></div>
 </div>
 <p>Next, we don’t need the eval identities.</p>
 <div class="sourceClojure">
@@ -2660,7 +2660,7 @@ ClassCastException
 <pre><code>
 #error {
  :class   java.lang.ClassCastException
- :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45746 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45746 is in unnamed module of loader clojure.lang.DynamicClassLoader @6fe1643; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
+ :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45748 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45748 is in unnamed module of loader clojure.lang.DynamicClassLoader @1b559769; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
  :trace
  [[clojure.core/conj                                                     "core.clj" 84]
   [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REV'/fn]
@@ -2912,7 +2912,7 @@ ClassCastException
 <pre><code>
 #error {
  :class   java.lang.ClassCastException
- :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45756 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45756 is in unnamed module of loader clojure.lang.DynamicClassLoader @549f5306; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
+ :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45758 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45758 is in unnamed module of loader clojure.lang.DynamicClassLoader @a82311e; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
  :trace
  [[clojure.core/conj                                                          "core.clj" 84]
   [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REV-LOGIC/fn]
