@@ -6,6 +6,7 @@ website:
   favicon: "favicon.ico"
   site-url: "https://clojurecivitas.github.io"
   image: "images/civitas-icon.svg"
+  draft-mode: unlinked
   open-graph: true
   navbar:
     logo: "images/civitas-icon.svg"
