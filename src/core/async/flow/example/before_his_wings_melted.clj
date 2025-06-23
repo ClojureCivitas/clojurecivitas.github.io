@@ -9,7 +9,6 @@
 (ns core.async.flow.example.before-his-wings-melted
   (:require [clojure.core.async :as async]
             [clojure.core.async.flow :as flow]
-            [clojure.datafy :as datafy]
             [core.async.flow.example.asynctopolis :as asynctopolis]
             [core.async.flow.example.flow-show :as show]))
 

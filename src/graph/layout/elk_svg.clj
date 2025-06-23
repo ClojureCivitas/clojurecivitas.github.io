@@ -11,7 +11,7 @@
   {:edge-shape-stroke      "black"
    :edge-shape-fill        "none"
    :node-shape-stroke      "black"
-   :node-shape-fill        "white"
+   :node-shape-fill        "none"
    :node-label-stroke      "none"
    :node-label-fill        "black"
    :node-label-font-size   "12px"
