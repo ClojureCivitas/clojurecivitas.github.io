@@ -649,49 +649,93 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb28"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">time</span> (<span class="kw">dotimes</span> [_ NUM-REPS]</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>        (cvt/romanized-&gt;தமிழ் s)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div data-lst-cap="OUT:">
-<p>“Elapsed time: 284.003551 msecs”</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>"Elapsed time: 274.901397 msecs"
+</code></pre>
+</div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb29"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb30"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb30"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">time</span> (<span class="kw">dotimes</span> [_ NUM-REPS]</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">-&gt;&gt;</span> (<span class="kw">re-seq</span> regex1 s)</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">map</span> #(<span class="kw">or</span> (cvt/romanized-தமிழ்-phoneme-map <span class="va">%</span>) <span class="va">%</span>))</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>             fmt/phonemes-&gt;str)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">time</span> (<span class="kw">dotimes</span> [_ NUM-REPS]</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">-&gt;&gt;</span> (<span class="kw">re-seq</span> regex1 s)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">map</span> #(<span class="kw">or</span> (cvt/romanized-தமிழ்-phoneme-map <span class="va">%</span>) <span class="va">%</span>))</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>             fmt/phonemes-&gt;str)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div data-lst-cap="OUT:">
-<p>“Elapsed time: 124.354771 msecs”</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb31"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout-title-container flex-fill">
+OUT
 </div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb32"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">time</span> (<span class="kw">dotimes</span> [_ NUM-REPS]</span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">-&gt;&gt;</span> (<span class="kw">re-seq</span> regex2 s)</span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">map</span> #(<span class="kw">or</span> (cvt/romanized-தமிழ்-phoneme-map <span class="va">%</span>) <span class="va">%</span>))</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>             fmt/phonemes-&gt;str)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div data-lst-cap="OUT:">
-<p>“Elapsed time: 90.750814 msecs”</p>
+<div class="callout-body-container callout-body">
+<pre><code>"Elapsed time: 112.505615 msecs"
+</code></pre>
+</div>
 </div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb33"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Well, this is surprising. I assumed that the regex implementation would be significantly faster. Let’s try to investigate.</p>
-<p>Maybe the difference is less than we thought because <code>fmt/phonemes-&gt;str</code> is suspiciously inefficient (and also based on the prefix tree code). So what if we strike that out from the above expressions that were timed?</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb34"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">time</span> (<span class="kw">dotimes</span> [_ NUM-REPS]</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">-&gt;&gt;</span> (<span class="kw">re-seq</span> regex2 s)</span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">map</span> #(<span class="kw">or</span> (cvt/romanized-தமிழ்-phoneme-map <span class="va">%</span>) <span class="va">%</span>))</span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>             str/join)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>             fmt/phonemes-&gt;str)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div data-lst-cap="OUT:">
-<p>“Elapsed time: 2.052443 msecs”</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>"Elapsed time: 108.106763 msecs"
+</code></pre>
+</div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb35"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Well, this is surprising. I assumed that the regex implementation would be significantly faster. Let’s try to investigate.</p>
+<p>Maybe the difference is less than we thought because <code>fmt/phonemes-&gt;str</code> is suspiciously inefficient (and also based on the prefix tree code). So what if we strike that out from the above expressions that were timed?</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb37"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">time</span> (<span class="kw">dotimes</span> [_ NUM-REPS]</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">-&gt;&gt;</span> (<span class="kw">re-seq</span> regex2 s)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>             (<span class="kw">map</span> #(<span class="kw">or</span> (cvt/romanized-தமிழ்-phoneme-map <span class="va">%</span>) <span class="va">%</span>))</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>             str/join)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>"Elapsed time: 1.749543 msecs"
+</code></pre>
+</div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb39"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>So <code>fmt/phonemes-&gt;str</code> is the culprit. And the implementation of it uses prefix tree code, which is ripe for optimization, perhaps similar to what we just proved here?</p>
 <div style="background-color:grey;height:2px;width:100%;"></div>

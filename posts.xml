@@ -1040,30 +1040,41 @@ font-weight: bold;
 font-style: inherit;">dotimes</span> [_ NUM-REPS]</span>
 <span id="cb28-2">        (cvt/romanized-&gt;தமிழ் s)))</span></code></pre></div>
 </div>
-<div data-lst-cap="OUT:">
-<p>“Elapsed time: 284.003551 msecs”</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>"Elapsed time: 274.901397 msecs"
+</code></pre>
+</div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">time</span> (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">dotimes</span> [_ NUM-REPS]</span>
-<span id="cb30-2">        (<span class="kw" style="color: #003B4F;
+<span id="cb31-2">        (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">-&gt;&gt;</span> (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">re-seq</span> regex1 s)</span>
-<span id="cb30-3">             (<span class="kw" style="color: #003B4F;
+<span id="cb31-3">             (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">map</span> #(<span class="kw" style="color: #003B4F;
@@ -1074,54 +1085,27 @@ background-color: null;
 font-style: inherit;">%</span>) <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">%</span>))</span>
-<span id="cb30-4">             fmt/phonemes-&gt;str)))</span></code></pre></div>
+<span id="cb31-4">             fmt/phonemes-&gt;str)))</span></code></pre></div>
 </div>
-<div data-lst-cap="OUT:">
-<p>“Elapsed time: 124.354771 msecs”</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1"><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nil</span></span></code></pre></div>
+<div class="callout-title-container flex-fill">
+OUT
 </div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb32" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb32-1">(<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">time</span> (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">dotimes</span> [_ NUM-REPS]</span>
-<span id="cb32-2">        (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">-&gt;&gt;</span> (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">re-seq</span> regex2 s)</span>
-<span id="cb32-3">             (<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">map</span> #(<span class="kw" style="color: #003B4F;
-background-color: null;
-font-weight: bold;
-font-style: inherit;">or</span> (cvt/romanized-தமிழ்-phoneme-map <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">%</span>) <span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">%</span>))</span>
-<span id="cb32-4">             fmt/phonemes-&gt;str)))</span></code></pre></div>
 </div>
-<div data-lst-cap="OUT:">
-<p>“Elapsed time: 90.750814 msecs”</p>
+<div class="callout-body-container callout-body">
+<pre><code>"Elapsed time: 112.505615 msecs"
+</code></pre>
+</div>
 </div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb33" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb33-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
-<p>Well, this is surprising. I assumed that the regex implementation would be significantly faster. Let’s try to investigate.</p>
-<p>Maybe the difference is less than we thought because <code>fmt/phonemes-&gt;str</code> is suspiciously inefficient (and also based on the prefix tree code). So what if we strike that out from the above expressions that were timed?</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb34" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb34-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
@@ -1148,13 +1132,73 @@ background-color: null;
 font-style: inherit;">%</span>) <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">%</span>))</span>
-<span id="cb34-4">             str/join)))</span></code></pre></div>
+<span id="cb34-4">             fmt/phonemes-&gt;str)))</span></code></pre></div>
 </div>
-<div data-lst-cap="OUT:">
-<p>“Elapsed time: 2.052443 msecs”</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>"Elapsed time: 108.106763 msecs"
+</code></pre>
+</div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb35" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb35-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb36" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb36-1"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nil</span></span></code></pre></div>
+</div>
+<p>Well, this is surprising. I assumed that the regex implementation would be significantly faster. Let’s try to investigate.</p>
+<p>Maybe the difference is less than we thought because <code>fmt/phonemes-&gt;str</code> is suspiciously inefficient (and also based on the prefix tree code). So what if we strike that out from the above expressions that were timed?</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb37" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb37-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">time</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">dotimes</span> [_ NUM-REPS]</span>
+<span id="cb37-2">        (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-&gt;&gt;</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">re-seq</span> regex2 s)</span>
+<span id="cb37-3">             (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">map</span> #(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">or</span> (cvt/romanized-தமிழ்-phoneme-map <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">%</span>) <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">%</span>))</span>
+<span id="cb37-4">             str/join)))</span></code></pre></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>"Elapsed time: 1.749543 msecs"
+</code></pre>
+</div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb39" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb39-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
@@ -2433,7 +2477,7 @@ font-style: inherit;">e</span>)))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval72403/fn--72404"</span></span></code></pre></div>
+font-style: inherit;">"Wrong number of args (1) passed to: clojure.transducers.what-if/eval72390/fn--72391"</span></span></code></pre></div>
 </div>
 <p>Why is it trying to call <code>cons</code> with a single argument? In addition to separating the transformation from the output, <code>transduce</code> also has a “completion” step, which is performed on the final result. A convenience function called <code>completing</code> can be used to wrap the function here to provide a “no-op” completion:</p>
 <div class="sourceClojure">
@@ -2795,11 +2839,31 @@ background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> [] s)])</span></code></pre></div>
 </div>
-<div data-lst-cap="OUT:">
-<p>0 1 2 3 4 0 1 2 3 4</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>0
+1
+2
+3
+4
+0
+1
+2
+3
+4
+</code></pre>
+</div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb48" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb48-1">[[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1">[[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -2823,7 +2887,7 @@ font-style: inherit;">5</span>]]</span></code></pre></div>
 </div>
 <p>That will print 0 1 2 3 4 twice, because the <code>eduction</code> is consumed twice. Compare that behavior to <code>sequence</code>, which produces a lazy sequence and caches its results:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1">(<span class="kw" style="color: #003B4F;
+<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1">(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">let</span> [s (<span class="kw" style="color: #003B4F;
@@ -2849,20 +2913,35 @@ font-weight: bold;
 font-style: inherit;">range</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">5</span>))]</span>
-<span id="cb49-2">  [(<span class="kw" style="color: #003B4F;
+<span id="cb50-2">  [(<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> [] s)</span>
-<span id="cb49-3">   (<span class="kw" style="color: #003B4F;
+<span id="cb50-3">   (<span class="kw" style="color: #003B4F;
 background-color: null;
 font-weight: bold;
 font-style: inherit;">into</span> [] s)])</span></code></pre></div>
 </div>
-<div data-lst-cap="OUT:">
-<p>0 1 2 3 4</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>0
+1
+2
+3
+4
+</code></pre>
+</div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1">[[<span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb52" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb52-1">[[<span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3283,9 +3362,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0xfaba0e3</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x77d200a8</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@faba0e3"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@77d200a8"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -3293,9 +3372,9 @@ font-style: inherit;">"clojure.lang.MultiFn@faba0e3"</span>]</span></code></pre>
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x2990a142</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x4aa3a770</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@2990a142"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@4aa3a770"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -3304,9 +3383,9 @@ font-style: inherit;">"java.lang.Object@2990a142"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x1879ba15</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x718e8da3</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@1879ba15"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@718e8da3"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -3322,11 +3401,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval72467$fn__72468 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval72454$fn__72455 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x174abee5</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x24b21e81</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval72467$fn__72468@174abee5"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval72454$fn__72455@24b21e81"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -3342,11 +3421,11 @@ font-weight: bold;
 font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval72471$fn__72472$fn__72473 <span class="bn" style="color: #AD0000;
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval72458$fn__72459$fn__72460 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x29241a50</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x77a3d13c</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval72471$fn__72472$fn__72473@29241a50"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval72458$fn__72459$fn__72460@77a3d13c"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -3400,7 +3479,7 @@ background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3747</span>]</span>
-<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__72479 invoke <span class="st" style="color: #20794D;
+<span id="cb13-3"> [clojure.print_object.remove_extraneous$caesar_cipher$add2__72466 invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -3440,7 +3519,7 @@ font-style: inherit;">fn</span> [y] y))))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print-object.remove-extraneous/eval72485/fn--72486/fn--72487"</span></span></code></pre></div>
+font-style: inherit;">"clojure.print-object.remove-extraneous/eval72472/fn--72473/fn--72474"</span></span></code></pre></div>
 </div>
 <p>Next, we don’t need the eval identities.</p>
 <div class="sourceClojure">
@@ -3812,7 +3891,7 @@ ClassCastException
 <pre><code>
 #error {
  :class   java.lang.ClassCastException
- :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45748 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45748 is in unnamed module of loader clojure.lang.DynamicClassLoader @6f2399bf; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
+ :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45735 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45735 is in unnamed module of loader clojure.lang.DynamicClassLoader @52a86261; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
  :trace
  [[clojure.core/conj                                                     "core.clj" 84]
   [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REV'/fn]
@@ -3820,11 +3899,11 @@ ClassCastException
   [Compiler.eval                                                         "Compiler.java" 7700]
   [Compiler.eval                                                         "Compiler.java" 7655]
   [clojure.core/eval                                                     "core.clj" 3232]
-  [scicloj.clay.v2.notebook/read-eval-capture/fn/fn                      "notebook.clj" 62]
-  [scicloj.clay.v2.notebook/read-eval-capture/fn                         "notebook.clj" 60]
-  [scicloj.clay.v2.notebook/read-eval-capture                            "notebook.clj" 59]
-  [scicloj.clay.v2.notebook/complete                                     "notebook.clj" 92]
-  [scicloj.clay.v2.notebook/complete-notes/fn                            "notebook.clj" 291]
+  [scicloj.clay.v2.notebook/read-eval-capture/fn/fn                      "notebook.clj" 61]
+  [scicloj.clay.v2.notebook/read-eval-capture/fn                         "notebook.clj" 59]
+  [scicloj.clay.v2.notebook/read-eval-capture                            "notebook.clj" 58]
+  [scicloj.clay.v2.notebook/complete                                     "notebook.clj" 91]
+  [scicloj.clay.v2.notebook/complete-notes/fn                            "notebook.clj" 290]
   [ArrayChunk.reduce                                                     "ArrayChunk.java" 65]
   [clojure.core.protocols/fn                                             "protocols.clj" 135]
   [clojure.core.protocols/fn/G                                           "protocols.clj" 19]
@@ -3832,10 +3911,10 @@ ClassCastException
   [clojure.core.protocols/fn                                             "protocols.clj" 74]
   [clojure.core.protocols/fn/G                                           "protocols.clj" 13]
   [clojure.core/reduce                                                   "core.clj" 6965]
-  [scicloj.clay.v2.notebook/complete-notes                               "notebook.clj" 286]
-  [scicloj.clay.v2.notebook/items-and-test-forms/fn                      "notebook.clj" 396]
+  [scicloj.clay.v2.notebook/complete-notes                               "notebook.clj" 285]
+  [scicloj.clay.v2.notebook/items-and-test-forms/fn                      "notebook.clj" 395]
   [clojure.core/with-redefs-fn                                           "core.clj" 7706]
-  [scicloj.clay.v2.notebook/items-and-test-forms                         "notebook.clj" 397]
+  [scicloj.clay.v2.notebook/items-and-test-forms                         "notebook.clj" 396]
   [scicloj.clay.v2.make/handle-single-source-spec!                       "make.clj" 336]
   [clojure.core/mapv/fn                                                  "core.clj" 7059]
   [ArrayChunk.reduce                                                     "ArrayChunk.java" 60]
@@ -4064,7 +4143,7 @@ ClassCastException
 <pre><code>
 #error {
  :class   java.lang.ClassCastException
- :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45758 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45758 is in unnamed module of loader clojure.lang.DynamicClassLoader @36559157; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
+ :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45745 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45745 is in unnamed module of loader clojure.lang.DynamicClassLoader @6f2399bf; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
  :trace
  [[clojure.core/conj                                                          "core.clj" 84]
   [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REV-LOGIC/fn]
@@ -4072,11 +4151,11 @@ ClassCastException
   [Compiler.eval                                                              "Compiler.java" 7700]
   [Compiler.eval                                                              "Compiler.java" 7655]
   [clojure.core/eval                                                          "core.clj" 3232]
-  [scicloj.clay.v2.notebook/read-eval-capture/fn/fn                           "notebook.clj" 62]
-  [scicloj.clay.v2.notebook/read-eval-capture/fn                              "notebook.clj" 60]
-  [scicloj.clay.v2.notebook/read-eval-capture                                 "notebook.clj" 59]
-  [scicloj.clay.v2.notebook/complete                                          "notebook.clj" 92]
-  [scicloj.clay.v2.notebook/complete-notes/fn                                 "notebook.clj" 291]
+  [scicloj.clay.v2.notebook/read-eval-capture/fn/fn                           "notebook.clj" 61]
+  [scicloj.clay.v2.notebook/read-eval-capture/fn                              "notebook.clj" 59]
+  [scicloj.clay.v2.notebook/read-eval-capture                                 "notebook.clj" 58]
+  [scicloj.clay.v2.notebook/complete                                          "notebook.clj" 91]
+  [scicloj.clay.v2.notebook/complete-notes/fn                                 "notebook.clj" 290]
   [ArrayChunk.reduce                                                          "ArrayChunk.java" 65]
   [clojure.core.protocols/fn                                                  "protocols.clj" 135]
   [clojure.core.protocols/fn/G                                                "protocols.clj" 19]
@@ -4084,10 +4163,10 @@ ClassCastException
   [clojure.core.protocols/fn                                                  "protocols.clj" 74]
   [clojure.core.protocols/fn/G                                                "protocols.clj" 13]
   [clojure.core/reduce                                                        "core.clj" 6965]
-  [scicloj.clay.v2.notebook/complete-notes                                    "notebook.clj" 286]
-  [scicloj.clay.v2.notebook/items-and-test-forms/fn                           "notebook.clj" 396]
+  [scicloj.clay.v2.notebook/complete-notes                                    "notebook.clj" 285]
+  [scicloj.clay.v2.notebook/items-and-test-forms/fn                           "notebook.clj" 395]
   [clojure.core/with-redefs-fn                                                "core.clj" 7706]
-  [scicloj.clay.v2.notebook/items-and-test-forms                              "notebook.clj" 397]
+  [scicloj.clay.v2.notebook/items-and-test-forms                              "notebook.clj" 396]
   [scicloj.clay.v2.make/handle-single-source-spec!                            "make.clj" 336]
   [clojure.core/mapv/fn                                                       "core.clj" 7059]
   [ArrayChunk.reduce                                                          "ArrayChunk.java" 60]
