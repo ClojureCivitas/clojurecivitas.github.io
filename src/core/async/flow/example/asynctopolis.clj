@@ -2,7 +2,6 @@
   :clay             {:title  "Stats and Signals in the Flow of Asynctopolis"
                      :quarto {:author   [:alexmiller :timothypratley]
                               :type     :post
-                              :draft    true
                               :date     "2025-05-1"
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}

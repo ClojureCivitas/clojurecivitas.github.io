@@ -2,7 +2,6 @@
   :clay             {:title  "What He Saw Before His Wings Melted"
                      :quarto {:author   [:daslu :timothypratley]
                               :type     :post
-                              :draft    true
                               :date     "2025-05-1"
                               :category :clojure
                               :tags     [:core.async :core.async.flow]}}}
