@@ -12,7 +12,7 @@
   clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
   clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
   org.scicloj/clay                            {:git/url "https://github.com/scicloj/clay"
-                                               :git/sha "bae1fdf09917277ae47514168e55340111a8f544"}
+                                               :git/sha "eca1251a004e36b1d152f7caa862545013bf6ebf"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph       {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph.json  {:mvn/version "0.10.0"}
