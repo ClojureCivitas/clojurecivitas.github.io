@@ -17,6 +17,8 @@ website:
       - pages.qmd
       - icon: github
         href: "https://github.com/ClojureCivitas/clojurecivitas.github.io"
+      - icon: rss
+        href: posts.xml
 
 format:
   html:
