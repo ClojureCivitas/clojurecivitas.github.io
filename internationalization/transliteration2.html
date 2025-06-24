@@ -384,8 +384,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="internationalization/transliteration2_files/md-default0.js" type="text/javascript"></script>
-<script src="internationalization/transliteration2_files/md-default1.js" type="text/javascript"></script>
+<script src="transliteration2_files/md-default0.js" type="text/javascript"></script>
+<script src="transliteration2_files/md-default1.js" type="text/javascript"></script>
 <p>In the last post on <a href="transliteration.html">transliteration</a>, I introduced the idea of transliteration as implemented in programming, and pointed out that the process of transforming text is more general. In that regard, the implementation that works for one use case will work for another. Now, the question is what is the most efficient and appropriate implementation?</p>
 <p>I talked about a prefix tree as easy for storing the sub-/strings to match on. However, in my pure Clojure implementation of a prefix tree, which is implemented using nested maps, the performance is slow. Very slow! But that’s not a reflection of Clojure, which is a language that is very practical and optimizes what it can. And the ethos of Clojure programming follows the maxim in programming, stemming <a href="https://wiki.c2.com/?MakeItWorkMakeItRightMakeItFast">from early Unix, of “make it work, make it right, make it fast”</a>. As such, we should think about how to make this fast.</p>
 <p>Tim asked me why this text transformation couldn’t have been implemented in a regex, and doing so would certainly make it fast. For example, to transliterate Tamil language text in Latin script into the Tamil script, my existing implementation would look like:</p>
@@ -659,7 +659,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 176.933504 msecs"
+<pre><code>"Elapsed time: 223.979222 msecs"
 </code></pre>
 </div>
 </div>
@@ -682,7 +682,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 118.539163 msecs"
+<pre><code>"Elapsed time: 135.265955 msecs"
 </code></pre>
 </div>
 </div>
@@ -705,7 +705,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 95.779402 msecs"
+<pre><code>"Elapsed time: 101.620822 msecs"
 </code></pre>
 </div>
 </div>
@@ -730,7 +730,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 2.021854 msecs"
+<pre><code>"Elapsed time: 2.425612 msecs"
 </code></pre>
 </div>
 </div>
