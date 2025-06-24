@@ -42,7 +42,14 @@
    :image       "https://avatars.githubusercontent.com/u/49298?v=4"
    :email       "timothypratley@gmail.com"
    :affiliation [:hummi]
-   :links       [{:icon "github" :href "https://github.com/timothypratley"}]}]
+   :links       [{:icon "github" :href "https://github.com/timothypratley"}]}
+  {:id          :harold
+   :name        "Harold"
+   :url         "https://techascent.com"
+   :image       "https://avatars.githubusercontent.com/u/7443?v=4"
+   :email       "harold@techascent.com"
+   :affiliation [:techascent]
+   :links       [{:icon "github" :text "GitHub" :href "https://github.com/harold"}]}]
 
  :affiliation
  [{:id   :clojure.core
@@ -57,7 +64,10 @@
   {:id   :hummi
    :name "Hummi"
    ;; TODO: as icons
-   :url  "https://hummi.app"}]
+   :url  "https://hummi.app"}
+  {:id   :techascent
+   :name "TechAscent"
+   :url "https://techascent.com"}]
 
  :topic
  [{:id        :core
