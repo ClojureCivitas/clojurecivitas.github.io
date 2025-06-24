@@ -1347,7 +1347,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 321.542971 msecs"
+<pre><code>"Elapsed time: 257.629737 msecs"
 </code></pre>
 </div>
 </div>
@@ -1394,7 +1394,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 181.298072 msecs"
+<pre><code>"Elapsed time: 118.929934 msecs"
 </code></pre>
 </div>
 </div>
@@ -1441,7 +1441,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 132.843292 msecs"
+<pre><code>"Elapsed time: 90.454022 msecs"
 </code></pre>
 </div>
 </div>
@@ -1490,7 +1490,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 2.063146 msecs"
+<pre><code>"Elapsed time: 2.067643 msecs"
 </code></pre>
 </div>
 </div>
@@ -3659,9 +3659,9 @@ font-style: inherit;">#'clojure.core/print-object</span> x w))</span></code></pr
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">#object[clojure.lang.MultiFn <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x59b372e1</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x1a6fec26</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.lang.MultiFn@59b372e1"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.lang.MultiFn@1a6fec26"</span>]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">(Object.)</span></code></pre></div>
@@ -3669,9 +3669,9 @@ font-style: inherit;">"clojure.lang.MultiFn@59b372e1"</span>]</span></code></pre
 <div class="printedClojure">
 <div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">#object[java.lang.Object <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x54b1ef92</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x62bd0336</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"java.lang.Object@54b1ef92"</span>]</span></code></pre></div>
+font-style: inherit;">"java.lang.Object@62bd0336"</span>]</span></code></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
@@ -3680,9 +3680,9 @@ font-style: inherit;">"java.lang.Object@54b1ef92"</span>]</span></code></pre></d
 <div class="printedClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x5aef6e07</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x2df068a2</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@5aef6e07"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.core.async.impl.channels.ManyToManyChannel@2df068a2"</span>]</span></code></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -3700,9 +3700,9 @@ font-style: inherit;">fn</span> [x] x)</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">#object[clojure.print_object.remove_extraneous$eval72470$fn__72471 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x3f3e0b5d</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x70a3bbcd</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval72470$fn__72471@3f3e0b5d"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval72470$fn__72471@70a3bbcd"</span>]</span></code></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
@@ -3720,9 +3720,9 @@ font-style: inherit;">fn</span> [y] y))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">#object[clojure.print_object.remove_extraneous$eval72474$fn__72475$fn__72476 <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x4dd0b74d</span> <span class="st" style="color: #20794D;
+font-style: inherit;">0x22d13ba4</span> <span class="st" style="color: #20794D;
 background-color: null;
-font-style: inherit;">"clojure.print_object.remove_extraneous$eval72474$fn__72475$fn__72476@4dd0b74d"</span>]</span></code></pre></div>
+font-style: inherit;">"clojure.print_object.remove_extraneous$eval72474$fn__72475$fn__72476@22d13ba4"</span>]</span></code></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -4188,7 +4188,7 @@ ClassCastException
 <pre><code>
 #error {
  :class   java.lang.ClassCastException
- :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45735 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45735 is in unnamed module of loader clojure.lang.DynamicClassLoader @7d452187; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
+ :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45735 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__45735 is in unnamed module of loader clojure.lang.DynamicClassLoader @45594c9e; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
  :trace
  [[clojure.core/conj                                                     "core.clj" 84]
   [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REV'/fn]
@@ -4440,7 +4440,7 @@ ClassCastException
 <pre><code>
 #error {
  :class   java.lang.ClassCastException
- :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45745 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45745 is in unnamed module of loader clojure.lang.DynamicClassLoader @4aa6a8f1; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
+ :message "class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45745 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__45745 is in unnamed module of loader clojure.lang.DynamicClassLoader @1af59a5e; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')"
  :trace
  [[clojure.core/conj                                                          "core.clj" 84]
   [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REV-LOGIC/fn]
@@ -6385,7 +6385,6 @@ StackOverflowError
   [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
   [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
   [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
-  [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]
   [code-interview.beating.with-stupid-stuff.z-combinator-gambit/REPLICATE]]}</code></pre>
 </div>
 </div>
@@ -7103,23 +7102,39 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Chronon transitioning :clojure.core.async.flow/resume
-Chronon running
+<pre><code>Randomius transitioning :clojure.core.async.flow/resume
+Talon, set flight!
 Tallystrix transitioning :clojure.core.async.flow/resume
-Claxxus transitioning :clojure.core.async.flow/resume
 </code></pre>
 </div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1">(async/poll! report-chan)</span></code></pre></div>
 </div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+THREAD OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>Chronon transitioning :clojure.core.async.flow/resume
+Chronon running
+Claxxus transitioning :clojure.core.async.flow/resume
+SQUARK: 11
+</code></pre>
+</div>
+</div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1">(flow/inject asynctopolis [<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1">(flow/inject asynctopolis [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -7137,21 +7152,15 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Randomius transitioning :clojure.core.async.flow/resume
-Talon, set flight!
-Chronon transforms :alarm true to :out
-Tallystrix transforming :poke true
-SQUARK: 6
-Randomius transform 6 from :stat to :out
-Tallystrix transforming :stat 6
+<pre><code>Randomius transform 11 from :stat to :out
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1">#object [FutureTask]</span></code></pre></div>
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">#object [FutureTask]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">(flow/inject asynctopolis [<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1">(flow/inject asynctopolis [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -7169,20 +7178,23 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transforming :poke true
+<pre><code>Tallystrix transforming :stat 11
+Tallystrix transforming :poke true
+Claxxus transforming :in {:val 11, :error :high}
+Alert:  {:val 11, :error :high}
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1">#object [FutureTask]</span></code></pre></div>
+<div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1">#object [FutureTask]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1">(show/flow-svg asynctopolis chs {<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1">(show/flow-svg asynctopolis chs {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:chans-as-ports</span> <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span></span>
-<span id="cb22-2">                                 <span class="at" style="color: #657422;
+<span id="cb23-2">                                 <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:with-content</span>   <span class="va" style="color: #111111;
 background-color: null;
@@ -7199,6 +7211,8 @@ THREAD OUT
 </div>
 <div class="callout-body-container callout-body">
 <pre><code>Tallystrix transforming :stat abc1000
+Chronon transforms :alarm true to :out
+Tallystrix transforming :poke true
 </code></pre>
 </div>
 </div>
@@ -7208,15 +7222,15 @@ THREAD OUT
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1">(flow/stop asynctopolis)</span></code></pre></div>
+<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1">(flow/stop asynctopolis)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">true</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1">(Thread/sleep <span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1">(Thread/sleep <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>)</span></code></pre></div>
 </div>
@@ -7230,9 +7244,9 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transitioning :clojure.core.async.flow/stop
-Randomius transitioning :clojure.core.async.flow/stop
+<pre><code>Randomius transitioning :clojure.core.async.flow/stop
 Talon, rest!
+Tallystrix transitioning :clojure.core.async.flow/stop
 Chronon transitioning :clojure.core.async.flow/stop
 Chronon rests.
 Claxxus transitioning :clojure.core.async.flow/stop
@@ -7240,7 +7254,7 @@ Claxxus transitioning :clojure.core.async.flow/stop
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
@@ -7456,32 +7470,31 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>SQUARK: 10
-SQUARK: 7
-SQUARK: 8
-SQUARK: 8
-SQUARK: 2
+<pre><code>SQUARK: 6
 SQUARK: 9
-SQUARK: 11
-SQUARK: 0
-SQUARK: 4
+SQUARK: 1
+SQUARK: 5
 SQUARK: 1
 SQUARK: 7
+SQUARK: 9
 SQUARK: 7
-SQUARK: 5
-SQUARK: 4
 SQUARK: 2
-SQUARK: 0
-SQUARK: 7
+SQUARK: 4
+SQUARK: 11
+SQUARK: 8
+SQUARK: 3
 SQUARK: 10
-SQUARK: 7
-SQUARK: 7
+SQUARK: 0
+SQUARK: 5
+SQUARK: 3
+SQUARK: 9
+SQUARK: 11
 SQUARK: 2
 </code></pre>
 </div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[10,7,8,8,2,9,11,0,4,1,7,7,5,4,2,0,7,10,7,7],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"index","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sample","showgrid":true},"title":"The prey of Talon"}, {});</script></div>
+               [{"y":[6,9,1,5,1,7,9,7,2,4,11,8,3,10,0,5,3,9,11,2],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"index","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sample","showgrid":true},"title":"The prey of Talon"}, {});</script></div>
 <p>You have sampled fairly, Talon.</p>
 <p>Talon operates at the behest of the city’s Generator.</p>
 <section id="meet-randomius-maximus-the-generator" class="level2">
@@ -7774,7 +7787,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]}, <span class="at
 background-color: null;
 font-style: inherit;">:flying</span> #object[clojure.lang.Atom <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x7f87fbd9</span> {<span class="at" style="color: #657422;
+font-style: inherit;">0x1eff6131</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:status</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -7833,7 +7846,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]},</span>
 background-color: null;
 font-style: inherit;">:flying</span> #&lt;Atom<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">@7f87fbd9:</span> true&gt;}</span></code></pre></div>
+font-style: inherit;">@1eff6131:</span> true&gt;}</span></code></pre></div>
 </div>
 <p>Talon is flying.</p>
 <div class="sourceClojure">
@@ -7853,7 +7866,7 @@ font-style: inherit;">:stat</span>)</span>
 <div class="printedClojure">
 <div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">19</span></span></code></pre></div>
+font-style: inherit;">10</span></span></code></pre></div>
 </div>
 <p>Transform with purpose.</p>
 <div class="sourceClojure">
@@ -7916,7 +7929,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]},</span>
 background-color: null;
 font-style: inherit;">:flying</span> #&lt;Atom<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">@7f87fbd9:</span> true&gt;}</span></code></pre></div>
+font-style: inherit;">@1eff6131:</span> true&gt;}</span></code></pre></div>
 </div>
 <p>I see you wish to send a missive to <code>out</code>. Be wary in the future, send only numbers to those who seek stats.</p>
 <p>Well done, Randomius. You are a true citizen. Now rest.</p>
@@ -7968,7 +7981,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]},</span>
 background-color: null;
 font-style: inherit;">:flying</span> #&lt;Atom<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">@7f87fbd9:</span> false&gt;}</span></code></pre></div>
+font-style: inherit;">@1eff6131:</span> false&gt;}</span></code></pre></div>
 </div>
 </section>
 <section id="meet-tallystrix-the-whispering-aggregator" class="level2">
@@ -8894,15 +8907,17 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Randomius transitioning :clojure.core.async.flow/resume
-Talon, set flight!
-SQUARK: 9
+<pre><code>Claxxus transitioning :clojure.core.async.flow/resume
 Tallystrix transitioning :clojure.core.async.flow/resume
 Chronon transitioning :clojure.core.async.flow/resume
 Chronon running
-Claxxus transitioning :clojure.core.async.flow/resume
-Randomius transform 9 from :stat to :out
-Tallystrix transforming :stat 9
+Randomius transitioning :clojure.core.async.flow/resume
+Chronon transforms :alarm true to :out
+Talon, set flight!
+Tallystrix transforming :poke true
+SQUARK: 7
+Randomius transform 7 from :stat to :out
+Tallystrix transforming :stat 7
 </code></pre>
 </div>
 </div>
@@ -8918,44 +8933,25 @@ font-style: inherit;">nil</span></span></code></pre></div>
 background-color: null;
 font-style: inherit;">:report-chan</span> chs))</span></code></pre></div>
 </div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-THREAD OUT
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<pre><code>Chronon transforms :alarm true to :out
-Tallystrix transforming :poke true
-</code></pre>
-</div>
-</div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1">{<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:avg</span> <span class="fl" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">9.0</span>, <span class="at" style="color: #657422;
+<div class="sourceCode" id="cb49" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1">{<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">1</span>}</span></code></pre></div>
+font-style: inherit;">0</span>}</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb51" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb51-1">(a/poll! (<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1">(a/poll! (<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:report-chan</span> chs))</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb52" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb52-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb51" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb51-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb53-1">(flow/inject flow [<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb52" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb52-1">(flow/inject flow [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -8964,10 +8960,10 @@ background-color: null;
 font-style: inherit;">true</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb54" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb54-1">#object [FutureTask]</span></code></pre></div>
+<div class="sourceCode" id="cb53" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb53-1">#object [FutureTask]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb55" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb55-1">(a/poll! (<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb54" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb54-1">(a/poll! (<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:report-chan</span> chs))</span></code></pre></div>
 </div>
@@ -8986,15 +8982,19 @@ THREAD OUT
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb57" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb57-1">{<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb56" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb56-1">{<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:avg</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">7.0</span>, <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0</span>}</span></code></pre></div>
+font-style: inherit;">1</span>}</span></code></pre></div>
 </div>
 <p>Mischief is afoot.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb58" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb58-1">(flow/inject flow [<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb57" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb57-1">(flow/inject flow [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -9003,10 +9003,10 @@ background-color: null;
 font-style: inherit;">"abc1000"</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb59" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb59-1">#object [FutureTask]</span></code></pre></div>
+<div class="sourceCode" id="cb58" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb58-1">#object [FutureTask]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb60" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb60-1">(a/poll! (<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb59" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb59-1">(a/poll! (<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:error-chan</span> chs))</span></code></pre></div>
 </div>
@@ -9025,79 +9025,79 @@ THREAD OUT
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb62" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb62-1">#<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb61" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb61-1">#<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:clojure.core.async.flow</span>{<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:pid</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span>,</span>
-<span id="cb62-2">                          <span class="at" style="color: #657422;
+<span id="cb61-2">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:status</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:running</span>,</span>
-<span id="cb62-3">                          <span class="at" style="color: #657422;
+<span id="cb61-3">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:state</span></span>
-<span id="cb62-4">                          {<span class="at" style="color: #657422;
+<span id="cb61-4">                          {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:min</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb62-5">                           <span class="at" style="color: #657422;
+<span id="cb61-5">                           <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:max</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>,</span>
-<span id="cb62-6">                           <span class="at" style="color: #657422;
+<span id="cb61-6">                           <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:clojure.core.async.flow/pid</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span>,</span>
-<span id="cb62-7">                           <span class="at" style="color: #657422;
+<span id="cb61-7">                           <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:vals</span> []},</span>
-<span id="cb62-8">                          <span class="at" style="color: #657422;
+<span id="cb61-8">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">4</span>,</span>
-<span id="cb62-9">                          <span class="at" style="color: #657422;
+<span id="cb61-9">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:cid</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:stat</span>,</span>
-<span id="cb62-10">                          <span class="at" style="color: #657422;
+<span id="cb61-10">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:msg</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"abc1000"</span>,</span>
-<span id="cb62-11">                          <span class="at" style="color: #657422;
+<span id="cb61-11">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:op</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:step</span>,</span>
-<span id="cb62-12">                          <span class="at" style="color: #657422;
+<span id="cb61-12">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:ex</span> #error {</span>
-<span id="cb62-13"> <span class="at" style="color: #657422;
+<span id="cb61-13"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:cause</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
-<span id="cb62-14"> <span class="at" style="color: #657422;
+<span id="cb61-14"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:via</span></span>
-<span id="cb62-15"> [{<span class="at" style="color: #657422;
+<span id="cb61-15"> [{<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:type</span> java.util.concurrent.ExecutionException</span>
-<span id="cb62-16">   <span class="at" style="color: #657422;
+<span id="cb61-16">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:message</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
-<span id="cb62-17">   <span class="at" style="color: #657422;
+<span id="cb61-17">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:at</span> [java.util.concurrent.FutureTask <span class="kw" style="color: #003B4F;
 background-color: null;
@@ -9107,90 +9107,90 @@ background-color: null;
 font-style: inherit;">"FutureTask.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">122</span>]}</span>
-<span id="cb62-18">  {<span class="at" style="color: #657422;
+<span id="cb61-18">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:type</span> java.lang.ClassCastException</span>
-<span id="cb62-19">   <span class="at" style="color: #657422;
+<span id="cb61-19">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:message</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
-<span id="cb62-20">   <span class="at" style="color: #657422;
+<span id="cb61-20">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:at</span> [clojure.lang.Numbers lt <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">253</span>]}]</span>
-<span id="cb62-21"> <span class="at" style="color: #657422;
+<span id="cb61-21"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:trace</span></span>
-<span id="cb62-22"> [[clojure.lang.Numbers lt <span class="st" style="color: #20794D;
+<span id="cb61-22"> [[clojure.lang.Numbers lt <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">253</span>]</span>
-<span id="cb62-23">  [core.async.flow.example.asynctopolis$Tallystrix invokeStatic <span class="st" style="color: #20794D;
+<span id="cb61-23">  [core.async.flow.example.asynctopolis$Tallystrix invokeStatic <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>]</span>
-<span id="cb62-24">  [core.async.flow.example.asynctopolis$Tallystrix invoke <span class="st" style="color: #20794D;
+<span id="cb61-24">  [core.async.flow.example.asynctopolis$Tallystrix invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>]</span>
-<span id="cb62-25">  [clojure.lang.AFn applyToHelper <span class="st" style="color: #20794D;
+<span id="cb61-25">  [clojure.lang.AFn applyToHelper <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"AFn.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">160</span>]</span>
-<span id="cb62-26">  [clojure.lang.AFn applyTo <span class="st" style="color: #20794D;
+<span id="cb61-26">  [clojure.lang.AFn applyTo <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"AFn.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">144</span>]</span>
-<span id="cb62-27">  [clojure.lang.Var applyTo <span class="st" style="color: #20794D;
+<span id="cb61-27">  [clojure.lang.Var applyTo <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Var.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">707</span>]</span>
-<span id="cb62-28">  [clojure.core$apply invokeStatic <span class="st" style="color: #20794D;
+<span id="cb61-28">  [clojure.core$apply invokeStatic <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"core.clj"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">667</span>]</span>
-<span id="cb62-29">  [clojure.core$apply invoke <span class="st" style="color: #20794D;
+<span id="cb61-29">  [clojure.core$apply invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"core.clj"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">662</span>]</span>
-<span id="cb62-30">  [clojure.core.async.flow.impl$futurize$fn__70109$fn__70110 invoke <span class="st" style="color: #20794D;
+<span id="cb61-30">  [clojure.core.async.flow.impl$futurize$fn__70109$fn__70110 invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"impl.clj"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">34</span>]</span>
-<span id="cb62-31">  [clojure.lang.AFn call <span class="st" style="color: #20794D;
+<span id="cb61-31">  [clojure.lang.AFn call <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"AFn.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">18</span>]</span>
-<span id="cb62-32">  [java.util.concurrent.FutureTask run <span class="st" style="color: #20794D;
+<span id="cb61-32">  [java.util.concurrent.FutureTask run <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"FutureTask.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">317</span>]</span>
-<span id="cb62-33">  [java.util.concurrent.ThreadPoolExecutor runWorker <span class="st" style="color: #20794D;
+<span id="cb61-33">  [java.util.concurrent.ThreadPoolExecutor runWorker <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"ThreadPoolExecutor.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1144</span>]</span>
-<span id="cb62-34">  [java.util.concurrent.ThreadPoolExecutor$Worker run <span class="st" style="color: #20794D;
+<span id="cb61-34">  [java.util.concurrent.ThreadPoolExecutor$Worker run <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"ThreadPoolExecutor.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">642</span>]</span>
-<span id="cb62-35">  [java.lang.Thread run <span class="st" style="color: #20794D;
+<span id="cb61-35">  [java.lang.Thread run <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Thread.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -9198,7 +9198,7 @@ font-style: inherit;">1583</span>]]}}</span></code></pre></div>
 </div>
 <p>Claxxus does not speak of such failures. He is for alerts. Thresholds breached, events of note, things the city must hear.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb63" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb63-1">(flow/inject flow [<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb62" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb62-1">(flow/inject flow [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Claxxus</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -9207,10 +9207,10 @@ background-color: null;
 font-style: inherit;">:sandwich</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb64" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb64-1">#object [FutureTask]</span></code></pre></div>
+<div class="sourceCode" id="cb63" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb63-1">#object [FutureTask]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb65" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb65-1">(Thread/sleep <span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb64" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb64-1">(Thread/sleep <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>)</span></code></pre></div>
 </div>
@@ -9230,22 +9230,22 @@ Alert:  :sandwich
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb67" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb67-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb66" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb66-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
 <p>Fluxus est graphum, fluxus est processus, fluxus est data.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb68" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb68-1">(datafy/datafy flow)</span></code></pre></div>
+<div class="sourceCode" id="cb67" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb67-1">(datafy/datafy flow)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb69" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb69-1">{<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb68" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb68-1">{<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:procs</span></span>
-<span id="cb69-2"> {<span class="at" style="color: #657422;
+<span id="cb68-2"> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Randomius</span></span>
-<span id="cb69-3">  {<span class="at" style="color: #657422;
+<span id="cb68-3">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:args</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9260,44 +9260,44 @@ background-color: null;
 font-style: inherit;">:wait</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">500</span>},</span>
-<span id="cb69-4">   <span class="at" style="color: #657422;
+<span id="cb68-4">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:proc</span></span>
-<span id="cb69-5">   {<span class="at" style="color: #657422;
+<span id="cb68-5">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:step</span> core.async.flow.example.asynctopolis/Randomius,</span>
-<span id="cb69-6">    <span class="at" style="color: #657422;
+<span id="cb68-6">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
-<span id="cb69-7">    {<span class="at" style="color: #657422;
+<span id="cb68-7">    {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:params</span></span>
-<span id="cb69-8">     {<span class="at" style="color: #657422;
+<span id="cb68-8">     {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:min</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Min value to generate"</span>,</span>
-<span id="cb69-9">      <span class="at" style="color: #657422;
+<span id="cb68-9">      <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:max</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Max value to generate"</span>,</span>
-<span id="cb69-10">      <span class="at" style="color: #657422;
+<span id="cb68-10">      <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:wait</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Time in ms to wait between generating"</span>},</span>
-<span id="cb69-11">     <span class="at" style="color: #657422;
+<span id="cb68-11">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:outs</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:out</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Output channel for stats"</span>}}}},</span>
-<span id="cb69-12">  <span class="at" style="color: #657422;
+<span id="cb68-12">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span></span>
-<span id="cb69-13">  {<span class="at" style="color: #657422;
+<span id="cb68-13">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:args</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9308,127 +9308,127 @@ background-color: null;
 font-style: inherit;">:max</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>},</span>
-<span id="cb69-14">   <span class="at" style="color: #657422;
+<span id="cb68-14">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:proc</span></span>
-<span id="cb69-15">   {<span class="at" style="color: #657422;
+<span id="cb68-15">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:step</span> core.async.flow.example.asynctopolis/Tallystrix,</span>
-<span id="cb69-16">    <span class="at" style="color: #657422;
+<span id="cb68-16">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
-<span id="cb69-17">    {<span class="at" style="color: #657422;
+<span id="cb68-17">    {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:params</span></span>
-<span id="cb69-18">     {<span class="at" style="color: #657422;
+<span id="cb68-18">     {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:min</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Min value, alert if lower"</span>,</span>
-<span id="cb69-19">      <span class="at" style="color: #657422;
+<span id="cb68-19">      <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:max</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Max value, alert if higher"</span>},</span>
-<span id="cb69-20">     <span class="at" style="color: #657422;
+<span id="cb68-20">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:ins</span></span>
-<span id="cb69-21">     {<span class="at" style="color: #657422;
+<span id="cb68-21">     {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:stat</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Channel to receive stat values"</span>,</span>
-<span id="cb69-22">      <span class="at" style="color: #657422;
+<span id="cb68-22">      <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:poke</span></span>
-<span id="cb69-23">      <span class="st" style="color: #20794D;
+<span id="cb68-23">      <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Channel to poke when it is time to report a window of data to the log"</span>},</span>
-<span id="cb69-24">     <span class="at" style="color: #657422;
+<span id="cb68-24">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:outs</span></span>
-<span id="cb69-25">     {<span class="at" style="color: #657422;
+<span id="cb68-25">     {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:alert</span></span>
-<span id="cb69-26">      <span class="st" style="color: #20794D;
+<span id="cb68-26">      <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Notify of value out of range {:val value, :error :high|:low"</span>},</span>
-<span id="cb69-27">     <span class="at" style="color: #657422;
+<span id="cb68-27">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:workload</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:compute</span>}}},</span>
-<span id="cb69-28">  <span class="at" style="color: #657422;
+<span id="cb68-28">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Chronon</span></span>
-<span id="cb69-29">  {<span class="at" style="color: #657422;
+<span id="cb68-29">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:args</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:wait</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3000</span>},</span>
-<span id="cb69-30">   <span class="at" style="color: #657422;
+<span id="cb68-30">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:proc</span></span>
-<span id="cb69-31">   {<span class="at" style="color: #657422;
+<span id="cb68-31">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:step</span> core.async.flow.example.asynctopolis/Chronon,</span>
-<span id="cb69-32">    <span class="at" style="color: #657422;
+<span id="cb68-32">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
-<span id="cb69-33">    {<span class="at" style="color: #657422;
+<span id="cb68-33">    {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:params</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:wait</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Time to wait between pokes"</span>},</span>
-<span id="cb69-34">     <span class="at" style="color: #657422;
+<span id="cb68-34">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:outs</span></span>
-<span id="cb69-35">     {<span class="at" style="color: #657422;
+<span id="cb68-35">     {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:out</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Poke channel, will send true when the alarm goes off"</span>}}}},</span>
-<span id="cb69-36">  <span class="at" style="color: #657422;
+<span id="cb68-36">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Claxxus</span></span>
-<span id="cb69-37">  {<span class="at" style="color: #657422;
+<span id="cb68-37">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:args</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:prefix</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Alert: "</span>},</span>
-<span id="cb69-38">   <span class="at" style="color: #657422;
+<span id="cb68-38">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:proc</span></span>
-<span id="cb69-39">   {<span class="at" style="color: #657422;
+<span id="cb68-39">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:step</span> core.async.flow.example.asynctopolis/Claxxus,</span>
-<span id="cb69-40">    <span class="at" style="color: #657422;
+<span id="cb68-40">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
-<span id="cb69-41">    {<span class="at" style="color: #657422;
+<span id="cb68-41">    {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:params</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:prefix</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Log message prefix"</span>},</span>
-<span id="cb69-42">     <span class="at" style="color: #657422;
+<span id="cb68-42">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:ins</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:in</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Channel to receive messages"</span>}}},</span>
-<span id="cb69-43">   <span class="at" style="color: #657422;
+<span id="cb68-43">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:chan-opts</span></span>
-<span id="cb69-44">   {<span class="at" style="color: #657422;
+<span id="cb68-44">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:in</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9443,10 +9443,10 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3</span>}}}}},</span>
-<span id="cb69-45"> <span class="at" style="color: #657422;
+<span id="cb68-45"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:conns</span></span>
-<span id="cb69-46"> [[[<span class="at" style="color: #657422;
+<span id="cb68-46"> [[[<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Randomius</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -9455,7 +9455,7 @@ background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:stat</span>]]</span>
-<span id="cb69-47">  [[<span class="at" style="color: #657422;
+<span id="cb68-47">  [[<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Chronon</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -9464,7 +9464,7 @@ background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:poke</span>]]</span>
-<span id="cb69-48">  [[<span class="at" style="color: #657422;
+<span id="cb68-48">  [[<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -9473,7 +9473,7 @@ background-color: null;
 font-style: inherit;">:Claxxus</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:in</span>]]],</span>
-<span id="cb69-49"> <span class="at" style="color: #657422;
+<span id="cb68-49"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:execs</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9488,33 +9488,33 @@ background-color: null;
 font-style: inherit;">:compute</span> <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span>},</span>
-<span id="cb69-50"> <span class="at" style="color: #657422;
+<span id="cb68-50"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:chans</span></span>
-<span id="cb69-51"> {<span class="at" style="color: #657422;
+<span id="cb68-51"> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:ins</span></span>
-<span id="cb69-52">  {[<span class="at" style="color: #657422;
+<span id="cb68-52">  {[<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:stat</span>]</span>
-<span id="cb69-53">   {<span class="at" style="color: #657422;
+<span id="cb68-53">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb69-54">    <span class="at" style="color: #657422;
+<span id="cb68-54">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb69-55">    <span class="at" style="color: #657422;
+<span id="cb68-55">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb69-56">    <span class="at" style="color: #657422;
+<span id="cb68-56">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9527,27 +9527,27 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>}},</span>
-<span id="cb69-57">   [<span class="at" style="color: #657422;
+<span id="cb68-57">   [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:poke</span>]</span>
-<span id="cb69-58">   {<span class="at" style="color: #657422;
+<span id="cb68-58">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb69-59">    <span class="at" style="color: #657422;
+<span id="cb68-59">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb69-60">    <span class="at" style="color: #657422;
+<span id="cb68-60">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb69-61">    <span class="at" style="color: #657422;
+<span id="cb68-61">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9560,27 +9560,27 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>}},</span>
-<span id="cb69-62">   [<span class="at" style="color: #657422;
+<span id="cb68-62">   [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Claxxus</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:in</span>]</span>
-<span id="cb69-63">   {<span class="at" style="color: #657422;
+<span id="cb68-63">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb69-64">    <span class="at" style="color: #657422;
+<span id="cb68-64">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb69-65">    <span class="at" style="color: #657422;
+<span id="cb68-65">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb69-66">    <span class="at" style="color: #657422;
+<span id="cb68-66">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9593,30 +9593,30 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3</span>}}},</span>
-<span id="cb69-67">  <span class="at" style="color: #657422;
+<span id="cb68-67">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:outs</span></span>
-<span id="cb69-68">  {[<span class="at" style="color: #657422;
+<span id="cb68-68">  {[<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Randomius</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:out</span>]</span>
-<span id="cb69-69">   {<span class="at" style="color: #657422;
+<span id="cb68-69">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb69-70">    <span class="at" style="color: #657422;
+<span id="cb68-70">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb69-71">    <span class="at" style="color: #657422;
+<span id="cb68-71">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb69-72">    <span class="at" style="color: #657422;
+<span id="cb68-72">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9629,27 +9629,27 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>}},</span>
-<span id="cb69-73">   [<span class="at" style="color: #657422;
+<span id="cb68-73">   [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:alert</span>]</span>
-<span id="cb69-74">   {<span class="at" style="color: #657422;
+<span id="cb68-74">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb69-75">    <span class="at" style="color: #657422;
+<span id="cb68-75">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb69-76">    <span class="at" style="color: #657422;
+<span id="cb68-76">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb69-77">    <span class="at" style="color: #657422;
+<span id="cb68-77">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9662,27 +9662,27 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3</span>}},</span>
-<span id="cb69-78">   [<span class="at" style="color: #657422;
+<span id="cb68-78">   [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Chronon</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:out</span>]</span>
-<span id="cb69-79">   {<span class="at" style="color: #657422;
+<span id="cb68-79">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb69-80">    <span class="at" style="color: #657422;
+<span id="cb68-80">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb69-81">    <span class="at" style="color: #657422;
+<span id="cb68-81">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb69-82">    <span class="at" style="color: #657422;
+<span id="cb68-82">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9695,25 +9695,25 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>}}},</span>
-<span id="cb69-83">  <span class="at" style="color: #657422;
+<span id="cb68-83">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:error</span></span>
-<span id="cb69-84">  {<span class="at" style="color: #657422;
+<span id="cb68-84">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb69-85">   <span class="at" style="color: #657422;
+<span id="cb68-85">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb69-86">   <span class="at" style="color: #657422;
+<span id="cb68-86">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb69-87">   <span class="at" style="color: #657422;
+<span id="cb68-87">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9726,25 +9726,25 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">100</span>}},</span>
-<span id="cb69-88">  <span class="at" style="color: #657422;
+<span id="cb68-88">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:report</span></span>
-<span id="cb69-89">  {<span class="at" style="color: #657422;
+<span id="cb68-89">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb69-90">   <span class="at" style="color: #657422;
+<span id="cb68-90">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb69-91">   <span class="at" style="color: #657422;
+<span id="cb68-91">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb69-92">   <span class="at" style="color: #657422;
+<span id="cb68-92">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9760,15 +9760,15 @@ font-style: inherit;">100</span>}}}}</span></code></pre></div>
 </div>
 <p>The flow may coordinate peace.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb70" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb70-1">(flow/pause flow)</span></code></pre></div>
+<div class="sourceCode" id="cb69" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb69-1">(flow/pause flow)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb71" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb71-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb70" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb70-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">true</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb72" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb72-1">(Thread/sleep <span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb71" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb71-1">(Thread/sleep <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>)</span></code></pre></div>
 </div>
@@ -9782,32 +9782,32 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transitioning :clojure.core.async.flow/pause
-Chronon transitioning :clojure.core.async.flow/pause
-Randomius transitioning :clojure.core.async.flow/pause
-Chronon rests.
+<pre><code>Randomius transitioning :clojure.core.async.flow/pause
 Talon, rest!
+Tallystrix transitioning :clojure.core.async.flow/pause
 Claxxus transitioning :clojure.core.async.flow/pause
+Chronon transitioning :clojure.core.async.flow/pause
+Chronon rests.
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb74" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb74-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb73" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb73-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
 <p>Pax optima rerum.</p>
 <p>The flow may cease.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb75" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb75-1">(flow/stop flow)</span></code></pre></div>
+<div class="sourceCode" id="cb74" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb74-1">(flow/stop flow)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb76" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb76-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb75" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb75-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">true</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb77" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb77-1">(Thread/sleep <span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb76" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb76-1">(Thread/sleep <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>)</span></code></pre></div>
 </div>
@@ -9821,15 +9821,15 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transitioning :clojure.core.async.flow/stop
-Randomius transitioning :clojure.core.async.flow/stop
-Chronon transitioning :clojure.core.async.flow/stop
+<pre><code>Randomius transitioning :clojure.core.async.flow/stop
 Claxxus transitioning :clojure.core.async.flow/stop
+Chronon transitioning :clojure.core.async.flow/stop
+Tallystrix transitioning :clojure.core.async.flow/stop
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb79" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb79-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb78" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb78-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
