@@ -1,12 +1,12 @@
-{:base-target-path    "temp"
- :base-source-path    "src"
- :subdirs-to-sync     ["src"]
- :keep-sync-root      false
- :flatten-targets     false
- :remote-repo         {:git-url "https://github.com/ClojureCivitas/clojurecivitas.github.io"
-                       :branch  "main"}
- :hide-info-line      true
- :hide-ui-header      true
+{:base-target-path "temp"
+ :base-source-path "src"
+ :subdirs-to-sync  ["src"]
+ :keep-sync-root   false
+ :flatten-targets  false
+ :remote-repo      {:git-url "https://github.com/ClojureCivitas/clojurecivitas.github.io"
+                    :branch  "main"}
+ :hide-info-line   true
+ :hide-ui-header   true
  :config/transform civitas.db/expand-authors
 
  ;; aliases

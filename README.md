@@ -70,24 +70,23 @@ unless a different image is listed in the metadata.
  :many-others ["see the examples" "creative uses" "visual variety"]}
 ```
 
-## Preview the Website **(Optional)**
+## Preview a Webpage **(Optional, Recommended)**
 
 [Use Clay REPL commands](https://scicloj.github.io/clay/#setup) to visualize the namespace as you write.
-
-Building is delegated to Clay and Quarto.
-
 When using Clay interactively it renders directly to HTML for speed.
+
+## Previewing the Website with Quarto **(Optional, Not Recommended)**
+
 The published site goes through a longer process of producing markdown then HTML.
+[Quarto](https://quarto.org/) is the markdown publishing tool.
 
 ```sh
-clojure -M:clay -a [:markdown]
+clojure -M:clay -A:markdown
 ```
 
 ```sh
 quarto preview site
 ```
-
-[Quarto](https://quarto.org/) is the markdown publishing tool.
 
 ### Publish
 
