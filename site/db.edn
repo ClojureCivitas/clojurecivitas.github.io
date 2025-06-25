@@ -49,7 +49,14 @@
    :image       "https://avatars.githubusercontent.com/u/7443?v=4"
    :email       "harold@techascent.com"
    :affiliation [:techascent]
-   :links       [{:icon "github" :text "GitHub" :href "https://github.com/harold"}]}]
+   :links       [{:icon "github" :text "GitHub" :href "https://github.com/harold"}]}
+  {:id          :samumbach
+   :name        "Sam Umbach"
+   :url         "https://github.com/samumbach"
+   :image       "https://avatars.githubusercontent.com/u/11580?v=4"
+   :email       "samumbach@gmail.com"
+   :affiliation [:clojurecamp]
+   :links       [{:icon "github" :href "https://github.com/samumbach"}]}]
 
  :affiliation
  [{:id   :clojure.core
