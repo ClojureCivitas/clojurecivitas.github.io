@@ -1,7 +1,7 @@
 {:paths ["src"]
 
  :deps
- {org.clojure/clojure                         {:mvn/version "1.12.0"}
+ {org.clojure/clojure                         {:mvn/version "1.12.1"}
   org.scicloj/noj                             {:mvn/version "2-beta18"}
   markdown-clj/markdown-clj                   {:mvn/version "1.12.4"}
   org.clojure/core.async                      {:mvn/version "1.9.808-alpha1"}
@@ -11,8 +11,7 @@
   metosin/malli                               {:mvn/version "0.19.1"}
   clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
   clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
-  org.scicloj/clay                            {:git/url "https://github.com/scicloj/clay"
-                                               :git/sha "eca1251a004e36b1d152f7caa862545013bf6ebf"}
+  org.scicloj/clay                            {:mvn/version "2-beta46"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph       {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph.json  {:mvn/version "0.10.0"}
