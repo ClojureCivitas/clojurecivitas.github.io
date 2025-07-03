@@ -1,5 +1,6 @@
 ^{:kindly/hide-code true
   :clay             {:title  "What if... we were taught transducers first?"
+                     :exception-continue true
                      :quarto {:author   :seancorfield
                               :type     :post
                               :date     "2025-05-31"
@@ -57,16 +58,14 @@
 ;; We might be tempted to use `cons` here, but its argument order is different
 ;; from `conj` so this will fail:
 
-(try (transduce (map inc) cons () (range 5))
-     (catch Exception e (ex-message e)))
+(transduce (map inc) cons () (range 5))
 
 ;; Okay, well, let's use an anonymous function to reverse the order of the
 ;; arguments:
 
-(try (transduce (map inc) #(cons %2 %1) () (range 5))
-     (catch Exception e (ex-message e)))
+(transduce (map inc) #(cons %2 %1) () (range 5))
 
-;; Why is it trying to call `cons` with a single argument? In addition to
+;; Why is it trying to call our `cons` wrapper with a single argument? In addition to
 ;; separating the transformation from the output, `transduce` also has a
 ;; "completion" step, which is performed on the final result. A convenience
 ;; function called `completing` can be used to wrap the function here to
