@@ -8,6 +8,7 @@
  :hide-info-line   true
  :hide-ui-header   true
  :config/transform civitas.db/expand-authors
+ ;; :use-kindly-render true
 
  ;; aliases
  :markdown
