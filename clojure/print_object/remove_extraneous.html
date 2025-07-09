@@ -406,20 +406,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="va">#'clojure.core/print-object</span> x w))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>#object[clojure.lang.MultiFn <span class="bn">0x39490f9a</span> <span class="st">"clojure.lang.MultiFn@39490f9a"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>#object[clojure.lang.MultiFn <span class="bn">0x3178857a</span> <span class="st">"clojure.lang.MultiFn@3178857a"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(Object.)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>#object[java.lang.Object <span class="bn">0x7de32aa1</span> <span class="st">"java.lang.Object@7de32aa1"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>#object[java.lang.Object <span class="bn">0x6ea4c52f</span> <span class="st">"java.lang.Object@6ea4c52f"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The syntax is <code>#object[CLASS-NAME HASH toString())]</code> and as you can see, the toString of an Object is <code>CLASS-NAME@HASH</code>. For most objects this becomes quite a long string.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(async/chan)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn">0x3d125304</span> <span class="st">"clojure.core.async.impl.channels.ManyToManyChannel@3d125304"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>#object[clojure.core.async.impl.channels.ManyToManyChannel <span class="bn">0x5c000a09</span> <span class="st">"clojure.core.async.impl.channels.ManyToManyChannel@5c000a09"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -432,14 +432,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">fn</span> [x] x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>#object[clojure.print_object.remove_extraneous$eval45350$fn__45351 <span class="bn">0x1bc67fe1</span> <span class="st">"clojure.print_object.remove_extraneous$eval45350$fn__45351@1bc67fe1"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>#object[clojure.print_object.remove_extraneous$eval45377$fn__45378 <span class="bn">0x56ba373a</span> <span class="st">"clojure.print_object.remove_extraneous$eval45377$fn__45378@56ba373a"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>It’s quite easy to miss the fact that it is a function as we are looking for a tiny little <code>fn</code> in a sea of text. If, like me, you are fond of the <a href="../../code_interview/beating/with_stupid_stuff/z_combinator_gambit.html">odd lambda calculus excursion</a>, things get even more hectic.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>((<span class="kw">fn</span> [x] (<span class="kw">fn</span> [v] ((x x) v))) (<span class="kw">fn</span> [y] y))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>#object[clojure.print_object.remove_extraneous$eval45354$fn__45355$fn__45356 <span class="bn">0x62835bf4</span> <span class="st">"clojure.print_object.remove_extraneous$eval45354$fn__45355$fn__45356@62835bf4"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>#object[clojure.print_object.remove_extraneous$eval45381$fn__45382$fn__45383 <span class="bn">0x719a1b36</span> <span class="st">"clojure.print_object.remove_extraneous$eval45381$fn__45382$fn__45383@719a1b36"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Yikes! what an eyesore. This is not an academic issue specific to lambda calculus. Any function created from inside a function is helpfully identifiable through the <code>fn$fn</code> nesting. We create these quite regularly, and they are often printed in stack traces. I’m sure you have seen them when you map an inline function across a seq, and there is a bug in the anonymous function.</p>
 <div class="sourceClojure">
@@ -454,7 +454,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>[[clojure.lang.Numbers add <span class="st">"Numbers.java"</span> <span class="dv">155</span>]</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a> [clojure.lang.Numbers add <span class="st">"Numbers.java"</span> <span class="dv">3747</span>]</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a> [clojure.print_object.remove_extraneous$caesar_cipher$add2__45362 invoke <span class="st">"NO_SOURCE_FILE"</span> <span class="dv">0</span>]</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a> [clojure.print_object.remove_extraneous$caesar_cipher$add2__45389 invoke <span class="st">"NO_SOURCE_FILE"</span> <span class="dv">0</span>]</span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a> [clojure.core$mapv$fn__8569 invoke <span class="st">"core.clj"</span> <span class="dv">7059</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>See that part <code>caesar_cipher$add2</code>? That is <strong>very</strong> useful information. It tells us that the exception was inside <code>add2</code>, which is inside <code>caesar-cipher</code>. The stack trace doesn’t print functions as objects, but it illustrates that the thing that we care about is that they are a function, what their name is, and whether they were created from inside another function.</p>
@@ -468,7 +468,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(class-name ((<span class="kw">fn</span> [] (<span class="kw">fn</span> [y] y))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="st">"clojure.print-object.remove-extraneous/eval45368/fn--45369/fn--45370"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="st">"clojure.print-object.remove-extraneous/eval45395/fn--45396/fn--45397"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Next, we don’t need the eval identities.</p>
 <div class="sourceClojure">
