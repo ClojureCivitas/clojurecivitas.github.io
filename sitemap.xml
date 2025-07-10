@@ -2,86 +2,90 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</loc>
-    <lastmod>2025-07-09T19:47:42.251Z</lastmod>
+    <lastmod>2025-07-10T01:12:37.818Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/civitas/explorer.html</loc>
-    <lastmod>2025-07-09T19:48:21.869Z</lastmod>
+    <lastmod>2025-07-10T01:13:23.181Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/math/stats/central_limit_theorem_convergence.html</loc>
-    <lastmod>2025-07-09T19:48:21.256Z</lastmod>
+    <lastmod>2025-07-10T01:13:22.757Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html</loc>
-    <lastmod>2025-07-09T19:48:19.235Z</lastmod>
+    <lastmod>2025-07-10T01:13:20.903Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/pages.html</loc>
-    <lastmod>2025-07-09T19:47:42.244Z</lastmod>
+    <lastmod>2025-07-10T01:12:37.811Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/posts.html</loc>
-    <lastmod>2025-07-09T19:47:42.244Z</lastmod>
+    <lastmod>2025-07-10T01:12:37.811Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</loc>
-    <lastmod>2025-07-09T19:48:18.981Z</lastmod>
+    <lastmod>2025-07-10T01:13:20.565Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/internationalization/transliteration2.html</loc>
-    <lastmod>2025-07-09T19:48:18.848Z</lastmod>
+    <lastmod>2025-07-10T01:13:20.460Z</lastmod>
   </url>
   <url>
-    <loc>https://clojurecivitas.github.io/core/async/flow/example/before_his_wings_melted.html</loc>
-    <lastmod>2025-07-09T19:48:17.447Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/clojure/transducers/what_if.html</loc>
-    <lastmod>2025-07-09T19:48:06.945Z</lastmod>
-  </url>
-  <url>
-    <loc>https://clojurecivitas.github.io/clojure/print_object/remove_extraneous.html</loc>
-    <lastmod>2025-07-09T19:48:09.039Z</lastmod>
+    <loc>https://clojurecivitas.github.io/games/beginning_to_build_a_browser_game.html</loc>
+    <lastmod>2025-07-10T01:13:19.428Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/core/async/flow/example/asynctopolis.html</loc>
-    <lastmod>2025-07-09T19:48:16.496Z</lastmod>
+    <lastmod>2025-07-10T01:13:18.421Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/clojure/print_object/remove_extraneous.html</loc>
+    <lastmod>2025-07-10T01:13:10.557Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/clojure/transducers/what_if.html</loc>
+    <lastmod>2025-07-10T01:13:08.478Z</lastmod>
+  </url>
+  <url>
+    <loc>https://clojurecivitas.github.io/core/async/flow/example/before_his_wings_melted.html</loc>
+    <lastmod>2025-07-10T01:13:19.372Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/internationalization/transliteration.html</loc>
-    <lastmod>2025-07-09T19:48:18.880Z</lastmod>
+    <lastmod>2025-07-10T01:13:20.484Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/index.html</loc>
-    <lastmod>2025-07-09T19:47:42.244Z</lastmod>
+    <lastmod>2025-07-10T01:12:37.811Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/about.html</loc>
-    <lastmod>2025-07-09T19:47:42.243Z</lastmod>
+    <lastmod>2025-07-10T01:12:37.811Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</loc>
-    <lastmod>2025-07-09T19:47:42.246Z</lastmod>
+    <lastmod>2025-07-10T01:12:37.814Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.html</loc>
-    <lastmod>2025-07-09T19:48:19.254Z</lastmod>
+    <lastmod>2025-07-10T01:13:20.930Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/math/stats/central_limit_theorem_different_distributions.html</loc>
-    <lastmod>2025-07-09T19:48:21.225Z</lastmod>
+    <lastmod>2025-07-10T01:13:22.731Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/math/primes/factorization/sieve_augmented.html</loc>
-    <lastmod>2025-07-09T19:48:21.279Z</lastmod>
+    <lastmod>2025-07-10T01:13:22.775Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/civitas/authors.html</loc>
-    <lastmod>2025-07-09T19:48:21.314Z</lastmod>
+    <lastmod>2025-07-10T01:13:22.804Z</lastmod>
   </url>
   <url>
     <loc>https://clojurecivitas.github.io/scicloj/tableplot/ideas/stacking.html</loc>
-    <lastmod>2025-07-09T19:48:22.375Z</lastmod>
+    <lastmod>2025-07-10T01:13:23.837Z</lastmod>
   </url>
 </urlset>
