@@ -404,84 +404,65 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 <script src="beginning_to_build_a_browser_game_files/md-default0.js" type="text/javascript"></script>
 <script src="beginning_to_build_a_browser_game_files/md-default1.js" type="text/javascript"></script>
-<p>Today we are pairing. We are messing around with Clojure.</p>
-<p>Instead of HTML tags, we’re using Clojure data structures to say what we mean. With tags, we need to close them. It’s nice to not need to close them.</p>
+<p>I’m new to Clojure. I asked my new friend Timothy how to make a square appear on the screen:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> thing </span>[<span class="at">:svg</span> {<span class="at">:style</span> {<span class="at">:border</span> <span class="st">"1px solid red"</span>}}</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>            [<span class="at">:rect</span> {<span class="at">:width</span> <span class="dv">50</span> <span class="at">:height</span> <span class="dv">50</span> <span class="at">:stroke</span> <span class="at">:blue</span>}]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kind/hiccup</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>[<span class="at">:svg</span> [<span class="at">:rect</span> {<span class="at">:width</span> <span class="dv">50</span> <span class="at">:height</span> <span class="dv">50</span>}]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>This tells Clay (our renderer) to render the HTML.</p>
+<svg style="height:50;width:50;"><rect height="50" width="50"></rect></svg>
+<p>Compared to HTML:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kind/hiccup</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>thing</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>&lt;svg&gt;&lt;rect width=<span class="dv">50</span> height=<span class="dv">50</span> /&gt;&lt;/svg&gt;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<svg style="border:1px solid red;"><rect height="50" stroke="blue" width="50"></rect></svg>
+<p>It’s nice to not have to close tags, but I’m not sure about the colons, nor the dependencies.</p>
+<p>Dependencies aside, we are this square. And we want to be able to move. Timothy, how can I move?</p>
+<p>We’ll separate the position data from the rendering:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kind/hiccup</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>[<span class="at">:div</span> [<span class="at">:button</span> <span class="st">"Click me"</span>] thing]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> world </span>(<span class="kw">atom</span> {<span class="at">:player</span> {<span class="at">:x</span> <span class="dv">75</span> <span class="at">:y</span> <span class="dv">75</span>}}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div><button>Click me</button><svg style="border:1px solid red;"><rect height="50" stroke="blue" width="50"></rect></svg></div>
-<p>Let’s create a function that parametrizes thing</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> create-thing </span>[x y]</span>
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> render </span>[world]</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  ^<span class="at">:kind/hiccup</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:svg</span> {<span class="at">:style</span> {<span class="at">:border</span> <span class="st">"1px solid red"</span>}}</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:rect</span> {<span class="at">:width</span> <span class="dv">50</span> <span class="at">:height</span> <span class="dv">50</span> <span class="at">:stroke</span> <span class="at">:blue</span> <span class="at">:x</span> x <span class="at">:y</span> y}]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:svg</span> {<span class="at">:style</span> {<span class="at">:border</span> <span class="st">"1px solid black"</span>}}</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">for</span> [[_entity-id {<span class="at">:keys</span> [x y]}] world]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>     [<span class="at">:rect</span> {<span class="at">:width</span> <span class="dv">50</span> <span class="at">:height</span> <span class="dv">50</span> <span class="at">:x</span> x <span class="at">:y</span> y}])])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(create-thing <span class="dv">50</span> <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(render <span class="at">@world</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<svg style="border:1px solid red;"><rect height="50" stroke="blue" width="50" x="50" y="50"></rect></svg>
-<p>Let’s create the world</p>
+<svg style="border:1px solid black;"><rect height="50" width="50" x="75" y="75"></rect></svg>
+<p>We’ll add an enemy to see how to work with <code>atom</code>:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> world </span>(<span class="kw">atom</span> {}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Let’s add something to the world</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">swap!</span> world <span class="kw">assoc</span> <span class="at">:player</span> {<span class="at">:x</span> <span class="dv">75</span> <span class="at">:y</span> <span class="dv">75</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">swap!</span> world <span class="kw">assoc</span> <span class="at">:enemy</span> {<span class="at">:x</span> <span class="dv">130</span> <span class="at">:y</span> <span class="dv">75</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:player</span> {<span class="at">:x</span> <span class="dv">75</span>, <span class="at">:y</span> <span class="dv">75</span>}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:player</span> {<span class="at">:x</span> <span class="dv">75</span>, <span class="at">:y</span> <span class="dv">75</span>}, <span class="at">:enemy</span> {<span class="at">:x</span> <span class="dv">130</span>, <span class="at">:y</span> <span class="dv">75</span>}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Wait, did <code>assoc</code> work? Yes.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> render-the-world </span>[world]</span>
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(render <span class="at">@world</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<svg style="border:1px solid black;"><rect height="50" width="50" x="75" y="75"></rect><rect height="50" width="50" x="130" y="75"></rect></svg>
+<p>Let us be different shapes:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> render </span>[world]</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  ^<span class="at">:kind/hiccup</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:svg</span> {<span class="at">:style</span> {<span class="at">:border</span> <span class="st">"1px solid red"</span>}}</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">for</span> [[_entity-id {<span class="at">:keys</span> [x y]}] world]</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>     [<span class="at">:rect</span> {<span class="at">:width</span> <span class="dv">50</span> <span class="at">:height</span> <span class="dv">50</span> <span class="at">:stroke</span> <span class="at">:blue</span> <span class="at">:x</span> x <span class="at">:y</span> y}])])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:svg</span> {<span class="at">:style</span> {<span class="at">:border</span> <span class="st">"1px solid black"</span>}}</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">for</span> [[entity-id {<span class="at">:keys</span> [x y]}] world]</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>     (<span class="kw">if</span> (<span class="kw">=</span> entity-id <span class="at">:player</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>       [<span class="at">:rect</span> {<span class="at">:width</span> <span class="dv">50</span> <span class="at">:height</span> <span class="dv">50</span> <span class="at">:fill</span> <span class="st">"#62b133"</span> <span class="at">:x</span> x <span class="at">:y</span> y <span class="at">:id</span> <span class="st">"player"</span>}]</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>       [<span class="at">:circle</span> {<span class="at">:r</span> <span class="dv">25</span> <span class="at">:fill</span> <span class="st">"#5880d9"</span> <span class="at">:cx</span> x <span class="at">:cy</span> y <span class="at">:id</span> <span class="st">"enemy"</span>}]))])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(render-the-world <span class="at">@world</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(render <span class="at">@world</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<svg style="border:1px solid red;"><rect height="50" stroke="blue" width="50" x="75" y="75"></rect></svg>
-<p>An enemy</p>
+<svg style="border:1px solid black;"><rect fill="#62b133" height="50" id="player" width="50" x="75" y="75"></rect><circle cx="130" cy="75" fill="#5880d9" id="enemy" r="25"></circle></svg>
+<p>Now would be a perfect time to use <a href="https://reagent-project.github.io/">Reagent</a> to connect the user’s keyboard to our world atom. However, I couldn’t get it working with <a href="https://scicloj.github.io/clay">Clay</a> (what we’re using to render this page). The dependencies have won the first battle.</p>
+<p>Moving on, we’ll resort to a <code>script</code> element. Clay lets us use JavaScript, but I couldn’t get it to work with curly braces. Suffering a one-liner, we can now move, via WASD on our keyboard.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">swap!</span> world <span class="kw">assoc</span> <span class="at">:enemy</span> {<span class="at">:x</span> <span class="dv">130</span> <span class="at">:y</span> <span class="dv">75</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kind/hiccup</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>[<span class="at">:script</span> <span class="ss">#"document.addEventListener('keydown', e =&gt; (['w', 'W'].includes(e.key) &amp;&amp; player.setAttribute('y', parseInt(player.getAttribute('y')) - 10) || ['a', 'A'].includes(e.key) &amp;&amp; player.setAttribute('x', parseInt(player.getAttribute('x')) - 10) || ['s', 'S'].includes(e.key) &amp;&amp; player.setAttribute('y', parseInt(player.getAttribute('y')) + 10) || ['d', 'D'].includes(e.key) &amp;&amp; player.setAttribute('x', parseInt(player.getAttribute('x')) + 10)))"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:player</span> {<span class="at">:x</span> <span class="dv">75</span>, <span class="at">:y</span> <span class="dv">75</span>}, <span class="at">:enemy</span> {<span class="at">:x</span> <span class="dv">130</span>, <span class="at">:y</span> <span class="dv">75</span>}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Show the enemy</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(render-the-world <span class="at">@world</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<svg style="border:1px solid red;"><rect height="50" stroke="blue" width="50" x="75" y="75"></rect><rect height="50" stroke="blue" width="50" x="130" y="75"></rect></svg>
-<p>Let’s look different from our enemy</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> render-the-world </span>[world]</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  ^<span class="at">:kind/hiccup</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:svg</span> {<span class="at">:style</span> {<span class="at">:border</span> <span class="st">"1px solid black"</span>}}</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>   (<span class="kw">for</span> [[entity-id {<span class="at">:keys</span> [x y]}] world]</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>     (<span class="kw">if</span> (<span class="kw">=</span> entity-id <span class="at">:player</span>)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>       [<span class="at">:rect</span> {<span class="at">:width</span> <span class="dv">50</span> <span class="at">:height</span> <span class="dv">50</span> <span class="at">:fill</span> <span class="st">"#62b133"</span> <span class="at">:x</span> x <span class="at">:y</span> y}]</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>       [<span class="at">:circle</span> {<span class="at">:r</span> <span class="dv">25</span> <span class="at">:fill</span> <span class="st">"#5880d9"</span> <span class="at">:cx</span> x <span class="at">:cy</span> y}]))])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(render-the-world <span class="at">@world</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<svg style="border:1px solid black;"><rect fill="#62b133" height="50" width="50" x="75" y="75"></rect><circle cx="130" cy="75" fill="#5880d9" r="25"></circle></svg>
-<p>It was nice to work with Clojure syntax as opposed to JavaScript. The only boilerplate I/we felt was the Clojure colons: “:” The code is nice to read. I’m just looking at what I meant to say. The things I care about are listed. There they are.</p>
+<script>document.addEventListener('keydown', e => (['w', 'W'].includes(e.key) && player.setAttribute('y', parseInt(player.getAttribute('y')) - 10) || ['a', 'A'].includes(e.key) && player.setAttribute('x', parseInt(player.getAttribute('x')) - 10) || ['s', 'S'].includes(e.key) && player.setAttribute('y', parseInt(player.getAttribute('y')) + 10) || ['d', 'D'].includes(e.key) && player.setAttribute('x', parseInt(player.getAttribute('x')) + 10)))</script>
 <div style="background-color:grey;height:2px;width:100%;"></div>
 <div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/games/beginning_to_build_a_browser_game.clj">src/games/beginning_to_build_a_browser_game.clj</a></small></small></pre></div>
 

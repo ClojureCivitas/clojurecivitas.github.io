@@ -465,32 +465,32 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>SQUARK: 2
-SQUARK: 5
-SQUARK: 9
-SQUARK: 8
-SQUARK: 6
-SQUARK: 8
-SQUARK: 9
+<pre><code>SQUARK: 6
+SQUARK: 0
+SQUARK: 1
 SQUARK: 3
-SQUARK: 5
-SQUARK: 7
 SQUARK: 2
-SQUARK: 4
-SQUARK: 5
-SQUARK: 3
-SQUARK: 3
-SQUARK: 11
-SQUARK: 5
+SQUARK: 0
 SQUARK: 11
 SQUARK: 0
+SQUARK: 5
+SQUARK: 3
+SQUARK: 1
+SQUARK: 0
+SQUARK: 0
+SQUARK: 1
+SQUARK: 11
+SQUARK: 1
 SQUARK: 4
-SQUARK: 2
+SQUARK: 0
+SQUARK: 7
+SQUARK: 11
+SQUARK: 6
 </code></pre>
 </div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[2,5,9,8,6,8,9,3,5,7,2,4,5,3,3,11,5,11,0,4],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"index","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sample","showgrid":true},"title":"The prey of Talon"}, {});</script></div>
+               [{"y":[6,0,1,3,2,0,11,0,5,3,1,0,0,1,11,1,4,0,7,11],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"index","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sample","showgrid":true},"title":"The prey of Talon"}, {});</script></div>
 <p>You have sampled fairly, Talon.</p>
 <p>Talon operates at the behest of the city’s Generator.</p>
 <section id="meet-randomius-maximus-the-generator" class="level2">
@@ -591,7 +591,7 @@ OUT
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="at">@state</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:min</span> <span class="dv">10</span>, <span class="at">:max</span> <span class="dv">20</span>, <span class="at">:wait</span> <span class="dv">1</span>, <span class="at">:clojure.core.async.flow/in-ports</span> {<span class="at">:stat</span> #object [ManyToManyChannel]}, <span class="at">:flying</span> #object[clojure.lang.Atom <span class="bn">0x3a3ddc34</span> {<span class="at">:status</span> <span class="at">:ready</span>, <span class="at">:val</span> <span class="va">false</span>}]}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:min</span> <span class="dv">10</span>, <span class="at">:max</span> <span class="dv">20</span>, <span class="at">:wait</span> <span class="dv">1</span>, <span class="at">:clojure.core.async.flow/in-ports</span> {<span class="at">:stat</span> #object [ManyToManyChannel]}, <span class="at">:flying</span> #object[clojure.lang.Atom <span class="bn">0x763630ac</span> {<span class="at">:status</span> <span class="at">:ready</span>, <span class="at">:val</span> <span class="va">false</span>}]}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Transition with order.</p>
 <div class="sourceClojure">
@@ -617,7 +617,7 @@ Talon, set flight!
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:max</span> <span class="dv">20</span>,</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:wait</span> <span class="dv">1</span>,</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:clojure.core.async.flow/in-ports</span> {<span class="at">:stat</span> #object [ManyToManyChannel]},</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@3a3ddc34:</span> true&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@763630ac:</span> true&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Talon is flying.</p>
 <div class="sourceClojure">
@@ -626,7 +626,7 @@ Talon, set flight!
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    (a/&lt;!!))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dv">14</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dv">17</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Transform with purpose.</p>
 <div class="sourceClojure">
@@ -656,7 +656,7 @@ OUT
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:max</span> <span class="dv">20</span>,</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:wait</span> <span class="dv">1</span>,</span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:clojure.core.async.flow/in-ports</span> {<span class="at">:stat</span> #object [ManyToManyChannel]},</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@3a3ddc34:</span> true&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@763630ac:</span> true&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>I see you wish to send a missive to <code>out</code>. Be wary in the future, send only numbers to those who seek stats.</p>
 <p>Well done, Randomius. You are a true citizen. Now rest.</p>
@@ -683,7 +683,7 @@ Talon, rest!
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:max</span> <span class="dv">20</span>,</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:wait</span> <span class="dv">1</span>,</span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:clojure.core.async.flow/in-ports</span> {<span class="at">:stat</span> #object [ManyToManyChannel]},</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@3a3ddc34:</span> false&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@763630ac:</span> false&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="meet-tallystrix-the-whispering-aggregator" class="level2">
@@ -1096,11 +1096,7 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Chronon transitioning :clojure.core.async.flow/resume
-Tallystrix transitioning :clojure.core.async.flow/resume
-Chronon running
-Claxxus transitioning :clojure.core.async.flow/resume
-Randomius transitioning :clojure.core.async.flow/resume
+<pre><code>Randomius transitioning :clojure.core.async.flow/resume
 Talon, set flight!
 </code></pre>
 </div>
@@ -1123,9 +1119,12 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>SQUARK: 10
-Randomius transform 10 from :stat to :out
-Chronon transforms :alarm true to :out
+<pre><code>Claxxus transitioning :clojure.core.async.flow/resume
+Chronon transitioning :clojure.core.async.flow/resume
+Chronon running
+SQUARK: 5
+Randomius transform 5 from :stat to :out
+Tallystrix transitioning :clojure.core.async.flow/resume
 </code></pre>
 </div>
 </div>
@@ -1151,8 +1150,9 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transforming :stat 10
+<pre><code>Chronon transforms :alarm true to :out
 Tallystrix transforming :poke true
+Tallystrix transforming :stat 5
 </code></pre>
 </div>
 </div>
@@ -1177,7 +1177,7 @@ THREAD OUT
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb58"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:avg</span> <span class="fl">10.0</span>, <span class="at">:count</span> <span class="dv">1</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb58"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:count</span> <span class="dv">0</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Mischief is afoot.</p>
 <div class="sourceClojure">
@@ -1388,10 +1388,10 @@ THREAD OUT
 <div class="callout-body-container callout-body">
 <pre><code>Randomius transitioning :clojure.core.async.flow/pause
 Talon, rest!
-Tallystrix transitioning :clojure.core.async.flow/pause
 Chronon transitioning :clojure.core.async.flow/pause
 Chronon rests.
 Claxxus transitioning :clojure.core.async.flow/pause
+Tallystrix transitioning :clojure.core.async.flow/pause
 </code></pre>
 </div>
 </div>
@@ -1402,6 +1402,12 @@ Claxxus transitioning :clojure.core.async.flow/pause
 <p>The flow may cease.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb76"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>(flow/stop flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb77"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb78"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>(Thread/sleep <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1414,33 +1420,14 @@ THREAD OUT
 </div>
 <div class="callout-body-container callout-body">
 <pre><code>Randomius transitioning :clojure.core.async.flow/stop
-</code></pre>
-</div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb78"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb79"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>(Thread/sleep <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-THREAD OUT
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<pre><code>Tallystrix transitioning :clojure.core.async.flow/stop
+Tallystrix transitioning :clojure.core.async.flow/stop
 Chronon transitioning :clojure.core.async.flow/stop
 Claxxus transitioning :clojure.core.async.flow/stop
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb81"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb80"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The city falls silent.</p>
 <p>Thus does Asynctopolis coordinate, thus is Vita Processus observed.</p>
