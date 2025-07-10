@@ -2,6 +2,8 @@
   :clay             {:title  "Beginning to build a browser game"
                      :quarto {:author   [:mattkleinsmith]
                               :category :clojure
+                              :type     :post
+                              :date     "2025-07-09"
                               :tags     [:game :browser]}}}
 (ns games.beginning-to-build-a-browser-game)
 
