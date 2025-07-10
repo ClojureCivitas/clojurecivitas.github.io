@@ -7,62 +7,58 @@
                               :tags     [:game :browser]}}}
 (ns games.beginning-to-build-a-browser-game)
 
-; Today we are pairing. We are messing around with Clojure.
+; I'm new to Clojure. I asked my new friend Timothy how to make a square appear on the screen:
 
-; Instead of HTML tags, we're using Clojure data structures to say what we mean.
-; With tags, we need to close them. It's nice to not need to close them.
-(def thing [:svg {:style {:border "1px solid red"}}
-            [:rect {:width 50 :height 50 :stroke :blue}]])
+^{:kindly/hide-code true}
+^:kind/code
+(str "^:kind/hiccup
+[:svg [:rect {:width 50 :height 50}]]")
 
-; This tells Clay (our renderer) to render the HTML.
+^{:kindly/hide-code true}
 ^:kind/hiccup
-thing
+[:svg {:style {:width 50 :height 50}}
+ [:rect {:width 50 :height 50}]]
 
-^:kind/hiccup
-[:div [:button "Click me"] thing]
+; Compared to HTML:
 
-; Let's create a function that parametrizes thing
-(defn create-thing [x y]
+^{:kindly/hide-code true}
+^:kind/code
+(str "<svg><rect width=" 50 " height=" 50 " /></svg>")
+
+
+; It's nice to not have to close tags, but I'm not sure about the colons, nor the dependencies.
+
+; Dependencies aside, we are this square. And we want to be able to move. Timothy, how can I move?
+
+; We'll separate the position data from the rendering:
+
+(def world (atom {:player {:x 75 :y 75}}))
+
+(defn render [world]
   ^:kind/hiccup
-  [:svg {:style {:border "1px solid red"}}
-   [:rect {:width 50 :height 50 :stroke :blue :x x :y y}]])
-(create-thing 50 50)
-
-; Let's create the world
-(def world (atom {}))
-
-; Let's add something to the world
-(swap! world assoc :player {:x 75 :y 75})
-
-; Wait, did `assoc` work? Yes.
-@world
-
-(defn render-the-world [world]
-  ^:kind/hiccup
-  [:svg {:style {:border "1px solid red"}}
+  [:svg {:style {:border "1px solid black"}}
    (for [[_entity-id {:keys [x y]}] world]
-     [:rect {:width 50 :height 50 :stroke :blue :x x :y y}])])
+     [:rect {:width 50 :height 50 :x x :y y}])])
 
-(render-the-world @world)
+(render @world)
 
-; An enemy
+; We'll add an enemy to see how to work with `atom`:
 (swap! world assoc :enemy {:x 130 :y 75})
+(render @world)
 
-; Show the enemy
-(render-the-world @world)
-
-; Let's look different from our enemy
-(defn render-the-world [world]
+; Let us be different shapes:
+(defn render [world]
   ^:kind/hiccup
   [:svg {:style {:border "1px solid black"}}
    (for [[entity-id {:keys [x y]}] world]
      (if (= entity-id :player)
-       [:rect {:width 50 :height 50 :fill "#62b133" :x x :y y}]
-       [:circle {:r 25 :fill "#5880d9" :cx x :cy y}]))])
-(render-the-world @world)
+       [:rect {:width 50 :height 50 :fill "#62b133" :x x :y y :id "player"}]
+       [:circle {:r 25 :fill "#5880d9" :cx x :cy y :id "enemy"}]))])
+(render @world)
 
-; It was nice to work with Clojure syntax as opposed to JavaScript.
-; The only boilerplate I/we felt was the Clojure colons: ":"
-; The code is nice to read. I'm just looking at what I meant to say.
-; The things I care about are listed. There they are.
+; Now would be a perfect time to use [Reagent](https://reagent-project.github.io/) to connect the user's keyboard to our world atom. However, I couldn't get it working with [Clay](https://scicloj.github.io/clay) (what we're using to render this page). The dependencies have won the first battle.
 
+; Moving on, we'll resort to a `script` element. Clay lets us use JavaScript, but I couldn't get it to work with curly braces. Suffering a one-liner, we can now move, via WASD on our keyboard.
+
+^:kind/hiccup
+[:script #"document.addEventListener('keydown', e => (['w', 'W'].includes(e.key) && player.setAttribute('y', parseInt(player.getAttribute('y')) - 10) || ['a', 'A'].includes(e.key) && player.setAttribute('x', parseInt(player.getAttribute('x')) - 10) || ['s', 'S'].includes(e.key) && player.setAttribute('y', parseInt(player.getAttribute('y')) + 10) || ['d', 'D'].includes(e.key) && player.setAttribute('x', parseInt(player.getAttribute('x')) + 10)))"]
