@@ -14,7 +14,8 @@ website:
     right:
       - about.qmd
       - posts.qmd
-      - pages.qmd
+      - civitas/authors.qmd
+      - civitas/explorer.qmd
       - icon: github
         href: "https://github.com/ClojureCivitas/clojurecivitas.github.io"
       - icon: rss

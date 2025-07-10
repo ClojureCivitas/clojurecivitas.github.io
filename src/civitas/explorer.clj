@@ -1,5 +1,5 @@
 ^:kindly/hide-code
-^{:clay {:title  "Civitas Explorer"
+^{:clay {:title  "Explorer"
          :quarto {:type   :page
                   :format {:html {:page-layout :full}}}}}
 (ns civitas.explorer
