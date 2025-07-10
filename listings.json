@@ -3,13 +3,13 @@
     "listing": "/pages.html",
     "items": [
       "/civitas/explorer.html",
-      "/games/beginning_to_build_a_browser_game.html",
       "/civitas/authors.html"
     ]
   },
   {
     "listing": "/posts.html",
     "items": [
+      "/games/beginning_to_build_a_browser_game.html",
       "/math/stats/central_limit_theorem_different_distributions.html",
       "/math/stats/central_limit_theorem_convergence.html",
       "/scicloj/tableplot/ideas/stacking.html",
