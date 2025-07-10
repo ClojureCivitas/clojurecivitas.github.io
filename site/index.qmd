@@ -6,4 +6,5 @@ about:
 ---
 [About](about.qmd)
 [Posts](posts.qmd)
-[Pages](pages.qmd)
+[Authors](civitas/authors.qmd)
+[Explorer](civitas/explorer.qmd)
