@@ -3,6 +3,7 @@
   {:title  "Simulating 1-D Convection in Clojure — From Equations to Arrays"
    :quarto {:author      :syungb
             :description "A quick exploration to simulate a classic fluid dynamics equation in Clojure using Java arrays."
+            :image       "linear.png"
             :type        :post
             :date        "2025-07-15"
             :category    :clojure
