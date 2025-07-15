@@ -6,11 +6,11 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Sam Umbach">
-<meta name="author" content="Timothy Pratley">
-<meta name="dcterms.date" content="2025-06-25">
+<meta name="author" content="Siyoung Byun">
+<meta name="dcterms.date" content="2025-07-15">
+<meta name="description" content="A quick exploration to simulate a classic fluid dynamics equation in Clojure using Java arrays.">
 
-<title>Convergence of Random Events – Clojure Civitas</title>
+<title>Simulating 1-D Convection in Clojure — From Equations to Arrays – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -61,28 +61,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </style>
 
 
-<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../../">
-<link href="../../favicon.ico" rel="icon">
-<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="../../site_libs/quarto-html/popper.min.js"></script>
-<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-4d49c55b2a02038d936e54d6a2565e99.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-95b9d8bfb9033cfe0e62f8828f2324d8.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-4d49c55b2a02038d936e54d6a2565e99.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-7d6f165988fb2100d51f41f5bac47e04.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-276513973ef675fe2cc4d6a1bd066430.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-7d6f165988fb2100d51f41f5bac47e04.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../favicon.ico" rel="icon">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-4d49c55b2a02038d936e54d6a2565e99.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-95b9d8bfb9033cfe0e62f8828f2324d8.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-4d49c55b2a02038d936e54d6a2565e99.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-7d6f165988fb2100d51f41f5bac47e04.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-276513973ef675fe2cc4d6a1bd066430.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-7d6f165988fb2100d51f41f5bac47e04.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -112,10 +112,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
-<meta property="og:title" content="Convergence of Random Events – Clojure Civitas">
-<meta property="og:description" content="">
-<meta property="og:image" content="https://clojurecivitas.github.io/math/stats/images/civitas-icon.svg">
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="Simulating 1-D Convection in Clojure — From Equations to Arrays – Clojure Civitas">
+<meta property="og:description" content="A quick exploration to simulate a classic fluid dynamics equation in Clojure using Java arrays.">
+<meta property="og:image" content="https://clojurecivitas.github.io/scicloj/cfd/intro/images/civitas-icon.svg">
 <meta property="og:site_name" content="Clojure Civitas">
 </head>
 
@@ -297,10 +326,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
-    <img src="../../images/civitas-icon.svg" alt="" class="navbar-logo">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../images/civitas-icon.svg" alt="" class="navbar-logo">
     </a>
-    <a class="navbar-brand" href="../../index.html">
+    <a class="navbar-brand" href="../../../index.html">
     <span class="navbar-title">Clojure Civitas</span>
     </a>
   </div>
@@ -311,19 +340,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../about.html"> 
+    <a class="nav-link" href="../../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../posts.html"> 
+    <a class="nav-link" href="../../../posts.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../civitas/authors.html"> 
+    <a class="nav-link" href="../../../civitas/authors.html"> 
 <span class="menu-text">Authors</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../civitas/explorer.html"> 
+    <a class="nav-link" href="../../../civitas/explorer.html"> 
 <span class="menu-text">Explorer</span></a>
   </li>  
   <li class="nav-item compact">
@@ -332,7 +361,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="../../posts.xml"> <i class="bi bi-rss" role="img">
+    <a class="nav-link" href="../../../posts.xml"> <i class="bi bi-rss" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -355,31 +384,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Convergence of Random Events</h1>
+<h1 class="title">Simulating 1-D Convection in Clojure — From Equations to Arrays</h1>
 </div>
 
+<div>
+  <div class="description">
+    A quick exploration to simulate a classic fluid dynamics equation in Clojure using Java arrays.
+  </div>
+</div>
 
 <div class="quarto-title-meta-author">
-  <div class="quarto-title-meta-heading">Authors</div>
-  <div class="quarto-title-meta-heading">Affiliations</div>
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
   
     <div class="quarto-title-meta-contents">
-    <p class="author"><a href="https://github.com/samumbach">Sam Umbach</a> <a href="mailto:samumbach@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+    <p class="author"><a href="https://github.com/syungb">Siyoung Byun</a> <a href="mailto:syungb@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
   </div>
   <div class="quarto-title-meta-contents">
         <p class="affiliation">
-            <a href="https://clojure.camp/">
-            Clojure Camp
-            </a>
-          </p>
-      </div>
-    <div class="quarto-title-meta-contents">
-    <p class="author"><a href="https://timothypratley.blogspot.com/p/httpswww.html">Timothy Pratley</a> <a href="mailto:timothypratley@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
-  </div>
-  <div class="quarto-title-meta-contents">
-        <p class="affiliation">
-            <a href="https://hummi.app">
-            Hummi
+            <a href="https://scicloj.github.io/">
+            Scicloj
             </a>
           </p>
       </div>
@@ -391,7 +415,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 25, 2025</p>
+      <p class="date">July 15, 2025</p>
     </div>
   </div>
   
@@ -413,135 +437,158 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="central_limit_theorem_convergence_files/md-default0.js" type="text/javascript"></script>
-<script src="central_limit_theorem_convergence_files/md-default1.js" type="text/javascript"></script>
-<p>Life is full of random events.</p>
-<p>We learn that multiple coin flips are “independent events” – no matter whether the past flip was heads or tails, the next flip is 50/50. (So why do they show the last few results at the routlette table? Hint: Don’t play routlette.) We learn that about half of babies are male and half female, so chances are 50/50 that your new little sibling will be a boy or a girl.</p>
-<p>I found the answer to “Of my 8 children, what are the chances that 4 are girls and 4 are boys?” counterintuitive. The central limit theorem is crucial to intuition around this question.</p>
-<p>When I initially encountered the Monte Hall problem, the correct answer wasn’t obvious or intuitive, but the mathemetical explanation is surprisingly understandable. We’ll try here to make the central limit theorem more understandable as well.</p>
-<p>Start with a single random event – value drawn from [0.0, 1.0)</p>
+<script src="linear_1d_convection_with_array_files/md-default0.js" type="text/javascript"></script>
+<script src="linear_1d_convection_with_array_files/md-default1.js" type="text/javascript"></script>
+<script src="linear_1d_convection_with_array_files/katex2.js" type="text/javascript"></script>
+<script src="linear_1d_convection_with_array_files/vega3.js" type="text/javascript"></script>
+<script src="linear_1d_convection_with_array_files/vega4.js" type="text/javascript"></script>
+<script src="linear_1d_convection_with_array_files/vega5.js" type="text/javascript"></script>
+<p><link href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" rel="stylesheet" type="text/css"></p>
+<p>Earlier this year I gave a <a href="https://youtu.be/RXr9i-aw0lM?si=NpnGOHh8TjC1gufI">talk</a> at the first online <a href="https://scicloj.github.io/scinoj-light-1/">Scinoj Light Conference</a>, sharing a <a href="https://github.com/scicloj/cfd-python-in-clojure">ongoing project</a> to port <a href="https://github.com/barbagroup/CFDPython">Computational Fluid Dynamics(CFD) learning materials</a> from Python to Clojure.</p>
+<p>In this post, I’ll demonstrate a simple one-dimensional linear <a href="https://en.wikipedia.org/wiki/Convection">convection</a> simulation implemented in Clojure using Java primitive arrays. This example shows a glimpse into the porting effort, with a focus on expressing numerical simulations using only built-in Clojure functions.</p>
+<section id="the-equation" class="level2">
+<h2 class="anchored" data-anchor-id="the-equation">The Equation</h2>
+<p><em>(This section won’t take up too much of your time…)</em></p>
+<p>We’re going to simulate the 1-D linear convection equation:</p>
+<p><span class="math display">\[\frac{\partial u }{\partial t} + c \frac{\partial u}{\partial x} = 0\]</span></p>
+<p>This explains how the flow velocity <code>u</code> changes over time <code>t</code> and position <code>x</code>, with <code>c</code> which is the wave speed.</p>
+<p>Instead of focusing on the physical interpretation(since I am no expert), the main focus on this post will be its implementation side - expressing it numerically and coding it in <strong>Clojure</strong>!</p>
+<p>Using a finite-difference scheme, the discretized form becomes:</p>
+<p><span class="math display">\[\frac{u_i^{n+1} - u_i^n}{\Delta t} + c \frac{u_i^n - u_{i-1}^n}{\Delta x} = 0\]</span></p>
+<p>Then, solving for <code>u_i^{n+1}</code> gives:</p>
+<p><span class="math display">\[u_i^{n+1} = n_i^n - c \frac{\Delta t}{\Delta x}(u_i^n - u_{i-1}^n)\]</span></p>
+</section>
+<section id="initial-setup" class="level2">
+<h2 class="anchored" data-anchor-id="initial-setup">Initial Setup</h2>
+<p>We begin by defining initial simulation parameters to start:</p>
+<ul>
+<li>nx: number of sliced steps for spatial point <code>x</code> from <code>x-start</code> and <code>x-end</code></li>
+<li>nt: number of time steps we want to propagate</li>
+<li>dx: each sliced <code>x</code> calculated from <code>dx = (x-end - x-start) / (nx - 1)</code></li>
+<li>dt: sliced each time step</li>
+<li>c: speed of wave</li>
+</ul>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">rand</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> init-params</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:x-start</span> <span class="dv">0</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">:x-end</span>   <span class="dv">2</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:nx</span>      <span class="dv">41</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>   <span class="at">:nt</span>      <span class="dv">25</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>   <span class="at">:dx</span>      (<span class="kw">/</span> (<span class="kw">-</span> <span class="dv">2</span> <span class="dv">0</span>) (<span class="kw">dec</span> <span class="dv">41</span>))</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>   <span class="at">:dt</span>      <span class="fl">0.025</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>   <span class="at">:c</span>       <span class="dv">1</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="creating-the-x-grid" class="level3">
+<h3 class="anchored" data-anchor-id="creating-the-x-grid">Creating the <code>x</code> Grid</h3>
+<p>With the given <code>init-params</code> we defined earlier, we create a float-array of spatial points <code>x</code>:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> array-x </span>(<span class="kw">let</span> [{<span class="at">:keys</span> [nx x-start x-end]} init-params</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                   arr  (<span class="kw">float-array</span> nx)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                   step (<span class="kw">/</span> (<span class="kw">-</span> x-end x-start) (<span class="kw">dec</span> nx))]</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>               (<span class="kw">dotimes</span> [i nx]</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                 (<span class="kw">aset</span> arr i (<span class="kw">float</span> (<span class="kw">*</span> i step))))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>               arr))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.05127306480144833</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>[<span class="fl">0.0</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="fl">0.15</span>, <span class="fl">0.2</span>, <span class="fl">0.25</span>, <span class="fl">0.3</span>, <span class="fl">0.35</span>, <span class="fl">0.4</span>, <span class="fl">0.45</span>, <span class="fl">0.5</span>, <span class="fl">0.55</span>, <span class="fl">0.6</span>,</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.65</span>, <span class="fl">0.7</span>, <span class="fl">0.75</span>, <span class="fl">0.8</span>, <span class="fl">0.85</span>, <span class="fl">0.9</span>, <span class="fl">0.95</span>, <span class="fl">1.0</span>, <span class="fl">1.05</span>, <span class="fl">1.1</span>, <span class="fl">1.15</span>, <span class="fl">1.2</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">1.25</span>, <span class="fl">1.3</span>, <span class="fl">1.35</span>, <span class="fl">1.4</span>, <span class="fl">1.45</span>, <span class="fl">1.5</span>, <span class="fl">1.55</span>, <span class="fl">1.6</span>, <span class="fl">1.65</span>, <span class="fl">1.7</span>, <span class="fl">1.75</span>, <span class="fl">1.8</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a> <span class="fl">1.85</span>, <span class="fl">1.9</span>, <span class="fl">1.95</span>, <span class="fl">2.0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>One way to combine random events is to take the average:</p>
+</section>
+<section id="defining-initial-flow-velocity-condition" class="level3">
+<h3 class="anchored" data-anchor-id="defining-initial-flow-velocity-condition">Defining Initial Flow Velocity Condition</h3>
+<p>The initial flow velocity(when <code>t = 0</code>) is 2 when <code>x ∈ [0.5, 1.0]</code>, and is 1 elsewhere:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> avg </span>[nums]</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">/</span> (<span class="kw">reduce</span> <span class="kw">+</span> nums) (<span class="kw">count</span> nums)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> init-cond-fn </span>#(<span class="kw">float</span> (<span class="kw">if</span> (<span class="kw">and</span> (<span class="kw">&gt;=</span> <span class="va">%</span> <span class="fl">0.5</span>) (<span class="kw">&lt;=</span> <span class="va">%</span> <span class="fl">1.0</span>)) <span class="dv">2</span> <span class="dv">1</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(avg [<span class="fl">0.0</span> <span class="fl">1.0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> array-u</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [nx (<span class="at">:nx</span> init-params)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        u  (<span class="kw">float-array</span> nx)]</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">dotimes</span> [i nx]</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">let</span> [x-i (<span class="kw">aget</span> array-x i)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>            u-i (init-cond-fn x-i)]</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">aset</span> u i u-i)))</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    u))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> init-array-u </span>(<span class="kw">float-array</span> array-u))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>[<span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">2.0</span>, <span class="fl">2.0</span>, <span class="fl">2.0</span>, <span class="fl">2.0</span>,</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">2.0</span>, <span class="fl">2.0</span>, <span class="fl">2.0</span>, <span class="fl">2.0</span>, <span class="fl">2.0</span>, <span class="fl">2.0</span>, <span class="fl">2.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Let’s try taking the average of several events together:</p>
+<p>We can visualize this initial <code>u</code>:</p>
+<div><script>vegaEmbed(document.currentScript.parentElement, {"mark":"line","width":500,"height":300,"encoding":{"x":{"field":"x","type":"quantitative"},"y":{"field":"y","type":"quantitative"}},"data":{"values":[{"y":1.0,"x":0.0},{"y":1.0,"x":0.05},{"y":1.0,"x":0.1},{"y":1.0,"x":0.15},{"y":1.0,"x":0.2},{"y":1.0,"x":0.25},{"y":1.0,"x":0.3},{"y":1.0,"x":0.35},{"y":1.0,"x":0.4},{"y":1.0,"x":0.45},{"y":2.0,"x":0.5},{"y":2.0,"x":0.55},{"y":2.0,"x":0.6},{"y":2.0,"x":0.65},{"y":2.0,"x":0.7},{"y":2.0,"x":0.75},{"y":2.0,"x":0.8},{"y":2.0,"x":0.85},{"y":2.0,"x":0.9},{"y":2.0,"x":0.95},{"y":2.0,"x":1.0},{"y":1.0,"x":1.05},{"y":1.0,"x":1.1},{"y":1.0,"x":1.15},{"y":1.0,"x":1.2},{"y":1.0,"x":1.25},{"y":1.0,"x":1.3},{"y":1.0,"x":1.35},{"y":1.0,"x":1.4},{"y":1.0,"x":1.45},{"y":1.0,"x":1.5},{"y":1.0,"x":1.55},{"y":1.0,"x":1.6},{"y":1.0,"x":1.65},{"y":1.0,"x":1.7},{"y":1.0,"x":1.75},{"y":1.0,"x":1.8},{"y":1.0,"x":1.85},{"y":1.0,"x":1.9},{"y":1.0,"x":1.95},{"y":1.0,"x":2.0}]}});</script></div>
+</section>
+<section id="wait-why-dotimes" class="level3">
+<h3 class="anchored" data-anchor-id="wait-why-dotimes">Wait, Why <code>dotimes</code>?</h3>
+<p>Since we’re working with mutable Java arrays(float-array), <code>dotimes</code> is an efficient choice here. Because it gives direct, index-based iteration. And it pairs naturally with <code>aget</code> and <code>aset</code> for reading and writing array values.</p>
+</section>
+</section>
+<section id="implementing-and-the-simulation" class="level2">
+<h2 class="anchored" data-anchor-id="implementing-and-the-simulation">Implementing and the Simulation</h2>
+<p>With the initial setup complete, we now apply the discretized convection equation at each time step.</p>
+<section id="step-function" class="level3">
+<h3 class="anchored" data-anchor-id="step-function">Step Function</h3>
+<p>Given the previous time step’s <code>array-u</code> and the <code>init-params</code>, We compute and mutate the flow velocity in-place:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(avg [(<span class="kw">rand</span>) (<span class="kw">rand</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> mutate-linear-convection-u</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  [array-u {<span class="at">:keys</span> [nx c dx dt]}]</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [u_i (<span class="kw">float-array</span> array-u)]</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">dotimes</span> [i (<span class="kw">-</span> nx <span class="dv">2</span>)]</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">let</span> [idx     (<span class="kw">inc</span> i)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>            un-i    (<span class="kw">aget</span> u_i idx)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            un-i<span class="dv">-1</span>  (<span class="kw">aget</span> u_i i)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>            new-u-i (<span class="kw">float</span> (<span class="kw">-</span> un-i (<span class="kw">*</span> c (<span class="kw">/</span> dt dx) (<span class="kw">-</span> un-i un-i<span class="dv">-1</span>))))]</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">aset</span> array-u idx new-u-i))))</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  array-u)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="time-integration" class="level3">
+<h3 class="anchored" data-anchor-id="time-integration">Time Integration</h3>
+<p>We run the step function <code>nt</code> times to run our simulation over time.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> simulate!</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  [array-u {<span class="at">:keys</span> [nt] <span class="at">:as</span> init-params}]</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">loop</span> [n <span class="dv">0</span>]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">if</span> (<span class="kw">=</span> n nt)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>      array-u</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">do</span> (mutate-linear-convection-u array-u init-params) (<span class="kw">recur</span> (<span class="kw">inc</span> n))))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Finally, we visualize the resulting <code>array-u</code>:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(simulate! array-u init-params)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.2204443459034523</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>[<span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0000007</span>,</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">1.0000097</span>, <span class="fl">1.0000782</span>, <span class="fl">1.0004553</span>, <span class="fl">1.0020387</span>, <span class="fl">1.0073167</span>, <span class="fl">1.0216427</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">1.0538762</span>, <span class="fl">1.1147615</span>, <span class="fl">1.2121781</span>, <span class="fl">1.3450189</span>, <span class="fl">1.4999992</span>, <span class="fl">1.6549712</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a> <span class="fl">1.7877436</span>, <span class="fl">1.8847833</span>, <span class="fl">1.9440854</span>, <span class="fl">1.9710407</span>, <span class="fl">1.9710407</span>, <span class="fl">1.9440854</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a> <span class="fl">1.8847833</span>, <span class="fl">1.7877436</span>, <span class="fl">1.6549712</span>, <span class="fl">1.4999992</span>, <span class="fl">1.3450189</span>, <span class="fl">1.2121781</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a> <span class="fl">1.1147615</span>, <span class="fl">1.0538762</span>, <span class="fl">1.0216427</span>, <span class="fl">1.0073167</span>, <span class="fl">1.0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<div><script>vegaEmbed(document.currentScript.parentElement, {"mark":"line","width":500,"height":300,"encoding":{"x":{"field":"x","type":"quantitative"},"y":{"field":"y","type":"quantitative"}},"data":{"values":[{"y":1.0,"x":0.0},{"y":1.0,"x":0.05},{"y":1.0,"x":0.1},{"y":1.0,"x":0.15},{"y":1.0,"x":0.2},{"y":1.0,"x":0.25},{"y":1.0,"x":0.3},{"y":1.0,"x":0.35},{"y":1.0,"x":0.4},{"y":1.0,"x":0.45},{"y":1.0,"x":0.5},{"y":1.0000007,"x":0.55},{"y":1.0000097,"x":0.6},{"y":1.0000782,"x":0.65},{"y":1.0004553,"x":0.7},{"y":1.0020387,"x":0.75},{"y":1.0073167,"x":0.8},{"y":1.0216427,"x":0.85},{"y":1.0538762,"x":0.9},{"y":1.1147615,"x":0.95},{"y":1.2121781,"x":1.0},{"y":1.3450189,"x":1.05},{"y":1.4999992,"x":1.1},{"y":1.6549712,"x":1.15},{"y":1.7877436,"x":1.2},{"y":1.8847833,"x":1.25},{"y":1.9440854,"x":1.3},{"y":1.9710407,"x":1.35},{"y":1.9710407,"x":1.4},{"y":1.9440854,"x":1.45},{"y":1.8847833,"x":1.5},{"y":1.7877436,"x":1.55},{"y":1.6549712,"x":1.6},{"y":1.4999992,"x":1.65},{"y":1.3450189,"x":1.7},{"y":1.2121781,"x":1.75},{"y":1.1147615,"x":1.8},{"y":1.0538762,"x":1.85},{"y":1.0216427,"x":1.9},{"y":1.0073167,"x":1.95},{"y":1.0,"x":2.0}]}});</script></div>
+<p>The plot shows how the flow velocity shifts from left to right over time, while also becoming smoother. Nice!</p>
+</section>
+</section>
+<section id="the-summary" class="level2">
+<h2 class="anchored" data-anchor-id="the-summary">The Summary</h2>
+<p>This Simple example demonstrates a simulation process using low-level Java primitive arrays in Clojure.</p>
+<p>Choosing this approach provided mutable, non-persistent data structures. While this deviates from idiomatic Clojure, it offers significant performance benefits for big-size numerical simulations. However, it comes with trade-offs; by opting for mutability, we give up the guarantees of immutability and structural sharing, making the code less safe and more error-prone.</p>
+<p>As the porting project continues, we plan to evolve the design to better align with idiomatic Clojure principles. Stay tuned!</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(avg [(<span class="kw">rand</span>) (<span class="kw">rand</span>) (<span class="kw">rand</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">comment</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">require</span> '[scicloj.clay.v2.api <span class="at">:as</span> clay])</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  (clay/make! {<span class="at">:source-path</span> <span class="st">"scicloj/cfd/intro/linear_1d_convection_with_array.clj"</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.45833050487203875</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>This is getting repetitive. We can make the computer repeat for us:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(avg (<span class="kw">repeatedly</span> <span class="dv">3</span> <span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.6908946114824408</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The more events that you average, the closer the result comes to 0.5:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(avg (<span class="kw">repeatedly</span> <span class="dv">30</span> <span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.4819249937809076</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(avg (<span class="kw">repeatedly</span> <span class="dv">300</span> <span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.5108724457255768</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Let’s try taking several events together:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> event </span>[]</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(event)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.4163511893723858</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> combined-event </span>[number-of-events]</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  (avg (<span class="kw">repeatedly</span> number-of-events event)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb20"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(combined-event <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb21"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.4591150420343256</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb22"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(combined-event <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb23"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.3327633481287717</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb24"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>(combined-event <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb25"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.30479202662817606</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Let’s look at a series of multiple of these combined event</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb26"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">repeatedly</span> <span class="dv">5</span> #(combined-event <span class="dv">2</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb27"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.22896167924932614</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.34234728750134136</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.5014052566602649</span></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.5327030745367389</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.3018280303660996</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb28"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">repeatedly</span> <span class="dv">5</span> #(combined-event <span class="dv">5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb29"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.4489331022678756</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.7232499218810755</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.3947919816349046</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.4812690970138373</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.4830925886008913</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb30"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">repeatedly</span> <span class="dv">5</span> #(combined-event <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb31"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.40358444163766344</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.4887440889666328</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.5948831220499541</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.5375957475241143</span></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.335738284695125</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>As we combine a larger number of events, the values cluster more closely to the middle of the original distribution.</p>
-<p>And regardless of the shape of the original event distribution, the result of combining more and more events will approach the normal distribution – it’s a unique function toward which these combinations always converge.</p>
-<p>This is true for both continuous variables (like <code>(rand)</code>) or discrete variables (like dice <code>(rand-nth [1 2 3 4 5 6])</code>), and it’s true even for oddly shaped distributions. When you combine enough of them, they take on the character of the bell-shaped curve.</p>
-<p>Learn More at <a href="https://www.youtube.com/watch?v=zeJD6dqJ5lo">3Blue1Brown - But what is the Central Limit Theorem?</a></p>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/math/stats/central_limit_theorem_convergence.clj">src/math/stats/central_limit_theorem_convergence.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/scicloj/cfd/intro/linear_1d_convection_with_array.clj">src/scicloj/cfd/intro/linear_1d_convection_with_array.clj</a></small></small></pre></div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

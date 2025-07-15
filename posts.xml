@@ -15,7 +15,664 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.32</generator>
-<lastBuildDate>Wed, 09 Jul 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 15 Jul 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Simulating 1-D Convection in Clojure — From Equations to Arrays</title>
+  <dc:creator>Siyoung Byun</dc:creator>
+  <link>https://clojurecivitas.github.io/scicloj/cfd/intro/linear_1d_convection_with_array.html</link>
+  <description><![CDATA[ 
+
+
+
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="linear_1d_convection_with_array_files/md-default0.js" type="text/javascript"></script>
+<script src="linear_1d_convection_with_array_files/md-default1.js" type="text/javascript"></script>
+<script src="linear_1d_convection_with_array_files/katex2.js" type="text/javascript"></script>
+<script src="linear_1d_convection_with_array_files/vega3.js" type="text/javascript"></script>
+<script src="linear_1d_convection_with_array_files/vega4.js" type="text/javascript"></script>
+<script src="linear_1d_convection_with_array_files/vega5.js" type="text/javascript"></script>
+<p><link href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" rel="stylesheet" type="text/css"></p>
+<p>Earlier this year I gave a <a href="https://youtu.be/RXr9i-aw0lM?si=NpnGOHh8TjC1gufI">talk</a> at the first online <a href="https://scicloj.github.io/scinoj-light-1/">Scinoj Light Conference</a>, sharing a <a href="https://github.com/scicloj/cfd-python-in-clojure">ongoing project</a> to port <a href="https://github.com/barbagroup/CFDPython">Computational Fluid Dynamics(CFD) learning materials</a> from Python to Clojure.</p>
+<p>In this post, I’ll demonstrate a simple one-dimensional linear <a href="https://en.wikipedia.org/wiki/Convection">convection</a> simulation implemented in Clojure using Java primitive arrays. This example shows a glimpse into the porting effort, with a focus on expressing numerical simulations using only built-in Clojure functions.</p>
+<section id="the-equation" class="level2">
+<h2 class="anchored" data-anchor-id="the-equation">The Equation</h2>
+<p><em>(This section won’t take up too much of your time…)</em></p>
+<p>We’re going to simulate the 1-D linear convection equation:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cfrac%7B%5Cpartial%20u%20%7D%7B%5Cpartial%20t%7D%20+%20c%20%5Cfrac%7B%5Cpartial%20u%7D%7B%5Cpartial%20x%7D%20=%200"></p>
+<p>This explains how the flow velocity <code>u</code> changes over time <code>t</code> and position <code>x</code>, with <code>c</code> which is the wave speed.</p>
+<p>Instead of focusing on the physical interpretation(since I am no expert), the main focus on this post will be its implementation side - expressing it numerically and coding it in <strong>Clojure</strong>!</p>
+<p>Using a finite-difference scheme, the discretized form becomes:</p>
+<p><img src="https://latex.codecogs.com/png.latex?%5Cfrac%7Bu_i%5E%7Bn+1%7D%20-%20u_i%5En%7D%7B%5CDelta%20t%7D%20+%20c%20%5Cfrac%7Bu_i%5En%20-%20u_%7Bi-1%7D%5En%7D%7B%5CDelta%20x%7D%20=%200"></p>
+<p>Then, solving for <code>u_i^{n+1}</code> gives:</p>
+<p><img src="https://latex.codecogs.com/png.latex?u_i%5E%7Bn+1%7D%20=%20n_i%5En%20-%20c%20%5Cfrac%7B%5CDelta%20t%7D%7B%5CDelta%20x%7D(u_i%5En%20-%20u_%7Bi-1%7D%5En)"></p>
+</section>
+<section id="initial-setup" class="level2">
+<h2 class="anchored" data-anchor-id="initial-setup">Initial Setup</h2>
+<p>We begin by defining initial simulation parameters to start:</p>
+<ul>
+<li>nx: number of sliced steps for spatial point <code>x</code> from <code>x-start</code> and <code>x-end</code></li>
+<li>nt: number of time steps we want to propagate</li>
+<li>dx: each sliced <code>x</code> calculated from <code>dx = (x-end - x-start) / (nx - 1)</code></li>
+<li>dt: sliced each time step</li>
+<li>c: speed of wave</li>
+</ul>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> init-params</span></span>
+<span id="cb1-2">  {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:x-start</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span></span>
+<span id="cb1-3">   <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:x-end</span>   <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span></span>
+<span id="cb1-4">   <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:nx</span>      <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">41</span></span>
+<span id="cb1-5">   <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:nt</span>      <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">25</span></span>
+<span id="cb1-6">   <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:dx</span>      (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">/</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">dec</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">41</span>))</span>
+<span id="cb1-7">   <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:dt</span>      <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.025</span></span>
+<span id="cb1-8">   <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:c</span>       <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>})</span></code></pre></div>
+</div>
+<section id="creating-the-x-grid" class="level3">
+<h3 class="anchored" data-anchor-id="creating-the-x-grid">Creating the <code>x</code> Grid</h3>
+<p>With the given <code>init-params</code> we defined earlier, we create a float-array of spatial points <code>x</code>:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> array-x </span>(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [{<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:keys</span> [nx x-start x-end]} init-params</span>
+<span id="cb2-2">                   arr  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">float-array</span> nx)</span>
+<span id="cb2-3">                   step (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">/</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span> x-end x-start) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">dec</span> nx))]</span>
+<span id="cb2-4">               (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">dotimes</span> [i nx]</span>
+<span id="cb2-5">                 (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">aset</span> arr i (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">float</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">*</span> i step))))</span>
+<span id="cb2-6">               arr))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb3" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1">[<span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.05</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.1</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.15</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.2</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.25</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.3</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.35</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.4</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.45</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.5</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.55</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.6</span>,</span>
+<span id="cb3-2"> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.65</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.7</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.75</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.8</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.85</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.9</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.95</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.05</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.1</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.15</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.2</span>,</span>
+<span id="cb3-3"> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.25</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.3</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.35</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.4</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.45</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.5</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.55</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.6</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.65</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.7</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.75</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.8</span>,</span>
+<span id="cb3-4"> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.85</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.9</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.95</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>]</span></code></pre></div>
+</div>
+</section>
+<section id="defining-initial-flow-velocity-condition" class="level3">
+<h3 class="anchored" data-anchor-id="defining-initial-flow-velocity-condition">Defining Initial Flow Velocity Condition</h3>
+<p>The initial flow velocity(when <code>t = 0</code>) is 2 when <code>x ∈ [0.5, 1.0]</code>, and is 1 elsewhere:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> init-cond-fn </span>#(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">float</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">and</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">&gt;=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">%</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0.5</span>) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">&lt;=</span> <span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">%</span> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>)) <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span> <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> array-u</span></span>
+<span id="cb5-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [nx (<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:nx</span> init-params)</span>
+<span id="cb5-3">        u  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">float-array</span> nx)]</span>
+<span id="cb5-4">    (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">dotimes</span> [i nx]</span>
+<span id="cb5-5">      (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [x-i (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">aget</span> array-x i)</span>
+<span id="cb5-6">            u-i (init-cond-fn x-i)]</span>
+<span id="cb5-7">        (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">aset</span> u i u-i)))</span>
+<span id="cb5-8">    u))</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> init-array-u </span>(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">float-array</span> array-u))</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1">[<span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>,</span>
+<span id="cb7-2"> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>,</span>
+<span id="cb7-3"> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>]</span></code></pre></div>
+</div>
+<p>We can visualize this initial <code>u</code>:</p>
+<div><script>vegaEmbed(document.currentScript.parentElement, {"mark":"line","width":500,"height":300,"encoding":{"x":{"field":"x","type":"quantitative"},"y":{"field":"y","type":"quantitative"}},"data":{"values":[{"y":1.0,"x":0.0},{"y":1.0,"x":0.05},{"y":1.0,"x":0.1},{"y":1.0,"x":0.15},{"y":1.0,"x":0.2},{"y":1.0,"x":0.25},{"y":1.0,"x":0.3},{"y":1.0,"x":0.35},{"y":1.0,"x":0.4},{"y":1.0,"x":0.45},{"y":2.0,"x":0.5},{"y":2.0,"x":0.55},{"y":2.0,"x":0.6},{"y":2.0,"x":0.65},{"y":2.0,"x":0.7},{"y":2.0,"x":0.75},{"y":2.0,"x":0.8},{"y":2.0,"x":0.85},{"y":2.0,"x":0.9},{"y":2.0,"x":0.95},{"y":2.0,"x":1.0},{"y":1.0,"x":1.05},{"y":1.0,"x":1.1},{"y":1.0,"x":1.15},{"y":1.0,"x":1.2},{"y":1.0,"x":1.25},{"y":1.0,"x":1.3},{"y":1.0,"x":1.35},{"y":1.0,"x":1.4},{"y":1.0,"x":1.45},{"y":1.0,"x":1.5},{"y":1.0,"x":1.55},{"y":1.0,"x":1.6},{"y":1.0,"x":1.65},{"y":1.0,"x":1.7},{"y":1.0,"x":1.75},{"y":1.0,"x":1.8},{"y":1.0,"x":1.85},{"y":1.0,"x":1.9},{"y":1.0,"x":1.95},{"y":1.0,"x":2.0}]}});</script></div>
+</section>
+<section id="wait-why-dotimes" class="level3">
+<h3 class="anchored" data-anchor-id="wait-why-dotimes">Wait, Why <code>dotimes</code>?</h3>
+<p>Since we’re working with mutable Java arrays(float-array), <code>dotimes</code> is an efficient choice here. Because it gives direct, index-based iteration. And it pairs naturally with <code>aget</code> and <code>aset</code> for reading and writing array values.</p>
+</section>
+</section>
+<section id="implementing-and-the-simulation" class="level2">
+<h2 class="anchored" data-anchor-id="implementing-and-the-simulation">Implementing and the Simulation</h2>
+<p>With the initial setup complete, we now apply the discretized convection equation at each time step.</p>
+<section id="step-function" class="level3">
+<h3 class="anchored" data-anchor-id="step-function">Step Function</h3>
+<p>Given the previous time step’s <code>array-u</code> and the <code>init-params</code>, We compute and mutate the flow velocity in-place:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> mutate-linear-convection-u</span></span>
+<span id="cb8-2">  [array-u {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:keys</span> [nx c dx dt]}]</span>
+<span id="cb8-3">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [u_i (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">float-array</span> array-u)]</span>
+<span id="cb8-4">    (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">dotimes</span> [i (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span> nx <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">2</span>)]</span>
+<span id="cb8-5">      (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">let</span> [idx     (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inc</span> i)</span>
+<span id="cb8-6">            un-i    (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">aget</span> u_i idx)</span>
+<span id="cb8-7">            un-i<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">-1</span>  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">aget</span> u_i i)</span>
+<span id="cb8-8">            new-u-i (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">float</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span> un-i (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">*</span> c (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">/</span> dt dx) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">-</span> un-i un-i<span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">-1</span>))))]</span>
+<span id="cb8-9">        (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">aset</span> array-u idx new-u-i))))</span>
+<span id="cb8-10">  array-u)</span></code></pre></div>
+</div>
+</section>
+<section id="time-integration" class="level3">
+<h3 class="anchored" data-anchor-id="time-integration">Time Integration</h3>
+<p>We run the step function <code>nt</code> times to run our simulation over time.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1">(<span class="bu" style="color: null;
+background-color: null;
+font-style: inherit;">defn</span><span class="fu" style="color: #4758AB;
+background-color: null;
+font-style: inherit;"> simulate!</span></span>
+<span id="cb9-2">  [array-u {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:keys</span> [nt] <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:as</span> init-params}]</span>
+<span id="cb9-3">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">loop</span> [n <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">0</span>]</span>
+<span id="cb9-4">    (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">if</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">=</span> n nt)</span>
+<span id="cb9-5">      array-u</span>
+<span id="cb9-6">      (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">do</span> (mutate-linear-convection-u array-u init-params) (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">recur</span> (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">inc</span> n))))))</span></code></pre></div>
+</div>
+<p>Finally, we visualize the resulting <code>array-u</code>:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">(simulate! array-u init-params)</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1">[<span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0000007</span>,</span>
+<span id="cb11-2"> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0000097</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0000782</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0004553</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0020387</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0073167</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0216427</span>,</span>
+<span id="cb11-3"> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0538762</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.1147615</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.2121781</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.3450189</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.4999992</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.6549712</span>,</span>
+<span id="cb11-4"> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.7877436</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.8847833</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.9440854</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.9710407</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.9710407</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.9440854</span>,</span>
+<span id="cb11-5"> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.8847833</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.7877436</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.6549712</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.4999992</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.3450189</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.2121781</span>,</span>
+<span id="cb11-6"> <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.1147615</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0538762</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0216427</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0073167</span>, <span class="fl" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1.0</span>]</span></code></pre></div>
+</div>
+<div><script>vegaEmbed(document.currentScript.parentElement, {"mark":"line","width":500,"height":300,"encoding":{"x":{"field":"x","type":"quantitative"},"y":{"field":"y","type":"quantitative"}},"data":{"values":[{"y":1.0,"x":0.0},{"y":1.0,"x":0.05},{"y":1.0,"x":0.1},{"y":1.0,"x":0.15},{"y":1.0,"x":0.2},{"y":1.0,"x":0.25},{"y":1.0,"x":0.3},{"y":1.0,"x":0.35},{"y":1.0,"x":0.4},{"y":1.0,"x":0.45},{"y":1.0,"x":0.5},{"y":1.0000007,"x":0.55},{"y":1.0000097,"x":0.6},{"y":1.0000782,"x":0.65},{"y":1.0004553,"x":0.7},{"y":1.0020387,"x":0.75},{"y":1.0073167,"x":0.8},{"y":1.0216427,"x":0.85},{"y":1.0538762,"x":0.9},{"y":1.1147615,"x":0.95},{"y":1.2121781,"x":1.0},{"y":1.3450189,"x":1.05},{"y":1.4999992,"x":1.1},{"y":1.6549712,"x":1.15},{"y":1.7877436,"x":1.2},{"y":1.8847833,"x":1.25},{"y":1.9440854,"x":1.3},{"y":1.9710407,"x":1.35},{"y":1.9710407,"x":1.4},{"y":1.9440854,"x":1.45},{"y":1.8847833,"x":1.5},{"y":1.7877436,"x":1.55},{"y":1.6549712,"x":1.6},{"y":1.4999992,"x":1.65},{"y":1.3450189,"x":1.7},{"y":1.2121781,"x":1.75},{"y":1.1147615,"x":1.8},{"y":1.0538762,"x":1.85},{"y":1.0216427,"x":1.9},{"y":1.0073167,"x":1.95},{"y":1.0,"x":2.0}]}});</script></div>
+<p>The plot shows how the flow velocity shifts from left to right over time, while also becoming smoother. Nice!</p>
+</section>
+</section>
+<section id="the-summary" class="level2">
+<h2 class="anchored" data-anchor-id="the-summary">The Summary</h2>
+<p>This Simple example demonstrates a simulation process using low-level Java primitive arrays in Clojure.</p>
+<p>Choosing this approach provided mutable, non-persistent data structures. While this deviates from idiomatic Clojure, it offers significant performance benefits for big-size numerical simulations. However, it comes with trade-offs; by opting for mutability, we give up the guarantees of immutability and structural sharing, making the code less safe and more error-prone.</p>
+<p>As the porting project continues, we plan to evolve the design to better align with idiomatic Clojure principles. Stay tuned!</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1">(<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">comment</span></span>
+<span id="cb12-2">  (<span class="kw" style="color: #003B4F;
+background-color: null;
+font-weight: bold;
+font-style: inherit;">require</span> '[scicloj.clay.v2.api <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:as</span> clay])</span>
+<span id="cb12-3">  (clay/make! {<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:source-path</span> <span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"scicloj/cfd/intro/linear_1d_convection_with_array.clj"</span>}))</span></code></pre></div>
+</div>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/scicloj/cfd/intro/linear_1d_convection_with_array.clj">src/scicloj/cfd/intro/linear_1d_convection_with_array.clj</a></small></small></pre></div>
+
+
+</section>
+
+ ]]></description>
+  <guid>https://clojurecivitas.github.io/scicloj/cfd/intro/linear_1d_convection_with_array.html</guid>
+  <pubDate>Tue, 15 Jul 2025 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Beginning to build a browser game</title>
   <dc:creator>Matt Kleinsmith</dc:creator>
@@ -380,7 +1037,7 @@ font-style: inherit;">40</span>})</span>
 <div class="sourceCode" id="cb5" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1">(histogram uniform-ds)</span></code></pre></div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[2467,2402,2524,2498,2512,2465,2443,2527,2563,2524,2565,2453,2455,2522,2507,2409,2547,2563,2526,2508,2493,2509,2430,2495,2486,2472,2416,2475,2496,2519,2539,2521,2532,2474,2534,2486,2466,2590,2563,2524],"r":null,"name":"","fill":null,"mode":null,"width":[0.024999703859225036,0.024999703859225036,0.024999703859225036,0.024999703859225036,0.024999703859225036,0.024999703859225036,0.024999703859225036,0.024999703859225036,0.024999703859225036,0.024999703859225036,0.024999703859225064,0.02499970385922501,0.024999703859225064,0.02499970385922501,0.024999703859225064,0.02499970385922501,0.02499970385922501,0.024999703859225064,0.02499970385922501,0.024999703859225064,0.02499970385922501,0.02499970385922512,0.024999703859224898,0.02499970385922512,0.02499970385922501,0.02499970385922512,0.02499970385922501,0.02499970385922501,0.02499970385922501,0.02499970385922512,0.02499970385922501,0.02499970385922501,0.02499970385922501,0.02499970385922501,0.02499970385922512,0.02499970385922501,0.02499970385922512,0.024999703859224898,0.02499970385922512,0.02499970385922501],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.01250116649454465,0.037500870353769686,0.06250057421299472,0.08750027807221976,0.1124999819314448,0.13749968579066985,0.16249938964989485,0.18749909350911992,0.21249879736834493,0.23749850122757,0.262498205086795,0.28749790894602006,0.31249761280524513,0.33749731666447014,0.36249702052369515,0.3874967243829202,0.4124964282421452,0.4374961321013703,0.4624958359605953,0.4874955398198203,0.5124952436790453,0.5374949475382704,0.5624946513974954,0.5874943552567204,0.6124940591159456,0.6374937629751706,0.6624934668343956,0.6874931706936207,0.7124928745528456,0.7374925784120707,0.7624922822712958,0.7874919861305207,0.8124916899897459,0.8374913938489708,0.8624910977081959,0.887490801567421,0.912490505426646,0.937490209285871,0.962489913145096,0.987489617004321],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+               [{"y":[2530,2478,2612,2485,2545,2467,2559,2479,2525,2470,2508,2551,2527,2529,2541,2505,2504,2532,2414,2434,2572,2430,2518,2524,2419,2556,2466,2500,2485,2462,2454,2476,2455,2465,2543,2515,2498,2512,2485,2470],"r":null,"name":"","fill":null,"mode":null,"width":[0.024999523952092897,0.024999523952092897,0.024999523952092893,0.0249995239520929,0.024999523952092886,0.0249995239520929,0.024999523952092872,0.024999523952092928,0.024999523952092872,0.0249995239520929,0.024999523952092928,0.024999523952092872,0.024999523952092872,0.024999523952092872,0.024999523952092928,0.024999523952092928,0.024999523952092872,0.024999523952092872,0.024999523952092872,0.024999523952092928,0.024999523952092928,0.024999523952092928,0.024999523952092817,0.024999523952092928,0.024999523952092928,0.024999523952092817,0.024999523952092928,0.024999523952092817,0.024999523952092928,0.024999523952092928,0.024999523952092928,0.024999523952092928,0.024999523952092817,0.024999523952092928,0.024999523952092817,0.024999523952092928,0.024999523952092928,0.024999523952092817,0.024999523952092928,0.024999523952092928],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.012504744094223015,0.03750426804631591,0.0625037919984088,0.0875033159505017,0.1125028399025946,0.1375023638546875,0.16250188780678038,0.18750141175887328,0.21250093571096618,0.23750045966305905,0.262499983615152,0.28749950756724485,0.3124990315193378,0.3374985554714306,0.3624980794235235,0.38749760337561645,0.4124971273277094,0.4374966512798022,0.4624961752318951,0.487495699183988,0.5124952231360809,0.5374947470881739,0.5624942710402667,0.5874937949923595,0.6124933189444526,0.6374928428965454,0.6624923668486382,0.6874918908007311,0.7124914147528241,0.7374909387049169,0.7624904626570099,0.7874899866091027,0.8124895105611957,0.8374890345132886,0.8624885584653814,0.8874880824174742,0.9124876063695673,0.9374871303216601,0.9624866542737529,0.987486178225846],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
 <p>If we combine several of these distributions, watch the shape of the distribution:</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb6" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1">(<span class="bu" style="color: null;
@@ -421,7 +1078,7 @@ background-color: null;
 font-style: inherit;">100000</span>))</span></code></pre></div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[179,389,669,903,1135,1458,1677,1875,2165,2453,2739,2862,3237,3299,3624,3845,4031,4407,4546,4827,4841,4663,4323,4039,3826,3649,3264,3083,2925,2636,2307,2075,1934,1589,1360,1115,908,637,377,129],"r":null,"name":"","fill":null,"mode":null,"width":[0.024842774973862853,0.024842774973862853,0.024842774973862843,0.024842774973862863,0.02484277497386285,0.024842774973862836,0.024842774973862863,0.024842774973862863,0.024842774973862863,0.024842774973862836,0.02484277497386289,0.02484277497386278,0.02484277497386289,0.024842774973862836,0.02484277497386289,0.024842774973862836,0.024842774973862836,0.02484277497386289,0.02484277497386278,0.024842774973862947,0.02484277497386289,0.02484277497386289,0.02484277497386267,0.02484277497386289,0.02484277497386289,0.02484277497386289,0.02484277497386289,0.02484277497386267,0.02484277497386289,0.02484277497386289,0.02484277497386289,0.02484277497386289,0.02484277497386267,0.02484277497386289,0.02484277497386289,0.02484277497386289,0.02484277497386289,0.02484277497386267,0.02484277497386289,0.02484277497386289],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.017380218878061217,0.04222299385192407,0.06706576882578692,0.09190854379964977,0.11675131877351264,0.14159409374737547,0.1664368687212383,0.1912796436951012,0.21612241866896403,0.2409651936428269,0.26580796861668976,0.2906507435905526,0.31549351856441543,0.3403362935382783,0.36517906851214116,0.390021843486004,0.4148646184598669,0.4397073934337297,0.46455016840759256,0.48939294338145545,0.5142357183553183,0.5390784933291812,0.563921268303044,0.5887640432769068,0.6136068182507697,0.6384495932246326,0.6632923681984955,0.6881351431723582,0.712977918146221,0.7378206931200839,0.7626634680939468,0.7875062430678097,0.8123490180416725,0.8371917930155353,0.8620345679893981,0.886877342963261,0.9117201179371239,0.9365628929109867,0.9614056678848495,0.9862484428587124],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+               [{"y":[137,375,678,872,1136,1389,1629,1838,2142,2346,2626,2855,3203,3409,3641,3919,4123,4353,4517,4896,4845,4558,4300,4230,3874,3585,3435,3053,2807,2597,2371,2165,1863,1643,1436,1127,885,632,384,126],"r":null,"name":"","fill":null,"mode":null,"width":[0.024926541050491326,0.024926541050491326,0.024926541050491323,0.02492654105049133,0.024926541050491316,0.02492654105049133,0.024926541050491302,0.024926541050491358,0.024926541050491302,0.02492654105049133,0.024926541050491358,0.024926541050491302,0.024926541050491302,0.024926541050491302,0.024926541050491358,0.024926541050491358,0.024926541050491302,0.024926541050491302,0.024926541050491302,0.024926541050491413,0.024926541050491302,0.024926541050491302,0.024926541050491302,0.024926541050491302,0.024926541050491302,0.024926541050491302,0.024926541050491524,0.02492654105049108,0.024926541050491524,0.024926541050491302,0.024926541050491302,0.024926541050491302,0.024926541050491302,0.024926541050491302,0.024926541050491302,0.024926541050491302,0.024926541050491524,0.02492654105049108,0.024926541050491524,0.024926541050491302],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.014512843382511865,0.03943938443300319,0.06436592548349451,0.08929246653398584,0.11421900758447717,0.13914554863496847,0.1640720896854598,0.18899863073595113,0.21392517178644246,0.2388517128369338,0.26377825388742515,0.28870479493791645,0.31363133598840776,0.33855787703889906,0.36348441808939036,0.3884109591398818,0.4133375001903731,0.4382640412408644,0.4631905822913557,0.48811712334184704,0.5130436643923384,0.5379702054428297,0.562896746493321,0.5878232875438123,0.6127498285943036,0.6376763696447949,0.6626029106952863,0.6875294517457776,0.7124559927962689,0.7373825338467603,0.7623090748972516,0.7872356159477429,0.8121621569982342,0.8370886980487255,0.8620152390992168,0.8869417801497081,0.9118683212001996,0.9367948622506909,0.9617214033011822,0.9866479443516736],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1">(histogram (event-sample-dataset #(combined-event <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -430,7 +1087,7 @@ background-color: null;
 font-style: inherit;">100000</span>))</span></code></pre></div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[3,4,27,53,123,263,372,642,894,1293,1757,2391,2942,3557,4291,5007,5650,6059,6543,6818,6852,6592,6328,5718,5167,4668,3935,3279,2547,2003,1444,1052,684,424,319,176,72,35,13,3],"r":null,"name":"","fill":null,"mode":null,"width":[0.0227179728685514,0.0227179728685514,0.022717972868551387,0.0227179728685514,0.0227179728685514,0.0227179728685514,0.022717972868551373,0.022717972868551428,0.022717972868551373,0.022717972868551428,0.022717972868551428,0.022717972868551317,0.022717972868551428,0.022717972868551373,0.022717972868551428,0.022717972868551428,0.022717972868551317,0.022717972868551428,0.022717972868551373,0.022717972868551428,0.022717972868551484,0.022717972868551373,0.022717972868551373,0.022717972868551373,0.022717972868551484,0.022717972868551373,0.022717972868551373,0.022717972868551373,0.022717972868551373,0.022717972868551484,0.022717972868551373,0.022717972868551484,0.02271797286855126,0.022717972868551373,0.022717972868551484,0.022717972868551373,0.022717972868551484,0.02271797286855126,0.022717972868551484,0.022717972868551373],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.05263863483111872,0.07535660769967012,0.09807458056822152,0.1207925534367729,0.1435105263053243,0.16622849917387572,0.1889464720424271,0.2116644449109785,0.2343824177795299,0.2571003906480813,0.2798183635166327,0.30253633638518407,0.32525430925373544,0.34797228212228687,0.3706902549908383,0.39340822785938967,0.41612620072794104,0.4388441735964924,0.46156214646504384,0.48428011933359527,0.5069980922021466,0.5297160650706981,0.5524340379392495,0.5751520108078009,0.5978699836763524,0.6205879565449037,0.6433059294134551,0.6660239022820065,0.6887418751505578,0.7114598480191092,0.7341778208876607,0.7568957937562122,0.7796137666247636,0.8023317394933148,0.8250497123618663,0.8477676852304177,0.870485658098969,0.8932036309675204,0.9159216038360718,0.9386395767046233],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+               [{"y":[1,3,21,44,87,152,328,454,707,1121,1412,1950,2613,3154,3854,4544,5193,5977,6142,6622,6708,6689,6601,6209,5689,5103,4298,3600,2976,2324,1768,1256,943,601,398,228,131,61,26,12],"r":null,"name":"","fill":null,"mode":null,"width":[0.022608956007184544,0.022608956007184544,0.02260895600718453,0.022608956007184544,0.02260895600718453,0.022608956007184544,0.022608956007184516,0.022608956007184572,0.022608956007184516,0.022608956007184544,0.022608956007184544,0.022608956007184544,0.022608956007184544,0.02260895600718449,0.0226089560071846,0.022608956007184544,0.02260895600718449,0.022608956007184544,0.022608956007184544,0.022608956007184544,0.0226089560071846,0.02260895600718449,0.02260895600718449,0.0226089560071846,0.02260895600718449,0.0226089560071846,0.0226089560071846,0.022608956007184378,0.0226089560071846,0.0226089560071846,0.02260895600718449,0.0226089560071846,0.022608956007184378,0.0226089560071846,0.0226089560071846,0.02260895600718449,0.0226089560071846,0.02260895600718449,0.02260895600718449,0.0226089560071846],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.04001389131376912,0.06262284732095366,0.0852318033281382,0.10784075933532274,0.13044971534250727,0.1530586713496918,0.17566762735687635,0.1982765833640609,0.22088553937124544,0.24349449537842996,0.26610345138561453,0.288712407392799,0.3113213633999836,0.3339303194071681,0.35653927541435265,0.3791482314215372,0.40175718742872174,0.4243661434359063,0.4469750994430908,0.4695840554502754,0.4921930114574599,0.5148019674646445,0.537410923471829,0.5600198794790134,0.582628835486198,0.6052377914933826,0.6278467475005671,0.6504557035077516,0.6730646595149361,0.6956736155221208,0.7182825715293053,0.7408915275364898,0.7635004835436743,0.7861094395508588,0.8087183955580435,0.831327351565228,0.8539363075724125,0.8765452635795971,0.8991542195867815,0.9217631755939661],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">(histogram (event-sample-dataset #(combined-event <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -439,7 +1096,7 @@ background-color: null;
 font-style: inherit;">100000</span>))</span></code></pre></div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[5,3,9,17,59,88,184,315,554,958,1415,2101,2927,3999,5078,6248,7043,7860,8337,8535,8042,7758,6737,5797,4714,3646,2600,1916,1233,754,486,270,161,84,41,20,4,1,0,1],"r":null,"name":"","fill":null,"mode":null,"width":[0.013883259835413997,0.013883259835414025,0.013883259835413997,0.013883259835413997,0.013883259835413997,0.013883259835413997,0.013883259835413997,0.013883259835413997,0.013883259835414052,0.013883259835413941,0.013883259835414052,0.013883259835413941,0.013883259835414052,0.013883259835413941,0.013883259835414052,0.013883259835414052,0.013883259835413941,0.013883259835414052,0.013883259835413941,0.013883259835414052,0.013883259835413941,0.013883259835414052,0.013883259835413941,0.013883259835414052,0.013883259835414052,0.013883259835413941,0.013883259835414052,0.013883259835413941,0.013883259835414052,0.013883259835413941,0.013883259835414052,0.013883259835414052,0.013883259835413941,0.013883259835413941,0.013883259835414052,0.013883259835414052,0.013883259835414052,0.013883259835413941,0.013883259835413941,0.013883259835414052],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.23819016508429425,0.25207342491970824,0.26595668475512224,0.2798399445905363,0.29372320442595024,0.3076064642613643,0.32148972409677823,0.3353729839321923,0.3492562437676063,0.3631395036030203,0.37702276343843427,0.39090602327384827,0.40478928310926227,0.41867254294467626,0.43255580278009026,0.4464390626155043,0.4603223224509183,0.4742055822863323,0.4880888421217463,0.5019721019571604,0.5158553617925743,0.5297386216279882,0.5436218814634023,0.5575051412988163,0.5713884011342303,0.5852716609696443,0.5991549208050584,0.6130381806404723,0.6269214404758863,0.6408047003113003,0.6546879601467144,0.6685712199821283,0.6824544798175424,0.6963377396529563,0.7102209994883704,0.7241042593237843,0.7379875191591985,0.7518707789946124,0.7657540388300264,0.7796372986654403],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+               [{"y":[2,5,5,17,45,94,171,292,485,781,1248,1784,2470,3464,4484,5437,6410,7239,7872,8151,8223,7724,7088,6245,5286,4279,3424,2522,1735,1202,746,514,251,162,76,38,14,6,4,5],"r":null,"name":"","fill":null,"mode":null,"width":[0.013377854396831201,0.013377854396831201,0.013377854396831257,0.013377854396831201,0.013377854396831201,0.013377854396831257,0.013377854396831201,0.013377854396831201,0.013377854396831201,0.013377854396831201,0.013377854396831257,0.013377854396831201,0.013377854396831201,0.013377854396831257,0.013377854396831201,0.013377854396831201,0.013377854396831201,0.013377854396831201,0.013377854396831257,0.013377854396831146,0.013377854396831257,0.013377854396831257,0.013377854396831146,0.013377854396831257,0.013377854396831146,0.013377854396831257,0.013377854396831257,0.013377854396831257,0.013377854396831146,0.013377854396831257,0.013377854396831146,0.013377854396831257,0.013377854396831257,0.013377854396831146,0.013377854396831257,0.013377854396831146,0.013377854396831257,0.013377854396831257,0.013377854396831146,0.013377854396831257],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.23999621279394698,0.25337406719077815,0.2667519215876094,0.28012977598444067,0.2935076303812718,0.30688548477810307,0.3202633391749343,0.33364119357176547,0.3470190479685967,0.3603969023654279,0.37377475676225913,0.3871526111590904,0.40053046555592153,0.4139083199527528,0.42728617434958405,0.4406640287464152,0.45404188314324645,0.4674197375400776,0.48079759193690885,0.49417544633374005,0.5075533007305713,0.5209311551274025,0.5343090095242338,0.5476868639210649,0.5610647183178961,0.5744425727147273,0.5878204271115586,0.6011982815083898,0.6145761359052211,0.6279539903020522,0.6413318446988834,0.6547096990957146,0.6680875534925459,0.6814654078893772,0.6948432622862083,0.7082211166830394,0.7215989710798707,0.734976825476702,0.7483546798735332,0.7617325342703644],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
 <p>Let’s try this again with a different shape of distribution:</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1">(<span class="bu" style="color: null;
@@ -580,7 +1237,7 @@ font-style: inherit;">100000</span>))</span></code></pre></div>
 <div class="sourceCode" id="cb16" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1">(histogram triangle-wave-ds)</span></code></pre></div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[4891,4714,4308,4075,3765,3658,3316,3107,2961,2627,2484,2036,1894,1676,1362,1163,858,656,363,133,115,389,635,849,1096,1395,1648,1845,2171,2411,2547,2775,3101,3332,3687,3969,4093,4408,4669,4818],"r":null,"name":"","fill":null,"mode":null,"width":[0.02499975925263453,0.02499975925263453,0.024999759252634528,0.024999759252634535,0.02499975925263452,0.024999759252634535,0.024999759252634507,0.024999759252634562,0.024999759252634507,0.024999759252634535,0.024999759252634535,0.024999759252634535,0.024999759252634535,0.02499975925263448,0.024999759252634535,0.02499975925263459,0.02499975925263448,0.024999759252634535,0.024999759252634535,0.024999759252634535,0.024999759252634535,0.024999759252634535,0.024999759252634424,0.024999759252634646,0.024999759252634535,0.024999759252634535,0.024999759252634535,0.024999759252634424,0.024999759252634535,0.024999759252634535,0.024999759252634646,0.024999759252634535,0.024999759252634424,0.024999759252634535,0.024999759252634535,0.024999759252634535,0.024999759252634646,0.024999759252634424,0.024999759252634535,0.024999759252634535],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.012502538356244484,0.037502297608879014,0.06250205686151354,0.08750181611414808,0.1125015753667826,0.13750133461941713,0.16250109387205164,0.18750085312468617,0.2125006123773207,0.23750037162995524,0.2625001308825898,0.2874998901352243,0.31249964938785885,0.3374994086404933,0.36249916789312786,0.3874989271457624,0.41249868639839693,0.43749844565103146,0.462498204903666,0.48749796415630053,0.5124977234089351,0.5374974826615696,0.562497241914204,0.5874970011668386,0.6124967604194732,0.6374965196721077,0.6624962789247423,0.6874960381773767,0.7124957974300112,0.7374955566826458,0.7624953159352803,0.787495075187915,0.8124948344405494,0.8374945936931839,0.8624943529458184,0.887494112198453,0.9124938714510875,0.937493630703722,0.9624933899563566,0.9874931492089911],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+               [{"y":[4909,4647,4394,4276,3888,3536,3384,3167,2905,2602,2298,2091,1948,1570,1337,1156,846,660,389,137,118,352,672,884,1130,1341,1680,1877,1983,2395,2602,2885,3108,3321,3698,3889,4113,4304,4597,4911],"r":null,"name":"","fill":null,"mode":null,"width":[0.02499961991624228,0.02499961991624228,0.02499961991624227,0.02499961991624229,0.024999619916242263,0.024999619916242277,0.024999619916242277,0.024999619916242305,0.024999619916242277,0.024999619916242277,0.024999619916242305,0.02499961991624222,0.024999619916242333,0.02499961991624222,0.024999619916242333,0.024999619916242277,0.024999619916242277,0.024999619916242277,0.024999619916242277,0.024999619916242277,0.024999619916242277,0.024999619916242333,0.02499961991624222,0.02499961991624222,0.024999619916242333,0.024999619916242333,0.024999619916242333,0.02499961991624211,0.024999619916242333,0.024999619916242333,0.02499961991624222,0.024999619916242333,0.02499961991624222,0.024999619916242333,0.02499961991624222,0.024999619916242333,0.024999619916242333,0.02499961991624222,0.02499961991624222,0.024999619916242333],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.012501955231313562,0.037501575147555845,0.06250119506379812,0.08750081498004039,0.11250043489628267,0.13750005481252495,0.16249967472876722,0.18749929464500953,0.2124989145612518,0.23749853447749408,0.26249815439373636,0.28749777430997864,0.3124973942262209,0.3374970141424632,0.36249663405870547,0.3874962539749478,0.41249587389119,0.43749549380743236,0.4624951137236746,0.4874947336399169,0.5124943535561591,0.5374939734724015,0.5624935933886437,0.587493213304886,0.6124928332211282,0.6374924531373706,0.6624920730536129,0.6874916929698551,0.7124913128860973,0.7374909328023397,0.7624905527185819,0.7874901726348242,0.8124897925510666,0.8374894124673088,0.862489032383551,0.8874886522997933,0.9124882722160357,0.937487892132278,0.9624875120485201,0.9874871319647625],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
 <p>Let’s combine several of these distributions:</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1">(histogram (event-sample-dataset #(combined-event <span class="dv" style="color: #AD0000;
@@ -590,7 +1247,7 @@ background-color: null;
 font-style: inherit;">100000</span>))</span></code></pre></div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[493,1310,1881,2341,2581,2796,2756,2623,2237,1839,1458,1251,1229,1533,2011,2566,3269,4285,5122,6200,6179,5088,4286,3373,2573,2056,1620,1341,1186,1442,1931,2309,2589,2695,2699,2707,2395,1982,1267,501],"r":null,"name":"","fill":null,"mode":null,"width":[0.02496957980734807,0.02496957980734807,0.02496957980734807,0.02496957980734807,0.02496957980734807,0.02496957980734807,0.02496957980734807,0.02496957980734807,0.02496957980734807,0.02496957980734807,0.024969579807348097,0.02496957980734804,0.024969579807348097,0.02496957980734804,0.024969579807348097,0.02496957980734804,0.02496957980734804,0.024969579807348097,0.02496957980734804,0.024969579807348097,0.024969579807348097,0.024969579807348152,0.02496957980734793,0.024969579807348152,0.02496957980734793,0.024969579807348152,0.024969579807348152,0.02496957980734793,0.024969579807348152,0.024969579807348152,0.02496957980734793,0.024969579807348152,0.02496957980734793,0.024969579807348152,0.024969579807348152,0.02496957980734793,0.024969579807348152,0.02496957980734793,0.024969579807348152,0.024969579807348152],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.012906190700026757,0.037875770507374826,0.0628453503147229,0.08781493012207096,0.11278450992941903,0.13775408973676712,0.16272366954411516,0.18769324935146325,0.2126628291588113,0.2376324089661594,0.2626019887735075,0.28757156858085553,0.31254114838820357,0.33751072819555167,0.36248030800289976,0.3874498878102478,0.41241946761759585,0.4373890474249439,0.462358627232292,0.4873282070396401,0.5122977868469881,0.5372673666543363,0.5622369464616843,0.5872065262690324,0.6121761060763804,0.6371456858837284,0.6621152656910766,0.6870848454984246,0.7120544253057727,0.7370240051131208,0.7619935849204689,0.7869631647278169,0.811932744535165,0.836902324342513,0.8618719041498611,0.8868414839572092,0.9118110637645572,0.9367806435719053,0.9617502233792533,0.9867198031866015],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+               [{"y":[528,1311,1929,2305,2717,2709,2796,2605,2326,1872,1518,1220,1284,1537,1944,2609,3462,4081,5243,6267,6048,5131,4252,3291,2665,1984,1518,1284,1245,1473,1887,2300,2615,2644,2773,2526,2383,1887,1324,507],"r":null,"name":"","fill":null,"mode":null,"width":[0.024950548344248372,0.024950548344248372,0.024950548344248362,0.024950548344248383,0.024950548344248355,0.02495054834424837,0.02495054834424837,0.024950548344248397,0.02495054834424837,0.02495054834424834,0.024950548344248424,0.024950548344248313,0.024950548344248424,0.024950548344248313,0.024950548344248424,0.02495054834424837,0.02495054834424837,0.02495054834424837,0.02495054834424837,0.024950548344248424,0.02495054834424837,0.02495054834424837,0.024950548344248258,0.02495054834424837,0.02495054834424848,0.02495054834424837,0.02495054834424837,0.024950548344248258,0.02495054834424848,0.02495054834424837,0.02495054834424837,0.02495054834424837,0.024950548344248258,0.02495054834424848,0.02495054834424837,0.02495054834424837,0.02495054834424837,0.02495054834424837,0.02495054834424837,0.02495054834424837],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.013854771368789267,0.03880531971303764,0.063755868057286,0.08870641640153437,0.11365696474578274,0.1386075130900311,0.16355806143427948,0.18850860977852785,0.21345915812277624,0.23840970646702458,0.263360254811273,0.2883108031555214,0.31326135149976975,0.3382118998440181,0.3631624481882665,0.38811299653251485,0.4130635448767632,0.4380140932210116,0.46296464156525996,0.48791518990950833,0.5128657382537567,0.5378162865980052,0.5627668349422534,0.5877173832865017,0.6126679316307502,0.6376184799749987,0.6625690283192469,0.6875195766634953,0.7124701250077436,0.7374206733519921,0.7623712216962404,0.7873217700404889,0.8122723183847371,0.8372228667289855,0.8621734150732339,0.8871239634174823,0.9120745117617306,0.9370250601059791,0.9619756084502273,0.9869261567944758],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1">(histogram (event-sample-dataset #(combined-event <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -599,7 +1256,7 @@ background-color: null;
 font-style: inherit;">100000</span>))</span></code></pre></div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[17,67,184,348,469,601,665,934,1430,2107,2700,2934,3038,3197,3867,4774,5523,5863,5539,5144,5001,5560,5796,5764,4989,3966,3358,3123,2947,2747,2172,1579,1070,677,638,480,393,224,89,26],"r":null,"name":"","fill":null,"mode":null,"width":[0.023537717606035877,0.023537717606035874,0.023537717606035874,0.023537717606035874,0.02353771760603586,0.023537717606035874,0.023537717606035874,0.023537717606035874,0.023537717606035874,0.023537717606035874,0.0235377176060359,0.023537717606035846,0.0235377176060359,0.023537717606035846,0.0235377176060359,0.023537717606035846,0.023537717606035846,0.0235377176060359,0.023537717606035846,0.0235377176060359,0.0235377176060359,0.023537717606035957,0.023537717606035735,0.023537717606035957,0.023537717606035846,0.023537717606035957,0.023537717606035846,0.023537717606035846,0.023537717606035846,0.023537717606035957,0.023537717606035846,0.023537717606035846,0.023537717606035846,0.023537717606035846,0.023537717606035957,0.023537717606035846,0.023537717606035957,0.023537717606035735,0.023537717606035957,0.023537717606035846],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.03868975768347924,0.06222747528951511,0.08576519289555098,0.10930291050158686,0.13284062810762273,0.1563783457136586,0.17991606331969445,0.20345378092573035,0.2269914985317662,0.2505292161378021,0.27406693374383795,0.29760465134987385,0.32114236895590975,0.3446800865619456,0.36821780416798144,0.39175552177401735,0.4152932393800532,0.4388309569860891,0.46236867459212494,0.4859063921981608,0.5094441098041967,0.5329818274102327,0.5565195450162685,0.5800572626223044,0.6035949802283402,0.6271326978343761,0.650670415440412,0.6742081330464479,0.6977458506524837,0.7212835682585197,0.7448212858645555,0.7683590034705914,0.7918967210766272,0.8154344386826631,0.8389721562886989,0.8625098738947349,0.8860475915007708,0.9095853091068067,0.9331230267128425,0.9566607443188784],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+               [{"y":[20,80,192,353,543,559,688,871,1524,2061,2735,2974,2996,3215,3941,4754,5646,5798,5528,5099,4947,5501,5766,5679,5089,4095,3359,3104,2849,2710,2209,1563,1030,698,593,522,390,195,106,18],"r":null,"name":"","fill":null,"mode":null,"width":[0.023545699893173802,0.023545699893173802,0.023545699893173788,0.023545699893173816,0.023545699893173788,0.023545699893173788,0.023545699893173788,0.023545699893173844,0.023545699893173788,0.023545699893173788,0.023545699893173844,0.023545699893173733,0.023545699893173844,0.023545699893173733,0.023545699893173844,0.023545699893173844,0.023545699893173733,0.023545699893173844,0.023545699893173733,0.023545699893173844,0.0235456998931739,0.023545699893173788,0.023545699893173677,0.023545699893173788,0.023545699893173788,0.0235456998931739,0.023545699893173788,0.023545699893173677,0.0235456998931739,0.023545699893173788,0.023545699893173788,0.0235456998931739,0.023545699893173677,0.023545699893173788,0.0235456998931739,0.023545699893173788,0.023545699893173788,0.023545699893173677,0.0235456998931739,0.023545699893173788],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.038908398864119904,0.062454098757293706,0.0859997986504675,0.1095454985436413,0.1330911984368151,0.1566368983299889,0.18018259822316268,0.2037282981163365,0.22727399800951031,0.2508196979026841,0.2743653977958579,0.2979110976890317,0.32145679758220547,0.34500249747537926,0.36854819736855304,0.39209389726172694,0.41563959715490073,0.4391852970480745,0.4627309969412483,0.4862766968344221,0.5098223967275959,0.5333680966207698,0.5569137965139435,0.5804594964071172,0.604005196300291,0.6275508961934648,0.6510965960866387,0.6746422959798124,0.6981879958729862,0.7217336957661601,0.7452793956593339,0.7688250955525078,0.7923707954456816,0.8159164953388552,0.8394621952320291,0.8630078951252029,0.8865535950183767,0.9100992949115505,0.9336449948047243,0.9571906946978981],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">(histogram (event-sample-dataset #(combined-event <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -608,7 +1265,7 @@ background-color: null;
 font-style: inherit;">100000</span>))</span></code></pre></div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[3,5,12,35,58,115,220,393,677,1090,1624,2350,3093,4136,5158,6159,7134,7853,8102,8235,7867,7346,6578,5615,4615,3567,2692,1876,1313,882,543,295,185,104,39,22,5,3,0,1],"r":null,"name":"","fill":null,"mode":null,"width":[0.016640668372551765,0.016640668372551737,0.016640668372551765,0.016640668372551765,0.016640668372551737,0.016640668372551737,0.016640668372551792,0.016640668372551737,0.016640668372551737,0.016640668372551737,0.016640668372551792,0.016640668372551737,0.016640668372551792,0.016640668372551737,0.016640668372551737,0.016640668372551737,0.016640668372551737,0.016640668372551848,0.016640668372551626,0.016640668372551848,0.016640668372551737,0.016640668372551737,0.016640668372551737,0.016640668372551737,0.016640668372551848,0.016640668372551737,0.016640668372551737,0.016640668372551737,0.016640668372551737,0.016640668372551737,0.016640668372551848,0.016640668372551737,0.016640668372551737,0.016640668372551737,0.016640668372551737,0.016640668372551848,0.016640668372551737,0.016640668372551626,0.016640668372551848,0.016640668372551737],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.1879818879632995,0.20462255633585125,0.22126322470840298,0.23790389308095478,0.2545445614535065,0.27118522982605825,0.28782589819861004,0.3044665665711618,0.3211072349437135,0.33774790331626525,0.354388571688817,0.3710292400613688,0.3876699084339206,0.4043105768064723,0.42095124517902405,0.4375919135515758,0.4542325819241275,0.4708732502966793,0.48751391866923105,0.5041545870417827,0.5207952554143346,0.5374359237868863,0.554076592159438,0.5707172605319898,0.5873579289045416,0.6039985972770934,0.6206392656496451,0.6372799340221968,0.6539206023947486,0.6705612707673003,0.6872019391398521,0.7038426075124039,0.7204832758849556,0.7371239442575074,0.7537646126300591,0.770405281002611,0.7870459493751627,0.8036866177477144,0.8203272861202662,0.8369679544928179],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+               [{"y":[3,6,6,38,57,107,194,374,588,982,1464,2062,2901,3761,4792,5892,6776,7539,7848,8132,8021,7743,6789,5893,5005,3922,2961,2148,1552,963,652,374,243,117,53,25,11,4,1,1],"r":null,"name":"","fill":null,"mode":null,"width":[0.01639818769671092,0.01639818769671092,0.016398187696710892,0.016398187696710947,0.01639818769671092,0.016398187696710864,0.01639818769671092,0.01639818769671092,0.01639818769671092,0.01639818769671092,0.01639818769671092,0.01639818769671092,0.01639818769671092,0.01639818769671092,0.016398187696710864,0.016398187696710975,0.016398187696710864,0.01639818769671092,0.01639818769671092,0.016398187696710975,0.016398187696710864,0.016398187696710864,0.016398187696710975,0.016398187696710864,0.016398187696710864,0.016398187696710975,0.016398187696710975,0.016398187696710864,0.016398187696710864,0.016398187696710975,0.016398187696710975,0.016398187696710975,0.016398187696710753,0.016398187696710975,0.016398187696710975,0.016398187696710753,0.016398187696710975,0.016398187696710975,0.016398187696710753,0.016398187696711086],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.18745321783568017,0.2038514055323911,0.22024959322910198,0.2366477809258129,0.2530459686225238,0.26944415631923474,0.28584234401594566,0.3022405317126565,0.3186387194093675,0.33503690710607836,0.35143509480278934,0.3678332824995002,0.3842314701962112,0.40062965789292204,0.41702784558963296,0.4334260332863439,0.4498242209830548,0.4662224086797657,0.4826205963764766,0.49901878407318756,0.5154169717698984,0.5318151594666094,0.5482133471633203,0.5646115348600311,0.5810097225567421,0.597407910253453,0.6138060979501639,0.6302042856468748,0.6466024733435858,0.6630006610402966,0.6793988487370076,0.6957970364337186,0.7121952241304295,0.7285934118271403,0.7449915995238513,0.7613897872205622,0.777787974917273,0.794186162613984,0.8105843503106949,0.8269825380074058],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
 <p>I find these visuals surprisingly powerful because you can see the original distribution “morph” into this characteristic shape.</p>
 <p>The normal distribution holds a unique place in mathematics and in the world itself: whenever you combine multiple independent and identically-distributed events, the result will converge to the normal distribution as the number of combined events increases.</p>
 <div style="background-color:grey;height:2px;width:100%;"></div>
@@ -657,7 +1314,7 @@ font-style: inherit;">rand</span>)</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.1251137509793976</span></span></code></pre></div>
+font-style: inherit;">0.05127306480144833</span></span></code></pre></div>
 </div>
 <p>One way to combine random events is to take the average:</p>
 <div class="sourceClojure">
@@ -705,7 +1362,7 @@ font-style: inherit;">rand</span>)])</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.05143190615482557</span></span></code></pre></div>
+font-style: inherit;">0.2204443459034523</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb8" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1">(avg [(<span class="kw" style="color: #003B4F;
@@ -722,7 +1379,7 @@ font-style: inherit;">rand</span>)])</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.5618273574863107</span></span></code></pre></div>
+font-style: inherit;">0.45833050487203875</span></span></code></pre></div>
 </div>
 <p>This is getting repetitive. We can make the computer repeat for us:</p>
 <div class="sourceClojure">
@@ -739,7 +1396,7 @@ font-style: inherit;">rand</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.2114650912122521</span></span></code></pre></div>
+font-style: inherit;">0.6908946114824408</span></span></code></pre></div>
 </div>
 <p>The more events that you average, the closer the result comes to 0.5:</p>
 <div class="sourceClojure">
@@ -756,7 +1413,7 @@ font-style: inherit;">rand</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.5527278188621337</span></span></code></pre></div>
+font-style: inherit;">0.4819249937809076</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1">(avg (<span class="kw" style="color: #003B4F;
@@ -772,7 +1429,7 @@ font-style: inherit;">rand</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.5002780206552659</span></span></code></pre></div>
+font-style: inherit;">0.5108724457255768</span></span></code></pre></div>
 </div>
 <p>Let’s try taking several events together:</p>
 <div class="sourceClojure">
@@ -792,7 +1449,7 @@ font-style: inherit;">rand</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.4948851838882158</span></span></code></pre></div>
+font-style: inherit;">0.4163511893723858</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">(<span class="bu" style="color: null;
@@ -813,7 +1470,7 @@ font-style: inherit;">1</span>)</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.1346507909434561</span></span></code></pre></div>
+font-style: inherit;">0.4591150420343256</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1">(combined-event <span class="dv" style="color: #AD0000;
@@ -823,7 +1480,7 @@ font-style: inherit;">2</span>)</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1"><span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.5123466100307641</span></span></code></pre></div>
+font-style: inherit;">0.3327633481287717</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1">(combined-event <span class="dv" style="color: #AD0000;
@@ -833,7 +1490,7 @@ font-style: inherit;">5</span>)</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.4604715724031775</span></span></code></pre></div>
+font-style: inherit;">0.30479202662817606</span></span></code></pre></div>
 </div>
 <p>Let’s look at a series of multiple of these combined event</p>
 <div class="sourceClojure">
@@ -849,19 +1506,19 @@ font-style: inherit;">2</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1">(<span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.3103126637297463</span></span>
+font-style: inherit;">0.22896167924932614</span></span>
 <span id="cb27-2"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.6417543286865239</span></span>
+font-style: inherit;">0.34234728750134136</span></span>
 <span id="cb27-3"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.17926223533215285</span></span>
+font-style: inherit;">0.5014052566602649</span></span>
 <span id="cb27-4"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.15036956474411195</span></span>
+font-style: inherit;">0.5327030745367389</span></span>
 <span id="cb27-5"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.2957765009889881</span>)</span></code></pre></div>
+font-style: inherit;">0.3018280303660996</span>)</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb28" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1">(<span class="kw" style="color: #003B4F;
@@ -876,19 +1533,19 @@ font-style: inherit;">5</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1">(<span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.332834361385794</span></span>
+font-style: inherit;">0.4489331022678756</span></span>
 <span id="cb29-2"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.48089021467104126</span></span>
+font-style: inherit;">0.7232499218810755</span></span>
 <span id="cb29-3"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.5715403703994306</span></span>
+font-style: inherit;">0.3947919816349046</span></span>
 <span id="cb29-4"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.3743686069887106</span></span>
+font-style: inherit;">0.4812690970138373</span></span>
 <span id="cb29-5"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.35491560250280346</span>)</span></code></pre></div>
+font-style: inherit;">0.4830925886008913</span>)</span></code></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb30" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1">(<span class="kw" style="color: #003B4F;
@@ -903,19 +1560,19 @@ font-style: inherit;">10</span>))</span></code></pre></div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb31" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1">(<span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.4085241218245275</span></span>
+font-style: inherit;">0.40358444163766344</span></span>
 <span id="cb31-2"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.6510132546131697</span></span>
+font-style: inherit;">0.4887440889666328</span></span>
 <span id="cb31-3"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.4559716331608617</span></span>
+font-style: inherit;">0.5948831220499541</span></span>
 <span id="cb31-4"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.4543528932289524</span></span>
+font-style: inherit;">0.5375957475241143</span></span>
 <span id="cb31-5"> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0.5682391902591218</span>)</span></code></pre></div>
+font-style: inherit;">0.335738284695125</span>)</span></code></pre></div>
 </div>
 <p>As we combine a larger number of events, the values cluster more closely to the middle of the original distribution.</p>
 <p>And regardless of the shape of the original event distribution, the result of combining more and more events will approach the normal distribution – it’s a unique function toward which these combinations always converge.</p>
@@ -2261,7 +2918,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 313.359677 msecs"
+<pre><code>"Elapsed time: 294.870879 msecs"
 </code></pre>
 </div>
 </div>
@@ -2308,7 +2965,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 200.617744 msecs"
+<pre><code>"Elapsed time: 156.514698 msecs"
 </code></pre>
 </div>
 </div>
@@ -2355,7 +3012,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 102.228924 msecs"
+<pre><code>"Elapsed time: 141.993837 msecs"
 </code></pre>
 </div>
 </div>
@@ -2404,7 +3061,7 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>"Elapsed time: 4.268774 msecs"
+<pre><code>"Elapsed time: 2.04524 msecs"
 </code></pre>
 </div>
 </div>
@@ -5090,7 +5747,7 @@ font-style: inherit;">5</span>])</span></code></pre></div>
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-class code_interview.beating.with_stupid_stuff.z_combinator_gambit<img src="https://latex.codecogs.com/png.latex?REV_SINGLEQUOTE_">fn__73367 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit<img src="https://latex.codecogs.com/png.latex?REV_SINGLEQUOTE_">fn__73367 is in unnamed module of loader clojure.lang.DynamicClassLoader <span class="citation" data-cites="cc1b2bc">@cc1b2bc</span>; clojure.lang.IPersistentCollection is in unnamed module of loader ‘app’)
+class code_interview.beating.with_stupid_stuff.z_combinator_gambit<img src="https://latex.codecogs.com/png.latex?REV_SINGLEQUOTE_">fn__73367 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit<img src="https://latex.codecogs.com/png.latex?REV_SINGLEQUOTE_">fn__73367 is in unnamed module of loader clojure.lang.DynamicClassLoader <span class="citation" data-cites="3d22ea43">@3d22ea43</span>; clojure.lang.IPersistentCollection is in unnamed module of loader ‘app’)
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
@@ -5101,7 +5758,7 @@ class code_interview.beating.with_stupid_stuff.z_combinator_gambit<img src="http
 code-interview.beating.with-stupid-stuff.z-combinator-gambit/eval73370  REPL Input:     
   code-interview.beating.with-stupid-stuff.z-combinator-gambit/REV'/fn  REPL Input:     
                                                      clojure.core/conj    core.clj:   84
-java.lang.ClassCastException: class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__73367 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__73367 is in unnamed module of loader clojure.lang.DynamicClassLoader @cc1b2bc; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')
+java.lang.ClassCastException: class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__73367 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_SINGLEQUOTE_$fn__73367 is in unnamed module of loader clojure.lang.DynamicClassLoader @3d22ea43; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')
 
 </code></pre>
 </div>
@@ -5304,7 +5961,7 @@ font-style: inherit;">5</span>])</span></code></pre></div>
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-class code_interview.beating.with_stupid_stuff.z_combinator_gambit<img src="https://latex.codecogs.com/png.latex?REV_LOGIC">fn__73377 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit<img src="https://latex.codecogs.com/png.latex?REV_LOGIC">fn__73377 is in unnamed module of loader clojure.lang.DynamicClassLoader <span class="citation" data-cites="17e99c8a">@17e99c8a</span>; clojure.lang.IPersistentCollection is in unnamed module of loader ‘app’)
+class code_interview.beating.with_stupid_stuff.z_combinator_gambit<img src="https://latex.codecogs.com/png.latex?REV_LOGIC">fn__73377 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit<img src="https://latex.codecogs.com/png.latex?REV_LOGIC">fn__73377 is in unnamed module of loader clojure.lang.DynamicClassLoader <span class="citation" data-cites="52537f2a">@52537f2a</span>; clojure.lang.IPersistentCollection is in unnamed module of loader ‘app’)
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
@@ -5315,7 +5972,7 @@ class code_interview.beating.with_stupid_stuff.z_combinator_gambit<img src="http
    code-interview.beating.with-stupid-stuff.z-combinator-gambit/eval73388  REPL Input:     
 code-interview.beating.with-stupid-stuff.z-combinator-gambit/REV-LOGIC/fn  REPL Input:     
                                                         clojure.core/conj    core.clj:   84
-java.lang.ClassCastException: class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__73377 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__73377 is in unnamed module of loader clojure.lang.DynamicClassLoader @17e99c8a; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')
+java.lang.ClassCastException: class code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__73377 cannot be cast to class clojure.lang.IPersistentCollection (code_interview.beating.with_stupid_stuff.z_combinator_gambit$REV_LOGIC$fn__73377 is in unnamed module of loader clojure.lang.DynamicClassLoader @52537f2a; clojure.lang.IPersistentCollection is in unnamed module of loader 'app')
 
 </code></pre>
 </div>
@@ -6377,36 +7034,33 @@ Claxxus initializing
 <div class="sourceClojure">
 <div class="sourceCode" id="cb10" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1">(flow/resume asynctopolis)</span></code></pre></div>
 </div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+THREAD OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>Tallystrix transitioning :clojure.core.async.flow/resume
+</code></pre>
+</div>
+</div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">true</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb12" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1">(<span class="bu" style="color: null;
+<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1">(<span class="bu" style="color: null;
 background-color: null;
 font-style: inherit;">def</span><span class="fu" style="color: #4758AB;
 background-color: null;
 font-style: inherit;"> report-chan </span>(<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:report-chan</span> chs))</span></code></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1">(async/poll! report-chan)</span></code></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">nil</span></span></code></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1">(flow/inject asynctopolis [<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:poke</span>] [<span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">true</span>])</span></code></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -6418,23 +7072,13 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Claxxus transitioning :clojure.core.async.flow/resume
-Randomius transitioning :clojure.core.async.flow/resume
+<pre><code>Randomius transitioning :clojure.core.async.flow/resume
 Talon, set flight!
 </code></pre>
 </div>
 </div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1">#object [FutureTask]</span></code></pre></div>
-</div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1">(flow/inject asynctopolis [<span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
-background-color: null;
-font-style: inherit;">:stat</span>] [<span class="st" style="color: #20794D;
-background-color: null;
-font-style: inherit;">"abc1000"</span>])</span></code></pre></div>
+<div class="sourceCode" id="cb15" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1">(async/poll! report-chan)</span></code></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -6448,21 +7092,46 @@ THREAD OUT
 <div class="callout-body-container callout-body">
 <pre><code>Chronon transitioning :clojure.core.async.flow/resume
 Chronon running
-Tallystrix transitioning :clojure.core.async.flow/resume
-Tallystrix transforming :poke true
+Claxxus transitioning :clojure.core.async.flow/resume
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1">#object [FutureTask]</span></code></pre></div>
+<div class="sourceCode" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">nil</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1">(show/flow-svg asynctopolis chs {<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb18" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1">(flow/inject asynctopolis [<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:poke</span>] [<span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">true</span>])</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb19" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1">#object [FutureTask]</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb20" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1">(flow/inject asynctopolis [<span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
+background-color: null;
+font-style: inherit;">:stat</span>] [<span class="st" style="color: #20794D;
+background-color: null;
+font-style: inherit;">"abc1000"</span>])</span></code></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb21" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1">#object [FutureTask]</span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb22" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1">(show/flow-svg asynctopolis chs {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:chans-as-ports</span> <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span></span>
-<span id="cb21-2">                                 <span class="at" style="color: #657422;
+<span id="cb22-2">                                 <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:with-content</span>   <span class="va" style="color: #111111;
 background-color: null;
@@ -6478,10 +7147,13 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>SQUARK: 6
+<pre><code>SQUARK: 11
+Randomius transform 11 from :stat to :out
+Tallystrix transforming :poke true
 Tallystrix transforming :stat abc1000
-Randomius transform 6 from :stat to :out
-Tallystrix transforming :stat 6
+Tallystrix transforming :stat 11
+Claxxus transforming :in {:val 11, :error :high}
+Alert:  {:val 11, :error :high}
 Chronon transforms :alarm true to :out
 Tallystrix transforming :poke true
 </code></pre>
@@ -6493,17 +7165,7 @@ Tallystrix transforming :poke true
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb23" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1">(flow/stop asynctopolis)</span></code></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><span class="va" style="color: #111111;
-background-color: null;
-font-style: inherit;">true</span></span></code></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb25" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1">(Thread/sleep <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">1</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb24" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1">(flow/stop asynctopolis)</span></code></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -6517,15 +7179,38 @@ THREAD OUT
 <div class="callout-body-container callout-body">
 <pre><code>Randomius transitioning :clojure.core.async.flow/stop
 Talon, rest!
-Chronon transitioning :clojure.core.async.flow/stop
-Chronon rests.
 Tallystrix transitioning :clojure.core.async.flow/stop
 Claxxus transitioning :clojure.core.async.flow/stop
+Chronon transitioning :clojure.core.async.flow/stop
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb26" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1"><span class="va" style="color: #111111;
+background-color: null;
+font-style: inherit;">true</span></span></code></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb27" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1">(Thread/sleep <span class="dv" style="color: #AD0000;
+background-color: null;
+font-style: inherit;">1</span>)</span></code></pre></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+THREAD OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>Chronon rests.
+</code></pre>
+</div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb29" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
@@ -6741,32 +7426,32 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>SQUARK: 2
-SQUARK: 3
-SQUARK: 0
+<pre><code>SQUARK: 1
+SQUARK: 7
 SQUARK: 1
 SQUARK: 3
-SQUARK: 11
-SQUARK: 2
-SQUARK: 5
-SQUARK: 9
-SQUARK: 6
-SQUARK: 3
-SQUARK: 3
-SQUARK: 8
-SQUARK: 9
-SQUARK: 6
-SQUARK: 8
-SQUARK: 9
-SQUARK: 1
 SQUARK: 4
-SQUARK: 10
+SQUARK: 3
+SQUARK: 6
+SQUARK: 9
+SQUARK: 9
+SQUARK: 9
+SQUARK: 11
+SQUARK: 9
+SQUARK: 8
+SQUARK: 5
+SQUARK: 5
+SQUARK: 7
+SQUARK: 3
 SQUARK: 0
+SQUARK: 3
+SQUARK: 4
+SQUARK: 5
 </code></pre>
 </div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[2,3,0,1,3,11,2,5,9,6,3,3,8,9,6,8,9,1,4,10],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"index","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sample","showgrid":true},"title":"The prey of Talon"}, {});</script></div>
+               [{"y":[1,7,1,3,4,3,6,9,9,9,11,9,8,5,5,7,3,0,3,4],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"index","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sample","showgrid":true},"title":"The prey of Talon"}, {});</script></div>
 <p>You have sampled fairly, Talon.</p>
 <p>Talon operates at the behest of the city’s Generator.</p>
 <section id="meet-randomius-maximus-the-generator" class="level2">
@@ -7059,7 +7744,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]}, <span class="at
 background-color: null;
 font-style: inherit;">:flying</span> #object[clojure.lang.Atom <span class="bn" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0x475d6aae</span> {<span class="at" style="color: #657422;
+font-style: inherit;">0xe2172ce</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:status</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -7118,7 +7803,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]},</span>
 background-color: null;
 font-style: inherit;">:flying</span> #&lt;Atom<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">@475d6aae:</span> false&gt;}</span></code></pre></div>
+font-style: inherit;">@e2172ce:</span> false&gt;}</span></code></pre></div>
 </div>
 <p>Talon is flying.</p>
 <div class="sourceClojure">
@@ -7201,7 +7886,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]},</span>
 background-color: null;
 font-style: inherit;">:flying</span> #&lt;Atom<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">@475d6aae:</span> false&gt;}</span></code></pre></div>
+font-style: inherit;">@e2172ce:</span> false&gt;}</span></code></pre></div>
 </div>
 <p>I see you wish to send a missive to <code>out</code>. Be wary in the future, send only numbers to those who seek stats.</p>
 <p>Well done, Randomius. You are a true citizen. Now rest.</p>
@@ -7253,7 +7938,7 @@ font-style: inherit;">:stat</span> #object [ManyToManyChannel]},</span>
 background-color: null;
 font-style: inherit;">:flying</span> #&lt;Atom<span class="at" style="color: #657422;
 background-color: null;
-font-style: inherit;">@475d6aae:</span> false&gt;}</span></code></pre></div>
+font-style: inherit;">@e2172ce:</span> false&gt;}</span></code></pre></div>
 </div>
 </section>
 <section id="meet-tallystrix-the-whispering-aggregator" class="level2">
@@ -8179,15 +8864,15 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Randomius transitioning :clojure.core.async.flow/resume
-Talon, set flight!
-SQUARK: 7
-Chronon transitioning :clojure.core.async.flow/resume
-Chronon running
-Tallystrix transitioning :clojure.core.async.flow/resume
+<pre><code>Chronon transitioning :clojure.core.async.flow/resume
 Claxxus transitioning :clojure.core.async.flow/resume
-Randomius transform 7 from :stat to :out
-Tallystrix transforming :stat 7
+Chronon running
+Randomius transitioning :clojure.core.async.flow/resume
+Talon, set flight!
+Tallystrix transitioning :clojure.core.async.flow/resume
+SQUARK: 1
+Randomius transform 1 from :stat to :out
+Tallystrix transforming :stat 1
 Chronon transforms :alarm true to :out
 Tallystrix transforming :poke true
 </code></pre>
@@ -8210,7 +8895,7 @@ font-style: inherit;">:report-chan</span> chs))</span></code></pre></div>
 background-color: null;
 font-style: inherit;">:avg</span> <span class="fl" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">7.0</span>, <span class="at" style="color: #657422;
+font-style: inherit;">1.0</span>, <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -8243,30 +8928,14 @@ font-style: inherit;">true</span>])</span></code></pre></div>
 background-color: null;
 font-style: inherit;">:report-chan</span> chs))</span></code></pre></div>
 </div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-THREAD OUT
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<pre><code>Tallystrix transforming :poke true
-</code></pre>
-</div>
-</div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb56" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb56-1">{<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb55" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb55-1"><span class="va" style="color: #111111;
 background-color: null;
-font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
-background-color: null;
-font-style: inherit;">0</span>}</span></code></pre></div>
+font-style: inherit;">nil</span></span></code></pre></div>
 </div>
 <p>Mischief is afoot.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb57" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb57-1">(flow/inject flow [<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb56" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb56-1">(flow/inject flow [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -8275,10 +8944,10 @@ background-color: null;
 font-style: inherit;">"abc1000"</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb58" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb58-1">#object [FutureTask]</span></code></pre></div>
+<div class="sourceCode" id="cb57" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb57-1">#object [FutureTask]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb59" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb59-1">(a/poll! (<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb58" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb58-1">(a/poll! (<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:error-chan</span> chs))</span></code></pre></div>
 </div>
@@ -8293,83 +8962,84 @@ THREAD OUT
 </div>
 <div class="callout-body-container callout-body">
 <pre><code>Tallystrix transforming :stat abc1000
+Tallystrix transforming :poke true
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb61" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb61-1">#<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb60" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb60-1">#<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:clojure.core.async.flow</span>{<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:pid</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span>,</span>
-<span id="cb61-2">                          <span class="at" style="color: #657422;
+<span id="cb60-2">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:status</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:running</span>,</span>
-<span id="cb61-3">                          <span class="at" style="color: #657422;
+<span id="cb60-3">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:state</span></span>
-<span id="cb61-4">                          {<span class="at" style="color: #657422;
+<span id="cb60-4">                          {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:min</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb61-5">                           <span class="at" style="color: #657422;
+<span id="cb60-5">                           <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:max</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>,</span>
-<span id="cb61-6">                           <span class="at" style="color: #657422;
+<span id="cb60-6">                           <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:clojure.core.async.flow/pid</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span>,</span>
-<span id="cb61-7">                           <span class="at" style="color: #657422;
+<span id="cb60-7">                           <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:vals</span> []},</span>
-<span id="cb61-8">                          <span class="at" style="color: #657422;
+<span id="cb60-8">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">4</span>,</span>
-<span id="cb61-9">                          <span class="at" style="color: #657422;
+font-style: inherit;">3</span>,</span>
+<span id="cb60-9">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:cid</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:stat</span>,</span>
-<span id="cb61-10">                          <span class="at" style="color: #657422;
+<span id="cb60-10">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:msg</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"abc1000"</span>,</span>
-<span id="cb61-11">                          <span class="at" style="color: #657422;
+<span id="cb60-11">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:op</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:step</span>,</span>
-<span id="cb61-12">                          <span class="at" style="color: #657422;
+<span id="cb60-12">                          <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:ex</span> #error {</span>
-<span id="cb61-13"> <span class="at" style="color: #657422;
+<span id="cb60-13"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:cause</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
-<span id="cb61-14"> <span class="at" style="color: #657422;
+<span id="cb60-14"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:via</span></span>
-<span id="cb61-15"> [{<span class="at" style="color: #657422;
+<span id="cb60-15"> [{<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:type</span> java.util.concurrent.ExecutionException</span>
-<span id="cb61-16">   <span class="at" style="color: #657422;
+<span id="cb60-16">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:message</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
-<span id="cb61-17">   <span class="at" style="color: #657422;
+<span id="cb60-17">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:at</span> [java.util.concurrent.FutureTask <span class="kw" style="color: #003B4F;
 background-color: null;
@@ -8379,90 +9049,90 @@ background-color: null;
 font-style: inherit;">"FutureTask.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">122</span>]}</span>
-<span id="cb61-18">  {<span class="at" style="color: #657422;
+<span id="cb60-18">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:type</span> java.lang.ClassCastException</span>
-<span id="cb61-19">   <span class="at" style="color: #657422;
+<span id="cb60-19">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:message</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
-<span id="cb61-20">   <span class="at" style="color: #657422;
+<span id="cb60-20">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:at</span> [clojure.lang.Numbers lt <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">253</span>]}]</span>
-<span id="cb61-21"> <span class="at" style="color: #657422;
+<span id="cb60-21"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:trace</span></span>
-<span id="cb61-22"> [[clojure.lang.Numbers lt <span class="st" style="color: #20794D;
+<span id="cb60-22"> [[clojure.lang.Numbers lt <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Numbers.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">253</span>]</span>
-<span id="cb61-23">  [core.async.flow.example.asynctopolis$Tallystrix invokeStatic <span class="st" style="color: #20794D;
+<span id="cb60-23">  [core.async.flow.example.asynctopolis$Tallystrix invokeStatic <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>]</span>
-<span id="cb61-24">  [core.async.flow.example.asynctopolis$Tallystrix invoke <span class="st" style="color: #20794D;
+<span id="cb60-24">  [core.async.flow.example.asynctopolis$Tallystrix invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"NO_SOURCE_FILE"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>]</span>
-<span id="cb61-25">  [clojure.lang.AFn applyToHelper <span class="st" style="color: #20794D;
+<span id="cb60-25">  [clojure.lang.AFn applyToHelper <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"AFn.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">160</span>]</span>
-<span id="cb61-26">  [clojure.lang.AFn applyTo <span class="st" style="color: #20794D;
+<span id="cb60-26">  [clojure.lang.AFn applyTo <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"AFn.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">144</span>]</span>
-<span id="cb61-27">  [clojure.lang.Var applyTo <span class="st" style="color: #20794D;
+<span id="cb60-27">  [clojure.lang.Var applyTo <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Var.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">707</span>]</span>
-<span id="cb61-28">  [clojure.core$apply invokeStatic <span class="st" style="color: #20794D;
+<span id="cb60-28">  [clojure.core$apply invokeStatic <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"core.clj"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">667</span>]</span>
-<span id="cb61-29">  [clojure.core$apply invoke <span class="st" style="color: #20794D;
+<span id="cb60-29">  [clojure.core$apply invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"core.clj"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">662</span>]</span>
-<span id="cb61-30">  [clojure.core.async.flow.impl$futurize$fn__52117$fn__52118 invoke <span class="st" style="color: #20794D;
+<span id="cb60-30">  [clojure.core.async.flow.impl$futurize$fn__52117$fn__52118 invoke <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"impl.clj"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">34</span>]</span>
-<span id="cb61-31">  [clojure.lang.AFn call <span class="st" style="color: #20794D;
+<span id="cb60-31">  [clojure.lang.AFn call <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"AFn.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">18</span>]</span>
-<span id="cb61-32">  [java.util.concurrent.FutureTask run <span class="st" style="color: #20794D;
+<span id="cb60-32">  [java.util.concurrent.FutureTask run <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"FutureTask.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">317</span>]</span>
-<span id="cb61-33">  [java.util.concurrent.ThreadPoolExecutor runWorker <span class="st" style="color: #20794D;
+<span id="cb60-33">  [java.util.concurrent.ThreadPoolExecutor runWorker <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"ThreadPoolExecutor.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1144</span>]</span>
-<span id="cb61-34">  [java.util.concurrent.ThreadPoolExecutor$Worker run <span class="st" style="color: #20794D;
+<span id="cb60-34">  [java.util.concurrent.ThreadPoolExecutor$Worker run <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"ThreadPoolExecutor.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">642</span>]</span>
-<span id="cb61-35">  [java.lang.Thread run <span class="st" style="color: #20794D;
+<span id="cb60-35">  [java.lang.Thread run <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Thread.java"</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -8470,7 +9140,7 @@ font-style: inherit;">1583</span>]]}}</span></code></pre></div>
 </div>
 <p>Claxxus does not speak of such failures. He is for alerts. Thresholds breached, events of note, things the city must hear.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb62" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb62-1">(flow/inject flow [<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb61" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb61-1">(flow/inject flow [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Claxxus</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -8479,10 +9149,10 @@ background-color: null;
 font-style: inherit;">:sandwich</span>])</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb63" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb63-1">#object [FutureTask]</span></code></pre></div>
+<div class="sourceCode" id="cb62" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb62-1">#object [FutureTask]</span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb64" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb64-1">(Thread/sleep <span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb63" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb63-1">(Thread/sleep <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>)</span></code></pre></div>
 </div>
@@ -8502,22 +9172,22 @@ Alert:  :sandwich
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb66" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb66-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb65" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb65-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
 <p>Fluxus est graphum, fluxus est processus, fluxus est data.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb67" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb67-1">(datafy/datafy flow)</span></code></pre></div>
+<div class="sourceCode" id="cb66" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb66-1">(datafy/datafy flow)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb68" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb68-1">{<span class="at" style="color: #657422;
+<div class="sourceCode" id="cb67" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb67-1">{<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:procs</span></span>
-<span id="cb68-2"> {<span class="at" style="color: #657422;
+<span id="cb67-2"> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Randomius</span></span>
-<span id="cb68-3">  {<span class="at" style="color: #657422;
+<span id="cb67-3">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:args</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -8532,44 +9202,44 @@ background-color: null;
 font-style: inherit;">:wait</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">500</span>},</span>
-<span id="cb68-4">   <span class="at" style="color: #657422;
+<span id="cb67-4">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:proc</span></span>
-<span id="cb68-5">   {<span class="at" style="color: #657422;
+<span id="cb67-5">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:step</span> core.async.flow.example.asynctopolis/Randomius,</span>
-<span id="cb68-6">    <span class="at" style="color: #657422;
+<span id="cb67-6">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
-<span id="cb68-7">    {<span class="at" style="color: #657422;
+<span id="cb67-7">    {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:params</span></span>
-<span id="cb68-8">     {<span class="at" style="color: #657422;
+<span id="cb67-8">     {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:min</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Min value to generate"</span>,</span>
-<span id="cb68-9">      <span class="at" style="color: #657422;
+<span id="cb67-9">      <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:max</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Max value to generate"</span>,</span>
-<span id="cb68-10">      <span class="at" style="color: #657422;
+<span id="cb67-10">      <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:wait</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Time in ms to wait between generating"</span>},</span>
-<span id="cb68-11">     <span class="at" style="color: #657422;
+<span id="cb67-11">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:outs</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:out</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Output channel for stats"</span>}}}},</span>
-<span id="cb68-12">  <span class="at" style="color: #657422;
+<span id="cb67-12">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span></span>
-<span id="cb68-13">  {<span class="at" style="color: #657422;
+<span id="cb67-13">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:args</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -8580,127 +9250,127 @@ background-color: null;
 font-style: inherit;">:max</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>},</span>
-<span id="cb68-14">   <span class="at" style="color: #657422;
+<span id="cb67-14">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:proc</span></span>
-<span id="cb68-15">   {<span class="at" style="color: #657422;
+<span id="cb67-15">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:step</span> core.async.flow.example.asynctopolis/Tallystrix,</span>
-<span id="cb68-16">    <span class="at" style="color: #657422;
+<span id="cb67-16">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
-<span id="cb68-17">    {<span class="at" style="color: #657422;
+<span id="cb67-17">    {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:params</span></span>
-<span id="cb68-18">     {<span class="at" style="color: #657422;
+<span id="cb67-18">     {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:min</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Min value, alert if lower"</span>,</span>
-<span id="cb68-19">      <span class="at" style="color: #657422;
+<span id="cb67-19">      <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:max</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Max value, alert if higher"</span>},</span>
-<span id="cb68-20">     <span class="at" style="color: #657422;
+<span id="cb67-20">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:ins</span></span>
-<span id="cb68-21">     {<span class="at" style="color: #657422;
+<span id="cb67-21">     {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:stat</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Channel to receive stat values"</span>,</span>
-<span id="cb68-22">      <span class="at" style="color: #657422;
+<span id="cb67-22">      <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:poke</span></span>
-<span id="cb68-23">      <span class="st" style="color: #20794D;
+<span id="cb67-23">      <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Channel to poke when it is time to report a window of data to the log"</span>},</span>
-<span id="cb68-24">     <span class="at" style="color: #657422;
+<span id="cb67-24">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:outs</span></span>
-<span id="cb68-25">     {<span class="at" style="color: #657422;
+<span id="cb67-25">     {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:alert</span></span>
-<span id="cb68-26">      <span class="st" style="color: #20794D;
+<span id="cb67-26">      <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Notify of value out of range {:val value, :error :high|:low"</span>},</span>
-<span id="cb68-27">     <span class="at" style="color: #657422;
+<span id="cb67-27">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:workload</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:compute</span>}}},</span>
-<span id="cb68-28">  <span class="at" style="color: #657422;
+<span id="cb67-28">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Chronon</span></span>
-<span id="cb68-29">  {<span class="at" style="color: #657422;
+<span id="cb67-29">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:args</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:wait</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3000</span>},</span>
-<span id="cb68-30">   <span class="at" style="color: #657422;
+<span id="cb67-30">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:proc</span></span>
-<span id="cb68-31">   {<span class="at" style="color: #657422;
+<span id="cb67-31">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:step</span> core.async.flow.example.asynctopolis/Chronon,</span>
-<span id="cb68-32">    <span class="at" style="color: #657422;
+<span id="cb67-32">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
-<span id="cb68-33">    {<span class="at" style="color: #657422;
+<span id="cb67-33">    {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:params</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:wait</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Time to wait between pokes"</span>},</span>
-<span id="cb68-34">     <span class="at" style="color: #657422;
+<span id="cb67-34">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:outs</span></span>
-<span id="cb68-35">     {<span class="at" style="color: #657422;
+<span id="cb67-35">     {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:out</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Poke channel, will send true when the alarm goes off"</span>}}}},</span>
-<span id="cb68-36">  <span class="at" style="color: #657422;
+<span id="cb67-36">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Claxxus</span></span>
-<span id="cb68-37">  {<span class="at" style="color: #657422;
+<span id="cb67-37">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:args</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:prefix</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Alert: "</span>},</span>
-<span id="cb68-38">   <span class="at" style="color: #657422;
+<span id="cb67-38">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:proc</span></span>
-<span id="cb68-39">   {<span class="at" style="color: #657422;
+<span id="cb67-39">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:step</span> core.async.flow.example.asynctopolis/Claxxus,</span>
-<span id="cb68-40">    <span class="at" style="color: #657422;
+<span id="cb67-40">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:desc</span></span>
-<span id="cb68-41">    {<span class="at" style="color: #657422;
+<span id="cb67-41">    {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:params</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:prefix</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Log message prefix"</span>},</span>
-<span id="cb68-42">     <span class="at" style="color: #657422;
+<span id="cb67-42">     <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:ins</span> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:in</span> <span class="st" style="color: #20794D;
 background-color: null;
 font-style: inherit;">"Channel to receive messages"</span>}}},</span>
-<span id="cb68-43">   <span class="at" style="color: #657422;
+<span id="cb67-43">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:chan-opts</span></span>
-<span id="cb68-44">   {<span class="at" style="color: #657422;
+<span id="cb67-44">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:in</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -8715,10 +9385,10 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3</span>}}}}},</span>
-<span id="cb68-45"> <span class="at" style="color: #657422;
+<span id="cb67-45"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:conns</span></span>
-<span id="cb68-46"> [[[<span class="at" style="color: #657422;
+<span id="cb67-46"> [[[<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Randomius</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -8727,7 +9397,7 @@ background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:stat</span>]]</span>
-<span id="cb68-47">  [[<span class="at" style="color: #657422;
+<span id="cb67-47">  [[<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Chronon</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -8736,7 +9406,7 @@ background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:poke</span>]]</span>
-<span id="cb68-48">  [[<span class="at" style="color: #657422;
+<span id="cb67-48">  [[<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
@@ -8745,7 +9415,7 @@ background-color: null;
 font-style: inherit;">:Claxxus</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:in</span>]]],</span>
-<span id="cb68-49"> <span class="at" style="color: #657422;
+<span id="cb67-49"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:execs</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -8760,33 +9430,33 @@ background-color: null;
 font-style: inherit;">:compute</span> <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span>},</span>
-<span id="cb68-50"> <span class="at" style="color: #657422;
+<span id="cb67-50"> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:chans</span></span>
-<span id="cb68-51"> {<span class="at" style="color: #657422;
+<span id="cb67-51"> {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:ins</span></span>
-<span id="cb68-52">  {[<span class="at" style="color: #657422;
+<span id="cb67-52">  {[<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:stat</span>]</span>
-<span id="cb68-53">   {<span class="at" style="color: #657422;
+<span id="cb67-53">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb68-54">    <span class="at" style="color: #657422;
+<span id="cb67-54">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb68-55">    <span class="at" style="color: #657422;
+<span id="cb67-55">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb68-56">    <span class="at" style="color: #657422;
+<span id="cb67-56">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -8799,27 +9469,27 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>}},</span>
-<span id="cb68-57">   [<span class="at" style="color: #657422;
+<span id="cb67-57">   [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:poke</span>]</span>
-<span id="cb68-58">   {<span class="at" style="color: #657422;
+<span id="cb67-58">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb68-59">    <span class="at" style="color: #657422;
+<span id="cb67-59">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb68-60">    <span class="at" style="color: #657422;
+<span id="cb67-60">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb68-61">    <span class="at" style="color: #657422;
+<span id="cb67-61">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -8832,27 +9502,27 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>}},</span>
-<span id="cb68-62">   [<span class="at" style="color: #657422;
+<span id="cb67-62">   [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Claxxus</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:in</span>]</span>
-<span id="cb68-63">   {<span class="at" style="color: #657422;
+<span id="cb67-63">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb68-64">    <span class="at" style="color: #657422;
+<span id="cb67-64">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb68-65">    <span class="at" style="color: #657422;
+<span id="cb67-65">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb68-66">    <span class="at" style="color: #657422;
+<span id="cb67-66">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -8865,30 +9535,30 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3</span>}}},</span>
-<span id="cb68-67">  <span class="at" style="color: #657422;
+<span id="cb67-67">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:outs</span></span>
-<span id="cb68-68">  {[<span class="at" style="color: #657422;
+<span id="cb67-68">  {[<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Randomius</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:out</span>]</span>
-<span id="cb68-69">   {<span class="at" style="color: #657422;
+<span id="cb67-69">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb68-70">    <span class="at" style="color: #657422;
+<span id="cb67-70">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb68-71">    <span class="at" style="color: #657422;
+<span id="cb67-71">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb68-72">    <span class="at" style="color: #657422;
+<span id="cb67-72">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -8901,27 +9571,27 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>}},</span>
-<span id="cb68-73">   [<span class="at" style="color: #657422;
+<span id="cb67-73">   [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Tallystrix</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:alert</span>]</span>
-<span id="cb68-74">   {<span class="at" style="color: #657422;
+<span id="cb67-74">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb68-75">    <span class="at" style="color: #657422;
+<span id="cb67-75">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb68-76">    <span class="at" style="color: #657422;
+<span id="cb67-76">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb68-77">    <span class="at" style="color: #657422;
+<span id="cb67-77">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -8934,27 +9604,27 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">3</span>}},</span>
-<span id="cb68-78">   [<span class="at" style="color: #657422;
+<span id="cb67-78">   [<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:Chronon</span> <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:out</span>]</span>
-<span id="cb68-79">   {<span class="at" style="color: #657422;
+<span id="cb67-79">   {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb68-80">    <span class="at" style="color: #657422;
+<span id="cb67-80">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>,</span>
-<span id="cb68-81">    <span class="at" style="color: #657422;
+<span id="cb67-81">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb68-82">    <span class="at" style="color: #657422;
+<span id="cb67-82">    <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -8967,25 +9637,25 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">10</span>}}},</span>
-<span id="cb68-83">  <span class="at" style="color: #657422;
+<span id="cb67-83">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:error</span></span>
-<span id="cb68-84">  {<span class="at" style="color: #657422;
+<span id="cb67-84">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb68-85">   <span class="at" style="color: #657422;
+<span id="cb67-85">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb68-86">   <span class="at" style="color: #657422;
+<span id="cb67-86">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb68-87">   <span class="at" style="color: #657422;
+<span id="cb67-87">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -8998,25 +9668,25 @@ background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">100</span>}},</span>
-<span id="cb68-88">  <span class="at" style="color: #657422;
+<span id="cb67-88">  <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:report</span></span>
-<span id="cb68-89">  {<span class="at" style="color: #657422;
+<span id="cb67-89">  {<span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:put-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb68-90">   <span class="at" style="color: #657422;
+<span id="cb67-90">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:take-count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">0</span>,</span>
-<span id="cb68-91">   <span class="at" style="color: #657422;
+<span id="cb67-91">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:closed</span>? <span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">false</span>,</span>
-<span id="cb68-92">   <span class="at" style="color: #657422;
+<span id="cb67-92">   <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:buffer</span> {<span class="at" style="color: #657422;
 background-color: null;
@@ -9024,7 +9694,7 @@ font-style: inherit;">:type</span> SlidingBuffer, <span class="at" style="color:
 background-color: null;
 font-style: inherit;">:count</span> <span class="dv" style="color: #AD0000;
 background-color: null;
-font-style: inherit;">0</span>, <span class="at" style="color: #657422;
+font-style: inherit;">1</span>, <span class="at" style="color: #657422;
 background-color: null;
 font-style: inherit;">:capacity</span> <span class="dv" style="color: #AD0000;
 background-color: null;
@@ -9032,15 +9702,15 @@ font-style: inherit;">100</span>}}}}</span></code></pre></div>
 </div>
 <p>The flow may coordinate peace.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb69" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb69-1">(flow/pause flow)</span></code></pre></div>
+<div class="sourceCode" id="cb68" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb68-1">(flow/pause flow)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb70" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb70-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb69" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb69-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">true</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb71" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb71-1">(Thread/sleep <span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb70" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb70-1">(Thread/sleep <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>)</span></code></pre></div>
 </div>
@@ -9054,9 +9724,9 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transitioning :clojure.core.async.flow/pause
-Randomius transitioning :clojure.core.async.flow/pause
+<pre><code>Randomius transitioning :clojure.core.async.flow/pause
 Talon, rest!
+Tallystrix transitioning :clojure.core.async.flow/pause
 Chronon transitioning :clojure.core.async.flow/pause
 Chronon rests.
 Claxxus transitioning :clojure.core.async.flow/pause
@@ -9064,22 +9734,22 @@ Claxxus transitioning :clojure.core.async.flow/pause
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb73" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb73-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb72" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb72-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
 <p>Pax optima rerum.</p>
 <p>The flow may cease.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb74" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb74-1">(flow/stop flow)</span></code></pre></div>
+<div class="sourceCode" id="cb73" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb73-1">(flow/stop flow)</span></code></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb75" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb75-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb74" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb74-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">true</span></span></code></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb76" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb76-1">(Thread/sleep <span class="dv" style="color: #AD0000;
+<div class="sourceCode" id="cb75" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb75-1">(Thread/sleep <span class="dv" style="color: #AD0000;
 background-color: null;
 font-style: inherit;">1</span>)</span></code></pre></div>
 </div>
@@ -9094,14 +9764,14 @@ THREAD OUT
 </div>
 <div class="callout-body-container callout-body">
 <pre><code>Randomius transitioning :clojure.core.async.flow/stop
-Claxxus transitioning :clojure.core.async.flow/stop
 Tallystrix transitioning :clojure.core.async.flow/stop
 Chronon transitioning :clojure.core.async.flow/stop
+Claxxus transitioning :clojure.core.async.flow/stop
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb78" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb78-1"><span class="va" style="color: #111111;
+<div class="sourceCode" id="cb77" style="background: #f1f3f5;"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb77-1"><span class="va" style="color: #111111;
 background-color: null;
 font-style: inherit;">nil</span></span></code></pre></div>
 </div>
