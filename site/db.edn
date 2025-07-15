@@ -62,7 +62,14 @@
    :image       "https://avatars.githubusercontent.com/u/11580?v=4"
    :email       "samumbach@gmail.com"
    :affiliation [:clojurecamp]
-   :links       [{:icon "github" :href "https://github.com/samumbach"}]}]
+   :links       [{:icon "github" :href "https://github.com/samumbach"}]}
+  {:id          :syungb
+   :name        "Siyoung Byun"
+   :url         "https://github.com/syungb"
+   :image       "https://avatars.githubusercontent.com/u/1319016?v=4"
+   :email       "syungb@gmail.com"
+   :affiliation [:scicloj]
+   :links       [{:icon "github" :href "https://github.com/syungb"}]}]
 
  :affiliation
  [{:id   :clojure.core
