@@ -1,8 +1,6 @@
 {:base-target-path "temp"
  :base-source-path "src"
  :subdirs-to-sync  ["src"]
- :keep-sync-root   false
- :flatten-targets  false
  :remote-repo      {:git-url "https://github.com/ClojureCivitas/clojurecivitas.github.io"
                     :branch  "main"}
  :hide-info-line   true
@@ -17,4 +15,7 @@
   :format           [:quarto :html]
   :run-quarto       false
   :hide-info-line   false
-  :quarto           []}}
+  :quarto           []
+  :flatten-targets  false
+  :keep-sync-root   false}}
+
