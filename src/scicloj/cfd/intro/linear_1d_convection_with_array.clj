@@ -171,7 +171,3 @@
 ;;
 ;; As the porting project continues, we plan to evolve the design to better align with idiomatic Clojure principles.
 ;; Stay tuned!
-
-(comment
-  (require '[scicloj.clay.v2.api :as clay])
-  (clay/make! {:source-path "scicloj/cfd/intro/linear_1d_convection_with_array.clj"}))
