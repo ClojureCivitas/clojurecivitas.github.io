@@ -581,11 +581,6 @@ window.Quarto = {
 <p>This Simple example demonstrates a simulation process using low-level Java primitive arrays in Clojure.</p>
 <p>Choosing this approach provided mutable, non-persistent data structures. While this deviates from idiomatic Clojure, it offers significant performance benefits for big-size numerical simulations. However, it comes with trade-offs; by opting for mutability, we give up the guarantees of immutability and structural sharing, making the code less safe and more error-prone.</p>
 <p>As the porting project continues, we plan to evolve the design to better align with idiomatic Clojure principles. Stay tuned!</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">comment</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">require</span> '[scicloj.clay.v2.api <span class="at">:as</span> clay])</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  (clay/make! {<span class="at">:source-path</span> <span class="st">"scicloj/cfd/intro/linear_1d_convection_with_array.clj"</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 <div style="background-color:grey;height:2px;width:100%;"></div>
 <div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/scicloj/cfd/intro/linear_1d_convection_with_array.clj">src/scicloj/cfd/intro/linear_1d_convection_with_array.clj</a></small></small></pre></div>
 
