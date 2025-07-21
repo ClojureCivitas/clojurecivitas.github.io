@@ -8,15 +8,15 @@
             [scicloj.kindly.v4.kind :as kind]))
 
 (def default-styles
-  {:edge-shape-stroke      "black"
+  {:edge-shape-stroke      :currentColor
    :edge-shape-fill        "none"
-   :node-shape-stroke      "black"
+   :node-shape-stroke      :currentColor
    :node-shape-fill        "none"
    :node-label-stroke      "none"
-   :node-label-fill        "black"
+   :node-label-fill        :currentColor
    :node-label-font-size   "12px"
    :node-label-font-family "sans-serif"
-   :port-shape-stroke      "black"
+   :port-shape-stroke      :currentColor
    :port-shape-fill        "white"})
 
 (defn edge-path [{:keys [sections]}]
