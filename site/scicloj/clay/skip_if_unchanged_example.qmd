@@ -26,6 +26,8 @@ format:
 .clay-side-by-side {margin: 1em 0}
 </style>
 <script src="skip_if_unchanged_example_files/md-default0.js" type="text/javascript"></script><script src="skip_if_unchanged_example_files/md-default1.js" type="text/javascript"></script>
+(Work-In-Progress Draft)
+
 Usually, when we wish to create Clojure Civitas posts, we enjoy the fact
 that Civitas runs our notebooks in the GitHub Actions as it renders the website.
 
