@@ -13,7 +13,7 @@
   clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
   org.scicloj/clay                            {#_#_:mvn/version "2-beta46"
                                                :git/url "https://github.com/scicloj/clay.git"
-                                               :git/sha "afa5e882ab7be29a5b26d34aaf9c99e9f743b349"}
+                                               :git/sha "55752a95a340dfe41dfade30264cf679e49502cc"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph       {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph.json  {:mvn/version "0.10.0"}
