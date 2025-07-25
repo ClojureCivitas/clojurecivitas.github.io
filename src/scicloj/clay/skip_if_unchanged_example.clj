@@ -7,7 +7,8 @@
             :type        :post
             :date        "2025-07-25"
             :category    :clay
-            :tags        [:clay :workflow]}}}
+            :tags        [:clay :workflow]
+            :draft       true}}}
 (ns scicloj.clay.skip-if-unchanged-example)
 
 ;; (Work-In-Progress Draft)
