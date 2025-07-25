@@ -8,8 +8,7 @@
             :date        "2025-07-25"
             :category    :clay
             :tags        [:clay :workflow]}}}
-
-(ns scicloj.clay.skip-if-unchanged)
+(ns scicloj.clay.skip-if-unchanged-example)
 
 ;; (Work-In-Progress Draft)
 
@@ -20,7 +19,7 @@
 ;; to be run in GitHub Actions. For example, they may depend on a local file
 ;; or service.
 
-;; This notebook, for example, assumes that you have a local secrets file
+;; This notebook, for example, assumes that you have a local secrets file,
 ;; and it will not work without it!
 
 (slurp "/home/daslu/my-secret.txt")
@@ -44,7 +43,7 @@
 ;; clojure -M:clay -A:markdown scicloj/clay/skip_if_unchanged_example.clj
 ;; ```
 
-;; 2. .. Or do the same in Clojure code.
+;; 2. ... Or do the same in Clojure code.
 (comment
   (require '[scicloj.clay.v2.api :as clay])
   (clay/make! {:source-path "scicloj/clay/skip_if_unchanged_example.clj"
