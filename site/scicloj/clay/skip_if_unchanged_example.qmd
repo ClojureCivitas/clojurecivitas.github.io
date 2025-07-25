@@ -90,6 +90,8 @@ clojure -M:clay -A:markdown scicloj/clay/skip_if_unchanged_example.clj
 Now, need to `git add` the generated `qmd` file.
 Here is how.
 
+(WIP)
+
 
 ```{=html}
 <div style="background-color:grey;height:2px;width:100%;"></div>
