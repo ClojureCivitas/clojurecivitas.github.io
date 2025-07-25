@@ -9,7 +9,6 @@
   {
     "listing": "/posts.html",
     "items": [
-      "/scicloj/clay/skip_if_unchanged_example.html",
       "/scicloj/kindly_render/visualize_colls.html",
       "/scicloj/cfd/intro/linear_1d_convection_with_array.html",
       "/games/beginning_to_build_a_browser_game.html",
