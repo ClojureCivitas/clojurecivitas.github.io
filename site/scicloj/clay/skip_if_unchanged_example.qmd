@@ -1,4 +1,11 @@
 ---
+description: A demonstration of our practice with some Civitas notebooks that cannot be run in GitHub Pages.
+category: clay
+tags: [clay, workflow]
+format:
+  html: {title: Some Civitas notebooks should only be run locally}
+date: '2025-07-25'
+type: post
 author:
   name: Daniel Slutsky
   image: https://avatars.githubusercontent.com/u/5673102?v=4
@@ -7,14 +14,8 @@ author:
   - {name: Scicloj, url: 'https://scicloj.github.io/'}
   links:
   - {icon: github, href: 'https://github.com/daslu'}
-description: A demonstration of our practice with some Civitas notebooks that cannot be run in GitHub Pages.
+draft: true
 image: skip-if-unchanged.jpg
-type: post
-date: '2025-07-25'
-category: clay
-tags: [clay, workflow]
-format:
-  html: {title: Some Civitas notebooks should only be run locally}
 
 ---
 <style></style><style>.printedClojure .sourceCode {
