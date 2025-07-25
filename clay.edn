@@ -17,5 +17,6 @@
   :hide-info-line   false
   :quarto           []
   :flatten-targets  false
-  :keep-sync-root   false}}
+  :keep-sync-root   false
+  :skip-if-unchanged true}}
 
