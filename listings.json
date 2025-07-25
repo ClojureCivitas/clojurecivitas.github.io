@@ -1,14 +1,33 @@
 [
   {
     "listing": "/pages.html",
-    "items": []
+    "items": [
+      "/civitas/explorer.html",
+      "/civitas/authors.html"
+    ]
   },
   {
     "listing": "/posts.html",
     "items": [
       "/scicloj/clay/skip_if_unchanged_example.html",
+      "/scicloj/kindly_render/visualize_colls.html",
+      "/scicloj/cfd/intro/linear_1d_convection_with_array.html",
+      "/games/beginning_to_build_a_browser_game.html",
+      "/math/stats/central_limit_theorem_different_distributions.html",
+      "/math/stats/central_limit_theorem_convergence.html",
+      "/scicloj/tableplot/ideas/stacking.html",
+      "/internationalization/transliteration2.html",
+      "/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.html",
+      "/internationalization/transliteration.html",
+      "/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html",
+      "/clojure/transducers/what_if.html",
       "/conferences/scinoj_light_1/notes/hallway_track.html",
-      "/scicloj/noj/intro/getting-started-noj.html"
+      "/math/primes/factorization/sieve_augmented.html",
+      "/clojure/print_object/remove_extraneous.html",
+      "/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html",
+      "/scicloj/noj/intro/getting-started-noj.html",
+      "/core/async/flow/example/before_his_wings_melted.html",
+      "/core/async/flow/example/asynctopolis.html"
     ]
   }
 ]

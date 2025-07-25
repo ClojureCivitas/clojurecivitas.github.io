@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Harold">
+<meta name="dcterms.date" content="2025-06-24">
+<meta name="keywords" content="charts, datasets">
+<meta name="description" content="A couple of quick ideas about visualizing data, especially with regard to comparison.">
+
+<title>Transforming Datasets to Stack Charts – Clojure Civitas</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../favicon.ico" rel="icon">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-4d49c55b2a02038d936e54d6a2565e99.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-95b9d8bfb9033cfe0e62f8828f2324d8.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-4d49c55b2a02038d936e54d6a2565e99.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-7d6f165988fb2100d51f41f5bac47e04.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-276513973ef675fe2cc4d6a1bd066430.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-7d6f165988fb2100d51f41f5bac47e04.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
+
+
+<meta property="og:title" content="Transforming Datasets to Stack Charts – Clojure Civitas">
+<meta property="og:description" content="A couple of quick ideas about visualizing data, especially with regard to comparison.">
+<meta property="og:image" content="https://clojurecivitas.github.io/scicloj/tableplot/ideas/images/civitas-icon.svg">
+<meta property="og:site_name" content="Clojure Civitas">
+</head>
+
+<body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../images/civitas-icon.svg" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Clojure Civitas</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../posts.html"> 
+<span class="menu-text">Posts</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../civitas/authors.html"> 
+<span class="menu-text">Authors</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../civitas/explorer.html"> 
+<span class="menu-text">Explorer</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ClojureCivitas/clojurecivitas.github.io"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../posts.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Transforming Datasets to Stack Charts</h1>
+</div>
+
+<div>
+  <div class="description">
+    A couple of quick ideas about visualizing data, especially with regard to comparison.
+  </div>
+</div>
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author"><a href="https://techascent.com">Harold</a> <a href="mailto:harold@techascent.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            <a href="https://techascent.com">
+            TechAscent
+            </a>
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 24, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+<div>
+  <div class="keywords">
+    <div class="block-title">Keywords</div>
+    <p>charts, datasets</p>
+  </div>
+</div>
+
+</header>
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="stacking_files/md-default0.js" type="text/javascript"></script>
+<script src="stacking_files/md-default1.js" type="text/javascript"></script>
+<script src="stacking_files/plotly2.js" type="text/javascript"></script>
+<p>With observed data, presumably from two runs of some experiment…</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> ds0</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (ds/-&gt;dataset <span class="st">"https://gist.githubusercontent.com/harold/18ba174c6c34e7d1c5d8d0954b48327c/raw"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                {<span class="at">:file-type</span> <span class="at">:csv</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> ds1</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (ds/-&gt;dataset <span class="st">"https://gist.githubusercontent.com/harold/008bbcd477bf51b47548d680107a6195/raw"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                {<span class="at">:file-type</span> <span class="at">:csv</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Well, what have we got?</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>ds0</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="clay-dataset">
+<p>https://gist.githubusercontent.com/harold/18ba174c6c34e7d1c5d8d0954b48327c/raw [500 1]:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">y</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">-0.09138541</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.73573478</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">0.66637442</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.42894310</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1.17985915</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2.10245096</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2.35628501</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.65951387</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2.66932952</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1.96287689</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">…</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6.30911743</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">6.65394635</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5.88407917</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">6.59312352</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6.32078823</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5.78220740</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6.11383638</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">6.62701870</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6.29688536</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5.87255145</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6.34171349</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A few hundred numbers… Hm…</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>ds1</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="clay-dataset">
+<p>https://gist.githubusercontent.com/harold/008bbcd477bf51b47548d680107a6195/raw [500 1]:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">y</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1.23590349</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">0.97176804</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1.44779983</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2.09836076</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2.39260885</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2.33861635</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2.55252144</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2.75108032</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3.42274612</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3.13478376</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">…</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">22.45761328</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">22.35632666</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">21.93285307</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">22.24006990</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">22.51064120</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">22.38858256</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">22.53949283</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">22.57957379</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">22.31971585</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">22.69953383</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">22.23848485</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>This neglects the hundreds of thousands of years invested in evolving a visual system…</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> ds0</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    (plotly/base {:=title <span class="st">"Run 0"</span>})</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-point {:=y <span class="st">"y"</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[-0.091385411,0.7357347817,0.6663744183,1.4289431,1.179859148,2.102450964,2.356285014,1.659513874,2.669329516,1.962876893,2.281320933,2.030971725,2.141806851,2.429028935,2.216699759,3.248792885,2.85915459,2.844708284,3.347163669,2.891986281,2.867806981,2.939552549,3.530527055,2.769636136,2.985509439,2.823217401,3.63149304,3.187964595,3.271761601,3.107162245,3.047525099,3.292144813,3.002385293,3.097708367,3.246215985,3.64382165,3.255837186,3.484767637,3.81569846,3.388807711,3.734923657,4.100898178,4.126134948,3.724342008,3.373228956,4.134103517,4.204602566,3.887541318,3.608231335,3.643346791,3.836617666,3.555458076,3.942211948,4.347721452,4.224846204,4.372289127,3.557516938,4.438496663,3.759143278,4.30069596,4.304466775,4.597806501,4.581932132,4.63187867,4.33820323,4.498562163,4.669056699,3.782983731,4.045015575,3.807231735,4.088620523,4.460617118,4.669192693,4.114449092,3.948954958,4.375677852,4.228203214,4.277982715,4.301740732,4.457420499,4.887012682,4.378413888,3.927439598,4.433599969,3.951603701,4.859943753,4.497573817,4.718746978,4.037272762,4.457068905,4.082025187,4.784066973,4.769034452,4.192434474,4.349406454,4.570151039,4.579471617,5.071994698,5.09469185,5.047632021,4.783628085,5.100680389,4.92067516,4.731114596,5.131047529,4.895093581,4.998457176,4.808153009,4.461820489,4.479319437,4.837047076,4.557745861,4.926508979,4.815765904,4.903294365,4.901762168,4.469075933,5.245012178,4.750751951,5.257908272,4.917454736,5.286966678,5.039702659,4.344291017,5.07815135,5.190206268,4.460464692,5.223326998,4.689280348,5.207188258,5.108224819,4.66669397,4.950692566,4.820097309,5.300029844,4.873214638,4.620361372,5.045409123,5.173200718,4.678009925,5.342951166,4.504824305,4.659315811,4.65395239,4.959500146,5.166044476,4.589043072,4.92539717,5.036407221,4.528934515,4.750483309,5.089362258,4.747420384,4.560933931,4.69731983,5.370775861,5.54408188,4.870151807,4.982952378,5.026103224,4.758093537,5.445398846,5.282926242,5.053611337,5.393322878,4.789481486,5.560350127,5.46872462,4.885679163,5.425402534,5.027629126,4.75937043,5.535845462,5.56468368,5.162722115,5.648908521,5.652861744,5.192845033,5.449265634,4.963183232,5.185810578,4.949147626,4.827288954,5.22343374,4.76636586,4.956024728,5.064878242,5.568241777,5.636722333,5.188198435,5.391030063,5.745392331,4.895431283,5.062298167,5.766067698,5.208467726,4.857926322,5.674868001,5.108376217,4.803191047,5.099029922,5.51997003,5.644845461,5.134980168,4.921490378,5.57716168,5.307292295,5.47186863,5.577605636,5.376444346,5.758267153,4.955895394,5.560248961,5.01885209,5.197031724,4.971260618,5.675118796,5.159668614,5.570128425,5.748989674,5.407793115,5.645831426,5.19084417,5.675543258,5.307176712,5.83990229,5.05800463,5.316756816,5.721186798,5.660053708,5.356917392,5.868687341,5.241031353,5.018840653,5.723915428,5.603391508,5.637191236,5.653098351,5.860835194,5.890353924,5.903225723,5.303125738,4.996896207,5.543229987,5.262778653,5.821386156,5.512832313,5.566762767,5.640670087,5.069275414,5.765756885,5.86017912,5.150716419,5.395079354,5.783127748,5.071064951,5.610929485,5.077061999,6.030309973,5.587665478,5.96100319,5.3626966,5.898617729,5.607751118,5.727503825,5.638371629,5.909348956,5.328635437,5.358938216,5.823474525,5.884209802,5.565626329,5.335881594,5.298575835,5.4936582,5.525137649,5.450604887,5.549507114,5.662079015,6.033882978,5.546148793,5.237446258,5.282335842,5.2570193,5.306550249,5.589693753,5.572127651,5.825803118,5.397934131,5.846644209,5.190710731,5.339267173,5.374441315,5.997527781,5.926929834,5.404621157,5.283471825,6.190815888,5.368134841,5.737524975,5.831479599,6.014756592,5.464442066,5.356078597,5.3045633,5.309324968,5.313932408,5.571318059,6.177355281,5.292944249,5.811761126,5.302201681,5.489218933,5.565653446,6.029786912,6.224517035,5.61852193,5.98496836,5.323210598,5.400833485,6.043761277,5.501502093,6.196847236,5.332571109,6.044573437,5.788482211,5.906037026,5.825451633,6.066170852,5.902622054,5.615834451,5.666042866,5.647504032,6.273373334,5.696997351,5.869802763,5.396455836,6.033408391,5.398430085,6.179975378,5.48463293,6.07524997,5.703118623,5.571885244,5.529826853,6.247287193,5.648227464,5.748623236,5.535974751,5.786986581,5.769911265,6.001811161,5.768458367,5.429927263,5.619527323,6.355078392,6.056836894,5.630359657,5.490317126,5.608078928,6.037617488,5.982307846,5.59225871,5.755322353,6.276425252,6.239805108,5.917673811,6.266787905,6.041941727,6.30067354,5.951306868,5.886235872,5.743239427,6.140328336,6.195976116,5.928325916,5.687647087,5.960407501,6.208528763,5.537097344,5.868038792,5.751598649,5.470716323,6.006061381,5.946447362,6.060854493,5.955738113,6.054101275,5.46516054,6.000258703,5.693584094,5.90157089,5.58696624,6.438124872,5.986940838,6.097427986,6.342970966,5.872480739,6.184307647,6.310933829,6.449423159,5.702910738,6.07810205,5.720395753,6.244231381,6.488800398,6.062917197,6.206624964,6.189374541,6.310345423,6.162726299,6.29022684,5.687159835,5.533259983,5.915712047,5.639536589,5.66629128,6.11893789,5.891531858,6.019958406,6.507969813,6.118891564,6.308212477,5.755661183,6.402753955,6.145612947,5.814500515,6.131029811,6.155667228,6.421572125,6.008377832,5.671965928,5.790046997,6.473888629,5.6735842,5.916077289,6.039886923,5.664281175,6.033371815,6.105990598,5.965932878,6.522222149,6.544349437,6.221467547,6.482550183,6.283792696,5.88315662,5.903699501,6.540387969,6.129555512,5.81484123,6.119101187,6.074123949,6.361832185,6.574196636,5.86011935,6.59508085,6.165092024,6.239947132,5.787017609,6.485263692,5.652730549,6.336553539,6.477293864,6.632374648,6.619335014,6.559543435,5.86833222,6.034620457,5.789605536,6.08765354,6.554086483,6.39963447,6.383420064,6.418704021,5.828037579,6.56359408,6.501102408,6.046008323,5.752362724,5.764621373,6.173771942,6.578253584,6.077199459,6.418813178,5.920725007,6.098170899,6.534082792,6.067753932,6.309117426,6.653946352,5.884079166,6.593123523,6.320788232,5.782207403,6.113836385,6.627018695,6.296885356,5.872551451,6.341713486],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Run 0"}, {});</script></div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> ds1</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    (plotly/base {:=title <span class="st">"Run 1"</span>})</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-point {:=y <span class="st">"y"</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[1.235903492,0.9717680404,1.447799826,2.098360756,2.392608847,2.338616348,2.552521436,2.751080324,3.422746121,3.134783757,3.646956674,3.736483046,3.742625698,4.207895263,4.126756518,3.680256397,4.028980935,4.194108157,4.641337617,4.715920619,4.924349303,5.171440202,4.400223137,5.121200297,4.879814785,5.143247978,4.832666143,5.621949963,5.289418223,5.373038912,5.111833212,5.470284045,5.854284174,5.337885369,5.526769149,5.897592187,6.436283586,6.526452533,6.091875573,6.20895634,6.398166843,6.428212683,6.099935198,6.609892832,6.572024523,6.838299449,6.548014036,6.837531012,6.549492657,7.036871018,7.49533298,6.805938283,6.945048706,7.492608757,7.448282703,7.769205051,7.647968207,7.487019005,7.810114789,7.95607824,7.849003649,7.459513161,8.2814631,8.236368191,7.804595919,7.932803359,7.852726117,8.142042955,7.884432217,8.593968301,8.690470177,8.484867049,8.437419743,8.478610969,8.787394678,8.887634745,8.406650354,9.233849634,8.719031505,8.777492284,9.425688403,9.12045248,9.230233635,8.777538686,9.336521259,9.755246333,9.660638994,8.976838574,9.683769196,9.591999672,9.410679949,9.259176534,9.760259381,9.792300347,9.748339501,9.727326906,10.20582556,9.447518463,10.2617393,10.27230861,9.994203464,10.0787653,10.17377676,10.50603932,9.882149349,9.963828894,10.55241099,10.60099904,10.0404168,10.11838791,10.17383111,11.06195803,10.63798481,10.69337488,10.42562162,11.0925196,10.60893771,11.14118087,11.17317401,11.01317318,10.69565591,10.7504634,10.95497534,11.13774867,11.13248327,11.05264006,11.22103795,11.62160875,11.01079565,11.16272055,11.58361699,11.05760978,11.44940221,11.33294987,11.21049545,12.01480926,12.18346944,11.869806,11.55849894,12.29009093,12.08066553,12.09321583,11.61853554,12.37432567,12.39497995,12.20142272,11.72333864,12.52238077,12.27668214,12.74576048,12.75522362,11.86023558,12.17113938,11.91665771,12.28355198,12.16265685,12.25972356,12.99551751,12.76022927,12.29133279,13.02279263,13.13668775,12.4064462,12.79605937,13.33774162,13.10955709,12.835005,12.85051869,13.26437524,12.75288266,12.7699555,13.51938357,12.81536199,13.67177535,13.44889924,13.33492862,13.56128802,13.14233909,13.4232015,13.29902303,13.87783568,13.27978064,13.50748503,13.72032528,14.00687101,13.27287704,13.5721611,13.74669615,13.87373073,13.89100798,13.72138727,14.0592909,13.7797584,13.52953051,14.15372324,13.9574872,13.67214604,13.77509416,13.66388956,13.98275053,13.6823965,13.84456459,14.31141645,14.30473437,14.02022866,14.27954449,14.25560284,14.3243574,14.11150596,14.96305018,14.13608879,14.33629565,15.07677642,14.86572347,14.66447697,14.63727245,14.26127001,14.92602806,15.28482166,15.16672466,14.54770727,15.12220019,14.85943707,14.62286905,14.61003046,15.1032938,15.34135883,15.00988732,15.09917694,14.71248042,15.30592579,14.74089475,14.99127199,15.35783471,15.03133227,15.74655132,14.97412575,15.46415641,15.54163293,15.52062108,15.79967738,15.17395037,15.65556615,15.67147921,15.98803693,16.05650599,15.62069399,15.34251295,16.13303367,15.83108818,15.35474003,15.81455691,16.32968664,16.01357223,15.66463866,15.70994901,15.92077184,15.95542489,16.06869303,16.48048867,15.842668,15.95975488,16.00837076,16.28052402,16.33992028,16.03122584,16.30365001,15.90158993,16.71346979,16.34494522,16.67946103,16.17646497,16.06925401,16.70401308,17.07065105,16.14820927,16.74189136,17.09623501,17.19903368,16.34369189,17.18242075,16.95757331,16.60846565,16.69131087,16.61957508,16.90323157,16.94252846,16.9790546,16.73082498,17.49683756,16.75427284,17.26174863,16.89243752,17.09400975,17.54861925,17.29527708,17.31705162,16.91866341,17.0753885,16.90076338,17.53278068,17.30873213,17.11457045,17.14314031,17.20961002,17.50255111,17.12532123,17.34623429,17.29686449,17.42796895,17.16631242,17.26043502,17.79978029,17.70332494,17.43743787,18.14921572,18.2937218,17.46274885,17.64151758,18.16721568,17.45134255,17.6778112,18.11952009,18.16529117,18.44099746,18.36337167,18.37395788,17.97688689,18.04397074,18.42754377,18.16249332,18.3152749,18.73359222,17.95401472,17.81742525,18.6426534,18.76107219,18.38952873,18.82660908,18.75979325,18.50089314,18.45016359,18.99749634,18.4088652,18.9228541,18.5570993,18.71836226,18.88227625,19.07837156,18.265899,18.9294226,18.48678875,18.91539835,18.46289225,18.42142436,18.72489129,18.56932998,19.06807063,18.99042698,19.2243357,18.51652572,18.60597713,18.79487412,18.77194973,18.62257909,19.28438949,18.98468872,19.28928034,19.16923102,19.15516958,19.30200664,19.22531791,19.40182602,19.52246992,18.8892973,19.63549694,19.00346996,19.01055975,18.98300239,19.16636388,19.17255553,19.6068525,19.51945669,19.2717486,19.65707966,19.55528755,19.93473731,19.24897079,20.18218478,20.19103914,19.60122156,20.10255817,20.19661332,19.67959546,19.41101515,19.81814858,19.75927345,20.15157165,19.99004627,20.36069334,19.68887087,19.90919052,19.90650353,20.5987749,19.80757022,20.22118491,20.02342815,20.4007964,20.22390666,20.71994658,19.8376547,20.34899683,20.12067684,20.568066,20.24592612,20.87369039,20.4402953,20.37097821,20.68389257,20.12282413,20.19311117,20.27825055,20.99483631,20.55089283,20.85343711,20.83811724,20.70234691,21.03644618,20.4535504,20.94818755,20.58480531,20.31886798,20.5376844,20.6798235,20.57941619,20.68280261,21.09603554,20.84450375,21.07966293,21.11254933,20.96306969,20.91756091,20.6324404,20.58894021,20.9349188,21.3379991,20.88975523,20.80766319,21.03741727,21.26266996,21.42476475,21.36068624,20.9593346,21.56890433,21.6830594,21.34138491,21.65461925,21.2717683,21.90747595,21.40917013,21.51297603,21.55043202,21.34836157,21.58085872,21.29985755,21.26271004,21.4510919,21.40372449,21.27495757,22.16765232,21.99877879,21.70911271,21.51255268,22.07313564,21.38048634,21.84569673,21.46754542,21.77872464,22.25390665,22.14789997,22.25782105,21.99364333,21.8763296,22.40770267,21.96653689,22.37551659,22.28887347,22.28699735,22.5072217,22.45761328,22.35632666,21.93285307,22.2400699,22.5106412,22.38858256,22.53949283,22.57957379,22.31971585,22.69953383,22.23848485],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Run 1"}, {});</script></div>
+<p>Better; however, our aim is to compare them… Which is higher?</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> (ds/concat (<span class="kw">assoc</span> ds0 <span class="at">:v</span> <span class="st">"Run 0"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>               (<span class="kw">assoc</span> ds1 <span class="at">:v</span> <span class="st">"Run 1"</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    (plotly/base {:=title <span class="st">"Comparison Between Runs"</span>})</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-point {:=y <span class="st">"y"</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                         :=color <span class="at">:v</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[-0.091385411,0.7357347817,0.6663744183,1.4289431,1.179859148,2.102450964,2.356285014,1.659513874,2.669329516,1.962876893,2.281320933,2.030971725,2.141806851,2.429028935,2.216699759,3.248792885,2.85915459,2.844708284,3.347163669,2.891986281,2.867806981,2.939552549,3.530527055,2.769636136,2.985509439,2.823217401,3.63149304,3.187964595,3.271761601,3.107162245,3.047525099,3.292144813,3.002385293,3.097708367,3.246215985,3.64382165,3.255837186,3.484767637,3.81569846,3.388807711,3.734923657,4.100898178,4.126134948,3.724342008,3.373228956,4.134103517,4.204602566,3.887541318,3.608231335,3.643346791,3.836617666,3.555458076,3.942211948,4.347721452,4.224846204,4.372289127,3.557516938,4.438496663,3.759143278,4.30069596,4.304466775,4.597806501,4.581932132,4.63187867,4.33820323,4.498562163,4.669056699,3.782983731,4.045015575,3.807231735,4.088620523,4.460617118,4.669192693,4.114449092,3.948954958,4.375677852,4.228203214,4.277982715,4.301740732,4.457420499,4.887012682,4.378413888,3.927439598,4.433599969,3.951603701,4.859943753,4.497573817,4.718746978,4.037272762,4.457068905,4.082025187,4.784066973,4.769034452,4.192434474,4.349406454,4.570151039,4.579471617,5.071994698,5.09469185,5.047632021,4.783628085,5.100680389,4.92067516,4.731114596,5.131047529,4.895093581,4.998457176,4.808153009,4.461820489,4.479319437,4.837047076,4.557745861,4.926508979,4.815765904,4.903294365,4.901762168,4.469075933,5.245012178,4.750751951,5.257908272,4.917454736,5.286966678,5.039702659,4.344291017,5.07815135,5.190206268,4.460464692,5.223326998,4.689280348,5.207188258,5.108224819,4.66669397,4.950692566,4.820097309,5.300029844,4.873214638,4.620361372,5.045409123,5.173200718,4.678009925,5.342951166,4.504824305,4.659315811,4.65395239,4.959500146,5.166044476,4.589043072,4.92539717,5.036407221,4.528934515,4.750483309,5.089362258,4.747420384,4.560933931,4.69731983,5.370775861,5.54408188,4.870151807,4.982952378,5.026103224,4.758093537,5.445398846,5.282926242,5.053611337,5.393322878,4.789481486,5.560350127,5.46872462,4.885679163,5.425402534,5.027629126,4.75937043,5.535845462,5.56468368,5.162722115,5.648908521,5.652861744,5.192845033,5.449265634,4.963183232,5.185810578,4.949147626,4.827288954,5.22343374,4.76636586,4.956024728,5.064878242,5.568241777,5.636722333,5.188198435,5.391030063,5.745392331,4.895431283,5.062298167,5.766067698,5.208467726,4.857926322,5.674868001,5.108376217,4.803191047,5.099029922,5.51997003,5.644845461,5.134980168,4.921490378,5.57716168,5.307292295,5.47186863,5.577605636,5.376444346,5.758267153,4.955895394,5.560248961,5.01885209,5.197031724,4.971260618,5.675118796,5.159668614,5.570128425,5.748989674,5.407793115,5.645831426,5.19084417,5.675543258,5.307176712,5.83990229,5.05800463,5.316756816,5.721186798,5.660053708,5.356917392,5.868687341,5.241031353,5.018840653,5.723915428,5.603391508,5.637191236,5.653098351,5.860835194,5.890353924,5.903225723,5.303125738,4.996896207,5.543229987,5.262778653,5.821386156,5.512832313,5.566762767,5.640670087,5.069275414,5.765756885,5.86017912,5.150716419,5.395079354,5.783127748,5.071064951,5.610929485,5.077061999,6.030309973,5.587665478,5.96100319,5.3626966,5.898617729,5.607751118,5.727503825,5.638371629,5.909348956,5.328635437,5.358938216,5.823474525,5.884209802,5.565626329,5.335881594,5.298575835,5.4936582,5.525137649,5.450604887,5.549507114,5.662079015,6.033882978,5.546148793,5.237446258,5.282335842,5.2570193,5.306550249,5.589693753,5.572127651,5.825803118,5.397934131,5.846644209,5.190710731,5.339267173,5.374441315,5.997527781,5.926929834,5.404621157,5.283471825,6.190815888,5.368134841,5.737524975,5.831479599,6.014756592,5.464442066,5.356078597,5.3045633,5.309324968,5.313932408,5.571318059,6.177355281,5.292944249,5.811761126,5.302201681,5.489218933,5.565653446,6.029786912,6.224517035,5.61852193,5.98496836,5.323210598,5.400833485,6.043761277,5.501502093,6.196847236,5.332571109,6.044573437,5.788482211,5.906037026,5.825451633,6.066170852,5.902622054,5.615834451,5.666042866,5.647504032,6.273373334,5.696997351,5.869802763,5.396455836,6.033408391,5.398430085,6.179975378,5.48463293,6.07524997,5.703118623,5.571885244,5.529826853,6.247287193,5.648227464,5.748623236,5.535974751,5.786986581,5.769911265,6.001811161,5.768458367,5.429927263,5.619527323,6.355078392,6.056836894,5.630359657,5.490317126,5.608078928,6.037617488,5.982307846,5.59225871,5.755322353,6.276425252,6.239805108,5.917673811,6.266787905,6.041941727,6.30067354,5.951306868,5.886235872,5.743239427,6.140328336,6.195976116,5.928325916,5.687647087,5.960407501,6.208528763,5.537097344,5.868038792,5.751598649,5.470716323,6.006061381,5.946447362,6.060854493,5.955738113,6.054101275,5.46516054,6.000258703,5.693584094,5.90157089,5.58696624,6.438124872,5.986940838,6.097427986,6.342970966,5.872480739,6.184307647,6.310933829,6.449423159,5.702910738,6.07810205,5.720395753,6.244231381,6.488800398,6.062917197,6.206624964,6.189374541,6.310345423,6.162726299,6.29022684,5.687159835,5.533259983,5.915712047,5.639536589,5.66629128,6.11893789,5.891531858,6.019958406,6.507969813,6.118891564,6.308212477,5.755661183,6.402753955,6.145612947,5.814500515,6.131029811,6.155667228,6.421572125,6.008377832,5.671965928,5.790046997,6.473888629,5.6735842,5.916077289,6.039886923,5.664281175,6.033371815,6.105990598,5.965932878,6.522222149,6.544349437,6.221467547,6.482550183,6.283792696,5.88315662,5.903699501,6.540387969,6.129555512,5.81484123,6.119101187,6.074123949,6.361832185,6.574196636,5.86011935,6.59508085,6.165092024,6.239947132,5.787017609,6.485263692,5.652730549,6.336553539,6.477293864,6.632374648,6.619335014,6.559543435,5.86833222,6.034620457,5.789605536,6.08765354,6.554086483,6.39963447,6.383420064,6.418704021,5.828037579,6.56359408,6.501102408,6.046008323,5.752362724,5.764621373,6.173771942,6.578253584,6.077199459,6.418813178,5.920725007,6.098170899,6.534082792,6.067753932,6.309117426,6.653946352,5.884079166,6.593123523,6.320788232,5.782207403,6.113836385,6.627018695,6.296885356,5.872551451,6.341713486],"r":null,"name":"Run 0","marker":{"color":"#1B9E77"},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null},{"y":[1.235903492,0.9717680404,1.447799826,2.098360756,2.392608847,2.338616348,2.552521436,2.751080324,3.422746121,3.134783757,3.646956674,3.736483046,3.742625698,4.207895263,4.126756518,3.680256397,4.028980935,4.194108157,4.641337617,4.715920619,4.924349303,5.171440202,4.400223137,5.121200297,4.879814785,5.143247978,4.832666143,5.621949963,5.289418223,5.373038912,5.111833212,5.470284045,5.854284174,5.337885369,5.526769149,5.897592187,6.436283586,6.526452533,6.091875573,6.20895634,6.398166843,6.428212683,6.099935198,6.609892832,6.572024523,6.838299449,6.548014036,6.837531012,6.549492657,7.036871018,7.49533298,6.805938283,6.945048706,7.492608757,7.448282703,7.769205051,7.647968207,7.487019005,7.810114789,7.95607824,7.849003649,7.459513161,8.2814631,8.236368191,7.804595919,7.932803359,7.852726117,8.142042955,7.884432217,8.593968301,8.690470177,8.484867049,8.437419743,8.478610969,8.787394678,8.887634745,8.406650354,9.233849634,8.719031505,8.777492284,9.425688403,9.12045248,9.230233635,8.777538686,9.336521259,9.755246333,9.660638994,8.976838574,9.683769196,9.591999672,9.410679949,9.259176534,9.760259381,9.792300347,9.748339501,9.727326906,10.20582556,9.447518463,10.2617393,10.27230861,9.994203464,10.0787653,10.17377676,10.50603932,9.882149349,9.963828894,10.55241099,10.60099904,10.0404168,10.11838791,10.17383111,11.06195803,10.63798481,10.69337488,10.42562162,11.0925196,10.60893771,11.14118087,11.17317401,11.01317318,10.69565591,10.7504634,10.95497534,11.13774867,11.13248327,11.05264006,11.22103795,11.62160875,11.01079565,11.16272055,11.58361699,11.05760978,11.44940221,11.33294987,11.21049545,12.01480926,12.18346944,11.869806,11.55849894,12.29009093,12.08066553,12.09321583,11.61853554,12.37432567,12.39497995,12.20142272,11.72333864,12.52238077,12.27668214,12.74576048,12.75522362,11.86023558,12.17113938,11.91665771,12.28355198,12.16265685,12.25972356,12.99551751,12.76022927,12.29133279,13.02279263,13.13668775,12.4064462,12.79605937,13.33774162,13.10955709,12.835005,12.85051869,13.26437524,12.75288266,12.7699555,13.51938357,12.81536199,13.67177535,13.44889924,13.33492862,13.56128802,13.14233909,13.4232015,13.29902303,13.87783568,13.27978064,13.50748503,13.72032528,14.00687101,13.27287704,13.5721611,13.74669615,13.87373073,13.89100798,13.72138727,14.0592909,13.7797584,13.52953051,14.15372324,13.9574872,13.67214604,13.77509416,13.66388956,13.98275053,13.6823965,13.84456459,14.31141645,14.30473437,14.02022866,14.27954449,14.25560284,14.3243574,14.11150596,14.96305018,14.13608879,14.33629565,15.07677642,14.86572347,14.66447697,14.63727245,14.26127001,14.92602806,15.28482166,15.16672466,14.54770727,15.12220019,14.85943707,14.62286905,14.61003046,15.1032938,15.34135883,15.00988732,15.09917694,14.71248042,15.30592579,14.74089475,14.99127199,15.35783471,15.03133227,15.74655132,14.97412575,15.46415641,15.54163293,15.52062108,15.79967738,15.17395037,15.65556615,15.67147921,15.98803693,16.05650599,15.62069399,15.34251295,16.13303367,15.83108818,15.35474003,15.81455691,16.32968664,16.01357223,15.66463866,15.70994901,15.92077184,15.95542489,16.06869303,16.48048867,15.842668,15.95975488,16.00837076,16.28052402,16.33992028,16.03122584,16.30365001,15.90158993,16.71346979,16.34494522,16.67946103,16.17646497,16.06925401,16.70401308,17.07065105,16.14820927,16.74189136,17.09623501,17.19903368,16.34369189,17.18242075,16.95757331,16.60846565,16.69131087,16.61957508,16.90323157,16.94252846,16.9790546,16.73082498,17.49683756,16.75427284,17.26174863,16.89243752,17.09400975,17.54861925,17.29527708,17.31705162,16.91866341,17.0753885,16.90076338,17.53278068,17.30873213,17.11457045,17.14314031,17.20961002,17.50255111,17.12532123,17.34623429,17.29686449,17.42796895,17.16631242,17.26043502,17.79978029,17.70332494,17.43743787,18.14921572,18.2937218,17.46274885,17.64151758,18.16721568,17.45134255,17.6778112,18.11952009,18.16529117,18.44099746,18.36337167,18.37395788,17.97688689,18.04397074,18.42754377,18.16249332,18.3152749,18.73359222,17.95401472,17.81742525,18.6426534,18.76107219,18.38952873,18.82660908,18.75979325,18.50089314,18.45016359,18.99749634,18.4088652,18.9228541,18.5570993,18.71836226,18.88227625,19.07837156,18.265899,18.9294226,18.48678875,18.91539835,18.46289225,18.42142436,18.72489129,18.56932998,19.06807063,18.99042698,19.2243357,18.51652572,18.60597713,18.79487412,18.77194973,18.62257909,19.28438949,18.98468872,19.28928034,19.16923102,19.15516958,19.30200664,19.22531791,19.40182602,19.52246992,18.8892973,19.63549694,19.00346996,19.01055975,18.98300239,19.16636388,19.17255553,19.6068525,19.51945669,19.2717486,19.65707966,19.55528755,19.93473731,19.24897079,20.18218478,20.19103914,19.60122156,20.10255817,20.19661332,19.67959546,19.41101515,19.81814858,19.75927345,20.15157165,19.99004627,20.36069334,19.68887087,19.90919052,19.90650353,20.5987749,19.80757022,20.22118491,20.02342815,20.4007964,20.22390666,20.71994658,19.8376547,20.34899683,20.12067684,20.568066,20.24592612,20.87369039,20.4402953,20.37097821,20.68389257,20.12282413,20.19311117,20.27825055,20.99483631,20.55089283,20.85343711,20.83811724,20.70234691,21.03644618,20.4535504,20.94818755,20.58480531,20.31886798,20.5376844,20.6798235,20.57941619,20.68280261,21.09603554,20.84450375,21.07966293,21.11254933,20.96306969,20.91756091,20.6324404,20.58894021,20.9349188,21.3379991,20.88975523,20.80766319,21.03741727,21.26266996,21.42476475,21.36068624,20.9593346,21.56890433,21.6830594,21.34138491,21.65461925,21.2717683,21.90747595,21.40917013,21.51297603,21.55043202,21.34836157,21.58085872,21.29985755,21.26271004,21.4510919,21.40372449,21.27495757,22.16765232,21.99877879,21.70911271,21.51255268,22.07313564,21.38048634,21.84569673,21.46754542,21.77872464,22.25390665,22.14789997,22.25782105,21.99364333,21.8763296,22.40770267,21.96653689,22.37551659,22.28887347,22.28699735,22.5072217,22.45761328,22.35632666,21.93285307,22.2400699,22.5106412,22.38858256,22.53949283,22.57957379,22.31971585,22.69953383,22.23848485],"r":null,"name":"Run 1","marker":{"color":"#D95F02"},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Comparison Between Runs"}, {});</script></div>
+<p>Now it’s up to the viewer to decide whether they like higher numbers or not.</p>
+<hr>
+<p>There are a couple of interesting ideas in that last bit of code:</p>
+<ol type="1">
+<li><code>assoc</code> a constant onto a ds creates a constant column</li>
+<li><code>:=color</code> takes care of grouping the results and the downstream display</li>
+</ol>
+<p>Neat.</p>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/scicloj/tableplot/ideas/stacking.clj">src/scicloj/tableplot/ideas/stacking.clj</a></small></small></pre></div>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/clojurecivitas\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

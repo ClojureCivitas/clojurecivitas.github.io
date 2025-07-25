@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Sam Umbach">
+<meta name="dcterms.date" content="2025-06-27">
+
+<title>Convergence to Normal Distribution, independent of original distribution – Clojure Civitas</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../favicon.ico" rel="icon">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-4d49c55b2a02038d936e54d6a2565e99.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-95b9d8bfb9033cfe0e62f8828f2324d8.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-4d49c55b2a02038d936e54d6a2565e99.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-7d6f165988fb2100d51f41f5bac47e04.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-276513973ef675fe2cc4d6a1bd066430.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-7d6f165988fb2100d51f41f5bac47e04.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
+
+
+<meta property="og:title" content="Convergence to Normal Distribution, independent of original distribution – Clojure Civitas">
+<meta property="og:description" content="">
+<meta property="og:image" content="https://clojurecivitas.github.io/math/stats/images/civitas-icon.svg">
+<meta property="og:site_name" content="Clojure Civitas">
+</head>
+
+<body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../images/civitas-icon.svg" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Clojure Civitas</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../posts.html"> 
+<span class="menu-text">Posts</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../civitas/authors.html"> 
+<span class="menu-text">Authors</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../civitas/explorer.html"> 
+<span class="menu-text">Explorer</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ClojureCivitas/clojurecivitas.github.io"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../posts.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Convergence to Normal Distribution, independent of original distribution</h1>
+</div>
+
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author"><a href="https://github.com/samumbach">Sam Umbach</a> <a href="mailto:samumbach@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            <a href="https://clojure.camp/">
+            Clojure Camp
+            </a>
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 27, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="central_limit_theorem_different_distributions_files/md-default0.js" type="text/javascript"></script>
+<script src="central_limit_theorem_different_distributions_files/md-default1.js" type="text/javascript"></script>
+<script src="central_limit_theorem_different_distributions_files/plotly2.js" type="text/javascript"></script>
+<p>We mentioned <a href="central_limit_theorem_convergence.html">last time</a> that the result of combining more and more events will approach the normal distribution, regardless of the shape of the original event distribution. Let’s try to demonstrate that visually.</p>
+<p>Our previous definition of a random event is an example of a uniform distribution:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> event </span>[]</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> event-sample-dataset </span>[event-fn sample-count]</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:index</span>       (<span class="kw">range</span> sample-count)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">:event-value</span> (<span class="kw">repeatedly</span> sample-count event-fn)})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> uniform-ds </span>(event-sample-dataset event <span class="dv">100000</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> histogram </span>[ds]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">-&gt;</span> ds</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>      (tc/dataset)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>      (plotly/layer-histogram</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>       {:=x <span class="at">:event-value</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        :=histnorm <span class="st">"count"</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        :=histogram-nbins <span class="dv">40</span>})</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      (plotly/layer-point)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(histogram uniform-ds)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[2442,2489,2431,2517,2522,2504,2488,2494,2553,2489,2432,2542,2666,2539,2428,2422,2591,2451,2496,2475,2408,2527,2472,2523,2433,2620,2451,2407,2448,2566,2516,2515,2531,2489,2593,2545,2509,2590,2361,2525],"r":null,"name":"","fill":null,"mode":null,"width":[0.02499930622991843,0.02499930622991843,0.02499930622991843,0.02499930622991843,0.024999306229918417,0.024999306229918444,0.024999306229918417,0.024999306229918444,0.024999306229918444,0.02499930622991839,0.024999306229918472,0.024999306229918417,0.024999306229918417,0.024999306229918417,0.024999306229918472,0.024999306229918417,0.024999306229918417,0.024999306229918472,0.02499930622991836,0.024999306229918417,0.024999306229918528,0.024999306229918417,0.024999306229918306,0.024999306229918528,0.024999306229918417,0.024999306229918417,0.024999306229918528,0.024999306229918306,0.024999306229918417,0.024999306229918528,0.024999306229918417,0.024999306229918417,0.024999306229918417,0.024999306229918417,0.024999306229918417,0.024999306229918528,0.024999306229918417,0.024999306229918306,0.024999306229918528,0.024999306229918417],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.012524084242312834,0.037523390472231265,0.06252269670214969,0.08752200293206813,0.11252130916198655,0.13752061539190497,0.1625199216218234,0.18751922785174185,0.21251853408166027,0.2375178403115787,0.26251714654149716,0.2875164527714156,0.312515759001334,0.3375150652312524,0.3625143714611708,0.3875136776910893,0.4125129839210077,0.4375122901509262,0.4625115963808446,0.48751090261076296,0.5125102088406814,0.5375095150706,0.5625088213005183,0.5875081275304367,0.6125074337603551,0.6375067399902736,0.662506046220192,0.6875053524501105,0.7125046586800288,0.7375039649099473,0.7625032711398658,0.7875025773697841,0.8125018835997027,0.837501189829621,0.8625004960595395,0.8874998022894579,0.9124991085193763,0.9374984147492947,0.9624977209792132,0.9874970272091317],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+<p>If we combine several of these distributions, watch the shape of the distribution:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> avg </span>[nums]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">/</span> (<span class="kw">reduce</span> <span class="kw">+</span> nums) (<span class="kw">count</span> nums)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> combined-event </span>[number-of-events]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  (avg (<span class="kw">repeatedly</span> number-of-events event)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(histogram (event-sample-dataset #(combined-event <span class="dv">2</span>) <span class="dv">100000</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[147,387,651,891,1139,1423,1571,1821,2079,2389,2648,2858,3054,3343,3745,3793,4060,4351,4559,4962,4849,4515,4396,4063,3948,3622,3379,3142,2886,2677,2326,2087,1895,1696,1410,1154,837,674,414,159],"r":null,"name":"","fill":null,"mode":null,"width":[0.024843337472465445,0.024843337472465445,0.024843337472465442,0.02484333747246545,0.024843337472465435,0.02484333747246545,0.02484333747246542,0.024843337472465477,0.02484333747246542,0.02484333747246545,0.024843337472465477,0.02484333747246542,0.02484333747246542,0.02484333747246542,0.024843337472465477,0.024843337472465477,0.02484333747246542,0.02484333747246542,0.02484333747246542,0.024843337472465477,0.02484333747246542,0.024843337472465477,0.024843337472465477,0.024843337472465477,0.024843337472465254,0.024843337472465477,0.024843337472465477,0.024843337472465477,0.024843337472465477,0.024843337472465477,0.024843337472465477,0.024843337472465477,0.024843337472465254,0.024843337472465477,0.024843337472465477,0.024843337472465477,0.024843337472465477,0.024843337472465254,0.024843337472465477,0.024843337472465477],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.014381047777507634,0.03922438524997308,0.06406772272243852,0.08891106019490397,0.11375439766736942,0.13859773513983487,0.1634410726123003,0.18828441008476574,0.21312774755723118,0.2379710850296966,0.2628144225021621,0.2876577599746275,0.312501097447093,0.33734443491955834,0.3621877723920238,0.3870311098644893,0.4118744473369548,0.43671778480942014,0.4615611222818856,0.48640445975435104,0.5112477972268165,0.5360911346992819,0.5609344721717474,0.5857778096442129,0.6106211471166783,0.6354644845891436,0.6603078220616091,0.6851511595340746,0.70999449700654,0.7348378344790055,0.759681171951471,0.7845245094239365,0.8093678468964018,0.8342111843688672,0.8590545218413327,0.8838978593137982,0.9087411967862636,0.933584534258729,0.9584278717311944,0.9832712092036598],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(histogram (event-sample-dataset #(combined-event <span class="dv">5</span>) <span class="dv">100000</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[5,15,48,104,190,297,478,772,1102,1465,2043,2618,3234,4003,4483,5197,5707,6135,6576,6519,6714,6472,6215,5581,4968,4337,3600,3090,2348,1791,1357,924,648,443,245,146,83,32,10,5],"r":null,"name":"","fill":null,"mode":null,"width":[0.02233720276159218,0.02233720276159218,0.02233720276159218,0.022337202761592193,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.02233720276159218,0.022337202761592123,0.022337202761592234,0.022337202761592234,0.022337202761592012,0.022337202761592234,0.022337202761592234,0.022337202761592123,0.022337202761592234,0.022337202761592123,0.022337202761592123,0.022337202761592234,0.022337202761592234,0.022337202761592123,0.022337202761592123,0.022337202761592234,0.022337202761592123,0.022337202761592234,0.022337202761592234,0.022337202761592123,0.022337202761592123,0.022337202761592234],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.06835253648130603,0.0906897392428982,0.11302694200449039,0.13536414476608258,0.15770134752767476,0.18003855028926694,0.20237575305085911,0.2247129558124513,0.24705015857404347,0.2693873613356357,0.2917245640972278,0.31406176685882004,0.33639896962041216,0.3587361723820044,0.3810733751435965,0.40341057790518875,0.4257477806667809,0.4480849834283731,0.47042218618996523,0.4927593889515574,0.5150965917131496,0.5374337944747418,0.559770997236334,0.5821081999979261,0.6044454027595183,0.6267826055211105,0.6491198082827027,0.6714570110442948,0.693794213805887,0.7161314165674791,0.7384686193290714,0.7608058220906635,0.7831430248522557,0.8054802276138479,0.82781743037544,0.8501546331370322,0.8724918358986244,0.8948290386602167,0.9171662414218087,0.9395034441834009],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(histogram (event-sample-dataset #(combined-event <span class="dv">20</span>) <span class="dv">100000</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[1,1,7,16,32,64,165,240,451,777,1175,1782,2523,3434,4492,5550,6583,7632,8326,8463,8319,7995,7223,6240,5129,4145,3051,2223,1564,992,626,360,216,96,56,27,15,6,2,1],"r":null,"name":"","fill":null,"mode":null,"width":[0.013907449081265011,0.013907449081265039,0.013907449081265011,0.013907449081265011,0.013907449081265011,0.013907449081265011,0.013907449081265011,0.013907449081265011,0.013907449081265011,0.013907449081265011,0.013907449081265066,0.013907449081264955,0.013907449081265066,0.013907449081264955,0.013907449081265066,0.013907449081264955,0.013907449081265011,0.013907449081265011,0.013907449081265066,0.013907449081264955,0.013907449081265066,0.013907449081265066,0.013907449081264955,0.013907449081264955,0.013907449081265066,0.013907449081265066,0.013907449081264955,0.013907449081264955,0.013907449081265066,0.013907449081265066,0.013907449081264955,0.013907449081265066,0.013907449081264955,0.013907449081264955,0.013907449081265066,0.013907449081265066,0.013907449081265066,0.013907449081264955,0.013907449081264955,0.013907449081265066],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.23154562152608116,0.24545307060734617,0.2593605196886112,0.27326796876987625,0.2871754178511412,0.30108286693240627,0.3149903160136712,0.3288977650949363,0.34280521417620125,0.3567126632574663,0.3706201123387313,0.38452756141999633,0.39843501050126134,0.41234245958252635,0.42624990866379137,0.4401573577450564,0.45406480682632133,0.4679722559075864,0.4818797049888514,0.4957871540701164,0.5096946031513814,0.5236020522326466,0.5375095013139115,0.5514169503951765,0.5653243994764414,0.5792318485577066,0.5931392976389716,0.6070467467202365,0.6209541958015015,0.6348616448827666,0.6487690939640316,0.6626765430452966,0.6765839921265616,0.6904914412078266,0.7043988902890916,0.7183063393703566,0.7322137884516218,0.7461212375328867,0.7600286866141517,0.7739361356954166],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+<p>Let’s try this again with a different shape of distribution:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> triangle-wave </span>[x]</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">-&gt;</span> x (<span class="kw">-</span> <span class="fl">0.5</span>) (Math/abs) (<span class="kw">*</span> <span class="fl">4.0</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> (<span class="kw">let</span> [xs (<span class="kw">range</span> <span class="fl">0.0</span> <span class="fl">1.01</span> <span class="fl">0.01</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>          ys (<span class="kw">mapv</span> triangle-wave xs)]</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>      (tc/dataset {<span class="at">:x</span> xs <span class="at">:y</span> ys}))</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-point</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>     {:=x <span class="at">:x</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>      :=y <span class="at">:y</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[2.0,1.96,1.92,1.88,1.84,1.8,1.76,1.72,1.68,1.6400000000000001,1.6,1.56,1.52,1.48,1.44,1.4,1.3599999999999999,1.3199999999999998,1.2799999999999998,1.2399999999999998,1.1999999999999997,1.1599999999999997,1.1199999999999997,1.0799999999999996,1.0399999999999996,0.9999999999999998,0.9599999999999997,0.9199999999999997,0.8799999999999997,0.8399999999999996,0.7999999999999996,0.7599999999999996,0.7199999999999995,0.6799999999999995,0.6399999999999995,0.5999999999999994,0.5599999999999994,0.5199999999999994,0.4799999999999993,0.4399999999999993,0.39999999999999925,0.3599999999999992,0.3199999999999992,0.27999999999999914,0.2399999999999991,0.19999999999999907,0.15999999999999903,0.119999999999999,0.07999999999999896,0.039999999999998925,8.881784197001252E-16,0.040000000000000924,0.08000000000000096,0.120000000000001,0.16000000000000103,0.20000000000000107,0.2400000000000011,0.28000000000000114,0.3200000000000012,0.3600000000000012,0.40000000000000124,0.4400000000000013,0.4800000000000013,0.5200000000000014,0.5600000000000014,0.6000000000000014,0.6400000000000015,0.6800000000000015,0.7200000000000015,0.7600000000000016,0.8000000000000016,0.8400000000000016,0.8800000000000017,0.9200000000000017,0.9600000000000017,1.0000000000000018,1.0400000000000018,1.0800000000000018,1.1200000000000019,1.160000000000002,1.200000000000002,1.240000000000002,1.280000000000002,1.320000000000002,1.360000000000002,1.4000000000000021,1.4400000000000022,1.4800000000000022,1.5200000000000022,1.5600000000000023,1.6000000000000023,1.6400000000000023,1.6800000000000024,1.7200000000000024,1.7600000000000025,1.8000000000000025,1.8400000000000025,1.8800000000000026,1.9200000000000026,1.9600000000000026,2.0000000000000027],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.11,0.12,0.13,0.14,0.15,0.16,0.17,0.18,0.19,0.2,0.21,0.22,0.23,0.24,0.25,0.26,0.27,0.28,0.29,0.3,0.31,0.32,0.33,0.34,0.35000000000000003,0.36,0.37,0.38,0.39,0.4,0.41000000000000003,0.42,0.43,0.44,0.45,0.46,0.47000000000000003,0.48,0.49,0.5,0.51,0.52,0.53,0.54,0.55,0.56,0.5700000000000001,0.58,0.59,0.6,0.61,0.62,0.63,0.64,0.65,0.66,0.67,0.68,0.6900000000000001,0.7000000000000001,0.71,0.72,0.73,0.74,0.75,0.76,0.77,0.78,0.79,0.8,0.81,0.8200000000000001,0.8300000000000001,0.84,0.85,0.86,0.87,0.88,0.89,0.9,0.91,0.92,0.93,0.9400000000000001,0.9500000000000001,0.96,0.97,0.98,0.99,1.0],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":null}, {});</script></div>
+<p>Generating samples from this distribution is more complicated than I initially expected. This warrants a follow-up, but for now I’ll just link to my source for this method: <a href="https://web.mit.edu/urban_or_book/www/book/chapter7/7.1.3.html"><em>Urban Operations Research</em> by Richard C. Larson and Amedeo R. Odoni, Section 7.1.3 Generating Samples from Probability Distributions</a> (see “The rejection method”).</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> sample-from-function </span>[f x-min x-max y-min y-max]</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">loop</span> []</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">let</span> [x (<span class="kw">+</span> x-min (<span class="kw">*</span> (<span class="kw">rand</span>) (<span class="kw">-</span> x-max x-min)))</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>          y (<span class="kw">+</span> y-min (<span class="kw">*</span> (<span class="kw">rand</span>) (<span class="kw">-</span> y-max y-min)))]</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">if</span> (<span class="kw">&lt;=</span> y (f x))</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        x</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">recur</span>)))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> event </span>[]</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  (sample-from-function triangle-wave <span class="fl">0.0</span> <span class="fl">1.0</span> <span class="fl">0.0</span> <span class="fl">2.0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> triangle-wave-ds </span>(event-sample-dataset event <span class="dv">100000</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(histogram triangle-wave-ds)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[4870,4645,4352,4136,3782,3549,3339,3076,2911,2530,2393,2063,1892,1672,1349,1179,918,651,417,134,114,388,650,875,1121,1392,1631,1823,2203,2355,2673,2848,3217,3267,3720,3882,4087,4365,4657,4874],"r":null,"name":"","fill":null,"mode":null,"width":[0.024999759493348497,0.024999759493348497,0.024999759493348497,0.024999759493348497,0.024999759493348497,0.024999759493348497,0.024999759493348483,0.02499975949334851,0.02499975949334851,0.024999759493348483,0.02499975949334851,0.024999759493348483,0.024999759493348483,0.024999759493348483,0.02499975949334854,0.024999759493348483,0.024999759493348483,0.02499975949334854,0.024999759493348428,0.02499975949334854,0.024999759493348483,0.02499975949334854,0.024999759493348428,0.02499975949334854,0.02499975949334854,0.024999759493348428,0.02499975949334854,0.024999759493348428,0.02499975949334854,0.02499975949334854,0.02499975949334854,0.024999759493348428,0.024999759493348428,0.02499975949334854,0.02499975949334854,0.02499975949334854,0.02499975949334854,0.024999759493348317,0.02499975949334854,0.02499975949334854],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.012500205165031066,0.03749996465837956,0.06249972415172806,0.08749948364507656,0.11249924313842505,0.13749900263177356,0.16249876212512204,0.18749852161847053,0.21249828111181907,0.23749804060516755,0.26249780009851603,0.2874975595918645,0.31249731908521305,0.3374970785785615,0.36249683807191,0.38749659756525856,0.412496357058607,0.4374961165519555,0.462495876045304,0.4874956355386525,0.512495395032001,0.5374951545253495,0.562494914018698,0.5874946735120465,0.612494433005395,0.6374941924987435,0.662493951992092,0.6874937114854405,0.7124934709787889,0.7374932304721376,0.762492989965486,0.7874927494588345,0.812492508952183,0.8374922684455315,0.8624920279388799,0.8874917874322286,0.912491546925577,0.9374913064189254,0.9624910659122738,0.9874908254056225],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+<p>Let’s combine several of these distributions:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(histogram (event-sample-dataset #(combined-event <span class="dv">2</span>) <span class="dv">100000</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[463,1328,1933,2370,2623,2827,2814,2482,2299,1863,1532,1242,1317,1590,1968,2661,3439,4249,5180,6092,6191,5107,4307,3310,2573,2052,1532,1229,1231,1448,1787,2280,2551,2752,2833,2562,2338,1909,1296,440],"r":null,"name":"","fill":null,"mode":null,"width":[0.02496822424648862,0.02496822424648862,0.02496822424648862,0.02496822424648862,0.02496822424648862,0.02496822424648862,0.02496822424648862,0.02496822424648862,0.02496822424648862,0.02496822424648862,0.024968224246488646,0.02496822424648859,0.024968224246488646,0.02496822424648859,0.024968224246488646,0.02496822424648859,0.02496822424648859,0.024968224246488646,0.02496822424648859,0.024968224246488646,0.02496822424648859,0.0249682242464887,0.02496822424648848,0.0249682242464887,0.02496822424648859,0.0249682242464887,0.02496822424648859,0.02496822424648859,0.02496822424648859,0.0249682242464887,0.02496822424648859,0.02496822424648859,0.02496822424648859,0.02496822424648859,0.0249682242464887,0.02496822424648859,0.0249682242464887,0.02496822424648848,0.0249682242464887,0.02496822424648859],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.013215326945158826,0.038183551191647444,0.06315177543813606,0.08811999968462468,0.1130882239311133,0.13805644817760193,0.16302467242409052,0.18799289667057917,0.21296112091706776,0.2379293451635564,0.26289756941004505,0.28786579365653364,0.31283401790302223,0.3378022421495109,0.3627704663959995,0.3877386906424881,0.4127069148889767,0.4376751391354653,0.46264336338195394,0.4876115876284426,0.5125798118749312,0.5375480361214198,0.5625162603679084,0.587484484614397,0.6124527088608857,0.6374209331073744,0.662389157353863,0.6873573816003515,0.7123256058468401,0.7372938300933287,0.7622620543398174,0.787230278586306,0.8121985028327946,0.8371667270792832,0.8621349513257719,0.8871031755722605,0.9120713998187491,0.9370396240652377,0.9620078483117263,0.986976072558215],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(histogram (event-sample-dataset #(combined-event <span class="dv">5</span>) <span class="dv">100000</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[12,53,149,358,406,557,680,908,1377,2011,2669,2980,3150,3330,3928,4849,5720,5928,5659,5180,5120,5500,5999,5715,4971,3941,3425,3044,3008,2649,2092,1377,937,675,578,485,323,176,62,19],"r":null,"name":"","fill":null,"mode":null,"width":[0.023971416592512493,0.023971416592512486,0.02397141659251248,0.023971416592512507,0.02397141659251248,0.02397141659251248,0.02397141659251248,0.023971416592512534,0.02397141659251248,0.023971416592512507,0.023971416592512507,0.02397141659251245,0.023971416592512507,0.02397141659251245,0.023971416592512507,0.023971416592512562,0.02397141659251245,0.023971416592512507,0.02397141659251245,0.023971416592512507,0.023971416592512562,0.02397141659251245,0.02397141659251245,0.02397141659251245,0.023971416592512562,0.02397141659251245,0.023971416592512562,0.02397141659251234,0.023971416592512562,0.02397141659251245,0.023971416592512562,0.023971416592512562,0.02397141659251234,0.023971416592512562,0.02397141659251245,0.023971416592512562,0.02397141659251245,0.02397141659251245,0.02397141659251245,0.023971416592512562],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.031668144338234505,0.055639560930747,0.07961097752325948,0.10358239411577197,0.12755381070828448,0.15152522730079693,0.17549664389330943,0.19946806048582194,0.22343947707833445,0.24741089367084693,0.27138231026335946,0.2953537268558719,0.31932514344838436,0.34329656004089687,0.3672679766334094,0.3912393932259219,0.4152108098184344,0.43918222641094684,0.46315364300345935,0.48712505959597185,0.5110964761884844,0.5350678927809969,0.5590393093735093,0.5830107259660218,0.6069821425585342,0.6309535591510468,0.6549249757435593,0.6788963923360718,0.7028678089285842,0.7268392255210967,0.7508106421136092,0.7747820587061218,0.7987534752986343,0.8227248918911467,0.8466963084836592,0.8706677250761716,0.8946391416686842,0.9186105582611966,0.9425819748537091,0.9665533914462217],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(histogram (event-sample-dataset #(combined-event <span class="dv">20</span>) <span class="dv">100000</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[3,7,15,35,70,119,225,383,669,986,1374,2145,2999,3759,4724,5708,6386,7377,7836,7976,7856,7588,6864,5897,4996,3990,3201,2365,1604,1146,698,443,258,141,89,37,16,9,5,1],"r":null,"name":"","fill":null,"mode":null,"width":[0.016011579283006283,0.016011579283006283,0.016011579283006283,0.016011579283006283,0.016011579283006283,0.016011579283006283,0.016011579283006228,0.01601157928300634,0.016011579283006228,0.01601157928300634,0.016011579283006228,0.01601157928300634,0.016011579283006228,0.016011579283006283,0.016011579283006283,0.016011579283006283,0.016011579283006283,0.016011579283006283,0.016011579283006283,0.016011579283006228,0.01601157928300634,0.01601157928300634,0.016011579283006228,0.016011579283006228,0.01601157928300634,0.01601157928300634,0.016011579283006228,0.016011579283006228,0.016011579283006228,0.01601157928300634,0.01601157928300634,0.016011579283006228,0.016011579283006228,0.01601157928300634,0.01601157928300634,0.016011579283006228,0.01601157928300634,0.016011579283006228,0.016011579283006228,0.01601157928300634],"type":"bar","theta":null,"z":null,"lon":null,"lat":null,"x":[0.1930315768382699,0.2090431561212762,0.22505473540428247,0.24106631468728876,0.257077893970295,0.27308947325330135,0.2891010525363076,0.30511263181931386,0.32112421110232015,0.33713579038532643,0.3531473696683327,0.369158948951339,0.3851705282343453,0.4011821075173515,0.41719368680035784,0.43320526608336407,0.4492168453663704,0.46522842464937664,0.481240003932383,0.4972515832153892,0.5132631624983954,0.5292747417814019,0.5452863210644081,0.5612979003474143,0.5773094796304206,0.593321058913427,0.6093326381964332,0.6253442174794395,0.6413557967624457,0.6573673760454519,0.6733789553284584,0.6893905346114646,0.7054021138944708,0.7214136931774771,0.7374252724604835,0.7534368517434897,0.769448431026496,0.7854600103095023,0.8014715895925085,0.8174831688755149],"text":null},{"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"event-value","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":null}, {});</script></div>
+<p>I find these visuals surprisingly powerful because you can see the original distribution “morph” into this characteristic shape.</p>
+<p>The normal distribution holds a unique place in mathematics and in the world itself: whenever you combine multiple independent and identically-distributed events, the result will converge to the normal distribution as the number of combined events increases.</p>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/math/stats/central_limit_theorem_different_distributions.clj">src/math/stats/central_limit_theorem_different_distributions.clj</a></small></small></pre></div>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/clojurecivitas\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
