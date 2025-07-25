@@ -413,7 +413,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>(Work-In-Progress Draft)</p>
 <p>Usually, when we wish to create Clojure Civitas posts, we enjoy the fact that Civitas runs our notebooks in the GitHub Actions as it renders the website.</p>
 <p>While this is the default behavior, sometimes, we cannot expect our notebooks to be run in GitHub Actions. For example, they may depend on a local file or service.</p>
-<p>This notebook, for example, assumes that you have a local secrets file and it will not work without it!</p>
+<p>This notebook, for example, assumes that you have a local secrets file, and it will not work without it!</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">slurp</span> <span class="st">"/home/daslu/my-secret.txt"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -429,23 +429,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<pre><code>                       clojure.core/eval              core.clj: 3232
-                                     ...                           
-scicloj.clay.skip-if-unchanged/eval73558            REPL Input:     
-                                     ...                           
-                      clojure.core/slurp              core.clj: 7089 (repeats 2 times)
-                                     ...                           
-                  clojure.java.io/reader                io.clj:   89
-                  clojure.java.io/reader                io.clj:  105
-                    clojure.java.io/fn/G                io.clj:   72
-                      clojure.java.io/fn                io.clj:  168
-                    clojure.java.io/fn/G                io.clj:   72
-                      clojure.java.io/fn                io.clj:  261
-                    clojure.java.io/fn/G                io.clj:   72
-                      clojure.java.io/fn                io.clj:  232
-          java.io.FileInputStream.&lt;init&gt;  FileInputStream.java:  152
-            java.io.FileInputStream.open  FileInputStream.java:  213
-           java.io.FileInputStream.open0  FileInputStream.java:     
+<pre><code>                               clojure.core/eval              core.clj: 3232
+                                             ...                           
+scicloj.clay.skip-if-unchanged-example/eval73558            REPL Input:     
+                                             ...                           
+                              clojure.core/slurp              core.clj: 7089 (repeats 2 times)
+                                             ...                           
+                          clojure.java.io/reader                io.clj:   89
+                          clojure.java.io/reader                io.clj:  105
+                            clojure.java.io/fn/G                io.clj:   72
+                              clojure.java.io/fn                io.clj:  168
+                            clojure.java.io/fn/G                io.clj:   72
+                              clojure.java.io/fn                io.clj:  261
+                            clojure.java.io/fn/G                io.clj:   72
+                              clojure.java.io/fn                io.clj:  232
+                  java.io.FileInputStream.&lt;init&gt;  FileInputStream.java:  152
+                    java.io.FileInputStream.open  FileInputStream.java:  213
+                   java.io.FileInputStream.open0  FileInputStream.java:     
 java.io.FileNotFoundException: /home/daslu/my-secret.txt (No such file or directory)
 
 </code></pre>
