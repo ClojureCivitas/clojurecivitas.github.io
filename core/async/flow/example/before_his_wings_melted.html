@@ -646,6 +646,21 @@ Claxxus initializing
 <div class="sourceClojure">
 <div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(flow/resume asynctopolis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> report-chan </span>(<span class="at">:report-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(async/poll! report-chan)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(flow/inject asynctopolis [<span class="at">:Tallystrix</span> <span class="at">:poke</span>] [<span class="va">true</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -656,25 +671,10 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Chronon transitioning :clojure.core.async.flow/resume
-Chronon running
+<pre><code>Randomius transitioning :clojure.core.async.flow/resume
+Talon, set flight!
 </code></pre>
 </div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> report-chan </span>(<span class="at">:report-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(async/poll! report-chan)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(flow/inject asynctopolis [<span class="at">:Tallystrix</span> <span class="at">:poke</span>] [<span class="va">true</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -692,11 +692,11 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transitioning :clojure.core.async.flow/resume
-Chronon transforms :alarm true to :out
-Randomius transitioning :clojure.core.async.flow/resume
-Talon, set flight!
+<pre><code>Chronon transitioning :clojure.core.async.flow/resume
+Chronon running
 Claxxus transitioning :clojure.core.async.flow/resume
+Tallystrix transitioning :clojure.core.async.flow/resume
+Tallystrix transforming :poke true
 </code></pre>
 </div>
 </div>
@@ -717,12 +717,12 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transforming :poke true
-Tallystrix transforming :stat abc1000
+<pre><code>Tallystrix transforming :stat abc1000
+SQUARK: 10
+Randomius transform 10 from :stat to :out
+Tallystrix transforming :stat 10
+Chronon transforms :alarm true to :out
 Tallystrix transforming :poke true
-SQUARK: 9
-Randomius transform 9 from :stat to :out
-Tallystrix transforming :stat 9
 </code></pre>
 </div>
 </div>
@@ -734,25 +734,11 @@ Tallystrix transforming :stat 9
 <div class="sourceClojure">
 <div class="sourceCode" id="cb23"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(flow/stop asynctopolis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-THREAD OUT
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<pre><code>Tallystrix transitioning :clojure.core.async.flow/stop
-</code></pre>
-</div>
-</div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb25"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb26"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>(Thread/sleep <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>(Thread/sleep <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -764,16 +750,17 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Chronon transitioning :clojure.core.async.flow/stop
+<pre><code>Randomius transitioning :clojure.core.async.flow/stop
+Talon, rest!
+Tallystrix transitioning :clojure.core.async.flow/stop
+Chronon transitioning :clojure.core.async.flow/stop
 Chronon rests.
 Claxxus transitioning :clojure.core.async.flow/stop
-Randomius transitioning :clojure.core.async.flow/stop
-Talon, rest!
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb28"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Icarus realized that Flow is a library for building concurrent, event-driven systems out of simple, communication-free functions. Processes connect through channels. You define the structure as a directed graph. Flow takes care of orchestration. Flows are data-driven, easy to inspect, reason about and visualize. Then he wondered just how high could he fly?</p>
 <p>Happy flowing, and keep your feathers waxed!</p>
