@@ -17,6 +17,6 @@
   :hide-info-line   false
   :quarto           []
   :flatten-targets  false
-  :keep-sync-root   false
-  :skip-if-unchanged true}}
-
+  :keep-sync-root   false}
+ :ci
+ {:keep-existing true}}

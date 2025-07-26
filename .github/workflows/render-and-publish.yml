@@ -39,7 +39,7 @@ jobs:
           restore-keys: cljdeps-
 
       - name: Build the content notebooks
-        run: clojure -M:clay -A:markdown
+        run: clojure -M:clay -A:markdown:ci
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2

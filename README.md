@@ -81,7 +81,7 @@ The published site goes through a longer process of producing markdown then HTML
 [Quarto](https://quarto.org/) is the markdown publishing tool.
 
 ```sh
-clojure -M:clay -A:markdown
+clojure -M:clay -A:markdown:ci
 ```
 
 ```sh
@@ -225,6 +225,14 @@ Future:
 * Regression testing would help when versions update.
 
 Goal: Minimize friction in authoring while ensuring publishable reproducibility.
+
+## Large data, slow calculations, private credentials
+
+If you add a qmd file under the `site` directory,
+it will prevent the source `clj` file from executing.
+This allows you to only run the code locally.
+
+See [Some notebooks should only be run locally](https://clojurecivitas.github.io/scicloj/clay/skip_if_unchanged_example.html) for more information.
 
 ## License
 
