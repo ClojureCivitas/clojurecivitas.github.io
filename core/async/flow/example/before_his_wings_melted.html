@@ -661,12 +661,6 @@ Claxxus initializing
 <div class="sourceClojure">
 <div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(flow/inject asynctopolis [<span class="at">:Tallystrix</span> <span class="at">:poke</span>] [<span class="va">true</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(flow/inject asynctopolis [<span class="at">:Tallystrix</span> <span class="at">:stat</span>] [<span class="st">"abc1000"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -677,14 +671,20 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Randomius transitioning :clojure.core.async.flow/resume
-Talon, set flight!
-Tallystrix transitioning :clojure.core.async.flow/resume
-Claxxus transitioning :clojure.core.async.flow/resume
+<pre><code>Tallystrix transitioning :clojure.core.async.flow/resume
 Chronon transitioning :clojure.core.async.flow/resume
 Chronon running
+Claxxus transitioning :clojure.core.async.flow/resume
+Randomius transitioning :clojure.core.async.flow/resume
+Talon, set flight!
 </code></pre>
 </div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(flow/inject asynctopolis [<span class="at">:Tallystrix</span> <span class="at">:stat</span>] [<span class="st">"abc1000"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -703,12 +703,14 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transforming :poke true
-Tallystrix transforming :stat abc1000
-SQUARK: 3
-Randomius transform 3 from :stat to :out
-Tallystrix transforming :stat 3
+<pre><code>SQUARK: 11
 Chronon transforms :alarm true to :out
+Randomius transform 11 from :stat to :out
+Tallystrix transforming :poke true
+Tallystrix transforming :stat abc1000
+Tallystrix transforming :stat 11
+Claxxus transforming :in {:val 11, :error :high}
+Alert:  {:val 11, :error :high}
 Tallystrix transforming :poke true
 </code></pre>
 </div>
@@ -737,12 +739,12 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transitioning :clojure.core.async.flow/stop
-Randomius transitioning :clojure.core.async.flow/stop
+<pre><code>Randomius transitioning :clojure.core.async.flow/stop
 Talon, rest!
-Claxxus transitioning :clojure.core.async.flow/stop
 Chronon transitioning :clojure.core.async.flow/stop
 Chronon rests.
+Claxxus transitioning :clojure.core.async.flow/stop
+Tallystrix transitioning :clojure.core.async.flow/stop
 </code></pre>
 </div>
 </div>
