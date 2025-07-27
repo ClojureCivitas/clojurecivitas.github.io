@@ -1,17 +1,14 @@
-^{:kindly/hide-code true
-  :clay
-  {:title  "Some Civitas notebooks should only be run locally"
-   :quarto {:author      :daslu
-            :description "A demonstration of our practice with some Civitas notebooks that cannot be run in GitHub Pages."
-            :image       "skip-if-unchanged.jpg"
-            :type        :post
-            :date        "2025-07-25"
-            :category    :clay
-            :tags        [:clay :workflow]
-            :draft       true}}}
+^{:clay {:title  "Some Clay notebooks should only be run locally"
+         :external-requirements ["my-secret.txt"]
+         :quarto {:author      :daslu
+                  :description "How to create notebooks with secrets, large files, and slow processes."
+                  :image       "skip-if-unchanged.jpg"
+                  :type        :post
+                  :date        "2025-07-25"
+                  :category    :clay
+                  :tags        [:clay :workflow]
+                  :draft       true}}}
 (ns scicloj.clay.skip-if-unchanged-example)
-
-;; (Work-In-Progress Draft)
 
 ;; Usually, when we wish to create Clojure Civitas posts, we enjoy the fact
 ;; that Civitas runs our notebooks in the GitHub Actions as it renders the website.
@@ -23,10 +20,10 @@
 ;; This notebook, for example, assumes that you have a local secrets file,
 ;; and it will not work without it!
 
-(slurp "/home/daslu/my-secret.txt")
+(slurp "temp/my-secret.txt")
 
 ;; If you are the author of such a notebook, the recommended practice is to
-;; render the notebook locally usinc Clay in Quarto `.qmd` format, and include
+;; render the notebook locally using Clay in Quarto `.qmd` format, and include
 ;; that file in your Pull Request.
 
 ;; The `.qmd` file is all that Civitas needs to include your notebook in the
@@ -50,9 +47,25 @@
   (clay/make! {:source-path "scicloj/clay/skip_if_unchanged_example.clj"
                :aliases [:markdown]}))
 
-
-
 ;; Now, need to `git add` the generated `qmd` file.
-;; Here is how.
 
-;; (WIP)
+;; ```sh
+;; git add -f site/scicloj/clay/skip_if_unchanged_example.clj
+;; ```
+
+;; Also we need to add some metadata to this namespace.
+;; Notice in the above namespace form there is:
+
+;; ```
+;; ^{:clay {:external-requirements ["my-secret.txt"] ...}...}
+;; ```
+
+;; That tells Clay that it should use the `.qmd` file instead of executing the notebook.
+;; When we commit and push, the site will be built from our `.qmd` file instead of `.clj` file.
+
+;; This approach works for credentials, large files,
+;; and slow processes which would otherwise cause the build process to be slow or fail.
+
+;; We hope this enables interesting use cases where providing reproducible code is important,
+;; while capturing just one specific execution of the code is valuable...
+;; such as an interactive session calling an LLM API which is saved as a static document.
