@@ -81,11 +81,19 @@ The published site goes through a longer process of producing markdown then HTML
 [Quarto](https://quarto.org/) is the markdown publishing tool.
 
 ```sh
-clojure -M:clay -A:markdown:ci
+clojure -M:clay -A:markdown
 ```
 
 ```sh
 quarto preview site
+```
+
+This will open a browser displaying the site locally.
+
+If you would like to preview a single file, then add the path relative to `src`:
+
+```sh
+clojure -M:clay -A:markdown games/beginning_to_build_a_browser_game.clj
 ```
 
 ### Publish
