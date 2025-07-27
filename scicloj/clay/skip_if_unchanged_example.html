@@ -8,9 +8,9 @@
 
 <meta name="author" content="Daniel Slutsky">
 <meta name="dcterms.date" content="2025-07-25">
-<meta name="description" content="A demonstration of our practice with some Civitas notebooks that cannot be run in GitHub Pages.">
+<meta name="description" content="How to create notebooks with secrets, large files, and slow processes.">
 
-<title>Some Civitas notebooks should only be run locally – Clojure Civitas</title>
+<title>Some Clay notebooks should only be run locally – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -114,8 +114,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:status" content="draft">
 
 
-<meta property="og:title" content="Some Civitas notebooks should only be run locally – Clojure Civitas">
-<meta property="og:description" content="A demonstration of our practice with some Civitas notebooks that cannot be run in GitHub Pages.">
+<meta property="og:title" content="Some Clay notebooks should only be run locally – Clojure Civitas">
+<meta property="og:description" content="How to create notebooks with secrets, large files, and slow processes.">
 <meta property="og:image" content="https://clojurecivitas.github.io/scicloj/clay/skip-if-unchanged.jpg">
 <meta property="og:site_name" content="Clojure Civitas">
 </head>
@@ -356,12 +356,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Some Civitas notebooks should only be run locally</h1>
+<h1 class="title">Some Clay notebooks should only be run locally</h1>
 </div>
 
 <div>
   <div class="description">
-    A demonstration of our practice with some Civitas notebooks that cannot be run in GitHub Pages.
+    How to create notebooks with secrets, large files, and slow processes.
   </div>
 </div>
 
@@ -409,37 +409,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="skip_if_unchanged_example_files/md-default0.js" type="text/javascript"></script>
-<script src="skip_if_unchanged_example_files/md-default1.js" type="text/javascript"></script>
-<p>(Work-In-Progress Draft)</p>
+<script src="skip_if_unchanged_example.qmd_files/md-default0.js" type="text/javascript"></script>
+<script src="skip_if_unchanged_example.qmd_files/md-default1.js" type="text/javascript"></script>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>^{<span class="at">:clay</span> {<span class="at">:title</span>  <span class="st">"Some Clay notebooks should only be run locally"</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">:external-requirements</span> [<span class="st">"my-secret.txt"</span>]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">:quarto</span> {<span class="at">:author</span>      <span class="at">:daslu</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:description</span> <span class="st">"How to create notebooks with secrets, large files, and slow processes."</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:image</span>       <span class="st">"skip-if-unchanged.jpg"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:type</span>        <span class="at">:post</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:date</span>        <span class="st">"2025-07-25"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:category</span>    <span class="at">:clay</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:tags</span>        [<span class="at">:clay</span> <span class="at">:workflow</span>]</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:draft</span>       <span class="va">true</span>}}}</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> scicloj.clay.skip-if-unchanged-example)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 <p>Usually, when we wish to create Clojure Civitas posts, we enjoy the fact that Civitas runs our notebooks in the GitHub Actions as it renders the website.</p>
 <p>While this is the default behavior, sometimes, we cannot expect our notebooks to be run in GitHub Actions. For example, they may depend on a local file or service.</p>
 <p>This notebook, for example, assumes that you have a local secrets file, and it will not work without it!</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">slurp</span> <span class="st">"/home/daslu/my-secret.txt"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">slurp</span> <span class="st">"temp/my-secret.txt"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="st">"this is my secret!!!!!</span><span class="sc">\n</span><span class="st">"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<p>If you are the author of such a notebook, the recommended practice is to render the notebook locally usinc Clay in Quarto <code>.qmd</code> format, and include that file in your Pull Request.</p>
-<p>The <code>.qmd</code> file is all that Civitas needs to include your notebook in the website. As long as the <code>.qmd</code> file is included in the PR, and is not older than your source <code>.clj</code> file, Civitas will just rely on it and not even try to generate it in GitHub Actions.</p>
-<p>To do that, you will need to make the file locally with a Quarto target.</p>
-<p>Here are two ways to do that:</p>
-<ol type="1">
-<li>Use the command line. Note that here, we use the path to the notebook, relative to <code>src</code>.</li>
-</ol>
-<div class="sourceCode" id="cb3"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">clojure</span> <span class="at">-M:clay</span> <span class="at">-A:markdown</span> scicloj/clay/skip_if_unchanged_example.clj</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<ol start="2" type="1">
-<li>… Or do the same in Clojure code.</li>
-</ol>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">comment</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">require</span> '[scicloj.clay.v2.api <span class="at">:as</span> clay])</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  (clay/make! {<span class="at">:source-path</span> <span class="st">"scicloj/clay/skip_if_unchanged_example.clj"</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">:aliases</span> [<span class="at">:markdown</span>]}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout-title-container flex-fill">
+temp/my-secret.txt (No such file or directory)
 </div>
-<p>Now, need to <code>git add</code> the generated <code>qmd</code> file. Here is how.</p>
-<p>(WIP)</p>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<pre><code>                               clojure.core/eval              core.clj: 3232
+                                             ...                           
+scicloj.clay.skip-if-unchanged-example/eval73554            REPL Input:     
+                                             ...                           
+                              clojure.core/slurp              core.clj: 7089 (repeats 2 times)
+                                             ...                           
+                          clojure.java.io/reader                io.clj:   89
+                          clojure.java.io/reader                io.clj:  105
+                            clojure.java.io/fn/G                io.clj:   72
+                              clojure.java.io/fn                io.clj:  168
+                            clojure.java.io/fn/G                io.clj:   72
+                              clojure.java.io/fn                io.clj:  261
+                            clojure.java.io/fn/G                io.clj:   72
+                              clojure.java.io/fn                io.clj:  232
+                  java.io.FileInputStream.&lt;init&gt;  FileInputStream.java:  152
+                    java.io.FileInputStream.open  FileInputStream.java:  213
+                   java.io.FileInputStream.open0  FileInputStream.java:     
+java.io.FileNotFoundException: temp/my-secret.txt (No such file or directory)
+
+</code></pre>
+</div>
+</div>
+</div>
 <div style="background-color:grey;height:2px;width:100%;"></div>
 <div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/scicloj/clay/skip_if_unchanged_example.clj">src/scicloj/clay/skip_if_unchanged_example.clj</a></small></small></pre></div>
 
