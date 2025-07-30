@@ -1,11 +1,14 @@
-{:base-target-path "temp"
- :base-source-path "src"
- :subdirs-to-sync  ["src"]
- :remote-repo      {:git-url "https://github.com/ClojureCivitas/clojurecivitas.github.io"
-                    :branch  "main"}
- :hide-info-line   true
- :hide-ui-header   true
- :config/transform civitas.db/expand-authors
+{:base-target-path   "temp"
+ :base-source-path   "src"
+ :quarto-target-path "site"
+ :quarto             []
+ :subdirs-to-sync    ["src"]
+ :keep-sync-root     false
+ :flatten-targets    false
+ :remote-repo        {:git-url "https://github.com/ClojureCivitas/clojurecivitas.github.io"
+                      :branch  "main"}
+ :hide-ui-header     true
+ :config/transform   civitas.db/expand-authors
  ;; :use-kindly-render true
 
  ;; aliases
@@ -13,8 +16,4 @@
  {:render           true
   :base-target-path "site"
   :format           [:quarto :html]
-  :run-quarto       false
-  :hide-info-line   false
-  :quarto           []
-  :flatten-targets  false
-  :keep-sync-root   false}}
+  :run-quarto       false}}
