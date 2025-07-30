@@ -666,7 +666,6 @@ THREAD OUT
 </div>
 <div class="callout-body-container callout-body">
 <pre><code>Randomius transitioning :clojure.core.async.flow/resume
-Talon, set flight!
 </code></pre>
 </div>
 </div>
@@ -686,11 +685,16 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Chronon transitioning :clojure.core.async.flow/resume
+<pre><code>Talon, set flight!
+SQUARK: 5
+Tallystrix transitioning :clojure.core.async.flow/resume
+Chronon transitioning :clojure.core.async.flow/resume
 Chronon running
 Claxxus transitioning :clojure.core.async.flow/resume
-SQUARK: 4
-Randomius transform 4 from :stat to :out
+Claxxus transforming :in :sandwich
+Alert:  :sandwich
+Randomius transform 5 from :stat to :out
+Chronon transforms :alarm true to :out
 </code></pre>
 </div>
 </div>
@@ -710,9 +714,7 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Chronon transforms :alarm true to :out
-Tallystrix transitioning :clojure.core.async.flow/resume
-Tallystrix transforming :stat 4
+<pre><code>Tallystrix transforming :poke true
 </code></pre>
 </div>
 </div>
@@ -733,7 +735,7 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transforming :poke true
+<pre><code>Tallystrix transforming :stat 5
 Tallystrix transforming :poke true
 Tallystrix transforming :stat abc1000
 </code></pre>
@@ -763,12 +765,12 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transitioning :clojure.core.async.flow/stop
-Randomius transitioning :clojure.core.async.flow/stop
+<pre><code>Randomius transitioning :clojure.core.async.flow/stop
 Talon, rest!
+Tallystrix transitioning :clojure.core.async.flow/stop
+Claxxus transitioning :clojure.core.async.flow/stop
 Chronon transitioning :clojure.core.async.flow/stop
 Chronon rests.
-Claxxus transitioning :clojure.core.async.flow/stop
 </code></pre>
 </div>
 </div>
