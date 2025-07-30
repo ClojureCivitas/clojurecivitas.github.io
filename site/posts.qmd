@@ -9,5 +9,6 @@ listing:
     - "title desc"
   sort-ui: true
   filter-ui: true
-  feed: true
+  feed:
+    type: metadata
 ---
