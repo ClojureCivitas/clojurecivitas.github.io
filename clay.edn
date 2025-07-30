@@ -13,6 +13,7 @@
 
  ;; aliases
  :markdown
- {:render         true
-  :format         [:quarto :html]
-  :run-quarto     false}}
+ {:render           true
+  :base-target-path "site"
+  :format           [:quarto :html]
+  :run-quarto       false}}
