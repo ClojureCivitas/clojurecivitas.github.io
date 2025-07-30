@@ -402,8 +402,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="what_if.qmd_files/md-default0.js" type="text/javascript"></script>
-<script src="what_if.qmd_files/md-default1.js" type="text/javascript"></script>
+<script src="what_if_files/md-default0.js" type="text/javascript"></script>
+<script src="what_if_files/md-default1.js" type="text/javascript"></script>
 <p>Most Clojure tutorials start out with sequence functions like <code>map</code>, <code>filter</code> etc, and then explain how to avoid some of the problems that lazy sequences can cause. Transducers tend to be introduced later as a more advanced topic, but I’d argue that they could (and should) be taught earlier, and instead treat lazy sequences as an advanced topic.</p>
 <p>What if… we were taught transducers first?</p>
 <p>We’re typically taught to use <code>map</code> or <code>filter</code> on a sequence or collection to produce a new sequence – and there’s often a comment that <code>map</code> applied to a vector does not produce a vector. With transducers, one of the key concepts is that the transformation is separated from the input and also from the output.</p>
@@ -491,7 +491,7 @@ Don’t know how to create ISeq from: java.lang.Long
 <div class="callout-body-container callout-body">
 <pre><code>                    clojure.core/eval    core.clj: 3232
                                   ...                 
-clojure.transducers.what-if/eval72738  REPL Input:     
+clojure.transducers.what-if/eval72753  REPL Input:     
                clojure.core/transduce    core.clj: 7025
                                   ...                 
               clojure.core/map/fn{x2}    core.clj: 2759
@@ -513,7 +513,7 @@ java.lang.IllegalArgumentException: Don't know how to create ISeq from: java.lan
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-Wrong number of args (1) passed to: clojure.transducers.what-if/eval72740/fn–72741
+Wrong number of args (1) passed to: clojure.transducers.what-if/eval72755/fn–72756
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
@@ -521,11 +521,11 @@ Wrong number of args (1) passed to: clojure.transducers.what-if/eval72740/fn–7
 <div class="callout-body-container callout-body">
 <pre><code>                    clojure.core/eval    core.clj: 3232
                                   ...                 
-clojure.transducers.what-if/eval72740  REPL Input:     
+clojure.transducers.what-if/eval72755  REPL Input:     
                clojure.core/transduce    core.clj: 7027
               clojure.core/map/fn{x2}    core.clj: 2757
                                   ...                 
-clojure.lang.ArityException: Wrong number of args (1) passed to: clojure.transducers.what-if/eval72740/fn--72741
+clojure.lang.ArityException: Wrong number of args (1) passed to: clojure.transducers.what-if/eval72755/fn--72756
 
 </code></pre>
 </div>
