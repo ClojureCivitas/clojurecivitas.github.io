@@ -53,3 +53,14 @@ jobs:
           path: site
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Send a stream message
+        uses: zulip/github-actions-zulip/send-message@v1
+        with:
+          api-key: ${{ secrets.ZULIP_API_KEY }}
+          email: "timothypratley@example.com"
+          organization-url: "https://org.zulipchat.com"
+          to: "150792"
+          type: "stream"
+          topic: "ClojureCivitas new posts"
+          content: "New update https://clojurecivitas.github.io/"
