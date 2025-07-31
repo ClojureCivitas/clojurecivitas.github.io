@@ -5,11 +5,11 @@ website:
   title: "Clojure Civitas"
   favicon: "favicon.ico"
   site-url: "https://clojurecivitas.github.io"
-  image: "images/civitas-icon.svg"
+  image: "/images/civitas-icon.svg"
   draft-mode: unlinked
   open-graph: true
   navbar:
-    logo: "images/civitas-icon.svg"
+    logo: "/images/civitas-icon.svg"
     logo-alt: "Clojure Civitas Logo"
     right:
       - about.qmd

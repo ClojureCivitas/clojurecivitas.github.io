@@ -6,7 +6,7 @@ color:
   tertiary:   "#A4C49C"    # Soft green (callouts, highlights)
 
 logo:
-  medium: images/civitas-icon.svg
+  medium: /images/civitas-icon.svg
 
 typography:
   fonts:
