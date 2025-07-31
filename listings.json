@@ -1,14 +1,8 @@
 [
   {
-    "listing": "/pages.html",
-    "items": [
-      "/civitas/explorer.html",
-      "/civitas/authors.html"
-    ]
-  },
-  {
     "listing": "/posts.html",
     "items": [
+      "/scicloj/clay/presenting_presentations-revealjs.html",
       "/scicloj/kindly_render/visualize_colls.html",
       "/scicloj/cfd/intro/linear_1d_convection_with_array.html",
       "/games/beginning_to_build_a_browser_game.html",
@@ -27,6 +21,13 @@
       "/scicloj/noj/intro/getting-started-noj.html",
       "/core/async/flow/example/before_his_wings_melted.html",
       "/core/async/flow/example/asynctopolis.html"
+    ]
+  },
+  {
+    "listing": "/pages.html",
+    "items": [
+      "/civitas/explorer.html",
+      "/civitas/authors.html"
     ]
   }
 ]

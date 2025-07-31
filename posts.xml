@@ -15,7 +15,16 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.32</generator>
-<lastBuildDate>Sun, 20 Jul 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Wed, 30 Jul 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title></title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/scicloj/clay/presenting_presentations-revealjs.html</link>
+  <description><![CDATA[  ]]></description>
+  <guid>https://clojurecivitas.github.io/scicloj/clay/presenting_presentations-revealjs.html</guid>
+  <pubDate>Wed, 30 Jul 2025 00:00:00 GMT</pubDate>
+  <media:content url="https://clojurecivitas.github.io/scicloj/clay/presenting_presentations.jpg" medium="image" type="image/jpeg"/>
+</item>
 <item>
   <title>Collections as grids with borders</title>
   <dc:creator>Timothy Pratley</dc:creator>
