@@ -15,7 +15,15 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.32</generator>
-<lastBuildDate>Wed, 30 Jul 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Fri, 01 Aug 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Macros, Matter, &amp; Malleability</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/games/macros_matter.html</link>
+  <description><![CDATA[ How to add UI components and ClojureScript to your Clojure namespace ]]></description>
+  <guid>https://clojurecivitas.github.io/games/macros_matter.html</guid>
+  <pubDate>Fri, 01 Aug 2025 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title></title>
   <dc:creator>Timothy Pratley</dc:creator>
