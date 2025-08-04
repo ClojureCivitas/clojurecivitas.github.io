@@ -15,7 +15,17 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.32</generator>
-<lastBuildDate>Fri, 01 Aug 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Mon, 04 Aug 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Macroexpand 2025 by Scicloj</title>
+  <dc:creator>Daniel Slutsky</dc:creator>
+  <dc:creator>Siyoung Byun</dc:creator>
+  <link>https://clojurecivitas.github.io/scicloj/macroexpand/macroexpand_2025.html</link>
+  <description><![CDATA[ Macroexpand 2025: A pair of conferences by Scicloj: Macroexpand-Noj and Macroexpand-Deep. Call for proposals is open! ]]></description>
+  <guid>https://clojurecivitas.github.io/scicloj/macroexpand/macroexpand_2025.html</guid>
+  <pubDate>Mon, 04 Aug 2025 00:00:00 GMT</pubDate>
+  <media:content url="https://clojurecivitas.github.io/scicloj/macroexpand/conf-logo.png" medium="image" type="image/png" height="92" width="144"/>
+</item>
 <item>
   <title>Macros, Matter, &amp; Malleability</title>
   <dc:creator>Timothy Pratley</dc:creator>
@@ -173,15 +183,6 @@
   <link>https://clojurecivitas.github.io/core/async/flow/example/before_his_wings_melted.html</link>
   <description><![CDATA[  ]]></description>
   <guid>https://clojurecivitas.github.io/core/async/flow/example/before_his_wings_melted.html</guid>
-  <pubDate>Thu, 01 May 2025 00:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Stats and Signals in the Flow of Asynctopolis</title>
-  <dc:creator>Alex Miller</dc:creator>
-  <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/core/async/flow/example/asynctopolis.html</link>
-  <description><![CDATA[  ]]></description>
-  <guid>https://clojurecivitas.github.io/core/async/flow/example/asynctopolis.html</guid>
   <pubDate>Thu, 01 May 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>

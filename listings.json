@@ -1,7 +1,15 @@
 [
   {
+    "listing": "/pages.html",
+    "items": [
+      "/civitas/explorer.html",
+      "/civitas/authors.html"
+    ]
+  },
+  {
     "listing": "/posts.html",
     "items": [
+      "/scicloj/macroexpand/macroexpand_2025.html",
       "/games/macros_matter.html",
       "/scicloj/clay/presenting_presentations-revealjs.html",
       "/scicloj/kindly_render/visualize_colls.html",
@@ -22,13 +30,6 @@
       "/scicloj/noj/intro/getting-started-noj.html",
       "/core/async/flow/example/before_his_wings_melted.html",
       "/core/async/flow/example/asynctopolis.html"
-    ]
-  },
-  {
-    "listing": "/pages.html",
-    "items": [
-      "/civitas/explorer.html",
-      "/civitas/authors.html"
     ]
   }
 ]
