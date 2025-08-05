@@ -7,10 +7,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Timothy Pratley">
-<meta name="dcterms.date" content="2025-08-01">
-<meta name="description" content="How to add UI components and ClojureScript to your Clojure namespace">
+<meta name="dcterms.date" content="2025-08-05">
+<meta name="description" content="Selective interaction with a persistent REPL sidebar inside your Clay documents">
 
-<title>Macros, Matter, &amp; Malleability – Clojure Civitas</title>
+<title>I’ll take a side of REPL with that – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -113,13 +113,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
 
 
-<meta property="og:title" content="Macros, Matter, &amp; Malleability – Clojure Civitas">
-<meta property="og:description" content="How to add UI components and ClojureScript to your Clojure namespace">
-<meta property="og:image" content="https://clojurecivitas.github.io/games/macros_matter.jpg">
+<meta property="og:title" content="I’ll take a side of REPL with that – Clojure Civitas">
+<meta property="og:description" content="Selective interaction with a persistent REPL sidebar inside your Clay documents">
+<meta property="og:image" content="https://clojurecivitas.github.io/civitas/repl-menu.webp">
 <meta property="og:site_name" content="Clojure Civitas">
 </head>
 
-<body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -345,26 +345,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
     
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content column-page" id="quarto-document-content">
 
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Macros, Matter, &amp; Malleability</h1>
+<h1 class="title">I’ll take a side of REPL with that</h1>
 </div>
 
 <div>
   <div class="description">
-    How to add UI components and ClojureScript to your Clojure namespace
+    Selective interaction with a persistent REPL sidebar inside your Clay documents
   </div>
 </div>
 
-<div class="quarto-title-meta-author">
+<div class="quarto-title-meta-author column-page">
   <div class="quarto-title-meta-heading">Author</div>
   <div class="quarto-title-meta-heading">Affiliation</div>
   
@@ -380,13 +380,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </div>
   </div>
 
-<div class="quarto-title-meta">
+<div class="quarto-title-meta column-page">
 
       
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 1, 2025</p>
+      <p class="date">August 5, 2025</p>
     </div>
   </div>
   
@@ -408,152 +408,180 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="macros_matter_files/md-default0.js" type="text/javascript"></script>
-<script src="macros_matter_files/md-default1.js" type="text/javascript"></script>
-<script src="macros_matter_files/reagent2.js" type="text/javascript"></script>
-<script src="macros_matter_files/reagent3.js" type="text/javascript"></script>
-<script src="macros_matter_files/reagent4.js" type="text/javascript"></script>
-<script src="macros_matter_files/reagent5.js" type="text/javascript"></script>
-<script src="macros_matter_files/reagent6.js" type="text/javascript"></script>
-<script src="macros_matter_files/reagent7.js" type="text/javascript"></script>
+<script src="repl_files/md-default0.js" type="text/javascript"></script>
+<script src="repl_files/md-default1.js" type="text/javascript"></script>
+<script src="repl_files/reagent2.js" type="text/javascript"></script>
+<script src="repl_files/reagent3.js" type="text/javascript"></script>
+<script src="repl_files/reagent4.js" type="text/javascript"></script>
+<script src="repl_files/reagent5.js" type="text/javascript"></script>
+<script src="repl_files/reagent6.js" type="text/javascript"></script>
+<script src="repl_files/reagent7.js" type="text/javascript"></script>
 <script type="application/x-scittle">(defn kindly-compute [input callback] (ajax.core/POST "/kindly-compute" {:headers {"Accept" "application/json"}, :params (pr-str input), :handler (fn [response] (-> response read-string callback)), :error-handler (fn [e] (.log js/console (str "error on compute: " e)))}))</script>
-<p>What if we embedded live UI and JavaScript logic directly into a Clojure namespace? Sounds wild? Let’s see how.</p>
-<p><a href="https://github.com/scicloj/clay">Clay</a> renders <a href="https://github.com/weavejester/hiccup">Hiccup</a> views, <a href="https://github.com/babashka/scittle">Scittle</a> executes ClojureScript in the browser, and <a href="https://reagent-project.github.io/">Reagent</a> enables components as functions. <code>kind/hiccup</code> is how we annotate forms to be rendered as HTML via Clay.</p>
-<p>Check out this mini-app for manipulating the Civitas logo.</p>
+<blockquote class="blockquote">
+<p>“Would you like to make that interactive?”</p>
+<p>– The eternal question facing documentation writers.</p>
+</blockquote>
+<p>Most code documentation has either static code with fixed results or dynamic editor blocks with evaluated results. This post explores a third option, a sidebar REPL that coexists with static examples, letting you copy interesting snippets and build on them.</p>
+<section id="persistent-workspace-benefits" class="level2">
+<h2 class="anchored" data-anchor-id="persistent-workspace-benefits">Persistent Workspace Benefits</h2>
+<p>The sidebar REPL mirrors the intuitive “one environment, one REPL” model, keeping state across interactions.</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>   '(<span class="bu">defonce</span><span class="fu"> state </span>(<span class="kw">atom</span> {}))</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>   '(<span class="kw">declare</span> reset explode)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:div#</span>app {<span class="at">:style</span> {<span class="at">:width</span> <span class="st">"100%"</span>}}]</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>   ['(<span class="kw">fn</span> []</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>       [<span class="at">:div</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        [<span class="at">:em</span> <span class="st">"Click and drag the hexagons"</span>]</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        [<span class="at">:div</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>         [<span class="at">:button</span> {<span class="at">:on-click</span> <span class="va">#'reset</span>} <span class="st">"reset"</span>]</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>         [<span class="at">:button</span> {<span class="at">:style</span> {<span class="at">:color</span> <span class="st">"red"</span>} <span class="at">:on-click</span> <span class="va">#'explode</span>} <span class="st">"explode"</span>]]])]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  '((<span class="kw">require</span> '[reagent.core <span class="at">:as</span> r])</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    (<span class="bu">defonce</span><span class="fu"> state </span>(r/atom {<span class="at">:zaniness</span> <span class="st">"moderate"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:mood</span> <span class="st">"curious"</span>}))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div><script type="application/x-scittle">(defonce state (atom {}))</script><script type="application/x-scittle">(declare reset explode)</script><div id="app" style="width:100%;"></div><div id="id4"><script type="application/x-scittle">(reagent.dom/render [(fn [] [:div [:em "Click and drag the hexagons"] [:div [:button {:on-click (var reset)} "reset"] [:button {:style {:color "red"}, :on-click (var explode)} "explode"]]])] (js/document.getElementById "id4"))</script></div></div>
-<p>Fun right?</p>
-<p>Notice that Clay accepts normal hiccup, but further treats forms as code, and function forms as components. We’ll get to the implementations of <code>reset</code>, <code>explode</code>, and the view setup later. But first I want to introduce you to the killer feature for this kind of code; Macros! Not just any macro, but the ultimate macro, <code>sneeze</code>.</p>
+<script type="application/x-scittle">(require (quote [reagent.core :as r]))</script><script type="application/x-scittle">(defonce state (r/atom {:zaniness "moderate", :mood "curious"}))</script>
+<p>We start with some initial mood and zaniness. Here’s a suggestion to modify it:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">swap!</span> state <span class="kw">assoc</span> <span class="at">:zaniness</span> <span class="st">"maximum"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Click the “copy” icon in the code example to transfer it to the REPL window.</p>
+</div>
+</div>
+<p>And now we’ll add to the post a mini-app for monitoring the state.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defmacro</span><span class="fu"> sneeze</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Generates Hiccup with a quasiquote-like templating syntax,</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="st">  enabling content insertion using unquote (~) and unquote-splicing (~@)."</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  [&amp; forms]</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  `(kind/hiccup ~(backtick/quote-fn <span class="kw">identity</span> forms)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div.card</span> {<span class="at">:style</span> {<span class="at">:margin</span> <span class="st">"20px 0"</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">:max-width</span> <span class="st">"600px"</span>}}</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:div.card-header.bg-success.text-white</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:h5.mb-0</span> <span class="st">"🔍 State Monitor"</span>]]</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:div.card-body</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:dl.row.mb-0</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>     [<span class="at">:dt.col-sm-3.text-end</span> <span class="st">"Current state:"</span>]</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>     [<span class="at">:dd.col-sm-9</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>      [<span class="at">:div.p-2.bg-light.border.rounded.font-monospace.small</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>       ['(<span class="kw">fn</span> [] (<span class="kw">pr-str</span> <span class="at">@state</span>))]]]</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>     [<span class="at">:dt.col-sm-3.text-end</span> <span class="st">"Instructions:"</span>]</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>     [<span class="at">:dd.col-sm-9.text-muted.small</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Try: "</span> [<span class="at">:div.sourceCode</span> [<span class="at">:code</span> <span class="st">"(swap! state assoc :key </span><span class="sc">\"</span><span class="st">value</span><span class="sc">\"</span><span class="st">)"</span>]] <span class="st">" in the REPL"</span>]]]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>This macro <code>sneeze</code> behaves just like <code>quote</code> but respects unquote and unquote-splicing. It also suggests that Clay treat the result as Hiccup, which further means that forms will be treated as Scittle. So it’s a convenient way to write hiccup that contains code, without quoting, and being able to mix in Clojure values with <code>~</code> and <code>~@</code>.</p>
+<div class="card" style="margin:20px 0;max-width:600px;"><div class="card-header bg-success text-white"><h5 class="mb-0 anchored">🔍 State Monitor</h5></div><div class="card-body"><dl class="row mb-0"><dt class="col-sm-3 text-end">Current state:</dt><dd class="col-sm-9"><div class="p-2 bg-light border rounded font-monospace small"><div id="id1"><script type="application/x-scittle">(reagent.dom/render [(fn [] (pr-str (clojure.core/deref state)))] (js/document.getElementById "id1"))</script></div></div></dd><dt class="col-sm-3 text-end">Instructions:</dt><dd class="col-sm-9 text-muted small">Try: <div class="sourceCode"><code>(swap! state assoc :key "value")</code></div> in the REPL</dd></dl></div></div>
+<p>The state you create in the REPL affects page components.</p>
+</section>
+<section id="curated-and-open-exploration" class="level2">
+<h2 class="anchored" data-anchor-id="curated-and-open-exploration">Curated and Open Exploration</h2>
+<p>Authors can provide focused examples for specific learning goals, while readers can pursue tangents. Here’s an example showcasing Clojure’s <code>frequencies</code> function with some delicious data:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(sneeze</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">defn</span><span class="fu"> my-component </span>[]</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:strong</span> ~(<span class="kw">str</span> <span class="st">"Wow, so random "</span> (<span class="kw">rand</span>))])</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div</span> [<span class="va">#'my-component</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">frequencies</span> [<span class="st">"apple"</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>              <span class="st">"banana"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>              <span class="st">"apple"</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>              <span class="st">"cherry"</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>              <span class="st">"banana"</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>              <span class="st">"apple"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<script type="application/x-scittle">(defn my-component [] [:strong "Wow, so random 0.4794049588365682"])</script><div><div id="id5"><script type="application/x-scittle">(reagent.dom/render [(var my-component)] (js/document.getElementById "id5"))</script></div></div>
-<p>This is weird right, why do we need <code>~</code>? Well, when we define <code>my-component</code> we are writing symbolic code. This is going to be interpreted in the browser, not in Clojure. We can conveniently insert calculations made in Clojure into our UI code. It’s like Scittle just inherited macros! That’s exciting… in a way JavaScript has inherited macros.</p>
-<p>Speaking of JavaScript, we need to bring in the MatterJS. MatterJS handles the physics simulation and rendering for our mini-app.</p>
+<div class="printedClojure">
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>{<span class="st">"apple"</span> <span class="dv">3</span>, <span class="st">"banana"</span> <span class="dv">2</span>, <span class="st">"cherry"</span> <span class="dv">1</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Try it with different data, maybe the letters in your name.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">frequencies</span> <span class="st">"supercalifragilisticexpialidocious"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Or simulate random selections:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">frequencies</span> (<span class="kw">repeatedly</span> <span class="dv">1000</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>                         #(<span class="kw">rand-nth</span> [<span class="at">:a</span> <span class="at">:b</span> <span class="at">:c</span> <span class="at">:d</span> <span class="at">:e</span> <span class="at">:f</span>])))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="visual-playground" class="level2">
+<h2 class="anchored" data-anchor-id="visual-playground">Visual Playground</h2>
+<p>The REPL can affect components on the page. This interactive canvas demonstrates how data can drive visual elements.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"</span>}])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div.card</span> {<span class="at">:style</span> {<span class="at">:margin</span> <span class="st">"20px 0"</span>}}</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:div.card-header.bg-primary.text-white</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:h5.mb-0</span> <span class="st">"🎨 Interactive Canvas"</span>]]</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:div.card-body</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:p.mb-3</span> <span class="st">"Shapes controlled by "</span> [<span class="at">:code</span> <span class="st">"@state"</span>] <span class="st">" — use the REPL to create and modify them."</span>]</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    ['(<span class="kw">fn</span> []</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>       [<span class="at">:svg</span> {<span class="at">:xmlns</span> <span class="st">"http://www.w3.org/2000/svg"</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>              <span class="at">:width</span> <span class="st">"100%"</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>              <span class="at">:height</span> <span class="st">"250px"</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>              <span class="at">:viewBox</span> <span class="st">"0 0 500 250"</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>              <span class="at">:style</span> {<span class="at">:border</span> <span class="st">"2px solid #dee2e6"</span> <span class="at">:border-radius</span> <span class="st">"4px"</span> <span class="at">:background</span> <span class="st">"#f8f9fa"</span>}}</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        <span class="co">;; Grid pattern</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        [<span class="at">:defs</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>         [<span class="at">:pattern</span> {<span class="at">:id</span> <span class="st">"grid"</span> <span class="at">:width</span> <span class="st">"50"</span> <span class="at">:height</span> <span class="st">"50"</span> <span class="at">:patternUnits</span> <span class="st">"userSpaceOnUse"</span>}</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>          [<span class="at">:path</span> {<span class="at">:d</span> <span class="st">"M 50 0 L 0 0 0 50"</span> <span class="at">:fill</span> <span class="st">"none"</span> <span class="at">:stroke</span> <span class="st">"#e9ecef"</span> <span class="at">:stroke-width</span> <span class="st">"1"</span>}]]]</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        [<span class="at">:rect</span> {<span class="at">:width</span> <span class="st">"500"</span> <span class="at">:height</span> <span class="st">"250"</span> <span class="at">:fill</span> <span class="st">"url(#grid)"</span>}]</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        <span class="co">;; Dynamic shapes from state</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">for</span> [{<span class="at">:keys</span> [<span class="kw">type</span> x y size color]} (<span class="at">:shapes</span> <span class="at">@state</span>)]</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>           (<span class="kw">case</span> <span class="kw">type</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>             <span class="at">:circle</span> [<span class="at">:circle</span> {<span class="at">:cx</span> x <span class="at">:cy</span> y <span class="at">:r</span> size <span class="at">:fill</span> color <span class="at">:stroke</span> <span class="st">"#333"</span> <span class="at">:stroke-width</span> <span class="dv">1</span>}]</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>             <span class="at">:square</span> [<span class="at">:rect</span> {<span class="at">:x</span> (<span class="kw">-</span> x size) <span class="at">:y</span> (<span class="kw">-</span> y size)</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:width</span> (<span class="kw">*</span> <span class="dv">2</span> size) <span class="at">:height</span> (<span class="kw">*</span> <span class="dv">2</span> size)</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:fill</span> color <span class="at">:stroke</span> <span class="st">"#333"</span> <span class="at">:stroke-width</span> <span class="dv">1</span>}]</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>             <span class="at">:triangle</span> [<span class="at">:polygon</span> {<span class="at">:points</span> (<span class="kw">str</span> x <span class="st">","</span> (<span class="kw">-</span> y size) <span class="st">" "</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>                                               (<span class="kw">-</span> x size) <span class="st">","</span> (<span class="kw">+</span> y size) <span class="st">" "</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>                                               (<span class="kw">+</span> x size) <span class="st">","</span> (<span class="kw">+</span> y size))</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">:fill</span> color <span class="at">:stroke</span> <span class="st">"#333"</span> <span class="at">:stroke-width</span> <span class="dv">1</span>}]</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>             <span class="va">nil</span>))])]]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
-<p>O.K. so here’s the code for the hexagons, notice toward the end the use of <code>~</code> to reuse Clojure code inside our Scittle code.</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(sneeze</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">;; Set up a MatterJS simulation to render to the `app` div.</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">def</span><span class="fu"> app </span>(js/document.getElementById <span class="st">"app"</span>))</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">def</span><span class="fu"> client-width </span>(.-clientWidth app))</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">def</span><span class="fu"> engine </span>(js/Matter.Engine.create (clj-&gt;js {<span class="at">:gravity</span> {<span class="at">:y</span> <span class="dv">0</span>}})))</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">def</span><span class="fu"> world-width </span><span class="dv">600</span>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">def</span><span class="fu"> w2 </span>(<span class="kw">/</span> world-width <span class="fl">2.0</span>))</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">def</span><span class="fu"> render </span>(js/Matter.Render.create (clj-&gt;js {<span class="at">:element</span> app</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                                                 <span class="at">:engine</span>  engine</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                                                 <span class="at">:options</span> {<span class="at">:wireframes</span> <span class="va">false</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                                                           <span class="at">:background</span> <span class="st">"rgba(0,0,128,0.05)"</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                                                           <span class="at">:hasBounds</span>  <span class="va">true</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>                                                           <span class="at">:width</span>      client-width</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                                                           <span class="at">:height</span>     client-width}})))</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">;; Bounds create a fixed coordinate system, similar to a view-box in SVG.</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  (set! (.. render -bounds -min -x) <span class="dv">0</span>)</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  (set! (.. render -bounds -min -y) <span class="dv">0</span>)</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  (set! (.. render -bounds -max -x) world-width)</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  (set! (.. render -bounds -max -y) world-width)</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">def</span><span class="fu"> mouse </span>(js/Matter.Mouse.create (.-canvas render)))</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [scale (<span class="kw">/</span> world-width client-width)]</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    (js/Matter.Mouse.setScale mouse (clj-&gt;js {<span class="at">:x</span> scale</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>                                              <span class="at">:y</span> scale})))</span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">def</span><span class="fu"> mouse-constraint </span>(js/Matter.MouseConstraint.create engine (clj-&gt;js {<span class="at">:mouse</span> mouse})))</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  (js/Matter.World.add (.-world engine) mouse-constraint)</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  (js/Matter.Render.run render)</span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">def</span><span class="fu"> runner </span>(js/Matter.Runner.create))</span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  (js/Matter.Runner.run runner engine)</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="co">;; Handle when the browser window dimensions change</span></span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  (js/window.addEventListener</span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>    <span class="st">"resize"</span></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">fn</span> []</span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">let</span> [w (.-clientWidth app)]</span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">-&gt;</span> render .-options .-width (set! w))</span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">-&gt;</span> render .-options .-height (set! w))</span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">-&gt;</span> render .-canvas .-width (set! w))</span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">-&gt;</span> render .-canvas .-height (set! w))</span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">let</span> [scale (<span class="kw">/</span> world-width w)]</span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>          (js/Matter.Mouse.setScale mouse (clj-&gt;js {<span class="at">:x</span> scale</span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>                                                    <span class="at">:y</span> scale})))</span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>        (js/Matter.Render.setPixelRatio render js/window.devicePixelRatio))))</span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>  <span class="co">;; Add some walls to keep everything inside the view</span></span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">defn</span><span class="fu"> create-boundaries </span>[width height thickness]</span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">let</span> [options (clj-&gt;js {<span class="at">:isStatic</span>    <span class="va">true</span></span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:restitution</span> <span class="fl">0.9</span></span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>                            <span class="at">:friction</span>    <span class="fl">0.1</span>})</span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>          x-mid (<span class="kw">/</span> width <span class="fl">2.0</span>)</span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>          y-mid (<span class="kw">/</span> height <span class="fl">2.0</span>)</span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>          t2 (<span class="kw">/</span> thickness <span class="fl">2.0</span>)]</span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">for</span> [[x y rw rh] [[(<span class="kw">-</span> <span class="dv">0</span> t2) y-mid thickness height]</span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>                         [(<span class="kw">+</span> width t2) y-mid thickness height]</span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>                         [x-mid (<span class="kw">-</span> <span class="dv">0</span> t2) width thickness]</span>
-<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>                         [x-mid (<span class="kw">+</span> height t2) width thickness]]]</span>
-<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>        (js/Matter.Bodies.rectangle x y rw rh options))))</span>
-<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>  (js/Matter.World.add (.-world engine)</span>
-<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>                       (clj-&gt;js (create-boundaries world-width world-width <span class="dv">500</span>)))</span>
-<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>  <span class="co">;; The Civitas logo consists of hexagons</span></span>
-<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">defn</span><span class="fu"> make-hexagon </span>[x y radius color]</span>
-<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>    (js/Matter.Bodies.polygon x y <span class="dv">6</span> radius</span>
-<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a>                              (clj-&gt;js {<span class="at">:restitution</span> <span class="fl">0.9</span></span>
-<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">:friction</span>    <span class="fl">0.1</span></span>
-<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">:render</span>      {<span class="at">:fillStyle</span> color}})))</span>
-<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>  <span class="co">;; Notice that we can make use of the colors from a different, Clojure namespace</span></span>
-<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [hexagons (<span class="kw">for</span> [[x y c] ~(<span class="kw">mapv</span> <span class="kw">conj</span> (geometry/hex <span class="dv">100</span>) db/get-colors)]</span>
-<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>                   (make-hexagon (<span class="kw">+</span> w2 x) (<span class="kw">+</span> w2 y) <span class="dv">50</span> c))]</span>
-<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a>    (js/Matter.World.add (.-world engine) (clj-&gt;js hexagons))</span>
-<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">swap!</span> state <span class="kw">assoc</span> <span class="at">:hexagons</span> hexagons))</span>
-<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>  <span class="co">;; These functions are attached to the on-click of the buttons</span></span>
-<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">defn</span><span class="fu"> reset </span>[]</span>
-<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">doseq</span> [[hex [x y]] (<span class="kw">map</span> <span class="kw">vector</span> (<span class="at">:hexagons</span> <span class="at">@state</span>) ~(<span class="kw">vec</span> (geometry/hex <span class="dv">100</span>)))]</span>
-<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>      (js/Matter.Body.setAngle hex <span class="dv">0</span>)</span>
-<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a>      (js/Matter.Body.setPosition hex (clj-&gt;js {<span class="at">:x</span> (<span class="kw">+</span> w2 x), <span class="at">:y</span> (<span class="kw">+</span> w2 y)}))))</span>
-<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>  (<span class="bu">defn</span><span class="fu"> explode </span>[]</span>
-<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">doseq</span> [hex (<span class="at">:hexagons</span> <span class="at">@state</span>)]</span>
-<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>      (js/Matter.Body.setVelocity hex (clj-&gt;js {<span class="at">:x</span> (<span class="kw">-</span> (<span class="kw">rand</span> <span class="dv">50</span>) <span class="dv">25</span>),</span>
-<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>                                                <span class="at">:y</span> (<span class="kw">-</span> (<span class="kw">rand</span> <span class="dv">50</span>) <span class="dv">25</span>)})))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="card" style="margin:20px 0;"><div class="card-header bg-primary text-white"><h5 class="mb-0 anchored">🎨 Interactive Canvas</h5></div><div class="card-body"><p class="mb-3">Shapes controlled by <code>@state</code> — use the REPL to create and modify them.</p><div id="id2"><script type="application/x-scittle">(reagent.dom/render [(fn [] [:svg {:xmlns "http://www.w3.org/2000/svg", :width "100%", :height "250px", :viewBox "0 0 500 250", :style {:border "2px solid #dee2e6", :border-radius "4px", :background "#f8f9fa"}} [:defs [:pattern {:id "grid", :width "50", :height "50", :patternUnits "userSpaceOnUse"} [:path {:d "M 50 0 L 0 0 0 50", :fill "none", :stroke "#e9ecef", :stroke-width "1"}]]] [:rect {:width "500", :height "250", :fill "url(#grid)"}] (for [{:keys [type x y size color]} (:shapes (clojure.core/deref state))] (case type :circle [:circle {:cx x, :cy y, :r size, :fill color, :stroke "#333", :stroke-width 1}] :square [:rect {:x (- x size), :y (- y size), :width (* 2 size), :height (* 2 size), :fill color, :stroke "#333", :stroke-width 1}] :triangle [:polygon {:points (str x "," (- y size) " " (- x size) "," (+ y size) " " (+ x size) "," (+ y size)), :fill color, :stroke "#333", :stroke-width 1}] nil))])] (js/document.getElementById "id2"))</script></div></div></div>
+<p>Add a single shape (maybe a tiny orange dot? 🟠):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">swap!</span> state <span class="kw">update</span> <span class="at">:shapes</span> <span class="kw">conj</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:type</span> <span class="at">:circle</span> <span class="at">:x</span> <span class="dv">250</span> <span class="at">:y</span> <span class="dv">200</span> <span class="at">:size</span> <span class="dv">15</span> <span class="at">:color</span> <span class="st">"#f39c12"</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<script type="application/x-scittle">(def app (js/document.getElementById "app"))</script><script type="application/x-scittle">(def client-width (.-clientWidth app))</script><script type="application/x-scittle">(def engine (js/Matter.Engine.create (clj->js {:gravity {:y 0}})))</script><script type="application/x-scittle">(def world-width 600)</script><script type="application/x-scittle">(def w2 (/ world-width 2.0))</script><script type="application/x-scittle">(def render (js/Matter.Render.create (clj->js {:element app, :options {:hasBounds true, :width client-width, :background "rgba(0,0,128,0.05)", :wireframes false, :height client-width}, :engine engine})))</script><script type="application/x-scittle">(set! (.. render -bounds -min -x) 0)</script><script type="application/x-scittle">(set! (.. render -bounds -min -y) 0)</script><script type="application/x-scittle">(set! (.. render -bounds -max -x) world-width)</script><script type="application/x-scittle">(set! (.. render -bounds -max -y) world-width)</script><script type="application/x-scittle">(def mouse (js/Matter.Mouse.create (.-canvas render)))</script><script type="application/x-scittle">(let [scale (/ world-width client-width)] (js/Matter.Mouse.setScale mouse (clj->js {:y scale, :x scale})))</script><script type="application/x-scittle">(def mouse-constraint (js/Matter.MouseConstraint.create engine (clj->js {:mouse mouse})))</script><script type="application/x-scittle">(js/Matter.World.add (.-world engine) mouse-constraint)</script><script type="application/x-scittle">(js/Matter.Render.run render)</script><script type="application/x-scittle">(def runner (js/Matter.Runner.create))</script><script type="application/x-scittle">(js/Matter.Runner.run runner engine)</script><script type="application/x-scittle">(js/window.addEventListener "resize" (fn [] (let [w (.-clientWidth app)] (-> render .-options .-width (set! w)) (-> render .-options .-height (set! w)) (-> render .-canvas .-width (set! w)) (-> render .-canvas .-height (set! w)) (let [scale (/ world-width w)] (js/Matter.Mouse.setScale mouse (clj->js {:y scale, :x scale}))) (js/Matter.Render.setPixelRatio render js/window.devicePixelRatio))))</script><script type="application/x-scittle">(defn create-boundaries [width height thickness] (let [options (clj->js {:isStatic true, :restitution 0.9, :friction 0.1}) x-mid (/ width 2.0) y-mid (/ height 2.0) t2 (/ thickness 2.0)] (for [[x y rw rh] [[(- 0 t2) y-mid thickness height] [(+ width t2) y-mid thickness height] [x-mid (- 0 t2) width thickness] [x-mid (+ height t2) width thickness]]] (js/Matter.Bodies.rectangle x y rw rh options))))</script><script type="application/x-scittle">(js/Matter.World.add (.-world engine) (clj->js (create-boundaries world-width world-width 500)))</script><script type="application/x-scittle">(defn make-hexagon [x y radius color] (js/Matter.Bodies.polygon x y 6 radius (clj->js {:render {:fillStyle color}, :restitution 0.9, :friction 0.1})))</script><script type="application/x-scittle">(let [hexagons (for [[x y c] [[100.0 0.0 "#E2F0CB"] [50.0 86.60254037844386 "#B5EAD7"] [-50.0 86.60254037844386 "#C7CEEA"] [-100.0 0.0 "#FF9AA2"] [-50.0 -86.60254037844386 "#FFB7B2"] [50.0 -86.60254037844386 "#FFDAC1"]]] (make-hexagon (+ w2 x) (+ w2 y) 50 c))] (js/Matter.World.add (.-world engine) (clj->js hexagons)) (swap! state assoc :hexagons hexagons))</script><script type="application/x-scittle">(defn reset [] (doseq [[hex [x y]] (map vector (:hexagons (clojure.core/deref state)) [[100.0 0.0] [50.0 86.60254037844386] [-50.0 86.60254037844386] [-100.0 0.0] [-50.0 -86.60254037844386] [50.0 -86.60254037844386]])] (js/Matter.Body.setAngle hex 0) (js/Matter.Body.setPosition hex (clj->js {:y (+ w2 y), :x (+ w2 x)}))))</script><script type="application/x-scittle">(defn explode [] (doseq [hex (:hexagons (clojure.core/deref state))] (js/Matter.Body.setVelocity hex (clj->js {:y (- (rand 50) 25), :x (- (rand 50) 25)}))))</script>
-<p>I’ll be the first to admit that this is a zany way to write code. But it’s a lot of fun, powerful, concise, and best of all is there is no setup. Everything is here in this one Clojure namespace. No build steps. I send my namespace to Clay and get a HTML page with Scittle baked in. It blends macros, UI, and JavaScript into a single file. For learning, tinkering, and demos, it’s a joy.</p>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Click the “copy” icon in the code example to transfer it to the REPL window, then press CTRL+Enter to eval.</p>
+</div>
+</div>
+<p>Add more shapes by modifying the <code>:shapes</code> vector:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">swap!</span> state <span class="kw">update</span> <span class="at">:shapes</span> <span class="kw">into</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  [{<span class="at">:type</span> <span class="at">:circle</span> <span class="at">:x</span> <span class="dv">100</span> <span class="at">:y</span> <span class="dv">100</span> <span class="at">:size</span> <span class="dv">30</span> <span class="at">:color</span> <span class="st">"#e74c3c"</span>}</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:type</span> <span class="at">:square</span> <span class="at">:x</span> <span class="dv">200</span> <span class="at">:y</span> <span class="dv">150</span> <span class="at">:size</span> <span class="dv">25</span> <span class="at">:color</span> <span class="st">"#3498db"</span>}</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:type</span> <span class="at">:triangle</span> <span class="at">:x</span> <span class="dv">350</span> <span class="at">:y</span> <span class="dv">100</span> <span class="at">:size</span> <span class="dv">40</span> <span class="at">:color</span> <span class="st">"#2ecc71"</span>}])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Generate a ✨random constellation✨:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">swap!</span> state <span class="kw">assoc</span> <span class="at">:shapes</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">repeatedly</span> <span class="dv">15</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    #(<span class="kw">hash-map</span> <span class="at">:type</span> (<span class="kw">rand-nth</span> [<span class="at">:circle</span> <span class="at">:square</span> <span class="at">:triangle</span>])</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">:x</span> (<span class="kw">rand-int</span> <span class="dv">500</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">:y</span> (<span class="kw">rand-int</span> <span class="dv">250</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">:size</span> (<span class="kw">+</span> <span class="dv">8</span> (<span class="kw">rand-int</span> <span class="dv">25</span>))</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>               <span class="at">:color</span> (<span class="kw">rand-nth</span> [<span class="st">"#e74c3c"</span> <span class="st">"#3498db"</span> <span class="st">"#2ecc71"</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"#f39c12"</span> <span class="st">"#9b59b6"</span> <span class="st">"#1abc9c"</span>]))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="the-full-development-experience" class="level2">
+<h2 class="anchored" data-anchor-id="the-full-development-experience">The Full Development Experience</h2>
+<p>While the sidebar REPL provides convenient experimentation for simple examples, the real power of <a href="https://github.com/scicloj/clay">Clay</a> is in working with the source code. Clone the <a href="https://github.com/clojurecivitas/clojurecivitas.github.io">repository</a> and open it in your editor to get the full interactive notebook experience. You can modify examples, create new namespaces, and contribute ideas back to the community. Add your own namespace under <code>src/</code> and it is published as a new post.</p>
+</section>
+<section id="sidebar-repl-usage" class="level2">
+<h2 class="anchored" data-anchor-id="sidebar-repl-usage">Sidebar REPL Usage</h2>
+<p>ClojureCivitas authors can require this namespace and enable the REPL sidebar:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">require</span> '[civitas.<span class="kw">repl</span> <span class="at">:as</span> <span class="kw">repl</span>])</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>(repl/scittle-sidebar)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Set <code>:page-layout :full</code> in the <code>:quarto</code> metadata to make best use of the available page space.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="macros_matter.jpg" class="img-fluid figure-img"></p>
-<figcaption>Hexagons escaping</figcaption>
+<p><img src="repl-menu.webp" class="img-fluid figure-img"></p>
+<figcaption>I’ll have the static examples with a side of REPL, thanks</figcaption>
 </figure>
 </div>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>I hope you enjoyed exploring this sidebar REPL approach. The sidebar REPL complements Clay’s strength of showing examples and results. Authors can intersperse static examples with outputs and interactive prompts for experimentation. The real magic happens when you clone this repository and work with the source code directly.</p>
+<p><strong>Ready to contribute?</strong> Add your own namespace under <code>src/</code> and it becomes a new post automatically.</p>
+<p><strong>Join the conversation:</strong> The best place to discuss this feature, share improvements, or ask questions is the <a href="https://clojurians.zulipchat.com/#narrow/channel/422115-clay-dev">Zulip: clay-dev channel</a></p>
+<p>Give it a try and let us know what you think! 🚀</p>
+<script type="application/x-scittle">(require (quote [reagent.core :as r]))</script><div id="id3"><script type="application/x-scittle">(reagent.dom/render [(fn [] (let [output-ref (atom nil) editor-ref (atom nil) show-editor? (r/atom true) layout (r/atom :right) repl-output (r/atom []) scroll-to-bottom! (fn* [] (when (clojure.core/deref output-ref) (js/setTimeout (fn [] (set! (.-scrollTop (clojure.core/deref output-ref)) (.-scrollHeight (clojure.core/deref output-ref)))) 10))) eval-code! (fn [code] (let [captured-output (atom []) result (binding [*print-fn* (fn* [p1__43000#] (swap! captured-output conj p1__43000#)) *print-err-fn* (fn* [p1__43001#] (swap! captured-output conj (str "ERR: " p1__43001#)))] (try (pr-str (js/scittle.core.eval_string code)) (catch :default e (str "Error: " (.-message e))))) output-str (when (seq (clojure.core/deref captured-output)) (clojure.string/join "" (clojure.core/deref captured-output)))] (swap! repl-output into (cond-> [(str "> " code)] output-str (conj output-str) :always (conj result))) (scroll-to-bottom!)))] (.addEventListener js/document "click" (fn [e] (when (clojure.core/deref editor-ref) (when-let [code-container (.. e -target (closest ".sourceCode"))] (when-let [code-element (.querySelector code-container "code")] (let [code-text (.-textContent code-element)] (set! (.-value (clojure.core/deref editor-ref)) code-text) (.focus (clojure.core/deref editor-ref)))))))) (fn [] (let [collapsed? (not (clojure.core/deref show-editor?)) is-bottom? (= (clojure.core/deref layout) :bottom) toggle! (fn* [] (swap! show-editor? not)) switch-layout! (fn* [] (reset! layout (if (= (clojure.core/deref layout) :right) :bottom :right))) collapsed-size "40px" full-size "350px"] [:<> [:div#scittle-sidebar.card.shadow-sm {:style (merge {:position "fixed", :z-index "1200", :display "flex", :flex-direction "column"} (if is-bottom? {:left "0", :right "0", :bottom "0", :height (if collapsed? collapsed-size full-size)} {:top "0", :right "0", :width (if collapsed? collapsed-size full-size), :height "100vh", :padding-top "77px"}))} (when (not collapsed?) [:div.d-flex.justify-content-between.align-items-center {:style {:flex "0 0 auto", :order "0"}} [:div.btn-group [:button.btn.btn-outline-primary.btn-sm {:on-click toggle!} (if is-bottom? [:i.bi.bi-chevron-bar-down] [:i.bi.bi-chevron-bar-right]) " Hide"] [:button.btn.btn-outline-secondary.btn-sm {:on-click switch-layout!} "↕ Switch Layout"]] [:small.text-muted "Ctrl+Enter to eval"]]) (when collapsed? [:button.btn.btn-outline-primary.w-100.h-100 {:on-click toggle!} (if is-bottom? [:i.bi.bi-chevron-bar-up] [:i.bi.bi-chevron-bar-left])]) (when (not collapsed?) [:div.card-body.p-0 {:style {:flex "1 1 auto", :order "1", :display "flex", :flex-direction (if is-bottom? "row" "column")}} [:div.position-relative {:style {:flex "1 1 0", :overflow "hidden"}} [:textarea.form-control.border-0 {:ref (fn* [p1__43002#] (reset! editor-ref p1__43002#)), :on-key-down (fn [e] (when (and (.-ctrlKey e) (= (.-key e) "Enter")) (eval-code! (.. e -target -value)))), :placeholder "Type Clojure code here...\nCtrl+Enter to evaluate\nClick copy buttons in code blocks to paste here", :style {:resize "none", :width "100%", :height "100%", :box-sizing "border-box", :font-family "var(--bs-font-monospace)", :font-size "0.875rem", :border-radius "0", :overflow-y "auto"}}]] [:div.position-relative {:style {:flex "1 1 0", :overflow "hidden"}} [:div.position-absolute.top-0.end-0.badge.bg-secondary.m-2 {:style {:font-size "0.65rem", :z-index "10"}} "Output"] [:div#repl-output.sourceCode.border-start {:ref (fn* [p1__43003#] (reset! output-ref p1__43003#)), :class (if is-bottom? "border-start" "border-top"), :style {:height "100%", :padding "0.75rem", :overflow-y "auto", :font-family "var(--bs-font-monospace)", :font-size "0.8125rem", :line-height "1.4"}} (for [[i output] (map-indexed vector (clojure.core/deref repl-output))] [:div.mb-1 {:key i} output])]]]) [:style (str (when (clojure.core/deref show-editor?) (if is-bottom? (str ".content { margin-bottom: " full-size " !important; }") (str ".content { margin-right: " full-size " !important; }"))))]]]))))] (js/document.getElementById "id3"))</script></div>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/games/macros_matter.clj">src/games/macros_matter.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/civitas/repl.clj">src/civitas/repl.clj</a></small></small></pre></div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

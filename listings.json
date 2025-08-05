@@ -9,6 +9,7 @@
   {
     "listing": "/posts.html",
     "items": [
+      "/civitas/repl.html",
       "/scicloj/macroexpand/macroexpand_2025.html",
       "/games/macros_matter.html",
       "/scicloj/clay/presenting_presentations-revealjs.html",

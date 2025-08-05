@@ -15,7 +15,15 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.32</generator>
-<lastBuildDate>Mon, 04 Aug 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 05 Aug 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>I’ll take a side of REPL with that</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/civitas/repl.html</link>
+  <description><![CDATA[ Selective interaction with a persistent REPL sidebar inside your Clay documents ]]></description>
+  <guid>https://clojurecivitas.github.io/civitas/repl.html</guid>
+  <pubDate>Tue, 05 Aug 2025 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Macroexpand 2025 by Scicloj</title>
   <dc:creator>Daniel Slutsky</dc:creator>
@@ -175,15 +183,6 @@
   <description><![CDATA[  ]]></description>
   <guid>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</guid>
   <pubDate>Tue, 06 May 2025 00:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>What He Saw Before His Wings Melted</title>
-  <dc:creator>Daniel Slutsky</dc:creator>
-  <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/core/async/flow/example/before_his_wings_melted.html</link>
-  <description><![CDATA[  ]]></description>
-  <guid>https://clojurecivitas.github.io/core/async/flow/example/before_his_wings_melted.html</guid>
-  <pubDate>Thu, 01 May 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
