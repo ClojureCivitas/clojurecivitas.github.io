@@ -24,3 +24,63 @@ div.quarto-post h3 a {
 .quarto-listing .quarto-post {
     border-bottom: none;
 }
+
+figcaption {
+  margin: auto;
+  text-align: center;
+}
+
+/* Add more breathing room throughout the site */
+
+/* Increase paragraph spacing */
+p {
+  margin-bottom: 1.2em;
+  line-height: 1.6;
+}
+
+/* More space around code blocks */
+pre {
+  margin: 1.5em 0;
+}
+
+/* Special handling for code blocks followed by output */
+/* Keep code and output connected but add space around the pair */
+.sourceCode + .cell-output,
+pre + .cell-output {
+  margin-top: 0.5em;
+  margin-bottom: 1.5em;
+}
+
+/* More space around horizontal rules */
+hr {
+  margin: 2em 0;
+  border: none;
+  border-top: 1px solid #ddd;
+}
+
+/* Add breathing room to list items */
+li {
+  margin-bottom: 0.5em;
+}
+
+/* More space around headings */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
+}
+
+/* First heading on page doesn't need top margin */
+h1:first-child, h2:first-child, h3:first-child {
+  margin-top: 0;
+}
+
+/* Add space around blockquotes */
+blockquote {
+  margin: 1.5em 0;
+  padding: 1em 1.5em;
+}
+
+/* Add space around tables */
+table {
+  margin: 1.5em 0;
+}
