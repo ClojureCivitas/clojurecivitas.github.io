@@ -9,6 +9,7 @@
   {
     "listing": "/posts.html",
     "items": [
+      "/clojure/tree_seq/depth_first_search.html",
       "/civitas/repl.html",
       "/scicloj/macroexpand/macroexpand_2025.html",
       "/games/macros_matter.html",

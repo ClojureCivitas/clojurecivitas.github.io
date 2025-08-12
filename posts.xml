@@ -14,8 +14,17 @@
 <title>Clojure Civitas</title>
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
-<generator>quarto-1.7.32</generator>
-<lastBuildDate>Tue, 05 Aug 2025 00:00:00 GMT</lastBuildDate>
+<generator>quarto-1.7.33</generator>
+<lastBuildDate>Mon, 11 Aug 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Depth-first search in Clojure (tree-seq)</title>
+  <dc:creator>Harold </dc:creator>
+  <link>https://clojurecivitas.github.io/clojure/tree_seq/depth_first_search.html</link>
+  <description><![CDATA[ Step-by-step development of a depth-first search, using tree-seq, to solve a classic puzzle. ]]></description>
+  <guid>https://clojurecivitas.github.io/clojure/tree_seq/depth_first_search.html</guid>
+  <pubDate>Mon, 11 Aug 2025 00:00:00 GMT</pubDate>
+  <media:content url="https://clojurecivitas.github.io/clojure/tree_seq/5q2.png" medium="image" type="image/png" height="144" width="144"/>
+</item>
 <item>
   <title>I’ll take a side of REPL with that</title>
   <dc:creator>Timothy Pratley</dc:creator>
@@ -175,14 +184,6 @@
   <guid>https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</guid>
   <pubDate>Sun, 25 May 2025 00:00:00 GMT</pubDate>
   <media:content url="https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z-combinator.jpg" medium="image" type="image/jpeg"/>
-</item>
-<item>
-  <title>Noj Reload Executable</title>
-  <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</link>
-  <description><![CDATA[  ]]></description>
-  <guid>https://clojurecivitas.github.io/scicloj/noj/intro/getting-started-noj.html</guid>
-  <pubDate>Tue, 06 May 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
