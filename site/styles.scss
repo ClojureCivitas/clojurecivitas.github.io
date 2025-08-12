@@ -32,6 +32,12 @@ figcaption {
 
 /* Add more breathing room throughout the site */
 
+/* More space around sub-headings */
+h2 {
+  margin-top: 1.5em !important;
+  margin-bottom: 0.8em !important;
+}
+
 /* Increase paragraph spacing */
 p {
   margin-bottom: 1.2em;
@@ -54,24 +60,11 @@ pre + .cell-output {
 /* More space around horizontal rules */
 hr {
   margin: 2em 0;
-  border: none;
-  border-top: 1px solid #ddd;
 }
 
 /* Add breathing room to list items */
 li {
   margin-bottom: 0.5em;
-}
-
-/* More space around headings */
-h1, h2, h3, h4, h5, h6 {
-  margin-top: 1.5em;
-  margin-bottom: 0.8em;
-}
-
-/* First heading on page doesn't need top margin */
-h1:first-child, h2:first-child, h3:first-child {
-  margin-top: 0;
 }
 
 /* Add space around blockquotes */
@@ -83,4 +76,9 @@ blockquote {
 /* Add space around tables */
 table {
   margin: 1.5em 0;
+}
+
+/* Add space between main headings and descriptions */
+#title-block-header.quarto-title-block.default .quarto-title .title {
+  margin-bottom: 0.5em;
 }
