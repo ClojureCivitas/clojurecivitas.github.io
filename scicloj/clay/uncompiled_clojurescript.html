@@ -554,6 +554,28 @@ Tip
 <div id="app2"><script src="uncompiled2.cljs" type="application/x-scittle"></script></div>
 <p>We replaced functions on the fly while our state lives on. The new code creates a fresh experience without losing where we were. Just like adding water to the pan.</p>
 </section>
+<section id="gotchas" class="level2">
+<h2 class="anchored" data-anchor-id="gotchas">Gotchas</h2>
+<p>Like any recipe, there are a few things to watch out for when cooking with Clay and Scittle. The main one is making sure you have all your ingredients (dependencies) ready.</p>
+<p>Choose one of these three ways to include your dependencies:</p>
+<ul>
+<li>Let Clay add them automatically when it sees you need them (like in this post’s first example)</li>
+<li>Explicitly request them by adding <code>:kindly/options {:html/deps [:scittle :reagent]}</code> to your namespace metadata</li>
+<li>Reference specific versions as JavaScript resources:</li>
+</ul>
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kindly/hide-code</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>(kindly/hiccup</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.js"</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:crossorigin</span> <span class="va">true</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"</span>}]</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:crossorigin</span> <span class="va">true</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"</span>}]</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.reagent.js"</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>If you see errors in th browser console like “reagent is not defined” or “Cannot read properties of undefined”, it usually means a dependencies isn’t loaded.</p>
+</section>
 <section id="why-go-light" class="level2">
 <h2 class="anchored" data-anchor-id="why-go-light">Why Go Light?</h2>
 <p>A Michelin-star kitchen is a marvel of efficiency. Sous chefs prepping ingredients, line cooks at their stations, everything precisely mise en place. That’s your typical ClojureScript setup. Build tools, asset compilation, development servers, and careful configuration.</p>
