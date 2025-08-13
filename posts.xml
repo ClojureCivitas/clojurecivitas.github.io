@@ -15,7 +15,15 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.33</generator>
-<lastBuildDate>Mon, 11 Aug 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Wed, 13 Aug 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>The Sandwich Approach to ClojureScript Development</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/scicloj/clay/uncompiled_clojurescript.html</link>
+  <description><![CDATA[ A lightweight way to cook with Clay and Scittle ]]></description>
+  <guid>https://clojurecivitas.github.io/scicloj/clay/uncompiled_clojurescript.html</guid>
+  <pubDate>Wed, 13 Aug 2025 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Depth-first search in Clojure (tree-seq)</title>
   <dc:creator>Harold </dc:creator>
@@ -174,16 +182,6 @@
   <description><![CDATA[  ]]></description>
   <guid>https://clojurecivitas.github.io/clojure/print_object/remove_extraneous.html</guid>
   <pubDate>Mon, 26 May 2025 00:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>The Z-Combinator Gambit</title>
-  <dc:creator>Chris Houser</dc:creator>
-  <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</link>
-  <description><![CDATA[  ]]></description>
-  <guid>https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z_combinator_gambit.html</guid>
-  <pubDate>Sun, 25 May 2025 00:00:00 GMT</pubDate>
-  <media:content url="https://clojurecivitas.github.io/code_interview/beating/with_stupid_stuff/z-combinator.jpg" medium="image" type="image/jpeg"/>
 </item>
 </channel>
 </rss>

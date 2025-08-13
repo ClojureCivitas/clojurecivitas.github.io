@@ -111,12 +111,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
-<meta name="quarto:status" content="draft">
 
 
 <meta property="og:title" content="The Sandwich Approach to ClojureScript Development – Clojure Civitas">
 <meta property="og:description" content="A lightweight way to cook with Clay and Scittle">
-<meta property="og:image" content="https://clojurecivitas.github.io/images/civitas-icon.svg">
+<meta property="og:image" content="https://clojurecivitas.github.io/scicloj/clay/uncompiled.jpg">
 <meta property="og:site_name" content="Clojure Civitas">
 </head>
 
@@ -294,7 +293,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
@@ -427,11 +426,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Clay lets us interleave plain Hiccup with Reagent/Scittle components:</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div</span> [<span class="at">:strong</span> <span class="st">"Hello from Hiccup"</span>]</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div</span> [<span class="at">:strong</span> <span class="st">"Hello from Hiccup (Clojure)"</span>]</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  ['(<span class="kw">fn</span> []</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      [<span class="at">:em</span> <span class="st">"Hello from Scittle/Reagent"</span>])]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      [<span class="at">:em</span> <span class="st">"Hello from Scittle/Reagent (ClojureScript)"</span>])]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div><strong>Hello from Hiccup</strong><div id="id6"><script type="application/x-scittle">(reagent.dom/render [(fn [] [:em "Hello from Scittle/Reagent"])] (js/document.getElementById "id6"))</script></div></div>
+<div><strong>Hello from Hiccup (Clojure)</strong><div id="id6"><script type="application/x-scittle">(reagent.dom/render [(fn [] [:em "Hello from Scittle/Reagent (ClojureScript)"])] (js/document.getElementById "id6"))</script></div></div>
 <p>But because Clay serves HTML, re-evaluating this namespace normally reloads the whole page. Wouldn’t it be great to get a Figwheel/shadow-cljs style experience where code updates in place?</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -459,12 +458,11 @@ Note
 <p><strong>uncompiled.cljs</strong>:</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> scicloj.clay.uncompiled</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [reagent.core <span class="at">:as</span> r]</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>            [reagent.dom <span class="at">:as</span> rdom]))</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>(rdom/render</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div</span> <span class="st">"hello from Scittle"</span>]</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a> (js/document.getElementById <span class="st">"app"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [reagent.dom <span class="at">:as</span> rdom]))</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>(rdom/render</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div</span> <span class="st">"Hello from a ClojureScript file (uncompiled.cljs)"</span>]</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a> (js/document.getElementById <span class="st">"app"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We need a target div for <code>uncompiled.cljs</code> to render into, and we load it via Scittle:</p>
 <div class="sourceClojure">
@@ -498,47 +496,85 @@ Tip
 </section>
 <section id="a-taste-test" class="level2">
 <h2 class="anchored" data-anchor-id="a-taste-test">A Taste Test</h2>
-<p>Let’s walk through a small example to see hot reload in action. I recommend copying these snippets into the <code>uncompiled.cljs</code> and saving as you go. First, we’ll set up our ingredients (app state):</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> my-app.core</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [reagent.core <span class="at">:as</span> r]))</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defonce</span><span class="fu"> app-state    </span><span class="co">; &lt;- defonce preserves state during reload</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  (r/atom {<span class="at">:style</span> <span class="st">"scrambled"</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>           <span class="at">:eggs</span> <span class="dv">2</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Let’s walk through a small example to see hot reload in action. I recommend copying these snippets into <code>uncompiled2.cljs</code> and saving as you go. First, we’ll set up our ingredients (app state):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> scicloj.clay.uncompiled2</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [reagent.core <span class="at">:as</span> r]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>            [reagent.dom <span class="at">:as</span> rdom]))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defonce</span><span class="fu"> app-state    </span><span class="co">; &lt;- defonce preserves state during reload</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  (r/atom {<span class="at">:style</span> <span class="st">"scrambled"</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>           <span class="at">:eggs</span> <span class="dv">2</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>Next, we’ll create a simple component to display our breakfast order:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> breakfast-order </span>[]</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:h3</span> <span class="st">"Breakfast Order"</span>]</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:p</span> <span class="st">"Style: "</span> (<span class="at">:style</span> <span class="at">@app-state</span>)]</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:p</span> <span class="st">"Eggs: "</span> (<span class="at">:eggs</span> <span class="at">@app-state</span>)]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>We can mount our new component on the <code>app</code> div.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(rdom/render</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  [breakfast-order]</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  (js/document.getElementById <span class="st">"app"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Just like our opening story, imagine the order changes mid-cook. We can update our component without losing the current state:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> breakfast-order </span>[]</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:h3</span> <span class="st">"Breakfast Order"</span>]</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:p</span> <span class="st">"Style: "</span> [<span class="at">:em</span> (<span class="at">:style</span> <span class="at">@app-state</span>)]]  <span class="co">; &lt;- added emphasis</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:p</span> <span class="st">"Eggs: "</span> (<span class="at">:eggs</span> <span class="at">@app-state</span>)]</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:small</span> <span class="st">"Water added for poaching..."</span>]])   <span class="co">; &lt;- new status line</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>Save the file, and voilà! The display updates while preserving the existing order details in app-state. No need to start over or lose your place in the cooking process.</p>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:p</span> <span class="st">"Eggs: "</span> (<span class="at">:eggs</span> <span class="at">@app-state</span>)]])</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>(rdom/render</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  [breakfast-order]</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  (js/document.getElementById <span class="st">"app2"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>We want to be able to change cooking styles.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> cycle-style </span>[]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">swap!</span> app-state <span class="kw">update</span> <span class="at">:style</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>         {<span class="st">"scrambled"</span> <span class="st">"fried"</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>          <span class="st">"fried"</span> <span class="st">"poached"</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>          <span class="st">"poached"</span> <span class="st">"scrambled"</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>And while we’re at it, let’s add controls for the number of eggs:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> add-egg </span>[]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">swap!</span> app-state <span class="kw">update</span> <span class="at">:eggs</span> <span class="kw">inc</span>))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> remove-egg </span>[]</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">swap!</span> app-state <span class="kw">update</span> <span class="at">:eggs</span> #(<span class="kw">max</span> <span class="dv">1</span> (<span class="kw">dec</span> <span class="va">%</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now we can update our component to use these functions.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> breakfast-order </span>[]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:h3</span> <span class="st">"Breakfast Order"</span>]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:div</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:p</span> <span class="st">"Style: "</span> [<span class="at">:strong</span> (<span class="at">:style</span> <span class="at">@app-state</span>)]]</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:button</span> {<span class="at">:onClick</span> cycle-style} <span class="st">"Change Style"</span>]]</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:div</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:p</span> <span class="st">"Eggs: "</span> (<span class="at">:eggs</span> <span class="at">@app-state</span>)]</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:button</span> {<span class="at">:onClick</span> remove-egg</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>              <span class="at">:disabled</span> (<span class="kw">=</span> <span class="dv">1</span> (<span class="at">:eggs</span> <span class="at">@app-state</span>))} <span class="st">"−"</span>]</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:button</span> {<span class="at">:onClick</span> add-egg} <span class="st">"+"</span>]]</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:div</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">case</span> (<span class="at">:style</span> <span class="at">@app-state</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>      <span class="st">"poached"</span> <span class="st">"Water added for poaching..."</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>      <span class="st">"fried"</span> <span class="st">"Turn n burn!"</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>      <span class="st">"scrambled"</span> <span class="st">"Whisking away..."</span>)]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>If you are running this locally, notice how we keep the same state while adding new features. Each time we save the ClojureScript file, our app updates but keeps its current state.</p>
+<p>Here’s the final result of our cooking:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div#</span>app2</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:type</span> <span class="st">"application/x-scittle"</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">:src</span> <span class="st">"uncompiled2.cljs"</span>}]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="app2"><script src="uncompiled2.cljs" type="application/x-scittle"></script></div>
+<p>We replaced functions on the fly while our state lives on. The new code creates a fresh experience without losing where we were. Just like adding water to the pan.</p>
 </section>
 <section id="why-go-light" class="level2">
 <h2 class="anchored" data-anchor-id="why-go-light">Why Go Light?</h2>
-<p>A Michelin-star kitchen is a marvel of efficiency. Sous chefs prepping ingredients, line cooks at their stations, everything precisely mise en place. That’s your typical ClojureScript setup: build tools, asset compilation, development servers, and careful configuration.</p>
-<p>But sometimes you just want to slap some cold cuts and cheese in a sandwich and start munching. That’s Scittle: quick, simple, and satisfying. No waiting for the kitchen to warm up, no cleanup afterward. Just write some code and see it work.</p>
+<p>A Michelin-star kitchen is a marvel of efficiency. Sous chefs prepping ingredients, line cooks at their stations, everything precisely mise en place. That’s your typical ClojureScript setup. Build tools, asset compilation, development servers, and careful configuration.</p>
+<p>But sometimes you just want to slap some cold cuts and cheese in a sandwich and start munching. That’s Scittle. Quick, simple, and satisfying. No waiting for the kitchen to warm up, no cleanup afterward. Write some code and see it work.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="uncompiled.jpg" class="img-fluid figure-img"></p>
+<figcaption>Sandwich creation workspace</figcaption>
+</figure>
+</div>
 </section>
 <section id="chefs-notes" class="level2">
 <h2 class="anchored" data-anchor-id="chefs-notes">Chef’s Notes</h2>
 <p>Clay blends the traditional with the experimental. Write a namespace, get a webpage. Add some Scittle, get interactive components.</p>
-<p>The magic happens in how Clay handles changes:</p>
+<p>Magic happens when Clay handles changes:</p>
 <ul>
-<li>For your narrative and page structure in Clojure live reload refreshes the whole view</li>
-<li>For your Scittle components hot reload updates just the code, keeping state alive</li>
+<li>For your narrative and page structure in Clojure, live reload refreshes the whole page</li>
+<li>For your Scittle components, hot reload updates only the code, keeping state alive</li>
 </ul>
-<p>This is especially sweet when you’re cooking up interactive elements like mini-games with matter.js. Tweak physics parameters or game logic, and watch them take effect instantly. Your game state, scores, and position all preserved.</p>
-<p>Remember how we started with those poached eggs? Maybe they were destined for a sandwich all along. That’s the beauty of this approach: start simple, stay flexible, and build exactly what you need. Clay lets you shape your story with markdown, spice it up with interactive widgets, and adjust the ingredients. That’s the kind of flow that keeps creative coding delicious.</p>
+<p>This is especially sweet when you’re cooking up mini-games with MatterJS. Tweak physics parameters or game logic, and watch them take effect as soon as you save.</p>
+<p>Remember how we started with those poached eggs? Maybe they were destined for a sandwich all along. That’s the beauty of this approach. Start simple, stay flexible, and build what you need. Clay lets you shape your story with markdown, spice it up with interactive widgets, and adjust the ingredients. That’s the kind of flow that keeps creative coding delicious.</p>
 <div style="background-color:grey;height:2px;width:100%;"></div>
 <div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/scicloj/clay/uncompiled_clojurescript.clj">src/scicloj/clay/uncompiled_clojurescript.clj</a></small></small></pre></div>
 

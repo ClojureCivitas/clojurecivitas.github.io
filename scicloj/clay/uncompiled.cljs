@@ -1,7 +1,6 @@
 (ns scicloj.clay.uncompiled
-  (:require [reagent.core :as r]
-            [reagent.dom :as rdom]))
+  (:require [reagent.dom :as rdom]))
 
 (rdom/render
- [:div "hello from Scittle"]
+ [:div "Hello from a ClojureScript file (uncompiled.cljs)"]
  (js/document.getElementById "app"))
