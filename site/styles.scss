@@ -32,8 +32,8 @@ figcaption {
 
 /* Add more breathing room throughout the site */
 
-/* More space around sub-headings */
-h2, h3 {
+/* More space around sub-headings, except in listings */
+h2:not(.listing-title), h3:not(.listing-title) {
   margin-top: 1.5em !important;
   margin-bottom: 0.8em !important;
 }
