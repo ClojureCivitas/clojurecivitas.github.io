@@ -6,8 +6,11 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Timothy Pratley">
+<meta name="dcterms.date" content="2025-08-13">
+<meta name="description" content="A lightweight way to cook with Clay and Scittle">
 
-<title>Pages – Clojure Civitas</title>
+<title>The Sandwich Approach to ClojureScript Development – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,33 +23,66 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./favicon.ico" rel="icon">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-4bb19fa9e15c342593cf81188a24865b.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-df1b66409fe65132821ef5fb472af056.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-9382e3f6a3e8b9de5602df5c90a73ad2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-df1b66409fe65132821ef5fb472af056.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../favicon.ico" rel="icon">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-4bb19fa9e15c342593cf81188a24865b.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-df1b66409fe65132821ef5fb472af056.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-9382e3f6a3e8b9de5602df5c90a73ad2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-df1b66409fe65132821ef5fb472af056.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -74,68 +110,12 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
-
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-title','listing-author','listing-image','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-title","listing-author","listing-image","listing-description"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
+<meta name="quarto:status" content="draft">
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<meta property="og:title" content="Pages – Clojure Civitas">
+<meta property="og:title" content="The Sandwich Approach to ClojureScript Development – Clojure Civitas">
+<meta property="og:description" content="A lightweight way to cook with Clay and Scittle">
 <meta property="og:image" content="https://clojurecivitas.github.io/images/civitas-icon.svg">
 <meta property="og:site_name" content="Clojure Civitas">
 </head>
@@ -314,14 +294,14 @@ window.Quarto = {
   </script>
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
+  <header id="quarto-header" class="headroom fixed-top"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./images/civitas-icon.svg" alt="" class="navbar-logo">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../images/civitas-icon.svg" alt="" class="navbar-logo">
     </a>
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Clojure Civitas</span>
     </a>
   </div>
@@ -332,19 +312,19 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./posts.html"> 
+    <a class="nav-link" href="../../posts.html"> 
 <span class="menu-text">Posts</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./civitas/authors.html"> 
+    <a class="nav-link" href="../../civitas/authors.html"> 
 <span class="menu-text">Authors</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./civitas/explorer.html"> 
+    <a class="nav-link" href="../../civitas/explorer.html"> 
 <span class="menu-text">Explorer</span></a>
   </li>  
   <li class="nav-item compact">
@@ -353,7 +333,7 @@ window.Quarto = {
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="./posts.xml"> <i class="bi bi-rss" role="img">
+    <a class="nav-link" href="../../posts.xml"> <i class="bi bi-rss" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -376,14 +356,40 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Pages</h1>
+<h1 class="title">The Sandwich Approach to ClojureScript Development</h1>
 </div>
 
+<div>
+  <div class="description">
+    A lightweight way to cook with Clay and Scittle
+  </div>
+</div>
 
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author"><a href="https://timothypratley.blogspot.com/p/httpswww.html">Timothy Pratley</a> <a href="mailto:timothypratley@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            <a href="https://hummi.app">
+            Hummi
+            </a>
+          </p>
+      </div>
+  </div>
 
 <div class="quarto-title-meta">
 
-    
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 13, 2025</p>
+    </div>
+  </div>
   
     
   </div>
@@ -393,72 +399,153 @@ window.Quarto = {
 </header>
 
 
-
-
-
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="listing-actions-group">
-   <div class="input-group input-group-sm quarto-listing-sort">
-    <span class="input-group-text"><i class="bi bi-sort-down"></i></span>
-    <select id="listing-listing-sort" class="form-select" aria-label="Order By" onchange="window['quarto-listings']['listing-listing'].sort(this.options[this.selectedIndex].value, { order: this.options[this.selectedIndex].getAttribute('data-direction')})">
-      <option value="" disabled="" selected="" hidden="">Order By</option>
-      <option value="index" data-direction="asc">Default</option>
-      <option value="listing-title" data-direction="asc">
-        Title
-      </option>
-      <option value="listing-author" data-direction="asc">
-        Author
-      </option>
-    </select>
-  </div>
-    <div class="input-group input-group-sm quarto-listing-filter">
-      <span class="input-group-text"><i class="bi bi-search"></i></span>
-      <input type="text" class="search form-control" placeholder="Filter">
-    </div>
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="uncompiled_clojurescript_files/md-default0.js" type="text/javascript"></script>
+<script src="uncompiled_clojurescript_files/md-default1.js" type="text/javascript"></script>
+<script src="uncompiled_clojurescript_files/reagent2.js" type="text/javascript"></script>
+<script src="uncompiled_clojurescript_files/reagent3.js" type="text/javascript"></script>
+<script src="uncompiled_clojurescript_files/reagent4.js" type="text/javascript"></script>
+<script src="uncompiled_clojurescript_files/reagent5.js" type="text/javascript"></script>
+<script src="uncompiled_clojurescript_files/reagent6.js" type="text/javascript"></script>
+<script src="uncompiled_clojurescript_files/reagent7.js" type="text/javascript"></script>
+<script type="application/x-scittle">(defn kindly-compute [input callback] (ajax.core/POST "/kindly-compute" {:headers {"Accept" "application/json"}, :params (pr-str input), :handler (fn [response] (-> response read-string callback)), :error-handler (fn [e] (.log js/console (str "error on compute: " e)))}))</script>
+<p>Imagine you’re making breakfast for your significant other one morning, you just cracked the eggs into a frypan and they call out “poached please”. What do you do? No need to start over, just add some water. That’s the spirit of hot reload; keep your state and adjust the functions.</p>
+<p>This kind of fluid adaptation is exactly what we want in our development workflow. Let’s see how to cook up that experience with two key ingredients.</p>
+<section id="the-main-ingredient-scittle" class="level2">
+<h2 class="anchored" data-anchor-id="the-main-ingredient-scittle">The Main Ingredient: Scittle</h2>
+<p><a href="https://github.com/babashka/scittle">Scittle</a> by the amazing <a href="https://github.com/borkdude">borkdude</a> is a ClojureScript interpreter that runs in the browser. No build step, no config, just static files. That makes it perfect to include in Clay notebooks like this one.</p>
+<p>When you’re hungry, do you always cook a gourmet meal? Sometimes you just want to make a quick sandwich—grab what you need, slap it together, and start eating. No prep work, no cleanup. That’s Scittle: quick, simple, satisfying ClojureScript without the ceremony. Sometimes you don’t need the full kitchen setup with build tools and configurations.</p>
+<p>Clay lets us interleave plain Hiccup with Reagent/Scittle components:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div</span> [<span class="at">:strong</span> <span class="st">"Hello from Hiccup"</span>]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  ['(<span class="kw">fn</span> []</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>      [<span class="at">:em</span> <span class="st">"Hello from Scittle/Reagent"</span>])]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-file-modified-sort="1755066056790" data-listing-reading-time-sort="3" data-listing-word-count-sort="590">
-<div class="thumbnail"><a href="./civitas/explorer.html" class="no-external">
-
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./civitas/explorer.html" class="no-external">Explorer</a>
-</h3>
-<div class="delink listing-description"><a href="./civitas/explorer.html" class="no-external">
-<link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet" type="text/css"> We need a database of Clojure learning resources.
-</a></div>
+<div><strong>Hello from Hiccup</strong><div id="id6"><script type="application/x-scittle">(reagent.dom/render [(fn [] [:em "Hello from Scittle/Reagent"])] (js/document.getElementById "id6"))</script></div></div>
+<p>But because Clay serves HTML, re-evaluating this namespace normally reloads the whole page. Wouldn’t it be great to get a Figwheel/shadow-cljs style experience where code updates in place?</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<div class="metadata">
-<a href="./civitas/explorer.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-listing-file-modified-sort="1755066053391" data-listing-reading-time-sort="2" data-listing-word-count-sort="221">
-<div class="thumbnail"><a href="./civitas/authors.html" class="no-external">
-
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-
-</a></div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./civitas/authors.html" class="no-external">Authors</a>
-</h3>
-<div class="delink listing-description"><a href="./civitas/authors.html" class="no-external">
-You belong here!
-</a></div>
-</div>
-<div class="metadata">
-<a href="./civitas/authors.html" class="no-external">
-</a>
+<div class="callout-title-container flex-fill">
+Note
 </div>
 </div>
+<div class="callout-body-container callout-body">
+<p>Hot Reloading injects only the modified code into the running application without restarting it entirely. This allows you to preserve state and treat the browser like a REPL.</p>
 </div>
-<div class="listing-no-matching d-none">No matching items</div>
-</div></main> <!-- /main -->
+</div>
+</section>
+<section id="the-inspiration-hot-reload-scittle" class="level2">
+<h2 class="anchored" data-anchor-id="the-inspiration-hot-reload-scittle">The Inspiration: Hot Reload Scittle</h2>
+<p><a href="https://github.com/chr15m">Chris McCormick</a> showed us something clever with <a href="https://github.com/chr15m/cljs-josh">cljs-josh</a>: Scittle code can be hot-reloaded. Here’s his demo:</p>
+<iframe allowfullscreen="allowfullscreen" src="https://www.youtube.com/embed/4tbjE0_W-58" width="100%"></iframe>
+<p>We’ll take that idea but do it the Clay way, using Clay’s live reload to manage our pages.</p>
+</section>
+<section id="clay-can-hot-reload-scittle" class="level2">
+<h2 class="anchored" data-anchor-id="clay-can-hot-reload-scittle">Clay Can Hot Reload Scittle</h2>
+<p>Here’s the code in our ClojureScript file:</p>
+<p><strong>uncompiled.cljs</strong>:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> scicloj.clay.uncompiled</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [reagent.core <span class="at">:as</span> r]</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>            [reagent.dom <span class="at">:as</span> rdom]))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>(rdom/render</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div</span> <span class="st">"hello from Scittle"</span>]</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a> (js/document.getElementById <span class="st">"app"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We need a target div for <code>uncompiled.cljs</code> to render into, and we load it via Scittle:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div#</span>app</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:type</span> <span class="st">"application/x-scittle"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">:src</span> <span class="st">"uncompiled.cljs"</span>}]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="app"><script src="uncompiled.cljs" type="application/x-scittle"></script></div>
+</section>
+<section id="turn-up-the-heat" class="level2">
+<h2 class="anchored" data-anchor-id="turn-up-the-heat">Turn Up the Heat</h2>
+<p>Time to get cooking! Clay needs <code>:live-reload true</code> to simmer. You can fire it up from the command line, via <a href="https://scicloj.github.io/clay/#setup">editor integration</a>, or drop this in your REPL:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">require</span> '[scicloj.clay.v2.snippets <span class="at">:as</span> snippets])</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>(snippets/watch! {})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Now whenever you save a <code>.cljs</code> file, the change is injected into the current Clay page without a full reload.</p>
+<p>If you prefer editor integration, bind a key to call <code>scicloj.clay.v2.server/scittle-eval-string!</code> on the current form.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>To take full advantage of hot reload with Reagent, use <code>defonce</code> for app state. This preserves atoms/ratoms across code swaps.</p>
+</div>
+</div>
+</section>
+<section id="a-taste-test" class="level2">
+<h2 class="anchored" data-anchor-id="a-taste-test">A Taste Test</h2>
+<p>Let’s walk through a small example to see hot reload in action. I recommend copying these snippets into the <code>uncompiled.cljs</code> and saving as you go. First, we’ll set up our ingredients (app state):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> my-app.core</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [reagent.core <span class="at">:as</span> r]))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defonce</span><span class="fu"> app-state    </span><span class="co">; &lt;- defonce preserves state during reload</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  (r/atom {<span class="at">:style</span> <span class="st">"scrambled"</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>           <span class="at">:eggs</span> <span class="dv">2</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Next, we’ll create a simple component to display our breakfast order:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> breakfast-order </span>[]</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:h3</span> <span class="st">"Breakfast Order"</span>]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:p</span> <span class="st">"Style: "</span> (<span class="at">:style</span> <span class="at">@app-state</span>)]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:p</span> <span class="st">"Eggs: "</span> (<span class="at">:eggs</span> <span class="at">@app-state</span>)]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>We can mount our new component on the <code>app</code> div.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(rdom/render</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  [breakfast-order]</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  (js/document.getElementById <span class="st">"app"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Just like our opening story, imagine the order changes mid-cook. We can update our component without losing the current state:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> breakfast-order </span>[]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:h3</span> <span class="st">"Breakfast Order"</span>]</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:p</span> <span class="st">"Style: "</span> [<span class="at">:em</span> (<span class="at">:style</span> <span class="at">@app-state</span>)]]  <span class="co">; &lt;- added emphasis</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:p</span> <span class="st">"Eggs: "</span> (<span class="at">:eggs</span> <span class="at">@app-state</span>)]</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:small</span> <span class="st">"Water added for poaching..."</span>]])   <span class="co">; &lt;- new status line</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Save the file, and voilà! The display updates while preserving the existing order details in app-state. No need to start over or lose your place in the cooking process.</p>
+</section>
+<section id="why-go-light" class="level2">
+<h2 class="anchored" data-anchor-id="why-go-light">Why Go Light?</h2>
+<p>A Michelin-star kitchen is a marvel of efficiency. Sous chefs prepping ingredients, line cooks at their stations, everything precisely mise en place. That’s your typical ClojureScript setup: build tools, asset compilation, development servers, and careful configuration.</p>
+<p>But sometimes you just want to slap some cold cuts and cheese in a sandwich and start munching. That’s Scittle: quick, simple, and satisfying. No waiting for the kitchen to warm up, no cleanup afterward. Just write some code and see it work.</p>
+</section>
+<section id="chefs-notes" class="level2">
+<h2 class="anchored" data-anchor-id="chefs-notes">Chef’s Notes</h2>
+<p>Clay blends the traditional with the experimental. Write a namespace, get a webpage. Add some Scittle, get interactive components.</p>
+<p>The magic happens in how Clay handles changes:</p>
+<ul>
+<li>For your narrative and page structure in Clojure live reload refreshes the whole view</li>
+<li>For your Scittle components hot reload updates just the code, keeping state alive</li>
+</ul>
+<p>This is especially sweet when you’re cooking up interactive elements like mini-games with matter.js. Tweak physics parameters or game logic, and watch them take effect instantly. Your game state, scores, and position all preserved.</p>
+<p>Remember how we started with those poached eggs? Maybe they were destined for a sandwich all along. That’s the beauty of this approach: start simple, stay flexible, and build exactly what you need. Clay lets you shape your story with markdown, spice it up with interactive widgets, and adjust the ingredients. That’s the kind of flow that keeps creative coding delicious.</p>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/scicloj/clay/uncompiled_clojurescript.clj">src/scicloj/clay/uncompiled_clojurescript.clj</a></small></small></pre></div>
+
+
+</section>
+
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
