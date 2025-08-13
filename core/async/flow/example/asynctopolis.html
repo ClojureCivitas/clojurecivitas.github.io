@@ -465,31 +465,32 @@ OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>SQUARK: 11
-SQUARK: 7
-SQUARK: 2
-SQUARK: 5
-SQUARK: 11
-SQUARK: 2
-SQUARK: 2
-SQUARK: 5
-SQUARK: 3
-SQUARK: 2
+<pre><code>SQUARK: 3
+SQUARK: 8
+SQUARK: 1
 SQUARK: 9
+SQUARK: 0
 SQUARK: 3
-SQUARK: 3
-SQUARK: 4
+SQUARK: 6
+SQUARK: 9
+SQUARK: 0
+SQUARK: 1
+SQUARK: 7
+SQUARK: 11
+SQUARK: 5
 SQUARK: 6
 SQUARK: 11
-SQUARK: 2
 SQUARK: 0
+SQUARK: 1
+SQUARK: 3
+SQUARK: 1
 SQUARK: 4
-SQUARK: 8
+SQUARK: 1
 </code></pre>
 </div>
 </div>
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
-               [{"y":[11,7,2,5,11,2,2,5,3,2,9,3,3,4,6,11,2,0,4,8],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"index","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sample","showgrid":true},"title":"The prey of Talon"}, {});</script></div>
+               [{"y":[3,8,1,9,0,3,6,9,0,1,7,11,5,6,11,0,1,3,1,4],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"index","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"sample","showgrid":true},"title":"The prey of Talon"}, {});</script></div>
 <p>You have sampled fairly, Talon.</p>
 <p>Talon operates at the behest of the city’s Generator.</p>
 <section id="meet-randomius-maximus-the-generator" class="level2">
@@ -590,7 +591,7 @@ OUT
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="at">@state</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:min</span> <span class="dv">10</span>, <span class="at">:max</span> <span class="dv">20</span>, <span class="at">:wait</span> <span class="dv">1</span>, <span class="at">:clojure.core.async.flow/in-ports</span> {<span class="at">:stat</span> #object [ManyToManyChannel]}, <span class="at">:flying</span> #object[clojure.lang.Atom <span class="bn">0x4ff8d448</span> {<span class="at">:status</span> <span class="at">:ready</span>, <span class="at">:val</span> <span class="va">false</span>}]}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:min</span> <span class="dv">10</span>, <span class="at">:max</span> <span class="dv">20</span>, <span class="at">:wait</span> <span class="dv">1</span>, <span class="at">:clojure.core.async.flow/in-ports</span> {<span class="at">:stat</span> #object [ManyToManyChannel]}, <span class="at">:flying</span> #object[clojure.lang.Atom <span class="bn">0x2bb5814e</span> {<span class="at">:status</span> <span class="at">:ready</span>, <span class="at">:val</span> <span class="va">false</span>}]}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Transition with order.</p>
 <div class="sourceClojure">
@@ -608,7 +609,6 @@ OUT
 <div class="callout-body-container callout-body">
 <pre><code>Randomius transitioning :clojure.core.async.flow/resume
 Talon, set flight!
-SQUARK: 10
 </code></pre>
 </div>
 </div>
@@ -617,7 +617,7 @@ SQUARK: 10
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:max</span> <span class="dv">20</span>,</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:wait</span> <span class="dv">1</span>,</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:clojure.core.async.flow/in-ports</span> {<span class="at">:stat</span> #object [ManyToManyChannel]},</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@4ff8d448:</span> false&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@2bb5814e:</span> false&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Talon is flying.</p>
 <div class="sourceClojure">
@@ -626,7 +626,7 @@ SQUARK: 10
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    (a/&lt;!!))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dv">10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dv">12</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Transform with purpose.</p>
 <div class="sourceClojure">
@@ -656,7 +656,7 @@ OUT
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:max</span> <span class="dv">20</span>,</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:wait</span> <span class="dv">1</span>,</span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:clojure.core.async.flow/in-ports</span> {<span class="at">:stat</span> #object [ManyToManyChannel]},</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@4ff8d448:</span> false&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@2bb5814e:</span> false&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>I see you wish to send a missive to <code>out</code>. Be wary in the future, send only numbers to those who seek stats.</p>
 <p>Well done, Randomius. You are a true citizen. Now rest.</p>
@@ -683,7 +683,7 @@ Talon, rest!
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:max</span> <span class="dv">20</span>,</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:wait</span> <span class="dv">1</span>,</span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:clojure.core.async.flow/in-ports</span> {<span class="at">:stat</span> #object [ManyToManyChannel]},</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@4ff8d448:</span> false&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:flying</span> #&lt;Atom<span class="at">@2bb5814e:</span> false&gt;}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="meet-tallystrix-the-whispering-aggregator" class="level2">
@@ -1096,19 +1096,14 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Chronon transitioning :clojure.core.async.flow/resume
-Chronon running
-Randomius transitioning :clojure.core.async.flow/resume
+<pre><code>Randomius transitioning :clojure.core.async.flow/resume
 Talon, set flight!
-SQUARK: 0
-Claxxus transitioning :clojure.core.async.flow/resume
+SQUARK: 11
+Randomius transform 11 from :stat to :out
 Tallystrix transitioning :clojure.core.async.flow/resume
-Randomius transform 0 from :stat to :out
-Chronon transforms :alarm true to :out
-Tallystrix transforming :stat 0
-Claxxus transforming :in {:val 0, :error :low}
-Alert:  {:val 0, :error :low}
-Tallystrix transforming :poke true
+Tallystrix transforming :stat 11
+Chronon transitioning :clojure.core.async.flow/resume
+Chronon running
 </code></pre>
 </div>
 </div>
@@ -1121,29 +1116,10 @@ Tallystrix transforming :poke true
 <div class="sourceCode" id="cb48"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>(a/poll! (<span class="at">:report-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb49"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:avg</span> <span class="fl">0.0</span>, <span class="at">:count</span> <span class="dv">1</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb49"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb50"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>(a/poll! (<span class="at">:report-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb51"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb52"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>(flow/inject flow [<span class="at">:Tallystrix</span> <span class="at">:poke</span>] [<span class="va">true</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb53"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb54"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>(a/poll! (<span class="at">:report-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb55"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Mischief is afoot.</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb56"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>(flow/inject flow [<span class="at">:Tallystrix</span> <span class="at">:stat</span>] [<span class="st">"abc1000"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1155,15 +1131,52 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transforming :poke true
+<pre><code>Claxxus transitioning :clojure.core.async.flow/resume
+Claxxus transforming :in {:val 11, :error :high}
+Alert:  {:val 11, :error :high}
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb58"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb52"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb59"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>(a/poll! (<span class="at">:error-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb53"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>(flow/inject flow [<span class="at">:Tallystrix</span> <span class="at">:poke</span>] [<span class="va">true</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb54"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb55"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>(a/poll! (<span class="at">:report-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+THREAD OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>Chronon transforms :alarm true to :out
+Tallystrix transforming :poke true
+Tallystrix transforming :poke true
+</code></pre>
+</div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb57"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:avg</span> <span class="fl">11.0</span>, <span class="at">:count</span> <span class="dv">1</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Mischief is afoot.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb58"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>(flow/inject flow [<span class="at">:Tallystrix</span> <span class="at">:stat</span>] [<span class="st">"abc1000"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb59"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb60"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>(a/poll! (<span class="at">:error-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1180,51 +1193,51 @@ THREAD OUT
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb61"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>#<span class="at">:clojure.core.async.flow</span>{<span class="at">:pid</span> <span class="at">:Tallystrix</span>,</span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:status</span> <span class="at">:running</span>,</span>
-<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:state</span></span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>                          {<span class="at">:min</span> <span class="dv">1</span>,</span>
-<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:max</span> <span class="dv">10</span>,</span>
-<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:clojure.core.async.flow/pid</span> <span class="at">:Tallystrix</span>,</span>
-<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:vals</span> []},</span>
-<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:count</span> <span class="dv">4</span>,</span>
-<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:cid</span> <span class="at">:stat</span>,</span>
-<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:msg</span> <span class="st">"abc1000"</span>,</span>
-<span id="cb61-11"><a href="#cb61-11" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:op</span> <span class="at">:step</span>,</span>
-<span id="cb61-12"><a href="#cb61-12" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:ex</span> #error {</span>
-<span id="cb61-13"><a href="#cb61-13" aria-hidden="true" tabindex="-1"></a> <span class="at">:cause</span> <span class="st">"class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
-<span id="cb61-14"><a href="#cb61-14" aria-hidden="true" tabindex="-1"></a> <span class="at">:via</span></span>
-<span id="cb61-15"><a href="#cb61-15" aria-hidden="true" tabindex="-1"></a> [{<span class="at">:type</span> java.util.concurrent.ExecutionException</span>
-<span id="cb61-16"><a href="#cb61-16" aria-hidden="true" tabindex="-1"></a>   <span class="at">:message</span> <span class="st">"java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
-<span id="cb61-17"><a href="#cb61-17" aria-hidden="true" tabindex="-1"></a>   <span class="at">:at</span> [java.util.concurrent.FutureTask <span class="kw">report</span> <span class="st">"FutureTask.java"</span> <span class="dv">122</span>]}</span>
-<span id="cb61-18"><a href="#cb61-18" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:type</span> java.lang.ClassCastException</span>
-<span id="cb61-19"><a href="#cb61-19" aria-hidden="true" tabindex="-1"></a>   <span class="at">:message</span> <span class="st">"class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
-<span id="cb61-20"><a href="#cb61-20" aria-hidden="true" tabindex="-1"></a>   <span class="at">:at</span> [clojure.lang.Numbers lt <span class="st">"Numbers.java"</span> <span class="dv">253</span>]}]</span>
-<span id="cb61-21"><a href="#cb61-21" aria-hidden="true" tabindex="-1"></a> <span class="at">:trace</span></span>
-<span id="cb61-22"><a href="#cb61-22" aria-hidden="true" tabindex="-1"></a> [[clojure.lang.Numbers lt <span class="st">"Numbers.java"</span> <span class="dv">253</span>]</span>
-<span id="cb61-23"><a href="#cb61-23" aria-hidden="true" tabindex="-1"></a>  [core.async.flow.example.asynctopolis$Tallystrix invokeStatic <span class="st">"NO_SOURCE_FILE"</span> <span class="dv">224</span>]</span>
-<span id="cb61-24"><a href="#cb61-24" aria-hidden="true" tabindex="-1"></a>  [core.async.flow.example.asynctopolis$Tallystrix invoke <span class="st">"NO_SOURCE_FILE"</span> <span class="dv">197</span>]</span>
-<span id="cb61-25"><a href="#cb61-25" aria-hidden="true" tabindex="-1"></a>  [clojure.lang.AFn applyToHelper <span class="st">"AFn.java"</span> <span class="dv">160</span>]</span>
-<span id="cb61-26"><a href="#cb61-26" aria-hidden="true" tabindex="-1"></a>  [clojure.lang.AFn applyTo <span class="st">"AFn.java"</span> <span class="dv">144</span>]</span>
-<span id="cb61-27"><a href="#cb61-27" aria-hidden="true" tabindex="-1"></a>  [clojure.lang.Var applyTo <span class="st">"Var.java"</span> <span class="dv">707</span>]</span>
-<span id="cb61-28"><a href="#cb61-28" aria-hidden="true" tabindex="-1"></a>  [clojure.core$apply invokeStatic <span class="st">"core.clj"</span> <span class="dv">667</span>]</span>
-<span id="cb61-29"><a href="#cb61-29" aria-hidden="true" tabindex="-1"></a>  [clojure.core$apply invoke <span class="st">"core.clj"</span> <span class="dv">662</span>]</span>
-<span id="cb61-30"><a href="#cb61-30" aria-hidden="true" tabindex="-1"></a>  [clojure.core.async.flow.impl$futurize$fn__52072$fn__52073 invoke <span class="st">"impl.clj"</span> <span class="dv">34</span>]</span>
-<span id="cb61-31"><a href="#cb61-31" aria-hidden="true" tabindex="-1"></a>  [clojure.lang.AFn call <span class="st">"AFn.java"</span> <span class="dv">18</span>]</span>
-<span id="cb61-32"><a href="#cb61-32" aria-hidden="true" tabindex="-1"></a>  [java.util.concurrent.FutureTask run <span class="st">"FutureTask.java"</span> <span class="dv">317</span>]</span>
-<span id="cb61-33"><a href="#cb61-33" aria-hidden="true" tabindex="-1"></a>  [java.util.concurrent.ThreadPoolExecutor runWorker <span class="st">"ThreadPoolExecutor.java"</span> <span class="dv">1144</span>]</span>
-<span id="cb61-34"><a href="#cb61-34" aria-hidden="true" tabindex="-1"></a>  [java.util.concurrent.ThreadPoolExecutor$Worker run <span class="st">"ThreadPoolExecutor.java"</span> <span class="dv">642</span>]</span>
-<span id="cb61-35"><a href="#cb61-35" aria-hidden="true" tabindex="-1"></a>  [java.lang.Thread run <span class="st">"Thread.java"</span> <span class="dv">1583</span>]]}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb62"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>#<span class="at">:clojure.core.async.flow</span>{<span class="at">:pid</span> <span class="at">:Tallystrix</span>,</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:status</span> <span class="at">:running</span>,</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:state</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>                          {<span class="at">:min</span> <span class="dv">1</span>,</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:max</span> <span class="dv">10</span>,</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:clojure.core.async.flow/pid</span> <span class="at">:Tallystrix</span>,</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>                           <span class="at">:vals</span> []},</span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:count</span> <span class="dv">4</span>,</span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:cid</span> <span class="at">:stat</span>,</span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:msg</span> <span class="st">"abc1000"</span>,</span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:op</span> <span class="at">:step</span>,</span>
+<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:ex</span> #error {</span>
+<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a> <span class="at">:cause</span> <span class="st">"class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
+<span id="cb62-14"><a href="#cb62-14" aria-hidden="true" tabindex="-1"></a> <span class="at">:via</span></span>
+<span id="cb62-15"><a href="#cb62-15" aria-hidden="true" tabindex="-1"></a> [{<span class="at">:type</span> java.util.concurrent.ExecutionException</span>
+<span id="cb62-16"><a href="#cb62-16" aria-hidden="true" tabindex="-1"></a>   <span class="at">:message</span> <span class="st">"java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
+<span id="cb62-17"><a href="#cb62-17" aria-hidden="true" tabindex="-1"></a>   <span class="at">:at</span> [java.util.concurrent.FutureTask <span class="kw">report</span> <span class="st">"FutureTask.java"</span> <span class="dv">122</span>]}</span>
+<span id="cb62-18"><a href="#cb62-18" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:type</span> java.lang.ClassCastException</span>
+<span id="cb62-19"><a href="#cb62-19" aria-hidden="true" tabindex="-1"></a>   <span class="at">:message</span> <span class="st">"class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')"</span></span>
+<span id="cb62-20"><a href="#cb62-20" aria-hidden="true" tabindex="-1"></a>   <span class="at">:at</span> [clojure.lang.Numbers lt <span class="st">"Numbers.java"</span> <span class="dv">253</span>]}]</span>
+<span id="cb62-21"><a href="#cb62-21" aria-hidden="true" tabindex="-1"></a> <span class="at">:trace</span></span>
+<span id="cb62-22"><a href="#cb62-22" aria-hidden="true" tabindex="-1"></a> [[clojure.lang.Numbers lt <span class="st">"Numbers.java"</span> <span class="dv">253</span>]</span>
+<span id="cb62-23"><a href="#cb62-23" aria-hidden="true" tabindex="-1"></a>  [core.async.flow.example.asynctopolis$Tallystrix invokeStatic <span class="st">"NO_SOURCE_FILE"</span> <span class="dv">224</span>]</span>
+<span id="cb62-24"><a href="#cb62-24" aria-hidden="true" tabindex="-1"></a>  [core.async.flow.example.asynctopolis$Tallystrix invoke <span class="st">"NO_SOURCE_FILE"</span> <span class="dv">197</span>]</span>
+<span id="cb62-25"><a href="#cb62-25" aria-hidden="true" tabindex="-1"></a>  [clojure.lang.AFn applyToHelper <span class="st">"AFn.java"</span> <span class="dv">160</span>]</span>
+<span id="cb62-26"><a href="#cb62-26" aria-hidden="true" tabindex="-1"></a>  [clojure.lang.AFn applyTo <span class="st">"AFn.java"</span> <span class="dv">144</span>]</span>
+<span id="cb62-27"><a href="#cb62-27" aria-hidden="true" tabindex="-1"></a>  [clojure.lang.Var applyTo <span class="st">"Var.java"</span> <span class="dv">707</span>]</span>
+<span id="cb62-28"><a href="#cb62-28" aria-hidden="true" tabindex="-1"></a>  [clojure.core$apply invokeStatic <span class="st">"core.clj"</span> <span class="dv">667</span>]</span>
+<span id="cb62-29"><a href="#cb62-29" aria-hidden="true" tabindex="-1"></a>  [clojure.core$apply invoke <span class="st">"core.clj"</span> <span class="dv">662</span>]</span>
+<span id="cb62-30"><a href="#cb62-30" aria-hidden="true" tabindex="-1"></a>  [clojure.core.async.flow.impl$futurize$fn__52072$fn__52073 invoke <span class="st">"impl.clj"</span> <span class="dv">34</span>]</span>
+<span id="cb62-31"><a href="#cb62-31" aria-hidden="true" tabindex="-1"></a>  [clojure.lang.AFn call <span class="st">"AFn.java"</span> <span class="dv">18</span>]</span>
+<span id="cb62-32"><a href="#cb62-32" aria-hidden="true" tabindex="-1"></a>  [java.util.concurrent.FutureTask run <span class="st">"FutureTask.java"</span> <span class="dv">317</span>]</span>
+<span id="cb62-33"><a href="#cb62-33" aria-hidden="true" tabindex="-1"></a>  [java.util.concurrent.ThreadPoolExecutor runWorker <span class="st">"ThreadPoolExecutor.java"</span> <span class="dv">1144</span>]</span>
+<span id="cb62-34"><a href="#cb62-34" aria-hidden="true" tabindex="-1"></a>  [java.util.concurrent.ThreadPoolExecutor$Worker run <span class="st">"ThreadPoolExecutor.java"</span> <span class="dv">642</span>]</span>
+<span id="cb62-35"><a href="#cb62-35" aria-hidden="true" tabindex="-1"></a>  [java.lang.Thread run <span class="st">"Thread.java"</span> <span class="dv">1583</span>]]}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Claxxus does not speak of such failures. He is for alerts. Thresholds breached, events of note, things the city must hear.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb62"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>(flow/inject flow [<span class="at">:Claxxus</span> <span class="at">:in</span>] [<span class="at">:sandwich</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb63"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>(flow/inject flow [<span class="at">:Claxxus</span> <span class="at">:in</span>] [<span class="at">:sandwich</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb63"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb64"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb64"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a>(Thread/sleep <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb65"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>(Thread/sleep <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1242,115 +1255,115 @@ Alert:  :sandwich
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb66"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb67"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Fluxus est graphum, fluxus est processus, fluxus est data.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb67"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>(datafy/datafy flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb68"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>(datafy/datafy flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb68"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:procs</span></span>
-<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:Randomius</span></span>
-<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:min</span> <span class="dv">0</span>, <span class="at">:max</span> <span class="dv">12</span>, <span class="at">:wait</span> <span class="dv">500</span>},</span>
-<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
-<span id="cb68-5"><a href="#cb68-5" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.asynctopolis/Randomius,</span>
-<span id="cb68-6"><a href="#cb68-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
-<span id="cb68-7"><a href="#cb68-7" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span></span>
-<span id="cb68-8"><a href="#cb68-8" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:min</span> <span class="st">"Min value to generate"</span>,</span>
-<span id="cb68-9"><a href="#cb68-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">:max</span> <span class="st">"Max value to generate"</span>,</span>
-<span id="cb68-10"><a href="#cb68-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">:wait</span> <span class="st">"Time in ms to wait between generating"</span>},</span>
-<span id="cb68-11"><a href="#cb68-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span> {<span class="at">:out</span> <span class="st">"Output channel for stats"</span>}}}},</span>
-<span id="cb68-12"><a href="#cb68-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">:Tallystrix</span></span>
-<span id="cb68-13"><a href="#cb68-13" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:min</span> <span class="dv">1</span>, <span class="at">:max</span> <span class="dv">10</span>},</span>
-<span id="cb68-14"><a href="#cb68-14" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
-<span id="cb68-15"><a href="#cb68-15" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.asynctopolis/Tallystrix,</span>
-<span id="cb68-16"><a href="#cb68-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
-<span id="cb68-17"><a href="#cb68-17" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span></span>
-<span id="cb68-18"><a href="#cb68-18" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:min</span> <span class="st">"Min value, alert if lower"</span>,</span>
-<span id="cb68-19"><a href="#cb68-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">:max</span> <span class="st">"Max value, alert if higher"</span>},</span>
-<span id="cb68-20"><a href="#cb68-20" aria-hidden="true" tabindex="-1"></a>     <span class="at">:ins</span></span>
-<span id="cb68-21"><a href="#cb68-21" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:stat</span> <span class="st">"Channel to receive stat values"</span>,</span>
-<span id="cb68-22"><a href="#cb68-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">:poke</span></span>
-<span id="cb68-23"><a href="#cb68-23" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Channel to poke when it is time to report a window of data to the log"</span>},</span>
-<span id="cb68-24"><a href="#cb68-24" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span></span>
-<span id="cb68-25"><a href="#cb68-25" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:alert</span></span>
-<span id="cb68-26"><a href="#cb68-26" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Notify of value out of range {:val value, :error :high|:low"</span>},</span>
-<span id="cb68-27"><a href="#cb68-27" aria-hidden="true" tabindex="-1"></a>     <span class="at">:workload</span> <span class="at">:compute</span>}}},</span>
-<span id="cb68-28"><a href="#cb68-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">:Chronon</span></span>
-<span id="cb68-29"><a href="#cb68-29" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:wait</span> <span class="dv">3000</span>},</span>
-<span id="cb68-30"><a href="#cb68-30" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
-<span id="cb68-31"><a href="#cb68-31" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.asynctopolis/Chronon,</span>
-<span id="cb68-32"><a href="#cb68-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
-<span id="cb68-33"><a href="#cb68-33" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span> {<span class="at">:wait</span> <span class="st">"Time to wait between pokes"</span>},</span>
-<span id="cb68-34"><a href="#cb68-34" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span></span>
-<span id="cb68-35"><a href="#cb68-35" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:out</span> <span class="st">"Poke channel, will send true when the alarm goes off"</span>}}}},</span>
-<span id="cb68-36"><a href="#cb68-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">:Claxxus</span></span>
-<span id="cb68-37"><a href="#cb68-37" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:prefix</span> <span class="st">"Alert: "</span>},</span>
-<span id="cb68-38"><a href="#cb68-38" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
-<span id="cb68-39"><a href="#cb68-39" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.asynctopolis/Claxxus,</span>
-<span id="cb68-40"><a href="#cb68-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
-<span id="cb68-41"><a href="#cb68-41" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span> {<span class="at">:prefix</span> <span class="st">"Log message prefix"</span>},</span>
-<span id="cb68-42"><a href="#cb68-42" aria-hidden="true" tabindex="-1"></a>     <span class="at">:ins</span> {<span class="at">:in</span> <span class="st">"Channel to receive messages"</span>}}},</span>
-<span id="cb68-43"><a href="#cb68-43" aria-hidden="true" tabindex="-1"></a>   <span class="at">:chan-opts</span></span>
-<span id="cb68-44"><a href="#cb68-44" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:in</span> {<span class="at">:buf-or-n</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">3</span>}}}}},</span>
-<span id="cb68-45"><a href="#cb68-45" aria-hidden="true" tabindex="-1"></a> <span class="at">:conns</span></span>
-<span id="cb68-46"><a href="#cb68-46" aria-hidden="true" tabindex="-1"></a> [[[<span class="at">:Randomius</span> <span class="at">:out</span>] [<span class="at">:Tallystrix</span> <span class="at">:stat</span>]]</span>
-<span id="cb68-47"><a href="#cb68-47" aria-hidden="true" tabindex="-1"></a>  [[<span class="at">:Chronon</span> <span class="at">:out</span>] [<span class="at">:Tallystrix</span> <span class="at">:poke</span>]]</span>
-<span id="cb68-48"><a href="#cb68-48" aria-hidden="true" tabindex="-1"></a>  [[<span class="at">:Tallystrix</span> <span class="at">:alert</span>] [<span class="at">:Claxxus</span> <span class="at">:in</span>]]],</span>
-<span id="cb68-49"><a href="#cb68-49" aria-hidden="true" tabindex="-1"></a> <span class="at">:execs</span> {<span class="at">:mixed</span> <span class="va">nil</span>, <span class="at">:io</span> <span class="va">nil</span>, <span class="at">:compute</span> <span class="va">nil</span>},</span>
-<span id="cb68-50"><a href="#cb68-50" aria-hidden="true" tabindex="-1"></a> <span class="at">:chans</span></span>
-<span id="cb68-51"><a href="#cb68-51" aria-hidden="true" tabindex="-1"></a> {<span class="at">:ins</span></span>
-<span id="cb68-52"><a href="#cb68-52" aria-hidden="true" tabindex="-1"></a>  {[<span class="at">:Tallystrix</span> <span class="at">:stat</span>]</span>
-<span id="cb68-53"><a href="#cb68-53" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb68-54"><a href="#cb68-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
-<span id="cb68-55"><a href="#cb68-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb68-56"><a href="#cb68-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}},</span>
-<span id="cb68-57"><a href="#cb68-57" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:Tallystrix</span> <span class="at">:poke</span>]</span>
-<span id="cb68-58"><a href="#cb68-58" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb68-59"><a href="#cb68-59" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
-<span id="cb68-60"><a href="#cb68-60" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb68-61"><a href="#cb68-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}},</span>
-<span id="cb68-62"><a href="#cb68-62" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:Claxxus</span> <span class="at">:in</span>]</span>
-<span id="cb68-63"><a href="#cb68-63" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb68-64"><a href="#cb68-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
-<span id="cb68-65"><a href="#cb68-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb68-66"><a href="#cb68-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">3</span>}}},</span>
-<span id="cb68-67"><a href="#cb68-67" aria-hidden="true" tabindex="-1"></a>  <span class="at">:outs</span></span>
-<span id="cb68-68"><a href="#cb68-68" aria-hidden="true" tabindex="-1"></a>  {[<span class="at">:Randomius</span> <span class="at">:out</span>]</span>
-<span id="cb68-69"><a href="#cb68-69" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb68-70"><a href="#cb68-70" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
-<span id="cb68-71"><a href="#cb68-71" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb68-72"><a href="#cb68-72" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}},</span>
-<span id="cb68-73"><a href="#cb68-73" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:Tallystrix</span> <span class="at">:alert</span>]</span>
-<span id="cb68-74"><a href="#cb68-74" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb68-75"><a href="#cb68-75" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
-<span id="cb68-76"><a href="#cb68-76" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb68-77"><a href="#cb68-77" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">3</span>}},</span>
-<span id="cb68-78"><a href="#cb68-78" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:Chronon</span> <span class="at">:out</span>]</span>
-<span id="cb68-79"><a href="#cb68-79" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb68-80"><a href="#cb68-80" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
-<span id="cb68-81"><a href="#cb68-81" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb68-82"><a href="#cb68-82" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}}},</span>
-<span id="cb68-83"><a href="#cb68-83" aria-hidden="true" tabindex="-1"></a>  <span class="at">:error</span></span>
-<span id="cb68-84"><a href="#cb68-84" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb68-85"><a href="#cb68-85" aria-hidden="true" tabindex="-1"></a>   <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb68-86"><a href="#cb68-86" aria-hidden="true" tabindex="-1"></a>   <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb68-87"><a href="#cb68-87" aria-hidden="true" tabindex="-1"></a>   <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">100</span>}},</span>
-<span id="cb68-88"><a href="#cb68-88" aria-hidden="true" tabindex="-1"></a>  <span class="at">:report</span></span>
-<span id="cb68-89"><a href="#cb68-89" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
-<span id="cb68-90"><a href="#cb68-90" aria-hidden="true" tabindex="-1"></a>   <span class="at">:take-count</span> <span class="dv">0</span>,</span>
-<span id="cb68-91"><a href="#cb68-91" aria-hidden="true" tabindex="-1"></a>   <span class="at">:closed</span>? <span class="va">false</span>,</span>
-<span id="cb68-92"><a href="#cb68-92" aria-hidden="true" tabindex="-1"></a>   <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">1</span>, <span class="at">:capacity</span> <span class="dv">100</span>}}}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb69"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:procs</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a> {<span class="at">:Randomius</span></span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:min</span> <span class="dv">0</span>, <span class="at">:max</span> <span class="dv">12</span>, <span class="at">:wait</span> <span class="dv">500</span>},</span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
+<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.asynctopolis/Randomius,</span>
+<span id="cb69-6"><a href="#cb69-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
+<span id="cb69-7"><a href="#cb69-7" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span></span>
+<span id="cb69-8"><a href="#cb69-8" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:min</span> <span class="st">"Min value to generate"</span>,</span>
+<span id="cb69-9"><a href="#cb69-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">:max</span> <span class="st">"Max value to generate"</span>,</span>
+<span id="cb69-10"><a href="#cb69-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">:wait</span> <span class="st">"Time in ms to wait between generating"</span>},</span>
+<span id="cb69-11"><a href="#cb69-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span> {<span class="at">:out</span> <span class="st">"Output channel for stats"</span>}}}},</span>
+<span id="cb69-12"><a href="#cb69-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">:Tallystrix</span></span>
+<span id="cb69-13"><a href="#cb69-13" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:min</span> <span class="dv">1</span>, <span class="at">:max</span> <span class="dv">10</span>},</span>
+<span id="cb69-14"><a href="#cb69-14" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
+<span id="cb69-15"><a href="#cb69-15" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.asynctopolis/Tallystrix,</span>
+<span id="cb69-16"><a href="#cb69-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
+<span id="cb69-17"><a href="#cb69-17" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span></span>
+<span id="cb69-18"><a href="#cb69-18" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:min</span> <span class="st">"Min value, alert if lower"</span>,</span>
+<span id="cb69-19"><a href="#cb69-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">:max</span> <span class="st">"Max value, alert if higher"</span>},</span>
+<span id="cb69-20"><a href="#cb69-20" aria-hidden="true" tabindex="-1"></a>     <span class="at">:ins</span></span>
+<span id="cb69-21"><a href="#cb69-21" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:stat</span> <span class="st">"Channel to receive stat values"</span>,</span>
+<span id="cb69-22"><a href="#cb69-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">:poke</span></span>
+<span id="cb69-23"><a href="#cb69-23" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Channel to poke when it is time to report a window of data to the log"</span>},</span>
+<span id="cb69-24"><a href="#cb69-24" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span></span>
+<span id="cb69-25"><a href="#cb69-25" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:alert</span></span>
+<span id="cb69-26"><a href="#cb69-26" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Notify of value out of range {:val value, :error :high|:low"</span>},</span>
+<span id="cb69-27"><a href="#cb69-27" aria-hidden="true" tabindex="-1"></a>     <span class="at">:workload</span> <span class="at">:compute</span>}}},</span>
+<span id="cb69-28"><a href="#cb69-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">:Chronon</span></span>
+<span id="cb69-29"><a href="#cb69-29" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:wait</span> <span class="dv">3000</span>},</span>
+<span id="cb69-30"><a href="#cb69-30" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
+<span id="cb69-31"><a href="#cb69-31" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.asynctopolis/Chronon,</span>
+<span id="cb69-32"><a href="#cb69-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
+<span id="cb69-33"><a href="#cb69-33" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span> {<span class="at">:wait</span> <span class="st">"Time to wait between pokes"</span>},</span>
+<span id="cb69-34"><a href="#cb69-34" aria-hidden="true" tabindex="-1"></a>     <span class="at">:outs</span></span>
+<span id="cb69-35"><a href="#cb69-35" aria-hidden="true" tabindex="-1"></a>     {<span class="at">:out</span> <span class="st">"Poke channel, will send true when the alarm goes off"</span>}}}},</span>
+<span id="cb69-36"><a href="#cb69-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">:Claxxus</span></span>
+<span id="cb69-37"><a href="#cb69-37" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:args</span> {<span class="at">:prefix</span> <span class="st">"Alert: "</span>},</span>
+<span id="cb69-38"><a href="#cb69-38" aria-hidden="true" tabindex="-1"></a>   <span class="at">:proc</span></span>
+<span id="cb69-39"><a href="#cb69-39" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:step</span> core.async.flow.example.asynctopolis/Claxxus,</span>
+<span id="cb69-40"><a href="#cb69-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">:desc</span></span>
+<span id="cb69-41"><a href="#cb69-41" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:params</span> {<span class="at">:prefix</span> <span class="st">"Log message prefix"</span>},</span>
+<span id="cb69-42"><a href="#cb69-42" aria-hidden="true" tabindex="-1"></a>     <span class="at">:ins</span> {<span class="at">:in</span> <span class="st">"Channel to receive messages"</span>}}},</span>
+<span id="cb69-43"><a href="#cb69-43" aria-hidden="true" tabindex="-1"></a>   <span class="at">:chan-opts</span></span>
+<span id="cb69-44"><a href="#cb69-44" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:in</span> {<span class="at">:buf-or-n</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">3</span>}}}}},</span>
+<span id="cb69-45"><a href="#cb69-45" aria-hidden="true" tabindex="-1"></a> <span class="at">:conns</span></span>
+<span id="cb69-46"><a href="#cb69-46" aria-hidden="true" tabindex="-1"></a> [[[<span class="at">:Randomius</span> <span class="at">:out</span>] [<span class="at">:Tallystrix</span> <span class="at">:stat</span>]]</span>
+<span id="cb69-47"><a href="#cb69-47" aria-hidden="true" tabindex="-1"></a>  [[<span class="at">:Chronon</span> <span class="at">:out</span>] [<span class="at">:Tallystrix</span> <span class="at">:poke</span>]]</span>
+<span id="cb69-48"><a href="#cb69-48" aria-hidden="true" tabindex="-1"></a>  [[<span class="at">:Tallystrix</span> <span class="at">:alert</span>] [<span class="at">:Claxxus</span> <span class="at">:in</span>]]],</span>
+<span id="cb69-49"><a href="#cb69-49" aria-hidden="true" tabindex="-1"></a> <span class="at">:execs</span> {<span class="at">:mixed</span> <span class="va">nil</span>, <span class="at">:io</span> <span class="va">nil</span>, <span class="at">:compute</span> <span class="va">nil</span>},</span>
+<span id="cb69-50"><a href="#cb69-50" aria-hidden="true" tabindex="-1"></a> <span class="at">:chans</span></span>
+<span id="cb69-51"><a href="#cb69-51" aria-hidden="true" tabindex="-1"></a> {<span class="at">:ins</span></span>
+<span id="cb69-52"><a href="#cb69-52" aria-hidden="true" tabindex="-1"></a>  {[<span class="at">:Tallystrix</span> <span class="at">:stat</span>]</span>
+<span id="cb69-53"><a href="#cb69-53" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb69-54"><a href="#cb69-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
+<span id="cb69-55"><a href="#cb69-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb69-56"><a href="#cb69-56" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}},</span>
+<span id="cb69-57"><a href="#cb69-57" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:Tallystrix</span> <span class="at">:poke</span>]</span>
+<span id="cb69-58"><a href="#cb69-58" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb69-59"><a href="#cb69-59" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
+<span id="cb69-60"><a href="#cb69-60" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb69-61"><a href="#cb69-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}},</span>
+<span id="cb69-62"><a href="#cb69-62" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:Claxxus</span> <span class="at">:in</span>]</span>
+<span id="cb69-63"><a href="#cb69-63" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb69-64"><a href="#cb69-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
+<span id="cb69-65"><a href="#cb69-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb69-66"><a href="#cb69-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">3</span>}}},</span>
+<span id="cb69-67"><a href="#cb69-67" aria-hidden="true" tabindex="-1"></a>  <span class="at">:outs</span></span>
+<span id="cb69-68"><a href="#cb69-68" aria-hidden="true" tabindex="-1"></a>  {[<span class="at">:Randomius</span> <span class="at">:out</span>]</span>
+<span id="cb69-69"><a href="#cb69-69" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb69-70"><a href="#cb69-70" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
+<span id="cb69-71"><a href="#cb69-71" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb69-72"><a href="#cb69-72" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}},</span>
+<span id="cb69-73"><a href="#cb69-73" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:Tallystrix</span> <span class="at">:alert</span>]</span>
+<span id="cb69-74"><a href="#cb69-74" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb69-75"><a href="#cb69-75" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
+<span id="cb69-76"><a href="#cb69-76" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb69-77"><a href="#cb69-77" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">3</span>}},</span>
+<span id="cb69-78"><a href="#cb69-78" aria-hidden="true" tabindex="-1"></a>   [<span class="at">:Chronon</span> <span class="at">:out</span>]</span>
+<span id="cb69-79"><a href="#cb69-79" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb69-80"><a href="#cb69-80" aria-hidden="true" tabindex="-1"></a>    <span class="at">:take-count</span> <span class="dv">1</span>,</span>
+<span id="cb69-81"><a href="#cb69-81" aria-hidden="true" tabindex="-1"></a>    <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb69-82"><a href="#cb69-82" aria-hidden="true" tabindex="-1"></a>    <span class="at">:buffer</span> {<span class="at">:type</span> FixedBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">10</span>}}},</span>
+<span id="cb69-83"><a href="#cb69-83" aria-hidden="true" tabindex="-1"></a>  <span class="at">:error</span></span>
+<span id="cb69-84"><a href="#cb69-84" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb69-85"><a href="#cb69-85" aria-hidden="true" tabindex="-1"></a>   <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb69-86"><a href="#cb69-86" aria-hidden="true" tabindex="-1"></a>   <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb69-87"><a href="#cb69-87" aria-hidden="true" tabindex="-1"></a>   <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">0</span>, <span class="at">:capacity</span> <span class="dv">100</span>}},</span>
+<span id="cb69-88"><a href="#cb69-88" aria-hidden="true" tabindex="-1"></a>  <span class="at">:report</span></span>
+<span id="cb69-89"><a href="#cb69-89" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:put-count</span> <span class="dv">0</span>,</span>
+<span id="cb69-90"><a href="#cb69-90" aria-hidden="true" tabindex="-1"></a>   <span class="at">:take-count</span> <span class="dv">0</span>,</span>
+<span id="cb69-91"><a href="#cb69-91" aria-hidden="true" tabindex="-1"></a>   <span class="at">:closed</span>? <span class="va">false</span>,</span>
+<span id="cb69-92"><a href="#cb69-92" aria-hidden="true" tabindex="-1"></a>   <span class="at">:buffer</span> {<span class="at">:type</span> SlidingBuffer, <span class="at">:count</span> <span class="dv">1</span>, <span class="at">:capacity</span> <span class="dv">100</span>}}}}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The flow may coordinate peace.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb69"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>(flow/pause flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb70"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>(flow/pause flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb70"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb71"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb71"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>(Thread/sleep <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb72"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>(Thread/sleep <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1362,28 +1375,28 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Randomius transitioning :clojure.core.async.flow/pause
+<pre><code>Tallystrix transitioning :clojure.core.async.flow/pause
 Claxxus transitioning :clojure.core.async.flow/pause
+Randomius transitioning :clojure.core.async.flow/pause
+Talon, rest!
 Chronon transitioning :clojure.core.async.flow/pause
 Chronon rests.
-Talon, rest!
-Tallystrix transitioning :clojure.core.async.flow/pause
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb73"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb74"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Pax optima rerum.</p>
 <p>The flow may cease.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb74"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>(flow/stop flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb75"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>(flow/stop flow)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb75"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb76"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb76"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>(Thread/sleep <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb77"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>(Thread/sleep <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1395,15 +1408,15 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Randomius transitioning :clojure.core.async.flow/stop
-Tallystrix transitioning :clojure.core.async.flow/stop
+<pre><code>Tallystrix transitioning :clojure.core.async.flow/stop
 Chronon transitioning :clojure.core.async.flow/stop
+Randomius transitioning :clojure.core.async.flow/stop
 Claxxus transitioning :clojure.core.async.flow/stop
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb78"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb79"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The city falls silent.</p>
 <p>Thus does Asynctopolis coordinate, thus is Vita Processus observed.</p>
