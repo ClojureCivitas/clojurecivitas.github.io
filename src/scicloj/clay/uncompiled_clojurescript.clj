@@ -24,9 +24,11 @@
 ;; No build step, no config, just static files. That makes it perfect to include in Clay notebooks like this one.
 
 ;; When you're hungry, do you always cook a gourmet meal?
-;; Sometimes you just want to make a quick sandwich—grab what you need,
-;; slap it together, and start eating. No prep work, no cleanup.
-;; That's Scittle: quick, simple, satisfying ClojureScript without the ceremony.
+;; Sometimes you just want to make a quick sandwich.
+;; Grab what you need, slap it together, and start eating.
+;; No prep work, no cleanup.
+;; That's Scittle.
+;; Quick, simple, satisfying ClojureScript without the ceremony.
 ;; Sometimes you don't need the full kitchen setup with build tools and configurations.
 
 ;; Clay lets us interleave plain Hiccup with Reagent/Scittle components:
