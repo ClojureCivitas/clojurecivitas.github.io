@@ -80,9 +80,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-df1b66409fe65132821ef5fb472af056.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-9382e3f6a3e8b9de5602df5c90a73ad2.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-df1b66409fe65132821ef5fb472af056.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-5d54f96dbb2a747cf0b02f8707cc9e44.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-cd88e637282679883cc6d66ed968e918.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-5d54f96dbb2a747cf0b02f8707cc9e44.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -450,7 +450,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:strong</span> ~(<span class="kw">str</span> <span class="st">"Wow, so random "</span> (<span class="kw">rand</span>))])</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div</span> [<span class="va">#'my-component</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<script type="application/x-scittle">(defn my-component [] [:strong "Wow, so random 0.09813730721752922"])</script><div><div id="id5"><script type="application/x-scittle">(reagent.dom/render [(var my-component)] (js/document.getElementById "id5"))</script></div></div>
+<script type="application/x-scittle">(defn my-component [] [:strong "Wow, so random 0.9901607606003304"])</script><div><div id="id5"><script type="application/x-scittle">(reagent.dom/render [(var my-component)] (js/document.getElementById "id5"))</script></div></div>
 <p>This is weird right, why do we need <code>~</code>? Well, when we define <code>my-component</code> we are writing symbolic code. This is going to be interpreted in the browser, not in Clojure. We can conveniently insert calculations made in Clojure into our UI code. It’s like Scittle just inherited macros! That’s exciting… in a way JavaScript has inherited macros.</p>
 <p>Speaking of JavaScript, we need to bring in the MatterJS. MatterJS handles the physics simulation and rendering for our mini-app.</p>
 <div class="sourceClojure">
