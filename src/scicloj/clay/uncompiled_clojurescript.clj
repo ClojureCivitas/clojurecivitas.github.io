@@ -196,14 +196,12 @@
 ;; ^:kindly/hide-code
 ;; (kindly/hiccup
 ;;  [:div
-;;   [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.js"
-;;             :type "application/javascript"}]
+;;   [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.js"}]
 ;;   [:script {:crossorigin true
 ;;             :src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"}]
 ;;   [:script {:crossorigin true
 ;;             :src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"}]
-;;   [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.reagent.js"
-;;             :type "application/javascript"}]])
+;;   [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.reagent.js"}]])
 ;; ```
 
 ;; If you see errors in th browser console like "reagent is not defined" or "Cannot read properties of undefined",
