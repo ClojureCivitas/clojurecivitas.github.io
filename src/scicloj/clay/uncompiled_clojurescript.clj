@@ -1,5 +1,6 @@
 ^:kindly/hide-code
-^{:clay {:title  "The Sandwich Approach to ClojureScript Development"
+^{:kindly/options {:html/deps [:scittle :reagent]}
+  :clay {:title  "The Sandwich Approach to ClojureScript Development"
          :quarto {:author      :timothypratley
                   :description "A lightweight way to cook with Clay and Scittle"
                   :type        :post
@@ -180,6 +181,33 @@
 ;; We replaced functions on the fly while our state lives on.
 ;; The new code creates a fresh experience without losing where we were.
 ;; Just like adding water to the pan.
+
+;; ## Gotchas
+
+;; Like any recipe, there are a few things to watch out for when cooking with Clay and Scittle.
+;; The main one is making sure you have all your ingredients (dependencies) ready.
+
+;; Choose one of these three ways to include your dependencies:
+
+;; * Let Clay add them automatically when it sees you need them (like in this post's first example)
+;; * Explicitly request them by adding `:kindly/options {:html/deps [:scittle :reagent]}` to your namespace metadata
+;; * Reference specific versions as JavaScript resources:
+;; ```clojure
+;; ^:kindly/hide-code
+;; (kindly/hiccup
+;;  [:div
+;;   [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.js"
+;;             :type "application/javascript"}]
+;;   [:script {:crossorigin true
+;;             :src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"}]
+;;   [:script {:crossorigin true
+;;             :src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"}]
+;;   [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.reagent.js"
+;;             :type "application/javascript"}]])
+;; ```
+
+;; If you see errors in th browser console like "reagent is not defined" or "Cannot read properties of undefined",
+;; it usually means a dependencies isn't loaded.
 
 ;; ## Why Go Light?
 
