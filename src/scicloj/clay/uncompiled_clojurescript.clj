@@ -3,7 +3,6 @@
          :quarto {:author      :timothypratley
                   :description "A lightweight way to cook with Clay and Scittle"
                   :type        :post
-                  :draft       true
                   :date        "2025-08-13"
                   :category    :clay
                   :tags        [:clay :workflow :scittle :reagent]}}}
@@ -33,9 +32,9 @@
 ;; Clay lets us interleave plain Hiccup with Reagent/Scittle components:
 
 (kind/hiccup
- [:div [:strong "Hello from Hiccup"]
+ [:div [:strong "Hello from Hiccup (Clojure)"]
   ['(fn []
-      [:em "Hello from Scittle/Reagent"])]])
+      [:em "Hello from Scittle/Reagent (ClojureScript)"])]])
 
 ;; But because Clay serves HTML, re-evaluating this namespace normally reloads the whole page.
 ;; Wouldn’t it be great to get a Figwheel/shadow-cljs style experience where code updates in place?
@@ -96,12 +95,13 @@
 ;; ## A Taste Test
 
 ;; Let's walk through a small example to see hot reload in action.
-;; I recommend copying these snippets into the `uncompiled.cljs` and saving as you go.
+;; I recommend copying these snippets into `uncompiled2.cljs` and saving as you go.
 ;; First, we'll set up our ingredients (app state):
 
 ;; ```clojure
-;; (ns my-app.core
-;;   (:require [reagent.core :as r]))
+;; (ns scicloj.clay.uncompiled2
+;;   (:require [reagent.core :as r]
+;;             [reagent.dom :as rdom]))
 ;;
 ;; (defonce app-state    ; <- defonce preserves state during reload
 ;;   (r/atom {:style "scrambled"
@@ -116,44 +116,83 @@
 ;;    [:h3 "Breakfast Order"]
 ;;    [:p "Style: " (:style @app-state)]
 ;;    [:p "Eggs: " (:eggs @app-state)]])
-;; ```
-
-;; We can mount our new component on the `app` div.
-
-;; ```clojure
+;;
 ;; (rdom/render
 ;;   [breakfast-order]
-;;   (js/document.getElementById "app"))
+;;   (js/document.getElementById "app2"))
 ;; ```
 
-;; Just like our opening story, imagine the order changes mid-cook.
-;; We can update our component without losing the current state:
+;; We want to be able to change cooking styles.
+
+;; ```clojure
+;; (defn cycle-style []
+;;   (swap! app-state update :style
+;;          {"scrambled" "fried"
+;;           "fried" "poached"
+;;           "poached" "scrambled"}))
+;; ```
+
+;; And while we're at it, let's add controls for the number of eggs:
+
+;; ```clojure
+;; (defn add-egg []
+;;   (swap! app-state update :eggs inc))
+
+;; (defn remove-egg []
+;;   (swap! app-state update :eggs #(max 1 (dec %))))
+;; ```
+
+;; Now we can update our component to use these functions.
 
 ;; ```clojure
 ;; (defn breakfast-order []
 ;;   [:div
 ;;    [:h3 "Breakfast Order"]
-;;    [:p "Style: " [:em (:style @app-state)]]  ; <- added emphasis
-;;    [:p "Eggs: " (:eggs @app-state)]
-;;    [:small "Water added for poaching..."]])   ; <- new status line
+;;    [:div
+;;     [:p "Style: " [:strong (:style @app-state)]]
+;;     [:button {:onClick cycle-style} "Change Style"]]
+;;    [:div
+;;     [:p "Eggs: " (:eggs @app-state)]
+;;     [:button {:onClick remove-egg
+;;               :disabled (= 1 (:eggs @app-state))} "−"]
+;;     [:button {:onClick add-egg} "+"]]
+;;    [:div
+;;     (case (:style @app-state)
+;;       "poached" "Water added for poaching..."
+;;       "fried" "Turn n burn!"
+;;       "scrambled" "Whisking away...")]])
 ;; ```
 
-;; Save the file, and voilà! The display updates while preserving the
-;; existing order details in app-state. No need to start over or lose
-;; your place in the cooking process.
+;; If you are running this locally,
+;; notice how we keep the same state while adding new features.
+;; Each time we save the ClojureScript file,
+;; our app updates but keeps its current state.
+
+;; Here's the final result of our cooking:
+
+(kind/hiccup
+ [:div#app2
+  [:script {:type "application/x-scittle"
+            :src "uncompiled2.cljs"}]])
+
+;; We replaced functions on the fly while our state lives on.
+;; The new code creates a fresh experience without losing where we were.
+;; Just like adding water to the pan.
 
 ;; ## Why Go Light?
 
 ;; A Michelin-star kitchen is a marvel of efficiency.
 ;; Sous chefs prepping ingredients,
 ;; line cooks at their stations, everything precisely mise en place.
-;; That's your typical ClojureScript setup: build tools, asset compilation,
-;; development servers, and careful configuration.
+;; That's your typical ClojureScript setup.
+;; Build tools, asset compilation, development servers, and careful configuration.
 ;;
 ;; But sometimes you just want to slap some cold cuts and cheese in a sandwich and start munching.
-;; That's Scittle: quick, simple, and satisfying.
+;; That's Scittle. Quick, simple, and satisfying.
 ;; No waiting for the kitchen to warm up, no cleanup afterward.
-;; Just write some code and see it work.
+;; Write some code and see it work.
+
+;; ![Sandwich creation workspace](uncompiled.jpg)
 
 ;; ## Chef's Notes
 
@@ -161,19 +200,19 @@
 ;; Write a namespace, get a webpage.
 ;; Add some Scittle, get interactive components.
 
-;; The magic happens in how Clay handles changes:
+;; Magic happens when Clay handles changes:
 
-;; - For your narrative and page structure in Clojure live reload refreshes the whole view
-;; - For your Scittle components hot reload updates just the code, keeping state alive
+;; - For your narrative and page structure in Clojure, live reload refreshes the whole page
+;; - For your Scittle components, hot reload updates only the code, keeping state alive
 
-;; This is especially sweet when you're cooking up interactive elements like mini-games
-;; with matter.js. Tweak physics parameters or game logic, and watch them take effect
-;; instantly. Your game state, scores, and position all preserved.
-;;
+;; This is especially sweet when you're cooking up mini-games with MatterJS.
+;; Tweak physics parameters or game logic, and watch them take effect as soon as you save.
+
 ;; Remember how we started with those poached eggs?
 ;; Maybe they were destined for a sandwich all along.
-;; That's the beauty of this approach: start simple,
-;; stay flexible, and build exactly what you need.
-;; Clay lets you shape your story with markdown, spice it up with interactive widgets,
+;; That's the beauty of this approach.
+;; Start simple, stay flexible, and build what you need.
+;; Clay lets you shape your story with markdown,
+;; spice it up with interactive widgets,
 ;; and adjust the ingredients.
 ;; That's the kind of flow that keeps creative coding delicious.
