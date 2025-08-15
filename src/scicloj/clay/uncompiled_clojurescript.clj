@@ -204,8 +204,8 @@
 ;;   [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.reagent.js"}]])
 ;; ```
 
-;; If you see errors in th browser console like "reagent is not defined" or "Cannot read properties of undefined",
-;; it usually means a dependencies isn't loaded.
+;; If you see errors in the browser console like "reagent is not defined" or "Cannot read properties of undefined",
+;; it usually means a dependency isn't loaded.
 
 ;; ## Why Go Light?
 
