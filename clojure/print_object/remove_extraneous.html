@@ -458,7 +458,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="printedClojure">
 <div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>[[clojure.lang.Numbers add <span class="st">"Numbers.java"</span> <span class="dv">155</span>]</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a> [clojure.lang.Numbers add <span class="st">"Numbers.java"</span> <span class="dv">3747</span>]</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a> [clojure.print_object.remove_extraneous$caesar_cipher$add2__72944 invoke <span class="st">"NO_SOURCE_FILE"</span> <span class="dv">50</span>]</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a> [clojure.print_object.remove_extraneous$caesar_cipher$add2__72969 invoke <span class="st">"NO_SOURCE_FILE"</span> <span class="dv">50</span>]</span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a> [clojure.core$mapv$fn__8569 invoke <span class="st">"core.clj"</span> <span class="dv">7059</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>See that part <code>caesar_cipher$add2</code>? That is <strong>very</strong> useful information. It tells us that the exception was inside <code>add2</code>, which is inside <code>caesar-cipher</code>. The stack trace doesn’t print functions as objects, but it illustrates that the thing that we care about is that they are a function, what their name is, and whether they were created from inside another function.</p>
@@ -472,7 +472,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(class-name ((<span class="kw">fn</span> [] (<span class="kw">fn</span> [y] y))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="st">"clojure.print-object.remove-extraneous/eval72950/fn--72951/fn--72952"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="st">"clojure.print-object.remove-extraneous/eval72975/fn--72976/fn--72977"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Next, we don’t need the eval identities.</p>
 <div class="sourceClojure">

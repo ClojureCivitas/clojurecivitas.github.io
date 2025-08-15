@@ -2,6 +2,7 @@
   {
     "listing": "/posts.html",
     "items": [
+      "/cesium/geovis.html",
       "/scicloj/clay/uncompiled_clojurescript.html",
       "/clojure/tree_seq/depth_first_search.html",
       "/civitas/repl.html",

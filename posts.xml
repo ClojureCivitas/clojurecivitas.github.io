@@ -17,6 +17,14 @@
 <generator>quarto-1.7.33</generator>
 <lastBuildDate>Wed, 13 Aug 2025 00:00:00 GMT</lastBuildDate>
 <item>
+  <title>Working with Cesium</title>
+  <dc:creator>joinr </dc:creator>
+  <link>https://clojurecivitas.github.io/cesium/geovis.html</link>
+  <description><![CDATA[ Looking at leveraging cesium for geospatial visualization. ]]></description>
+  <guid>https://clojurecivitas.github.io/cesium/geovis.html</guid>
+  <pubDate>Wed, 13 Aug 2025 00:00:00 GMT</pubDate>
+</item>
+<item>
   <title>The Sandwich Approach to ClojureScript Development</title>
   <dc:creator>Timothy Pratley</dc:creator>
   <link>https://clojurecivitas.github.io/scicloj/clay/uncompiled_clojurescript.html</link>
@@ -174,14 +182,6 @@
   <description><![CDATA[  ]]></description>
   <guid>https://clojurecivitas.github.io/math/primes/factorization/sieve_augmented.html</guid>
   <pubDate>Wed, 28 May 2025 00:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Clean object printing by removing extraneous</title>
-  <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/clojure/print_object/remove_extraneous.html</link>
-  <description><![CDATA[  ]]></description>
-  <guid>https://clojurecivitas.github.io/clojure/print_object/remove_extraneous.html</guid>
-  <pubDate>Mon, 26 May 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
