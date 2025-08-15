@@ -10,6 +10,7 @@
 (ns scicloj.clay.uncompiled-clojurescript
   (:require [scicloj.kindly.v4.kind :as kind]))
 
+
 ;; Imagine you're making breakfast for your significant other one morning,
 ;; you just cracked the eggs into a frypan and they call out "poached please".
 ;; What do you do?
@@ -66,6 +67,7 @@
 ;; **uncompiled.cljs**:
 ^:kindly/hide-code
 (kind/code (slurp "src/scicloj/clay/uncompiled.cljs"))
+
 
 ;; We need a target div for `uncompiled.cljs` to render into, and we load it via Scittle:
 
