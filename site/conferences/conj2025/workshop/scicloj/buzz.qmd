@@ -1,5 +1,10 @@
 ---
-author: [ezmiller]
+author:
+- name: Ethan Miller
+  image: https://avatars.githubusercontent.com/u/772738?v=4
+  url: https://github.com/ezmiller
+  affiliation:
+  - {name: Scicloj, url: 'https://scicloj.github.io/'}
 description: Getting to know our host city for Clojure/conj 2025. We dive into 311 service data to see what's on the minds of Charlotte's citizens and get a taste of our hands-on data analysis workshop.
 type: post
 date: '2025-08-15'
