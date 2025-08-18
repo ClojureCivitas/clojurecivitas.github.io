@@ -37,7 +37,7 @@
                  {:icon "mastodon" :text "Mastodon" :href "https://tech.lgbt/@seancorfield"}]}
   {:id          :timschafer
    :name        "Tim Schafer"
-   :image       "https://media.licdn.com/dms/image/v2/D4E03AQGuYEubu1rpeA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1681232451970?e=1754524800&v=beta&t=YbMtki98RI584h2kge6dLdg8PF79uNb7NKt59wrpyVs"
+   :image       "https://media.licdn.com/dms/image/v2/D4E03AQGuYEubu1rpeA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1681232451970?e=1758153600&v=beta&t=b71jKqzrVKoYVqA7SSMvjwGw48w0DMKCanxyx25F2s0"
    :url         "https://github.com/srcerer"
    :affiliation [:clojurecamp]
    :links       [{:icon "github" :href "https://github.com/srcerer"}]}
