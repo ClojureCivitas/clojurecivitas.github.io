@@ -826,9 +826,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>As a bonus, I tossed in a few buttons below the main view to simplify the interface. We can load all 23K of our fire data (spanning 2000-2022), if we click “Load Fires!”.</p>
 <p>After a second or two the fire events will be loaded and we’ll notice the timeline has changed with a new start time somewhere in the year 2000.</p>
 </section>
-<section id="a-note-on-map-tiles-and-base-layers-cesium-is-built-to-work-with-all-sorts" class="level1">
-<h1>A Note on Map Tiles and Base Layers Cesium is built to work with all sorts</h1>
-<p>of geospatial layers, which are the visual projections of the geography that we want see rendered. We build maps by adding layers (from various sources) and then we can place interactive 3d geometry in the context of these layers.</p>
+<section id="a-note-on-map-tiles-and-base-layers" class="level1">
+<h1>A Note on Map Tiles and Base Layers</h1>
+<p>Cesium is built to work with all sorts of geospatial layers, which are the visual projections of the geography that we want see rendered. We build maps by adding layers (from various sources) and then we can place interactive 3d geometry in the context of these layers.</p>
 <p>Most layers come in the form of “map tiles”, which are 3d coordinates mapping a visible chunk of the earth at a particular altitude. So when we zoom into a particular view of the current projection of the earth, the visible tiles are loaded on the fly. This means we either need a tile server or our own local tiles (like a specially oriented directory structure) to serve up typical map layers.</p>
 <p>Cesium refers to the underlying layer as the base layer. They provide access to several online map tile providers by way of their “layer picker” interface. This means you can switch the underlyin visual layers at any point if you want to see different features (e.g.&nbsp;topology vs roads vs political boundaries vs 3D terrain…)</p>
 <p>Some of the layers Cesium provides appear to be available to you during development time, but if you publish something e.g.&nbsp;on clojure civitas or another domain, you might find that the tile server refuses to send tiles and the visual view is just a default blue tileset (e.g.&nbsp;nothing).</p>
@@ -841,10 +841,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="back-to-the-app" class="level1">
 <h1>Back to the App</h1>
-<section id="geojson-for-simple-polyogonal-layers-state-boundaries" class="level2">
-<h2 class="anchored" data-anchor-id="geojson-for-simple-polyogonal-layers-state-boundaries">GeoJSON For Simple Polyogonal Layers (State Boundaries)</h2>
+<section id="geojson-for-complex-polygonal-layers-state-boundaries" class="level2">
+<h2 class="anchored" data-anchor-id="geojson-for-complex-polygonal-layers-state-boundaries">GeoJSON For Complex Polygonal Layers (State Boundaries)</h2>
 <p>Since not every layer has state boundaries baked in, I added a layer from open source state boundaries via GeoJSON. We get the added benefit of having states recognized as named entities in Cesium, so clicking on a state boundary will pop up some information about the entity (in this case, the name).</p>
 <p>This layer can be toggled using the “Toggle States” button. With some base layers, it may look better to have it toggled off since the current translucent grey polygon fill may collide with interesting visual features.</p>
+<section id="side-note---clay-local-files-vs.-quarto" class="level3">
+<h3 class="anchored" data-anchor-id="side-note---clay-local-files-vs.-quarto">Side Note - Clay Local Files vs.&nbsp;Quarto</h3>
+<p>Normally, we can just reference files that are local to our notebook’s folder, like images and script tags, and Clay will pick them up just fine. When we go to publish on the Quarto web site, Clay will emit a baked document in .qmd format, wherein only the references to assets in use will be picked up and copied over as static assets.</p>
+<p>As a consequence of how this Quarto site builds stuff, if we want to have our topojson file available for our CesiumJS app to pull locally, we have to reference it somewhere to indicate it should be copied to the static site (or we stick it in a global resources file etc.).</p>
+<p>This work-around applies to any resource we want to have inside a webapp like geojson or other data, since Quarto isn’t going to know that. We can communicate our need by adding some reference to the doc, like a download link using the hiccup below.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:a</span> {<span class="at">:href</span> <span class="st">"ne_10m_us_states.topojson"</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>      <span class="at">:download</span> <span class="st">"ne_10m_us_states.topojson"</span>}</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ne_10m_us_states.topojson"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<a download="ne_10m_us_states.topojson" href="ne_10m_us_states.topojson">ne_10m_us_states.topojson</a>
+</section>
 <section id="geospatial-entities" class="level3">
 <h3 class="anchored" data-anchor-id="geospatial-entities">Geospatial Entities</h3>
 <p>This is a common idiom in CesiumJS. There is a natural correspondence between geospatial entities and interactive analysis. Cesium enables workflows for interactive selection and viewing; we can tap into these flows with cljs and make even more interesting stuff.</p>
