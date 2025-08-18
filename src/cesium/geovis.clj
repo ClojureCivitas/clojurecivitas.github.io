@@ -5,6 +5,7 @@
                   :type        :post
                   :date        "2025-08-13"
                   :category    :clay
+                  :page-layout :full
                   :tags        [:clay :workflow :scittle :reagent :cesium]}}}
 (ns cesium.geovis
   (:require [scicloj.kindly.v4.kind :as kind]
@@ -49,7 +50,9 @@
       (tc/select-columns flds)
       (tc/select-rows (fn [{:keys [Discover_DateTime Control_DateTime]}]
                         (and  Discover_DateTime Control_DateTime)))))
-fire-data
+
+;;Here's a  a feel for the structure based on the first 10 records.
+(tc/head fire-data 10)
 
 ;; The way we're going to expose this to sci, for efficiency, is to serialize
 ;; our fire data as json, then load it via a script tag.
@@ -222,6 +225,8 @@ fire-data
 ;; which allows time to progress forward or backward at a constant rate, to
 ;; change the rate of change, or to pause the passage of time.
 
+;; ## Interactive Globe Renders Below
+
 ^:kindly/hide-code
 (kind/hiccup
  [:div#app
@@ -229,6 +234,7 @@ fire-data
             :src "core.cljs"}]])
 
 
+;; # Additional UI
 
 ;; As a bonus, I tossed in a few buttons below the main view to simplify the
 ;; interface. We can load all 23K of our fire data (spanning 2000-2022), if we
@@ -280,10 +286,7 @@ fire-data
 ;; At the time of publication, I missed this change, and so we have a change
 ;; in tileset and presentation to account.
 
-^:kindly/hide-code
-(kind/hiccup
- [:div
-  [:img {:src "Stadia.jpg"}]])
+;; ![Stadia Notes](Stadia.jpg)
 
 ;; # Back to the App
 
@@ -346,10 +349,7 @@ fire-data
 ;; If we hit play at this point, we might find a view that looks like
 ;; this:
 
-^:kindly/hide-code
-(kind/hiccup
- [:div
-  [:img {:src "firedemo.jpg"}]])
+;; ![some fires](firedemo.jpg)
 
 ;; We can pause the view using either the Stop button or the Cesium UI button in
 ;; the bottom left Clock widget. Since fires are also entities, we can click on
@@ -358,21 +358,15 @@ fire-data
 ;; If you are running locally (or in the future, if I pony up for an API key from
 ;; Stadia) then you can get a view of their Stamen Toner map like this one:
 
-^:kindly/hide-code
-(kind/hiccup
- [:div
-  [:img {:src "simplefires.jpg"}]])
+;; ![toner layer](simplefires.jpg)
 
 ;; We change projections with the upper right corner UI control.  Clicking
 ;; on the wireframe globe lets us choose either a 2d planar overhead projection,
 ;; or a 2.5 Columbus view.  Let's use that.
 
 ;; For reference if we had access to the Stamen Toner layer, this is one more view:
-^:kindly/hide-code
-(kind/hiccup
- [:div
-  [:img {:src "toner.jpg"}]])
 
+;; ![2.5d toner layer](toner.jpg)
 
 ;; # 3D Tiles
 
@@ -380,18 +374,11 @@ fire-data
 ;; We can demo it and turn our flat globe surface into detailed textured
 ;; terrain.
 
-^:kindly/hide-code
-(kind/hiccup
- [:div
-  [:img {:src "3daerial.jpg"}]])
-
+;; ![2.5d 3d aerial layer](3daerial.jpg)
 
 ;; The hillshade layer shows off more of the terrain:
 
-^:kindly/hide-code
-(kind/hiccup
- [:div
-  [:img {:src "3dtiles.jpg"}]])
+;; ![2.5d 3d hillshade layer](3dtiles.jpg)
 
 ;; Stay tuned for more 3d stuff.
 
