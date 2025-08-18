@@ -115,7 +115,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <meta property="og:title" content="Working with Cesium – Clojure Civitas">
 <meta property="og:description" content="Looking at leveraging cesium for geospatial visualization.">
-<meta property="og:image" content="https://clojurecivitas.github.io/cesium/simplefires.jpg">
+<meta property="og:image" content="https://clojurecivitas.github.io/cesium/Stadia.jpg">
 <meta property="og:site_name" content="Clojure Civitas">
 </head>
 
@@ -364,16 +364,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </div>
 
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author"><a href="https://github.com/joinr">joinr</a> <a href="mailto:true" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            <a href="https://scicloj.github.io/">
+            Scicloj
+            </a>
+          </p>
+      </div>
+  </div>
 
 <div class="quarto-title-meta">
 
-    <div>
-    <div class="quarto-title-meta-heading">Author</div>
-    <div class="quarto-title-meta-contents">
-             <p>joinr </p>
-          </div>
-  </div>
-    
+      
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
@@ -403,27 +412,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="geovis_files/md-default1.js" type="text/javascript"></script>
 <section id="geospatial-visualization-with-clay-and-cesiumjs" class="level1">
 <h1>Geospatial Visualization With Clay and CesiumJS</h1>
-<p>This is a short port of a more sophisticated cljs application that leverages cesiumjs for geospatial visualization, animation, and various interactive 3d projections. After seeing other civitas posts, I decided to try to port over a subset of the functionality in a “lightweight” package, combined with some analysis of open data (in this case, fires in Oregon), and then build up an interactive view/animation of the result.</p>
+<p>This is a short port of a more sophisticated cljs application that leverages CesiumJS for geospatial visualization, animation, and various interactive 3d projections. After seeing other civitas posts, I decided to try to port over a subset of the functionality in a “lightweight” package, combined with some analysis of open data (in this case, fires in Oregon), and then build up an interactive view/animation of the result.</p>
 <p>Clay affords a nice platform for doing this, and scittle can be bent to our will to allow fairly sophisticated cljs/js stuff to be used directly (0 install). We will discuss alternate methods of accomplishing this later in a more efficient manner, but as an experimentation with clay and scittle and cesium, it’s not bad!</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> cesium.geovis</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [scicloj.kindly.v4.kind <span class="at">:as</span> kind]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>            [tablecloth.api <span class="at">:as</span> tc]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            [charred.api <span class="at">:as</span> charred]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            [clojure.java.io <span class="at">:as</span> jio]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
 <section id="fire-data" class="level1">
 <h1>Fire Data</h1>
 <p>Our working dataset comes from historical Oregon fire data. The original can be found at https://catalog.data.gov/dataset/odf-fire-occurrence-data-2000-2022 I have taken the liberty of gzipping the original csv to make it easier to host.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> flds</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:FireName</span>  <span class="at">:Size</span>_class <span class="at">:EstTotalAcres</span>  <span class="at">:Ign</span>_DateTime</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">:ReportDateTime</span> <span class="at">:Discover</span>_DateTime <span class="at">:Control</span>_DateTime <span class="at">:Lat</span>_DD <span class="at">:Long</span>_DD</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:CauseBy</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> flds</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:FireName</span>  <span class="at">:Size</span>_class <span class="at">:EstTotalAcres</span>  <span class="at">:Ign</span>_DateTime</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">:ReportDateTime</span> <span class="at">:Discover</span>_DateTime <span class="at">:Control</span>_DateTime <span class="at">:Lat</span>_DD <span class="at">:Long</span>_DD</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:CauseBy</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> fire-data</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">-&gt;</span> (tc/dataset <span class="st">"src/cesium/ODF_Fire_Occurrence_Data_2000-2022.csv.gz"</span> {<span class="at">:key-fn</span> <span class="kw">keyword</span>})</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>      (tc/select-columns flds)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>      (tc/select-rows (<span class="kw">fn</span> [{<span class="at">:keys</span> [Discover_DateTime Control_DateTime]}]</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                        (<span class="kw">and</span>  Discover_DateTime Control_DateTime)))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> fire-data</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">-&gt;</span> (tc/dataset <span class="st">"src/cesium/ODF_Fire_Occurrence_Data_2000-2022.csv.gz"</span> {<span class="at">:key-fn</span> <span class="kw">keyword</span>})</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>      (tc/select-columns flds)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>      (tc/select-rows (<span class="kw">fn</span> [{<span class="at">:keys</span> [Discover_DateTime Control_DateTime]}]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                        (<span class="kw">and</span>  Discover_DateTime Control_DateTime)))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fire-data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>fire-data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="clay-dataset">
 <p>src/cesium/ODF_Fire_Occurrence_Data_2000-2022.csv.gz [23391 10]:</p>
@@ -722,85 +738,140 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </div>
-<p>the way we’re going to expose this to sci, for efficiency, is to serialize our fire data as json, then load it via a script tag.</p>
-<p>I have processing methods for loading from the local file system and the original application does so and then does ETL from cljs over either csv files, or we precompile stuff in cljs as edn defined in data namespaces.</p>
-<p>since we’re using scittle, I don’t want to break the bank on pushing ETL into the interpreter. clay allows us to preprocess the data and bake it here for consumption, so we’ll do that.</p>
-<p>we can use the ambiently available (and fast) charred to spit our stuff to json…</p>
+<p>The way we’re going to expose this to sci, for efficiency, is to serialize our fire data as json, then load it via a script tag.</p>
+<p>I have processing methods for loading from the local file system and the original application does so and then does ETL from cljs over either csv files, or we compile stuff in cljs as EDN defined in data namespaces.</p>
+<p>Since we’re using scittle, I don’t want to break the bank on pushing ETL into the interpreter. Clay allows us to preprocess the data and bake it here for consumption, so we’ll do that.</p>
+<p>We can use the ambiently available (and fast) charred to spit our stuff to JSON…</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> extract-fires </span>[d]</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">-&gt;&gt;</span> d</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>       (tech.v3.dataset/mapseq-reader)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>       <span class="kw">vec</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>       (charred/write-json-str )</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>       (<span class="kw">str</span> <span class="st">"FireData = "</span>)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>       (spit <span class="st">"src/cesium/firedata.js"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> extract-fires </span>[d]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">-&gt;&gt;</span> d</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>       (tech.v3.dataset/mapseq-reader)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>       <span class="kw">vec</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>       (charred/write-json-str )</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>       (<span class="kw">str</span> <span class="st">"FireData = "</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>       (spit <span class="st">"src/cesium/firedata.js"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Cesium wants date/time in a julian format, but we have conversion paths for js Date types established. So we’ll leave the start/stop times of our fires as strings and coerce them to Date types directly from cljs. when we read this in on the cljs side, we’ll get json objects for each fire event.</p>
+<p>We only need this is our firedata isn’t already emitted…</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">when-not</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    (.exists (jio/file <span class="st">"src/cesium/firedata.js"</span>))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  (extract-fires fire-data))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Cesium wants date/time in a Julian format, but we have conversion paths for js Date types established. So we’ll leave the start/stop times of our fires as strings and coerce them to Date types directly from cljs. when we read this in on the cljs side, we’ll get json objects for each fire event.</p>
 <p>In order to use all our stuff, we’ll need a bunch of dependencies… How can we load them in clay though and have them available for our in-browser cljs environment? Script tags of course!</p>
-<p>We can abuse hiccup with script tags and just pull in js files as we would with html. As demonstrated elsewhere, we can do the same with cljs files (local to this notebook/the page) if we have scittle as a script.</p>
+<p>We can abuse hiccup with script tags and just pull in js files as we would with HTML. As demonstrated elsewhere, we can do the same with cljs files (local to this notebook/the page) if we have scittle as a script.</p>
 <p>So our scheme is this: define some hidden hiccup that defines a div that loads all of our dependencies.</p>
 <p>Then we can build out the browser portion of our app by leveraging cljs tooling (e.g.&nbsp;reagent) via scittle.</p>
 <p>Note: the app portion can be as sophisticated and spread out as we’d like it to be. We can have multiple files (e.g.&nbsp;namespaces) and just load them as script tags, and require them from cljs in scittle as normal.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kindly/hide-code</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.js"</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.promesa.js"</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:crossorigin</span> <span class="va">true</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"</span>}]</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:crossorigin</span> <span class="va">true</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"</span>}]</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.reagent.js"</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js"</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:link</span> {<span class="at">:href</span> <span class="st">"https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Widgets/widgets.css"</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>          <span class="at">:rel</span> <span class="st">"stylesheet"</span> }]</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">;;color patch</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"color.js"</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">;;data</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"firedata.js"</span> <span class="co">;;creates FireData var.</span></span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">;;app deps.</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"protocols.cljs"</span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"time.cljs"</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"util.cljs"</span></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"czml.cljs"</span></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"etl.cljs"</span></span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"cesium.cljs"</span></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"widget.cljs"</span></span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>  ])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div><script src="https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.js" type="application/javascript"></script><script src="https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.promesa.js" type="application/javascript"></script><script crossorigin="crossorigin" src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script><script crossorigin="crossorigin" src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script><script src="https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.reagent.js" type="application/javascript"></script><script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js" type="application/javascript"></script><link href="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Widgets/widgets.css" rel="stylesheet"><script src="color.js" type="application/javascript"></script><script src="firedata.js" type="application/javascript"></script><script src="protocols.cljs" type="application/x-scittle"></script><script src="time.cljs" type="application/x-scittle"></script><script src="util.cljs" type="application/x-scittle"></script><script src="czml.cljs" type="application/x-scittle"></script><script src="etl.cljs" type="application/x-scittle"></script><script src="cesium.cljs" type="application/x-scittle"></script><script src="widget.cljs" type="application/x-scittle"></script></div>
-<p>then our cesium app’s entry point is another hiccup div exposing an app id with the “core.cljs” script being loaded from scittle</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kindly/hide-code</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div#</span>app</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:type</span> <span class="st">"application/x-scittle"</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">:src</span> <span class="st">"core.cljs"</span>}]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kindly/hide-code</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.js"</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.promesa.js"</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:crossorigin</span> <span class="va">true</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"</span>}]</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:crossorigin</span> <span class="va">true</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"</span>}]</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.reagent.js"</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cesium.com/downloads/CesiumJS/releases/1.132/Build/Cesium/Cesium.js"</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:link</span> {<span class="at">:href</span> <span class="st">"https://cesium.com/downloads/CesiumJS/releases/1.132/Build/Cesium/Widgets/widgets.css"</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>          <span class="at">:rel</span> <span class="st">"stylesheet"</span> }]</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">;;color patch</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"color.js"</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">;;safe stringify for debugging...</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"safestring.js"</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">;;data</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"firedata.js"</span> <span class="co">;;creates FireData var.</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/javascript"</span>}]</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="co">;;app deps.</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"protocols.cljs"</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"time.cljs"</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"util.cljs"</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"czml.cljs"</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"etl.cljs"</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"cesium.cljs"</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"widget.cljs"</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>            <span class="at">:type</span> <span class="st">"application/x-scittle"</span>}]</span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>  ])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div><script src="https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.js" type="application/javascript"></script><script src="https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.promesa.js" type="application/javascript"></script><script crossorigin="crossorigin" src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script><script crossorigin="crossorigin" src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script><script src="https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.reagent.js" type="application/javascript"></script><script src="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Cesium.js" type="application/javascript"></script><link href="https://cesium.com/downloads/cesiumjs/releases/1.132/Build/Cesium/Widgets/widgets.css" rel="stylesheet"><script src="color.js" type="application/javascript"></script><script src="safestring.js" type="application/javascript"></script><script src="firedata.js" type="application/javascript"></script><script src="protocols.cljs" type="application/x-scittle"></script><script src="time.cljs" type="application/x-scittle"></script><script src="util.cljs" type="application/x-scittle"></script><script src="czml.cljs" type="application/x-scittle"></script><script src="etl.cljs" type="application/x-scittle"></script><script src="cesium.cljs" type="application/x-scittle"></script><script src="widget.cljs" type="application/x-scittle"></script></div>
+<p>Our CesiumJS app’s entry point is another hiccup div exposing an app id with the “core.cljs” script being loaded from scittle</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>^<span class="at">:kindly/hide-code</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div#</span>app</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:type</span> <span class="st">"application/x-scittle"</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">:src</span> <span class="st">"core.cljs"</span>}]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="the-app" class="level1">
 <h1>The App</h1>
-<p>The application is a typical cesium widget with some reagent ui bits. We have the primary geospatial view, which default to an interactive globe with the ability to spin, zoom, pan, and tilt the view with the mouse or a touchscreen.</p>
-<p>cesium is meant to show animated 3d visuals on top of geospatial layers and projections, so it prominently features a timeline on the bottom. This is an interactive ui that allows the user to move forward and backward into arbitrary points in time, with any temporal data in the visual updating accordingly.</p>
+<p>The application is a typical CesiumJS widget with some reagent ui bits. We have the primary geospatial view, which default to an interactive globe with the ability to spin, zoom, pan, and tilt the view with the mouse or a touchscreen.</p>
+<p>Cesium is meant to show animated 3d visuals on top of geospatial layers and projections, so it prominently features a timeline on the bottom. This is an interactive ui that allows the user to move forward and backward into arbitrary points in time, with any temporal data in the visual updating accordingly.</p>
 <p>Additionally, the timeline has a control mechanism in the bottom left clock, which allows time to progress forward or backward at a constant rate, to change the rate of change, or to pause the passage of time.</p>
 <div id="app"><script src="core.cljs" type="application/x-scittle"></script></div>
 <p>As a bonus, I tossed in a few buttons below the main view to simplify the interface. We can load all 23K of our fire data (spanning 2000-2022), if we click “Load Fires!”.</p>
 <p>After a second or two the fire events will be loaded and we’ll notice the timeline has changed with a new start time somewhere in the year 2000.</p>
-<p>At this point, we can play around with the ui a bit to see what cesium offers out of the box. The default Bing Maps aerial layer doesn’t have any state information; we can get a bit of a better view, with more contrast, if we change to the Stadia x Stamen Toner layer. We can click on the layer picker in upper right, and scroll down to find it on the second group of layers as a black-and-white high contrast layer.</p>
+</section>
+<section id="a-note-on-map-tiles-and-base-layers-cesium-is-built-to-work-with-all-sorts" class="level1">
+<h1>A Note on Map Tiles and Base Layers Cesium is built to work with all sorts</h1>
+<p>of geospatial layers, which are the visual projections of the geography that we want see rendered. We build maps by adding layers (from various sources) and then we can place interactive 3d geometry in the context of these layers.</p>
+<p>Most layers come in the form of “map tiles”, which are 3d coordinates mapping a visible chunk of the earth at a particular altitude. So when we zoom into a particular view of the current projection of the earth, the visible tiles are loaded on the fly. This means we either need a tile server or our own local tiles (like a specially oriented directory structure) to serve up typical map layers.</p>
+<p>Cesium refers to the underlying layer as the base layer. They provide access to several online map tile providers by way of their “layer picker” interface. This means you can switch the underlyin visual layers at any point if you want to see different features (e.g.&nbsp;topology vs roads vs political boundaries vs 3D terrain…)</p>
+<p>Some of the layers Cesium provides appear to be available to you during development time, but if you publish something e.g.&nbsp;on clojure civitas or another domain, you might find that the tile server refuses to send tiles and the visual view is just a default blue tileset (e.g.&nbsp;nothing).</p>
+<section id="stadia-tiles-work-in-dev-but-not-production-intended" class="level2">
+<h2 class="anchored" data-anchor-id="stadia-tiles-work-in-dev-but-not-production-intended">Stadia Tiles Work In Dev But Not Production (Intended)</h2>
+<p>Missing tiles occurs more commonly with the (very nice) series of Stadia tilesets. To add to the confusion, they are explicitly designed to work if you are working on a local development environment, e.g.&nbsp;if you cloned the clojure civitas repository and loaded this example locally instead of going through the clojure civitas github pages site, all of the Stadia tiles will work flawlessly. This is due to the circa 2023 move toward a funded tile hosting service, per https://github.com/CesiumGS/cesium/pull/11485 Since then, Stadia now hosts all the Stamen maptiles, and has terms of service per https://docs.stadiamaps.com/authentication/#authentication . In the case of local development, they allow requests from localhost, but will require an api or an authenticated domain, which requires registering with their service.</p>
+<p>At the time of publication, I missed this change, and so we have a change in tileset and presentation to account.</p>
+<div><img src="Stadia.jpg"></div>
+</section>
+</section>
+<section id="back-to-the-app" class="level1">
+<h1>Back to the App</h1>
+<section id="geojson-for-simple-polyogonal-layers-state-boundaries" class="level2">
+<h2 class="anchored" data-anchor-id="geojson-for-simple-polyogonal-layers-state-boundaries">GeoJSON For Simple Polyogonal Layers (State Boundaries)</h2>
+<p>Since not every layer has state boundaries baked in, I added a layer from open source state boundaries via GeoJSON. We get the added benefit of having states recognized as named entities in Cesium, so clicking on a state boundary will pop up some information about the entity (in this case, the name).</p>
+<p>This layer can be toggled using the “Toggle States” button. With some base layers, it may look better to have it toggled off since the current translucent grey polygon fill may collide with interesting visual features.</p>
+<section id="geospatial-entities" class="level3">
+<h3 class="anchored" data-anchor-id="geospatial-entities">Geospatial Entities</h3>
+<p>This is a common idiom in CesiumJS. There is a natural correspondence between geospatial entities and interactive analysis. Cesium enables workflows for interactive selection and viewing; we can tap into these flows with cljs and make even more interesting stuff.</p>
+</section>
+</section>
+<section id="ui" class="level2">
+<h2 class="anchored" data-anchor-id="ui">UI</h2>
+<p>At this point, we can play around with the UI a bit to see what cesium offers out of the box. Feel free to play with any of the layers in Layer Picker control in the upper right corner.</p>
+<p>It might be nice to have some additional information like cities and streets. We can click on the layer picker in upper right, and pick the ‘Bing Aerial Maps With Labels’ layer, or any of the other road maps.</p>
 <p>Once that’s done, we’ll zoom in to Oregon in the northwest corner of the US. This is where our data lives, so our fires will show up animating around here as simple arcs popping up from the earth over time, corresponding to the presence of a fire.</p>
 <p>If we hit play at this point, we might find a view that looks like this:</p>
+<div><img src="firedemo.jpg"></div>
+<p>We can pause the view using either the Stop button or the Cesium UI button in the bottom left Clock widget. Since fires are also entities, we can click on one and get some information.</p>
+<p>If you are running locally (or in the future, if I pony up for an API key from Stadia) then you can get a view of their Stamen Toner map like this one:</p>
 <div><img src="simplefires.jpg"></div>
+<p>We change projections with the upper right corner UI control. Clicking on the wireframe globe lets us choose either a 2d planar overhead projection, or a 2.5 Columbus view. Let’s use that.</p>
+<p>For reference if we had access to the Stamen Toner layer, this is one more view:</p>
+<div><img src="toner.jpg"></div>
+</section>
+</section>
+<section id="d-tiles" class="level1">
+<h1>3D Tiles</h1>
+<p>One of the biggest features is Cesium’s Ion streaming 3d tile service. We can demo it and turn our flat globe surface into detailed textured terrain.</p>
+<div><img src="3daerial.jpg"></div>
+<p>The hillshade layer shows off more of the terrain:</p>
+<div><img src="3dtiles.jpg"></div>
+<p>Stay tuned for more 3d stuff.</p>
 </section>
 <section id="outro" class="level1">
 <h1>Outro</h1>
