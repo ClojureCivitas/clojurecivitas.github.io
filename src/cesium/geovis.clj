@@ -237,10 +237,12 @@ fire-data
 ;; After a second or two the fire events will be loaded and we'll notice the
 ;; timeline has changed with a new start time somewhere in the year 2000.
 
-;; # A Note on Map Tiles and Base Layers Cesium is built to work with all sorts
-;; of geospatial layers, which are the visual projections of the geography that
-;; we want see rendered. We build maps by adding layers (from various sources)
-;; and then we can place interactive 3d geometry in the context of these layers.
+;; # A Note on Map Tiles and Base Layers
+
+;; Cesium is built to work with all sorts of geospatial layers, which are the
+;; visual projections of the geography that we want see rendered. We build maps
+;; by adding layers (from various sources) and then we can place interactive 3d
+;; geometry in the context of these layers.
 
 ;; Most layers come in the form of "map tiles", which are 3d coordinates mapping
 ;; a visible chunk of the earth at a particular altitude. So when we zoom into a
@@ -278,10 +280,14 @@ fire-data
 ;; At the time of publication, I missed this change, and so we have a change
 ;; in tileset and presentation to account.
 
+^:kindly/hide-code
+(kind/hiccup
+ [:div
+  [:img {:src "Stadia.jpg"}]])
 
 ;; # Back to the App
 
-;; ## GeoJSON For Simple Polyogonal Layers (State Boundaries)
+;; ## GeoJSON For Complex  Polygonal Layers (State Boundaries)
 
 ;; Since not every layer has state boundaries baked in, I added a layer from
 ;; open source state boundaries via GeoJSON.  We get the added benefit of
@@ -291,6 +297,29 @@ fire-data
 ;; This layer can be toggled using the "Toggle States" button.  With some
 ;; base layers, it may look better to have it toggled off since the current
 ;; translucent grey polygon fill may collide with interesting visual features.
+
+;; ### Side Note - Clay Local Files vs. Quarto
+
+;; Normally, we can just reference files that are local to our notebook's
+;; folder, like images and script tags, and Clay will pick them up just fine.
+;; When we go to publish on the Quarto web site, Clay will emit a baked document
+;; in .qmd format, wherein only the references to assets in use will be
+;; picked up and copied over as static assets.
+
+;; As a consequence of how this Quarto site builds stuff, if we want to
+;; have our topojson file available for our CesiumJS app to pull locally,
+;; we have to reference it somewhere to indicate it should be copied to
+;; the static site (or we stick it in a global resources file etc.).
+
+;; This work-around applies to any resource we want to have inside a webapp
+;; like geojson or other data, since Quarto isn't going to know that.  We
+;; can communicate our need by adding some reference to the doc, like a download
+;; link using the hiccup below.
+
+(kind/hiccup
+ [:a {:href "ne_10m_us_states.topojson"
+      :download "ne_10m_us_states.topojson"}
+  "ne_10m_us_states.topojson"])
 
 ;; ### Geospatial Entities
 
