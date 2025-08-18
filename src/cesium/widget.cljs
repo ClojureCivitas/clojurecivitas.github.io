@@ -4,7 +4,8 @@
 ;;repl don't reload the viewer.
 (ns cesiumdemo.widget
   (:require  [reagent.core :as r]
-             [cesiumdemo.cesium :as cesium]))
+             [cesiumdemo.cesium :as cesium]
+             [promesa.core :as p]))
 
 ;;we'll maintain some state for our globe....
 (defonce view
@@ -126,35 +127,48 @@
                   (set-view! extents :id id))]
           v))})))
 
-
+(defn with-name [obj nm]
+  (if nm
+    (if (instance? js/Promise obj)
+      (-> obj
+          (p/then (fn [obj]
+                    (set! (.-name obj) nm)
+                    obj)))
+      (do (set! (.-name obj) nm)
+          obj))
+    obj))
 
 ;;stateful API for working with a "Single" current view....
-(defn load-czml! [coll & {:keys [id] :or {id :current}}]
-  (let [p (js/Cesium.CzmlDataSource.load coll)
+(defn load-czml! [coll & {:keys [id name] :or {id :current}}]
+  (let [p (-> (js/Cesium.CzmlDataSource.load coll)
+              (with-name name))
         v  (@view id)]
     (.add  (.-dataSources v)
            p)
     p))
 
-(defn load-kml! [path & {:keys [id] :or {id :current}}]
+(defn load-kml! [path & {:keys [id name] :or {id :current}}]
   (let [v (get @view id)
-        p (js/Cesium.KmlDataSource.load path #js{:camera (.. v -scene -camera)
-                                                 :canvas (.. v -scene -canvas)})]
+        p (-> (js/Cesium.KmlDataSource.load path #js{:camera (.. v -scene -camera)
+                                                     :canvas (.. v -scene -canvas)})
+              (with-name name))]
     (.add  (.-dataSources v)
            p)
     p))
 
-(defn load-geojson! [path & {:keys [style id] :as opts :or {id :current}}]
+(defn load-geojson! [path & {:keys [style id name] :as opts :or {id :current}}]
   (let [style (if style style
                   {:stroke js/Cesium.Color.BLACK
                    :fill  (js/Cesium.Color.GREY.withAlpha 0.5),
                    :strokeWidth 3})
         v (@view id)
-        p (js/Cesium.GeoJsonDataSource.load path #js{:camera (.. v -scene -camera)
+        p (->
+           (js/Cesium.GeoJsonDataSource.load path #js{:camera (.. v -scene -camera)
                                                      :canvas (.. v -scene -canvas)
                                                      :stroke (style :stroke)
                                                      :fill (style :fill)
                                                      :strokeWidth 20 #_(style :strokeWidth)} #_style)
+           (with-name name))
         #_#__ (aset p "clampToGround" true)]
     (.add  (.-dataSources v)
            p)
