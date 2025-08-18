@@ -278,6 +278,10 @@ fire-data
 ;; At the time of publication, I missed this change, and so we have a change
 ;; in tileset and presentation to account.
 
+^:kindly/hide-code
+(kind/hiccup
+ [:div
+  [:img {:src "Stadia.jpg"}]])
 
 ;; # Back to the App
 
