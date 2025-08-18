@@ -11,6 +11,26 @@
    [promesa.core :as p]
    ))
 
+
+;;put your own here.
+(set! (.-defaultAccessToken js/Cesium.Ion)
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiODFiNWRmOC02MDQ4LTRjNDktYjZmMy1kZjk0MDFjYWM4MDQiLCJpZCI6MzMyMTI0LCJpYXQiOjE3NTUyMDI3MTZ9.1L8bGdlixVLs_-YYNOBrrCkHikDAGEy7EPkSeEn3ukY")
+
+(def bounds {:default   [-125.147327626 24.6163352675 -66.612171376 49.6742238918]
+             :shifted   [-115.85193175578075 23.6163352675 -66.612171376 49.6742238918]
+             :3d-us     {:position [-63215.181346188605 -9528933.76322208 6760084.984842104], :direction [0.007298723988826753 0.8268915851484712 -0.5623140003937158], :up [0.08733080420213787 0.5596533194968705 0.8241125485111495], :right [0.9961526284990382 -0.05512230389581595 -0.06812835201055821]}
+             :3d-us-perspective {:position [-317622.8693122543 -9992858.180467833 4246834.783303648], :direction [0.031052476256112346 0.9868503489240992 -0.15862576255686647], :up [0.0037603323137679672 0.15858582933665222 0.9873380346337804], :right [0.9995106820936202 -0.03125577645796077 0.001213597444119795]}
+             :3d-us-small {:position [-762505.075345366 -8709290.1490951 4043268.4155746778], :direction [0.09961461776873652 0.9857124352588807 -0.13582313095638476], :up [0.05184249751899356 0.1311751752861519 0.9900027418344055], :right [0.9936746365776786 -0.10566015504746376 -0.038034829532472586]}
+             :inset-atlantic {:position [-5415797.494191807 4642953.337264422 10653133.091939844], :direction [0 0 -1], :up [-2.2204460492503126e-16 1 0], :right [1 2.2204460492503126e-16 0]}
+             :us        [-129.2	20.2	-62.7	51.1]
+             :us-europe [-125.8	16.7	71.7	55.2]
+             :europe    [-12.6	34.7	53.8	60.3]
+             :us-asia   [88.7	5.3	-67.7	48.5]
+             :us-hld   {:position [-1.1789283742143026E7 -851171.9394538645 4220213.20184823],
+                        :direction [-0.014107715109319626 0.8223014117772767 -0.5688772807587698],
+                        :up [-0.009758438829426674 0.5687935771746235 0.8224224215307534],
+                        :right [0.9998528617981781 0.01715385536820768 2.833893553849664E-10]}})
+
 (def color-schemes
   {:red          {:colors {:equipment [255 0 0 125]}}
    :orange       {:colors {:equipment [255, 165, 0, 125]}}
@@ -45,7 +65,7 @@
                              #js{:url  (js/Cesium.buildModuleUrl. "Assets/Textures/NaturalEarthII")})
    ;;false ;;(-> local-layers :blue-marble)
    :geocoder true
-   :resolutionScale 1.0
+   :resolutionScale 1.0 ;;can toggle this to mess with res...hmm..
    :clockViewModel shared-clock
    })
 
@@ -106,6 +126,85 @@
   (set! (.-clockRange shared-clock) js/Cesium.ClockRange.CLAMPED)
   (swap! app-state assoc :extents [start stop]))
 
+(defn ^js/Cesium.DataSourceCollection
+  get-layers! [& {:keys [id] :or {id :current}}]
+  (-> id ces/get-view .-dataSources))
+
+(defn imagery-layers [& {:keys [id] :or {id :current}}]
+  (-> id ces/get-view .-imageryLayers))
+
+(defn layer-names [& {:keys [id] :or {id :current}}]
+  (for [^js/Cesium.DataSource v (some-> id ces/get-view .-dataSources .-_dataSources)]
+    (.-name v)))
+
+(defn ^js/Cesium.EntityCollection
+  get-layer! [k & {:keys [id] :or {id :current}}]
+  (-> (get-layers! :id id) (.getByName k) first))
+
+
+(defn drop-layer! [k & {:keys [id] :or {id :current}}]
+  (let [l   (get-layers! :id id)
+        tgt (first (.getByName l k))]
+    (.remove l tgt true)))
+
+
+(defn show-layer! [k & {:keys [id] :or {id :current}}]
+  (let [l   (get-layers! :id id)
+        tgt (first (.getByName l k))]
+    (set! (.-show tgt) true)))
+
+(defn hide-layer! [k & {:keys [id] :or {id :current}}]
+  (let [l   (get-layers! :id id)
+        tgt (first (.getByName l k))]
+    (set! (.-show tgt)  false)))
+
+(defn toggle-layer! [k & {:keys [id] :or {id :current}}]
+  (let [l   (get-layers! :id id)
+        tgt (first (.getByName l k))]
+    (when tgt
+      (set! (.-show tgt)  (not (.-show tgt))))))
+
+(defn entities-in [layer & {:keys [id] :or {id :current}}]
+  (-> (get-layer! layer :id id)
+      .-_entityCollection
+      .-values
+      ))
+
+(defn url->xyz [url]
+  (js/Cesium.UrlTemplateImageryProvider. #js{:url url}))
+
+(defn base-layer []
+  (.get (imagery-layers) 0))
+
+(defn xyz-provider [url]
+  (url->xyz url))
+
+(def local-layers
+  {:blue-marble   (xyz-provider "layers/bm5/{z}/{x}/{y}.png")
+   :virtual-earth (xyz-provider "layers/bingve/{z}/{x}/{y}.png")})
+
+(defn set-imagery [provider]
+  (let [layers   (imagery-layers)
+        base     (base-layer)
+        _        (.remove layers base)]
+    (.addImageryProvider layers provider)))
+
+(defn registered-moves []
+  (let [keyf (memoize (fn [e] (-> e meta (get "move-type"))))]
+    (->> (get-layer! "moves")
+         .-_entityCollection
+         vals
+         (group-by keyf))))
+
+(defn present [t ents]
+  (let [t (->jd t)]
+    (filter (fn [^js/Cesium.Entity e] (.isAvailable e t)) ents)))
+
+;;naive stats.
+(defn present-on-day [d ents]
+  (present (add-days +now+ d) ents ))
+
+
 #_
 (defn simple-movement  [from to start stop]
   ;;just draw a straight line between from and to for now.
@@ -146,26 +245,27 @@
            (set-finish! start stop)
            :done)))
 
-(defn demo-click! []
-  (fire-events!))
-;;put your own here.
-(set! (.-defaultAccessToken js/Cesium.Ion)
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiODFiNWRmOC02MDQ4LTRjNDktYjZmMy1kZjk0MDFjYWM4MDQiLCJpZCI6MzMyMTI0LCJpYXQiOjE3NTUyMDI3MTZ9.1L8bGdlixVLs_-YYNOBrrCkHikDAGEy7EPkSeEn3ukY")
+(defn states! []
+  (ces/load-geojson! "ne_10m_us_states.topojson" :style
+                     {:stroke js/Cesium.Color.BLACK
+                      :fill  (js/Cesium.Color.DARKGRAY.withAlpha 0.7),
+                      :strokeWidth 20}
+                     :name "states"))
+#_
+(defn countries! []
+  (ces/load-geojson! "all-countries.geo.json" :id :inset
+                     :style {:stroke js/Cesium.Color.BLACK
+                             :fill  (js/Cesium.Color.GREY.withAlpha 1.0),
+                             :strokeWidth 3}))
 
-(def bounds {:default   [-125.147327626 24.6163352675 -66.612171376 49.6742238918]
-             :shifted   [-115.85193175578075 23.6163352675 -66.612171376 49.6742238918]
-             :3d-us     {:position [-63215.181346188605 -9528933.76322208 6760084.984842104], :direction [0.007298723988826753 0.8268915851484712 -0.5623140003937158], :up [0.08733080420213787 0.5596533194968705 0.8241125485111495], :right [0.9961526284990382 -0.05512230389581595 -0.06812835201055821]}
-             :3d-us-perspective {:position [-317622.8693122543 -9992858.180467833 4246834.783303648], :direction [0.031052476256112346 0.9868503489240992 -0.15862576255686647], :up [0.0037603323137679672 0.15858582933665222 0.9873380346337804], :right [0.9995106820936202 -0.03125577645796077 0.001213597444119795]}
-             :3d-us-small {:position [-762505.075345366 -8709290.1490951 4043268.4155746778], :direction [0.09961461776873652 0.9857124352588807 -0.13582313095638476], :up [0.05184249751899356 0.1311751752861519 0.9900027418344055], :right [0.9936746365776786 -0.10566015504746376 -0.038034829532472586]}
-             :inset-atlantic {:position [-5415797.494191807 4642953.337264422 10653133.091939844], :direction [0 0 -1], :up [-2.2204460492503126e-16 1 0], :right [1 2.2204460492503126e-16 0]}
-             :us        [-129.2	20.2	-62.7	51.1]
-             :us-europe [-125.8	16.7	71.7	55.2]
-             :europe    [-12.6	34.7	53.8	60.3]
-             :us-asia   [88.7	5.3	-67.7	48.5]
-             :us-hld   {:position [-1.1789283742143026E7 -851171.9394538645 4220213.20184823],
-                        :direction [-0.014107715109319626 0.8223014117772767 -0.5688772807587698],
-                        :up [-0.009758438829426674 0.5687935771746235 0.8224224215307534],
-                        :right [0.9998528617981781 0.01715385536820768 2.833893553849664E-10]}})
+
+
+;;Handlers
+(defn demo-click! []    (fire-events!))
+(defn toggle-states! [] (toggle-layer! "states"))
+
+
+;;UI
 
 (defn cesium-root
   ([opts]
@@ -184,13 +284,22 @@
      "play"]
     [:button.cesium-button {:style {:flex "1"} :id "stop" :type "button" :on-click #(stop!)}
      "stop"]
+    [:button.cesium-button {:style {:flex "1"} :id "toggle states" :type "button"
+                            :on-click #(toggle-states!)}
+     "Toggle States Layer"]
     [:button.cesium-button {:style {:flex "1"} :id "demo" :type "button" :on-click demo-click!}
      "Load Fires!"]]] )
+
+(defn layers! []
+  (do  (states!)
+       #_
+       (countries!)))
+
 ;; Initialize App
 (defn main []
-;;  (reset! app-state default-state)
   (rdom/render [page app-state]
-            (.getElementById js/document "app")))
+            (.getElementById js/document "app"))
+  (layers!))
 
 (main)
 

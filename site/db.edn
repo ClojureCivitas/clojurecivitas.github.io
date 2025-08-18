@@ -74,7 +74,14 @@
    :image       "https://avatars.githubusercontent.com/u/1319016?v=4"
    :email       "syungb@gmail.com"
    :affiliation [:scicloj]
-   :links       [{:icon "github" :href "https://github.com/syungb"}]}]
+   :links       [{:icon "github" :href "https://github.com/syungb"}]}
+  {:id          :joinr
+   :name        "joinr"
+   :url         "https://github.com/joinr"
+   :image       "https://avatars.githubusercontent.com/u/4629681?v=4"
+   :email       ""
+   :affiliation [:scicloj]
+   :links       [{:icon "github" :href "https://github.com/joinr"}]}]
 
  :affiliation
  [{:id   :clojure.core
