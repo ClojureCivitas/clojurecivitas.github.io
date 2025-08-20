@@ -1,7 +1,7 @@
 {:base-target-path   "temp"
  :base-source-path   "src"
  :quarto-target-path "site"
- :quarto             []
+ :quarto             ^:replace {}
  :subdirs-to-sync    ["src"]
  :keep-sync-root     false
  :flatten-targets    false
