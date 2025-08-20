@@ -30,6 +30,10 @@ figcaption {
   text-align: center;
 }
 
+body.quarto-dark .js-plotly-plot {
+  filter: invert(100%) hue-rotate(180deg);
+}
+
 /* Add more breathing room throughout the site */
 
 /* More space around sub-headings, except in listings */
