@@ -15,7 +15,15 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.33</generator>
-<lastBuildDate>Wed, 13 Aug 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Tue, 19 Aug 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Why Building My Blog is More Fun Than Filling It</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/civitas/why/i_should_write_more.html</link>
+  <description><![CDATA[ On the joy of building, the challenge of writing, and how to make blogging more fun and productive for Clojure developers. ]]></description>
+  <guid>https://clojurecivitas.github.io/civitas/why/i_should_write_more.html</guid>
+  <pubDate>Tue, 19 Aug 2025 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Working with Cesium</title>
   <dc:creator>joinr </dc:creator>
@@ -174,14 +182,6 @@
   <guid>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</guid>
   <pubDate>Wed, 28 May 2025 00:00:00 GMT</pubDate>
   <media:content url="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/noj_components.png" medium="image" type="image/png" height="75" width="144"/>
-</item>
-<item>
-  <title>Factorization of Eratosthenes</title>
-  <dc:creator>Tim Schafer</dc:creator>
-  <link>https://clojurecivitas.github.io/math/primes/factorization/sieve_augmented.html</link>
-  <description><![CDATA[  ]]></description>
-  <guid>https://clojurecivitas.github.io/math/primes/factorization/sieve_augmented.html</guid>
-  <pubDate>Wed, 28 May 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.33">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Timothy Pratley">
+<meta name="dcterms.date" content="2025-08-19">
+<meta name="description" content="On the joy of building, the challenge of writing, and how to make blogging more fun and productive for Clojure developers.">
+
+<title>Why Building My Blog is More Fun Than Filling It – Clojure Civitas</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../favicon.ico" rel="icon">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-4bb19fa9e15c342593cf81188a24865b.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f40b4dcbf9c34f50681889308f70b0e7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-3c4ac729eee099423e36a156098eafad.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-f40b4dcbf9c34f50681889308f70b0e7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
+
+
+<meta property="og:title" content="Why Building My Blog is More Fun Than Filling It – Clojure Civitas">
+<meta property="og:description" content="On the joy of building, the challenge of writing, and how to make blogging more fun and productive for Clojure developers.">
+<meta property="og:image" content="https://clojurecivitas.github.io/civitas/why/i-should-write-more.webp">
+<meta property="og:site_name" content="Clojure Civitas">
+</head>
+
+<body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../images/civitas-icon.svg" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Clojure Civitas</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../posts.html"> 
+<span class="menu-text">Posts</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../civitas/authors.html"> 
+<span class="menu-text">Authors</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../civitas/explorer.html"> 
+<span class="menu-text">Explorer</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ClojureCivitas/clojurecivitas.github.io"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../posts.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Why Building My Blog is More Fun Than Filling It</h1>
+</div>
+
+<div>
+  <div class="description">
+    On the joy of building, the challenge of writing, and how to make blogging more fun and productive for Clojure developers.
+  </div>
+</div>
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author"><a href="https://timothypratley.blogspot.com/p/httpswww.html">Timothy Pratley</a> <a href="mailto:timothypratley@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            <a href="https://hummi.app">
+            Hummi
+            </a>
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 19, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="i_should_write_more_files/md-default0.js" type="text/javascript"></script>
+<script src="i_should_write_more_files/md-default1.js" type="text/javascript"></script>
+<script src="i_should_write_more_files/plotly2.js" type="text/javascript"></script>
+<p>Let’s admit it, we spend more time tinkering with our blogging frameworks than actually writing posts. Building the blog is the fun part. Writing for it feels like a chore.</p>
+<p>We love to build. It’s a playground of puzzles, a chance to learn, and a way to create something that is truly ours. But this love for building can become a distraction from the original goal of writing. And the initial joy of creating the blog can fade as our focus shifts to the content.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Don’t let perfect be the enemy of done. Even a simple post can inspire others.</p>
+</div>
+</div>
+<p>I used to have a blog. I would get an idea I was excited to write about. But to show the idea required setting up a project, testing my code, writing a narrative, and then copying code, visualizations, and JavaScript into my post. I’d spend more time on the infrastructure than on the idea itself. It drained the fun out of it.</p>
+<p>With a tool like Clay, which powers ClojureCivitas, the process is different. Technical writing becomes an extension of coding. My focus is on making the code work and explaining the idea. The narrative, written in Markdown, flows alongside the code. It’s all in one place, and it all just works.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>You can use Clay to write, test, and publish your posts all in one place. No more copy-pasting code or fiddling with formatting!</p>
+</div>
+</div>
+<section id="its-still-fun-because-its-still-code" class="level2">
+<h2 class="anchored" data-anchor-id="its-still-fun-because-its-still-code">It’s Still Fun, Because It’s Still Code</h2>
+<p>The best part is that this way of writing is inherently enjoyable for a developer. You’re in your favorite editor, in your REPL, you’re in your element, writing Clojure. You’re writing <em>about</em> code and you’re writing <em>with</em> code. For those of us who love to tinker, the creative outlet is still there. We can scratch that building itch without getting bogged down.</p>
+<p>ClojureCivitas is a community space for sharing the kind of work you love to create. Contributing is easy. Just clone and open the project, write some code in a new namespace, and submit a pull request to share it. If you’re a Clojure developer with something to say, you can start writing a post right now and publish it the same day. It’s a direct, rewarding, and enjoyable way to share your insights. We can’t wait to see what you create!</p>
+</section>
+<section id="putting-our-tools-into-action" class="level2">
+<h2 class="anchored" data-anchor-id="putting-our-tools-into-action">Putting Our Tools Into Action</h2>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The following code is a playful simulation. Your own blogging experience may vary, but the patterns are often surprisingly familiar!</p>
+</div>
+</div>
+<p>Let’s model the factors involved in blog creation with some data.</p>
+<p>Imagine a developer who has several ideas for their blog. Some are about creating content, and others are about features and bugs they want to address.</p>
+<p>First we will generate some example tasks.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> vocab</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:type</span> [<span class="at">:post</span> <span class="at">:feature</span> <span class="at">:fix</span>]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">:topic</span> [<span class="st">"macros"</span> <span class="st">"performance"</span> <span class="st">"data science"</span> <span class="st">"web dev"</span> <span class="st">"testing"</span>]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:hero</span> [<span class="st">"Batman"</span> <span class="st">"Wonder Woman"</span> <span class="st">"Spider-Man"</span> <span class="st">"Iron Man"</span> <span class="st">"Captain Marvel"</span>]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>   <span class="at">:adj</span> [<span class="st">"dark"</span> <span class="st">"emoji"</span> <span class="st">"infinite"</span> <span class="st">"custom"</span> <span class="st">"live"</span>]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>   <span class="at">:feature</span> [<span class="st">"mode"</span> <span class="st">"reactions"</span> <span class="st">"scroll"</span> <span class="st">"font"</span> <span class="st">"preview"</span>]</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>   <span class="at">:bug</span> [<span class="st">"off-by-one"</span> <span class="st">"broken"</span> <span class="st">"slow"</span> <span class="st">"missing"</span> <span class="st">"typo"</span>]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>   <span class="at">:loc</span> [<span class="st">"error"</span> <span class="st">"layout"</span> <span class="st">"load"</span> <span class="st">"favicon"</span>]})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We’ll use Fastmath for seeded randomization so that our results are reproducible</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">require</span> '[fastmath.random <span class="at">:as</span> r])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(r/set-seed! (<span class="kw">hash</span> <span class="st">"ClojureCivitas"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>#object[org.apache.commons.math3.random.JDKRandomGenerator <span class="bn">0xee8f495</span> <span class="st">"org.apache.commons.math3.random.JDKRandomGenerator@ee8f495"</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This small helper will select a word from our vocabulary</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> choose </span>(<span class="kw">comp</span> #(<span class="kw">nth</span> <span class="va">%</span> (r/irand (<span class="kw">count</span> <span class="va">%</span>))) vocab))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(choose <span class="at">:topic</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="st">"performance"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s choose words randomly to construct task descriptions</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> task </span>[<span class="kw">type</span>]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">case</span> <span class="kw">type</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">:post</span> (<span class="kw">str</span> <span class="st">"Blog about how "</span> (choose <span class="at">:hero</span>) <span class="st">" uses "</span> (choose <span class="at">:topic</span>))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">:feature</span> (<span class="kw">str</span> <span class="st">"Add "</span> (choose <span class="at">:adj</span>) <span class="st">" "</span> (choose <span class="at">:feature</span>))</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">:fix</span> (<span class="kw">str</span> <span class="st">"Fix "</span> (choose <span class="at">:bug</span>) <span class="st">" "</span> (choose <span class="at">:loc</span>) <span class="st">" in "</span> (choose <span class="at">:feature</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(task (choose <span class="at">:type</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="st">"Blog about how Batman uses macros"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we want to randomly generate the number of views for a blog post</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> median-views </span><span class="dv">1000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">require</span> '[fastmath.core <span class="at">:as</span> fm])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> log-normal-dist</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  (r/distribution <span class="at">:log-normal</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                  {<span class="at">:scale</span> (fm/log median-views)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">:shape</span> <span class="fl">0.5</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> views </span>[]</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">int</span> (r/sample log-normal-dist)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(views)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1073</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">repeatedly</span> <span class="dv">10</span> views)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(<span class="dv">1709</span> <span class="dv">277</span> <span class="dv">417</span> <span class="dv">775</span> <span class="dv">1094</span> <span class="dv">514</span> <span class="dv">296</span> <span class="dv">749</span> <span class="dv">1322</span> <span class="dv">1290</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Those numbers look about right, but it would be better to plot them to make sure. We’ll make use of fast dataset operations with Tablecloth, visualized with Tableplot.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">require</span> '[tablecloth.api <span class="at">:as</span> tc])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb20"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">require</span> '[scicloj.tableplot.v1.plotly <span class="at">:as</span> plotly])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb21"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> (tc/dataset {<span class="at">:views</span> (<span class="kw">repeatedly</span> <span class="dv">1000</span> views)})</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    (plotly/base {:=title <span class="st">"The Long Tail of Blog Post Reach"</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:width</span> <span class="st">"100%"</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>                  :=x-title <span class="st">"Views per Post"</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>                  :=y-title <span class="st">"Number of Posts"</span>})</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-histogram {:=x <span class="at">:views</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[238,385,215,88,38,22,13,0,0,1],"r":null,"name":"","fill":null,"mode":null,"type":"bar","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":[470.25,924.75,1379.25,1833.75,2288.25,2742.75,3197.25,3651.75,4106.25,4560.75],"text":null}], {"100%":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"views","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"count","showgrid":true},"title":"The Long Tail of Blog Post Reach"}, {});</script></div>
+<p>Most posts get a modest number of views, but a few reach a much larger audience. A classic long-tail effect of publishing online.</p>
+<p>Now we’ll assign the views, as well as some other factors to each task.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb22"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> gen-task </span>[]</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [t (choose <span class="at">:type</span>)]</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:type</span> t</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">:task</span> (task t)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">:time-spent</span> (r/irand <span class="dv">1</span> <span class="dv">24</span>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">:readers-reached</span> (<span class="kw">if</span> (<span class="kw">=</span> t <span class="at">:post</span>) (views) <span class="dv">0</span>)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">:style-points</span> (<span class="kw">if</span> (<span class="kw">=</span> t <span class="at">:feature</span>) (r/irand <span class="dv">1</span> <span class="dv">100</span>) (r/irand <span class="dv">10</span>))</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">:fun-factor</span> (<span class="kw">if</span> (<span class="kw">=</span> t <span class="at">:fix</span>) <span class="dv">0</span> (r/irand <span class="dv">1</span> <span class="dv">100</span>))}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb23"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(gen-task)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb24"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:type</span> <span class="at">:post</span>,</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:task</span> <span class="st">"Blog about how Spider-Man uses web dev"</span>,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:time-spent</span> <span class="dv">4</span>,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:readers-reached</span> <span class="dv">1046</span>,</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a> <span class="at">:style-points</span> <span class="dv">2</span>,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a> <span class="at">:fun-factor</span> <span class="dv">94</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb25"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>(tc/dataset (<span class="kw">repeatedly</span> <span class="dv">10</span> gen-task)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>            {<span class="at">:dataset-name</span> <span class="st">"Ten things I love about blogging"</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="clay-dataset">
+<p>Ten things I love about blogging [10 6]:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 38%">
+<col style="width: 11%">
+<col style="width: 16%">
+<col style="width: 13%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>:type</th>
+<th>:task</th>
+<th style="text-align: right;">:time-spent</th>
+<th style="text-align: right;">:readers-reached</th>
+<th style="text-align: right;">:style-points</th>
+<th style="text-align: right;">:fun-factor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>:feature</td>
+<td>Add dark font</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: right;">52</td>
+</tr>
+<tr class="even">
+<td>:feature</td>
+<td>Add live preview</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">93</td>
+</tr>
+<tr class="odd">
+<td>:post</td>
+<td>Blog about how Spider-Man uses web dev</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">390</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">47</td>
+</tr>
+<tr class="even">
+<td>:post</td>
+<td>Blog about how Batman uses web dev</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">780</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">16</td>
+</tr>
+<tr class="odd">
+<td>:post</td>
+<td>Blog about how Captain Marvel uses macros</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">779</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">78</td>
+</tr>
+<tr class="even">
+<td>:feature</td>
+<td>Add custom scroll</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">70</td>
+<td style="text-align: right;">80</td>
+</tr>
+<tr class="odd">
+<td>:fix</td>
+<td>Fix typo layout in scroll</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>:fix</td>
+<td>Fix slow layout in reactions</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td>:fix</td>
+<td>Fix typo favicon in mode</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>:post</td>
+<td>Blog about how Batman uses macros</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">876</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">96</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Nice! Now we’ll generate a larger dataset which may yeild more general insights.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb26"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defonce</span><span class="fu"> tasks-ds</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  (tc/dataset (<span class="kw">repeatedly</span> <span class="dv">1000</span> gen-task)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>              {<span class="at">:dataset-name</span> <span class="st">"Things I could do to my blog"</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This scatter plot compares the time spent on each activity type with the number of readers reached. Writing posts tends to reach more readers, while tinkering with features or fixes rarely does.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb27"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> tasks-ds</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    (plotly/base {:=title <span class="st">"Effort vs. Impact: What Reaches Readers?"</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:width</span> <span class="st">"100%"</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>                  :=x-title <span class="st">"Time Spent (hours)"</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>                  :=y-title <span class="st">"Readers Reached"</span>})</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-point {:=x <span class="at">:time-spent</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>                         :=y <span class="at">:readers-reached</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>                         :=color <span class="at">:type</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[828,1996,490,2745,515,1912,733,465,790,1268,1059,1899,1612,1540,600,2446,1258,785,1543,1084,1169,962,1635,1150,821,1070,950,882,1155,923,768,1119,1266,905,1899,1231,1614,461,1225,950,1485,1566,1568,648,1572,1198,853,901,2752,888,693,934,957,1467,700,883,1246,1497,1181,793,1560,1122,335,239,642,1127,560,896,829,1856,872,1212,495,622,371,1205,746,904,1310,504,1668,660,723,891,1285,2388,455,2024,2290,1874,1353,1719,468,1189,1269,1024,543,1444,477,3072,818,2494,470,1774,1424,956,1015,1172,570,688,532,2070,444,601,1271,502,836,991,806,906,902,1530,1092,602,1626,3400,1140,423,534,368,931,1364,1436,484,665,1514,840,446,745,740,687,883,1198,569,1321,1715,1146,1583,554,700,1068,1024,356,1016,1112,978,1692,221,1049,2023,1234,527,697,2446,1754,1218,1319,968,619,693,1120,1999,1378,746,977,1082,657,920,520,918,776,2181,1350,2138,790,903,763,626,461,1029,1277,990,549,1176,483,1034,782,1076,590,2466,1498,2735,719,848,1038,1042,1132,1010,611,464,1031,557,861,452,1533,620,1316,1142,1732,1817,1075,2068,310,1434,1008,3305,495,1281,2053,1754,1093,1589,511,1072,1050,557,1249,697,676,967,1120,792,1259,982,2124,824,3396,906,1428,482,2483,786,1789,2262,669,1041,839,1391,572,1647,1137,1450,1354,913,837,514,1231,1770,746,830,611,276,272,765,668,700,1118,1456,723,1097,490,519,721,1601,646,428,232,651,1303,794,1223,1218,713,1033,1477,658,852,1235,775,713,869,1536,1680,1133,699,1260,1025,1242,1051,993,438,841,1181,464,431,1490,2328,930,719,505,2722,723,1129,744,1193,2474,1581,1046,1056,1266,1189,752,1807,1173,549],"r":null,"name":":post","marker":{"color":"#1B9E77"},"fill":null,"mode":"markers","type":"scatter","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":[14,7,5,7,19,16,5,18,21,17,6,23,16,2,18,1,15,23,4,8,15,1,8,6,7,5,5,5,19,1,1,19,8,22,14,11,10,9,5,3,23,21,21,14,14,13,23,9,15,16,9,20,4,4,11,5,22,16,9,3,11,17,1,8,22,17,16,3,3,20,21,17,12,7,22,9,12,23,22,22,12,21,17,5,22,14,18,5,18,12,4,16,18,19,15,19,17,22,17,4,3,23,20,19,5,11,12,2,14,19,22,3,19,19,13,21,9,3,4,12,4,11,10,19,3,16,15,7,8,7,19,6,2,18,13,14,21,8,18,14,12,2,15,19,16,16,7,22,2,10,11,14,4,8,2,19,12,10,2,9,4,5,11,20,10,17,5,4,15,17,1,17,13,23,12,10,6,11,8,2,4,13,12,7,4,5,14,18,3,11,14,15,3,3,5,3,11,4,20,21,5,2,12,8,4,17,2,23,22,5,9,17,18,8,1,5,5,15,2,21,6,12,1,10,5,9,11,15,2,11,3,16,7,7,5,17,23,20,19,1,23,18,21,7,12,16,3,2,8,17,21,9,12,6,12,21,17,7,23,14,23,22,7,23,12,22,13,3,9,3,14,15,5,7,4,11,12,9,5,22,19,18,3,9,17,21,6,18,11,7,23,16,10,22,5,13,13,5,18,14,7,14,11,18,16,13,10,22,11,1,22,18,19,2,15,20,6,8,16,1,17,18,18,12,12,20,17,19,19,19,20,4,19,18,3],"text":null},{"y":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"r":null,"name":":fix","marker":{"color":"#D95F02"},"fill":null,"mode":"markers","type":"scatter","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":[12,4,2,17,5,5,18,14,14,2,16,4,14,13,5,3,6,12,19,21,22,18,4,20,3,14,15,23,21,12,8,13,9,17,9,22,4,18,11,19,12,3,6,13,10,20,8,23,10,11,3,8,8,17,15,3,11,2,20,11,16,13,15,15,9,3,4,16,16,4,6,9,11,13,15,8,15,13,12,18,9,7,12,11,3,21,6,18,14,3,16,7,12,20,15,15,13,6,23,19,2,5,14,23,11,22,6,15,4,13,22,2,11,13,22,19,12,12,6,10,20,7,19,14,21,14,1,16,11,7,2,3,1,19,1,11,8,7,15,3,22,21,21,8,22,22,11,14,14,16,4,16,22,8,10,9,18,23,2,14,18,1,21,23,2,4,3,14,7,23,11,17,22,20,2,18,14,4,1,9,3,22,5,6,21,7,9,18,6,10,11,9,22,12,21,23,17,15,20,12,12,11,17,20,6,18,3,13,23,22,21,5,1,9,2,19,5,15,14,11,4,3,12,15,19,1,1,3,15,16,1,15,8,19,6,16,6,11,21,20,20,19,23,2,13,19,9,18,23,2,9,16,17,16,14,4,7,13,10,23,9,11,15,9,12,13,14,13,1,23,11,15,12,10,8,5,1,15,13,10,21,7,4,23,20,4,23,3,3,13,14,4,10,12,9,5,8,8,6,21,8,6,9,5,11,20,18,23,14,1,12,13,12,2,23,8,9,10,14,2,12,10,13,8,9,7,19,20,6,16,1,21,19,20,4,15,4,21,5,9,7,10,21,17,11,4,17,6,23,11,11,17,3,18,15,9,8,5,23,18,2,5,3,9,8,6,18,22,9,16],"text":null},{"y":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"r":null,"name":":feature","marker":{"color":"#7570B3"},"fill":null,"mode":"markers","type":"scatter","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":[10,16,19,23,3,12,5,21,2,2,8,20,22,14,3,5,2,4,1,7,1,5,7,9,3,22,17,1,7,4,17,21,8,12,2,4,8,23,8,17,20,16,20,13,23,18,6,14,19,12,16,19,1,11,7,3,14,13,11,1,16,18,15,20,16,8,19,17,1,8,3,9,17,2,15,9,13,20,4,15,21,2,19,2,18,5,20,22,20,18,4,4,15,16,2,16,5,6,23,23,2,9,8,12,12,3,10,3,18,9,23,13,12,4,20,7,20,20,1,14,9,19,20,6,12,19,17,20,23,14,13,21,18,9,7,7,14,18,1,21,2,4,1,9,6,13,6,16,18,23,23,4,10,5,7,17,6,15,13,5,4,5,12,18,20,3,1,4,5,20,15,9,2,21,6,14,7,15,11,20,20,12,4,17,20,6,5,16,10,14,22,16,5,8,4,23,22,9,8,19,20,19,5,15,9,6,16,20,22,21,13,11,7,23,3,17,21,14,7,15,12,14,17,11,19,23,14,13,13,4,11,15,7,13,8,3,5,2,9,19,10,6,16,22,2,7,7,7,17,17,20,23,12,21,20,7,16,22,10,21,18,22,11,22,11,3,23,2,6,14,12,14,19,19,14,20,21,9,7,6,21,12,14,5,18,16,23,10,16,18,3,2,1,23,7],"text":null}], {"100%":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"Time Spent (hours)","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"Readers Reached","showgrid":true},"title":"Effort vs. Impact: What Reaches Readers?"}, {});</script></div>
+<p>Here, we look at how much fun each activity is, relative to the time spent. Feature work and writing posts are generally more fun than bug fixes.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb28"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> tasks-ds</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    (plotly/base {:=title <span class="st">"Fun per Hour: Which Tasks Spark Joy?"</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:width</span> <span class="st">"100%"</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>                  :=x-title <span class="st">"Time Spent (hours)"</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>                  :=y-title <span class="st">"Fun Factor"</span>})</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-point {:=x <span class="at">:time-spent</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>                         :=y <span class="at">:fun-factor</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>                         :=color <span class="at">:type</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[16,7,31,42,72,47,10,92,33,27,54,71,68,99,96,69,14,83,43,73,77,87,39,94,33,79,88,80,32,5,12,51,56,42,61,30,66,34,15,83,47,67,64,80,96,49,90,27,15,26,55,88,29,1,8,76,12,83,51,19,66,82,9,96,24,4,79,76,62,96,13,68,97,27,70,43,67,95,47,31,72,70,51,4,81,22,2,50,35,95,26,4,68,45,79,28,10,19,59,74,62,82,82,69,60,18,60,56,78,87,98,51,60,8,54,21,57,22,46,85,34,89,50,64,18,11,77,10,36,32,48,46,76,21,71,20,45,14,87,79,53,84,75,39,61,21,87,38,77,68,72,12,74,86,4,27,1,40,31,9,89,84,17,33,92,52,99,69,88,9,85,24,78,56,94,41,8,14,57,30,87,45,94,87,31,81,27,84,2,88,93,14,37,78,8,78,61,12,76,7,35,61,25,66,6,67,81,84,56,14,55,52,2,10,47,65,17,95,83,85,95,99,52,6,73,32,21,18,11,25,79,86,87,25,62,98,51,53,9,66,65,20,23,56,91,53,21,17,59,52,57,53,64,39,39,25,37,51,58,78,38,95,25,88,26,6,24,96,63,67,18,81,2,9,80,23,96,69,84,55,72,54,9,34,41,84,87,75,8,60,66,19,66,81,19,8,20,90,46,63,52,63,68,35,63,17,99,50,60,43,13,23,41,80,44,6,7,84,85,10,25,60,94,15,91,52,30,52,5,84,55,18,70,96,54],"r":null,"name":":post","marker":{"color":"#1B9E77"},"fill":null,"mode":"markers","type":"scatter","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":[14,7,5,7,19,16,5,18,21,17,6,23,16,2,18,1,15,23,4,8,15,1,8,6,7,5,5,5,19,1,1,19,8,22,14,11,10,9,5,3,23,21,21,14,14,13,23,9,15,16,9,20,4,4,11,5,22,16,9,3,11,17,1,8,22,17,16,3,3,20,21,17,12,7,22,9,12,23,22,22,12,21,17,5,22,14,18,5,18,12,4,16,18,19,15,19,17,22,17,4,3,23,20,19,5,11,12,2,14,19,22,3,19,19,13,21,9,3,4,12,4,11,10,19,3,16,15,7,8,7,19,6,2,18,13,14,21,8,18,14,12,2,15,19,16,16,7,22,2,10,11,14,4,8,2,19,12,10,2,9,4,5,11,20,10,17,5,4,15,17,1,17,13,23,12,10,6,11,8,2,4,13,12,7,4,5,14,18,3,11,14,15,3,3,5,3,11,4,20,21,5,2,12,8,4,17,2,23,22,5,9,17,18,8,1,5,5,15,2,21,6,12,1,10,5,9,11,15,2,11,3,16,7,7,5,17,23,20,19,1,23,18,21,7,12,16,3,2,8,17,21,9,12,6,12,21,17,7,23,14,23,22,7,23,12,22,13,3,9,3,14,15,5,7,4,11,12,9,5,22,19,18,3,9,17,21,6,18,11,7,23,16,10,22,5,13,13,5,18,14,7,14,11,18,16,13,10,22,11,1,22,18,19,2,15,20,6,8,16,1,17,18,18,12,12,20,17,19,19,19,20,4,19,18,3],"text":null},{"y":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"r":null,"name":":fix","marker":{"color":"#D95F02"},"fill":null,"mode":"markers","type":"scatter","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":[12,4,2,17,5,5,18,14,14,2,16,4,14,13,5,3,6,12,19,21,22,18,4,20,3,14,15,23,21,12,8,13,9,17,9,22,4,18,11,19,12,3,6,13,10,20,8,23,10,11,3,8,8,17,15,3,11,2,20,11,16,13,15,15,9,3,4,16,16,4,6,9,11,13,15,8,15,13,12,18,9,7,12,11,3,21,6,18,14,3,16,7,12,20,15,15,13,6,23,19,2,5,14,23,11,22,6,15,4,13,22,2,11,13,22,19,12,12,6,10,20,7,19,14,21,14,1,16,11,7,2,3,1,19,1,11,8,7,15,3,22,21,21,8,22,22,11,14,14,16,4,16,22,8,10,9,18,23,2,14,18,1,21,23,2,4,3,14,7,23,11,17,22,20,2,18,14,4,1,9,3,22,5,6,21,7,9,18,6,10,11,9,22,12,21,23,17,15,20,12,12,11,17,20,6,18,3,13,23,22,21,5,1,9,2,19,5,15,14,11,4,3,12,15,19,1,1,3,15,16,1,15,8,19,6,16,6,11,21,20,20,19,23,2,13,19,9,18,23,2,9,16,17,16,14,4,7,13,10,23,9,11,15,9,12,13,14,13,1,23,11,15,12,10,8,5,1,15,13,10,21,7,4,23,20,4,23,3,3,13,14,4,10,12,9,5,8,8,6,21,8,6,9,5,11,20,18,23,14,1,12,13,12,2,23,8,9,10,14,2,12,10,13,8,9,7,19,20,6,16,1,21,19,20,4,15,4,21,5,9,7,10,21,17,11,4,17,6,23,11,11,17,3,18,15,9,8,5,23,18,2,5,3,9,8,6,18,22,9,16],"text":null},{"y":[59,80,37,33,36,55,63,10,17,78,54,39,13,77,42,51,10,9,42,92,33,58,51,17,77,26,51,5,39,35,18,73,49,68,55,52,85,28,14,98,16,46,57,69,93,6,81,12,69,67,96,21,10,39,27,31,88,33,14,22,40,76,74,12,16,3,33,5,32,15,70,75,42,54,26,1,70,96,48,66,82,7,31,70,28,75,87,13,15,96,56,73,83,58,50,12,33,29,33,19,46,23,28,3,94,5,69,24,97,43,52,66,3,80,10,12,98,83,43,79,3,12,71,12,23,61,30,74,78,25,94,18,77,40,67,46,19,38,8,10,71,15,49,33,43,52,98,78,67,59,27,54,32,35,23,59,16,11,59,28,87,88,37,78,85,78,31,77,55,56,75,85,84,45,18,44,86,71,58,82,84,81,83,34,51,46,41,67,14,34,67,42,66,63,2,68,49,98,93,39,89,98,65,63,58,83,54,68,13,87,24,15,17,8,50,1,53,80,3,58,70,55,14,35,35,12,92,42,66,63,77,77,29,35,5,43,65,43,31,47,40,64,71,77,85,54,39,48,10,57,64,64,55,24,53,6,79,47,97,53,65,54,4,35,41,25,22,91,38,66,39,65,51,16,48,59,90,52,73,22,96,58,91,29,93,69,9,47,46,34,33,77,74,88,26],"r":null,"name":":feature","marker":{"color":"#7570B3"},"fill":null,"mode":"markers","type":"scatter","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":[10,16,19,23,3,12,5,21,2,2,8,20,22,14,3,5,2,4,1,7,1,5,7,9,3,22,17,1,7,4,17,21,8,12,2,4,8,23,8,17,20,16,20,13,23,18,6,14,19,12,16,19,1,11,7,3,14,13,11,1,16,18,15,20,16,8,19,17,1,8,3,9,17,2,15,9,13,20,4,15,21,2,19,2,18,5,20,22,20,18,4,4,15,16,2,16,5,6,23,23,2,9,8,12,12,3,10,3,18,9,23,13,12,4,20,7,20,20,1,14,9,19,20,6,12,19,17,20,23,14,13,21,18,9,7,7,14,18,1,21,2,4,1,9,6,13,6,16,18,23,23,4,10,5,7,17,6,15,13,5,4,5,12,18,20,3,1,4,5,20,15,9,2,21,6,14,7,15,11,20,20,12,4,17,20,6,5,16,10,14,22,16,5,8,4,23,22,9,8,19,20,19,5,15,9,6,16,20,22,21,13,11,7,23,3,17,21,14,7,15,12,14,17,11,19,23,14,13,13,4,11,15,7,13,8,3,5,2,9,19,10,6,16,22,2,7,7,7,17,17,20,23,12,21,20,7,16,22,10,21,18,22,11,22,11,3,23,2,6,14,12,14,19,19,14,20,21,9,7,6,21,12,14,5,18,16,23,10,16,18,3,2,1,23,7],"text":null}], {"100%":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"Time Spent (hours)","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"Fun Factor","showgrid":true},"title":"Fun per Hour: Which Tasks Spark Joy?"}, {});</script></div>
+<p>This chart shows how much style each activity brings to the blog. Feature work is where you can really express your creativity and add flair, while posts and fixes are less about style.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb29"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> tasks-ds</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    (plotly/base {:=title <span class="st">"Where the Style Shines: Creative Expression by Task"</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:width</span> <span class="st">"100%"</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>                  :=x-title <span class="st">"Time Spent (hours)"</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>                  :=y-title <span class="st">"Style Points"</span>})</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-point {:=x <span class="at">:time-spent</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>                         :=y <span class="at">:style-points</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>                         :=color <span class="at">:type</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[0,6,0,6,3,4,0,0,5,8,4,9,4,7,3,7,5,3,9,9,6,9,7,2,2,3,0,2,6,0,3,5,5,8,0,8,0,3,9,7,4,4,5,2,8,6,4,6,5,0,1,0,5,9,8,2,1,0,3,7,6,6,1,5,8,3,1,5,8,9,3,3,2,2,4,1,8,7,3,1,9,3,8,2,7,2,2,7,9,4,6,3,1,7,7,0,3,2,2,7,8,2,1,3,6,7,3,9,8,9,5,2,2,9,8,2,6,8,1,9,0,9,7,3,1,1,2,6,2,9,6,7,6,6,0,1,4,2,7,8,8,6,8,4,9,4,9,5,7,5,2,9,1,3,4,2,1,2,4,9,4,2,3,0,7,0,8,6,8,6,9,5,5,5,5,7,6,4,7,9,9,3,3,4,9,4,2,2,8,5,8,0,7,8,7,9,3,2,1,3,3,1,5,2,1,2,0,7,2,2,3,0,1,2,5,0,0,5,0,1,4,7,6,7,1,3,1,3,6,1,9,9,5,6,7,4,8,9,6,3,4,2,6,3,9,7,7,9,1,1,9,9,0,4,4,2,8,5,3,8,3,9,2,9,4,4,1,9,3,7,6,6,8,4,4,4,3,2,9,3,5,3,8,5,1,0,1,6,5,1,7,4,8,7,4,1,7,7,6,3,9,0,4,2,5,1,1,7,9,4,1,8,5,3,1,1,1,5,8,8,6,3,1,8,2,5,1,6,4,1,2,0,6,0,4],"r":null,"name":":post","marker":{"color":"#1B9E77"},"fill":null,"mode":"markers","type":"scatter","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":[14,7,5,7,19,16,5,18,21,17,6,23,16,2,18,1,15,23,4,8,15,1,8,6,7,5,5,5,19,1,1,19,8,22,14,11,10,9,5,3,23,21,21,14,14,13,23,9,15,16,9,20,4,4,11,5,22,16,9,3,11,17,1,8,22,17,16,3,3,20,21,17,12,7,22,9,12,23,22,22,12,21,17,5,22,14,18,5,18,12,4,16,18,19,15,19,17,22,17,4,3,23,20,19,5,11,12,2,14,19,22,3,19,19,13,21,9,3,4,12,4,11,10,19,3,16,15,7,8,7,19,6,2,18,13,14,21,8,18,14,12,2,15,19,16,16,7,22,2,10,11,14,4,8,2,19,12,10,2,9,4,5,11,20,10,17,5,4,15,17,1,17,13,23,12,10,6,11,8,2,4,13,12,7,4,5,14,18,3,11,14,15,3,3,5,3,11,4,20,21,5,2,12,8,4,17,2,23,22,5,9,17,18,8,1,5,5,15,2,21,6,12,1,10,5,9,11,15,2,11,3,16,7,7,5,17,23,20,19,1,23,18,21,7,12,16,3,2,8,17,21,9,12,6,12,21,17,7,23,14,23,22,7,23,12,22,13,3,9,3,14,15,5,7,4,11,12,9,5,22,19,18,3,9,17,21,6,18,11,7,23,16,10,22,5,13,13,5,18,14,7,14,11,18,16,13,10,22,11,1,22,18,19,2,15,20,6,8,16,1,17,18,18,12,12,20,17,19,19,19,20,4,19,18,3],"text":null},{"y":[7,2,5,7,9,1,8,5,4,8,5,4,6,5,9,6,0,8,5,9,0,9,8,8,4,6,2,9,2,0,3,5,4,5,3,3,2,4,2,2,2,6,0,3,3,3,2,6,6,7,2,3,8,9,6,4,0,5,9,5,9,6,5,6,4,3,2,0,2,8,7,8,8,6,7,3,5,4,4,4,0,3,7,9,6,6,3,8,7,7,1,1,2,5,5,5,2,4,2,9,2,1,6,9,4,6,1,5,9,9,0,2,4,9,0,2,2,0,3,0,0,6,3,4,5,7,3,2,2,7,9,4,1,1,7,4,0,7,3,4,8,3,2,8,7,5,6,3,8,1,8,5,4,4,8,5,4,5,3,5,6,7,3,6,3,7,7,3,7,0,1,8,0,6,6,6,7,9,1,8,6,9,4,2,4,1,0,9,3,6,2,0,6,9,0,8,7,2,5,9,2,2,5,7,3,2,6,6,2,3,6,6,2,7,1,6,8,6,2,5,5,8,6,0,7,7,7,4,6,6,8,0,8,1,9,1,2,1,2,5,0,0,4,5,8,1,5,2,9,0,6,8,2,3,0,0,2,9,8,5,9,5,3,2,5,3,8,1,4,2,7,1,3,7,3,7,8,3,9,5,1,3,3,1,8,3,8,1,6,5,9,3,2,8,3,9,7,5,7,8,9,3,7,8,0,1,0,4,9,9,2,5,7,2,8,1,0,1,1,1,9,0,2,0,4,7,9,3,1,8,7,2,9,7,1,2,3,7,4,5,3,3,8,7,2,1,7,2,2,0,8,9,4,5,3,4,3,8,2,4,4,6,3,2,2,4,8,8,5,0],"r":null,"name":":fix","marker":{"color":"#D95F02"},"fill":null,"mode":"markers","type":"scatter","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":[12,4,2,17,5,5,18,14,14,2,16,4,14,13,5,3,6,12,19,21,22,18,4,20,3,14,15,23,21,12,8,13,9,17,9,22,4,18,11,19,12,3,6,13,10,20,8,23,10,11,3,8,8,17,15,3,11,2,20,11,16,13,15,15,9,3,4,16,16,4,6,9,11,13,15,8,15,13,12,18,9,7,12,11,3,21,6,18,14,3,16,7,12,20,15,15,13,6,23,19,2,5,14,23,11,22,6,15,4,13,22,2,11,13,22,19,12,12,6,10,20,7,19,14,21,14,1,16,11,7,2,3,1,19,1,11,8,7,15,3,22,21,21,8,22,22,11,14,14,16,4,16,22,8,10,9,18,23,2,14,18,1,21,23,2,4,3,14,7,23,11,17,22,20,2,18,14,4,1,9,3,22,5,6,21,7,9,18,6,10,11,9,22,12,21,23,17,15,20,12,12,11,17,20,6,18,3,13,23,22,21,5,1,9,2,19,5,15,14,11,4,3,12,15,19,1,1,3,15,16,1,15,8,19,6,16,6,11,21,20,20,19,23,2,13,19,9,18,23,2,9,16,17,16,14,4,7,13,10,23,9,11,15,9,12,13,14,13,1,23,11,15,12,10,8,5,1,15,13,10,21,7,4,23,20,4,23,3,3,13,14,4,10,12,9,5,8,8,6,21,8,6,9,5,11,20,18,23,14,1,12,13,12,2,23,8,9,10,14,2,12,10,13,8,9,7,19,20,6,16,1,21,19,20,4,15,4,21,5,9,7,10,21,17,11,4,17,6,23,11,11,17,3,18,15,9,8,5,23,18,2,5,3,9,8,6,18,22,9,16],"text":null},{"y":[79,17,75,94,74,7,86,76,91,12,40,82,42,35,55,22,70,38,20,23,5,32,28,19,88,42,64,59,50,68,7,94,52,10,14,17,68,36,32,82,27,29,86,17,30,43,94,7,93,5,80,1,20,5,31,24,55,42,83,36,11,87,63,57,10,52,66,5,21,8,70,77,37,48,5,39,69,1,60,32,14,67,11,64,74,60,44,96,4,71,45,17,6,68,67,49,94,18,69,71,67,43,32,61,89,26,50,17,66,32,55,90,66,6,62,33,70,74,35,4,99,73,3,45,13,94,22,1,99,5,95,18,67,68,81,25,78,70,12,7,32,8,67,63,96,4,40,23,77,41,17,34,30,21,96,68,73,89,79,26,3,83,28,71,48,36,73,58,48,65,8,50,59,82,59,17,38,66,41,19,9,12,13,58,2,56,12,12,25,66,97,90,23,90,2,42,84,80,60,29,32,25,96,30,11,4,94,2,27,53,78,77,52,43,83,97,94,12,55,76,3,91,19,54,37,9,94,60,17,62,10,60,81,64,44,8,23,85,9,19,60,82,28,36,37,19,30,66,94,34,3,53,49,65,14,94,81,13,39,3,99,72,58,30,21,38,1,7,42,50,91,98,31,71,86,99,43,26,97,77,6,20,75,9,63,61,65,56,23,66,25,84,2,62,86],"r":null,"name":":feature","marker":{"color":"#7570B3"},"fill":null,"mode":"markers","type":"scatter","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":[10,16,19,23,3,12,5,21,2,2,8,20,22,14,3,5,2,4,1,7,1,5,7,9,3,22,17,1,7,4,17,21,8,12,2,4,8,23,8,17,20,16,20,13,23,18,6,14,19,12,16,19,1,11,7,3,14,13,11,1,16,18,15,20,16,8,19,17,1,8,3,9,17,2,15,9,13,20,4,15,21,2,19,2,18,5,20,22,20,18,4,4,15,16,2,16,5,6,23,23,2,9,8,12,12,3,10,3,18,9,23,13,12,4,20,7,20,20,1,14,9,19,20,6,12,19,17,20,23,14,13,21,18,9,7,7,14,18,1,21,2,4,1,9,6,13,6,16,18,23,23,4,10,5,7,17,6,15,13,5,4,5,12,18,20,3,1,4,5,20,15,9,2,21,6,14,7,15,11,20,20,12,4,17,20,6,5,16,10,14,22,16,5,8,4,23,22,9,8,19,20,19,5,15,9,6,16,20,22,21,13,11,7,23,3,17,21,14,7,15,12,14,17,11,19,23,14,13,13,4,11,15,7,13,8,3,5,2,9,19,10,6,16,22,2,7,7,7,17,17,20,23,12,21,20,7,16,22,10,21,18,22,11,22,11,3,23,2,6,14,12,14,19,19,14,20,21,9,7,6,21,12,14,5,18,16,23,10,16,18,3,2,1,23,7],"text":null}], {"100%":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"Time Spent (hours)","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"Style Points","showgrid":true},"title":"Where the Style Shines: Creative Expression by Task"}, {});</script></div>
+<p>Given there are several factors at work, how can we determine the value of any one task? The objective function below quantifies what makes a blogging task worthwhile. It combines the positive factors then divides by the time spent. The higher the score, the more “bang for your buck” you get from that activity.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Try adjusting the weights or formula in the objective function to reflect what you value most in your own workflow.</p>
+</div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb30"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> objective</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"I want to have fun, reach readers, with style, without spending a lot of time"</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  [{<span class="at">:keys</span> [readers-reached fun-factor style-points time-spent]}]</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">/</span> (<span class="kw">+</span> readers-reached</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>        fun-factor</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>        style-points)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>     time-spent))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We combine all the factors relative to time spent, to estimate the overall value of each activity type. This bar chart summarizes which activities give you the most bang for your buck.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb31"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">-&gt;</span> tasks-ds</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    (tc/map-rows #(<span class="kw">assoc</span> <span class="va">%</span> <span class="at">:value</span> (objective <span class="va">%</span>)))</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    (tc/group-by [<span class="at">:type</span>])</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    (tc/mean <span class="at">:value</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    (plotly/base {:=title <span class="st">"Time Well Spent: Overall Value by Activity"</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">:width</span> <span class="st">"100%"</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>                  :=x-title <span class="st">"Activity Type"</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>                  :=y-title <span class="st">"Mean Value"</span>})</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    (plotly/layer-bar {:=x <span class="at">:type</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>                       :=y <span class="st">"summary"</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>                       :=y-title <span class="st">"mean value"</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>                       :=color <span class="at">:type</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement,
+               [{"y":[180.10599805218504],"r":null,"name":":post","marker":{"color":"#1B9E77"},"fill":null,"mode":null,"type":"bar","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":["post"],"text":null},{"y":[0.7208501301574057],"r":null,"name":":fix","marker":{"color":"#D95F02"},"fill":null,"mode":null,"type":"bar","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":["fix"],"text":null},{"y":[14.281010539390023],"r":null,"name":":feature","marker":{"color":"#7570B3"},"fill":null,"mode":null,"type":"bar","100%":null,"theta":null,"z":null,"lon":null,"lat":null,"x":["feature"],"text":null}], {"100%":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"Activity Type","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"mean value","showgrid":true},"title":"Time Well Spent: Overall Value by Activity"}, {});</script></div>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>Building and tinkering with your blog is fun, but sharing your ideas is what truly creates value for you and your readers. With tools that make writing as natural and enjoyable as coding, you can focus on what matters. Write, share, and enjoy the process. Your next post might be the one that inspires someone else to start.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="i-should-write-more.webp" class="img-fluid figure-img"></p>
+<figcaption>What’s on your mind?</figcaption>
+</figure>
+</div>
+<p>Ready to share your own story? Open a new namespace and start writing today!</p>
+<script>window.addEventListener('resize', function() {
+   document.querySelectorAll('.js-plotly-plot').forEach(function(plot) {
+     Plotly.Plots.resize(plot);
+   });
+ });</script>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/civitas/why/i_should_write_more.clj">src/civitas/why/i_should_write_more.clj</a></small></small></pre></div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/clojurecivitas\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
