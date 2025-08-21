@@ -1,6 +1,9 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Two Columns, One Namespace: Clojure to PDF"
                      :format [:quarto :pdf]
+                     ;; for plot snapshots
+                     :external-requirements ["python"
+                                             "pip install plotly kaleido"]
                      :quarto {:author      :timothypratley
                               :description "Transform your Clojure code into a beautiful, journal-style PDF, complete with math, charts, and images."
                               :type        :post
@@ -17,7 +20,6 @@
                               :geometry      ["top=30mm" "left=20mm" "heightrounded"]
                               :include-in-header {:text "\\AddToHook{env/Highlighting/begin}{\\small}"}}}}
 (ns scicloj.clay.pdf)
-
 
 ;; ---
 
