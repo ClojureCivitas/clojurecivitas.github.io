@@ -665,8 +665,10 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transitioning :clojure.core.async.flow/resume
+<pre><code>Chronon transitioning :clojure.core.async.flow/resume
+Chronon running
 Claxxus transitioning :clojure.core.async.flow/resume
+Tallystrix transitioning :clojure.core.async.flow/resume
 </code></pre>
 </div>
 </div>
@@ -692,9 +694,7 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Chronon transitioning :clojure.core.async.flow/resume
-Chronon running
-Randomius transitioning :clojure.core.async.flow/resume
+<pre><code>Randomius transitioning :clojure.core.async.flow/resume
 Talon, set flight!
 </code></pre>
 </div>
@@ -716,13 +716,13 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transforming :poke true
-Tallystrix transforming :stat abc1000
-Chronon transforms :alarm true to :out
-SQUARK: 5
+<pre><code>SQUARK: 8
 Tallystrix transforming :poke true
-Randomius transform 5 from :stat to :out
-Tallystrix transforming :stat 5
+Randomius transform 8 from :stat to :out
+Chronon transforms :alarm true to :out
+Tallystrix transforming :stat abc1000
+Tallystrix transforming :stat 8
+Tallystrix transforming :poke true
 </code></pre>
 </div>
 </div>
@@ -746,7 +746,10 @@ THREAD OUT
 <div class="callout-body-container callout-body">
 <pre><code>Randomius transitioning :clojure.core.async.flow/stop
 Talon, rest!
+Chronon transitioning :clojure.core.async.flow/stop
+Chronon rests.
 Tallystrix transitioning :clojure.core.async.flow/stop
+Claxxus transitioning :clojure.core.async.flow/stop
 </code></pre>
 </div>
 </div>
@@ -756,24 +759,8 @@ Tallystrix transitioning :clojure.core.async.flow/stop
 <div class="sourceClojure">
 <div class="sourceCode" id="cb26"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>(Thread/sleep <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-THREAD OUT
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<pre><code>Claxxus transitioning :clojure.core.async.flow/stop
-Chronon transitioning :clojure.core.async.flow/stop
-Chronon rests.
-</code></pre>
-</div>
-</div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb28"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Icarus realized that Flow is a library for building concurrent, event-driven systems out of simple, communication-free functions. Processes connect through channels. You define the structure as a directed graph. Flow takes care of orchestration. Flows are data-driven, easy to inspect, reason about and visualize. Then he wondered just how high could he fly?</p>
 <p>Happy flowing, and keep your feathers waxed!</p>
