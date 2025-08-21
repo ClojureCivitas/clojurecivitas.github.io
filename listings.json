@@ -1,5 +1,12 @@
 [
   {
+    "listing": "/pages.html",
+    "items": [
+      "/civitas/explorer.html",
+      "/civitas/authors.html"
+    ]
+  },
+  {
     "listing": "/posts.html",
     "items": [
       "/civitas/why/i_should_write_more.html",
@@ -28,13 +35,6 @@
       "/scicloj/noj/intro/getting-started-noj.html",
       "/core/async/flow/example/before_his_wings_melted.html",
       "/core/async/flow/example/asynctopolis.html"
-    ]
-  },
-  {
-    "listing": "/pages.html",
-    "items": [
-      "/civitas/explorer.html",
-      "/civitas/authors.html"
     ]
   }
 ]
