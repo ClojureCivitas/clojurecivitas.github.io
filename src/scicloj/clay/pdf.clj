@@ -55,6 +55,8 @@
 
 ;; ## Making a PDF
 
+;; This document was created from a Clojure namespace in ClojureCivitas [pdf.clj](https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/scicloj/clay/pdf.clj)
+
 ;; Make sure you set the quarto metadata on your namespace to `:format [:quarto :pdf]`,
 ;; or if you prefer to build at the REPL, you can set the format in the options.
 
