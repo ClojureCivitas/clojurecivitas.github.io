@@ -180,7 +180,7 @@ See [Some notebooks should only be run locally](https://clojurecivitas.github.io
 
 Pages are rendered with [Quarto](https://quarto.org).
 To see what styling options are available, check the [Quarto HTML Reference](https://quarto.org/docs/reference/formats/html.html).
-Anything you can do there, you can do in your namespace comment markdown and namespace metadata annotation.
+Anything you can do there, you can do in comment markdown and namespace metadata annotation.
 
 ## Design
 
