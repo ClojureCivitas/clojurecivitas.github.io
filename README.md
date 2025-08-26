@@ -54,10 +54,10 @@ Add metadata on your namespace to set the title, author, and tags.
 (ns my.namespace.example)
 ```
 
-[!TIP]
-The `:draft true` flag keeps it out of the posts list, but it will be available as a draft which can only be viewed by using the full URL.
-This can help if you aren't confident about the posting process or would like feedback before sharing.
-Otherwise, I recommend going YOLO and not worrying about drafts.
+> [!TIP]
+> The `:draft true` flag keeps it out of the posts list, but it will be available as a draft which can only be viewed by using the full URL.
+> This can help if you aren't confident about the posting process or would like feedback before sharing.
+> Otherwise, I recommend going YOLO and not worrying about drafts.
 
 Configure your author profile in [site/db.edn](site/db.edn).
 
