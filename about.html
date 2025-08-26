@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>about – Clojure Civitas</title>
+<title>About – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -75,7 +75,7 @@ ul.task-list li input[type="checkbox"] {
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
 
 
-<meta property="og:title" content="Clojure Civitas">
+<meta property="og:title" content="About – Clojure Civitas">
 <meta property="og:description" content="">
 <meta property="og:image" content="https://clojurecivitas.github.io/images/civitas-icon.svg">
 <meta property="og:site_name" content="Clojure Civitas">
@@ -313,16 +313,71 @@ ul.task-list li input[type="checkbox"] {
 <!-- margin-sidebar -->
     
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">About</h1>
+</div>
 
 
 
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
 
 
-<section id="about" class="level1">
-<h1>About</h1>
-<p><img src="images/civitas-icon.svg" alt="Civitas Icon" align="right"></p>
+</header>
+
+
+<p><img src="images/civitas-icon.svg" alt="Civitas Icon" align="right" style="margin: 1.5em;"></p>
 <p>Clojure Civitas makes it easy for you to publish Clojure ideas and explorations without the overhead of setting up a new project, blog, or repo. Whether you’re sketching out a quick experiment or writing a deeper post, just fork this repo, create a namespace, write, commit and submit a pull request. This is your shared scratch space.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>“Civitas” refers to a community of citizens, encompassing the rights, duties, and privileges associated with belonging.</p>
+</div>
+</div>
+<section id="usage" class="level2">
+<h2 class="anchored" data-anchor-id="usage">Usage</h2>
+<ol type="1">
+<li>Fork the <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io">Clojure Civitas repository</a></li>
+<li>Add your new namespace to <code>src</code></li>
+<li>Write code and markdown comments</li>
+<li>Submit a pull request</li>
+<li>Published</li>
+</ol>
+<p>See <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/README.md">README.md</a> for more information, or browse the existing namespaces in <code>src</code>.</p>
+</section>
+<section id="rationale" class="level2">
+<h2 class="anchored" data-anchor-id="rationale">Rationale</h2>
+<p>Namespaces with markdown comments are a natural fit for interactive, literate programming. ClojureCivitas makes it easy to experience the pleasure of this style of coding. Build up an idea in your REPL, in your favorite editor, and share it with others.</p>
+<p><strong>Problem:</strong> There is incidental complexity in literate programming setup and publishing. Creating a new project, configuring a blog, choosing themes and styling, organizing files, adding analytics, and thinking about SEO all add overhead. This friction gets in the way of creativity, exploration, writing, and sharing. Many people are missing out on the joy of interactive programming as a tool for thought.</p>
+<p><strong>Solution:</strong> A clear path for publishing Clojure ideas and explorations.</p>
+<p><strong>Hope:</strong> As writers share their ideas, readers are encouraged to try literate programming, and share their own insights and experiments.</p>
+<section id="why-markdown-in-code" class="level3">
+<h3 class="anchored" data-anchor-id="why-markdown-in-code">Why markdown in code?</h3>
+<p>We value reproducible artifacts. Start with code. Make it work. Then tell the story.</p>
+</section>
+<section id="make-publishing-clojure-namespaces-easy" class="level3">
+<h3 class="anchored" data-anchor-id="make-publishing-clojure-namespaces-easy">Make Publishing Clojure Namespaces Easy</h3>
+<p>Creators should only have to care about their code, not setting up projects or hosting workflows. Let’s make a shared, organized platform for short experiments, tutorials, notes, and blog posts.</p>
+</section>
+<section id="build-a-database-of-knowledge" class="level3">
+<h3 class="anchored" data-anchor-id="build-a-database-of-knowledge">Build a Database of Knowledge</h3>
+<p>Civitas aggregates structured metadata about the content it hosts and links it to other Clojure resources. We can build a connected web of ideas, showing how concepts relate, what builds on what, and where to go next. A <a href="https://clojurecivitas.github.io/civitas/explorer.html">hex-grid interface</a> presents these relationships visually. Each notebook can declare prerequisites, alternatives, and follow-ups. This helps learners discover next steps, helps educators design coherent learning paths, and enables the community to improve content over time. The goal is to make the Clojure knowledge ecosystem easier to explore and navigate.</p>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 2rem 0;">
 <div style="border-left: 3px solid green; padding-left: 1rem;">
 <h3 class="anchored">
@@ -350,21 +405,6 @@ The best resources rise through collective refinement.
 </div>
 </div>
 <p>An open effort to structure learning resources with meaningful connections.</p>
-<p>“Civitas” refers to a community of citizens, encompassing the rights, duties, and privileges associated with belonging. It’s a term that signifies citizenship, not just a physical city, but also the political and social fabric of the community.</p>
-<section id="usage" class="level2">
-<h2 class="anchored" data-anchor-id="usage">Usage</h2>
-<p>See <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/README.md">README.md</a>.</p>
-</section>
-<section id="rationale" class="level2">
-<h2 class="anchored" data-anchor-id="rationale">Rationale</h2>
-<p>Clojure and markdown are a natural fit for interactive, literate programming. But there is incidental complexity in setup and publishing. Creating a new project, configuring a blog, choosing themes and styling, organizing files, adding analytics, and thinking about SEO all add overhead. This friction discourages experimentation and makes publishing harder than it needs to be.</p>
-<section id="make-publishing-clojure-namespaces-easy" class="level3">
-<h3 class="anchored" data-anchor-id="make-publishing-clojure-namespaces-easy">Make Publishing Clojure Namespaces Easy</h3>
-<p>Markdown comments in Clojure namespaces is a perfect fit for interactive literate programming. Creators should only have to care about their code, not setting up projects or hosting workflows. Let’s make a shared, organized platform for short experiments, tutorials, notes, and blog posts.</p>
-</section>
-<section id="build-a-database-of-knowledge" class="level3">
-<h3 class="anchored" data-anchor-id="build-a-database-of-knowledge">Build a Database of Knowledge</h3>
-<p>Civitas aggregates structured metadata about the content it hosts and links it to other Clojure resources. We can build a connected web of ideas, showing how concepts relate, what builds on what, and where to go next. A <a href="https://clojurecivitas.github.io/civitas/explorer.html">hex-grid interface</a> presents these relationships visually. Each notebook can declare prerequisites, alternatives, and follow-ups. This helps learners discover next steps, helps educators design coherent learning paths, and enables the community to improve content over time. The goal is to make the Clojure knowledge ecosystem easier to explore and navigate.</p>
 </section>
 <section id="embrace-alternatives" class="level3">
 <h3 class="anchored" data-anchor-id="embrace-alternatives">Embrace Alternatives</h3>
@@ -389,11 +429,6 @@ The best resources rise through collective refinement.
 <section id="technical-details" class="level3">
 <h3 class="anchored" data-anchor-id="technical-details">Technical Details</h3>
 <p>Made with <a href="https://scicloj.github.io/clay/">Clay</a>. See the <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/README.md">README.md</a> in the repository for contribution guidelines and technical details.</p>
-</section>
-</section>
-<section id="why-markdown-in-code" class="level2">
-<h2 class="anchored" data-anchor-id="why-markdown-in-code">Why markdown in code?</h2>
-<p>We value reproducible artifacts. Start with code. Make it work. Then tell the story.</p>
 
 
 </section>
