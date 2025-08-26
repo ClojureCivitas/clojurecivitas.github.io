@@ -22,10 +22,11 @@ Think. Code. Share.
 
 ## Rationale
 
+Literate programming is fun.
+We want more people to experience it.
 Why markdown in code? We value reproducible artifacts.
 
-See [Clojure Civitas Rationale](https://clojurecivitas.github.io/about#rationale).
-
+See [Clojure Civitas Rationale](https://clojurecivitas.github.io/about#rationale) for more detail.
 
 ## Contributing
 
@@ -53,6 +54,11 @@ Add metadata on your namespace to set the title, author, and tags.
 (ns my.namespace.example)
 ```
 
+[!TIP]
+The `:draft true` flag keeps it out of the posts list, but it will be available as a draft which can only be viewed by using the full URL.
+This can help if you aren't confident about the posting process or would like feedback before sharing.
+Otherwise, I recommend going YOLO and not worrying about drafts.
+
 Configure your author profile in [site/db.edn](site/db.edn).
 
 Images can be added to the same folder as the namespace,
@@ -70,15 +76,47 @@ unless a different image is listed in the metadata.
  :many-others ["see the examples" "creative uses" "visual variety"]}
 ```
 
-## Preview a Webpage **(Optional, Recommended)**
+### Preview a Webpage **(Optional, Recommended)**
 
-[Use Clay REPL commands](https://scicloj.github.io/clay/#setup) to visualize the namespace as you write.
-When using Clay interactively it renders directly to HTML for speed.
+Clay is ready to interactively render your namespace as HTML, you just need to ask it to "Clay Make File".
 
-## Previewing the Website with Quarto **(Optional, Not Recommended)**
+**REPL commands to render as you write**
+
+| Editor   | Integration Details                                                                 |
+|----------|-------------------------------------------------------------------------------------|
+| Cursive  | "Clay Make File" and similar REPL commands added automatically                      |
+| Calva    | Install "Calva Power Tools" extension for "Clay Make File" and similar commands     |
+| Emacs    | See [clay.el](https://github.com/scicloj/clay.el)                                   |
+| Neovim   | See [clay.nvim](https://github.com/radovanne/clay.nvim)                             |
+
+**CLI alternative**
+
+If you prefer not to use editor integration, you can run:
+
+```
+clojure -M:clay
+```
+
+Will live reload your changes (see [command line](https://scicloj.github.io/clay/#cli) for more details)
+
+**REPL alternative**
+
+If you prefer invoking Clay from the REPL,
+see [scicloj.clay.v2.snippets/make-ns-html!](https://github.com/scicloj/clay/blob/main/src/scicloj/clay/v2/snippets.clj)
+and the [Clay API documentation](https://scicloj.github.io/clay/#api).
+
+### Previewing the Website with Quarto **(Optional, Not Required)**
 
 The published site goes through a longer process of producing markdown then HTML.
 [Quarto](https://quarto.org/) is the markdown publishing tool.
+
+**Using editor integration**
+
+You can use the "Clay Make File Quarto" command to generate the necessary files via Quarto.
+It takes a little bit longer, but will show the styles of the published site.
+You may need to do a preparatory command-line markdown build once to get the necessary files in place.
+
+**Using the command line**
 
 ```sh
 clojure -M:clay -A:markdown
@@ -105,7 +143,8 @@ Create a pull request:
 3. push the branch to your fork
 4. open a pull request
 
-Your pull request will be reviewed to prevent abuse and then merged.
+Your pull request will be quickly reviewed to prevent abuse and then merged.
+Reviews are minimal, our goal is to get your changes published ASAP.
 Once merged, namespaces are automatically published to the website.
 
 Please contact [@timothypratley](https://github.com/timothypratley) if you are having any difficulty submitting a PR.
@@ -121,6 +160,15 @@ Add to or modify [site/db.edn](site/db.edn).
 The goal is to create a database of resources for learning.
 See the [explorer](https://clojurecivitas.github.io/civitas/explorer.html).
 
+### Large data, slow calculations, private credentials
+
+You can render a `qmd` file locally (see preview instructions above).
+If you `git add -f site/my-ns/my-post.qmd`,
+it will prevent the source `src/my-ns/my-post.clj` file from executing in the publish process.
+Only you will run the code locally (where you have secrets and large files available).
+
+See [Some notebooks should only be run locally](https://clojurecivitas.github.io/scicloj/clay/skip_if_unchanged_example.html) for more detail.
+
 ## Design
 
 Align with Clojure's values: simplicity, community, and tooling that helps you think.
@@ -134,19 +182,19 @@ Think of it as a logical path that leads to a specific artifact or topic.
 Classification elements such as tags, author, document type, level, or publication date belong in **metadata**, not the
 namespace.
 
-- **Start with an organization** if the narrative is about a library or tool maintained by one.  
+- **Start with an organization** if the narrative is about a library or tool maintained by one.
   Examples: `scicloj`, `lambdaisland`.
-- **Follow with the specific library or concept.**  
+- **Follow with the specific library or concept.**
   Examples: `scicloj.clay`, `lambdaisland.kaocha`, `lambdaisland.hiccup`.
-- If there is **no organization**, start directly with the library or tool name.  
+- If there is **no organization**, start directly with the library or tool name.
   Examples: `hiccup`, `reagent`.
-- For **core Clojure topics**, use `clojure` as the root.  
+- For **core Clojure topics**, use `clojure` as the root.
   Examples: `clojure.lazy-sequences`, `clojure.transducers`.
 - Add **segments** to further qualify the namespace. These segments should:
     - Avoid name collisions.
     - Not duplicate metadata.
     - The last segment should be extra specific and descriptive. Prefer: `z-combinator-gambit`, avoid: `z-combinator`.
-- **Events, communities, or topics** may also be used as the top-level namespace when appropriate.  
+- **Events, communities, or topics** may also be used as the top-level namespace when appropriate.
   Use discretion to determine if the narrative is primarily about an artifact library, a concept, or an event.
 - Namespaces must consist of more than one segment.
 
@@ -167,18 +215,9 @@ Differentiation between posts, pages, and presentations is by `type` metadata (a
 
 | Namespace                                                               | Description                                                   |
 |-------------------------------------------------------------------------|---------------------------------------------------------------|
-| `scicloj.clay.clojure-notebooks-for-pythonistas`                        | Introduction to Clay for Python programmers.                  |
 | `lambdaisland.kaocha.customization-tips-and-tricks`                     | Tips for fast iteration with Kaocha.                          |
-| `lambdaisland.kaocha.up-and-running-on-ubuntu`                          | Kaocha setup guide for Ubuntu.                                |
-| `clojure.transducers.how-it-works-explained-with-diagrams`              | Explains transducers with diagrams.                           |
 | `clojure.lazy-sequences.detailed-explanation-by-example`                | In-depth example-driven guide to lazy sequences.              |
-| `conferences.clojure-conj-2023.state-of-clojure.notes.from-the-backrow` | Notes on the "State of Clojure" talk at Clojure/Conj 2023.    |
-| `hiccup.basic-html-generation`                                          | Tutorial on generating HTML with Hiccup.                      |
 | `algorithms.graph.layout.force-directed-spring-simulation`              | On force-directed graph layout algorithms (library-agnostic). |
-| `data-structures.datoms.all-about-eavt`                                 | EAVT indexing, not tied to any vendor.                        |
-| `clojure.deps-edn.monorepo-setup-in-detail`                             | Monorepo setup using `deps.edn`.                              |
-| `cursive.super-easy-debugging-techniques`                               | Debugging in Cursive IDE, for beginners.                      |
-| `cognitect.datomic.cloud.how-we-scale-to-5million-users`                | Datomic Cloud scaling case study.                             |
 | `reagent.component-lifecycle.a-tale-of-life-death-and-rebirth`          | A whimsical take on Reagent component lifecycles.             |
 
 ### File system organization
@@ -215,6 +254,7 @@ Goal: Constellations, not cabinets.
 ### Dependency management
 
 A single `deps.edn` file is shared.
+Contributors are encouraged to add dependencies as needed.
 
 Pros:
 
@@ -234,13 +274,9 @@ Future:
 
 Goal: Minimize friction in authoring while ensuring publishable reproducibility.
 
-## Large data, slow calculations, private credentials
+## Deployment
 
-If you add a qmd file under the `site` directory,
-it will prevent the source `clj` file from executing.
-This allows you to only run the code locally.
-
-See [Some notebooks should only be run locally](https://clojurecivitas.github.io/scicloj/clay/skip_if_unchanged_example.html) for more information.
+See [.github/workflows/render-and-publish.yml](.github/workflows/render-and-publish.yml)
 
 ## License
 

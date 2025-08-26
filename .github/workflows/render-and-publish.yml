@@ -32,7 +32,7 @@ jobs:
           java-version: '21'
 
       - name: Set up Clojure
-        uses: DeLaGuardo/setup-clojure@13.2
+        uses: DeLaGuardo/setup-clojure@main
         with:
           cli: 'latest'
 

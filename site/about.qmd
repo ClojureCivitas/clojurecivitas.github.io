@@ -1,12 +1,64 @@
-# About
+---
+title: "About"
+---
 
-<img src="images/civitas-icon.svg" alt="Civitas Icon" align="right">
+<img src="images/civitas-icon.svg" alt="Civitas Icon" align="right" style="margin: 1.5em;">
 
 Clojure Civitas makes it easy for you to publish Clojure ideas and explorations
 without the overhead of setting up a new project, blog, or repo.
 Whether you're sketching out a quick experiment or writing a deeper post,
 just fork this repo, create a namespace, write, commit and submit a pull request.
 This is your shared scratch space.
+
+::: {.callout-tip}
+"Civitas" refers to a community of citizens, encompassing the rights, duties, and privileges associated with belonging.
+:::
+
+## Usage
+
+1. Fork the [Clojure Civitas repository](https://github.com/ClojureCivitas/clojurecivitas.github.io)
+2. Add your new namespace to `src`
+3. Write code and markdown comments
+4. Submit a pull request
+5. Published
+
+See [README.md](https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/README.md) for more information,
+or browse the existing namespaces in `src`.
+
+## Rationale
+
+Namespaces with markdown comments are a natural fit for interactive, literate programming.
+ClojureCivitas makes it easy to experience the pleasure of this style of coding.
+Build up an idea in your REPL, in your favorite editor, and share it with others.
+
+**Problem:** There is incidental complexity in literate programming setup and publishing.
+Creating a new project, configuring a blog, choosing themes and styling, organizing files, adding analytics, and thinking about SEO all add overhead.
+This friction gets in the way of creativity, exploration, writing, and sharing.
+Many people are missing out on the joy of interactive programming as a tool for thought.
+
+**Solution:** A clear path for publishing Clojure ideas and explorations.
+
+**Hope:** As writers share their ideas, readers are encouraged to try literate programming, and share their own insights and experiments.
+
+### Why markdown in code?
+
+We value reproducible artifacts.
+Start with code. Make it work.
+Then tell the story.
+
+### Make Publishing Clojure Namespaces Easy
+
+Creators should only have to care about their code, not setting up projects or hosting workflows.
+Let's make a shared, organized platform for short experiments, tutorials, notes, and blog posts.
+
+### Build a Database of Knowledge
+
+Civitas aggregates structured metadata about the content it hosts and links it to other Clojure resources.
+We can build a connected web of ideas, showing how concepts relate, what builds on what, and where to go next.
+A [hex-grid interface](https://clojurecivitas.github.io/civitas/explorer.html) presents these relationships visually.
+Each notebook can declare prerequisites, alternatives, and follow-ups.
+This helps learners discover next steps, helps educators design coherent learning paths, and enables the community to improve content over time.
+The goal is to make the Clojure knowledge ecosystem easier to explore and navigate.
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 2rem 0;">
 <div style="border-left: 3px solid green; padding-left: 1rem;">
@@ -24,35 +76,6 @@ This is your shared scratch space.
 </div>
 
 An open effort to structure learning resources with meaningful connections.
-
-"Civitas" refers to a community of citizens, encompassing the rights, duties, and privileges associated with belonging.
-It's a term that signifies citizenship, not just a physical city, but also the political and social fabric of the community.
-
-## Usage
-
-See [README.md](https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/README.md).
-
-## Rationale
-
-Clojure and markdown are a natural fit for interactive, literate programming.
-But there is incidental complexity in setup and publishing.
-Creating a new project, configuring a blog, choosing themes and styling, organizing files, adding analytics, and thinking about SEO all add overhead.
-This friction discourages experimentation and makes publishing harder than it needs to be.
-
-### Make Publishing Clojure Namespaces Easy
-
-Markdown comments in Clojure namespaces is a perfect fit for interactive literate programming.
-Creators should only have to care about their code, not setting up projects or hosting workflows.
-Let's make a shared, organized platform for short experiments, tutorials, notes, and blog posts.
-
-### Build a Database of Knowledge
-
-Civitas aggregates structured metadata about the content it hosts and links it to other Clojure resources.
-We can build a connected web of ideas, showing how concepts relate, what builds on what, and where to go next.
-A [hex-grid interface](https://clojurecivitas.github.io/civitas/explorer.html) presents these relationships visually.
-Each notebook can declare prerequisites, alternatives, and follow-ups.
-This helps learners discover next steps, helps educators design coherent learning paths, and enables the community to improve content over time.
-The goal is to make the Clojure knowledge ecosystem easier to explore and navigate.
 
 ### Embrace Alternatives
 
@@ -84,8 +107,3 @@ See the [Clojure Civitas Analytics Dashboard](https://clojurecivitas.goatcounter
 
 Made with [Clay](https://scicloj.github.io/clay/).
 See the [README.md](https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/README.md) in the repository for contribution guidelines and technical details.
-
-## Why markdown in code?
-
-We value reproducible artifacts.
-Start with code. Make it work. Then tell the story.
