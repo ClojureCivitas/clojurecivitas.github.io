@@ -66,7 +66,10 @@ and displayed with markdown like `;; ![caption](my-image.jpg)`.
 The first image on the page is used as a preview in the blog listing,
 unless a different image is listed in the metadata.
 
+### Adding Visualizations
+
 [Kindly](https://scicloj.github.io/kindly-noted/kindly) annotations are rendered as visualizations.
+You add code like this:
 
 ```clojure
 ^kind/table
@@ -76,7 +79,11 @@ unless a different image is listed in the metadata.
  :many-others ["see the examples" "creative uses" "visual variety"]}
 ```
 
-### Preview a Webpage **(Optional, Recommended)**
+Then you can render the table interactively, and it will also be rendered in the final post.
+
+See [Clay examples](https://scicloj.github.io/clay/clay_book.examples.html) to see what's possible.
+
+### Preview your namespace as a Webpage **(Optional, Recommended)**
 
 Clay is ready to interactively render your namespace as HTML, you just need to ask it to "Clay Make File".
 
@@ -169,6 +176,12 @@ Only you will run the code locally (where you have secrets and large files avail
 
 See [Some notebooks should only be run locally](https://clojurecivitas.github.io/scicloj/clay/skip_if_unchanged_example.html) for more detail.
 
+### Styling and other features
+
+Pages are rendered with [Quarto](https://quarto.org).
+To see what styling options are available, check the [Quarto HTML Reference](https://quarto.org/docs/reference/formats/html.html).
+Anything you can do there, you can do in your namespace comment markdown and namespace metadata annotation.
+
 ## Design
 
 Align with Clojure's values: simplicity, community, and tooling that helps you think.
@@ -198,6 +211,15 @@ namespace.
   Use discretion to determine if the narrative is primarily about an artifact library, a concept, or an event.
 - Namespaces must consist of more than one segment.
 
+#### Choosing a Namespace Examples
+
+| Namespace                                                               | Description                                                   |
+|-------------------------------------------------------------------------|---------------------------------------------------------------|
+| `lambdaisland.kaocha.customization-tips-and-tricks`                     | Tips for fast iteration with Kaocha.                          |
+| `clojure.lazy-sequences.detailed-explanation-by-example`                | In-depth example-driven guide to lazy sequences.              |
+| `algorithms.graph.layout.force-directed-spring-simulation`              | On force-directed graph layout algorithms (library-agnostic). |
+| `reagent.component-lifecycle.a-tale-of-life-death-and-rebirth`          | A whimsical take on Reagent component lifecycles.             |
+
 #### Metadata and Navigation
 
 It may feel unintuitive not to group related content (e.g. an author’s blog series) by directory or namespace.
@@ -210,15 +232,6 @@ Namespaces prioritize **logical addressing** over ontological hierarchy.
 This promotes flexibility at the cost of tidiness, but enables richer discovery through metadata and search.
 
 Differentiation between posts, pages, and presentations is by `type` metadata (a Quarto page type convention).
-
-#### Examples
-
-| Namespace                                                               | Description                                                   |
-|-------------------------------------------------------------------------|---------------------------------------------------------------|
-| `lambdaisland.kaocha.customization-tips-and-tricks`                     | Tips for fast iteration with Kaocha.                          |
-| `clojure.lazy-sequences.detailed-explanation-by-example`                | In-depth example-driven guide to lazy sequences.              |
-| `algorithms.graph.layout.force-directed-spring-simulation`              | On force-directed graph layout algorithms (library-agnostic). |
-| `reagent.component-lifecycle.a-tale-of-life-death-and-rebirth`          | A whimsical take on Reagent component lifecycles.             |
 
 ### File system organization
 
