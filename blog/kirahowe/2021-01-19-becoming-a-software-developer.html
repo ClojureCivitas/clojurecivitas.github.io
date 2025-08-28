@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.33">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Kira Howe">
+<meta name="dcterms.date" content="2021-01-19">
+
+<title>Becoming A Software Developer – Clojure Civitas</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../favicon.ico" rel="icon">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-4bb19fa9e15c342593cf81188a24865b.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-5779b3facc9d66268c5e8518df256508.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-ed5d6653ca098c923ccbc5e23d9b373e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-5779b3facc9d66268c5e8518df256508.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
+
+
+<meta property="og:title" content="Becoming A Software Developer – Clojure Civitas">
+<meta property="og:description" content="">
+<meta property="og:image" content="https://clojurecivitas.github.io/images/civitas-icon.svg">
+<meta property="og:site_name" content="Clojure Civitas">
+</head>
+
+<body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../images/civitas-icon.svg" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Clojure Civitas</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../posts.html"> 
+<span class="menu-text">Posts</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../civitas/authors.html"> 
+<span class="menu-text">Authors</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../civitas/explorer.html"> 
+<span class="menu-text">Explorer</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ClojureCivitas/clojurecivitas.github.io"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../posts.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Becoming A Software Developer</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://kiramclean.com">Kira Howe</a> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 19, 2021</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>I get asked a lot for advice on becoming a software developer. I didn’t study anything related to software in university, but now it’s what I do for a living. I also spent about 3.5 years mentoring with <a href="https://www.lighthouselabs.ca">Lighthouse Labs</a>, a local web development bootcamp, and watched (and would like to believe at least in some cases, helped) hundreds of people of every age from wildly diverse backgrounds get jobs as software developers.</p>
+<p>This is my advice for people with no technical experience who want to land their first job writing software. It’s based on my experience as both a person who did it myself and as a mentor to other people who did it. There’s no single right way to go about this, and no matter how you do it’s a lot of work. But these are some things that have worked for other people, myself included. These suggestions are arranged roughly in order, but of course many overlap and kind of happen at the same time.</p>
+<section id="know-what-youre-getting-yourself-into" class="level2">
+<h2 class="anchored" data-anchor-id="know-what-youre-getting-yourself-into">Know what you’re getting yourself into</h2>
+<p>Software engineering is nothing like I expected it to be. All the hard parts involve dealing with people. Part of my original motivation for choosing a career in software was thinking I wouldn’t have to deal much with people. I wasn’t very good at it and didn’t enjoy it, but my fantasy of just sitting in front of my computer all day and watching my bank account fill up was totally delusional.</p>
+<p>The reality of writing code for a living, in my experience, includes dealing with a lot of office politics, entitled middle managers, stressed out co-workers, and yes, condescencion and occasional harassment (especially if you’re not male). I find the culture of the tech industry generally toxic and abusive and it has very nearly broken my spirit on multiple occasions.</p>
+<p>You won’t be alone dealing with this. Your co-workers and countless people across the industry share the experience. And it is ultimately bearable.</p>
+<p>I don’t say this to discourage anyone from getting into software, but just to highlight that the stuff you hear from recruiters is bullshit. It’s not all free trips and fancy perks and big paycheques. It is those things, sure, but the reality is much less glamorous than they make it sound.</p>
+<p>Being a software developer means getting paid to solve other people’s problems. The rest is fluff. This makes it a solid career path, though, because other people have a lot of problems.</p>
+<p>It is still an empowering and lucrative career. Despite my generally negative view of the industry, I still highly recommend and help people into a career in software regularly. Most individual software developers, like most people, are genuine and kind. And I can’t speak to problems in other industries first hand, but I gather most high-paying, male-dominated industries are pretty similar anyway.</p>
+</section>
+<section id="meet-lots-of-people" class="level2">
+<h2 class="anchored" data-anchor-id="meet-lots-of-people">Meet lots of people</h2>
+<p>I was referred to three of the four programming jobs I’ve had so far through friends. I made friends with those people who were already programmers at meetups. I didn’t ask them to get me a job, but a lot of companies are pretty much always looking for new software engineers, so when your friend hears you’re looking for that kind of job, they can bring it up at work. I still did interviews, but it makes an enormous difference when someone the boss already knows and trusts can vouch for you.</p>
+<p>A word on meeting strangers. I, like many people who are into nerd things like software, am the most introverted person I know. I found hanging out in groups of new people excruciating at first, but honestly learning how to not be awkward around strangers is just as important as learning how to code if you want to do well in your career. I just went to the meetups and stood off to the side, awkwardly making eye contact with a few random people. Eventually a friendly extrovert would come up and initiate a conversation, and before I knew it I could hold my own in a crowd.</p>
+<p>Check out meetups for programming languages you’re interested in, or if there aren’t those kinds of groups where you live, join online communities. Most programming languages have a slack or discord server where people hang out, and in my experience people are usually very welcoming and kind to newbies (at least in the Ruby, Elixir, and Clojure communities; all of which I highly recommend).</p>
+</section>
+<section id="learn-how-to-code-in-public" class="level2">
+<h2 class="anchored" data-anchor-id="learn-how-to-code-in-public">Learn how to code, in public</h2>
+<p>Without any formal education in software development, you have to offer something else to prove you actually know how to write code. I did this by building a bunch of crappy side projects. The very first thing I ever did was replicate the Google landing page with HTML and CSS. The first actual app I made was a blackjack game with Sinatra. I also made Twitter and Reddit clones with Rails, and little browser games like Pacman with different JavaScript frameworks. Some of that code still exists in my <a href="https://github.com/kmclean-old">GitHub graveyard</a> if you want to see what I mean by crappy. Other common toy projects include link shorteners, photo galleries, e-commerce stores, time trackers, or clones of whatever software you normally use, like spreadsheets, workflow management, calendars, etc. The possibilities are endless.</p>
+<p>Look for tutorials online that walk through how to build the kinds of things you’re interested in. If you don’t know where to start, <a href="https://www.theodinproject.com">The Odin Project</a> and <a href="https://www.freecodecamp.org">Free Code Camp</a> are two free programs that offer very realistic learning roadmaps. I did parts of both of those but never finished either. I also did several free courses on <a href="https://www.coursera.org/browse/computer-science">Coursera</a> and <a href="https://www.edx.org/course/subject/computer-science">edX</a>, which are both amazing but you have to be careful not to end up in a rabbit hole. Those two mostly have actual university courses, which are super interesting, but not very relevant to things you’ll do in a real job.</p>
+<p>If your goal is to get from nothing to making money as a developer as fast as possible I recommend sticking to a more targeted learning roadmap like the two above. There are also countless paid ones which vary wildly in price and quality. Be weary about shelling out huge amounts of money for bootcamps. I did pay for a few months of <a href="https://launchschool.com">Launch School</a> (which at the time was called “Tea Leaf Academy”), and it was the best career move I ever made. I highly recommend them because they’re in a sweet spot of offering a robust and relevant curriculum without costing a fortune. It’s not free ($200/month), but a few hundred dollars is a very small investment in the scheme of your career. Apparently they also offer a deferred payment option now, too.</p>
+<p>The career-oriented bootcamps will also teach you loads of useful practical things they don’t teach in the free university courses, like version control (git), testing, and how to collaborate with other developers on one project.</p>
+<p>It took me 6 months of studying, meeting people, and building crappy software full time before I got my first internship. <a href="https://www.lighthouselabs.ca/student-outcomes">95% of Lighthouse Labs graduates</a> are employed as software developers in that timeframe. Launch School delivers <a href="https://launchschool.com/results">impressive, concrete results</a> for many of their students, too. I never finished most of the courses or programs I started. I funded that time off by living like a peasant on money I made running one of those student painting businesses the previous summer. Learning to code can feel like a slog at times, but just stick with it and you’re very likely to be among the vast majority who succeed at this self-educated developer thing. It is a totally achievable and realistic goal and you’re in good company.</p>
+<p>Other than doing free online courses and building apps from tutorials, other ways I learned in public during this time included blogging about my learning journey, making myself a portfolio website to showcase my little projects, and volunteering with some local tech communities. Do what works for you, but focus on ending up with at least a few medium sized projects you can show someone to prove you know how to make software that works.</p>
+</section>
+<section id="learn-best-practices" class="level2">
+<h2 class="anchored" data-anchor-id="learn-best-practices">Learn best practices</h2>
+<p>A surprising number of experienced developers still write really horrible code. Spend some time learning about software design and software engineering best practices to avoid becoming one of them. How you do that depends a lot on how you learn. (BTW, you should figure that out before you embark upon a journey of self-re-education for a career change). I absorb a lot from reading and prefer to learn by studying theory over trial and error, so reading and watching talks works really well for me. YMMV and you do ultimately just need experience to really get this stuff, but you don’t have to start from scratch.</p>
+<p>Read “The Pragmatic Programmer” by Dave Thomas and Andrew Hunt, and anything by Sandi Metz. Watch Rich Hickey’s talks, especially “<a href="https://www.infoq.com/presentations/Simple-Made-Easy/">Simple Made Easy</a>”, and Sarah Mei’s “<a href="https://brightonruby.com/2017/livable-code-sarah-mei/">Livable Code</a>”. Other classics include Eric Evans’ “Domain Driven Design” and Martin Fowler’s “Refactoring”. There are countless others and everyone has their opinion about what should be included in the software engineering canon, but these are my recommendations. They’ll provide a solid foundation and ample fodder for further reading and watching.</p>
+</section>
+<section id="pour-your-heart-out" class="level2">
+<h2 class="anchored" data-anchor-id="pour-your-heart-out">Pour your heart out</h2>
+<p>Once you can write code that mostly works, start looking for a job. Put the word out that you’re seeking your first role writing software. Hopefully one of your programmer friends will know about an open position, but you can still apply to random jobs on the internet, too. This has a very low success rate, but it’s possible. I got one of my four jobs by firing my resume into the abyss. I included a very long and heartfelt cover letter about how I loved programming so much and really wanted to work for this specific company (which I did), and how I learn fast and really believed I could do the job if they’d give me a chance.</p>
+<p>It worked. The hiring manager said my letter caught his attention. I had one year of experience at that time and had never worked remotely before, but I got the job.</p>
+<p>Don’t be afraid to be authentic. Don’t lie and say you know more than you do, but don’t sell yourself short, either. Bootstrapping a career in software is no small feat and there are many teams out there who would love to hire the kinds of self-starting fast learners who do it.</p>
+</section>
+<section id="dont-be-too-picky-at-first" class="level2">
+<h2 class="anchored" data-anchor-id="dont-be-too-picky-at-first">Don’t be too picky (at first!)</h2>
+<p>The reality is that your first job or two will probably be pretty crappy and underpaid. At this point you’re trying to convince someone to take a chance on you, and it’s a trade off between your dignity and your future career. In the very beginning, you should prioritize gaining experience over almost everything else. Obviously never put up with anything you’re uncomfortable with, but if you can stick it out it’s worth setting the bar pretty low just to get your first few months of real job experience, IMHO.</p>
+<p>I lucked out and worked with the most amazing team in the world for my first job as a developer, but I discovered from the students I mentored that that is very much not the norm.</p>
+<p>There are pros and cons to every kind of company, so don’t worry too much about finding the perfect fit right away. Focus on gaining experience at first so you can have the freedom to focus on finding the perfect fit later. I’ve worked with a few different kinds of companies and there are pros and cons no matter where you go.</p>
+<p>Big corporations usually have a lot of experienced developers and lethargic processes, so there’s more opportunity to take your time and get help from people more advanced than you. The pressure is often pretty low because people have such low expectations for new developers, which honestly is fair. You have a lot of room to screw up because you’re such a tiny cog in a massive machine. The downsides depend on your personality. For me it was that I find most large tech companies to be evil and didn’t like the soul-crushing feeling of helping to build something I hated.</p>
+<p>Startups usually have fewer people available to be mentors, but more opportunity to take on disproportionate responsibility for your level, which can be an amazing learning experience in a different way. You also have a lot of room to screw up, but it’s more because your screw ups just blend in with the overall culture of moving fast and breaking things. I now believe that’s a ridiculous way to run a business, but when there’s widespread acceptance of breaking even important things, you have a lot freedom to experiment and learn by trial and error.</p>
+</section>
+<section id="be-a-good-student" class="level2">
+<h2 class="anchored" data-anchor-id="be-a-good-student">Be a good student</h2>
+<p>Lastly, once you finally land your first job, be a good student. Treat your first year or two on the job like paid education, not your chance to go in and show everyone how it’s done. You know way less than you think, and you have no idea what it takes to build functioning software systems, let alone to deploy or maintain them. Always be humble and eager to learn. Soak up every minute of attention you get from more experienced developers around you and learn from them. Not everything they say is wise or true, but pay attention and copy the things that work whilst ignoring the things that clearly don’t.</p>
+<p>Learn how to ask good questions. Don’t be afraid to ask for help, but before you do, at least try to figure out the problem yourself. Write down what you tried, and explain why you’re surprised your attempt didn’t work.</p>
+<p>There are certain things you can only really learn from experience on a real world project, so see what opportunities there are to learn those things, for example:</p>
+<ul>
+<li>securing and backing up actual important customer data</li>
+<li>deploying a huge app with no downtime</li>
+<li>refactoring large, messy, legacy codebases</li>
+<li>adding new features to large, messy, legacy codebases</li>
+<li>fixing obscure bugs with no instructions to reproduce them</li>
+</ul>
+<p>These are just a few examples of things you won’t run into on your little demo projects. Pay attention to the problems you’re dealing with at work that you don’t run into on side projects and learn how to fix those. That’s your pathway to levelling up. Most importantly, never stop learning.</p>
+</section>
+<section id="thats-all" class="level2">
+<h2 class="anchored" data-anchor-id="thats-all">That’s all</h2>
+<p>Software development is a great career. It’s allowed me to be financially independent and stable, travel the world, meet cool people, and lots more. My path won’t work for everyone. There are as many different ways to become a software developer as there are people, but I’ve seen countless aspiring software engineers go through their own journeys and many of them touch on these points, so see how they fit in to your own path. And let me know how it goes 🙂</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/clojurecivitas\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

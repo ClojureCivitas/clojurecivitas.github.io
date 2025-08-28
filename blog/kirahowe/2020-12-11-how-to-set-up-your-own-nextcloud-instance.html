@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.33">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Kira Howe">
+<meta name="dcterms.date" content="2020-12-19">
+
+<title>How To Set Up Your Own Nextcloud Server – Clojure Civitas</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../favicon.ico" rel="icon">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-4bb19fa9e15c342593cf81188a24865b.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-5779b3facc9d66268c5e8518df256508.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-ed5d6653ca098c923ccbc5e23d9b373e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-5779b3facc9d66268c5e8518df256508.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
+
+
+<meta property="og:title" content="How To Set Up Your Own Nextcloud Server – Clojure Civitas">
+<meta property="og:description" content="">
+<meta property="og:image" content="https://clojurecivitas.github.io/images/civitas-icon.svg">
+<meta property="og:site_name" content="Clojure Civitas">
+</head>
+
+<body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../images/civitas-icon.svg" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Clojure Civitas</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../posts.html"> 
+<span class="menu-text">Posts</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../civitas/authors.html"> 
+<span class="menu-text">Authors</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../civitas/explorer.html"> 
+<span class="menu-text">Explorer</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ClojureCivitas/clojurecivitas.github.io"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../posts.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">How To Set Up Your Own Nextcloud Server</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://kiramclean.com">Kira Howe</a> </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">December 19, 2020</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>One of my goals for 2020 was to stop using Google’s products. There are a lot of reasons why, but that’s not the point of this post. I found out about Nextcloud last month and it turns out it’s a great replacement for a lot of Google. I don’t actually use all of its features, but I’ve migrated my calendar, reminders, contacts, bookmarks, video calls, photos, and news feeds and I’m really happy with it so far.</p>
+<p>There are a lot of companies that will host Nextcloud for you where you just sign up for an account like anything else, but in case you’re interested in hosting Nextcloud for yourself this post is basically a brain dump of how I did that. It took me a while to cobble together all the pieces I needed to get everything working from end to end, so I’m hoping this might save someone else from having to do the same. If you know your way around servers and Nextcloud already you can just skim the headings like a checklist to make sure you don’t forget an important step. But if you want a succinct overview of the actual steps I did and commands I ran, each section contains those details. By the end you’ll see how I installed Nextcloud on my own server, secured it, set up backups, and set up external storage for my photos.</p>
+<p>Some parts are pieced together from other partial guides or longer blog posts, so where relevant the references lead to those sources. This post is more of a quick start with just the essential steps. Anything in <code>&lt;pointy-brackets&gt;</code> is meant to be replaced. So the actual command I ran was e.g.&nbsp;<code>adduser kira</code>, not <code>adduser &lt;name&gt;</code>.</p>
+<section id="what-this-list-assumes-you-already-have" class="level2">
+<h2 class="anchored" data-anchor-id="what-this-list-assumes-you-already-have">What this list assumes you already have</h2>
+<ul>
+<li>A domain name. I got mine from <a href="https://namecheap.com">Namecheap</a>.</li>
+<li>An account with a cloud server provider. I use <a href="https://www.linode.com/choosing-linode/">Linode</a>.</li>
+<li>An account with <a href="https://www.backblaze.com/b2/cloud-storage.html">Backblaze</a></li>
+<li>An account with <a href="https://healthchecks.io/">Healthchecks.io</a></li>
+<li>Your ssh key</li>
+<li>$99/year. I pay $5/month for the server I use, $2/month for back ups, $5/year for the domain name ($5.16 actually), and CAD$10/year for carbon offsets.</li>
+</ul>
+</section>
+<section id="set-up-a-server-running-ubuntu-and-set-up-ssh-access-for-yourself" class="level2">
+<h2 class="anchored" data-anchor-id="set-up-a-server-running-ubuntu-and-set-up-ssh-access-for-yourself">1. Set up a server running Ubuntu and set up ssh access for yourself</h2>
+<ul>
+<li>Spin up a new server with your cloud provider. I use a “nanode”, the smallest server available from Linode, with 1GB of RAM and 25GB of storage, which is plenty more than <a href="https://docs.nextcloud.com/server/16/admin_manual/installation/system_requirements.html#server">Nextcloud’s minimum specs</a>.</li>
+<li>Select an operating system that can install <a href="https://snapcraft.io/docs/installing-snapd">snap packages</a>. I’m using Ubuntu 20.04 (LTS). Nextcloud recommends at least either Ubuntu 18.04 LTS or Red Hat Enterprise Linux 7.</li>
+<li>Add your ssh key to the server. There should be a way to do this through the UI where you manage your new server.</li>
+<li>Copy the IP address of your new server</li>
+</ul>
+<section id="ssh-into-your-server-as-the-root-user-and-make-yourself-a-new-sudo-user-that-can-also-ssh-into-the-machine-1" class="level3">
+<h3 class="anchored" data-anchor-id="ssh-into-your-server-as-the-root-user-and-make-yourself-a-new-sudo-user-that-can-also-ssh-into-the-machine-1">1.1. ssh into your server as the root user and make yourself a new sudo user that can also ssh into the machine <sup><a href="https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-20-04">1</a></sup></h3>
+<ul>
+<li><code>ssh root@&lt;server-ip-address&gt;</code></li>
+<li><code>adduser &lt;name&gt;</code></li>
+<li><code>usermod -aG sudo &lt;name&gt;</code></li>
+<li><code>rsync --archive --chown=&lt;name&gt;:&lt;name&gt; ~/.ssh /home/&lt;name&gt;</code></li>
+</ul>
+<p>Close this ssh session and log in as your new user to make sure it works:</p>
+<ul>
+<li><code>logout</code></li>
+<li><code>ssh &lt;name&gt;@&lt;server-ip-address&gt;</code></li>
+</ul>
+<p>Leave this ssh session open. The rest of the commands below are meant to be run on your server, unless otherwise stated.</p>
+</section>
+</section>
+<section id="point-your-new-server-to-your-custom-domain" class="level2">
+<h2 class="anchored" data-anchor-id="point-your-new-server-to-your-custom-domain">2. Point your new server to your custom domain</h2>
+<p>There should be a way to do this in the admin section for your server. On Linode’s there’s a “Domains” section in the left admin menu. From there I clicked “Add a Domain” in the top right, then filled in the domain name, my email address, and selected “Insert default records from one of my Linodes” from the “Insert Defaults Records” dropdown, then I selected my new Nextcloud server from the list of Linodes. The steps might be slightly different depending what cloud server provider you’re using. By the end you need DNS records pointing your domain name to your Nextcloud server. If you did this through Linode (or whatever you’re using), you’ll also need to update the nameservers with your domain registar.</p>
+</section>
+<section id="set-up-a-basic-firewall" class="level2">
+<h2 class="anchored" data-anchor-id="set-up-a-basic-firewall">3. Set up a basic firewall</h2>
+<ul>
+<li><code>sudo ufw allow OpenSSH</code></li>
+<li><code>sudo ufw allow https</code></li>
+<li><code>sudo ufw allow http</code></li>
+<li><code>sudo ufw enable</code></li>
+</ul>
+</section>
+<section id="install-nextcloud" class="level2">
+<h2 class="anchored" data-anchor-id="install-nextcloud">4. Install Nextcloud</h2>
+<ul>
+<li><code>sudo snap install nextcloud</code></li>
+<li><code>sudo nextcloud.manual-install &lt;username&gt; &lt;password&gt;</code></li>
+</ul>
+</section>
+<section id="set-up-your-domain-enable-https-and-install-an-auto-updating-certificate-from-lets-encrypt" class="level2">
+<h2 class="anchored" data-anchor-id="set-up-your-domain-enable-https-and-install-an-auto-updating-certificate-from-lets-encrypt">5. Set up your domain, enable https, and install an auto-updating certificate from Let’s Encrypt</h2>
+<ul>
+<li><code>sudo nextcloud.occ config:system:set trusted_domains 1 --value=&lt;your-domain.name&gt;</code></li>
+<li><code>sudo nextcloud.enable-https lets-encrypt</code></li>
+</ul>
+</section>
+<section id="enable-2fa-on-your-nextcloud-account" class="level2">
+<h2 class="anchored" data-anchor-id="enable-2fa-on-your-nextcloud-account">6. Enable 2FA on your Nextcloud account <sup>*</sup></h2>
+<ul>
+<li>Log in to your new personal cloud at the domain you configured using the username and password you chose above and install the 2FA app
+<ul>
+<li>Click on your initial in the top right corner of the Nextcloud dashboard and select “Apps”</li>
+<li>In the left side bar click on “Security”, then search for the “Two-Factor TOTP Provider” app</li>
+<li>Click “Download and enable”</li>
+</ul></li>
+<li>Set up 2FA with this newly installed app
+<ul>
+<li>Click on your initial in the top right corner and select “Settings”</li>
+<li>In the left sidebar, click on “Security” (in the “Personal” section) then check the “Enable TOTP” box and follow the instructions to set up 2FA</li>
+</ul></li>
+</ul>
+<p>I managed to forget my password in the time between installing Nextcloud and trying to log in for the first time. If that happens to you, you can reset it by running <code>sudo nextcloud.occ user:resetpassword &lt;username&gt;</code>.</p>
+<hr>
+<p><small>* Doing this means you will be required to generate “app passwords” in order to log in to your Nextcloud account in third party apps or other devices (to use Nextcloud to sync your calendar or reminders to your phone, for example.) There’s a tiny box with a button that says “Create new app password” at the bottom of the “Security” admin section (under “Personal”, not “Administration”) where you can do that.</small></p>
+</section>
+<section id="set-up-backups" class="level2">
+<h2 class="anchored" data-anchor-id="set-up-backups">7. Set up backups</h2>
+<section id="turn-on-local-backups" class="level3">
+<h3 class="anchored" data-anchor-id="turn-on-local-backups">7.1. Turn on “local” backups</h3>
+<ul>
+<li>Enable backups for your whole server for a first layer of backups. I did this when I was setting up my Linode (there was a checkbox in the “Optional Add-ons” section for it). Otherwise there’s a “Backups” tab in the admin section where you can turn them on. Linode charges $2/month for this.</li>
+</ul>
+</section>
+<section id="set-up-offsite-backups" class="level3">
+<h3 class="anchored" data-anchor-id="set-up-offsite-backups">7.2. Set up “offsite” backups</h3>
+<ul>
+<li>Install and set up Backblaze
+<ul>
+<li>Make a bucket in Backblaze for your backups</li>
+<li>Make an app key with access to your backup bucket</li>
+<li>Get the Backblaze cli and configure it
+<ul>
+<li><code>sudo apt install python3-pip</code></li>
+<li><code>sudo pip3 install b2</code></li>
+<li><code>sudo b2 authorize_account &lt;keyID&gt;</code></li>
+<li>Copy the key secret from the app key you just made to authorize the Backblaze cli</li>
+</ul></li>
+</ul></li>
+<li>Create a new user to run the backups and disable password access for it, for security <sup><a href="https://kevq.uk/how-to-backup-nextcloud/">2</a></sup>
+<ul>
+<li><code>sudo adduser ncbackup</code></li>
+<li><code>sudo usermod -s /sbin/nologin ncbackup</code> <sup>*</sup></li>
+</ul></li>
+<li>Create directories for the backups and logs
+<ul>
+<li><code>sudo mkdir -p /home/ncbackup/backups/logs</code></li>
+</ul></li>
+<li>Create the backup script and make it runnable <sup>**</sup>
+<ul>
+<li><code>sudo touch /usr/sbin/ncbackup.sh</code></li>
+<li><code>sudo chmod +x /usr/sbin/ncbackup.sh</code></li>
+<li><code>sudo vim /usr/sbin/ncbackup.sh</code> and copy the contents of the backup script below into your new file, or write your own that accomplishes the same things: <sup>***</sup></li>
+</ul></li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-e</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="va">DATE</span><span class="op">=</span><span class="va">$(</span><span class="fu">date</span> <span class="st">'+%Y-%m-%d'</span><span class="va">)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Output to a logfile</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">exec</span> <span class="op">&amp;&gt;</span> /home/ncbackup/backups/logs/<span class="va">${DATE}</span>.txt</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Export all your config and data from Nextcloud</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Starting Nextcloud export..."</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ex">nextcloud.export</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Export complete"</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Compress backed up folder</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Compressing backup..."</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-zcf</span> /home/ncbackup/backups/<span class="va">${DATE}</span>.tar.gz <span class="at">-C</span> /var/snap/nextcloud/common/backups/ .</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Nextcloud backup successfully compressed to /home/ncbackup/backups"</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove uncompressed backup data</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> /var/snap/nextcloud/common/backups/<span class="pp">*</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove backups and logs older than 5 days</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Removing backups older than 5 days..."</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /home/ncbackup/backups <span class="at">-type</span> f <span class="at">-mtime</span> +5 <span class="at">-delete</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /home/ncbackup/backups/logs <span class="at">-type</span> f <span class="at">-mtime</span> +5 <span class="at">-delete</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep 14 days of backups in Backblaze</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Uploading to Backblaze..."</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="ex">b2</span> sync <span class="at">--keepDays</span> 14 <span class="at">--replaceNewer</span> /home/ncbackup/backups b2://<span class="op">&lt;</span>your-bucket-name<span class="op">&gt;</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Nextcloud backup completed successfully"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ul>
+<li>Let the <code>ncbackup</code> user run the backup script as the root user
+<ul>
+<li><code>sudo visudo</code></li>
+<li>Copy this to the end of the file that opens:</li>
+</ul></li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Allow ncbackup to run script as sudo</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ncbackup</span> ALL=<span class="er">(</span><span class="ex">ALL</span><span class="kw">)</span> <span class="ex">NOPASSWD:</span> /usr/sbin/ncbackup.sh</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<hr>
+<p>
+<small> * If you want to undo this for some reason you can run <code>sudo usermod -s /bin/bash ncbackup</code> </small>
+</p>
+<p>
+<small> ** Note this means you will have 6 copies of all your data on your server all the time – 5 backups and the live versions. The backups are compressed, but it can still add up to a lot of space. Keep an eye on how much storage your server is using. Running it out of space will probably be one of the first issues you run into. I explain how to get notified when that’s close to happening at the end. </small>
+</p>
+<p>
+<small> *** You don’t have to use vim here. Your server probably has nano installed or you can install the editor of your choice. To change the default editor on your server, run <code>sudo update-alternatives –config editor</code>, and choose the one you want. </small>
+</p>
+</section>
+</section>
+<section id="schedule-and-monitor-your-backups" class="level2">
+<h2 class="anchored" data-anchor-id="schedule-and-monitor-your-backups">8. Schedule and monitor your backups</h2>
+<ul>
+<li>Make yourself a healthcheck at <a href="https://healthchecks.io">healthchecks.io</a> and copy the ping url</li>
+<li><code>sudo crontab -u ncbackup -e</code></li>
+<li>Copy this to the bottom of the file: <code>0 2 * * * sudo /usr/sbin/ncbackup.sh &amp;&amp; curl -fsS -m 10 --retry 5 -o /dev/null &lt;your-ping-url&gt;</code></li>
+</ul>
+<p>This will run your backups once per day at 2am (in your server’s timezone, probably UTC), but you can set whatever time and frequency you want, just remember to update your healthcheck to match.</p>
+</section>
+<section id="test-your-backups" class="level2">
+<h2 class="anchored" data-anchor-id="test-your-backups">9. Test your backups</h2>
+<p>Backups are only useful if you can use them to restore your data. Make sure yours work before you need them.</p>
+<p>To test your entire server backups you can just try restoring the whole server using Linode’s (or whoever’s) UI. Testing the archived backups we uploaded to Backblaze is a little more involved but you’ll be glad you know how to do it when you need it.</p>
+<ul>
+<li>Repeat steps 1-5, except you can just update the records for your domain that’s already set up to point to your new server’s IP address(es).</li>
+<li>Download one of your backups</li>
+<li>Copy the backup onto your new server. Run this in a terminal on your machine (not in an ssh session with a remote server):
+<ul>
+<li><code>scp /local/path/to/your/backup/ &lt;user&gt;@&lt;new-server-ip-address&gt;:~</code></li>
+</ul></li>
+</ul>
+<p><em>ssh into your new server for the rest of these commands</em> - Unzip, rename, and move the backup to a place where the Nextcloud snap installation will be able to access it, then make the root user the owner - <code>tar -xvzf &lt;backup-name&gt;.tar.gz</code> - <code>sudo mv &lt;backup-data-dir&gt;/ /var/snap/nextcloud/current/</code> - <code>sudo chown -R root:root /var/snap/nextcloud/current/&lt;backup-data-dir&gt;/</code> - Import your data - <code>sudo nextcloud.import /var/snap/nextcloud/current/&lt;backup-data-dir&gt;/</code> - Once it’s done, clean up the backup archive - <code>rm &lt;backup-name&gt;.tar.gz</code></p>
+<p>This should be all you need to restore your Nextcloud installation. It might take a while for the DNS records to propagate, so if you want to test that your restored cloud is working in the meantime you can check it directly at its IP address if you add that to the list of trusted domains: - <code>sudo nextcloud.occ config:system:set trusted_domains 2 --value=&lt;new-server-ip-address&gt;</code></p>
+<p>Note this will only be available over http, so you might get a dramatic warning about security when you visit the ip address directly. To remove the ip address from the list of trusted domains once you’re satisfied, run: - <code>sudo nextcloud.occ config:system:delete trusted_domains 2</code></p>
+</section>
+<section id="offset-your-co2" class="level2">
+<h2 class="anchored" data-anchor-id="offset-your-co2">10. Offset your CO<sub>2</sub></h2>
+<p>It’s not going to be clear exactly what the environmental impact of your server is, but it won’t be nothing. You can get a rough idea how much CO<sub>2</sub> your server emits with tools like <a href="https://www.websitecarbon.com/">this one</a>. Then you can buy carbon offsets from a reputable carbon offset vendor, like <a href="https://www.less.ca/en-ca/tonnes.cfm">Less</a>. I spent $10/year to offset half a tonne of CO<sub>2</sub>.</p>
+<p>I know carbon offsetting is a <a href="https://davidsuzuki.org/wp-content/uploads/2019/10/purchasing-carbon-offsets-guide-for-canadians.pdf">long and complicated topic</a>, and the environmental impact of computing infrastructure goes way beyond CO<sub>2</sub> emissions, but the point is just to be aware that doing all this stuff on your computer has potentially negative consequences in the real world and to at least try to minimize them where you can and mitigate them where you can’t.</p>
+</section>
+<section id="bonus" class="level2">
+<h2 class="anchored" data-anchor-id="bonus">Bonus</h2>
+<section id="set-up-a-backblaze-bucket-as-external-storage-e.g.-for-photos" class="level3">
+<h3 class="anchored" data-anchor-id="set-up-a-backblaze-bucket-as-external-storage-e.g.-for-photos">Set up a Backblaze bucket as external storage, e.g.&nbsp;for photos</h3>
+<ul>
+<li>Install and enable the “External storage support” app for your Nextcloud instance</li>
+<li>Go to “Settings” then, under “Administration” in the left side bar (<em>not</em> under “Personal”), click “External storages”</li>
+<li>Enter a name for your new folder<sup>*</sup> and select “Amazon S3” from the “Add storage” dropdown, then fill in the details for your Backblaze bucket and account</li>
+</ul>
+<p>
+<small> * Make sure the name you give the external storage folder isn’t already taken. I called mine “Photos”, which already existed in my Nextcloud files, and it conflicted in strange and surprising ways. If you want to call your external storage folder “Photos” make sure to go delete the “Photos” folder that’s already there first. </small>
+</p>
+</section>
+<section id="get-notified-when-youre-approaching-your-storage-limit" class="level3">
+<h3 class="anchored" data-anchor-id="get-notified-when-youre-approaching-your-storage-limit">Get notified when you’re approaching your storage limit</h3>
+<p>If you choose the cheapest Linode server like I did it doesn’t come with much storage, and depending on how much data you have and how many backups you’re leaving on the server you might run it out of storage pretty quickly. There’s an app called “Quota warning” in the monitoring category you can install to get notified if you’re approaching your server’s storage limits. You can configure when and how it notifies you in “Additional settings” after it’s installed.</p>
+<hr>
+<p>That’s it! I hope this helps someone avoid hours of searching through documentation, blog posts, and outdated forums. Good luck!</p>
+<p><strong>Discuss this post on <a href="https://news.ycombinator.com/item?id=25481465">Hacker News</a>, <a href="https://dev.to/kiraemclean/how-to-set-up-your-own-nextcloud-server-2hc3">Dev.to</a> or <a href="https://www.reddit.com/r/NextCloud/comments/kgdpaw/i_set_up_my_own_nextcloud_instance_as_part_of_my/">Reddit</a></strong></p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/clojurecivitas\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

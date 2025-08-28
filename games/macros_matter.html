@@ -80,9 +80,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-68d21bd1aa23fdaa920fe1d269933407.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-f40b4dcbf9c34f50681889308f70b0e7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-3c4ac729eee099423e36a156098eafad.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-f40b4dcbf9c34f50681889308f70b0e7.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-5779b3facc9d66268c5e8518df256508.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ed5d6653ca098c923ccbc5e23d9b373e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-5779b3facc9d66268c5e8518df256508.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -433,7 +433,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>         [<span class="at">:button</span> {<span class="at">:on-click</span> <span class="va">#'reset</span>} <span class="st">"reset"</span>]</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>         [<span class="at">:button</span> {<span class="at">:style</span> {<span class="at">:color</span> <span class="st">"red"</span>} <span class="at">:on-click</span> <span class="va">#'explode</span>} <span class="st">"explode"</span>]]])]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div><script type="application/x-scittle">(defonce state (atom {}))</script><script type="application/x-scittle">(declare reset explode)</script><div id="app" style="width:100%;"></div><div id="id4"><script type="application/x-scittle">(reagent.dom/render [(fn [] [:div [:em "Click and drag the hexagons"] [:div [:button {:on-click (var reset)} "reset"] [:button {:style {:color "red"}, :on-click (var explode)} "explode"]]])] (js/document.getElementById "id4"))</script></div></div>
+<div><script type="application/x-scittle">(defonce state (atom {}))</script><script type="application/x-scittle">(declare reset explode)</script><div id="app" style="width:100%;"></div><div id="id5"><script type="application/x-scittle">(reagent.dom/render [(fn [] [:div [:em "Click and drag the hexagons"] [:div [:button {:on-click (var reset)} "reset"] [:button {:style {:color "red"}, :on-click (var explode)} "explode"]]])] (js/document.getElementById "id5"))</script></div></div>
 <p>Fun right?</p>
 <p>Notice that Clay accepts normal hiccup, but further treats forms as code, and function forms as components. We’ll get to the implementations of <code>reset</code>, <code>explode</code>, and the view setup later. But first I want to introduce you to the killer feature for this kind of code; Macros! Not just any macro, but the ultimate macro, <code>sneeze</code>.</p>
 <div class="sourceClojure">
@@ -450,7 +450,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:strong</span> ~(<span class="kw">str</span> <span class="st">"Wow, so random "</span> (<span class="kw">rand</span>))])</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div</span> [<span class="va">#'my-component</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<script type="application/x-scittle">(defn my-component [] [:strong "Wow, so random 0.7520181450880038"])</script><div><div id="id5"><script type="application/x-scittle">(reagent.dom/render [(var my-component)] (js/document.getElementById "id5"))</script></div></div>
+<script type="application/x-scittle">(defn my-component [] [:strong "Wow, so random 0.8511335591564546"])</script><div><div id="id6"><script type="application/x-scittle">(reagent.dom/render [(var my-component)] (js/document.getElementById "id6"))</script></div></div>
 <p>This is weird right, why do we need <code>~</code>? Well, when we define <code>my-component</code> we are writing symbolic code. This is going to be interpreted in the browser, not in Clojure. We can conveniently insert calculations made in Clojure into our UI code. It’s like Scittle just inherited macros! That’s exciting… in a way JavaScript has inherited macros.</p>
 <p>Speaking of JavaScript, we need to bring in the MatterJS. MatterJS handles the physics simulation and rendering for our mini-app.</p>
 <div class="sourceClojure">
