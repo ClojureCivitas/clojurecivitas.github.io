@@ -9,6 +9,12 @@
    :image "https://avatars.githubusercontent.com/u/772738?v=4"
    :url "https://github.com/ezmiller"
    :affiliation [:scicloj]}
+  {:id          :kirahowe
+   :name        "Kira Howe"
+   :image       "https://avatars.githubusercontent.com/u/11531673?v=4"
+   :url         "https://kiramclean.com/"
+   :affiliation [:scicloj]
+   :links       [{:icon "github" :href "https://github.com/kirahowe"}]}
   {:id          :daslu
    :name        "Daniel Slutsky"
    :image       "https://avatars.githubusercontent.com/u/5673102?v=4"
