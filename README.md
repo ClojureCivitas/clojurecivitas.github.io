@@ -40,6 +40,11 @@ Pull Requests invited, that's the point!
 
 Add a Clojure namespace or markdown file in the [`/src`](src) folder.
 
+> [!TIP]
+> If you prefer to write Markdown instead of Clojure,
+> put your markdown file in [`/site`](site) instead.
+> For a personal blog, you can put files in [`/site/blog`](site/blog).
+
 Add metadata on your namespace to set the title, author, and tags.
 
 ```clojure
@@ -192,8 +197,7 @@ A namespace serves as a clear, unique path to its content and follows **Clojureâ
 
 The namespace should emphasize **what the narrative is about**, not how it is categorized.
 Think of it as a logical path that leads to a specific artifact or topic.
-Classification elements such as tags, author, document type, level, or publication date belong in **metadata**, not the
-namespace.
+Classification elements such as tags, author, document type, level, or publication date belong in **metadata**.
 
 - **Start with an organization** if the narrative is about a library or tool maintained by one.
   Examples: `scicloj`, `lambdaisland`.
@@ -233,12 +237,23 @@ This promotes flexibility at the cost of tidiness, but enables richer discovery 
 
 Differentiation between posts, pages, and presentations is by `type` metadata (a Quarto page type convention).
 
+#### Exception: Personal blog posts
+
+The `blog` directories (in `src` and `site`) are exceptions to the topic oriented namespacing.
+We invite personal blogs, serialized writing, or other content where organizing by author and date is more convenient than by topic or namespace.
+
+For example: `site/blog/myname/2025-08-28-my-post.md`
+
+This structure is an intentional exception to the namespace organization.
+We want it to be easy for contributors to migrate or maintain personal blogs.
+
 ### File system organization
 
-| Directory | Description                                                  |
-|-----------|--------------------------------------------------------------|
-| `src`     | Source root for namespaces, markdown, images, and data files |
-| `site`    | Static assets of the Quarto website                          |
+| Directory   | Description                                                  |
+|-------------|--------------------------------------------------------------|
+| `src`       | Source root for namespaces, markdown, images, and data files |
+| `site`      | Static assets of the Quarto website                          |
+| `site/blog` | Personal writings                                            |
 
 Non-Clojure files in `src` will be synced to `site`.
 Shared images can go in `src/images`,
