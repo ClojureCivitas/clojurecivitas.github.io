@@ -9,6 +9,7 @@
   {
     "listing": "/posts.html",
     "items": [
+      "/scicloj/cfd/data_viz/interactive_visualization.html",
       "/civitas/why/i_should_write_more.html",
       "/cesium/geovis.html",
       "/scicloj/clay/uncompiled_clojurescript.html",

@@ -14,8 +14,17 @@
 <title>Clojure Civitas</title>
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
-<generator>quarto-1.7.33</generator>
-<lastBuildDate>Tue, 19 Aug 2025 00:00:00 GMT</lastBuildDate>
+<generator>quarto-1.7.34</generator>
+<lastBuildDate>Sat, 30 Aug 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Exploring Time Series Data Visualization</title>
+  <dc:creator>Siyoung Byun</dc:creator>
+  <link>https://clojurecivitas.github.io/scicloj/cfd/data_viz/interactive_visualization.html</link>
+  <description><![CDATA[ A simple exploration to create time-series data visualization ]]></description>
+  <guid>https://clojurecivitas.github.io/scicloj/cfd/data_viz/interactive_visualization.html</guid>
+  <pubDate>Sat, 30 Aug 2025 00:00:00 GMT</pubDate>
+  <media:content url="https://clojurecivitas.github.io/scicloj/cfd/data_viz/overlayplot.png" medium="image" type="image/png" height="83" width="144"/>
+</item>
 <item>
   <title>Why Building My Blog is More Fun Than Filling It</title>
   <dc:creator>Timothy Pratley</dc:creator>
@@ -173,15 +182,6 @@
   <description><![CDATA[  ]]></description>
   <guid>https://clojurecivitas.github.io/clojure/transducers/what_if.html</guid>
   <pubDate>Sat, 31 May 2025 00:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>The Hallway Track: SciNoj Light #1 Data Analysis Stories</title>
-  <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</link>
-  <description><![CDATA[  ]]></description>
-  <guid>https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/hallway_track.html</guid>
-  <pubDate>Wed, 28 May 2025 00:00:00 GMT</pubDate>
-  <media:content url="https://clojurecivitas.github.io/conferences/scinoj_light_1/notes/noj_components.png" medium="image" type="image/png" height="75" width="144"/>
 </item>
 </channel>
 </rss>

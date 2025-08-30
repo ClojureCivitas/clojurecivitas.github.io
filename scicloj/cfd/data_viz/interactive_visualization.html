@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.34">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Siyoung Byun">
+<meta name="dcterms.date" content="2025-08-30">
+<meta name="description" content="A simple exploration to create time-series data visualization">
+
+<title>Exploring Time Series Data Visualization – Clojure Civitas</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../favicon.ico" rel="icon">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-399203f6078c9f40aa1bd3ecdeb04a2a.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-8500d94e49f1d3f418296a7c1c9b0ee7.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-399203f6078c9f40aa1bd3ecdeb04a2a.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-5779b3facc9d66268c5e8518df256508.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-ed5d6653ca098c923ccbc5e23d9b373e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-5779b3facc9d66268c5e8518df256508.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
+
+
+<meta property="og:title" content="Exploring Time Series Data Visualization – Clojure Civitas">
+<meta property="og:description" content="A simple exploration to create time-series data visualization">
+<meta property="og:image" content="https://clojurecivitas.github.io/scicloj/cfd/data_viz/overlayplot.png">
+<meta property="og:site_name" content="Clojure Civitas">
+<meta property="og:image:height" content="714">
+<meta property="og:image:width" content="1238">
+</head>
+
+<body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../images/civitas-icon.svg" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Clojure Civitas</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../posts.html"> 
+<span class="menu-text">Posts</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../civitas/authors.html"> 
+<span class="menu-text">Authors</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../civitas/explorer.html"> 
+<span class="menu-text">Explorer</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/ClojureCivitas/clojurecivitas.github.io"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../../posts.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Exploring Time Series Data Visualization</h1>
+</div>
+
+<div>
+  <div class="description">
+    A simple exploration to create time-series data visualization
+  </div>
+</div>
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author"><a href="https://github.com/syungb">Siyoung Byun</a> <a href="mailto:syungb@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            <a href="https://scicloj.github.io/">
+            Scicloj
+            </a>
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 30, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<style></style>
+<style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style>
+<style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="interactive_visualization_files/md-default0.js" type="text/javascript"></script>
+<script src="interactive_visualization_files/md-default1.js" type="text/javascript"></script>
+<script src="interactive_visualization_files/vega2.js" type="text/javascript"></script>
+<script src="interactive_visualization_files/vega3.js" type="text/javascript"></script>
+<script src="interactive_visualization_files/vega4.js" type="text/javascript"></script>
+<p>In my <a href="./scicloj/cfd/intro/linear_1d_convection_with_array.html">earlier post</a>, I demonstrated how to implement a linear fluid dynamics simulation (linear convection equation) using primitive Java arrays in a one-dimensional setting. The example showed how the flow velocity array gets recalculated and overwritten during each loop iteration, with each loop representing a time step in our simulation.</p>
+<p>While some readers might be satisfied with just seeing the final result, others are likely curious the process that produces the final outcome. What if we could watch this process in real-time? What patterns emerge as the simulation progresses?</p>
+<p>This time, I want to show how to create a simple, but more engaging and interactive visualization. Instead of simply overwriting arrays as we iterate through our simulation loop, we will accumulate each result into a sequence.</p>
+<p>Once gain, we’ll use the 1-D linear convection equation from fluid dynamics as our playground (and reuse some code from the previous post). The main focus of this post is on creating interactive plots that make simulation results more visually interesting, so we won’t dive too deep into physical implications (though the visual results might just inspire you to explore that side too! 😉).</p>
+<section id="understanding-the-data" class="level3">
+<h3 class="anchored" data-anchor-id="understanding-the-data">Understanding the Data</h3>
+<p>Before we jump into the data visualization, let’s briefly set our initial data and what it represents.</p>
+</section>
+<section id="the-setup" class="level3">
+<h3 class="anchored" data-anchor-id="the-setup">The Setup</h3>
+<ul>
+<li><strong>x</strong>: Sliced positions along a one-dimensional space (think of points along a line)</li>
+<li><strong>y</strong>: The flow velocity(<code>u</code>) at each position <code>x</code></li>
+<li><strong>nt</strong>: The number of time steps we’ll simulate</li>
+</ul>
+</section>
+<section id="a-real-world-analogy-just-to-add-a-bit-of-fun" class="level3">
+<h3 class="anchored" data-anchor-id="a-real-world-analogy-just-to-add-a-bit-of-fun">A Real World Analogy (Just to add a bit of fun)</h3>
+<p>Imagine a rain gutter on a rainy day with water steadily flowing through it. Now, picture slicing a section of this gutter and marking specific positions along its length- these become our <code>x</code> coordinates. The water continues to flow, then suddenly, a bird overhead drops a stone into the gutter, creating a sudden disturbance or <strong>“shock”</strong> in the water flow. And this becomes our <strong>initial condition</strong>.</p>
+<p><strong>Initial Conditions</strong>: The stone drop becomes our starting point(<code>t = 0</code>), and at the moment of the impact, and the velocity at affected points jumps to 2 as a localized region (in our case, between <code>0.5</code> and <code>1.0</code> of <code>x</code> is where the imaginary bird dropped a stone), while the rest of the gutter maintains its normal flow velocity of <code>1</code>.</p>
+<p>Our initial parameters and plot configuration are:</p>
+<div class="printedClojure">
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:x-start</span> <span class="dv">0</span>, <span class="at">:x-end</span> <span class="dv">2</span>, <span class="at">:nx</span> <span class="dv">41</span>, <span class="at">:nt</span> <span class="dv">100</span>, <span class="at">:dx</span> <span class="fl">1/20</span>, <span class="at">:dt</span> <span class="fl">0.025</span>, <span class="at">:c</span> <span class="dv">1</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div><script>vegaEmbed(document.currentScript.parentElement, {"width":500,"height":300,"mark":"line","data":{"values":[{"y":1.0,"x":0.0},{"y":1.0,"x":0.05},{"y":1.0,"x":0.1},{"y":1.0,"x":0.15},{"y":1.0,"x":0.2},{"y":1.0,"x":0.25},{"y":1.0,"x":0.3},{"y":1.0,"x":0.35},{"y":1.0,"x":0.4},{"y":1.0,"x":0.45},{"y":2.0,"x":0.5},{"y":2.0,"x":0.55},{"y":2.0,"x":0.6},{"y":2.0,"x":0.65},{"y":2.0,"x":0.7},{"y":2.0,"x":0.75},{"y":2.0,"x":0.8},{"y":2.0,"x":0.85},{"y":2.0,"x":0.9},{"y":2.0,"x":0.95},{"y":2.0,"x":1.0},{"y":1.0,"x":1.05},{"y":1.0,"x":1.1},{"y":1.0,"x":1.15},{"y":1.0,"x":1.2},{"y":1.0,"x":1.25},{"y":1.0,"x":1.3},{"y":1.0,"x":1.35},{"y":1.0,"x":1.4},{"y":1.0,"x":1.45},{"y":1.0,"x":1.5},{"y":1.0,"x":1.55},{"y":1.0,"x":1.6},{"y":1.0,"x":1.65},{"y":1.0,"x":1.7},{"y":1.0,"x":1.75},{"y":1.0,"x":1.8},{"y":1.0,"x":1.85},{"y":1.0,"x":1.9},{"y":1.0,"x":1.95},{"y":1.0,"x":2.0}]},"encoding":{"x":{"title":"Position X","field":"x","type":"quantitative"},"y":{"title":"Flow Velocity","field":"y","type":"quantitative","scale":{"domain":[0.8,2.1]}}}});</script></div>
+</section>
+<section id="simulation-code" class="level2">
+<h2 class="anchored" data-anchor-id="simulation-code">Simulation Code</h2>
+<p>Here is a simulation function we will use to accumulate the results:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> simulate-accumulate!</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Simulate linear convection for given a given numer of times(nt) and accumulate</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="st">  all intermediate states.</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="st">  Args:</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="st">  - array-u: initial velocity field as a mutable array</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="st">             (note: we're reusing some codes from the previous post)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="st">  - params: a config map with required keys: nt, nx, c, dx, and dt</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="st">  Returns a vector of (nt + 1) velocity field vectors, where each vector represents</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="st">  the velocity field at a specific time step."</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  [array-u {<span class="at">:keys</span> [nt]</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">:as</span>   params}]</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">loop</span> [n    <span class="dv">0</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>         !cum (<span class="kw">transient</span> [(<span class="kw">vec</span> array-u)])]</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">if</span> (<span class="kw">=</span> n nt)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">persistent!</span> !cum)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">recur</span> (<span class="kw">inc</span> n) (<span class="kw">conj!</span> !cum (<span class="kw">vec</span> (lin-conv/mutate-linear-convection-u array-u params)))))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Then we run the simulation and store the accumulated results:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> accumulated-u </span>(simulate-accumulate! initial-arr-u init-params))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="data-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="data-visualization">Data Visualization</h2>
+<p>We have a vector of numbers representing velocity values. With certain conditions, we want to visualize how these numbers change over time. We will use <a href="https://vega.github.io/vega-lite/">Vega-Lite</a>’s line plots for our visualization.</p>
+<p>First, we need a function that transforms accumulated results into Vega-Lite data format by flattening time-series velocity fields into individual data points with time step indices:</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> accumulated-u-&gt;vega-data-values </span>[{<span class="at">:keys</span> [array-x accumulated-u]}]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">apply</span> <span class="kw">concat</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    (map-indexed</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>      (<span class="kw">fn</span> [idx u-i]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">map</span> #(<span class="kw">hash-map</span> <span class="at">:idx</span> idx <span class="at">:x</span> <span class="va">%</span> <span class="at">:y</span> <span class="va">%2</span>) array-x u-i))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>      accumulated-u)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="multi-series-overlay-plot" class="level3">
+<h3 class="anchored" data-anchor-id="multi-series-overlay-plot">Multi-Series Overlay Plot</h3>
+<p>In this first visualization, we show the simulation results as changes over time in one plot. Since showing all 101 time steps in one plot may not be very useful, we take every 10th result, and overlay each of those line plots into a single one.</p>
+<p>The plotting data is grouped by <code>idx</code>(time step), which produces a <a href="https://vega.github.io/vega-lite/docs/line.html#multi-series-colored-line-chart">multi-series colored line plot</a>.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> [[init-u &amp; rest-u] accumulated-u</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>      plot-data (<span class="kw">-&gt;&gt;</span> rest-u</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                     (partition-all <span class="dv">10</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">map</span> <span class="kw">last</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">into</span> [init-u])</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                     (<span class="kw">assoc</span> plot-params <span class="at">:accumulated-u</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                     (accumulated-u-&gt;vega-data-values))]</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  (kind/vega-lite (<span class="kw">merge</span> default-plot-width-height-map</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>                         {<span class="at">:data</span>     {<span class="at">:values</span> plot-data}</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:mark</span>     <span class="st">"line"</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                          <span class="at">:encoding</span> {<span class="at">:x</span>     {<span class="at">:field</span> <span class="st">"x"</span> <span class="at">:type</span> <span class="st">"quantitative"</span> <span class="at">:title</span> <span class="st">"X"</span>}</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:y</span>     {<span class="at">:field</span> <span class="st">"y"</span> <span class="at">:type</span> <span class="st">"quantitative"</span> <span class="at">:title</span> <span class="st">"Flow Velocity"</span> <span class="at">:scale</span> {<span class="at">:domain</span> default-y-domain}}</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:color</span> {<span class="at">:field</span> <span class="st">"idx"</span> <span class="at">:type</span> <span class="st">"nominal"</span> <span class="at">:legend</span> <span class="va">nil</span>}}})))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div><script>vegaEmbed(document.currentScript.parentElement, {"width":500,"height":300,"data":{"values":[{"y":1.0,"x":0.0,"idx":0},{"y":1.0,"x":0.05,"idx":0},{"y":1.0,"x":0.1,"idx":0},{"y":1.0,"x":0.15,"idx":0},{"y":1.0,"x":0.2,"idx":0},{"y":1.0,"x":0.25,"idx":0},{"y":1.0,"x":0.3,"idx":0},{"y":1.0,"x":0.35,"idx":0},{"y":1.0,"x":0.4,"idx":0},{"y":1.0,"x":0.45,"idx":0},{"y":2.0,"x":0.5,"idx":0},{"y":2.0,"x":0.55,"idx":0},{"y":2.0,"x":0.6,"idx":0},{"y":2.0,"x":0.65,"idx":0},{"y":2.0,"x":0.7,"idx":0},{"y":2.0,"x":0.75,"idx":0},{"y":2.0,"x":0.8,"idx":0},{"y":2.0,"x":0.85,"idx":0},{"y":2.0,"x":0.9,"idx":0},{"y":2.0,"x":0.95,"idx":0},{"y":2.0,"x":1.0,"idx":0},{"y":1.0,"x":1.05,"idx":0},{"y":1.0,"x":1.1,"idx":0},{"y":1.0,"x":1.15,"idx":0},{"y":1.0,"x":1.2,"idx":0},{"y":1.0,"x":1.25,"idx":0},{"y":1.0,"x":1.3,"idx":0},{"y":1.0,"x":1.35,"idx":0},{"y":1.0,"x":1.4,"idx":0},{"y":1.0,"x":1.45,"idx":0},{"y":1.0,"x":1.5,"idx":0},{"y":1.0,"x":1.55,"idx":0},{"y":1.0,"x":1.6,"idx":0},{"y":1.0,"x":1.65,"idx":0},{"y":1.0,"x":1.7,"idx":0},{"y":1.0,"x":1.75,"idx":0},{"y":1.0,"x":1.8,"idx":0},{"y":1.0,"x":1.85,"idx":0},{"y":1.0,"x":1.9,"idx":0},{"y":1.0,"x":1.95,"idx":0},{"y":1.0,"x":2.0,"idx":0},{"y":1.0,"x":0.0,"idx":1},{"y":1.0,"x":0.05,"idx":1},{"y":1.0,"x":0.1,"idx":1},{"y":1.0,"x":0.15,"idx":1},{"y":1.0,"x":0.2,"idx":1},{"y":1.0,"x":0.25,"idx":1},{"y":1.0,"x":0.3,"idx":1},{"y":1.0,"x":0.35,"idx":1},{"y":1.0,"x":0.4,"idx":1},{"y":1.0,"x":0.45,"idx":1},{"y":1.0009766,"x":0.5,"idx":1},{"y":1.0107422,"x":0.55,"idx":1},{"y":1.0546875,"x":0.6,"idx":1},{"y":1.171875,"x":0.65,"idx":1},{"y":1.3769531,"x":0.7,"idx":1},{"y":1.6230469,"x":0.75,"idx":1},{"y":1.828125,"x":0.8,"idx":1},{"y":1.9453125,"x":0.85,"idx":1},{"y":1.9892578,"x":0.9,"idx":1},{"y":1.9990234,"x":0.95,"idx":1},{"y":2.0,"x":1.0,"idx":1},{"y":1.9990234,"x":1.05,"idx":1},{"y":1.9892578,"x":1.1,"idx":1},{"y":1.9453125,"x":1.15,"idx":1},{"y":1.828125,"x":1.2,"idx":1},{"y":1.6230469,"x":1.25,"idx":1},{"y":1.3769531,"x":1.3,"idx":1},{"y":1.171875,"x":1.35,"idx":1},{"y":1.0546875,"x":1.4,"idx":1},{"y":1.0107422,"x":1.45,"idx":1},{"y":1.0009766,"x":1.5,"idx":1},{"y":1.0,"x":1.55,"idx":1},{"y":1.0,"x":1.6,"idx":1},{"y":1.0,"x":1.65,"idx":1},{"y":1.0,"x":1.7,"idx":1},{"y":1.0,"x":1.75,"idx":1},{"y":1.0,"x":1.8,"idx":1},{"y":1.0,"x":1.85,"idx":1},{"y":1.0,"x":1.9,"idx":1},{"y":1.0,"x":1.95,"idx":1},{"y":1.0,"x":2.0,"idx":1},{"y":1.0,"x":0.0,"idx":2},{"y":1.0,"x":0.05,"idx":2},{"y":1.0,"x":0.1,"idx":2},{"y":1.0,"x":0.15,"idx":2},{"y":1.0,"x":0.2,"idx":2},{"y":1.0,"x":0.25,"idx":2},{"y":1.0,"x":0.3,"idx":2},{"y":1.0,"x":0.35,"idx":2},{"y":1.0,"x":0.4,"idx":2},{"y":1.0,"x":0.45,"idx":2},{"y":1.000001,"x":0.5,"idx":2},{"y":1.00002,"x":0.55,"idx":2},{"y":1.0002012,"x":0.6,"idx":2},{"y":1.0012884,"x":0.65,"idx":2},{"y":1.005909,"x":0.7,"idx":2},{"y":1.0206947,"x":0.75,"idx":2},{"y":1.0576591,"x":0.8,"idx":2},{"y":1.131588,"x":0.85,"idx":2},{"y":1.2517223,"x":0.9,"idx":2},{"y":1.4119015,"x":0.95,"idx":2},{"y":1.5880985,"x":1.0,"idx":2},{"y":1.7482767,"x":1.05,"idx":2},{"y":1.868392,"x":1.1,"idx":2},{"y":1.9421396,"x":1.15,"idx":2},{"y":1.9780169,"x":1.2,"idx":2},{"y":1.9881821,"x":1.25,"idx":2},{"y":1.9780169,"x":1.3,"idx":2},{"y":1.9421396,"x":1.35,"idx":2},{"y":1.868392,"x":1.4,"idx":2},{"y":1.7482767,"x":1.45,"idx":2},{"y":1.5880985,"x":1.5,"idx":2},{"y":1.4119015,"x":1.55,"idx":2},{"y":1.2517223,"x":1.6,"idx":2},{"y":1.131588,"x":1.65,"idx":2},{"y":1.0576591,"x":1.7,"idx":2},{"y":1.0206947,"x":1.75,"idx":2},{"y":1.005909,"x":1.8,"idx":2},{"y":1.0012884,"x":1.85,"idx":2},{"y":1.0002012,"x":1.9,"idx":2},{"y":1.00002,"x":1.95,"idx":2},{"y":1.0,"x":2.0,"idx":2},{"y":1.0,"x":0.0,"idx":3},{"y":1.0,"x":0.05,"idx":3},{"y":1.0,"x":0.1,"idx":3},{"y":1.0,"x":0.15,"idx":3},{"y":1.0,"x":0.2,"idx":3},{"y":1.0,"x":0.25,"idx":3},{"y":1.0,"x":0.3,"idx":3},{"y":1.0,"x":0.35,"idx":3},{"y":1.0,"x":0.4,"idx":3},{"y":1.0,"x":0.45,"idx":3},{"y":1.0,"x":0.5,"idx":3},{"y":1.0,"x":0.55,"idx":3},{"y":1.0000005,"x":0.6,"idx":3},{"y":1.0000043,"x":0.65,"idx":3},{"y":1.0000297,"x":0.7,"idx":3},{"y":1.0001624,"x":0.75,"idx":3},{"y":1.0007155,"x":0.8,"idx":3},{"y":1.0026114,"x":0.85,"idx":3},{"y":1.0080624,"x":0.9,"idx":3},{"y":1.0213871,"x":0.95,"idx":3},{"y":1.0493686,"x":1.0,"idx":3},{"y":1.1002443,"x":1.05,"idx":3},{"y":1.1807973,"x":1.1,"idx":3},{"y":1.2923319,"x":1.15,"idx":3},{"y":1.4277636,"x":1.2,"idx":3},{"y":1.5722024,"x":1.25,"idx":3},{"y":1.7075051,"x":1.3,"idx":3},{"y":1.8184872,"x":1.35,"idx":3},{"y":1.8971443,"x":1.4,"idx":3},{"y":1.942569,"x":1.45,"idx":3},{"y":1.957226,"x":1.5,"idx":3},{"y":1.942569,"x":1.55,"idx":3},{"y":1.8971443,"x":1.6,"idx":3},{"y":1.8184872,"x":1.65,"idx":3},{"y":1.7075051,"x":1.7,"idx":3},{"y":1.5722024,"x":1.75,"idx":3},{"y":1.4277636,"x":1.8,"idx":3},{"y":1.2923319,"x":1.85,"idx":3},{"y":1.1807973,"x":1.9,"idx":3},{"y":1.1002443,"x":1.95,"idx":3},{"y":1.0,"x":2.0,"idx":3},{"y":1.0,"x":0.0,"idx":4},{"y":1.0,"x":0.05,"idx":4},{"y":1.0,"x":0.1,"idx":4},{"y":1.0,"x":0.15,"idx":4},{"y":1.0,"x":0.2,"idx":4},{"y":1.0,"x":0.25,"idx":4},{"y":1.0,"x":0.3,"idx":4},{"y":1.0,"x":0.35,"idx":4},{"y":1.0,"x":0.4,"idx":4},{"y":1.0,"x":0.45,"idx":4},{"y":1.0,"x":0.5,"idx":4},{"y":1.0,"x":0.55,"idx":4},{"y":1.0,"x":0.6,"idx":4},{"y":1.0,"x":0.65,"idx":4},{"y":1.0,"x":0.7,"idx":4},{"y":1.0000007,"x":0.75,"idx":4},{"y":1.0000042,"x":0.8,"idx":4},{"y":1.0000212,"x":0.85,"idx":4},{"y":1.0000911,"x":0.9,"idx":4},{"y":1.0003397,"x":0.95,"idx":4},{"y":1.0011108,"x":1.0,"idx":4},{"y":1.0032134,"x":1.05,"idx":4},{"y":1.0082946,"x":1.1,"idx":4},{"y":1.0192387,"x":1.15,"idx":4},{"y":1.0403454,"x":1.2,"idx":4},{"y":1.07693,"x":1.25,"idx":4},{"y":1.134093,"x":1.3,"idx":4},{"y":1.214791,"x":1.35,"idx":4},{"y":1.3178929,"x":1.4,"idx":4},{"y":1.4372236,"x":1.45,"idx":4},{"y":1.5623455,"x":1.5,"idx":4},{"y":1.6809752,"x":1.55,"idx":4},{"y":1.7819914,"x":1.6,"idx":4},{"y":1.8576118,"x":1.65,"idx":4},{"y":1.9038312,"x":1.7,"idx":4},{"y":1.9193094,"x":1.75,"idx":4},{"y":1.9038312,"x":1.8,"idx":4},{"y":1.8576118,"x":1.85,"idx":4},{"y":1.7819914,"x":1.9,"idx":4},{"y":1.6809752,"x":1.95,"idx":4},{"y":1.0,"x":2.0,"idx":4},{"y":1.0,"x":0.0,"idx":5},{"y":1.0,"x":0.05,"idx":5},{"y":1.0,"x":0.1,"idx":5},{"y":1.0,"x":0.15,"idx":5},{"y":1.0,"x":0.2,"idx":5},{"y":1.0,"x":0.25,"idx":5},{"y":1.0,"x":0.3,"idx":5},{"y":1.0,"x":0.35,"idx":5},{"y":1.0,"x":0.4,"idx":5},{"y":1.0,"x":0.45,"idx":5},{"y":1.0,"x":0.5,"idx":5},{"y":1.0,"x":0.55,"idx":5},{"y":1.0,"x":0.6,"idx":5},{"y":1.0,"x":0.65,"idx":5},{"y":1.0,"x":0.7,"idx":5},{"y":1.0,"x":0.75,"idx":5},{"y":1.0,"x":0.8,"idx":5},{"y":1.0,"x":0.85,"idx":5},{"y":1.0000005,"x":0.9,"idx":5},{"y":1.0000029,"x":0.95,"idx":5},{"y":1.0000119,"x":1.0,"idx":5},{"y":1.0000451,"x":1.05,"idx":5},{"y":1.0001528,"x":1.1,"idx":5},{"y":1.000468,"x":1.15,"idx":5},{"y":1.001301,"x":1.2,"idx":5},{"y":1.0033003,"x":1.25,"idx":5},{"y":1.0076734,"x":1.3,"idx":5},{"y":1.0164196,"x":1.35,"idx":5},{"y":1.0324543,"x":1.4,"idx":5},{"y":1.0594597,"x":1.45,"idx":5},{"y":1.1013167,"x":1.5,"idx":5},{"y":1.1611063,"x":1.55,"idx":5},{"y":1.2398989,"x":1.6,"idx":5},{"y":1.3357526,"x":1.65,"idx":5},{"y":1.4433942,"x":1.7,"idx":5},{"y":1.5548364,"x":1.75,"idx":5},{"y":1.6607941,"x":1.8,"idx":5},{"y":1.7523828,"x":1.85,"idx":5},{"y":1.8224622,"x":1.9,"idx":5},{"y":1.8662262,"x":1.95,"idx":5},{"y":1.0,"x":2.0,"idx":5},{"y":1.0,"x":0.0,"idx":6},{"y":1.0,"x":0.05,"idx":6},{"y":1.0,"x":0.1,"idx":6},{"y":1.0,"x":0.15,"idx":6},{"y":1.0,"x":0.2,"idx":6},{"y":1.0,"x":0.25,"idx":6},{"y":1.0,"x":0.3,"idx":6},{"y":1.0,"x":0.35,"idx":6},{"y":1.0,"x":0.4,"idx":6},{"y":1.0,"x":0.45,"idx":6},{"y":1.0,"x":0.5,"idx":6},{"y":1.0,"x":0.55,"idx":6},{"y":1.0,"x":0.6,"idx":6},{"y":1.0,"x":0.65,"idx":6},{"y":1.0,"x":0.7,"idx":6},{"y":1.0,"x":0.75,"idx":6},{"y":1.0,"x":0.8,"idx":6},{"y":1.0,"x":0.85,"idx":6},{"y":1.0,"x":0.9,"idx":6},{"y":1.0,"x":0.95,"idx":6},{"y":1.0,"x":1.0,"idx":6},{"y":1.0000002,"x":1.05,"idx":6},{"y":1.0000014,"x":1.1,"idx":6},{"y":1.000006,"x":1.15,"idx":6},{"y":1.0000211,"x":1.2,"idx":6},{"y":1.0000672,"x":1.25,"idx":6},{"y":1.0001969,"x":1.3,"idx":6},{"y":1.0005329,"x":1.35,"idx":6},{"y":1.0013351,"x":1.4,"idx":6},{"y":1.0031089,"x":1.45,"idx":6},{"y":1.0067447,"x":1.5,"idx":6},{"y":1.0136701,"x":1.55,"idx":6},{"y":1.0259466,"x":1.6,"idx":6},{"y":1.0462289,"x":1.65,"idx":6},{"y":1.077495,"x":1.7,"idx":6},{"y":1.1225095,"x":1.75,"idx":6},{"y":1.18308,"x":1.8,"idx":6},{"y":1.2592821,"x":1.85,"idx":6},{"y":1.3489089,"x":1.9,"idx":6},{"y":1.4473758,"x":1.95,"idx":6},{"y":1.0,"x":2.0,"idx":6},{"y":1.0,"x":0.0,"idx":7},{"y":1.0,"x":0.05,"idx":7},{"y":1.0,"x":0.1,"idx":7},{"y":1.0,"x":0.15,"idx":7},{"y":1.0,"x":0.2,"idx":7},{"y":1.0,"x":0.25,"idx":7},{"y":1.0,"x":0.3,"idx":7},{"y":1.0,"x":0.35,"idx":7},{"y":1.0,"x":0.4,"idx":7},{"y":1.0,"x":0.45,"idx":7},{"y":1.0,"x":0.5,"idx":7},{"y":1.0,"x":0.55,"idx":7},{"y":1.0,"x":0.6,"idx":7},{"y":1.0,"x":0.65,"idx":7},{"y":1.0,"x":0.7,"idx":7},{"y":1.0,"x":0.75,"idx":7},{"y":1.0,"x":0.8,"idx":7},{"y":1.0,"x":0.85,"idx":7},{"y":1.0,"x":0.9,"idx":7},{"y":1.0,"x":0.95,"idx":7},{"y":1.0,"x":1.0,"idx":7},{"y":1.0,"x":1.05,"idx":7},{"y":1.0,"x":1.1,"idx":7},{"y":1.0,"x":1.15,"idx":7},{"y":1.0000001,"x":1.2,"idx":7},{"y":1.0000007,"x":1.25,"idx":7},{"y":1.0000029,"x":1.3,"idx":7},{"y":1.0000095,"x":1.35,"idx":7},{"y":1.0000292,"x":1.4,"idx":7},{"y":1.0000831,"x":1.45,"idx":7},{"y":1.0002202,"x":1.5,"idx":7},{"y":1.0005466,"x":1.55,"idx":7},{"y":1.0012738,"x":1.6,"idx":7},{"y":1.0027914,"x":1.65,"idx":7},{"y":1.0057633,"x":1.7,"idx":7},{"y":1.0112313,"x":1.75,"idx":7},{"y":1.020695,"x":1.8,"idx":7},{"y":1.0361161,"x":1.85,"idx":7},{"y":1.0597953,"x":1.9,"idx":7},{"y":1.094079,"x":1.95,"idx":7},{"y":1.0,"x":2.0,"idx":7},{"y":1.0,"x":0.0,"idx":8},{"y":1.0,"x":0.05,"idx":8},{"y":1.0,"x":0.1,"idx":8},{"y":1.0,"x":0.15,"idx":8},{"y":1.0,"x":0.2,"idx":8},{"y":1.0,"x":0.25,"idx":8},{"y":1.0,"x":0.3,"idx":8},{"y":1.0,"x":0.35,"idx":8},{"y":1.0,"x":0.4,"idx":8},{"y":1.0,"x":0.45,"idx":8},{"y":1.0,"x":0.5,"idx":8},{"y":1.0,"x":0.55,"idx":8},{"y":1.0,"x":0.6,"idx":8},{"y":1.0,"x":0.65,"idx":8},{"y":1.0,"x":0.7,"idx":8},{"y":1.0,"x":0.75,"idx":8},{"y":1.0,"x":0.8,"idx":8},{"y":1.0,"x":0.85,"idx":8},{"y":1.0,"x":0.9,"idx":8},{"y":1.0,"x":0.95,"idx":8},{"y":1.0,"x":1.0,"idx":8},{"y":1.0,"x":1.05,"idx":8},{"y":1.0,"x":1.1,"idx":8},{"y":1.0,"x":1.15,"idx":8},{"y":1.0,"x":1.2,"idx":8},{"y":1.0,"x":1.25,"idx":8},{"y":1.0,"x":1.3,"idx":8},{"y":1.0,"x":1.35,"idx":8},{"y":1.0000004,"x":1.4,"idx":8},{"y":1.0000014,"x":1.45,"idx":8},{"y":1.0000043,"x":1.5,"idx":8},{"y":1.0000126,"x":1.55,"idx":8},{"y":1.000035,"x":1.6,"idx":8},{"y":1.0000916,"x":1.65,"idx":8},{"y":1.0002258,"x":1.7,"idx":8},{"y":1.0005264,"x":1.75,"idx":8},{"y":1.0011623,"x":1.8,"idx":8},{"y":1.002434,"x":1.85,"idx":8},{"y":1.0048413,"x":1.9,"idx":8},{"y":1.0091577,"x":1.95,"idx":8},{"y":1.0,"x":2.0,"idx":8},{"y":1.0,"x":0.0,"idx":9},{"y":1.0,"x":0.05,"idx":9},{"y":1.0,"x":0.1,"idx":9},{"y":1.0,"x":0.15,"idx":9},{"y":1.0,"x":0.2,"idx":9},{"y":1.0,"x":0.25,"idx":9},{"y":1.0,"x":0.3,"idx":9},{"y":1.0,"x":0.35,"idx":9},{"y":1.0,"x":0.4,"idx":9},{"y":1.0,"x":0.45,"idx":9},{"y":1.0,"x":0.5,"idx":9},{"y":1.0,"x":0.55,"idx":9},{"y":1.0,"x":0.6,"idx":9},{"y":1.0,"x":0.65,"idx":9},{"y":1.0,"x":0.7,"idx":9},{"y":1.0,"x":0.75,"idx":9},{"y":1.0,"x":0.8,"idx":9},{"y":1.0,"x":0.85,"idx":9},{"y":1.0,"x":0.9,"idx":9},{"y":1.0,"x":0.95,"idx":9},{"y":1.0,"x":1.0,"idx":9},{"y":1.0,"x":1.05,"idx":9},{"y":1.0,"x":1.1,"idx":9},{"y":1.0,"x":1.15,"idx":9},{"y":1.0,"x":1.2,"idx":9},{"y":1.0,"x":1.25,"idx":9},{"y":1.0,"x":1.3,"idx":9},{"y":1.0,"x":1.35,"idx":9},{"y":1.0,"x":1.4,"idx":9},{"y":1.0,"x":1.45,"idx":9},{"y":1.0,"x":1.5,"idx":9},{"y":1.0000001,"x":1.55,"idx":9},{"y":1.0000006,"x":1.6,"idx":9},{"y":1.0000019,"x":1.65,"idx":9},{"y":1.0000055,"x":1.7,"idx":9},{"y":1.0000149,"x":1.75,"idx":9},{"y":1.0000384,"x":1.8,"idx":9},{"y":1.0000939,"x":1.85,"idx":9},{"y":1.0002191,"x":1.9,"idx":9},{"y":1.0004864,"x":1.95,"idx":9},{"y":1.0,"x":2.0,"idx":9},{"y":1.0,"x":0.0,"idx":10},{"y":1.0,"x":0.05,"idx":10},{"y":1.0,"x":0.1,"idx":10},{"y":1.0,"x":0.15,"idx":10},{"y":1.0,"x":0.2,"idx":10},{"y":1.0,"x":0.25,"idx":10},{"y":1.0,"x":0.3,"idx":10},{"y":1.0,"x":0.35,"idx":10},{"y":1.0,"x":0.4,"idx":10},{"y":1.0,"x":0.45,"idx":10},{"y":1.0,"x":0.5,"idx":10},{"y":1.0,"x":0.55,"idx":10},{"y":1.0,"x":0.6,"idx":10},{"y":1.0,"x":0.65,"idx":10},{"y":1.0,"x":0.7,"idx":10},{"y":1.0,"x":0.75,"idx":10},{"y":1.0,"x":0.8,"idx":10},{"y":1.0,"x":0.85,"idx":10},{"y":1.0,"x":0.9,"idx":10},{"y":1.0,"x":0.95,"idx":10},{"y":1.0,"x":1.0,"idx":10},{"y":1.0,"x":1.05,"idx":10},{"y":1.0,"x":1.1,"idx":10},{"y":1.0,"x":1.15,"idx":10},{"y":1.0,"x":1.2,"idx":10},{"y":1.0,"x":1.25,"idx":10},{"y":1.0,"x":1.3,"idx":10},{"y":1.0,"x":1.35,"idx":10},{"y":1.0,"x":1.4,"idx":10},{"y":1.0,"x":1.45,"idx":10},{"y":1.0,"x":1.5,"idx":10},{"y":1.0,"x":1.55,"idx":10},{"y":1.0,"x":1.6,"idx":10},{"y":1.0,"x":1.65,"idx":10},{"y":1.0,"x":1.7,"idx":10},{"y":1.0000001,"x":1.75,"idx":10},{"y":1.0000007,"x":1.8,"idx":10},{"y":1.0000021,"x":1.85,"idx":10},{"y":1.0000062,"x":1.9,"idx":10},{"y":1.0000161,"x":1.95,"idx":10},{"y":1.0,"x":2.0,"idx":10}]},"mark":"line","encoding":{"x":{"field":"x","type":"quantitative","title":"X"},"y":{"field":"y","type":"quantitative","title":"Flow Velocity","scale":{"domain":[0.8,2.1]}},"color":{"field":"idx","type":"nominal","legend":null}}});</script></div>
+</section>
+<section id="interactive-time-step-plot" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-time-step-plot">Interactive Time Step Plot</h3>
+<p>In this second visualization, the plot includes an interactive slider that allows you to select a particular time step(<code>idx</code>) to visualize the velocity field at that specific moment.</p>
+<p>This interactive slider is implemented using Vega-Lite’s <a href="https://vega.github.io/vega-lite/docs/bind.html#input-element-binding">parameter binding feature</a>.</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> [select-dt-name <span class="st">"selectedDt"</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>      initial-dt     <span class="dv">0</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>      dt-step        <span class="dv">1</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>      dt-field       <span class="st">"idx"</span>]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  (kind/vega-lite (<span class="kw">merge</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                   default-plot-width-height-map</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                   {<span class="at">:data</span>      {<span class="at">:values</span> (accumulated-u-&gt;vega-data-values plot-params)}</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                    <span class="at">:transform</span> [{<span class="at">:filter</span> (<span class="kw">str</span> <span class="st">"datum."</span> dt-field <span class="st">" == "</span> select-dt-name)}]</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                    <span class="at">:params</span>    [{<span class="at">:name</span>  select-dt-name</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">:value</span> initial-dt</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">:bind</span>  {<span class="at">:input</span> <span class="st">"range"</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                                         <span class="at">:name</span>  <span class="st">"Time interval idx: "</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                                         <span class="at">:min</span>   initial-dt</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                                         <span class="at">:max</span>   (<span class="at">:nt</span> plot-params)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                                         <span class="at">:step</span>  dt-step}}]</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>                    <span class="at">:mark</span>      <span class="st">"line"</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                    <span class="at">:encoding</span>  {<span class="at">:x</span> {<span class="at">:field</span> <span class="st">"x"</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">:type</span>  <span class="st">"quantitative"</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">:title</span> <span class="st">"X"</span>}</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>                                <span class="at">:y</span> {<span class="at">:field</span> <span class="st">"y"</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">:type</span>  <span class="st">"quantitative"</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">:title</span> <span class="st">"Flow Velocity"</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">:scale</span> {<span class="at">:domain</span> default-y-domain}}}})))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div><script>vegaEmbed(document.currentScript.parentElement, {"width":500,"height":300,"data":{"values":[{"y":1.0,"x":0.0,"idx":0},{"y":1.0,"x":0.05,"idx":0},{"y":1.0,"x":0.1,"idx":0},{"y":1.0,"x":0.15,"idx":0},{"y":1.0,"x":0.2,"idx":0},{"y":1.0,"x":0.25,"idx":0},{"y":1.0,"x":0.3,"idx":0},{"y":1.0,"x":0.35,"idx":0},{"y":1.0,"x":0.4,"idx":0},{"y":1.0,"x":0.45,"idx":0},{"y":2.0,"x":0.5,"idx":0},{"y":2.0,"x":0.55,"idx":0},{"y":2.0,"x":0.6,"idx":0},{"y":2.0,"x":0.65,"idx":0},{"y":2.0,"x":0.7,"idx":0},{"y":2.0,"x":0.75,"idx":0},{"y":2.0,"x":0.8,"idx":0},{"y":2.0,"x":0.85,"idx":0},{"y":2.0,"x":0.9,"idx":0},{"y":2.0,"x":0.95,"idx":0},{"y":2.0,"x":1.0,"idx":0},{"y":1.0,"x":1.05,"idx":0},{"y":1.0,"x":1.1,"idx":0},{"y":1.0,"x":1.15,"idx":0},{"y":1.0,"x":1.2,"idx":0},{"y":1.0,"x":1.25,"idx":0},{"y":1.0,"x":1.3,"idx":0},{"y":1.0,"x":1.35,"idx":0},{"y":1.0,"x":1.4,"idx":0},{"y":1.0,"x":1.45,"idx":0},{"y":1.0,"x":1.5,"idx":0},{"y":1.0,"x":1.55,"idx":0},{"y":1.0,"x":1.6,"idx":0},{"y":1.0,"x":1.65,"idx":0},{"y":1.0,"x":1.7,"idx":0},{"y":1.0,"x":1.75,"idx":0},{"y":1.0,"x":1.8,"idx":0},{"y":1.0,"x":1.85,"idx":0},{"y":1.0,"x":1.9,"idx":0},{"y":1.0,"x":1.95,"idx":0},{"y":1.0,"x":2.0,"idx":0},{"y":1.0,"x":0.0,"idx":1},{"y":1.0,"x":0.05,"idx":1},{"y":1.0,"x":0.1,"idx":1},{"y":1.0,"x":0.15,"idx":1},{"y":1.0,"x":0.2,"idx":1},{"y":1.0,"x":0.25,"idx":1},{"y":1.0,"x":0.3,"idx":1},{"y":1.0,"x":0.35,"idx":1},{"y":1.0,"x":0.4,"idx":1},{"y":1.0,"x":0.45,"idx":1},{"y":1.5,"x":0.5,"idx":1},{"y":2.0,"x":0.55,"idx":1},{"y":2.0,"x":0.6,"idx":1},{"y":2.0,"x":0.65,"idx":1},{"y":2.0,"x":0.7,"idx":1},{"y":2.0,"x":0.75,"idx":1},{"y":2.0,"x":0.8,"idx":1},{"y":2.0,"x":0.85,"idx":1},{"y":2.0,"x":0.9,"idx":1},{"y":2.0,"x":0.95,"idx":1},{"y":2.0,"x":1.0,"idx":1},{"y":1.5,"x":1.05,"idx":1},{"y":1.0,"x":1.1,"idx":1},{"y":1.0,"x":1.15,"idx":1},{"y":1.0,"x":1.2,"idx":1},{"y":1.0,"x":1.25,"idx":1},{"y":1.0,"x":1.3,"idx":1},{"y":1.0,"x":1.35,"idx":1},{"y":1.0,"x":1.4,"idx":1},{"y":1.0,"x":1.45,"idx":1},{"y":1.0,"x":1.5,"idx":1},{"y":1.0,"x":1.55,"idx":1},{"y":1.0,"x":1.6,"idx":1},{"y":1.0,"x":1.65,"idx":1},{"y":1.0,"x":1.7,"idx":1},{"y":1.0,"x":1.75,"idx":1},{"y":1.0,"x":1.8,"idx":1},{"y":1.0,"x":1.85,"idx":1},{"y":1.0,"x":1.9,"idx":1},{"y":1.0,"x":1.95,"idx":1},{"y":1.0,"x":2.0,"idx":1},{"y":1.0,"x":0.0,"idx":2},{"y":1.0,"x":0.05,"idx":2},{"y":1.0,"x":0.1,"idx":2},{"y":1.0,"x":0.15,"idx":2},{"y":1.0,"x":0.2,"idx":2},{"y":1.0,"x":0.25,"idx":2},{"y":1.0,"x":0.3,"idx":2},{"y":1.0,"x":0.35,"idx":2},{"y":1.0,"x":0.4,"idx":2},{"y":1.0,"x":0.45,"idx":2},{"y":1.25,"x":0.5,"idx":2},{"y":1.75,"x":0.55,"idx":2},{"y":2.0,"x":0.6,"idx":2},{"y":2.0,"x":0.65,"idx":2},{"y":2.0,"x":0.7,"idx":2},{"y":2.0,"x":0.75,"idx":2},{"y":2.0,"x":0.8,"idx":2},{"y":2.0,"x":0.85,"idx":2},{"y":2.0,"x":0.9,"idx":2},{"y":2.0,"x":0.95,"idx":2},{"y":2.0,"x":1.0,"idx":2},{"y":1.75,"x":1.05,"idx":2},{"y":1.25,"x":1.1,"idx":2},{"y":1.0,"x":1.15,"idx":2},{"y":1.0,"x":1.2,"idx":2},{"y":1.0,"x":1.25,"idx":2},{"y":1.0,"x":1.3,"idx":2},{"y":1.0,"x":1.35,"idx":2},{"y":1.0,"x":1.4,"idx":2},{"y":1.0,"x":1.45,"idx":2},{"y":1.0,"x":1.5,"idx":2},{"y":1.0,"x":1.55,"idx":2},{"y":1.0,"x":1.6,"idx":2},{"y":1.0,"x":1.65,"idx":2},{"y":1.0,"x":1.7,"idx":2},{"y":1.0,"x":1.75,"idx":2},{"y":1.0,"x":1.8,"idx":2},{"y":1.0,"x":1.85,"idx":2},{"y":1.0,"x":1.9,"idx":2},{"y":1.0,"x":1.95,"idx":2},{"y":1.0,"x":2.0,"idx":2},{"y":1.0,"x":0.0,"idx":3},{"y":1.0,"x":0.05,"idx":3},{"y":1.0,"x":0.1,"idx":3},{"y":1.0,"x":0.15,"idx":3},{"y":1.0,"x":0.2,"idx":3},{"y":1.0,"x":0.25,"idx":3},{"y":1.0,"x":0.3,"idx":3},{"y":1.0,"x":0.35,"idx":3},{"y":1.0,"x":0.4,"idx":3},{"y":1.0,"x":0.45,"idx":3},{"y":1.125,"x":0.5,"idx":3},{"y":1.5,"x":0.55,"idx":3},{"y":1.875,"x":0.6,"idx":3},{"y":2.0,"x":0.65,"idx":3},{"y":2.0,"x":0.7,"idx":3},{"y":2.0,"x":0.75,"idx":3},{"y":2.0,"x":0.8,"idx":3},{"y":2.0,"x":0.85,"idx":3},{"y":2.0,"x":0.9,"idx":3},{"y":2.0,"x":0.95,"idx":3},{"y":2.0,"x":1.0,"idx":3},{"y":1.875,"x":1.05,"idx":3},{"y":1.5,"x":1.1,"idx":3},{"y":1.125,"x":1.15,"idx":3},{"y":1.0,"x":1.2,"idx":3},{"y":1.0,"x":1.25,"idx":3},{"y":1.0,"x":1.3,"idx":3},{"y":1.0,"x":1.35,"idx":3},{"y":1.0,"x":1.4,"idx":3},{"y":1.0,"x":1.45,"idx":3},{"y":1.0,"x":1.5,"idx":3},{"y":1.0,"x":1.55,"idx":3},{"y":1.0,"x":1.6,"idx":3},{"y":1.0,"x":1.65,"idx":3},{"y":1.0,"x":1.7,"idx":3},{"y":1.0,"x":1.75,"idx":3},{"y":1.0,"x":1.8,"idx":3},{"y":1.0,"x":1.85,"idx":3},{"y":1.0,"x":1.9,"idx":3},{"y":1.0,"x":1.95,"idx":3},{"y":1.0,"x":2.0,"idx":3},{"y":1.0,"x":0.0,"idx":4},{"y":1.0,"x":0.05,"idx":4},{"y":1.0,"x":0.1,"idx":4},{"y":1.0,"x":0.15,"idx":4},{"y":1.0,"x":0.2,"idx":4},{"y":1.0,"x":0.25,"idx":4},{"y":1.0,"x":0.3,"idx":4},{"y":1.0,"x":0.35,"idx":4},{"y":1.0,"x":0.4,"idx":4},{"y":1.0,"x":0.45,"idx":4},{"y":1.0625,"x":0.5,"idx":4},{"y":1.3125,"x":0.55,"idx":4},{"y":1.6875,"x":0.6,"idx":4},{"y":1.9375,"x":0.65,"idx":4},{"y":2.0,"x":0.7,"idx":4},{"y":2.0,"x":0.75,"idx":4},{"y":2.0,"x":0.8,"idx":4},{"y":2.0,"x":0.85,"idx":4},{"y":2.0,"x":0.9,"idx":4},{"y":2.0,"x":0.95,"idx":4},{"y":2.0,"x":1.0,"idx":4},{"y":1.9375,"x":1.05,"idx":4},{"y":1.6875,"x":1.1,"idx":4},{"y":1.3125,"x":1.15,"idx":4},{"y":1.0625,"x":1.2,"idx":4},{"y":1.0,"x":1.25,"idx":4},{"y":1.0,"x":1.3,"idx":4},{"y":1.0,"x":1.35,"idx":4},{"y":1.0,"x":1.4,"idx":4},{"y":1.0,"x":1.45,"idx":4},{"y":1.0,"x":1.5,"idx":4},{"y":1.0,"x":1.55,"idx":4},{"y":1.0,"x":1.6,"idx":4},{"y":1.0,"x":1.65,"idx":4},{"y":1.0,"x":1.7,"idx":4},{"y":1.0,"x":1.75,"idx":4},{"y":1.0,"x":1.8,"idx":4},{"y":1.0,"x":1.85,"idx":4},{"y":1.0,"x":1.9,"idx":4},{"y":1.0,"x":1.95,"idx":4},{"y":1.0,"x":2.0,"idx":4},{"y":1.0,"x":0.0,"idx":5},{"y":1.0,"x":0.05,"idx":5},{"y":1.0,"x":0.1,"idx":5},{"y":1.0,"x":0.15,"idx":5},{"y":1.0,"x":0.2,"idx":5},{"y":1.0,"x":0.25,"idx":5},{"y":1.0,"x":0.3,"idx":5},{"y":1.0,"x":0.35,"idx":5},{"y":1.0,"x":0.4,"idx":5},{"y":1.0,"x":0.45,"idx":5},{"y":1.03125,"x":0.5,"idx":5},{"y":1.1875,"x":0.55,"idx":5},{"y":1.5,"x":0.6,"idx":5},{"y":1.8125,"x":0.65,"idx":5},{"y":1.96875,"x":0.7,"idx":5},{"y":2.0,"x":0.75,"idx":5},{"y":2.0,"x":0.8,"idx":5},{"y":2.0,"x":0.85,"idx":5},{"y":2.0,"x":0.9,"idx":5},{"y":2.0,"x":0.95,"idx":5},{"y":2.0,"x":1.0,"idx":5},{"y":1.96875,"x":1.05,"idx":5},{"y":1.8125,"x":1.1,"idx":5},{"y":1.5,"x":1.15,"idx":5},{"y":1.1875,"x":1.2,"idx":5},{"y":1.03125,"x":1.25,"idx":5},{"y":1.0,"x":1.3,"idx":5},{"y":1.0,"x":1.35,"idx":5},{"y":1.0,"x":1.4,"idx":5},{"y":1.0,"x":1.45,"idx":5},{"y":1.0,"x":1.5,"idx":5},{"y":1.0,"x":1.55,"idx":5},{"y":1.0,"x":1.6,"idx":5},{"y":1.0,"x":1.65,"idx":5},{"y":1.0,"x":1.7,"idx":5},{"y":1.0,"x":1.75,"idx":5},{"y":1.0,"x":1.8,"idx":5},{"y":1.0,"x":1.85,"idx":5},{"y":1.0,"x":1.9,"idx":5},{"y":1.0,"x":1.95,"idx":5},{"y":1.0,"x":2.0,"idx":5},{"y":1.0,"x":0.0,"idx":6},{"y":1.0,"x":0.05,"idx":6},{"y":1.0,"x":0.1,"idx":6},{"y":1.0,"x":0.15,"idx":6},{"y":1.0,"x":0.2,"idx":6},{"y":1.0,"x":0.25,"idx":6},{"y":1.0,"x":0.3,"idx":6},{"y":1.0,"x":0.35,"idx":6},{"y":1.0,"x":0.4,"idx":6},{"y":1.0,"x":0.45,"idx":6},{"y":1.015625,"x":0.5,"idx":6},{"y":1.109375,"x":0.55,"idx":6},{"y":1.34375,"x":0.6,"idx":6},{"y":1.65625,"x":0.65,"idx":6},{"y":1.890625,"x":0.7,"idx":6},{"y":1.984375,"x":0.75,"idx":6},{"y":2.0,"x":0.8,"idx":6},{"y":2.0,"x":0.85,"idx":6},{"y":2.0,"x":0.9,"idx":6},{"y":2.0,"x":0.95,"idx":6},{"y":2.0,"x":1.0,"idx":6},{"y":1.984375,"x":1.05,"idx":6},{"y":1.890625,"x":1.1,"idx":6},{"y":1.65625,"x":1.15,"idx":6},{"y":1.34375,"x":1.2,"idx":6},{"y":1.109375,"x":1.25,"idx":6},{"y":1.015625,"x":1.3,"idx":6},{"y":1.0,"x":1.35,"idx":6},{"y":1.0,"x":1.4,"idx":6},{"y":1.0,"x":1.45,"idx":6},{"y":1.0,"x":1.5,"idx":6},{"y":1.0,"x":1.55,"idx":6},{"y":1.0,"x":1.6,"idx":6},{"y":1.0,"x":1.65,"idx":6},{"y":1.0,"x":1.7,"idx":6},{"y":1.0,"x":1.75,"idx":6},{"y":1.0,"x":1.8,"idx":6},{"y":1.0,"x":1.85,"idx":6},{"y":1.0,"x":1.9,"idx":6},{"y":1.0,"x":1.95,"idx":6},{"y":1.0,"x":2.0,"idx":6},{"y":1.0,"x":0.0,"idx":7},{"y":1.0,"x":0.05,"idx":7},{"y":1.0,"x":0.1,"idx":7},{"y":1.0,"x":0.15,"idx":7},{"y":1.0,"x":0.2,"idx":7},{"y":1.0,"x":0.25,"idx":7},{"y":1.0,"x":0.3,"idx":7},{"y":1.0,"x":0.35,"idx":7},{"y":1.0,"x":0.4,"idx":7},{"y":1.0,"x":0.45,"idx":7},{"y":1.0078125,"x":0.5,"idx":7},{"y":1.0625,"x":0.55,"idx":7},{"y":1.2265625,"x":0.6,"idx":7},{"y":1.5,"x":0.65,"idx":7},{"y":1.7734375,"x":0.7,"idx":7},{"y":1.9375,"x":0.75,"idx":7},{"y":1.9921875,"x":0.8,"idx":7},{"y":2.0,"x":0.85,"idx":7},{"y":2.0,"x":0.9,"idx":7},{"y":2.0,"x":0.95,"idx":7},{"y":2.0,"x":1.0,"idx":7},{"y":1.9921875,"x":1.05,"idx":7},{"y":1.9375,"x":1.1,"idx":7},{"y":1.7734375,"x":1.15,"idx":7},{"y":1.5,"x":1.2,"idx":7},{"y":1.2265625,"x":1.25,"idx":7},{"y":1.0625,"x":1.3,"idx":7},{"y":1.0078125,"x":1.35,"idx":7},{"y":1.0,"x":1.4,"idx":7},{"y":1.0,"x":1.45,"idx":7},{"y":1.0,"x":1.5,"idx":7},{"y":1.0,"x":1.55,"idx":7},{"y":1.0,"x":1.6,"idx":7},{"y":1.0,"x":1.65,"idx":7},{"y":1.0,"x":1.7,"idx":7},{"y":1.0,"x":1.75,"idx":7},{"y":1.0,"x":1.8,"idx":7},{"y":1.0,"x":1.85,"idx":7},{"y":1.0,"x":1.9,"idx":7},{"y":1.0,"x":1.95,"idx":7},{"y":1.0,"x":2.0,"idx":7},{"y":1.0,"x":0.0,"idx":8},{"y":1.0,"x":0.05,"idx":8},{"y":1.0,"x":0.1,"idx":8},{"y":1.0,"x":0.15,"idx":8},{"y":1.0,"x":0.2,"idx":8},{"y":1.0,"x":0.25,"idx":8},{"y":1.0,"x":0.3,"idx":8},{"y":1.0,"x":0.35,"idx":8},{"y":1.0,"x":0.4,"idx":8},{"y":1.0,"x":0.45,"idx":8},{"y":1.0039062,"x":0.5,"idx":8},{"y":1.0351562,"x":0.55,"idx":8},{"y":1.1445312,"x":0.6,"idx":8},{"y":1.3632812,"x":0.65,"idx":8},{"y":1.6367188,"x":0.7,"idx":8},{"y":1.8554688,"x":0.75,"idx":8},{"y":1.9648438,"x":0.8,"idx":8},{"y":1.9960938,"x":0.85,"idx":8},{"y":2.0,"x":0.9,"idx":8},{"y":2.0,"x":0.95,"idx":8},{"y":2.0,"x":1.0,"idx":8},{"y":1.9960938,"x":1.05,"idx":8},{"y":1.9648438,"x":1.1,"idx":8},{"y":1.8554688,"x":1.15,"idx":8},{"y":1.6367188,"x":1.2,"idx":8},{"y":1.3632812,"x":1.25,"idx":8},{"y":1.1445312,"x":1.3,"idx":8},{"y":1.0351562,"x":1.35,"idx":8},{"y":1.0039062,"x":1.4,"idx":8},{"y":1.0,"x":1.45,"idx":8},{"y":1.0,"x":1.5,"idx":8},{"y":1.0,"x":1.55,"idx":8},{"y":1.0,"x":1.6,"idx":8},{"y":1.0,"x":1.65,"idx":8},{"y":1.0,"x":1.7,"idx":8},{"y":1.0,"x":1.75,"idx":8},{"y":1.0,"x":1.8,"idx":8},{"y":1.0,"x":1.85,"idx":8},{"y":1.0,"x":1.9,"idx":8},{"y":1.0,"x":1.95,"idx":8},{"y":1.0,"x":2.0,"idx":8},{"y":1.0,"x":0.0,"idx":9},{"y":1.0,"x":0.05,"idx":9},{"y":1.0,"x":0.1,"idx":9},{"y":1.0,"x":0.15,"idx":9},{"y":1.0,"x":0.2,"idx":9},{"y":1.0,"x":0.25,"idx":9},{"y":1.0,"x":0.3,"idx":9},{"y":1.0,"x":0.35,"idx":9},{"y":1.0,"x":0.4,"idx":9},{"y":1.0,"x":0.45,"idx":9},{"y":1.0019531,"x":0.5,"idx":9},{"y":1.0195312,"x":0.55,"idx":9},{"y":1.0898438,"x":0.6,"idx":9},{"y":1.2539062,"x":0.65,"idx":9},{"y":1.5,"x":0.7,"idx":9},{"y":1.7460938,"x":0.75,"idx":9},{"y":1.9101562,"x":0.8,"idx":9},{"y":1.9804688,"x":0.85,"idx":9},{"y":1.9980469,"x":0.9,"idx":9},{"y":2.0,"x":0.95,"idx":9},{"y":2.0,"x":1.0,"idx":9},{"y":1.9980469,"x":1.05,"idx":9},{"y":1.9804688,"x":1.1,"idx":9},{"y":1.9101562,"x":1.15,"idx":9},{"y":1.7460938,"x":1.2,"idx":9},{"y":1.5,"x":1.25,"idx":9},{"y":1.2539062,"x":1.3,"idx":9},{"y":1.0898438,"x":1.35,"idx":9},{"y":1.0195312,"x":1.4,"idx":9},{"y":1.0019531,"x":1.45,"idx":9},{"y":1.0,"x":1.5,"idx":9},{"y":1.0,"x":1.55,"idx":9},{"y":1.0,"x":1.6,"idx":9},{"y":1.0,"x":1.65,"idx":9},{"y":1.0,"x":1.7,"idx":9},{"y":1.0,"x":1.75,"idx":9},{"y":1.0,"x":1.8,"idx":9},{"y":1.0,"x":1.85,"idx":9},{"y":1.0,"x":1.9,"idx":9},{"y":1.0,"x":1.95,"idx":9},{"y":1.0,"x":2.0,"idx":9},{"y":1.0,"x":0.0,"idx":10},{"y":1.0,"x":0.05,"idx":10},{"y":1.0,"x":0.1,"idx":10},{"y":1.0,"x":0.15,"idx":10},{"y":1.0,"x":0.2,"idx":10},{"y":1.0,"x":0.25,"idx":10},{"y":1.0,"x":0.3,"idx":10},{"y":1.0,"x":0.35,"idx":10},{"y":1.0,"x":0.4,"idx":10},{"y":1.0,"x":0.45,"idx":10},{"y":1.0009766,"x":0.5,"idx":10},{"y":1.0107422,"x":0.55,"idx":10},{"y":1.0546875,"x":0.6,"idx":10},{"y":1.171875,"x":0.65,"idx":10},{"y":1.3769531,"x":0.7,"idx":10},{"y":1.6230469,"x":0.75,"idx":10},{"y":1.828125,"x":0.8,"idx":10},{"y":1.9453125,"x":0.85,"idx":10},{"y":1.9892578,"x":0.9,"idx":10},{"y":1.9990234,"x":0.95,"idx":10},{"y":2.0,"x":1.0,"idx":10},{"y":1.9990234,"x":1.05,"idx":10},{"y":1.9892578,"x":1.1,"idx":10},{"y":1.9453125,"x":1.15,"idx":10},{"y":1.828125,"x":1.2,"idx":10},{"y":1.6230469,"x":1.25,"idx":10},{"y":1.3769531,"x":1.3,"idx":10},{"y":1.171875,"x":1.35,"idx":10},{"y":1.0546875,"x":1.4,"idx":10},{"y":1.0107422,"x":1.45,"idx":10},{"y":1.0009766,"x":1.5,"idx":10},{"y":1.0,"x":1.55,"idx":10},{"y":1.0,"x":1.6,"idx":10},{"y":1.0,"x":1.65,"idx":10},{"y":1.0,"x":1.7,"idx":10},{"y":1.0,"x":1.75,"idx":10},{"y":1.0,"x":1.8,"idx":10},{"y":1.0,"x":1.85,"idx":10},{"y":1.0,"x":1.9,"idx":10},{"y":1.0,"x":1.95,"idx":10},{"y":1.0,"x":2.0,"idx":10},{"y":1.0,"x":0.0,"idx":11},{"y":1.0,"x":0.05,"idx":11},{"y":1.0,"x":0.1,"idx":11},{"y":1.0,"x":0.15,"idx":11},{"y":1.0,"x":0.2,"idx":11},{"y":1.0,"x":0.25,"idx":11},{"y":1.0,"x":0.3,"idx":11},{"y":1.0,"x":0.35,"idx":11},{"y":1.0,"x":0.4,"idx":11},{"y":1.0,"x":0.45,"idx":11},{"y":1.0004883,"x":0.5,"idx":11},{"y":1.0058594,"x":0.55,"idx":11},{"y":1.0327148,"x":0.6,"idx":11},{"y":1.1132812,"x":0.65,"idx":11},{"y":1.2744141,"x":0.7,"idx":11},{"y":1.5,"x":0.75,"idx":11},{"y":1.7255859,"x":0.8,"idx":11},{"y":1.8867188,"x":0.85,"idx":11},{"y":1.9672852,"x":0.9,"idx":11},{"y":1.9941406,"x":0.95,"idx":11},{"y":1.9995117,"x":1.0,"idx":11},{"y":1.9995117,"x":1.05,"idx":11},{"y":1.9941406,"x":1.1,"idx":11},{"y":1.9672852,"x":1.15,"idx":11},{"y":1.8867188,"x":1.2,"idx":11},{"y":1.7255859,"x":1.25,"idx":11},{"y":1.5,"x":1.3,"idx":11},{"y":1.2744141,"x":1.35,"idx":11},{"y":1.1132812,"x":1.4,"idx":11},{"y":1.0327148,"x":1.45,"idx":11},{"y":1.0058594,"x":1.5,"idx":11},{"y":1.0004883,"x":1.55,"idx":11},{"y":1.0,"x":1.6,"idx":11},{"y":1.0,"x":1.65,"idx":11},{"y":1.0,"x":1.7,"idx":11},{"y":1.0,"x":1.75,"idx":11},{"y":1.0,"x":1.8,"idx":11},{"y":1.0,"x":1.85,"idx":11},{"y":1.0,"x":1.9,"idx":11},{"y":1.0,"x":1.95,"idx":11},{"y":1.0,"x":2.0,"idx":11},{"y":1.0,"x":0.0,"idx":12},{"y":1.0,"x":0.05,"idx":12},{"y":1.0,"x":0.1,"idx":12},{"y":1.0,"x":0.15,"idx":12},{"y":1.0,"x":0.2,"idx":12},{"y":1.0,"x":0.25,"idx":12},{"y":1.0,"x":0.3,"idx":12},{"y":1.0,"x":0.35,"idx":12},{"y":1.0,"x":0.4,"idx":12},{"y":1.0,"x":0.45,"idx":12},{"y":1.0002441,"x":0.5,"idx":12},{"y":1.0031738,"x":0.55,"idx":12},{"y":1.0192871,"x":0.6,"idx":12},{"y":1.072998,"x":0.65,"idx":12},{"y":1.1938477,"x":0.7,"idx":12},{"y":1.387207,"x":0.75,"idx":12},{"y":1.612793,"x":0.8,"idx":12},{"y":1.8061523,"x":0.85,"idx":12},{"y":1.927002,"x":0.9,"idx":12},{"y":1.9807129,"x":0.95,"idx":12},{"y":1.9968262,"x":1.0,"idx":12},{"y":1.9995117,"x":1.05,"idx":12},{"y":1.9968262,"x":1.1,"idx":12},{"y":1.9807129,"x":1.15,"idx":12},{"y":1.927002,"x":1.2,"idx":12},{"y":1.8061523,"x":1.25,"idx":12},{"y":1.612793,"x":1.3,"idx":12},{"y":1.387207,"x":1.35,"idx":12},{"y":1.1938477,"x":1.4,"idx":12},{"y":1.072998,"x":1.45,"idx":12},{"y":1.0192871,"x":1.5,"idx":12},{"y":1.0031738,"x":1.55,"idx":12},{"y":1.0002441,"x":1.6,"idx":12},{"y":1.0,"x":1.65,"idx":12},{"y":1.0,"x":1.7,"idx":12},{"y":1.0,"x":1.75,"idx":12},{"y":1.0,"x":1.8,"idx":12},{"y":1.0,"x":1.85,"idx":12},{"y":1.0,"x":1.9,"idx":12},{"y":1.0,"x":1.95,"idx":12},{"y":1.0,"x":2.0,"idx":12},{"y":1.0,"x":0.0,"idx":13},{"y":1.0,"x":0.05,"idx":13},{"y":1.0,"x":0.1,"idx":13},{"y":1.0,"x":0.15,"idx":13},{"y":1.0,"x":0.2,"idx":13},{"y":1.0,"x":0.25,"idx":13},{"y":1.0,"x":0.3,"idx":13},{"y":1.0,"x":0.35,"idx":13},{"y":1.0,"x":0.4,"idx":13},{"y":1.0,"x":0.45,"idx":13},{"y":1.0001221,"x":0.5,"idx":13},{"y":1.001709,"x":0.55,"idx":13},{"y":1.0112305,"x":0.6,"idx":13},{"y":1.0461426,"x":0.65,"idx":13},{"y":1.1334229,"x":0.7,"idx":13},{"y":1.2905273,"x":0.75,"idx":13},{"y":1.5,"x":0.8,"idx":13},{"y":1.7094727,"x":0.85,"idx":13},{"y":1.8665771,"x":0.9,"idx":13},{"y":1.9538574,"x":0.95,"idx":13},{"y":1.9887695,"x":1.0,"idx":13},{"y":1.998169,"x":1.05,"idx":13},{"y":1.998169,"x":1.1,"idx":13},{"y":1.9887695,"x":1.15,"idx":13},{"y":1.9538574,"x":1.2,"idx":13},{"y":1.8665771,"x":1.25,"idx":13},{"y":1.7094727,"x":1.3,"idx":13},{"y":1.5,"x":1.35,"idx":13},{"y":1.2905273,"x":1.4,"idx":13},{"y":1.1334229,"x":1.45,"idx":13},{"y":1.0461426,"x":1.5,"idx":13},{"y":1.0112305,"x":1.55,"idx":13},{"y":1.001709,"x":1.6,"idx":13},{"y":1.0001221,"x":1.65,"idx":13},{"y":1.0,"x":1.7,"idx":13},{"y":1.0,"x":1.75,"idx":13},{"y":1.0,"x":1.8,"idx":13},{"y":1.0,"x":1.85,"idx":13},{"y":1.0,"x":1.9,"idx":13},{"y":1.0,"x":1.95,"idx":13},{"y":1.0,"x":2.0,"idx":13},{"y":1.0,"x":0.0,"idx":14},{"y":1.0,"x":0.05,"idx":14},{"y":1.0,"x":0.1,"idx":14},{"y":1.0,"x":0.15,"idx":14},{"y":1.0,"x":0.2,"idx":14},{"y":1.0,"x":0.25,"idx":14},{"y":1.0,"x":0.3,"idx":14},{"y":1.0,"x":0.35,"idx":14},{"y":1.0,"x":0.4,"idx":14},{"y":1.0,"x":0.45,"idx":14},{"y":1.000061,"x":0.5,"idx":14},{"y":1.0009155,"x":0.55,"idx":14},{"y":1.0064697,"x":0.6,"idx":14},{"y":1.0286865,"x":0.65,"idx":14},{"y":1.0897827,"x":0.7,"idx":14},{"y":1.2119751,"x":0.75,"idx":14},{"y":1.3952637,"x":0.8,"idx":14},{"y":1.6047363,"x":0.85,"idx":14},{"y":1.7880249,"x":0.9,"idx":14},{"y":1.9102173,"x":0.95,"idx":14},{"y":1.9713135,"x":1.0,"idx":14},{"y":1.9934692,"x":1.05,"idx":14},{"y":1.998169,"x":1.1,"idx":14},{"y":1.9934692,"x":1.15,"idx":14},{"y":1.9713135,"x":1.2,"idx":14},{"y":1.9102173,"x":1.25,"idx":14},{"y":1.7880249,"x":1.3,"idx":14},{"y":1.6047363,"x":1.35,"idx":14},{"y":1.3952637,"x":1.4,"idx":14},{"y":1.2119751,"x":1.45,"idx":14},{"y":1.0897827,"x":1.5,"idx":14},{"y":1.0286865,"x":1.55,"idx":14},{"y":1.0064697,"x":1.6,"idx":14},{"y":1.0009155,"x":1.65,"idx":14},{"y":1.000061,"x":1.7,"idx":14},{"y":1.0,"x":1.75,"idx":14},{"y":1.0,"x":1.8,"idx":14},{"y":1.0,"x":1.85,"idx":14},{"y":1.0,"x":1.9,"idx":14},{"y":1.0,"x":1.95,"idx":14},{"y":1.0,"x":2.0,"idx":14},{"y":1.0,"x":0.0,"idx":15},{"y":1.0,"x":0.05,"idx":15},{"y":1.0,"x":0.1,"idx":15},{"y":1.0,"x":0.15,"idx":15},{"y":1.0,"x":0.2,"idx":15},{"y":1.0,"x":0.25,"idx":15},{"y":1.0,"x":0.3,"idx":15},{"y":1.0,"x":0.35,"idx":15},{"y":1.0,"x":0.4,"idx":15},{"y":1.0,"x":0.45,"idx":15},{"y":1.0000305,"x":0.5,"idx":15},{"y":1.0004883,"x":0.55,"idx":15},{"y":1.0036926,"x":0.6,"idx":15},{"y":1.0175781,"x":0.65,"idx":15},{"y":1.0592346,"x":0.7,"idx":15},{"y":1.1508789,"x":0.75,"idx":15},{"y":1.3036194,"x":0.8,"idx":15},{"y":1.5,"x":0.85,"idx":15},{"y":1.6963806,"x":0.9,"idx":15},{"y":1.8491211,"x":0.95,"idx":15},{"y":1.9407654,"x":1.0,"idx":15},{"y":1.9823914,"x":1.05,"idx":15},{"y":1.9958191,"x":1.1,"idx":15},{"y":1.9958191,"x":1.15,"idx":15},{"y":1.9823914,"x":1.2,"idx":15},{"y":1.9407654,"x":1.25,"idx":15},{"y":1.8491211,"x":1.3,"idx":15},{"y":1.6963806,"x":1.35,"idx":15},{"y":1.5,"x":1.4,"idx":15},{"y":1.3036194,"x":1.45,"idx":15},{"y":1.1508789,"x":1.5,"idx":15},{"y":1.0592346,"x":1.55,"idx":15},{"y":1.0175781,"x":1.6,"idx":15},{"y":1.0036926,"x":1.65,"idx":15},{"y":1.0004883,"x":1.7,"idx":15},{"y":1.0000305,"x":1.75,"idx":15},{"y":1.0,"x":1.8,"idx":15},{"y":1.0,"x":1.85,"idx":15},{"y":1.0,"x":1.9,"idx":15},{"y":1.0,"x":1.95,"idx":15},{"y":1.0,"x":2.0,"idx":15},{"y":1.0,"x":0.0,"idx":16},{"y":1.0,"x":0.05,"idx":16},{"y":1.0,"x":0.1,"idx":16},{"y":1.0,"x":0.15,"idx":16},{"y":1.0,"x":0.2,"idx":16},{"y":1.0,"x":0.25,"idx":16},{"y":1.0,"x":0.3,"idx":16},{"y":1.0,"x":0.35,"idx":16},{"y":1.0,"x":0.4,"idx":16},{"y":1.0,"x":0.45,"idx":16},{"y":1.0000153,"x":0.5,"idx":16},{"y":1.0002594,"x":0.55,"idx":16},{"y":1.0020905,"x":0.6,"idx":16},{"y":1.0106354,"x":0.65,"idx":16},{"y":1.0384064,"x":0.7,"idx":16},{"y":1.1050568,"x":0.75,"idx":16},{"y":1.2272491,"x":0.8,"idx":16},{"y":1.4018097,"x":0.85,"idx":16},{"y":1.5981903,"x":0.9,"idx":16},{"y":1.7727509,"x":0.95,"idx":16},{"y":1.8949432,"x":1.0,"idx":16},{"y":1.9615784,"x":1.05,"idx":16},{"y":1.9891052,"x":1.1,"idx":16},{"y":1.9958191,"x":1.15,"idx":16},{"y":1.9891052,"x":1.2,"idx":16},{"y":1.9615784,"x":1.25,"idx":16},{"y":1.8949432,"x":1.3,"idx":16},{"y":1.7727509,"x":1.35,"idx":16},{"y":1.5981903,"x":1.4,"idx":16},{"y":1.4018097,"x":1.45,"idx":16},{"y":1.2272491,"x":1.5,"idx":16},{"y":1.1050568,"x":1.55,"idx":16},{"y":1.0384064,"x":1.6,"idx":16},{"y":1.0106354,"x":1.65,"idx":16},{"y":1.0020905,"x":1.7,"idx":16},{"y":1.0002594,"x":1.75,"idx":16},{"y":1.0000153,"x":1.8,"idx":16},{"y":1.0,"x":1.85,"idx":16},{"y":1.0,"x":1.9,"idx":16},{"y":1.0,"x":1.95,"idx":16},{"y":1.0,"x":2.0,"idx":16},{"y":1.0,"x":0.0,"idx":17},{"y":1.0,"x":0.05,"idx":17},{"y":1.0,"x":0.1,"idx":17},{"y":1.0,"x":0.15,"idx":17},{"y":1.0,"x":0.2,"idx":17},{"y":1.0,"x":0.25,"idx":17},{"y":1.0,"x":0.3,"idx":17},{"y":1.0,"x":0.35,"idx":17},{"y":1.0,"x":0.4,"idx":17},{"y":1.0,"x":0.45,"idx":17},{"y":1.0000076,"x":0.5,"idx":17},{"y":1.0001373,"x":0.55,"idx":17},{"y":1.0011749,"x":0.6,"idx":17},{"y":1.0063629,"x":0.65,"idx":17},{"y":1.0245209,"x":0.7,"idx":17},{"y":1.0717316,"x":0.75,"idx":17},{"y":1.166153,"x":0.8,"idx":17},{"y":1.3145294,"x":0.85,"idx":17},{"y":1.5,"x":0.9,"idx":17},{"y":1.6854706,"x":0.95,"idx":17},{"y":1.833847,"x":1.0,"idx":17},{"y":1.9282608,"x":1.05,"idx":17},{"y":1.9753418,"x":1.1,"idx":17},{"y":1.9924622,"x":1.15,"idx":17},{"y":1.9924622,"x":1.2,"idx":17},{"y":1.9753418,"x":1.25,"idx":17},{"y":1.9282608,"x":1.3,"idx":17},{"y":1.833847,"x":1.35,"idx":17},{"y":1.6854706,"x":1.4,"idx":17},{"y":1.5,"x":1.45,"idx":17},{"y":1.3145294,"x":1.5,"idx":17},{"y":1.166153,"x":1.55,"idx":17},{"y":1.0717316,"x":1.6,"idx":17},{"y":1.0245209,"x":1.65,"idx":17},{"y":1.0063629,"x":1.7,"idx":17},{"y":1.0011749,"x":1.75,"idx":17},{"y":1.0001373,"x":1.8,"idx":17},{"y":1.0000076,"x":1.85,"idx":17},{"y":1.0,"x":1.9,"idx":17},{"y":1.0,"x":1.95,"idx":17},{"y":1.0,"x":2.0,"idx":17},{"y":1.0,"x":0.0,"idx":18},{"y":1.0,"x":0.05,"idx":18},{"y":1.0,"x":0.1,"idx":18},{"y":1.0,"x":0.15,"idx":18},{"y":1.0,"x":0.2,"idx":18},{"y":1.0,"x":0.25,"idx":18},{"y":1.0,"x":0.3,"idx":18},{"y":1.0,"x":0.35,"idx":18},{"y":1.0,"x":0.4,"idx":18},{"y":1.0,"x":0.45,"idx":18},{"y":1.0000038,"x":0.5,"idx":18},{"y":1.0000725,"x":0.55,"idx":18},{"y":1.0006561,"x":0.6,"idx":18},{"y":1.0037689,"x":0.65,"idx":18},{"y":1.0154419,"x":0.7,"idx":18},{"y":1.0481262,"x":0.75,"idx":18},{"y":1.1189423,"x":0.8,"idx":18},{"y":1.2403412,"x":0.85,"idx":18},{"y":1.4072647,"x":0.9,"idx":18},{"y":1.5927353,"x":0.95,"idx":18},{"y":1.7596588,"x":1.0,"idx":18},{"y":1.8810539,"x":1.05,"idx":18},{"y":1.9518013,"x":1.1,"idx":18},{"y":1.983902,"x":1.15,"idx":18},{"y":1.9924622,"x":1.2,"idx":18},{"y":1.983902,"x":1.25,"idx":18},{"y":1.9518013,"x":1.3,"idx":18},{"y":1.8810539,"x":1.35,"idx":18},{"y":1.7596588,"x":1.4,"idx":18},{"y":1.5927353,"x":1.45,"idx":18},{"y":1.4072647,"x":1.5,"idx":18},{"y":1.2403412,"x":1.55,"idx":18},{"y":1.1189423,"x":1.6,"idx":18},{"y":1.0481262,"x":1.65,"idx":18},{"y":1.0154419,"x":1.7,"idx":18},{"y":1.0037689,"x":1.75,"idx":18},{"y":1.0006561,"x":1.8,"idx":18},{"y":1.0000725,"x":1.85,"idx":18},{"y":1.0000038,"x":1.9,"idx":18},{"y":1.0,"x":1.95,"idx":18},{"y":1.0,"x":2.0,"idx":18},{"y":1.0,"x":0.0,"idx":19},{"y":1.0,"x":0.05,"idx":19},{"y":1.0,"x":0.1,"idx":19},{"y":1.0,"x":0.15,"idx":19},{"y":1.0,"x":0.2,"idx":19},{"y":1.0,"x":0.25,"idx":19},{"y":1.0,"x":0.3,"idx":19},{"y":1.0,"x":0.35,"idx":19},{"y":1.0,"x":0.4,"idx":19},{"y":1.0,"x":0.45,"idx":19},{"y":1.0000019,"x":0.5,"idx":19},{"y":1.0000381,"x":0.55,"idx":19},{"y":1.0003643,"x":0.6,"idx":19},{"y":1.0022125,"x":0.65,"idx":19},{"y":1.0096054,"x":0.7,"idx":19},{"y":1.031784,"x":0.75,"idx":19},{"y":1.0835342,"x":0.8,"idx":19},{"y":1.1796417,"x":0.85,"idx":19},{"y":1.323803,"x":0.9,"idx":19},{"y":1.5,"x":0.95,"idx":19},{"y":1.676197,"x":1.0,"idx":19},{"y":1.8203564,"x":1.05,"idx":19},{"y":1.9164276,"x":1.1,"idx":19},{"y":1.9678516,"x":1.15,"idx":19},{"y":1.9881821,"x":1.2,"idx":19},{"y":1.9881821,"x":1.25,"idx":19},{"y":1.9678516,"x":1.3,"idx":19},{"y":1.9164276,"x":1.35,"idx":19},{"y":1.8203564,"x":1.4,"idx":19},{"y":1.676197,"x":1.45,"idx":19},{"y":1.5,"x":1.5,"idx":19},{"y":1.323803,"x":1.55,"idx":19},{"y":1.1796417,"x":1.6,"idx":19},{"y":1.0835342,"x":1.65,"idx":19},{"y":1.031784,"x":1.7,"idx":19},{"y":1.0096054,"x":1.75,"idx":19},{"y":1.0022125,"x":1.8,"idx":19},{"y":1.0003643,"x":1.85,"idx":19},{"y":1.0000381,"x":1.9,"idx":19},{"y":1.0000019,"x":1.95,"idx":19},{"y":1.0,"x":2.0,"idx":19},{"y":1.0,"x":0.0,"idx":20},{"y":1.0,"x":0.05,"idx":20},{"y":1.0,"x":0.1,"idx":20},{"y":1.0,"x":0.15,"idx":20},{"y":1.0,"x":0.2,"idx":20},{"y":1.0,"x":0.25,"idx":20},{"y":1.0,"x":0.3,"idx":20},{"y":1.0,"x":0.35,"idx":20},{"y":1.0,"x":0.4,"idx":20},{"y":1.0,"x":0.45,"idx":20},{"y":1.000001,"x":0.5,"idx":20},{"y":1.00002,"x":0.55,"idx":20},{"y":1.0002012,"x":0.6,"idx":20},{"y":1.0012884,"x":0.65,"idx":20},{"y":1.005909,"x":0.7,"idx":20},{"y":1.0206947,"x":0.75,"idx":20},{"y":1.0576591,"x":0.8,"idx":20},{"y":1.131588,"x":0.85,"idx":20},{"y":1.2517223,"x":0.9,"idx":20},{"y":1.4119015,"x":0.95,"idx":20},{"y":1.5880985,"x":1.0,"idx":20},{"y":1.7482767,"x":1.05,"idx":20},{"y":1.868392,"x":1.1,"idx":20},{"y":1.9421396,"x":1.15,"idx":20},{"y":1.9780169,"x":1.2,"idx":20},{"y":1.9881821,"x":1.25,"idx":20},{"y":1.9780169,"x":1.3,"idx":20},{"y":1.9421396,"x":1.35,"idx":20},{"y":1.868392,"x":1.4,"idx":20},{"y":1.7482767,"x":1.45,"idx":20},{"y":1.5880985,"x":1.5,"idx":20},{"y":1.4119015,"x":1.55,"idx":20},{"y":1.2517223,"x":1.6,"idx":20},{"y":1.131588,"x":1.65,"idx":20},{"y":1.0576591,"x":1.7,"idx":20},{"y":1.0206947,"x":1.75,"idx":20},{"y":1.005909,"x":1.8,"idx":20},{"y":1.0012884,"x":1.85,"idx":20},{"y":1.0002012,"x":1.9,"idx":20},{"y":1.00002,"x":1.95,"idx":20},{"y":1.0,"x":2.0,"idx":20},{"y":1.0,"x":0.0,"idx":21},{"y":1.0,"x":0.05,"idx":21},{"y":1.0,"x":0.1,"idx":21},{"y":1.0,"x":0.15,"idx":21},{"y":1.0,"x":0.2,"idx":21},{"y":1.0,"x":0.25,"idx":21},{"y":1.0,"x":0.3,"idx":21},{"y":1.0,"x":0.35,"idx":21},{"y":1.0,"x":0.4,"idx":21},{"y":1.0,"x":0.45,"idx":21},{"y":1.0000005,"x":0.5,"idx":21},{"y":1.0000105,"x":0.55,"idx":21},{"y":1.0001106,"x":0.6,"idx":21},{"y":1.0007448,"x":0.65,"idx":21},{"y":1.0035987,"x":0.7,"idx":21},{"y":1.0133018,"x":0.75,"idx":21},{"y":1.039177,"x":0.8,"idx":21},{"y":1.0946236,"x":0.85,"idx":21},{"y":1.1916552,"x":0.9,"idx":21},{"y":1.3318119,"x":0.95,"idx":21},{"y":1.5,"x":1.0,"idx":21},{"y":1.6681876,"x":1.05,"idx":21},{"y":1.8083344,"x":1.1,"idx":21},{"y":1.9052658,"x":1.15,"idx":21},{"y":1.9600782,"x":1.2,"idx":21},{"y":1.9830995,"x":1.25,"idx":21},{"y":1.9830995,"x":1.3,"idx":21},{"y":1.9600782,"x":1.35,"idx":21},{"y":1.9052658,"x":1.4,"idx":21},{"y":1.8083344,"x":1.45,"idx":21},{"y":1.6681876,"x":1.5,"idx":21},{"y":1.5,"x":1.55,"idx":21},{"y":1.3318119,"x":1.6,"idx":21},{"y":1.1916552,"x":1.65,"idx":21},{"y":1.0946236,"x":1.7,"idx":21},{"y":1.039177,"x":1.75,"idx":21},{"y":1.0133018,"x":1.8,"idx":21},{"y":1.0035987,"x":1.85,"idx":21},{"y":1.0007448,"x":1.9,"idx":21},{"y":1.0001106,"x":1.95,"idx":21},{"y":1.0,"x":2.0,"idx":21},{"y":1.0,"x":0.0,"idx":22},{"y":1.0,"x":0.05,"idx":22},{"y":1.0,"x":0.1,"idx":22},{"y":1.0,"x":0.15,"idx":22},{"y":1.0,"x":0.2,"idx":22},{"y":1.0,"x":0.25,"idx":22},{"y":1.0,"x":0.3,"idx":22},{"y":1.0,"x":0.35,"idx":22},{"y":1.0,"x":0.4,"idx":22},{"y":1.0,"x":0.45,"idx":22},{"y":1.0000002,"x":0.5,"idx":22},{"y":1.0000055,"x":0.55,"idx":22},{"y":1.0000606,"x":0.6,"idx":22},{"y":1.0004277,"x":0.65,"idx":22},{"y":1.0021718,"x":0.7,"idx":22},{"y":1.0084503,"x":0.75,"idx":22},{"y":1.0262394,"x":0.8,"idx":22},{"y":1.0669003,"x":0.85,"idx":22},{"y":1.1431394,"x":0.9,"idx":22},{"y":1.2617335,"x":0.95,"idx":22},{"y":1.415906,"x":1.0,"idx":22},{"y":1.5840938,"x":1.05,"idx":22},{"y":1.738261,"x":1.1,"idx":22},{"y":1.8568001,"x":1.15,"idx":22},{"y":1.932672,"x":1.2,"idx":22},{"y":1.9715889,"x":1.25,"idx":22},{"y":1.9830995,"x":1.3,"idx":22},{"y":1.9715889,"x":1.35,"idx":22},{"y":1.932672,"x":1.4,"idx":22},{"y":1.8568001,"x":1.45,"idx":22},{"y":1.738261,"x":1.5,"idx":22},{"y":1.5840938,"x":1.55,"idx":22},{"y":1.415906,"x":1.6,"idx":22},{"y":1.2617335,"x":1.65,"idx":22},{"y":1.1431394,"x":1.7,"idx":22},{"y":1.0669003,"x":1.75,"idx":22},{"y":1.0262394,"x":1.8,"idx":22},{"y":1.0084503,"x":1.85,"idx":22},{"y":1.0021718,"x":1.9,"idx":22},{"y":1.0004277,"x":1.95,"idx":22},{"y":1.0,"x":2.0,"idx":22},{"y":1.0,"x":0.0,"idx":23},{"y":1.0,"x":0.05,"idx":23},{"y":1.0,"x":0.1,"idx":23},{"y":1.0,"x":0.15,"idx":23},{"y":1.0,"x":0.2,"idx":23},{"y":1.0,"x":0.25,"idx":23},{"y":1.0,"x":0.3,"idx":23},{"y":1.0,"x":0.35,"idx":23},{"y":1.0,"x":0.4,"idx":23},{"y":1.0,"x":0.45,"idx":23},{"y":1.0000001,"x":0.5,"idx":23},{"y":1.0000029,"x":0.55,"idx":23},{"y":1.000033,"x":0.6,"idx":23},{"y":1.0002441,"x":0.65,"idx":23},{"y":1.0012997,"x":0.7,"idx":23},{"y":1.005311,"x":0.75,"idx":23},{"y":1.0173448,"x":0.8,"idx":23},{"y":1.0465698,"x":0.85,"idx":23},{"y":1.1050198,"x":0.9,"idx":23},{"y":1.2024364,"x":0.95,"idx":23},{"y":1.3388197,"x":1.0,"idx":23},{"y":1.4999999,"x":1.05,"idx":23},{"y":1.6611774,"x":1.1,"idx":23},{"y":1.7975305,"x":1.15,"idx":23},{"y":1.894736,"x":1.2,"idx":23},{"y":1.9521304,"x":1.25,"idx":23},{"y":1.9773442,"x":1.3,"idx":23},{"y":1.9773442,"x":1.35,"idx":23},{"y":1.9521304,"x":1.4,"idx":23},{"y":1.894736,"x":1.45,"idx":23},{"y":1.7975305,"x":1.5,"idx":23},{"y":1.6611774,"x":1.55,"idx":23},{"y":1.4999999,"x":1.6,"idx":23},{"y":1.3388197,"x":1.65,"idx":23},{"y":1.2024364,"x":1.7,"idx":23},{"y":1.1050198,"x":1.75,"idx":23},{"y":1.0465698,"x":1.8,"idx":23},{"y":1.0173448,"x":1.85,"idx":23},{"y":1.005311,"x":1.9,"idx":23},{"y":1.0012997,"x":1.95,"idx":23},{"y":1.0,"x":2.0,"idx":23},{"y":1.0,"x":0.0,"idx":24},{"y":1.0,"x":0.05,"idx":24},{"y":1.0,"x":0.1,"idx":24},{"y":1.0,"x":0.15,"idx":24},{"y":1.0,"x":0.2,"idx":24},{"y":1.0,"x":0.25,"idx":24},{"y":1.0,"x":0.3,"idx":24},{"y":1.0,"x":0.35,"idx":24},{"y":1.0,"x":0.4,"idx":24},{"y":1.0,"x":0.45,"idx":24},{"y":1.0,"x":0.5,"idx":24},{"y":1.0000014,"x":0.55,"idx":24},{"y":1.0000179,"x":0.6,"idx":24},{"y":1.0001385,"x":0.65,"idx":24},{"y":1.000772,"x":0.7,"idx":24},{"y":1.0033054,"x":0.75,"idx":24},{"y":1.011328,"x":0.8,"idx":24},{"y":1.0319574,"x":0.85,"idx":24},{"y":1.0757948,"x":0.9,"idx":24},{"y":1.1537281,"x":0.95,"idx":24},{"y":1.2706281,"x":1.0,"idx":24},{"y":1.4194098,"x":1.05,"idx":24},{"y":1.5805886,"x":1.1,"idx":24},{"y":1.7293539,"x":1.15,"idx":24},{"y":1.8461332,"x":1.2,"idx":24},{"y":1.9234333,"x":1.25,"idx":24},{"y":1.9647373,"x":1.3,"idx":24},{"y":1.9773442,"x":1.35,"idx":24},{"y":1.9647373,"x":1.4,"idx":24},{"y":1.9234333,"x":1.45,"idx":24},{"y":1.8461332,"x":1.5,"idx":24},{"y":1.7293539,"x":1.55,"idx":24},{"y":1.5805886,"x":1.6,"idx":24},{"y":1.4194098,"x":1.65,"idx":24},{"y":1.2706281,"x":1.7,"idx":24},{"y":1.1537281,"x":1.75,"idx":24},{"y":1.0757948,"x":1.8,"idx":24},{"y":1.0319574,"x":1.85,"idx":24},{"y":1.011328,"x":1.9,"idx":24},{"y":1.0033054,"x":1.95,"idx":24},{"y":1.0,"x":2.0,"idx":24},{"y":1.0,"x":0.0,"idx":25},{"y":1.0,"x":0.05,"idx":25},{"y":1.0,"x":0.1,"idx":25},{"y":1.0,"x":0.15,"idx":25},{"y":1.0,"x":0.2,"idx":25},{"y":1.0,"x":0.25,"idx":25},{"y":1.0,"x":0.3,"idx":25},{"y":1.0,"x":0.35,"idx":25},{"y":1.0,"x":0.4,"idx":25},{"y":1.0,"x":0.45,"idx":25},{"y":1.0,"x":0.5,"idx":25},{"y":1.0000007,"x":0.55,"idx":25},{"y":1.0000097,"x":0.6,"idx":25},{"y":1.0000782,"x":0.65,"idx":25},{"y":1.0004553,"x":0.7,"idx":25},{"y":1.0020387,"x":0.75,"idx":25},{"y":1.0073167,"x":0.8,"idx":25},{"y":1.0216427,"x":0.85,"idx":25},{"y":1.0538762,"x":0.9,"idx":25},{"y":1.1147615,"x":0.95,"idx":25},{"y":1.2121781,"x":1.0,"idx":25},{"y":1.3450189,"x":1.05,"idx":25},{"y":1.4999992,"x":1.1,"idx":25},{"y":1.6549712,"x":1.15,"idx":25},{"y":1.7877436,"x":1.2,"idx":25},{"y":1.8847833,"x":1.25,"idx":25},{"y":1.9440854,"x":1.3,"idx":25},{"y":1.9710407,"x":1.35,"idx":25},{"y":1.9710407,"x":1.4,"idx":25},{"y":1.9440854,"x":1.45,"idx":25},{"y":1.8847833,"x":1.5,"idx":25},{"y":1.7877436,"x":1.55,"idx":25},{"y":1.6549712,"x":1.6,"idx":25},{"y":1.4999992,"x":1.65,"idx":25},{"y":1.3450189,"x":1.7,"idx":25},{"y":1.2121781,"x":1.75,"idx":25},{"y":1.1147615,"x":1.8,"idx":25},{"y":1.0538762,"x":1.85,"idx":25},{"y":1.0216427,"x":1.9,"idx":25},{"y":1.0073167,"x":1.95,"idx":25},{"y":1.0,"x":2.0,"idx":25},{"y":1.0,"x":0.0,"idx":26},{"y":1.0,"x":0.05,"idx":26},{"y":1.0,"x":0.1,"idx":26},{"y":1.0,"x":0.15,"idx":26},{"y":1.0,"x":0.2,"idx":26},{"y":1.0,"x":0.25,"idx":26},{"y":1.0,"x":0.3,"idx":26},{"y":1.0,"x":0.35,"idx":26},{"y":1.0,"x":0.4,"idx":26},{"y":1.0,"x":0.45,"idx":26},{"y":1.0,"x":0.5,"idx":26},{"y":1.0000004,"x":0.55,"idx":26},{"y":1.0000052,"x":0.6,"idx":26},{"y":1.0000439,"x":0.65,"idx":26},{"y":1.0002668,"x":0.7,"idx":26},{"y":1.0012469,"x":0.75,"idx":26},{"y":1.0046778,"x":0.8,"idx":26},{"y":1.0144796,"x":0.85,"idx":26},{"y":1.0377594,"x":0.9,"idx":26},{"y":1.0843189,"x":0.95,"idx":26},{"y":1.1634698,"x":1.0,"idx":26},{"y":1.2785985,"x":1.05,"idx":26},{"y":1.422509,"x":1.1,"idx":26},{"y":1.5774852,"x":1.15,"idx":26},{"y":1.7213573,"x":1.2,"idx":26},{"y":1.8362634,"x":1.25,"idx":26},{"y":1.9144343,"x":1.3,"idx":26},{"y":1.957563,"x":1.35,"idx":26},{"y":1.9710407,"x":1.4,"idx":26},{"y":1.957563,"x":1.45,"idx":26},{"y":1.9144343,"x":1.5,"idx":26},{"y":1.8362634,"x":1.55,"idx":26},{"y":1.7213573,"x":1.6,"idx":26},{"y":1.5774852,"x":1.65,"idx":26},{"y":1.422509,"x":1.7,"idx":26},{"y":1.2785985,"x":1.75,"idx":26},{"y":1.1634698,"x":1.8,"idx":26},{"y":1.0843189,"x":1.85,"idx":26},{"y":1.0377594,"x":1.9,"idx":26},{"y":1.0144796,"x":1.95,"idx":26},{"y":1.0,"x":2.0,"idx":26},{"y":1.0,"x":0.0,"idx":27},{"y":1.0,"x":0.05,"idx":27},{"y":1.0,"x":0.1,"idx":27},{"y":1.0,"x":0.15,"idx":27},{"y":1.0,"x":0.2,"idx":27},{"y":1.0,"x":0.25,"idx":27},{"y":1.0,"x":0.3,"idx":27},{"y":1.0,"x":0.35,"idx":27},{"y":1.0,"x":0.4,"idx":27},{"y":1.0,"x":0.45,"idx":27},{"y":1.0,"x":0.5,"idx":27},{"y":1.0000002,"x":0.55,"idx":27},{"y":1.0000029,"x":0.6,"idx":27},{"y":1.0000246,"x":0.65,"idx":27},{"y":1.0001553,"x":0.7,"idx":27},{"y":1.0007569,"x":0.75,"idx":27},{"y":1.0029624,"x":0.8,"idx":27},{"y":1.0095787,"x":0.85,"idx":27},{"y":1.0261195,"x":0.9,"idx":27},{"y":1.0610392,"x":0.95,"idx":27},{"y":1.1238943,"x":1.0,"idx":27},{"y":1.2210342,"x":1.05,"idx":27},{"y":1.3505538,"x":1.1,"idx":27},{"y":1.4999971,"x":1.15,"idx":27},{"y":1.6494212,"x":1.2,"idx":27},{"y":1.7788104,"x":1.25,"idx":27},{"y":1.8753488,"x":1.3,"idx":27},{"y":1.9359987,"x":1.35,"idx":27},{"y":1.9643018,"x":1.4,"idx":27},{"y":1.9643018,"x":1.45,"idx":27},{"y":1.9359987,"x":1.5,"idx":27},{"y":1.8753488,"x":1.55,"idx":27},{"y":1.7788104,"x":1.6,"idx":27},{"y":1.6494212,"x":1.65,"idx":27},{"y":1.4999971,"x":1.7,"idx":27},{"y":1.3505538,"x":1.75,"idx":27},{"y":1.2210342,"x":1.8,"idx":27},{"y":1.1238943,"x":1.85,"idx":27},{"y":1.0610392,"x":1.9,"idx":27},{"y":1.0261195,"x":1.95,"idx":27},{"y":1.0,"x":2.0,"idx":27},{"y":1.0,"x":0.0,"idx":28},{"y":1.0,"x":0.05,"idx":28},{"y":1.0,"x":0.1,"idx":28},{"y":1.0,"x":0.15,"idx":28},{"y":1.0,"x":0.2,"idx":28},{"y":1.0,"x":0.25,"idx":28},{"y":1.0,"x":0.3,"idx":28},{"y":1.0,"x":0.35,"idx":28},{"y":1.0,"x":0.4,"idx":28},{"y":1.0,"x":0.45,"idx":28},{"y":1.0,"x":0.5,"idx":28},{"y":1.0000001,"x":0.55,"idx":28},{"y":1.0000015,"x":0.6,"idx":28},{"y":1.0000137,"x":0.65,"idx":28},{"y":1.0000899,"x":0.7,"idx":28},{"y":1.0004561,"x":0.75,"idx":28},{"y":1.0018597,"x":0.8,"idx":28},{"y":1.0062705,"x":0.85,"idx":28},{"y":1.0178491,"x":0.9,"idx":28},{"y":1.0435793,"x":0.95,"idx":28},{"y":1.0924668,"x":1.0,"idx":28},{"y":1.1724643,"x":1.05,"idx":28},{"y":1.285794,"x":1.1,"idx":28},{"y":1.4252754,"x":1.15,"idx":28},{"y":1.5747092,"x":1.2,"idx":28},{"y":1.7141159,"x":1.25,"idx":28},{"y":1.8270795,"x":1.3,"idx":28},{"y":1.9056737,"x":1.35,"idx":28},{"y":1.9501503,"x":1.4,"idx":28},{"y":1.9643018,"x":1.45,"idx":28},{"y":1.9501503,"x":1.5,"idx":28},{"y":1.9056737,"x":1.55,"idx":28},{"y":1.8270795,"x":1.6,"idx":28},{"y":1.7141159,"x":1.65,"idx":28},{"y":1.5747092,"x":1.7,"idx":28},{"y":1.4252754,"x":1.75,"idx":28},{"y":1.285794,"x":1.8,"idx":28},{"y":1.1724643,"x":1.85,"idx":28},{"y":1.0924668,"x":1.9,"idx":28},{"y":1.0435793,"x":1.95,"idx":28},{"y":1.0,"x":2.0,"idx":28},{"y":1.0,"x":0.0,"idx":29},{"y":1.0,"x":0.05,"idx":29},{"y":1.0,"x":0.1,"idx":29},{"y":1.0,"x":0.15,"idx":29},{"y":1.0,"x":0.2,"idx":29},{"y":1.0,"x":0.25,"idx":29},{"y":1.0,"x":0.3,"idx":29},{"y":1.0,"x":0.35,"idx":29},{"y":1.0,"x":0.4,"idx":29},{"y":1.0,"x":0.45,"idx":29},{"y":1.0,"x":0.5,"idx":29},{"y":1.0,"x":0.55,"idx":29},{"y":1.0000008,"x":0.6,"idx":29},{"y":1.0000076,"x":0.65,"idx":29},{"y":1.0000517,"x":0.7,"idx":29},{"y":1.000273,"x":0.75,"idx":29},{"y":1.0011579,"x":0.8,"idx":29},{"y":1.004065,"x":0.85,"idx":29},{"y":1.0120598,"x":0.9,"idx":29},{"y":1.0307143,"x":0.95,"idx":29},{"y":1.0680231,"x":1.0,"idx":29},{"y":1.1324656,"x":1.05,"idx":29},{"y":1.2291291,"x":1.1,"idx":29},{"y":1.3555348,"x":1.15,"idx":29},{"y":1.4999924,"x":1.2,"idx":29},{"y":1.6444125,"x":1.25,"idx":29},{"y":1.7705977,"x":1.3,"idx":29},{"y":1.8663766,"x":1.35,"idx":29},{"y":1.927912,"x":1.4,"idx":29},{"y":1.957226,"x":1.45,"idx":29},{"y":1.957226,"x":1.5,"idx":29},{"y":1.927912,"x":1.55,"idx":29},{"y":1.8663766,"x":1.6,"idx":29},{"y":1.7705977,"x":1.65,"idx":29},{"y":1.6444125,"x":1.7,"idx":29},{"y":1.4999924,"x":1.75,"idx":29},{"y":1.3555348,"x":1.8,"idx":29},{"y":1.2291291,"x":1.85,"idx":29},{"y":1.1324656,"x":1.9,"idx":29},{"y":1.0680231,"x":1.95,"idx":29},{"y":1.0,"x":2.0,"idx":29},{"y":1.0,"x":0.0,"idx":30},{"y":1.0,"x":0.05,"idx":30},{"y":1.0,"x":0.1,"idx":30},{"y":1.0,"x":0.15,"idx":30},{"y":1.0,"x":0.2,"idx":30},{"y":1.0,"x":0.25,"idx":30},{"y":1.0,"x":0.3,"idx":30},{"y":1.0,"x":0.35,"idx":30},{"y":1.0,"x":0.4,"idx":30},{"y":1.0,"x":0.45,"idx":30},{"y":1.0,"x":0.5,"idx":30},{"y":1.0,"x":0.55,"idx":30},{"y":1.0000005,"x":0.6,"idx":30},{"y":1.0000043,"x":0.65,"idx":30},{"y":1.0000297,"x":0.7,"idx":30},{"y":1.0001624,"x":0.75,"idx":30},{"y":1.0007155,"x":0.8,"idx":30},{"y":1.0026114,"x":0.85,"idx":30},{"y":1.0080624,"x":0.9,"idx":30},{"y":1.0213871,"x":0.95,"idx":30},{"y":1.0493686,"x":1.0,"idx":30},{"y":1.1002443,"x":1.05,"idx":30},{"y":1.1807973,"x":1.1,"idx":30},{"y":1.2923319,"x":1.15,"idx":30},{"y":1.4277636,"x":1.2,"idx":30},{"y":1.5722024,"x":1.25,"idx":30},{"y":1.7075051,"x":1.3,"idx":30},{"y":1.8184872,"x":1.35,"idx":30},{"y":1.8971443,"x":1.4,"idx":30},{"y":1.942569,"x":1.45,"idx":30},{"y":1.957226,"x":1.5,"idx":30},{"y":1.942569,"x":1.55,"idx":30},{"y":1.8971443,"x":1.6,"idx":30},{"y":1.8184872,"x":1.65,"idx":30},{"y":1.7075051,"x":1.7,"idx":30},{"y":1.5722024,"x":1.75,"idx":30},{"y":1.4277636,"x":1.8,"idx":30},{"y":1.2923319,"x":1.85,"idx":30},{"y":1.1807973,"x":1.9,"idx":30},{"y":1.1002443,"x":1.95,"idx":30},{"y":1.0,"x":2.0,"idx":30},{"y":1.0,"x":0.0,"idx":31},{"y":1.0,"x":0.05,"idx":31},{"y":1.0,"x":0.1,"idx":31},{"y":1.0,"x":0.15,"idx":31},{"y":1.0,"x":0.2,"idx":31},{"y":1.0,"x":0.25,"idx":31},{"y":1.0,"x":0.3,"idx":31},{"y":1.0,"x":0.35,"idx":31},{"y":1.0,"x":0.4,"idx":31},{"y":1.0,"x":0.45,"idx":31},{"y":1.0,"x":0.5,"idx":31},{"y":1.0,"x":0.55,"idx":31},{"y":1.0000002,"x":0.6,"idx":31},{"y":1.0000024,"x":0.65,"idx":31},{"y":1.0000169,"x":0.7,"idx":31},{"y":1.0000961,"x":0.75,"idx":31},{"y":1.0004389,"x":0.8,"idx":31},{"y":1.0016634,"x":0.85,"idx":31},{"y":1.0053369,"x":0.9,"idx":31},{"y":1.0147247,"x":0.95,"idx":31},{"y":1.0353779,"x":1.0,"idx":31},{"y":1.0748065,"x":1.05,"idx":31},{"y":1.1405208,"x":1.1,"idx":31},{"y":1.2365646,"x":1.15,"idx":31},{"y":1.3600478,"x":1.2,"idx":31},{"y":1.4999831,"x":1.25,"idx":31},{"y":1.6398537,"x":1.3,"idx":31},{"y":1.7629962,"x":1.35,"idx":31},{"y":1.8578157,"x":1.4,"idx":31},{"y":1.9198567,"x":1.45,"idx":31},{"y":1.9498975,"x":1.5,"idx":31},{"y":1.9498975,"x":1.55,"idx":31},{"y":1.9198567,"x":1.6,"idx":31},{"y":1.8578157,"x":1.65,"idx":31},{"y":1.7629962,"x":1.7,"idx":31},{"y":1.6398537,"x":1.75,"idx":31},{"y":1.4999831,"x":1.8,"idx":31},{"y":1.3600478,"x":1.85,"idx":31},{"y":1.2365646,"x":1.9,"idx":31},{"y":1.1405208,"x":1.95,"idx":31},{"y":1.0,"x":2.0,"idx":31},{"y":1.0,"x":0.0,"idx":32},{"y":1.0,"x":0.05,"idx":32},{"y":1.0,"x":0.1,"idx":32},{"y":1.0,"x":0.15,"idx":32},{"y":1.0,"x":0.2,"idx":32},{"y":1.0,"x":0.25,"idx":32},{"y":1.0,"x":0.3,"idx":32},{"y":1.0,"x":0.35,"idx":32},{"y":1.0,"x":0.4,"idx":32},{"y":1.0,"x":0.45,"idx":32},{"y":1.0,"x":0.5,"idx":32},{"y":1.0,"x":0.55,"idx":32},{"y":1.0000001,"x":0.6,"idx":32},{"y":1.0000013,"x":0.65,"idx":32},{"y":1.0000097,"x":0.7,"idx":32},{"y":1.0000565,"x":0.75,"idx":32},{"y":1.0002675,"x":0.8,"idx":32},{"y":1.0010512,"x":0.85,"idx":32},{"y":1.0035002,"x":0.9,"idx":32},{"y":1.0100307,"x":0.95,"idx":32},{"y":1.0250514,"x":1.0,"idx":32},{"y":1.0550921,"x":1.05,"idx":32},{"y":1.1076636,"x":1.1,"idx":32},{"y":1.1885427,"x":1.15,"idx":32},{"y":1.2983062,"x":1.2,"idx":32},{"y":1.4300154,"x":1.25,"idx":32},{"y":1.5699184,"x":1.3,"idx":32},{"y":1.701425,"x":1.35,"idx":32},{"y":1.810406,"x":1.4,"idx":32},{"y":1.8888361,"x":1.45,"idx":32},{"y":1.9348772,"x":1.5,"idx":32},{"y":1.9498975,"x":1.55,"idx":32},{"y":1.9348772,"x":1.6,"idx":32},{"y":1.8888361,"x":1.65,"idx":32},{"y":1.810406,"x":1.7,"idx":32},{"y":1.701425,"x":1.75,"idx":32},{"y":1.5699184,"x":1.8,"idx":32},{"y":1.4300154,"x":1.85,"idx":32},{"y":1.2983062,"x":1.9,"idx":32},{"y":1.1885427,"x":1.95,"idx":32},{"y":1.0,"x":2.0,"idx":32},{"y":1.0,"x":0.0,"idx":33},{"y":1.0,"x":0.05,"idx":33},{"y":1.0,"x":0.1,"idx":33},{"y":1.0,"x":0.15,"idx":33},{"y":1.0,"x":0.2,"idx":33},{"y":1.0,"x":0.25,"idx":33},{"y":1.0,"x":0.3,"idx":33},{"y":1.0,"x":0.35,"idx":33},{"y":1.0,"x":0.4,"idx":33},{"y":1.0,"x":0.45,"idx":33},{"y":1.0,"x":0.5,"idx":33},{"y":1.0,"x":0.55,"idx":33},{"y":1.0,"x":0.6,"idx":33},{"y":1.0000007,"x":0.65,"idx":33},{"y":1.0000055,"x":0.7,"idx":33},{"y":1.0000331,"x":0.75,"idx":33},{"y":1.000162,"x":0.8,"idx":33},{"y":1.0006593,"x":0.85,"idx":33},{"y":1.0022757,"x":0.9,"idx":33},{"y":1.0067655,"x":0.95,"idx":33},{"y":1.017541,"x":1.0,"idx":33},{"y":1.0400717,"x":1.05,"idx":33},{"y":1.0813779,"x":1.1,"idx":33},{"y":1.1481032,"x":1.15,"idx":33},{"y":1.2434244,"x":1.2,"idx":33},{"y":1.3641608,"x":1.25,"idx":33},{"y":1.4999669,"x":1.3,"idx":33},{"y":1.6356716,"x":1.35,"idx":33},{"y":1.7559154,"x":1.4,"idx":33},{"y":1.849621,"x":1.45,"idx":33},{"y":1.9118567,"x":1.5,"idx":33},{"y":1.9423873,"x":1.55,"idx":33},{"y":1.9423873,"x":1.6,"idx":33},{"y":1.9118567,"x":1.65,"idx":33},{"y":1.849621,"x":1.7,"idx":33},{"y":1.7559154,"x":1.75,"idx":33},{"y":1.6356716,"x":1.8,"idx":33},{"y":1.4999669,"x":1.85,"idx":33},{"y":1.3641608,"x":1.9,"idx":33},{"y":1.2434244,"x":1.95,"idx":33},{"y":1.0,"x":2.0,"idx":33},{"y":1.0,"x":0.0,"idx":34},{"y":1.0,"x":0.05,"idx":34},{"y":1.0,"x":0.1,"idx":34},{"y":1.0,"x":0.15,"idx":34},{"y":1.0,"x":0.2,"idx":34},{"y":1.0,"x":0.25,"idx":34},{"y":1.0,"x":0.3,"idx":34},{"y":1.0,"x":0.35,"idx":34},{"y":1.0,"x":0.4,"idx":34},{"y":1.0,"x":0.45,"idx":34},{"y":1.0,"x":0.5,"idx":34},{"y":1.0,"x":0.55,"idx":34},{"y":1.0,"x":0.6,"idx":34},{"y":1.0000004,"x":0.65,"idx":34},{"y":1.0000031,"x":0.7,"idx":34},{"y":1.0000193,"x":0.75,"idx":34},{"y":1.0000975,"x":0.8,"idx":34},{"y":1.0004107,"x":0.85,"idx":34},{"y":1.0014675,"x":0.9,"idx":34},{"y":1.0045207,"x":0.95,"idx":34},{"y":1.0121533,"x":1.0,"idx":34},{"y":1.0288064,"x":1.05,"idx":34},{"y":1.0607247,"x":1.1,"idx":34},{"y":1.1147406,"x":1.15,"idx":34},{"y":1.1957638,"x":1.2,"idx":34},{"y":1.3037926,"x":1.25,"idx":34},{"y":1.4320638,"x":1.3,"idx":34},{"y":1.5678192,"x":1.35,"idx":34},{"y":1.6957935,"x":1.4,"idx":34},{"y":1.8027682,"x":1.45,"idx":34},{"y":1.8807389,"x":1.5,"idx":34},{"y":1.927122,"x":1.55,"idx":34},{"y":1.9423873,"x":1.6,"idx":34},{"y":1.927122,"x":1.65,"idx":34},{"y":1.8807389,"x":1.7,"idx":34},{"y":1.8027682,"x":1.75,"idx":34},{"y":1.6957935,"x":1.8,"idx":34},{"y":1.5678192,"x":1.85,"idx":34},{"y":1.4320638,"x":1.9,"idx":34},{"y":1.3037926,"x":1.95,"idx":34},{"y":1.0,"x":2.0,"idx":34},{"y":1.0,"x":0.0,"idx":35},{"y":1.0,"x":0.05,"idx":35},{"y":1.0,"x":0.1,"idx":35},{"y":1.0,"x":0.15,"idx":35},{"y":1.0,"x":0.2,"idx":35},{"y":1.0,"x":0.25,"idx":35},{"y":1.0,"x":0.3,"idx":35},{"y":1.0,"x":0.35,"idx":35},{"y":1.0,"x":0.4,"idx":35},{"y":1.0,"x":0.45,"idx":35},{"y":1.0,"x":0.5,"idx":35},{"y":1.0,"x":0.55,"idx":35},{"y":1.0,"x":0.6,"idx":35},{"y":1.0000002,"x":0.65,"idx":35},{"y":1.0000017,"x":0.7,"idx":35},{"y":1.0000112,"x":0.75,"idx":35},{"y":1.0000584,"x":0.8,"idx":35},{"y":1.0002542,"x":0.85,"idx":35},{"y":1.0009391,"x":0.9,"idx":35},{"y":1.0029941,"x":0.95,"idx":35},{"y":1.008337,"x":1.0,"idx":35},{"y":1.0204799,"x":1.05,"idx":35},{"y":1.0447656,"x":1.1,"idx":35},{"y":1.0877327,"x":1.15,"idx":35},{"y":1.1552522,"x":1.2,"idx":35},{"y":1.2497783,"x":1.25,"idx":35},{"y":1.3679283,"x":1.3,"idx":35},{"y":1.4999416,"x":1.35,"idx":35},{"y":1.6318064,"x":1.4,"idx":35},{"y":1.7492809,"x":1.45,"idx":35},{"y":1.8417535,"x":1.5,"idx":35},{"y":1.9039304,"x":1.55,"idx":35},{"y":1.9347546,"x":1.6,"idx":35},{"y":1.9347546,"x":1.65,"idx":35},{"y":1.9039304,"x":1.7,"idx":35},{"y":1.8417535,"x":1.75,"idx":35},{"y":1.7492809,"x":1.8,"idx":35},{"y":1.6318064,"x":1.85,"idx":35},{"y":1.4999416,"x":1.9,"idx":35},{"y":1.3679283,"x":1.95,"idx":35},{"y":1.0,"x":2.0,"idx":35},{"y":1.0,"x":0.0,"idx":36},{"y":1.0,"x":0.05,"idx":36},{"y":1.0,"x":0.1,"idx":36},{"y":1.0,"x":0.15,"idx":36},{"y":1.0,"x":0.2,"idx":36},{"y":1.0,"x":0.25,"idx":36},{"y":1.0,"x":0.3,"idx":36},{"y":1.0,"x":0.35,"idx":36},{"y":1.0,"x":0.4,"idx":36},{"y":1.0,"x":0.45,"idx":36},{"y":1.0,"x":0.5,"idx":36},{"y":1.0,"x":0.55,"idx":36},{"y":1.0,"x":0.6,"idx":36},{"y":1.0000001,"x":0.65,"idx":36},{"y":1.000001,"x":0.7,"idx":36},{"y":1.0000064,"x":0.75,"idx":36},{"y":1.0000348,"x":0.8,"idx":36},{"y":1.0001563,"x":0.85,"idx":36},{"y":1.0005966,"x":0.9,"idx":36},{"y":1.0019666,"x":0.95,"idx":36},{"y":1.0056655,"x":1.0,"idx":36},{"y":1.0144085,"x":1.05,"idx":36},{"y":1.0326228,"x":1.1,"idx":36},{"y":1.0662491,"x":1.15,"idx":36},{"y":1.1214924,"x":1.2,"idx":36},{"y":1.2025152,"x":1.25,"idx":36},{"y":1.3088533,"x":1.3,"idx":36},{"y":1.4339349,"x":1.35,"idx":36},{"y":1.565874,"x":1.4,"idx":36},{"y":1.6905437,"x":1.45,"idx":36},{"y":1.7955172,"x":1.5,"idx":36},{"y":1.872842,"x":1.55,"idx":36},{"y":1.9193425,"x":1.6,"idx":36},{"y":1.9347546,"x":1.65,"idx":36},{"y":1.9193425,"x":1.7,"idx":36},{"y":1.872842,"x":1.75,"idx":36},{"y":1.7955172,"x":1.8,"idx":36},{"y":1.6905437,"x":1.85,"idx":36},{"y":1.565874,"x":1.9,"idx":36},{"y":1.4339349,"x":1.95,"idx":36},{"y":1.0,"x":2.0,"idx":36},{"y":1.0,"x":0.0,"idx":37},{"y":1.0,"x":0.05,"idx":37},{"y":1.0,"x":0.1,"idx":37},{"y":1.0,"x":0.15,"idx":37},{"y":1.0,"x":0.2,"idx":37},{"y":1.0,"x":0.25,"idx":37},{"y":1.0,"x":0.3,"idx":37},{"y":1.0,"x":0.35,"idx":37},{"y":1.0,"x":0.4,"idx":37},{"y":1.0,"x":0.45,"idx":37},{"y":1.0,"x":0.5,"idx":37},{"y":1.0,"x":0.55,"idx":37},{"y":1.0,"x":0.6,"idx":37},{"y":1.0,"x":0.65,"idx":37},{"y":1.0000005,"x":0.7,"idx":37},{"y":1.0000037,"x":0.75,"idx":37},{"y":1.0000206,"x":0.8,"idx":37},{"y":1.0000956,"x":0.85,"idx":37},{"y":1.0003765,"x":0.9,"idx":37},{"y":1.0012816,"x":0.95,"idx":37},{"y":1.0038161,"x":1.0,"idx":37},{"y":1.010037,"x":1.05,"idx":37},{"y":1.0235157,"x":1.1,"idx":37},{"y":1.049436,"x":1.15,"idx":37},{"y":1.0938708,"x":1.2,"idx":37},{"y":1.1620038,"x":1.25,"idx":37},{"y":1.2556843,"x":1.3,"idx":37},{"y":1.3713942,"x":1.35,"idx":37},{"y":1.4999044,"x":1.4,"idx":37},{"y":1.6282089,"x":1.45,"idx":37},{"y":1.7430304,"x":1.5,"idx":37},{"y":1.8341796,"x":1.55,"idx":37},{"y":1.8960922,"x":1.6,"idx":37},{"y":1.9270486,"x":1.65,"idx":37},{"y":1.9270486,"x":1.7,"idx":37},{"y":1.8960922,"x":1.75,"idx":37},{"y":1.8341796,"x":1.8,"idx":37},{"y":1.7430304,"x":1.85,"idx":37},{"y":1.6282089,"x":1.9,"idx":37},{"y":1.4999044,"x":1.95,"idx":37},{"y":1.0,"x":2.0,"idx":37},{"y":1.0,"x":0.0,"idx":38},{"y":1.0,"x":0.05,"idx":38},{"y":1.0,"x":0.1,"idx":38},{"y":1.0,"x":0.15,"idx":38},{"y":1.0,"x":0.2,"idx":38},{"y":1.0,"x":0.25,"idx":38},{"y":1.0,"x":0.3,"idx":38},{"y":1.0,"x":0.35,"idx":38},{"y":1.0,"x":0.4,"idx":38},{"y":1.0,"x":0.45,"idx":38},{"y":1.0,"x":0.5,"idx":38},{"y":1.0,"x":0.55,"idx":38},{"y":1.0,"x":0.6,"idx":38},{"y":1.0,"x":0.65,"idx":38},{"y":1.0000002,"x":0.7,"idx":38},{"y":1.0000021,"x":0.75,"idx":38},{"y":1.0000122,"x":0.8,"idx":38},{"y":1.0000582,"x":0.85,"idx":38},{"y":1.000236,"x":0.9,"idx":38},{"y":1.000829,"x":0.95,"idx":38},{"y":1.0025489,"x":1.0,"idx":38},{"y":1.0069265,"x":1.05,"idx":38},{"y":1.0167763,"x":1.1,"idx":38},{"y":1.0364759,"x":1.15,"idx":38},{"y":1.0716534,"x":1.2,"idx":38},{"y":1.1279373,"x":1.25,"idx":38},{"y":1.208844,"x":1.3,"idx":38},{"y":1.3135393,"x":1.35,"idx":38},{"y":1.4356493,"x":1.4,"idx":38},{"y":1.5640566,"x":1.45,"idx":38},{"y":1.6856196,"x":1.5,"idx":38},{"y":1.788605,"x":1.55,"idx":38},{"y":1.8651359,"x":1.6,"idx":38},{"y":1.9115703,"x":1.65,"idx":38},{"y":1.9270486,"x":1.7,"idx":38},{"y":1.9115703,"x":1.75,"idx":38},{"y":1.8651359,"x":1.8,"idx":38},{"y":1.788605,"x":1.85,"idx":38},{"y":1.6856196,"x":1.9,"idx":38},{"y":1.5640566,"x":1.95,"idx":38},{"y":1.0,"x":2.0,"idx":38},{"y":1.0,"x":0.0,"idx":39},{"y":1.0,"x":0.05,"idx":39},{"y":1.0,"x":0.1,"idx":39},{"y":1.0,"x":0.15,"idx":39},{"y":1.0,"x":0.2,"idx":39},{"y":1.0,"x":0.25,"idx":39},{"y":1.0,"x":0.3,"idx":39},{"y":1.0,"x":0.35,"idx":39},{"y":1.0,"x":0.4,"idx":39},{"y":1.0,"x":0.45,"idx":39},{"y":1.0,"x":0.5,"idx":39},{"y":1.0,"x":0.55,"idx":39},{"y":1.0,"x":0.6,"idx":39},{"y":1.0,"x":0.65,"idx":39},{"y":1.0000001,"x":0.7,"idx":39},{"y":1.0000012,"x":0.75,"idx":39},{"y":1.0000072,"x":0.8,"idx":39},{"y":1.0000352,"x":0.85,"idx":39},{"y":1.0001471,"x":0.9,"idx":39},{"y":1.0005325,"x":0.95,"idx":39},{"y":1.001689,"x":1.0,"idx":39},{"y":1.0047377,"x":1.05,"idx":39},{"y":1.0118514,"x":1.1,"idx":39},{"y":1.0266261,"x":1.15,"idx":39},{"y":1.0540646,"x":1.2,"idx":39},{"y":1.0997953,"x":1.25,"idx":39},{"y":1.1683906,"x":1.3,"idx":39},{"y":1.2611916,"x":1.35,"idx":39},{"y":1.3745942,"x":1.4,"idx":39},{"y":1.4998529,"x":1.45,"idx":39},{"y":1.6248381,"x":1.5,"idx":39},{"y":1.7371123,"x":1.55,"idx":39},{"y":1.8268704,"x":1.6,"idx":39},{"y":1.8883531,"x":1.65,"idx":39},{"y":1.9193094,"x":1.7,"idx":39},{"y":1.9193094,"x":1.75,"idx":39},{"y":1.8883531,"x":1.8,"idx":39},{"y":1.8268704,"x":1.85,"idx":39},{"y":1.7371123,"x":1.9,"idx":39},{"y":1.6248381,"x":1.95,"idx":39},{"y":1.0,"x":2.0,"idx":39},{"y":1.0,"x":0.0,"idx":40},{"y":1.0,"x":0.05,"idx":40},{"y":1.0,"x":0.1,"idx":40},{"y":1.0,"x":0.15,"idx":40},{"y":1.0,"x":0.2,"idx":40},{"y":1.0,"x":0.25,"idx":40},{"y":1.0,"x":0.3,"idx":40},{"y":1.0,"x":0.35,"idx":40},{"y":1.0,"x":0.4,"idx":40},{"y":1.0,"x":0.45,"idx":40},{"y":1.0,"x":0.5,"idx":40},{"y":1.0,"x":0.55,"idx":40},{"y":1.0,"x":0.6,"idx":40},{"y":1.0,"x":0.65,"idx":40},{"y":1.0,"x":0.7,"idx":40},{"y":1.0000007,"x":0.75,"idx":40},{"y":1.0000042,"x":0.8,"idx":40},{"y":1.0000212,"x":0.85,"idx":40},{"y":1.0000911,"x":0.9,"idx":40},{"y":1.0003397,"x":0.95,"idx":40},{"y":1.0011108,"x":1.0,"idx":40},{"y":1.0032134,"x":1.05,"idx":40},{"y":1.0082946,"x":1.1,"idx":40},{"y":1.0192387,"x":1.15,"idx":40},{"y":1.0403454,"x":1.2,"idx":40},{"y":1.07693,"x":1.25,"idx":40},{"y":1.134093,"x":1.3,"idx":40},{"y":1.214791,"x":1.35,"idx":40},{"y":1.3178929,"x":1.4,"idx":40},{"y":1.4372236,"x":1.45,"idx":40},{"y":1.5623455,"x":1.5,"idx":40},{"y":1.6809752,"x":1.55,"idx":40},{"y":1.7819914,"x":1.6,"idx":40},{"y":1.8576118,"x":1.65,"idx":40},{"y":1.9038312,"x":1.7,"idx":40},{"y":1.9193094,"x":1.75,"idx":40},{"y":1.9038312,"x":1.8,"idx":40},{"y":1.8576118,"x":1.85,"idx":40},{"y":1.7819914,"x":1.9,"idx":40},{"y":1.6809752,"x":1.95,"idx":40},{"y":1.0,"x":2.0,"idx":40},{"y":1.0,"x":0.0,"idx":41},{"y":1.0,"x":0.05,"idx":41},{"y":1.0,"x":0.1,"idx":41},{"y":1.0,"x":0.15,"idx":41},{"y":1.0,"x":0.2,"idx":41},{"y":1.0,"x":0.25,"idx":41},{"y":1.0,"x":0.3,"idx":41},{"y":1.0,"x":0.35,"idx":41},{"y":1.0,"x":0.4,"idx":41},{"y":1.0,"x":0.45,"idx":41},{"y":1.0,"x":0.5,"idx":41},{"y":1.0,"x":0.55,"idx":41},{"y":1.0,"x":0.6,"idx":41},{"y":1.0,"x":0.65,"idx":41},{"y":1.0,"x":0.7,"idx":41},{"y":1.0000004,"x":0.75,"idx":41},{"y":1.0000024,"x":0.8,"idx":41},{"y":1.0000126,"x":0.85,"idx":41},{"y":1.0000561,"x":0.9,"idx":41},{"y":1.0002154,"x":0.95,"idx":41},{"y":1.0007253,"x":1.0,"idx":41},{"y":1.0021621,"x":1.05,"idx":41},{"y":1.005754,"x":1.1,"idx":41},{"y":1.0137666,"x":1.15,"idx":41},{"y":1.0297921,"x":1.2,"idx":41},{"y":1.0586377,"x":1.25,"idx":41},{"y":1.1055115,"x":1.3,"idx":41},{"y":1.174442,"x":1.35,"idx":41},{"y":1.2663419,"x":1.4,"idx":41},{"y":1.3775582,"x":1.45,"idx":41},{"y":1.4997845,"x":1.5,"idx":41},{"y":1.6216604,"x":1.55,"idx":41},{"y":1.7314832,"x":1.6,"idx":41},{"y":1.8198016,"x":1.65,"idx":41},{"y":1.8807216,"x":1.7,"idx":41},{"y":1.9115703,"x":1.75,"idx":41},{"y":1.9115703,"x":1.8,"idx":41},{"y":1.8807216,"x":1.85,"idx":41},{"y":1.8198016,"x":1.9,"idx":41},{"y":1.7314832,"x":1.95,"idx":41},{"y":1.0,"x":2.0,"idx":41},{"y":1.0,"x":0.0,"idx":42},{"y":1.0,"x":0.05,"idx":42},{"y":1.0,"x":0.1,"idx":42},{"y":1.0,"x":0.15,"idx":42},{"y":1.0,"x":0.2,"idx":42},{"y":1.0,"x":0.25,"idx":42},{"y":1.0,"x":0.3,"idx":42},{"y":1.0,"x":0.35,"idx":42},{"y":1.0,"x":0.4,"idx":42},{"y":1.0,"x":0.45,"idx":42},{"y":1.0,"x":0.5,"idx":42},{"y":1.0,"x":0.55,"idx":42},{"y":1.0,"x":0.6,"idx":42},{"y":1.0,"x":0.65,"idx":42},{"y":1.0,"x":0.7,"idx":42},{"y":1.0000002,"x":0.75,"idx":42},{"y":1.0000014,"x":0.8,"idx":42},{"y":1.0000075,"x":0.85,"idx":42},{"y":1.0000343,"x":0.9,"idx":42},{"y":1.0001358,"x":0.95,"idx":42},{"y":1.0004704,"x":1.0,"idx":42},{"y":1.0014436,"x":1.05,"idx":42},{"y":1.003958,"x":1.1,"idx":42},{"y":1.0097604,"x":1.15,"idx":42},{"y":1.0217793,"x":1.2,"idx":42},{"y":1.044215,"x":1.25,"idx":42},{"y":1.0820746,"x":1.3,"idx":42},{"y":1.1399767,"x":1.35,"idx":42},{"y":1.220392,"x":1.4,"idx":42},{"y":1.3219501,"x":1.45,"idx":42},{"y":1.4386714,"x":1.5,"idx":42},{"y":1.5607224,"x":1.55,"idx":42},{"y":1.6765718,"x":1.6,"idx":42},{"y":1.7756424,"x":1.65,"idx":42},{"y":1.8502616,"x":1.7,"idx":42},{"y":1.8961459,"x":1.75,"idx":42},{"y":1.9115703,"x":1.8,"idx":42},{"y":1.8961459,"x":1.85,"idx":42},{"y":1.8502616,"x":1.9,"idx":42},{"y":1.7756424,"x":1.95,"idx":42},{"y":1.0,"x":2.0,"idx":42},{"y":1.0,"x":0.0,"idx":43},{"y":1.0,"x":0.05,"idx":43},{"y":1.0,"x":0.1,"idx":43},{"y":1.0,"x":0.15,"idx":43},{"y":1.0,"x":0.2,"idx":43},{"y":1.0,"x":0.25,"idx":43},{"y":1.0,"x":0.3,"idx":43},{"y":1.0,"x":0.35,"idx":43},{"y":1.0,"x":0.4,"idx":43},{"y":1.0,"x":0.45,"idx":43},{"y":1.0,"x":0.5,"idx":43},{"y":1.0,"x":0.55,"idx":43},{"y":1.0,"x":0.6,"idx":43},{"y":1.0,"x":0.65,"idx":43},{"y":1.0,"x":0.7,"idx":43},{"y":1.0000001,"x":0.75,"idx":43},{"y":1.0000008,"x":0.8,"idx":43},{"y":1.0000045,"x":0.85,"idx":43},{"y":1.000021,"x":0.9,"idx":43},{"y":1.0000851,"x":0.95,"idx":43},{"y":1.000303,"x":1.0,"idx":43},{"y":1.000957,"x":1.05,"idx":43},{"y":1.0027008,"x":1.1,"idx":43},{"y":1.0068592,"x":1.15,"idx":43},{"y":1.0157698,"x":1.2,"idx":43},{"y":1.0329971,"x":1.25,"idx":43},{"y":1.0631448,"x":1.3,"idx":43},{"y":1.1110257,"x":1.35,"idx":43},{"y":1.1801844,"x":1.4,"idx":43},{"y":1.2711711,"x":1.45,"idx":43},{"y":1.3803108,"x":1.5,"idx":43},{"y":1.4996969,"x":1.55,"idx":43},{"y":1.6186471,"x":1.6,"idx":43},{"y":1.7261071,"x":1.65,"idx":43},{"y":1.812952,"x":1.7,"idx":43},{"y":1.8732038,"x":1.75,"idx":43},{"y":1.9038582,"x":1.8,"idx":43},{"y":1.9038582,"x":1.85,"idx":43},{"y":1.8732038,"x":1.9,"idx":43},{"y":1.812952,"x":1.95,"idx":43},{"y":1.0,"x":2.0,"idx":43},{"y":1.0,"x":0.0,"idx":44},{"y":1.0,"x":0.05,"idx":44},{"y":1.0,"x":0.1,"idx":44},{"y":1.0,"x":0.15,"idx":44},{"y":1.0,"x":0.2,"idx":44},{"y":1.0,"x":0.25,"idx":44},{"y":1.0,"x":0.3,"idx":44},{"y":1.0,"x":0.35,"idx":44},{"y":1.0,"x":0.4,"idx":44},{"y":1.0,"x":0.45,"idx":44},{"y":1.0,"x":0.5,"idx":44},{"y":1.0,"x":0.55,"idx":44},{"y":1.0,"x":0.6,"idx":44},{"y":1.0,"x":0.65,"idx":44},{"y":1.0,"x":0.7,"idx":44},{"y":1.0,"x":0.75,"idx":44},{"y":1.0000005,"x":0.8,"idx":44},{"y":1.0000026,"x":0.85,"idx":44},{"y":1.0000128,"x":0.9,"idx":44},{"y":1.000053,"x":0.95,"idx":44},{"y":1.0001941,"x":1.0,"idx":44},{"y":1.00063,"x":1.05,"idx":44},{"y":1.0018289,"x":1.1,"idx":44},{"y":1.00478,"x":1.15,"idx":44},{"y":1.0113145,"x":1.2,"idx":44},{"y":1.0243835,"x":1.25,"idx":44},{"y":1.0480709,"x":1.3,"idx":44},{"y":1.0870852,"x":1.35,"idx":44},{"y":1.1456051,"x":1.4,"idx":44},{"y":1.2256777,"x":1.45,"idx":44},{"y":1.3257409,"x":1.5,"idx":44},{"y":1.4400039,"x":1.55,"idx":44},{"y":1.5591719,"x":1.6,"idx":44},{"y":1.6723771,"x":1.65,"idx":44},{"y":1.7695296,"x":1.7,"idx":44},{"y":1.8430779,"x":1.75,"idx":44},{"y":1.888531,"x":1.8,"idx":44},{"y":1.9038582,"x":1.85,"idx":44},{"y":1.888531,"x":1.9,"idx":44},{"y":1.8430779,"x":1.95,"idx":44},{"y":1.0,"x":2.0,"idx":44},{"y":1.0,"x":0.0,"idx":45},{"y":1.0,"x":0.05,"idx":45},{"y":1.0,"x":0.1,"idx":45},{"y":1.0,"x":0.15,"idx":45},{"y":1.0,"x":0.2,"idx":45},{"y":1.0,"x":0.25,"idx":45},{"y":1.0,"x":0.3,"idx":45},{"y":1.0,"x":0.35,"idx":45},{"y":1.0,"x":0.4,"idx":45},{"y":1.0,"x":0.45,"idx":45},{"y":1.0,"x":0.5,"idx":45},{"y":1.0,"x":0.55,"idx":45},{"y":1.0,"x":0.6,"idx":45},{"y":1.0,"x":0.65,"idx":45},{"y":1.0,"x":0.7,"idx":45},{"y":1.0,"x":0.75,"idx":45},{"y":1.0000002,"x":0.8,"idx":45},{"y":1.0000015,"x":0.85,"idx":45},{"y":1.0000076,"x":0.9,"idx":45},{"y":1.0000329,"x":0.95,"idx":45},{"y":1.0001235,"x":1.0,"idx":45},{"y":1.000412,"x":1.05,"idx":45},{"y":1.0012295,"x":1.1,"idx":45},{"y":1.0033045,"x":1.15,"idx":45},{"y":1.0080473,"x":1.2,"idx":45},{"y":1.017849,"x":1.25,"idx":45},{"y":1.0362272,"x":1.3,"idx":45},{"y":1.0675781,"x":1.35,"idx":45},{"y":1.1163452,"x":1.4,"idx":45},{"y":1.1856414,"x":1.45,"idx":45},{"y":1.2757094,"x":1.5,"idx":45},{"y":1.3828723,"x":1.55,"idx":45},{"y":1.4995879,"x":1.6,"idx":45},{"y":1.6157745,"x":1.65,"idx":45},{"y":1.7209533,"x":1.7,"idx":45},{"y":1.8063037,"x":1.75,"idx":45},{"y":1.8658044,"x":1.8,"idx":45},{"y":1.8961946,"x":1.85,"idx":45},{"y":1.8961946,"x":1.9,"idx":45},{"y":1.8658044,"x":1.95,"idx":45},{"y":1.0,"x":2.0,"idx":45},{"y":1.0,"x":0.0,"idx":46},{"y":1.0,"x":0.05,"idx":46},{"y":1.0,"x":0.1,"idx":46},{"y":1.0,"x":0.15,"idx":46},{"y":1.0,"x":0.2,"idx":46},{"y":1.0,"x":0.25,"idx":46},{"y":1.0,"x":0.3,"idx":46},{"y":1.0,"x":0.35,"idx":46},{"y":1.0,"x":0.4,"idx":46},{"y":1.0,"x":0.45,"idx":46},{"y":1.0,"x":0.5,"idx":46},{"y":1.0,"x":0.55,"idx":46},{"y":1.0,"x":0.6,"idx":46},{"y":1.0,"x":0.65,"idx":46},{"y":1.0,"x":0.7,"idx":46},{"y":1.0,"x":0.75,"idx":46},{"y":1.0000001,"x":0.8,"idx":46},{"y":1.000001,"x":0.85,"idx":46},{"y":1.0000045,"x":0.9,"idx":46},{"y":1.0000203,"x":0.95,"idx":46},{"y":1.0000782,"x":1.0,"idx":46},{"y":1.0002677,"x":1.05,"idx":46},{"y":1.0008208,"x":1.1,"idx":46},{"y":1.002267,"x":1.15,"idx":46},{"y":1.0056759,"x":1.2,"idx":46},{"y":1.0129482,"x":1.25,"idx":46},{"y":1.0270381,"x":1.3,"idx":46},{"y":1.0519027,"x":1.35,"idx":46},{"y":1.0919616,"x":1.4,"idx":46},{"y":1.1509933,"x":1.45,"idx":46},{"y":1.2306755,"x":1.5,"idx":46},{"y":1.3292909,"x":1.55,"idx":46},{"y":1.44123,"x":1.6,"idx":46},{"y":1.5576812,"x":1.65,"idx":46},{"y":1.6683639,"x":1.7,"idx":46},{"y":1.7636285,"x":1.75,"idx":46},{"y":1.8360541,"x":1.8,"idx":46},{"y":1.8809996,"x":1.85,"idx":46},{"y":1.8961946,"x":1.9,"idx":46},{"y":1.8809996,"x":1.95,"idx":46},{"y":1.0,"x":2.0,"idx":46},{"y":1.0,"x":0.0,"idx":47},{"y":1.0,"x":0.05,"idx":47},{"y":1.0,"x":0.1,"idx":47},{"y":1.0,"x":0.15,"idx":47},{"y":1.0,"x":0.2,"idx":47},{"y":1.0,"x":0.25,"idx":47},{"y":1.0,"x":0.3,"idx":47},{"y":1.0,"x":0.35,"idx":47},{"y":1.0,"x":0.4,"idx":47},{"y":1.0,"x":0.45,"idx":47},{"y":1.0,"x":0.5,"idx":47},{"y":1.0,"x":0.55,"idx":47},{"y":1.0,"x":0.6,"idx":47},{"y":1.0,"x":0.65,"idx":47},{"y":1.0,"x":0.7,"idx":47},{"y":1.0,"x":0.75,"idx":47},{"y":1.0,"x":0.8,"idx":47},{"y":1.0000005,"x":0.85,"idx":47},{"y":1.0000027,"x":0.9,"idx":47},{"y":1.0000124,"x":0.95,"idx":47},{"y":1.0000492,"x":1.0,"idx":47},{"y":1.000173,"x":1.05,"idx":47},{"y":1.0005443,"x":1.1,"idx":47},{"y":1.0015439,"x":1.15,"idx":47},{"y":1.0039715,"x":1.2,"idx":47},{"y":1.009312,"x":1.25,"idx":47},{"y":1.0199931,"x":1.3,"idx":47},{"y":1.0394704,"x":1.35,"idx":47},{"y":1.0719321,"x":1.4,"idx":47},{"y":1.1214775,"x":1.45,"idx":47},{"y":1.1908344,"x":1.5,"idx":47},{"y":1.2799832,"x":1.55,"idx":47},{"y":1.3852605,"x":1.6,"idx":47},{"y":1.4994557,"x":1.65,"idx":47},{"y":1.6130226,"x":1.7,"idx":47},{"y":1.7159963,"x":1.75,"idx":47},{"y":1.7998413,"x":1.8,"idx":47},{"y":1.8585268,"x":1.85,"idx":47},{"y":1.888597,"x":1.9,"idx":47},{"y":1.888597,"x":1.95,"idx":47},{"y":1.0,"x":2.0,"idx":47},{"y":1.0,"x":0.0,"idx":48},{"y":1.0,"x":0.05,"idx":48},{"y":1.0,"x":0.1,"idx":48},{"y":1.0,"x":0.15,"idx":48},{"y":1.0,"x":0.2,"idx":48},{"y":1.0,"x":0.25,"idx":48},{"y":1.0,"x":0.3,"idx":48},{"y":1.0,"x":0.35,"idx":48},{"y":1.0,"x":0.4,"idx":48},{"y":1.0,"x":0.45,"idx":48},{"y":1.0,"x":0.5,"idx":48},{"y":1.0,"x":0.55,"idx":48},{"y":1.0,"x":0.6,"idx":48},{"y":1.0,"x":0.65,"idx":48},{"y":1.0,"x":0.7,"idx":48},{"y":1.0,"x":0.75,"idx":48},{"y":1.0,"x":0.8,"idx":48},{"y":1.0000002,"x":0.85,"idx":48},{"y":1.0000017,"x":0.9,"idx":48},{"y":1.0000076,"x":0.95,"idx":48},{"y":1.0000308,"x":1.0,"idx":48},{"y":1.0001111,"x":1.05,"idx":48},{"y":1.0003586,"x":1.1,"idx":48},{"y":1.001044,"x":1.15,"idx":48},{"y":1.0027577,"x":1.2,"idx":48},{"y":1.0066417,"x":1.25,"idx":48},{"y":1.0146525,"x":1.3,"idx":48},{"y":1.0297318,"x":1.35,"idx":48},{"y":1.0557013,"x":1.4,"idx":48},{"y":1.0967047,"x":1.45,"idx":48},{"y":1.156156,"x":1.5,"idx":48},{"y":1.2354088,"x":1.55,"idx":48},{"y":1.3326218,"x":1.6,"idx":48},{"y":1.442358,"x":1.65,"idx":48},{"y":1.5562391,"x":1.7,"idx":48},{"y":1.6645094,"x":1.75,"idx":48},{"y":1.7579188,"x":1.8,"idx":48},{"y":1.829184,"x":1.85,"idx":48},{"y":1.8735619,"x":1.9,"idx":48},{"y":1.888597,"x":1.95,"idx":48},{"y":1.0,"x":2.0,"idx":48},{"y":1.0,"x":0.0,"idx":49},{"y":1.0,"x":0.05,"idx":49},{"y":1.0,"x":0.1,"idx":49},{"y":1.0,"x":0.15,"idx":49},{"y":1.0,"x":0.2,"idx":49},{"y":1.0,"x":0.25,"idx":49},{"y":1.0,"x":0.3,"idx":49},{"y":1.0,"x":0.35,"idx":49},{"y":1.0,"x":0.4,"idx":49},{"y":1.0,"x":0.45,"idx":49},{"y":1.0,"x":0.5,"idx":49},{"y":1.0,"x":0.55,"idx":49},{"y":1.0,"x":0.6,"idx":49},{"y":1.0,"x":0.65,"idx":49},{"y":1.0,"x":0.7,"idx":49},{"y":1.0,"x":0.75,"idx":49},{"y":1.0,"x":0.8,"idx":49},{"y":1.0000001,"x":0.85,"idx":49},{"y":1.000001,"x":0.9,"idx":49},{"y":1.0000046,"x":0.95,"idx":49},{"y":1.0000192,"x":1.0,"idx":49},{"y":1.0000709,"x":1.05,"idx":49},{"y":1.0002348,"x":1.1,"idx":49},{"y":1.0007013,"x":1.15,"idx":49},{"y":1.0019009,"x":1.2,"idx":49},{"y":1.0046997,"x":1.25,"idx":49},{"y":1.010647,"x":1.3,"idx":49},{"y":1.0221921,"x":1.35,"idx":49},{"y":1.0427165,"x":1.4,"idx":49},{"y":1.076203,"x":1.45,"idx":49},{"y":1.1264303,"x":1.5,"idx":49},{"y":1.1957824,"x":1.55,"idx":49},{"y":1.2840153,"x":1.6,"idx":49},{"y":1.3874899,"x":1.65,"idx":49},{"y":1.4992986,"x":1.7,"idx":49},{"y":1.6103742,"x":1.75,"idx":49},{"y":1.7112141,"x":1.8,"idx":49},{"y":1.7935514,"x":1.85,"idx":49},{"y":1.851373,"x":1.9,"idx":49},{"y":1.8810794,"x":1.95,"idx":49},{"y":1.0,"x":2.0,"idx":49},{"y":1.0,"x":0.0,"idx":50},{"y":1.0,"x":0.05,"idx":50},{"y":1.0,"x":0.1,"idx":50},{"y":1.0,"x":0.15,"idx":50},{"y":1.0,"x":0.2,"idx":50},{"y":1.0,"x":0.25,"idx":50},{"y":1.0,"x":0.3,"idx":50},{"y":1.0,"x":0.35,"idx":50},{"y":1.0,"x":0.4,"idx":50},{"y":1.0,"x":0.45,"idx":50},{"y":1.0,"x":0.5,"idx":50},{"y":1.0,"x":0.55,"idx":50},{"y":1.0,"x":0.6,"idx":50},{"y":1.0,"x":0.65,"idx":50},{"y":1.0,"x":0.7,"idx":50},{"y":1.0,"x":0.75,"idx":50},{"y":1.0,"x":0.8,"idx":50},{"y":1.0,"x":0.85,"idx":50},{"y":1.0000005,"x":0.9,"idx":50},{"y":1.0000029,"x":0.95,"idx":50},{"y":1.0000119,"x":1.0,"idx":50},{"y":1.0000451,"x":1.05,"idx":50},{"y":1.0001528,"x":1.1,"idx":50},{"y":1.000468,"x":1.15,"idx":50},{"y":1.001301,"x":1.2,"idx":50},{"y":1.0033003,"x":1.25,"idx":50},{"y":1.0076734,"x":1.3,"idx":50},{"y":1.0164196,"x":1.35,"idx":50},{"y":1.0324543,"x":1.4,"idx":50},{"y":1.0594597,"x":1.45,"idx":50},{"y":1.1013167,"x":1.5,"idx":50},{"y":1.1611063,"x":1.55,"idx":50},{"y":1.2398989,"x":1.6,"idx":50},{"y":1.3357526,"x":1.65,"idx":50},{"y":1.4433942,"x":1.7,"idx":50},{"y":1.5548364,"x":1.75,"idx":50},{"y":1.6607941,"x":1.8,"idx":50},{"y":1.7523828,"x":1.85,"idx":50},{"y":1.8224622,"x":1.9,"idx":50},{"y":1.8662262,"x":1.95,"idx":50},{"y":1.0,"x":2.0,"idx":50},{"y":1.0,"x":0.0,"idx":51},{"y":1.0,"x":0.05,"idx":51},{"y":1.0,"x":0.1,"idx":51},{"y":1.0,"x":0.15,"idx":51},{"y":1.0,"x":0.2,"idx":51},{"y":1.0,"x":0.25,"idx":51},{"y":1.0,"x":0.3,"idx":51},{"y":1.0,"x":0.35,"idx":51},{"y":1.0,"x":0.4,"idx":51},{"y":1.0,"x":0.45,"idx":51},{"y":1.0,"x":0.5,"idx":51},{"y":1.0,"x":0.55,"idx":51},{"y":1.0,"x":0.6,"idx":51},{"y":1.0,"x":0.65,"idx":51},{"y":1.0,"x":0.7,"idx":51},{"y":1.0,"x":0.75,"idx":51},{"y":1.0,"x":0.8,"idx":51},{"y":1.0,"x":0.85,"idx":51},{"y":1.0000002,"x":0.9,"idx":51},{"y":1.0000017,"x":0.95,"idx":51},{"y":1.0000074,"x":1.0,"idx":51},{"y":1.0000285,"x":1.05,"idx":51},{"y":1.000099,"x":1.1,"idx":51},{"y":1.0003104,"x":1.15,"idx":51},{"y":1.0008845,"x":1.2,"idx":51},{"y":1.0023007,"x":1.25,"idx":51},{"y":1.0054868,"x":1.3,"idx":51},{"y":1.0120466,"x":1.35,"idx":51},{"y":1.024437,"x":1.4,"idx":51},{"y":1.045957,"x":1.45,"idx":51},{"y":1.0803882,"x":1.5,"idx":51},{"y":1.1312115,"x":1.55,"idx":51},{"y":1.2005026,"x":1.6,"idx":51},{"y":1.2878258,"x":1.65,"idx":51},{"y":1.3895733,"x":1.7,"idx":51},{"y":1.4991152,"x":1.75,"idx":51},{"y":1.6078153,"x":1.8,"idx":51},{"y":1.7065885,"x":1.85,"idx":51},{"y":1.7874224,"x":1.9,"idx":51},{"y":1.8443441,"x":1.95,"idx":51},{"y":1.0,"x":2.0,"idx":51},{"y":1.0,"x":0.0,"idx":52},{"y":1.0,"x":0.05,"idx":52},{"y":1.0,"x":0.1,"idx":52},{"y":1.0,"x":0.15,"idx":52},{"y":1.0,"x":0.2,"idx":52},{"y":1.0,"x":0.25,"idx":52},{"y":1.0,"x":0.3,"idx":52},{"y":1.0,"x":0.35,"idx":52},{"y":1.0,"x":0.4,"idx":52},{"y":1.0,"x":0.45,"idx":52},{"y":1.0,"x":0.5,"idx":52},{"y":1.0,"x":0.55,"idx":52},{"y":1.0,"x":0.6,"idx":52},{"y":1.0,"x":0.65,"idx":52},{"y":1.0,"x":0.7,"idx":52},{"y":1.0,"x":0.75,"idx":52},{"y":1.0,"x":0.8,"idx":52},{"y":1.0,"x":0.85,"idx":52},{"y":1.0000001,"x":0.9,"idx":52},{"y":1.000001,"x":0.95,"idx":52},{"y":1.0000045,"x":1.0,"idx":52},{"y":1.0000179,"x":1.05,"idx":52},{"y":1.0000637,"x":1.1,"idx":52},{"y":1.0002047,"x":1.15,"idx":52},{"y":1.0005975,"x":1.2,"idx":52},{"y":1.0015926,"x":1.25,"idx":52},{"y":1.0038939,"x":1.3,"idx":52},{"y":1.0087667,"x":1.35,"idx":52},{"y":1.0182418,"x":1.4,"idx":52},{"y":1.035197,"x":1.45,"idx":52},{"y":1.0631726,"x":1.5,"idx":52},{"y":1.1057999,"x":1.55,"idx":52},{"y":1.1658571,"x":1.6,"idx":52},{"y":1.2441642,"x":1.65,"idx":52},{"y":1.3386996,"x":1.7,"idx":52},{"y":1.4443443,"x":1.75,"idx":52},{"y":1.5534652,"x":1.8,"idx":52},{"y":1.6572019,"x":1.85,"idx":52},{"y":1.7470055,"x":1.9,"idx":52},{"y":1.8158833,"x":1.95,"idx":52},{"y":1.0,"x":2.0,"idx":52},{"y":1.0,"x":0.0,"idx":53},{"y":1.0,"x":0.05,"idx":53},{"y":1.0,"x":0.1,"idx":53},{"y":1.0,"x":0.15,"idx":53},{"y":1.0,"x":0.2,"idx":53},{"y":1.0,"x":0.25,"idx":53},{"y":1.0,"x":0.3,"idx":53},{"y":1.0,"x":0.35,"idx":53},{"y":1.0,"x":0.4,"idx":53},{"y":1.0,"x":0.45,"idx":53},{"y":1.0,"x":0.5,"idx":53},{"y":1.0,"x":0.55,"idx":53},{"y":1.0,"x":0.6,"idx":53},{"y":1.0,"x":0.65,"idx":53},{"y":1.0,"x":0.7,"idx":53},{"y":1.0,"x":0.75,"idx":53},{"y":1.0,"x":0.8,"idx":53},{"y":1.0,"x":0.85,"idx":53},{"y":1.0,"x":0.9,"idx":53},{"y":1.0000005,"x":0.95,"idx":53},{"y":1.0000027,"x":1.0,"idx":53},{"y":1.0000112,"x":1.05,"idx":53},{"y":1.0000408,"x":1.1,"idx":53},{"y":1.0001342,"x":1.15,"idx":53},{"y":1.000401,"x":1.2,"idx":53},{"y":1.001095,"x":1.25,"idx":53},{"y":1.0027432,"x":1.3,"idx":53},{"y":1.0063303,"x":1.35,"idx":53},{"y":1.0135043,"x":1.4,"idx":53},{"y":1.0267193,"x":1.45,"idx":53},{"y":1.0491848,"x":1.5,"idx":53},{"y":1.0844862,"x":1.55,"idx":53},{"y":1.1358285,"x":1.6,"idx":53},{"y":1.2050107,"x":1.65,"idx":53},{"y":1.2914319,"x":1.7,"idx":53},{"y":1.3915219,"x":1.75,"idx":53},{"y":1.4989047,"x":1.8,"idx":53},{"y":1.6053336,"x":1.85,"idx":53},{"y":1.7021036,"x":1.9,"idx":53},{"y":1.7814443,"x":1.95,"idx":53},{"y":1.0,"x":2.0,"idx":53},{"y":1.0,"x":0.0,"idx":54},{"y":1.0,"x":0.05,"idx":54},{"y":1.0,"x":0.1,"idx":54},{"y":1.0,"x":0.15,"idx":54},{"y":1.0,"x":0.2,"idx":54},{"y":1.0,"x":0.25,"idx":54},{"y":1.0,"x":0.3,"idx":54},{"y":1.0,"x":0.35,"idx":54},{"y":1.0,"x":0.4,"idx":54},{"y":1.0,"x":0.45,"idx":54},{"y":1.0,"x":0.5,"idx":54},{"y":1.0,"x":0.55,"idx":54},{"y":1.0,"x":0.6,"idx":54},{"y":1.0,"x":0.65,"idx":54},{"y":1.0,"x":0.7,"idx":54},{"y":1.0,"x":0.75,"idx":54},{"y":1.0,"x":0.8,"idx":54},{"y":1.0,"x":0.85,"idx":54},{"y":1.0,"x":0.9,"idx":54},{"y":1.0000002,"x":0.95,"idx":54},{"y":1.0000017,"x":1.0,"idx":54},{"y":1.0000069,"x":1.05,"idx":54},{"y":1.000026,"x":1.1,"idx":54},{"y":1.0000875,"x":1.15,"idx":54},{"y":1.0002676,"x":1.2,"idx":54},{"y":1.000748,"x":1.25,"idx":54},{"y":1.0019192,"x":1.3,"idx":54},{"y":1.0045367,"x":1.35,"idx":54},{"y":1.0099173,"x":1.4,"idx":54},{"y":1.0201118,"x":1.45,"idx":54},{"y":1.0379521,"x":1.5,"idx":54},{"y":1.0668355,"x":1.55,"idx":54},{"y":1.1101574,"x":1.6,"idx":54},{"y":1.1704196,"x":1.65,"idx":54},{"y":1.2482213,"x":1.7,"idx":54},{"y":1.3414769,"x":1.75,"idx":54},{"y":1.4452133,"x":1.8,"idx":54},{"y":1.5521191,"x":1.85,"idx":54},{"y":1.6537186,"x":1.9,"idx":54},{"y":1.741774,"x":1.95,"idx":54},{"y":1.0,"x":2.0,"idx":54},{"y":1.0,"x":0.0,"idx":55},{"y":1.0,"x":0.05,"idx":55},{"y":1.0,"x":0.1,"idx":55},{"y":1.0,"x":0.15,"idx":55},{"y":1.0,"x":0.2,"idx":55},{"y":1.0,"x":0.25,"idx":55},{"y":1.0,"x":0.3,"idx":55},{"y":1.0,"x":0.35,"idx":55},{"y":1.0,"x":0.4,"idx":55},{"y":1.0,"x":0.45,"idx":55},{"y":1.0,"x":0.5,"idx":55},{"y":1.0,"x":0.55,"idx":55},{"y":1.0,"x":0.6,"idx":55},{"y":1.0,"x":0.65,"idx":55},{"y":1.0,"x":0.7,"idx":55},{"y":1.0,"x":0.75,"idx":55},{"y":1.0,"x":0.8,"idx":55},{"y":1.0,"x":0.85,"idx":55},{"y":1.0,"x":0.9,"idx":55},{"y":1.0000001,"x":0.95,"idx":55},{"y":1.000001,"x":1.0,"idx":55},{"y":1.0000043,"x":1.05,"idx":55},{"y":1.0000165,"x":1.1,"idx":55},{"y":1.0000567,"x":1.15,"idx":55},{"y":1.0001776,"x":1.2,"idx":55},{"y":1.0005078,"x":1.25,"idx":55},{"y":1.0013336,"x":1.3,"idx":55},{"y":1.003228,"x":1.35,"idx":55},{"y":1.007227,"x":1.4,"idx":55},{"y":1.0150145,"x":1.45,"idx":55},{"y":1.029032,"x":1.5,"idx":55},{"y":1.0523938,"x":1.55,"idx":55},{"y":1.0884964,"x":1.6,"idx":55},{"y":1.1402885,"x":1.65,"idx":55},{"y":1.2093204,"x":1.7,"idx":55},{"y":1.2948492,"x":1.75,"idx":55},{"y":1.3933451,"x":1.8,"idx":55},{"y":1.4986663,"x":1.85,"idx":55},{"y":1.6029189,"x":1.9,"idx":55},{"y":1.6977463,"x":1.95,"idx":55},{"y":1.0,"x":2.0,"idx":55},{"y":1.0,"x":0.0,"idx":56},{"y":1.0,"x":0.05,"idx":56},{"y":1.0,"x":0.1,"idx":56},{"y":1.0,"x":0.15,"idx":56},{"y":1.0,"x":0.2,"idx":56},{"y":1.0,"x":0.25,"idx":56},{"y":1.0,"x":0.3,"idx":56},{"y":1.0,"x":0.35,"idx":56},{"y":1.0,"x":0.4,"idx":56},{"y":1.0,"x":0.45,"idx":56},{"y":1.0,"x":0.5,"idx":56},{"y":1.0,"x":0.55,"idx":56},{"y":1.0,"x":0.6,"idx":56},{"y":1.0,"x":0.65,"idx":56},{"y":1.0,"x":0.7,"idx":56},{"y":1.0,"x":0.75,"idx":56},{"y":1.0,"x":0.8,"idx":56},{"y":1.0,"x":0.85,"idx":56},{"y":1.0,"x":0.9,"idx":56},{"y":1.0,"x":0.95,"idx":56},{"y":1.0000005,"x":1.0,"idx":56},{"y":1.0000026,"x":1.05,"idx":56},{"y":1.0000104,"x":1.1,"idx":56},{"y":1.0000366,"x":1.15,"idx":56},{"y":1.0001172,"x":1.2,"idx":56},{"y":1.0003427,"x":1.25,"idx":56},{"y":1.0009208,"x":1.3,"idx":56},{"y":1.0022807,"x":1.35,"idx":56},{"y":1.0052274,"x":1.4,"idx":56},{"y":1.0111208,"x":1.45,"idx":56},{"y":1.0220232,"x":1.5,"idx":56},{"y":1.0407128,"x":1.55,"idx":56},{"y":1.0704451,"x":1.6,"idx":56},{"y":1.1143925,"x":1.65,"idx":56},{"y":1.1748044,"x":1.7,"idx":56},{"y":1.2520847,"x":1.75,"idx":56},{"y":1.3440971,"x":1.8,"idx":56},{"y":1.4460057,"x":1.85,"idx":56},{"y":1.5507926,"x":1.9,"idx":56},{"y":1.6503326,"x":1.95,"idx":56},{"y":1.0,"x":2.0,"idx":56},{"y":1.0,"x":0.0,"idx":57},{"y":1.0,"x":0.05,"idx":57},{"y":1.0,"x":0.1,"idx":57},{"y":1.0,"x":0.15,"idx":57},{"y":1.0,"x":0.2,"idx":57},{"y":1.0,"x":0.25,"idx":57},{"y":1.0,"x":0.3,"idx":57},{"y":1.0,"x":0.35,"idx":57},{"y":1.0,"x":0.4,"idx":57},{"y":1.0,"x":0.45,"idx":57},{"y":1.0,"x":0.5,"idx":57},{"y":1.0,"x":0.55,"idx":57},{"y":1.0,"x":0.6,"idx":57},{"y":1.0,"x":0.65,"idx":57},{"y":1.0,"x":0.7,"idx":57},{"y":1.0,"x":0.75,"idx":57},{"y":1.0,"x":0.8,"idx":57},{"y":1.0,"x":0.85,"idx":57},{"y":1.0,"x":0.9,"idx":57},{"y":1.0,"x":0.95,"idx":57},{"y":1.0000002,"x":1.0,"idx":57},{"y":1.0000015,"x":1.05,"idx":57},{"y":1.0000064,"x":1.1,"idx":57},{"y":1.0000235,"x":1.15,"idx":57},{"y":1.0000769,"x":1.2,"idx":57},{"y":1.00023,"x":1.25,"idx":57},{"y":1.0006318,"x":1.3,"idx":57},{"y":1.0016007,"x":1.35,"idx":57},{"y":1.0037541,"x":1.4,"idx":57},{"y":1.0081742,"x":1.45,"idx":57},{"y":1.016572,"x":1.5,"idx":57},{"y":1.031368,"x":1.55,"idx":57},{"y":1.055579,"x":1.6,"idx":57},{"y":1.0924188,"x":1.65,"idx":57},{"y":1.1445985,"x":1.7,"idx":57},{"y":1.2134446,"x":1.75,"idx":57},{"y":1.2980909,"x":1.8,"idx":57},{"y":1.3950515,"x":1.85,"idx":57},{"y":1.4983991,"x":1.9,"idx":57},{"y":1.6005626,"x":1.95,"idx":57},{"y":1.0,"x":2.0,"idx":57},{"y":1.0,"x":0.0,"idx":58},{"y":1.0,"x":0.05,"idx":58},{"y":1.0,"x":0.1,"idx":58},{"y":1.0,"x":0.15,"idx":58},{"y":1.0,"x":0.2,"idx":58},{"y":1.0,"x":0.25,"idx":58},{"y":1.0,"x":0.3,"idx":58},{"y":1.0,"x":0.35,"idx":58},{"y":1.0,"x":0.4,"idx":58},{"y":1.0,"x":0.45,"idx":58},{"y":1.0,"x":0.5,"idx":58},{"y":1.0,"x":0.55,"idx":58},{"y":1.0,"x":0.6,"idx":58},{"y":1.0,"x":0.65,"idx":58},{"y":1.0,"x":0.7,"idx":58},{"y":1.0,"x":0.75,"idx":58},{"y":1.0,"x":0.8,"idx":58},{"y":1.0,"x":0.85,"idx":58},{"y":1.0,"x":0.9,"idx":58},{"y":1.0,"x":0.95,"idx":58},{"y":1.0000001,"x":1.0,"idx":58},{"y":1.000001,"x":1.05,"idx":58},{"y":1.000004,"x":1.1,"idx":58},{"y":1.000015,"x":1.15,"idx":58},{"y":1.0000502,"x":1.2,"idx":58},{"y":1.0001534,"x":1.25,"idx":58},{"y":1.0004308,"x":1.3,"idx":58},{"y":1.0011163,"x":1.35,"idx":58},{"y":1.0026774,"x":1.4,"idx":58},{"y":1.0059642,"x":1.45,"idx":58},{"y":1.0123731,"x":1.5,"idx":58},{"y":1.02397,"x":1.55,"idx":58},{"y":1.0434735,"x":1.6,"idx":58},{"y":1.0739989,"x":1.65,"idx":58},{"y":1.1185086,"x":1.7,"idx":58},{"y":1.1790216,"x":1.75,"idx":58},{"y":1.2557678,"x":1.8,"idx":58},{"y":1.3465712,"x":1.85,"idx":58},{"y":1.4467254,"x":1.9,"idx":58},{"y":1.5494809,"x":1.95,"idx":58},{"y":1.0,"x":2.0,"idx":58},{"y":1.0,"x":0.0,"idx":59},{"y":1.0,"x":0.05,"idx":59},{"y":1.0,"x":0.1,"idx":59},{"y":1.0,"x":0.15,"idx":59},{"y":1.0,"x":0.2,"idx":59},{"y":1.0,"x":0.25,"idx":59},{"y":1.0,"x":0.3,"idx":59},{"y":1.0,"x":0.35,"idx":59},{"y":1.0,"x":0.4,"idx":59},{"y":1.0,"x":0.45,"idx":59},{"y":1.0,"x":0.5,"idx":59},{"y":1.0,"x":0.55,"idx":59},{"y":1.0,"x":0.6,"idx":59},{"y":1.0,"x":0.65,"idx":59},{"y":1.0,"x":0.7,"idx":59},{"y":1.0,"x":0.75,"idx":59},{"y":1.0,"x":0.8,"idx":59},{"y":1.0,"x":0.85,"idx":59},{"y":1.0,"x":0.9,"idx":59},{"y":1.0,"x":0.95,"idx":59},{"y":1.0,"x":1.0,"idx":59},{"y":1.0000005,"x":1.05,"idx":59},{"y":1.0000025,"x":1.1,"idx":59},{"y":1.0000095,"x":1.15,"idx":59},{"y":1.0000327,"x":1.2,"idx":59},{"y":1.0001018,"x":1.25,"idx":59},{"y":1.0002921,"x":1.3,"idx":59},{"y":1.0007735,"x":1.35,"idx":59},{"y":1.0018969,"x":1.4,"idx":59},{"y":1.0043209,"x":1.45,"idx":59},{"y":1.0091686,"x":1.5,"idx":59},{"y":1.0181715,"x":1.55,"idx":59},{"y":1.0337217,"x":1.6,"idx":59},{"y":1.0587362,"x":1.65,"idx":59},{"y":1.0962538,"x":1.7,"idx":59},{"y":1.1487651,"x":1.75,"idx":59},{"y":1.2173947,"x":1.8,"idx":59},{"y":1.3011695,"x":1.85,"idx":59},{"y":1.3966483,"x":1.9,"idx":59},{"y":1.4981031,"x":1.95,"idx":59},{"y":1.0,"x":2.0,"idx":59},{"y":1.0,"x":0.0,"idx":60},{"y":1.0,"x":0.05,"idx":60},{"y":1.0,"x":0.1,"idx":60},{"y":1.0,"x":0.15,"idx":60},{"y":1.0,"x":0.2,"idx":60},{"y":1.0,"x":0.25,"idx":60},{"y":1.0,"x":0.3,"idx":60},{"y":1.0,"x":0.35,"idx":60},{"y":1.0,"x":0.4,"idx":60},{"y":1.0,"x":0.45,"idx":60},{"y":1.0,"x":0.5,"idx":60},{"y":1.0,"x":0.55,"idx":60},{"y":1.0,"x":0.6,"idx":60},{"y":1.0,"x":0.65,"idx":60},{"y":1.0,"x":0.7,"idx":60},{"y":1.0,"x":0.75,"idx":60},{"y":1.0,"x":0.8,"idx":60},{"y":1.0,"x":0.85,"idx":60},{"y":1.0,"x":0.9,"idx":60},{"y":1.0,"x":0.95,"idx":60},{"y":1.0,"x":1.0,"idx":60},{"y":1.0000002,"x":1.05,"idx":60},{"y":1.0000014,"x":1.1,"idx":60},{"y":1.000006,"x":1.15,"idx":60},{"y":1.0000211,"x":1.2,"idx":60},{"y":1.0000672,"x":1.25,"idx":60},{"y":1.0001969,"x":1.3,"idx":60},{"y":1.0005329,"x":1.35,"idx":60},{"y":1.0013351,"x":1.4,"idx":60},{"y":1.0031089,"x":1.45,"idx":60},{"y":1.0067447,"x":1.5,"idx":60},{"y":1.0136701,"x":1.55,"idx":60},{"y":1.0259466,"x":1.6,"idx":60},{"y":1.0462289,"x":1.65,"idx":60},{"y":1.077495,"x":1.7,"idx":60},{"y":1.1225095,"x":1.75,"idx":60},{"y":1.18308,"x":1.8,"idx":60},{"y":1.2592821,"x":1.85,"idx":60},{"y":1.3489089,"x":1.9,"idx":60},{"y":1.4473758,"x":1.95,"idx":60},{"y":1.0,"x":2.0,"idx":60},{"y":1.0,"x":0.0,"idx":61},{"y":1.0,"x":0.05,"idx":61},{"y":1.0,"x":0.1,"idx":61},{"y":1.0,"x":0.15,"idx":61},{"y":1.0,"x":0.2,"idx":61},{"y":1.0,"x":0.25,"idx":61},{"y":1.0,"x":0.3,"idx":61},{"y":1.0,"x":0.35,"idx":61},{"y":1.0,"x":0.4,"idx":61},{"y":1.0,"x":0.45,"idx":61},{"y":1.0,"x":0.5,"idx":61},{"y":1.0,"x":0.55,"idx":61},{"y":1.0,"x":0.6,"idx":61},{"y":1.0,"x":0.65,"idx":61},{"y":1.0,"x":0.7,"idx":61},{"y":1.0,"x":0.75,"idx":61},{"y":1.0,"x":0.8,"idx":61},{"y":1.0,"x":0.85,"idx":61},{"y":1.0,"x":0.9,"idx":61},{"y":1.0,"x":0.95,"idx":61},{"y":1.0,"x":1.0,"idx":61},{"y":1.0000001,"x":1.05,"idx":61},{"y":1.0000008,"x":1.1,"idx":61},{"y":1.0000037,"x":1.15,"idx":61},{"y":1.0000136,"x":1.2,"idx":61},{"y":1.0000441,"x":1.25,"idx":61},{"y":1.0001321,"x":1.3,"idx":61},{"y":1.0003649,"x":1.35,"idx":61},{"y":1.000934,"x":1.4,"idx":61},{"y":1.0022221,"x":1.45,"idx":61},{"y":1.0049268,"x":1.5,"idx":61},{"y":1.0102074,"x":1.55,"idx":61},{"y":1.0198083,"x":1.6,"idx":61},{"y":1.0360878,"x":1.65,"idx":61},{"y":1.061862,"x":1.7,"idx":61},{"y":1.1000023,"x":1.75,"idx":61},{"y":1.1527947,"x":1.8,"idx":61},{"y":1.221181,"x":1.85,"idx":61},{"y":1.3040955,"x":1.9,"idx":61},{"y":1.3981423,"x":1.95,"idx":61},{"y":1.0,"x":2.0,"idx":61},{"y":1.0,"x":0.0,"idx":62},{"y":1.0,"x":0.05,"idx":62},{"y":1.0,"x":0.1,"idx":62},{"y":1.0,"x":0.15,"idx":62},{"y":1.0,"x":0.2,"idx":62},{"y":1.0,"x":0.25,"idx":62},{"y":1.0,"x":0.3,"idx":62},{"y":1.0,"x":0.35,"idx":62},{"y":1.0,"x":0.4,"idx":62},{"y":1.0,"x":0.45,"idx":62},{"y":1.0,"x":0.5,"idx":62},{"y":1.0,"x":0.55,"idx":62},{"y":1.0,"x":0.6,"idx":62},{"y":1.0,"x":0.65,"idx":62},{"y":1.0,"x":0.7,"idx":62},{"y":1.0,"x":0.75,"idx":62},{"y":1.0,"x":0.8,"idx":62},{"y":1.0,"x":0.85,"idx":62},{"y":1.0,"x":0.9,"idx":62},{"y":1.0,"x":0.95,"idx":62},{"y":1.0,"x":1.0,"idx":62},{"y":1.0,"x":1.05,"idx":62},{"y":1.0000005,"x":1.1,"idx":62},{"y":1.0000023,"x":1.15,"idx":62},{"y":1.0000086,"x":1.2,"idx":62},{"y":1.0000288,"x":1.25,"idx":62},{"y":1.0000881,"x":1.3,"idx":62},{"y":1.0002484,"x":1.35,"idx":62},{"y":1.0006495,"x":1.4,"idx":62},{"y":1.0015781,"x":1.45,"idx":62},{"y":1.0035744,"x":1.5,"idx":62},{"y":1.0075672,"x":1.55,"idx":62},{"y":1.0150079,"x":1.6,"idx":62},{"y":1.027948,"x":1.65,"idx":62},{"y":1.0489749,"x":1.7,"idx":62},{"y":1.0809321,"x":1.75,"idx":62},{"y":1.1263986,"x":1.8,"idx":62},{"y":1.1869879,"x":1.85,"idx":62},{"y":1.2626383,"x":1.9,"idx":62},{"y":1.3511189,"x":1.95,"idx":62},{"y":1.0,"x":2.0,"idx":62},{"y":1.0,"x":0.0,"idx":63},{"y":1.0,"x":0.05,"idx":63},{"y":1.0,"x":0.1,"idx":63},{"y":1.0,"x":0.15,"idx":63},{"y":1.0,"x":0.2,"idx":63},{"y":1.0,"x":0.25,"idx":63},{"y":1.0,"x":0.3,"idx":63},{"y":1.0,"x":0.35,"idx":63},{"y":1.0,"x":0.4,"idx":63},{"y":1.0,"x":0.45,"idx":63},{"y":1.0,"x":0.5,"idx":63},{"y":1.0,"x":0.55,"idx":63},{"y":1.0,"x":0.6,"idx":63},{"y":1.0,"x":0.65,"idx":63},{"y":1.0,"x":0.7,"idx":63},{"y":1.0,"x":0.75,"idx":63},{"y":1.0,"x":0.8,"idx":63},{"y":1.0,"x":0.85,"idx":63},{"y":1.0,"x":0.9,"idx":63},{"y":1.0,"x":0.95,"idx":63},{"y":1.0,"x":1.0,"idx":63},{"y":1.0,"x":1.05,"idx":63},{"y":1.0000002,"x":1.1,"idx":63},{"y":1.0000014,"x":1.15,"idx":63},{"y":1.0000055,"x":1.2,"idx":63},{"y":1.0000187,"x":1.25,"idx":63},{"y":1.0000584,"x":1.3,"idx":63},{"y":1.0001683,"x":1.35,"idx":63},{"y":1.000449,"x":1.4,"idx":63},{"y":1.0011138,"x":1.45,"idx":63},{"y":1.0025762,"x":1.5,"idx":63},{"y":1.0055708,"x":1.55,"idx":63},{"y":1.0112875,"x":1.6,"idx":63},{"y":1.0214779,"x":1.65,"idx":63},{"y":1.0384614,"x":1.7,"idx":63},{"y":1.0649536,"x":1.75,"idx":63},{"y":1.1036654,"x":1.8,"idx":63},{"y":1.1566932,"x":1.85,"idx":63},{"y":1.2248131,"x":1.9,"idx":63},{"y":1.3068786,"x":1.95,"idx":63},{"y":1.0,"x":2.0,"idx":63},{"y":1.0,"x":0.0,"idx":64},{"y":1.0,"x":0.05,"idx":64},{"y":1.0,"x":0.1,"idx":64},{"y":1.0,"x":0.15,"idx":64},{"y":1.0,"x":0.2,"idx":64},{"y":1.0,"x":0.25,"idx":64},{"y":1.0,"x":0.3,"idx":64},{"y":1.0,"x":0.35,"idx":64},{"y":1.0,"x":0.4,"idx":64},{"y":1.0,"x":0.45,"idx":64},{"y":1.0,"x":0.5,"idx":64},{"y":1.0,"x":0.55,"idx":64},{"y":1.0,"x":0.6,"idx":64},{"y":1.0,"x":0.65,"idx":64},{"y":1.0,"x":0.7,"idx":64},{"y":1.0,"x":0.75,"idx":64},{"y":1.0,"x":0.8,"idx":64},{"y":1.0,"x":0.85,"idx":64},{"y":1.0,"x":0.9,"idx":64},{"y":1.0,"x":0.95,"idx":64},{"y":1.0,"x":1.0,"idx":64},{"y":1.0,"x":1.05,"idx":64},{"y":1.0000001,"x":1.1,"idx":64},{"y":1.0000008,"x":1.15,"idx":64},{"y":1.0000035,"x":1.2,"idx":64},{"y":1.0000122,"x":1.25,"idx":64},{"y":1.0000386,"x":1.3,"idx":64},{"y":1.0001134,"x":1.35,"idx":64},{"y":1.0003086,"x":1.4,"idx":64},{"y":1.0007813,"x":1.45,"idx":64},{"y":1.001845,"x":1.5,"idx":64},{"y":1.0040735,"x":1.55,"idx":64},{"y":1.008429,"x":1.6,"idx":64},{"y":1.0163827,"x":1.65,"idx":64},{"y":1.0299697,"x":1.7,"idx":64},{"y":1.0517075,"x":1.75,"idx":64},{"y":1.0843095,"x":1.8,"idx":64},{"y":1.1301793,"x":1.85,"idx":64},{"y":1.1907532,"x":1.9,"idx":64},{"y":1.2658458,"x":1.95,"idx":64},{"y":1.0,"x":2.0,"idx":64},{"y":1.0,"x":0.0,"idx":65},{"y":1.0,"x":0.05,"idx":65},{"y":1.0,"x":0.1,"idx":65},{"y":1.0,"x":0.15,"idx":65},{"y":1.0,"x":0.2,"idx":65},{"y":1.0,"x":0.25,"idx":65},{"y":1.0,"x":0.3,"idx":65},{"y":1.0,"x":0.35,"idx":65},{"y":1.0,"x":0.4,"idx":65},{"y":1.0,"x":0.45,"idx":65},{"y":1.0,"x":0.5,"idx":65},{"y":1.0,"x":0.55,"idx":65},{"y":1.0,"x":0.6,"idx":65},{"y":1.0,"x":0.65,"idx":65},{"y":1.0,"x":0.7,"idx":65},{"y":1.0,"x":0.75,"idx":65},{"y":1.0,"x":0.8,"idx":65},{"y":1.0,"x":0.85,"idx":65},{"y":1.0,"x":0.9,"idx":65},{"y":1.0,"x":0.95,"idx":65},{"y":1.0,"x":1.0,"idx":65},{"y":1.0,"x":1.05,"idx":65},{"y":1.0,"x":1.1,"idx":65},{"y":1.0000005,"x":1.15,"idx":65},{"y":1.0000021,"x":1.2,"idx":65},{"y":1.0000079,"x":1.25,"idx":65},{"y":1.0000254,"x":1.3,"idx":65},{"y":1.000076,"x":1.35,"idx":65},{"y":1.000211,"x":1.4,"idx":65},{"y":1.000545,"x":1.45,"idx":65},{"y":1.0013132,"x":1.5,"idx":65},{"y":1.0029593,"x":1.55,"idx":65},{"y":1.0062513,"x":1.6,"idx":65},{"y":1.0124059,"x":1.65,"idx":65},{"y":1.0231762,"x":1.7,"idx":65},{"y":1.0408386,"x":1.75,"idx":65},{"y":1.0680084,"x":1.8,"idx":65},{"y":1.1072444,"x":1.85,"idx":65},{"y":1.1604662,"x":1.9,"idx":65},{"y":1.2282995,"x":1.95,"idx":65},{"y":1.0,"x":2.0,"idx":65},{"y":1.0,"x":0.0,"idx":66},{"y":1.0,"x":0.05,"idx":66},{"y":1.0,"x":0.1,"idx":66},{"y":1.0,"x":0.15,"idx":66},{"y":1.0,"x":0.2,"idx":66},{"y":1.0,"x":0.25,"idx":66},{"y":1.0,"x":0.3,"idx":66},{"y":1.0,"x":0.35,"idx":66},{"y":1.0,"x":0.4,"idx":66},{"y":1.0,"x":0.45,"idx":66},{"y":1.0,"x":0.5,"idx":66},{"y":1.0,"x":0.55,"idx":66},{"y":1.0,"x":0.6,"idx":66},{"y":1.0,"x":0.65,"idx":66},{"y":1.0,"x":0.7,"idx":66},{"y":1.0,"x":0.75,"idx":66},{"y":1.0,"x":0.8,"idx":66},{"y":1.0,"x":0.85,"idx":66},{"y":1.0,"x":0.9,"idx":66},{"y":1.0,"x":0.95,"idx":66},{"y":1.0,"x":1.0,"idx":66},{"y":1.0,"x":1.05,"idx":66},{"y":1.0,"x":1.1,"idx":66},{"y":1.0000002,"x":1.15,"idx":66},{"y":1.0000013,"x":1.2,"idx":66},{"y":1.000005,"x":1.25,"idx":66},{"y":1.0000167,"x":1.3,"idx":66},{"y":1.0000508,"x":1.35,"idx":66},{"y":1.0001435,"x":1.4,"idx":66},{"y":1.000378,"x":1.45,"idx":66},{"y":1.0009291,"x":1.5,"idx":66},{"y":1.0021362,"x":1.55,"idx":66},{"y":1.0046053,"x":1.6,"idx":66},{"y":1.0093286,"x":1.65,"idx":66},{"y":1.017791,"x":1.7,"idx":66},{"y":1.0320075,"x":1.75,"idx":66},{"y":1.0544236,"x":1.8,"idx":66},{"y":1.0876265,"x":1.85,"idx":66},{"y":1.1338553,"x":1.9,"idx":66},{"y":1.1943829,"x":1.95,"idx":66},{"y":1.0,"x":2.0,"idx":66},{"y":1.0,"x":0.0,"idx":67},{"y":1.0,"x":0.05,"idx":67},{"y":1.0,"x":0.1,"idx":67},{"y":1.0,"x":0.15,"idx":67},{"y":1.0,"x":0.2,"idx":67},{"y":1.0,"x":0.25,"idx":67},{"y":1.0,"x":0.3,"idx":67},{"y":1.0,"x":0.35,"idx":67},{"y":1.0,"x":0.4,"idx":67},{"y":1.0,"x":0.45,"idx":67},{"y":1.0,"x":0.5,"idx":67},{"y":1.0,"x":0.55,"idx":67},{"y":1.0,"x":0.6,"idx":67},{"y":1.0,"x":0.65,"idx":67},{"y":1.0,"x":0.7,"idx":67},{"y":1.0,"x":0.75,"idx":67},{"y":1.0,"x":0.8,"idx":67},{"y":1.0,"x":0.85,"idx":67},{"y":1.0,"x":0.9,"idx":67},{"y":1.0,"x":0.95,"idx":67},{"y":1.0,"x":1.0,"idx":67},{"y":1.0,"x":1.05,"idx":67},{"y":1.0,"x":1.1,"idx":67},{"y":1.0000001,"x":1.15,"idx":67},{"y":1.0000007,"x":1.2,"idx":67},{"y":1.0000031,"x":1.25,"idx":67},{"y":1.0000108,"x":1.3,"idx":67},{"y":1.0000337,"x":1.35,"idx":67},{"y":1.0000972,"x":1.4,"idx":67},{"y":1.0002608,"x":1.45,"idx":67},{"y":1.0006535,"x":1.5,"idx":67},{"y":1.0015327,"x":1.55,"idx":67},{"y":1.0033708,"x":1.6,"idx":67},{"y":1.006967,"x":1.65,"idx":67},{"y":1.0135598,"x":1.7,"idx":67},{"y":1.0248992,"x":1.75,"idx":67},{"y":1.0432155,"x":1.8,"idx":67},{"y":1.071025,"x":1.85,"idx":67},{"y":1.1107409,"x":1.9,"idx":67},{"y":1.1641191,"x":1.95,"idx":67},{"y":1.0,"x":2.0,"idx":67},{"y":1.0,"x":0.0,"idx":68},{"y":1.0,"x":0.05,"idx":68},{"y":1.0,"x":0.1,"idx":68},{"y":1.0,"x":0.15,"idx":68},{"y":1.0,"x":0.2,"idx":68},{"y":1.0,"x":0.25,"idx":68},{"y":1.0,"x":0.3,"idx":68},{"y":1.0,"x":0.35,"idx":68},{"y":1.0,"x":0.4,"idx":68},{"y":1.0,"x":0.45,"idx":68},{"y":1.0,"x":0.5,"idx":68},{"y":1.0,"x":0.55,"idx":68},{"y":1.0,"x":0.6,"idx":68},{"y":1.0,"x":0.65,"idx":68},{"y":1.0,"x":0.7,"idx":68},{"y":1.0,"x":0.75,"idx":68},{"y":1.0,"x":0.8,"idx":68},{"y":1.0,"x":0.85,"idx":68},{"y":1.0,"x":0.9,"idx":68},{"y":1.0,"x":0.95,"idx":68},{"y":1.0,"x":1.0,"idx":68},{"y":1.0,"x":1.05,"idx":68},{"y":1.0,"x":1.1,"idx":68},{"y":1.0,"x":1.15,"idx":68},{"y":1.0000005,"x":1.2,"idx":68},{"y":1.0000019,"x":1.25,"idx":68},{"y":1.0000069,"x":1.3,"idx":68},{"y":1.0000223,"x":1.35,"idx":68},{"y":1.0000654,"x":1.4,"idx":68},{"y":1.000179,"x":1.45,"idx":68},{"y":1.0004572,"x":1.5,"idx":68},{"y":1.0010931,"x":1.55,"idx":68},{"y":1.0024517,"x":1.6,"idx":68},{"y":1.0051689,"x":1.65,"idx":68},{"y":1.0102634,"x":1.7,"idx":68},{"y":1.0192295,"x":1.75,"idx":68},{"y":1.0340574,"x":1.8,"idx":68},{"y":1.0571203,"x":1.85,"idx":68},{"y":1.090883,"x":1.9,"idx":68},{"y":1.13743,"x":1.95,"idx":68},{"y":1.0,"x":2.0,"idx":68},{"y":1.0,"x":0.0,"idx":69},{"y":1.0,"x":0.05,"idx":69},{"y":1.0,"x":0.1,"idx":69},{"y":1.0,"x":0.15,"idx":69},{"y":1.0,"x":0.2,"idx":69},{"y":1.0,"x":0.25,"idx":69},{"y":1.0,"x":0.3,"idx":69},{"y":1.0,"x":0.35,"idx":69},{"y":1.0,"x":0.4,"idx":69},{"y":1.0,"x":0.45,"idx":69},{"y":1.0,"x":0.5,"idx":69},{"y":1.0,"x":0.55,"idx":69},{"y":1.0,"x":0.6,"idx":69},{"y":1.0,"x":0.65,"idx":69},{"y":1.0,"x":0.7,"idx":69},{"y":1.0,"x":0.75,"idx":69},{"y":1.0,"x":0.8,"idx":69},{"y":1.0,"x":0.85,"idx":69},{"y":1.0,"x":0.9,"idx":69},{"y":1.0,"x":0.95,"idx":69},{"y":1.0,"x":1.0,"idx":69},{"y":1.0,"x":1.05,"idx":69},{"y":1.0,"x":1.1,"idx":69},{"y":1.0,"x":1.15,"idx":69},{"y":1.0000002,"x":1.2,"idx":69},{"y":1.0000012,"x":1.25,"idx":69},{"y":1.0000044,"x":1.3,"idx":69},{"y":1.0000145,"x":1.35,"idx":69},{"y":1.0000439,"x":1.4,"idx":69},{"y":1.0001223,"x":1.45,"idx":69},{"y":1.000318,"x":1.5,"idx":69},{"y":1.0007751,"x":1.55,"idx":69},{"y":1.0017724,"x":1.6,"idx":69},{"y":1.0038103,"x":1.65,"idx":69},{"y":1.0077162,"x":1.7,"idx":69},{"y":1.0147464,"x":1.75,"idx":69},{"y":1.0266435,"x":1.8,"idx":69},{"y":1.0455889,"x":1.85,"idx":69},{"y":1.0740017,"x":1.9,"idx":69},{"y":1.1141565,"x":1.95,"idx":69},{"y":1.0,"x":2.0,"idx":69},{"y":1.0,"x":0.0,"idx":70},{"y":1.0,"x":0.05,"idx":70},{"y":1.0,"x":0.1,"idx":70},{"y":1.0,"x":0.15,"idx":70},{"y":1.0,"x":0.2,"idx":70},{"y":1.0,"x":0.25,"idx":70},{"y":1.0,"x":0.3,"idx":70},{"y":1.0,"x":0.35,"idx":70},{"y":1.0,"x":0.4,"idx":70},{"y":1.0,"x":0.45,"idx":70},{"y":1.0,"x":0.5,"idx":70},{"y":1.0,"x":0.55,"idx":70},{"y":1.0,"x":0.6,"idx":70},{"y":1.0,"x":0.65,"idx":70},{"y":1.0,"x":0.7,"idx":70},{"y":1.0,"x":0.75,"idx":70},{"y":1.0,"x":0.8,"idx":70},{"y":1.0,"x":0.85,"idx":70},{"y":1.0,"x":0.9,"idx":70},{"y":1.0,"x":0.95,"idx":70},{"y":1.0,"x":1.0,"idx":70},{"y":1.0,"x":1.05,"idx":70},{"y":1.0,"x":1.1,"idx":70},{"y":1.0,"x":1.15,"idx":70},{"y":1.0000001,"x":1.2,"idx":70},{"y":1.0000007,"x":1.25,"idx":70},{"y":1.0000029,"x":1.3,"idx":70},{"y":1.0000095,"x":1.35,"idx":70},{"y":1.0000292,"x":1.4,"idx":70},{"y":1.0000831,"x":1.45,"idx":70},{"y":1.0002202,"x":1.5,"idx":70},{"y":1.0005466,"x":1.55,"idx":70},{"y":1.0012738,"x":1.6,"idx":70},{"y":1.0027914,"x":1.65,"idx":70},{"y":1.0057633,"x":1.7,"idx":70},{"y":1.0112313,"x":1.75,"idx":70},{"y":1.020695,"x":1.8,"idx":70},{"y":1.0361161,"x":1.85,"idx":70},{"y":1.0597953,"x":1.9,"idx":70},{"y":1.094079,"x":1.95,"idx":70},{"y":1.0,"x":2.0,"idx":70},{"y":1.0,"x":0.0,"idx":71},{"y":1.0,"x":0.05,"idx":71},{"y":1.0,"x":0.1,"idx":71},{"y":1.0,"x":0.15,"idx":71},{"y":1.0,"x":0.2,"idx":71},{"y":1.0,"x":0.25,"idx":71},{"y":1.0,"x":0.3,"idx":71},{"y":1.0,"x":0.35,"idx":71},{"y":1.0,"x":0.4,"idx":71},{"y":1.0,"x":0.45,"idx":71},{"y":1.0,"x":0.5,"idx":71},{"y":1.0,"x":0.55,"idx":71},{"y":1.0,"x":0.6,"idx":71},{"y":1.0,"x":0.65,"idx":71},{"y":1.0,"x":0.7,"idx":71},{"y":1.0,"x":0.75,"idx":71},{"y":1.0,"x":0.8,"idx":71},{"y":1.0,"x":0.85,"idx":71},{"y":1.0,"x":0.9,"idx":71},{"y":1.0,"x":0.95,"idx":71},{"y":1.0,"x":1.0,"idx":71},{"y":1.0,"x":1.05,"idx":71},{"y":1.0,"x":1.1,"idx":71},{"y":1.0,"x":1.15,"idx":71},{"y":1.0,"x":1.2,"idx":71},{"y":1.0000005,"x":1.25,"idx":71},{"y":1.0000018,"x":1.3,"idx":71},{"y":1.0000062,"x":1.35,"idx":71},{"y":1.0000193,"x":1.4,"idx":71},{"y":1.0000561,"x":1.45,"idx":71},{"y":1.0001516,"x":1.5,"idx":71},{"y":1.0003834,"x":1.55,"idx":71},{"y":1.0009102,"x":1.6,"idx":71},{"y":1.0020325,"x":1.65,"idx":71},{"y":1.0042773,"x":1.7,"idx":71},{"y":1.0084972,"x":1.75,"idx":71},{"y":1.0159631,"x":1.8,"idx":71},{"y":1.0284055,"x":1.85,"idx":71},{"y":1.0479558,"x":1.9,"idx":71},{"y":1.0769372,"x":1.95,"idx":71},{"y":1.0,"x":2.0,"idx":71},{"y":1.0,"x":0.0,"idx":72},{"y":1.0,"x":0.05,"idx":72},{"y":1.0,"x":0.1,"idx":72},{"y":1.0,"x":0.15,"idx":72},{"y":1.0,"x":0.2,"idx":72},{"y":1.0,"x":0.25,"idx":72},{"y":1.0,"x":0.3,"idx":72},{"y":1.0,"x":0.35,"idx":72},{"y":1.0,"x":0.4,"idx":72},{"y":1.0,"x":0.45,"idx":72},{"y":1.0,"x":0.5,"idx":72},{"y":1.0,"x":0.55,"idx":72},{"y":1.0,"x":0.6,"idx":72},{"y":1.0,"x":0.65,"idx":72},{"y":1.0,"x":0.7,"idx":72},{"y":1.0,"x":0.75,"idx":72},{"y":1.0,"x":0.8,"idx":72},{"y":1.0,"x":0.85,"idx":72},{"y":1.0,"x":0.9,"idx":72},{"y":1.0,"x":0.95,"idx":72},{"y":1.0,"x":1.0,"idx":72},{"y":1.0,"x":1.05,"idx":72},{"y":1.0,"x":1.1,"idx":72},{"y":1.0,"x":1.15,"idx":72},{"y":1.0,"x":1.2,"idx":72},{"y":1.0000002,"x":1.25,"idx":72},{"y":1.0000012,"x":1.3,"idx":72},{"y":1.000004,"x":1.35,"idx":72},{"y":1.0000128,"x":1.4,"idx":72},{"y":1.0000377,"x":1.45,"idx":72},{"y":1.000104,"x":1.5,"idx":72},{"y":1.0002675,"x":1.55,"idx":72},{"y":1.0006468,"x":1.6,"idx":72},{"y":1.0014713,"x":1.65,"idx":72},{"y":1.003155,"x":1.7,"idx":72},{"y":1.0063872,"x":1.75,"idx":72},{"y":1.0122302,"x":1.8,"idx":72},{"y":1.0221844,"x":1.85,"idx":72},{"y":1.0381806,"x":1.9,"idx":72},{"y":1.0624465,"x":1.95,"idx":72},{"y":1.0,"x":2.0,"idx":72},{"y":1.0,"x":0.0,"idx":73},{"y":1.0,"x":0.05,"idx":73},{"y":1.0,"x":0.1,"idx":73},{"y":1.0,"x":0.15,"idx":73},{"y":1.0,"x":0.2,"idx":73},{"y":1.0,"x":0.25,"idx":73},{"y":1.0,"x":0.3,"idx":73},{"y":1.0,"x":0.35,"idx":73},{"y":1.0,"x":0.4,"idx":73},{"y":1.0,"x":0.45,"idx":73},{"y":1.0,"x":0.5,"idx":73},{"y":1.0,"x":0.55,"idx":73},{"y":1.0,"x":0.6,"idx":73},{"y":1.0,"x":0.65,"idx":73},{"y":1.0,"x":0.7,"idx":73},{"y":1.0,"x":0.75,"idx":73},{"y":1.0,"x":0.8,"idx":73},{"y":1.0,"x":0.85,"idx":73},{"y":1.0,"x":0.9,"idx":73},{"y":1.0,"x":0.95,"idx":73},{"y":1.0,"x":1.0,"idx":73},{"y":1.0,"x":1.05,"idx":73},{"y":1.0,"x":1.1,"idx":73},{"y":1.0,"x":1.15,"idx":73},{"y":1.0,"x":1.2,"idx":73},{"y":1.0000001,"x":1.25,"idx":73},{"y":1.0000007,"x":1.3,"idx":73},{"y":1.0000026,"x":1.35,"idx":73},{"y":1.0000083,"x":1.4,"idx":73},{"y":1.0000253,"x":1.45,"idx":73},{"y":1.0000708,"x":1.5,"idx":73},{"y":1.0001857,"x":1.55,"idx":73},{"y":1.0004572,"x":1.6,"idx":73},{"y":1.001059,"x":1.65,"idx":73},{"y":1.0023131,"x":1.7,"idx":73},{"y":1.0047711,"x":1.75,"idx":73},{"y":1.0093087,"x":1.8,"idx":73},{"y":1.0172073,"x":1.85,"idx":73},{"y":1.0301825,"x":1.9,"idx":73},{"y":1.0503135,"x":1.95,"idx":73},{"y":1.0,"x":2.0,"idx":73},{"y":1.0,"x":0.0,"idx":74},{"y":1.0,"x":0.05,"idx":74},{"y":1.0,"x":0.1,"idx":74},{"y":1.0,"x":0.15,"idx":74},{"y":1.0,"x":0.2,"idx":74},{"y":1.0,"x":0.25,"idx":74},{"y":1.0,"x":0.3,"idx":74},{"y":1.0,"x":0.35,"idx":74},{"y":1.0,"x":0.4,"idx":74},{"y":1.0,"x":0.45,"idx":74},{"y":1.0,"x":0.5,"idx":74},{"y":1.0,"x":0.55,"idx":74},{"y":1.0,"x":0.6,"idx":74},{"y":1.0,"x":0.65,"idx":74},{"y":1.0,"x":0.7,"idx":74},{"y":1.0,"x":0.75,"idx":74},{"y":1.0,"x":0.8,"idx":74},{"y":1.0,"x":0.85,"idx":74},{"y":1.0,"x":0.9,"idx":74},{"y":1.0,"x":0.95,"idx":74},{"y":1.0,"x":1.0,"idx":74},{"y":1.0,"x":1.05,"idx":74},{"y":1.0,"x":1.1,"idx":74},{"y":1.0,"x":1.15,"idx":74},{"y":1.0,"x":1.2,"idx":74},{"y":1.0,"x":1.25,"idx":74},{"y":1.0000005,"x":1.3,"idx":74},{"y":1.0000017,"x":1.35,"idx":74},{"y":1.0000055,"x":1.4,"idx":74},{"y":1.0000168,"x":1.45,"idx":74},{"y":1.000048,"x":1.5,"idx":74},{"y":1.0001283,"x":1.55,"idx":74},{"y":1.0003214,"x":1.6,"idx":74},{"y":1.0007582,"x":1.65,"idx":74},{"y":1.0016861,"x":1.7,"idx":74},{"y":1.0035422,"x":1.75,"idx":74},{"y":1.0070399,"x":1.8,"idx":74},{"y":1.013258,"x":1.85,"idx":74},{"y":1.0236949,"x":1.9,"idx":74},{"y":1.0402479,"x":1.95,"idx":74},{"y":1.0,"x":2.0,"idx":74},{"y":1.0,"x":0.0,"idx":75},{"y":1.0,"x":0.05,"idx":75},{"y":1.0,"x":0.1,"idx":75},{"y":1.0,"x":0.15,"idx":75},{"y":1.0,"x":0.2,"idx":75},{"y":1.0,"x":0.25,"idx":75},{"y":1.0,"x":0.3,"idx":75},{"y":1.0,"x":0.35,"idx":75},{"y":1.0,"x":0.4,"idx":75},{"y":1.0,"x":0.45,"idx":75},{"y":1.0,"x":0.5,"idx":75},{"y":1.0,"x":0.55,"idx":75},{"y":1.0,"x":0.6,"idx":75},{"y":1.0,"x":0.65,"idx":75},{"y":1.0,"x":0.7,"idx":75},{"y":1.0,"x":0.75,"idx":75},{"y":1.0,"x":0.8,"idx":75},{"y":1.0,"x":0.85,"idx":75},{"y":1.0,"x":0.9,"idx":75},{"y":1.0,"x":0.95,"idx":75},{"y":1.0,"x":1.0,"idx":75},{"y":1.0,"x":1.05,"idx":75},{"y":1.0,"x":1.1,"idx":75},{"y":1.0,"x":1.15,"idx":75},{"y":1.0,"x":1.2,"idx":75},{"y":1.0,"x":1.25,"idx":75},{"y":1.0000002,"x":1.3,"idx":75},{"y":1.0000011,"x":1.35,"idx":75},{"y":1.0000036,"x":1.4,"idx":75},{"y":1.0000112,"x":1.45,"idx":75},{"y":1.0000324,"x":1.5,"idx":75},{"y":1.0000882,"x":1.55,"idx":75},{"y":1.0002248,"x":1.6,"idx":75},{"y":1.0005398,"x":1.65,"idx":75},{"y":1.0012221,"x":1.7,"idx":75},{"y":1.0026141,"x":1.75,"idx":75},{"y":1.005291,"x":1.8,"idx":75},{"y":1.010149,"x":1.85,"idx":75},{"y":1.0184765,"x":1.9,"idx":75},{"y":1.0319715,"x":1.95,"idx":75},{"y":1.0,"x":2.0,"idx":75},{"y":1.0,"x":0.0,"idx":76},{"y":1.0,"x":0.05,"idx":76},{"y":1.0,"x":0.1,"idx":76},{"y":1.0,"x":0.15,"idx":76},{"y":1.0,"x":0.2,"idx":76},{"y":1.0,"x":0.25,"idx":76},{"y":1.0,"x":0.3,"idx":76},{"y":1.0,"x":0.35,"idx":76},{"y":1.0,"x":0.4,"idx":76},{"y":1.0,"x":0.45,"idx":76},{"y":1.0,"x":0.5,"idx":76},{"y":1.0,"x":0.55,"idx":76},{"y":1.0,"x":0.6,"idx":76},{"y":1.0,"x":0.65,"idx":76},{"y":1.0,"x":0.7,"idx":76},{"y":1.0,"x":0.75,"idx":76},{"y":1.0,"x":0.8,"idx":76},{"y":1.0,"x":0.85,"idx":76},{"y":1.0,"x":0.9,"idx":76},{"y":1.0,"x":0.95,"idx":76},{"y":1.0,"x":1.0,"idx":76},{"y":1.0,"x":1.05,"idx":76},{"y":1.0,"x":1.1,"idx":76},{"y":1.0,"x":1.15,"idx":76},{"y":1.0,"x":1.2,"idx":76},{"y":1.0,"x":1.25,"idx":76},{"y":1.0000001,"x":1.3,"idx":76},{"y":1.0000007,"x":1.35,"idx":76},{"y":1.0000024,"x":1.4,"idx":76},{"y":1.0000074,"x":1.45,"idx":76},{"y":1.0000218,"x":1.5,"idx":76},{"y":1.0000603,"x":1.55,"idx":76},{"y":1.0001565,"x":1.6,"idx":76},{"y":1.0003823,"x":1.65,"idx":76},{"y":1.000881,"x":1.7,"idx":76},{"y":1.0019181,"x":1.75,"idx":76},{"y":1.0039525,"x":1.8,"idx":76},{"y":1.00772,"x":1.85,"idx":76},{"y":1.0143127,"x":1.9,"idx":76},{"y":1.025224,"x":1.95,"idx":76},{"y":1.0,"x":2.0,"idx":76},{"y":1.0,"x":0.0,"idx":77},{"y":1.0,"x":0.05,"idx":77},{"y":1.0,"x":0.1,"idx":77},{"y":1.0,"x":0.15,"idx":77},{"y":1.0,"x":0.2,"idx":77},{"y":1.0,"x":0.25,"idx":77},{"y":1.0,"x":0.3,"idx":77},{"y":1.0,"x":0.35,"idx":77},{"y":1.0,"x":0.4,"idx":77},{"y":1.0,"x":0.45,"idx":77},{"y":1.0,"x":0.5,"idx":77},{"y":1.0,"x":0.55,"idx":77},{"y":1.0,"x":0.6,"idx":77},{"y":1.0,"x":0.65,"idx":77},{"y":1.0,"x":0.7,"idx":77},{"y":1.0,"x":0.75,"idx":77},{"y":1.0,"x":0.8,"idx":77},{"y":1.0,"x":0.85,"idx":77},{"y":1.0,"x":0.9,"idx":77},{"y":1.0,"x":0.95,"idx":77},{"y":1.0,"x":1.0,"idx":77},{"y":1.0,"x":1.05,"idx":77},{"y":1.0,"x":1.1,"idx":77},{"y":1.0,"x":1.15,"idx":77},{"y":1.0,"x":1.2,"idx":77},{"y":1.0,"x":1.25,"idx":77},{"y":1.0,"x":1.3,"idx":77},{"y":1.0000005,"x":1.35,"idx":77},{"y":1.0000015,"x":1.4,"idx":77},{"y":1.0000049,"x":1.45,"idx":77},{"y":1.0000145,"x":1.5,"idx":77},{"y":1.000041,"x":1.55,"idx":77},{"y":1.0001085,"x":1.6,"idx":77},{"y":1.0002694,"x":1.65,"idx":77},{"y":1.0006316,"x":1.7,"idx":77},{"y":1.0013995,"x":1.75,"idx":77},{"y":1.0029353,"x":1.8,"idx":77},{"y":1.0058362,"x":1.85,"idx":77},{"y":1.0110164,"x":1.9,"idx":77},{"y":1.0197684,"x":1.95,"idx":77},{"y":1.0,"x":2.0,"idx":77},{"y":1.0,"x":0.0,"idx":78},{"y":1.0,"x":0.05,"idx":78},{"y":1.0,"x":0.1,"idx":78},{"y":1.0,"x":0.15,"idx":78},{"y":1.0,"x":0.2,"idx":78},{"y":1.0,"x":0.25,"idx":78},{"y":1.0,"x":0.3,"idx":78},{"y":1.0,"x":0.35,"idx":78},{"y":1.0,"x":0.4,"idx":78},{"y":1.0,"x":0.45,"idx":78},{"y":1.0,"x":0.5,"idx":78},{"y":1.0,"x":0.55,"idx":78},{"y":1.0,"x":0.6,"idx":78},{"y":1.0,"x":0.65,"idx":78},{"y":1.0,"x":0.7,"idx":78},{"y":1.0,"x":0.75,"idx":78},{"y":1.0,"x":0.8,"idx":78},{"y":1.0,"x":0.85,"idx":78},{"y":1.0,"x":0.9,"idx":78},{"y":1.0,"x":0.95,"idx":78},{"y":1.0,"x":1.0,"idx":78},{"y":1.0,"x":1.05,"idx":78},{"y":1.0,"x":1.1,"idx":78},{"y":1.0,"x":1.15,"idx":78},{"y":1.0,"x":1.2,"idx":78},{"y":1.0,"x":1.25,"idx":78},{"y":1.0,"x":1.3,"idx":78},{"y":1.0000002,"x":1.35,"idx":78},{"y":1.000001,"x":1.4,"idx":78},{"y":1.0000032,"x":1.45,"idx":78},{"y":1.0000098,"x":1.5,"idx":78},{"y":1.0000278,"x":1.55,"idx":78},{"y":1.0000747,"x":1.6,"idx":78},{"y":1.000189,"x":1.65,"idx":78},{"y":1.0004505,"x":1.7,"idx":78},{"y":1.0010155,"x":1.75,"idx":78},{"y":1.0021675,"x":1.8,"idx":78},{"y":1.0043857,"x":1.85,"idx":78},{"y":1.0084263,"x":1.9,"idx":78},{"y":1.0153923,"x":1.95,"idx":78},{"y":1.0,"x":2.0,"idx":78},{"y":1.0,"x":0.0,"idx":79},{"y":1.0,"x":0.05,"idx":79},{"y":1.0,"x":0.1,"idx":79},{"y":1.0,"x":0.15,"idx":79},{"y":1.0,"x":0.2,"idx":79},{"y":1.0,"x":0.25,"idx":79},{"y":1.0,"x":0.3,"idx":79},{"y":1.0,"x":0.35,"idx":79},{"y":1.0,"x":0.4,"idx":79},{"y":1.0,"x":0.45,"idx":79},{"y":1.0,"x":0.5,"idx":79},{"y":1.0,"x":0.55,"idx":79},{"y":1.0,"x":0.6,"idx":79},{"y":1.0,"x":0.65,"idx":79},{"y":1.0,"x":0.7,"idx":79},{"y":1.0,"x":0.75,"idx":79},{"y":1.0,"x":0.8,"idx":79},{"y":1.0,"x":0.85,"idx":79},{"y":1.0,"x":0.9,"idx":79},{"y":1.0,"x":0.95,"idx":79},{"y":1.0,"x":1.0,"idx":79},{"y":1.0,"x":1.05,"idx":79},{"y":1.0,"x":1.1,"idx":79},{"y":1.0,"x":1.15,"idx":79},{"y":1.0,"x":1.2,"idx":79},{"y":1.0,"x":1.25,"idx":79},{"y":1.0,"x":1.3,"idx":79},{"y":1.0000001,"x":1.35,"idx":79},{"y":1.0000006,"x":1.4,"idx":79},{"y":1.0000021,"x":1.45,"idx":79},{"y":1.0000064,"x":1.5,"idx":79},{"y":1.0000188,"x":1.55,"idx":79},{"y":1.0000513,"x":1.6,"idx":79},{"y":1.0001318,"x":1.65,"idx":79},{"y":1.0003197,"x":1.7,"idx":79},{"y":1.000733,"x":1.75,"idx":79},{"y":1.0015914,"x":1.8,"idx":79},{"y":1.0032766,"x":1.85,"idx":79},{"y":1.0064061,"x":1.9,"idx":79},{"y":1.0119092,"x":1.95,"idx":79},{"y":1.0,"x":2.0,"idx":79},{"y":1.0,"x":0.0,"idx":80},{"y":1.0,"x":0.05,"idx":80},{"y":1.0,"x":0.1,"idx":80},{"y":1.0,"x":0.15,"idx":80},{"y":1.0,"x":0.2,"idx":80},{"y":1.0,"x":0.25,"idx":80},{"y":1.0,"x":0.3,"idx":80},{"y":1.0,"x":0.35,"idx":80},{"y":1.0,"x":0.4,"idx":80},{"y":1.0,"x":0.45,"idx":80},{"y":1.0,"x":0.5,"idx":80},{"y":1.0,"x":0.55,"idx":80},{"y":1.0,"x":0.6,"idx":80},{"y":1.0,"x":0.65,"idx":80},{"y":1.0,"x":0.7,"idx":80},{"y":1.0,"x":0.75,"idx":80},{"y":1.0,"x":0.8,"idx":80},{"y":1.0,"x":0.85,"idx":80},{"y":1.0,"x":0.9,"idx":80},{"y":1.0,"x":0.95,"idx":80},{"y":1.0,"x":1.0,"idx":80},{"y":1.0,"x":1.05,"idx":80},{"y":1.0,"x":1.1,"idx":80},{"y":1.0,"x":1.15,"idx":80},{"y":1.0,"x":1.2,"idx":80},{"y":1.0,"x":1.25,"idx":80},{"y":1.0,"x":1.3,"idx":80},{"y":1.0,"x":1.35,"idx":80},{"y":1.0000004,"x":1.4,"idx":80},{"y":1.0000014,"x":1.45,"idx":80},{"y":1.0000043,"x":1.5,"idx":80},{"y":1.0000126,"x":1.55,"idx":80},{"y":1.000035,"x":1.6,"idx":80},{"y":1.0000916,"x":1.65,"idx":80},{"y":1.0002258,"x":1.7,"idx":80},{"y":1.0005264,"x":1.75,"idx":80},{"y":1.0011623,"x":1.8,"idx":80},{"y":1.002434,"x":1.85,"idx":80},{"y":1.0048413,"x":1.9,"idx":80},{"y":1.0091577,"x":1.95,"idx":80},{"y":1.0,"x":2.0,"idx":80},{"y":1.0,"x":0.0,"idx":81},{"y":1.0,"x":0.05,"idx":81},{"y":1.0,"x":0.1,"idx":81},{"y":1.0,"x":0.15,"idx":81},{"y":1.0,"x":0.2,"idx":81},{"y":1.0,"x":0.25,"idx":81},{"y":1.0,"x":0.3,"idx":81},{"y":1.0,"x":0.35,"idx":81},{"y":1.0,"x":0.4,"idx":81},{"y":1.0,"x":0.45,"idx":81},{"y":1.0,"x":0.5,"idx":81},{"y":1.0,"x":0.55,"idx":81},{"y":1.0,"x":0.6,"idx":81},{"y":1.0,"x":0.65,"idx":81},{"y":1.0,"x":0.7,"idx":81},{"y":1.0,"x":0.75,"idx":81},{"y":1.0,"x":0.8,"idx":81},{"y":1.0,"x":0.85,"idx":81},{"y":1.0,"x":0.9,"idx":81},{"y":1.0,"x":0.95,"idx":81},{"y":1.0,"x":1.0,"idx":81},{"y":1.0,"x":1.05,"idx":81},{"y":1.0,"x":1.1,"idx":81},{"y":1.0,"x":1.15,"idx":81},{"y":1.0,"x":1.2,"idx":81},{"y":1.0,"x":1.25,"idx":81},{"y":1.0,"x":1.3,"idx":81},{"y":1.0,"x":1.35,"idx":81},{"y":1.0000002,"x":1.4,"idx":81},{"y":1.000001,"x":1.45,"idx":81},{"y":1.0000029,"x":1.5,"idx":81},{"y":1.0000085,"x":1.55,"idx":81},{"y":1.0000238,"x":1.6,"idx":81},{"y":1.0000633,"x":1.65,"idx":81},{"y":1.0001587,"x":1.7,"idx":81},{"y":1.0003761,"x":1.75,"idx":81},{"y":1.0008444,"x":1.8,"idx":81},{"y":1.0017982,"x":1.85,"idx":81},{"y":1.0036377,"x":1.9,"idx":81},{"y":1.0069995,"x":1.95,"idx":81},{"y":1.0,"x":2.0,"idx":81},{"y":1.0,"x":0.0,"idx":82},{"y":1.0,"x":0.05,"idx":82},{"y":1.0,"x":0.1,"idx":82},{"y":1.0,"x":0.15,"idx":82},{"y":1.0,"x":0.2,"idx":82},{"y":1.0,"x":0.25,"idx":82},{"y":1.0,"x":0.3,"idx":82},{"y":1.0,"x":0.35,"idx":82},{"y":1.0,"x":0.4,"idx":82},{"y":1.0,"x":0.45,"idx":82},{"y":1.0,"x":0.5,"idx":82},{"y":1.0,"x":0.55,"idx":82},{"y":1.0,"x":0.6,"idx":82},{"y":1.0,"x":0.65,"idx":82},{"y":1.0,"x":0.7,"idx":82},{"y":1.0,"x":0.75,"idx":82},{"y":1.0,"x":0.8,"idx":82},{"y":1.0,"x":0.85,"idx":82},{"y":1.0,"x":0.9,"idx":82},{"y":1.0,"x":0.95,"idx":82},{"y":1.0,"x":1.0,"idx":82},{"y":1.0,"x":1.05,"idx":82},{"y":1.0,"x":1.1,"idx":82},{"y":1.0,"x":1.15,"idx":82},{"y":1.0,"x":1.2,"idx":82},{"y":1.0,"x":1.25,"idx":82},{"y":1.0,"x":1.3,"idx":82},{"y":1.0,"x":1.35,"idx":82},{"y":1.0000001,"x":1.4,"idx":82},{"y":1.0000006,"x":1.45,"idx":82},{"y":1.0000019,"x":1.5,"idx":82},{"y":1.0000057,"x":1.55,"idx":82},{"y":1.0000162,"x":1.6,"idx":82},{"y":1.0000436,"x":1.65,"idx":82},{"y":1.000111,"x":1.7,"idx":82},{"y":1.0002674,"x":1.75,"idx":82},{"y":1.0006102,"x":1.8,"idx":82},{"y":1.0013213,"x":1.85,"idx":82},{"y":1.002718,"x":1.9,"idx":82},{"y":1.0053186,"x":1.95,"idx":82},{"y":1.0,"x":2.0,"idx":82},{"y":1.0,"x":0.0,"idx":83},{"y":1.0,"x":0.05,"idx":83},{"y":1.0,"x":0.1,"idx":83},{"y":1.0,"x":0.15,"idx":83},{"y":1.0,"x":0.2,"idx":83},{"y":1.0,"x":0.25,"idx":83},{"y":1.0,"x":0.3,"idx":83},{"y":1.0,"x":0.35,"idx":83},{"y":1.0,"x":0.4,"idx":83},{"y":1.0,"x":0.45,"idx":83},{"y":1.0,"x":0.5,"idx":83},{"y":1.0,"x":0.55,"idx":83},{"y":1.0,"x":0.6,"idx":83},{"y":1.0,"x":0.65,"idx":83},{"y":1.0,"x":0.7,"idx":83},{"y":1.0,"x":0.75,"idx":83},{"y":1.0,"x":0.8,"idx":83},{"y":1.0,"x":0.85,"idx":83},{"y":1.0,"x":0.9,"idx":83},{"y":1.0,"x":0.95,"idx":83},{"y":1.0,"x":1.0,"idx":83},{"y":1.0,"x":1.05,"idx":83},{"y":1.0,"x":1.1,"idx":83},{"y":1.0,"x":1.15,"idx":83},{"y":1.0,"x":1.2,"idx":83},{"y":1.0,"x":1.25,"idx":83},{"y":1.0,"x":1.3,"idx":83},{"y":1.0,"x":1.35,"idx":83},{"y":1.0,"x":1.4,"idx":83},{"y":1.0000004,"x":1.45,"idx":83},{"y":1.0000012,"x":1.5,"idx":83},{"y":1.0000038,"x":1.55,"idx":83},{"y":1.000011,"x":1.6,"idx":83},{"y":1.0000299,"x":1.65,"idx":83},{"y":1.0000772,"x":1.7,"idx":83},{"y":1.0001892,"x":1.75,"idx":83},{"y":1.0004388,"x":1.8,"idx":83},{"y":1.0009658,"x":1.85,"idx":83},{"y":1.0020196,"x":1.9,"idx":83},{"y":1.0040183,"x":1.95,"idx":83},{"y":1.0,"x":2.0,"idx":83},{"y":1.0,"x":0.0,"idx":84},{"y":1.0,"x":0.05,"idx":84},{"y":1.0,"x":0.1,"idx":84},{"y":1.0,"x":0.15,"idx":84},{"y":1.0,"x":0.2,"idx":84},{"y":1.0,"x":0.25,"idx":84},{"y":1.0,"x":0.3,"idx":84},{"y":1.0,"x":0.35,"idx":84},{"y":1.0,"x":0.4,"idx":84},{"y":1.0,"x":0.45,"idx":84},{"y":1.0,"x":0.5,"idx":84},{"y":1.0,"x":0.55,"idx":84},{"y":1.0,"x":0.6,"idx":84},{"y":1.0,"x":0.65,"idx":84},{"y":1.0,"x":0.7,"idx":84},{"y":1.0,"x":0.75,"idx":84},{"y":1.0,"x":0.8,"idx":84},{"y":1.0,"x":0.85,"idx":84},{"y":1.0,"x":0.9,"idx":84},{"y":1.0,"x":0.95,"idx":84},{"y":1.0,"x":1.0,"idx":84},{"y":1.0,"x":1.05,"idx":84},{"y":1.0,"x":1.1,"idx":84},{"y":1.0,"x":1.15,"idx":84},{"y":1.0,"x":1.2,"idx":84},{"y":1.0,"x":1.25,"idx":84},{"y":1.0,"x":1.3,"idx":84},{"y":1.0,"x":1.35,"idx":84},{"y":1.0,"x":1.4,"idx":84},{"y":1.0000002,"x":1.45,"idx":84},{"y":1.0000007,"x":1.5,"idx":84},{"y":1.0000025,"x":1.55,"idx":84},{"y":1.0000074,"x":1.6,"idx":84},{"y":1.0000205,"x":1.65,"idx":84},{"y":1.0000536,"x":1.7,"idx":84},{"y":1.0001333,"x":1.75,"idx":84},{"y":1.000314,"x":1.8,"idx":84},{"y":1.0007024,"x":1.85,"idx":84},{"y":1.0014927,"x":1.9,"idx":84},{"y":1.003019,"x":1.95,"idx":84},{"y":1.0,"x":2.0,"idx":84},{"y":1.0,"x":0.0,"idx":85},{"y":1.0,"x":0.05,"idx":85},{"y":1.0,"x":0.1,"idx":85},{"y":1.0,"x":0.15,"idx":85},{"y":1.0,"x":0.2,"idx":85},{"y":1.0,"x":0.25,"idx":85},{"y":1.0,"x":0.3,"idx":85},{"y":1.0,"x":0.35,"idx":85},{"y":1.0,"x":0.4,"idx":85},{"y":1.0,"x":0.45,"idx":85},{"y":1.0,"x":0.5,"idx":85},{"y":1.0,"x":0.55,"idx":85},{"y":1.0,"x":0.6,"idx":85},{"y":1.0,"x":0.65,"idx":85},{"y":1.0,"x":0.7,"idx":85},{"y":1.0,"x":0.75,"idx":85},{"y":1.0,"x":0.8,"idx":85},{"y":1.0,"x":0.85,"idx":85},{"y":1.0,"x":0.9,"idx":85},{"y":1.0,"x":0.95,"idx":85},{"y":1.0,"x":1.0,"idx":85},{"y":1.0,"x":1.05,"idx":85},{"y":1.0,"x":1.1,"idx":85},{"y":1.0,"x":1.15,"idx":85},{"y":1.0,"x":1.2,"idx":85},{"y":1.0,"x":1.25,"idx":85},{"y":1.0,"x":1.3,"idx":85},{"y":1.0,"x":1.35,"idx":85},{"y":1.0,"x":1.4,"idx":85},{"y":1.0000001,"x":1.45,"idx":85},{"y":1.0000005,"x":1.5,"idx":85},{"y":1.0000017,"x":1.55,"idx":85},{"y":1.000005,"x":1.6,"idx":85},{"y":1.000014,"x":1.65,"idx":85},{"y":1.0000371,"x":1.7,"idx":85},{"y":1.0000935,"x":1.75,"idx":85},{"y":1.0002236,"x":1.8,"idx":85},{"y":1.0005082,"x":1.85,"idx":85},{"y":1.0010976,"x":1.9,"idx":85},{"y":1.0022559,"x":1.95,"idx":85},{"y":1.0,"x":2.0,"idx":85},{"y":1.0,"x":0.0,"idx":86},{"y":1.0,"x":0.05,"idx":86},{"y":1.0,"x":0.1,"idx":86},{"y":1.0,"x":0.15,"idx":86},{"y":1.0,"x":0.2,"idx":86},{"y":1.0,"x":0.25,"idx":86},{"y":1.0,"x":0.3,"idx":86},{"y":1.0,"x":0.35,"idx":86},{"y":1.0,"x":0.4,"idx":86},{"y":1.0,"x":0.45,"idx":86},{"y":1.0,"x":0.5,"idx":86},{"y":1.0,"x":0.55,"idx":86},{"y":1.0,"x":0.6,"idx":86},{"y":1.0,"x":0.65,"idx":86},{"y":1.0,"x":0.7,"idx":86},{"y":1.0,"x":0.75,"idx":86},{"y":1.0,"x":0.8,"idx":86},{"y":1.0,"x":0.85,"idx":86},{"y":1.0,"x":0.9,"idx":86},{"y":1.0,"x":0.95,"idx":86},{"y":1.0,"x":1.0,"idx":86},{"y":1.0,"x":1.05,"idx":86},{"y":1.0,"x":1.1,"idx":86},{"y":1.0,"x":1.15,"idx":86},{"y":1.0,"x":1.2,"idx":86},{"y":1.0,"x":1.25,"idx":86},{"y":1.0,"x":1.3,"idx":86},{"y":1.0,"x":1.35,"idx":86},{"y":1.0,"x":1.4,"idx":86},{"y":1.0,"x":1.45,"idx":86},{"y":1.0000002,"x":1.5,"idx":86},{"y":1.0000011,"x":1.55,"idx":86},{"y":1.0000033,"x":1.6,"idx":86},{"y":1.0000095,"x":1.65,"idx":86},{"y":1.0000255,"x":1.7,"idx":86},{"y":1.0000653,"x":1.75,"idx":86},{"y":1.0001585,"x":1.8,"idx":86},{"y":1.000366,"x":1.85,"idx":86},{"y":1.0008029,"x":1.9,"idx":86},{"y":1.0016768,"x":1.95,"idx":86},{"y":1.0,"x":2.0,"idx":86},{"y":1.0,"x":0.0,"idx":87},{"y":1.0,"x":0.05,"idx":87},{"y":1.0,"x":0.1,"idx":87},{"y":1.0,"x":0.15,"idx":87},{"y":1.0,"x":0.2,"idx":87},{"y":1.0,"x":0.25,"idx":87},{"y":1.0,"x":0.3,"idx":87},{"y":1.0,"x":0.35,"idx":87},{"y":1.0,"x":0.4,"idx":87},{"y":1.0,"x":0.45,"idx":87},{"y":1.0,"x":0.5,"idx":87},{"y":1.0,"x":0.55,"idx":87},{"y":1.0,"x":0.6,"idx":87},{"y":1.0,"x":0.65,"idx":87},{"y":1.0,"x":0.7,"idx":87},{"y":1.0,"x":0.75,"idx":87},{"y":1.0,"x":0.8,"idx":87},{"y":1.0,"x":0.85,"idx":87},{"y":1.0,"x":0.9,"idx":87},{"y":1.0,"x":0.95,"idx":87},{"y":1.0,"x":1.0,"idx":87},{"y":1.0,"x":1.05,"idx":87},{"y":1.0,"x":1.1,"idx":87},{"y":1.0,"x":1.15,"idx":87},{"y":1.0,"x":1.2,"idx":87},{"y":1.0,"x":1.25,"idx":87},{"y":1.0,"x":1.3,"idx":87},{"y":1.0,"x":1.35,"idx":87},{"y":1.0,"x":1.4,"idx":87},{"y":1.0,"x":1.45,"idx":87},{"y":1.0000001,"x":1.5,"idx":87},{"y":1.0000007,"x":1.55,"idx":87},{"y":1.0000021,"x":1.6,"idx":87},{"y":1.0000064,"x":1.65,"idx":87},{"y":1.0000175,"x":1.7,"idx":87},{"y":1.0000454,"x":1.75,"idx":87},{"y":1.0001119,"x":1.8,"idx":87},{"y":1.0002623,"x":1.85,"idx":87},{"y":1.0005844,"x":1.9,"idx":87},{"y":1.0012398,"x":1.95,"idx":87},{"y":1.0,"x":2.0,"idx":87},{"y":1.0,"x":0.0,"idx":88},{"y":1.0,"x":0.05,"idx":88},{"y":1.0,"x":0.1,"idx":88},{"y":1.0,"x":0.15,"idx":88},{"y":1.0,"x":0.2,"idx":88},{"y":1.0,"x":0.25,"idx":88},{"y":1.0,"x":0.3,"idx":88},{"y":1.0,"x":0.35,"idx":88},{"y":1.0,"x":0.4,"idx":88},{"y":1.0,"x":0.45,"idx":88},{"y":1.0,"x":0.5,"idx":88},{"y":1.0,"x":0.55,"idx":88},{"y":1.0,"x":0.6,"idx":88},{"y":1.0,"x":0.65,"idx":88},{"y":1.0,"x":0.7,"idx":88},{"y":1.0,"x":0.75,"idx":88},{"y":1.0,"x":0.8,"idx":88},{"y":1.0,"x":0.85,"idx":88},{"y":1.0,"x":0.9,"idx":88},{"y":1.0,"x":0.95,"idx":88},{"y":1.0,"x":1.0,"idx":88},{"y":1.0,"x":1.05,"idx":88},{"y":1.0,"x":1.1,"idx":88},{"y":1.0,"x":1.15,"idx":88},{"y":1.0,"x":1.2,"idx":88},{"y":1.0,"x":1.25,"idx":88},{"y":1.0,"x":1.3,"idx":88},{"y":1.0,"x":1.35,"idx":88},{"y":1.0,"x":1.4,"idx":88},{"y":1.0,"x":1.45,"idx":88},{"y":1.0,"x":1.5,"idx":88},{"y":1.0000005,"x":1.55,"idx":88},{"y":1.0000014,"x":1.6,"idx":88},{"y":1.0000043,"x":1.65,"idx":88},{"y":1.0000119,"x":1.7,"idx":88},{"y":1.0000315,"x":1.75,"idx":88},{"y":1.0000787,"x":1.8,"idx":88},{"y":1.0001872,"x":1.85,"idx":88},{"y":1.0004233,"x":1.9,"idx":88},{"y":1.0009121,"x":1.95,"idx":88},{"y":1.0,"x":2.0,"idx":88},{"y":1.0,"x":0.0,"idx":89},{"y":1.0,"x":0.05,"idx":89},{"y":1.0,"x":0.1,"idx":89},{"y":1.0,"x":0.15,"idx":89},{"y":1.0,"x":0.2,"idx":89},{"y":1.0,"x":0.25,"idx":89},{"y":1.0,"x":0.3,"idx":89},{"y":1.0,"x":0.35,"idx":89},{"y":1.0,"x":0.4,"idx":89},{"y":1.0,"x":0.45,"idx":89},{"y":1.0,"x":0.5,"idx":89},{"y":1.0,"x":0.55,"idx":89},{"y":1.0,"x":0.6,"idx":89},{"y":1.0,"x":0.65,"idx":89},{"y":1.0,"x":0.7,"idx":89},{"y":1.0,"x":0.75,"idx":89},{"y":1.0,"x":0.8,"idx":89},{"y":1.0,"x":0.85,"idx":89},{"y":1.0,"x":0.9,"idx":89},{"y":1.0,"x":0.95,"idx":89},{"y":1.0,"x":1.0,"idx":89},{"y":1.0,"x":1.05,"idx":89},{"y":1.0,"x":1.1,"idx":89},{"y":1.0,"x":1.15,"idx":89},{"y":1.0,"x":1.2,"idx":89},{"y":1.0,"x":1.25,"idx":89},{"y":1.0,"x":1.3,"idx":89},{"y":1.0,"x":1.35,"idx":89},{"y":1.0,"x":1.4,"idx":89},{"y":1.0,"x":1.45,"idx":89},{"y":1.0,"x":1.5,"idx":89},{"y":1.0000002,"x":1.55,"idx":89},{"y":1.000001,"x":1.6,"idx":89},{"y":1.0000029,"x":1.65,"idx":89},{"y":1.0000081,"x":1.7,"idx":89},{"y":1.0000217,"x":1.75,"idx":89},{"y":1.0000551,"x":1.8,"idx":89},{"y":1.0001329,"x":1.85,"idx":89},{"y":1.0003052,"x":1.9,"idx":89},{"y":1.0006677,"x":1.95,"idx":89},{"y":1.0,"x":2.0,"idx":89},{"y":1.0,"x":0.0,"idx":90},{"y":1.0,"x":0.05,"idx":90},{"y":1.0,"x":0.1,"idx":90},{"y":1.0,"x":0.15,"idx":90},{"y":1.0,"x":0.2,"idx":90},{"y":1.0,"x":0.25,"idx":90},{"y":1.0,"x":0.3,"idx":90},{"y":1.0,"x":0.35,"idx":90},{"y":1.0,"x":0.4,"idx":90},{"y":1.0,"x":0.45,"idx":90},{"y":1.0,"x":0.5,"idx":90},{"y":1.0,"x":0.55,"idx":90},{"y":1.0,"x":0.6,"idx":90},{"y":1.0,"x":0.65,"idx":90},{"y":1.0,"x":0.7,"idx":90},{"y":1.0,"x":0.75,"idx":90},{"y":1.0,"x":0.8,"idx":90},{"y":1.0,"x":0.85,"idx":90},{"y":1.0,"x":0.9,"idx":90},{"y":1.0,"x":0.95,"idx":90},{"y":1.0,"x":1.0,"idx":90},{"y":1.0,"x":1.05,"idx":90},{"y":1.0,"x":1.1,"idx":90},{"y":1.0,"x":1.15,"idx":90},{"y":1.0,"x":1.2,"idx":90},{"y":1.0,"x":1.25,"idx":90},{"y":1.0,"x":1.3,"idx":90},{"y":1.0,"x":1.35,"idx":90},{"y":1.0,"x":1.4,"idx":90},{"y":1.0,"x":1.45,"idx":90},{"y":1.0,"x":1.5,"idx":90},{"y":1.0000001,"x":1.55,"idx":90},{"y":1.0000006,"x":1.6,"idx":90},{"y":1.0000019,"x":1.65,"idx":90},{"y":1.0000055,"x":1.7,"idx":90},{"y":1.0000149,"x":1.75,"idx":90},{"y":1.0000384,"x":1.8,"idx":90},{"y":1.0000939,"x":1.85,"idx":90},{"y":1.0002191,"x":1.9,"idx":90},{"y":1.0004864,"x":1.95,"idx":90},{"y":1.0,"x":2.0,"idx":90},{"y":1.0,"x":0.0,"idx":91},{"y":1.0,"x":0.05,"idx":91},{"y":1.0,"x":0.1,"idx":91},{"y":1.0,"x":0.15,"idx":91},{"y":1.0,"x":0.2,"idx":91},{"y":1.0,"x":0.25,"idx":91},{"y":1.0,"x":0.3,"idx":91},{"y":1.0,"x":0.35,"idx":91},{"y":1.0,"x":0.4,"idx":91},{"y":1.0,"x":0.45,"idx":91},{"y":1.0,"x":0.5,"idx":91},{"y":1.0,"x":0.55,"idx":91},{"y":1.0,"x":0.6,"idx":91},{"y":1.0,"x":0.65,"idx":91},{"y":1.0,"x":0.7,"idx":91},{"y":1.0,"x":0.75,"idx":91},{"y":1.0,"x":0.8,"idx":91},{"y":1.0,"x":0.85,"idx":91},{"y":1.0,"x":0.9,"idx":91},{"y":1.0,"x":0.95,"idx":91},{"y":1.0,"x":1.0,"idx":91},{"y":1.0,"x":1.05,"idx":91},{"y":1.0,"x":1.1,"idx":91},{"y":1.0,"x":1.15,"idx":91},{"y":1.0,"x":1.2,"idx":91},{"y":1.0,"x":1.25,"idx":91},{"y":1.0,"x":1.3,"idx":91},{"y":1.0,"x":1.35,"idx":91},{"y":1.0,"x":1.4,"idx":91},{"y":1.0,"x":1.45,"idx":91},{"y":1.0,"x":1.5,"idx":91},{"y":1.0,"x":1.55,"idx":91},{"y":1.0000004,"x":1.6,"idx":91},{"y":1.0000012,"x":1.65,"idx":91},{"y":1.0000037,"x":1.7,"idx":91},{"y":1.0000103,"x":1.75,"idx":91},{"y":1.0000267,"x":1.8,"idx":91},{"y":1.0000662,"x":1.85,"idx":91},{"y":1.0001565,"x":1.9,"idx":91},{"y":1.0003527,"x":1.95,"idx":91},{"y":1.0,"x":2.0,"idx":91},{"y":1.0,"x":0.0,"idx":92},{"y":1.0,"x":0.05,"idx":92},{"y":1.0,"x":0.1,"idx":92},{"y":1.0,"x":0.15,"idx":92},{"y":1.0,"x":0.2,"idx":92},{"y":1.0,"x":0.25,"idx":92},{"y":1.0,"x":0.3,"idx":92},{"y":1.0,"x":0.35,"idx":92},{"y":1.0,"x":0.4,"idx":92},{"y":1.0,"x":0.45,"idx":92},{"y":1.0,"x":0.5,"idx":92},{"y":1.0,"x":0.55,"idx":92},{"y":1.0,"x":0.6,"idx":92},{"y":1.0,"x":0.65,"idx":92},{"y":1.0,"x":0.7,"idx":92},{"y":1.0,"x":0.75,"idx":92},{"y":1.0,"x":0.8,"idx":92},{"y":1.0,"x":0.85,"idx":92},{"y":1.0,"x":0.9,"idx":92},{"y":1.0,"x":0.95,"idx":92},{"y":1.0,"x":1.0,"idx":92},{"y":1.0,"x":1.05,"idx":92},{"y":1.0,"x":1.1,"idx":92},{"y":1.0,"x":1.15,"idx":92},{"y":1.0,"x":1.2,"idx":92},{"y":1.0,"x":1.25,"idx":92},{"y":1.0,"x":1.3,"idx":92},{"y":1.0,"x":1.35,"idx":92},{"y":1.0,"x":1.4,"idx":92},{"y":1.0,"x":1.45,"idx":92},{"y":1.0,"x":1.5,"idx":92},{"y":1.0,"x":1.55,"idx":92},{"y":1.0000002,"x":1.6,"idx":92},{"y":1.0000007,"x":1.65,"idx":92},{"y":1.0000024,"x":1.7,"idx":92},{"y":1.0000069,"x":1.75,"idx":92},{"y":1.0000185,"x":1.8,"idx":92},{"y":1.0000465,"x":1.85,"idx":92},{"y":1.0001113,"x":1.9,"idx":92},{"y":1.0002546,"x":1.95,"idx":92},{"y":1.0,"x":2.0,"idx":92},{"y":1.0,"x":0.0,"idx":93},{"y":1.0,"x":0.05,"idx":93},{"y":1.0,"x":0.1,"idx":93},{"y":1.0,"x":0.15,"idx":93},{"y":1.0,"x":0.2,"idx":93},{"y":1.0,"x":0.25,"idx":93},{"y":1.0,"x":0.3,"idx":93},{"y":1.0,"x":0.35,"idx":93},{"y":1.0,"x":0.4,"idx":93},{"y":1.0,"x":0.45,"idx":93},{"y":1.0,"x":0.5,"idx":93},{"y":1.0,"x":0.55,"idx":93},{"y":1.0,"x":0.6,"idx":93},{"y":1.0,"x":0.65,"idx":93},{"y":1.0,"x":0.7,"idx":93},{"y":1.0,"x":0.75,"idx":93},{"y":1.0,"x":0.8,"idx":93},{"y":1.0,"x":0.85,"idx":93},{"y":1.0,"x":0.9,"idx":93},{"y":1.0,"x":0.95,"idx":93},{"y":1.0,"x":1.0,"idx":93},{"y":1.0,"x":1.05,"idx":93},{"y":1.0,"x":1.1,"idx":93},{"y":1.0,"x":1.15,"idx":93},{"y":1.0,"x":1.2,"idx":93},{"y":1.0,"x":1.25,"idx":93},{"y":1.0,"x":1.3,"idx":93},{"y":1.0,"x":1.35,"idx":93},{"y":1.0,"x":1.4,"idx":93},{"y":1.0,"x":1.45,"idx":93},{"y":1.0,"x":1.5,"idx":93},{"y":1.0,"x":1.55,"idx":93},{"y":1.0000001,"x":1.6,"idx":93},{"y":1.0000005,"x":1.65,"idx":93},{"y":1.0000015,"x":1.7,"idx":93},{"y":1.0000046,"x":1.75,"idx":93},{"y":1.0000126,"x":1.8,"idx":93},{"y":1.0000324,"x":1.85,"idx":93},{"y":1.0000789,"x":1.9,"idx":93},{"y":1.000183,"x":1.95,"idx":93},{"y":1.0,"x":2.0,"idx":93},{"y":1.0,"x":0.0,"idx":94},{"y":1.0,"x":0.05,"idx":94},{"y":1.0,"x":0.1,"idx":94},{"y":1.0,"x":0.15,"idx":94},{"y":1.0,"x":0.2,"idx":94},{"y":1.0,"x":0.25,"idx":94},{"y":1.0,"x":0.3,"idx":94},{"y":1.0,"x":0.35,"idx":94},{"y":1.0,"x":0.4,"idx":94},{"y":1.0,"x":0.45,"idx":94},{"y":1.0,"x":0.5,"idx":94},{"y":1.0,"x":0.55,"idx":94},{"y":1.0,"x":0.6,"idx":94},{"y":1.0,"x":0.65,"idx":94},{"y":1.0,"x":0.7,"idx":94},{"y":1.0,"x":0.75,"idx":94},{"y":1.0,"x":0.8,"idx":94},{"y":1.0,"x":0.85,"idx":94},{"y":1.0,"x":0.9,"idx":94},{"y":1.0,"x":0.95,"idx":94},{"y":1.0,"x":1.0,"idx":94},{"y":1.0,"x":1.05,"idx":94},{"y":1.0,"x":1.1,"idx":94},{"y":1.0,"x":1.15,"idx":94},{"y":1.0,"x":1.2,"idx":94},{"y":1.0,"x":1.25,"idx":94},{"y":1.0,"x":1.3,"idx":94},{"y":1.0,"x":1.35,"idx":94},{"y":1.0,"x":1.4,"idx":94},{"y":1.0,"x":1.45,"idx":94},{"y":1.0,"x":1.5,"idx":94},{"y":1.0,"x":1.55,"idx":94},{"y":1.0,"x":1.6,"idx":94},{"y":1.0000002,"x":1.65,"idx":94},{"y":1.000001,"x":1.7,"idx":94},{"y":1.0000031,"x":1.75,"idx":94},{"y":1.0000086,"x":1.8,"idx":94},{"y":1.0000225,"x":1.85,"idx":94},{"y":1.0000557,"x":1.9,"idx":94},{"y":1.0001309,"x":1.95,"idx":94},{"y":1.0,"x":2.0,"idx":94},{"y":1.0,"x":0.0,"idx":95},{"y":1.0,"x":0.05,"idx":95},{"y":1.0,"x":0.1,"idx":95},{"y":1.0,"x":0.15,"idx":95},{"y":1.0,"x":0.2,"idx":95},{"y":1.0,"x":0.25,"idx":95},{"y":1.0,"x":0.3,"idx":95},{"y":1.0,"x":0.35,"idx":95},{"y":1.0,"x":0.4,"idx":95},{"y":1.0,"x":0.45,"idx":95},{"y":1.0,"x":0.5,"idx":95},{"y":1.0,"x":0.55,"idx":95},{"y":1.0,"x":0.6,"idx":95},{"y":1.0,"x":0.65,"idx":95},{"y":1.0,"x":0.7,"idx":95},{"y":1.0,"x":0.75,"idx":95},{"y":1.0,"x":0.8,"idx":95},{"y":1.0,"x":0.85,"idx":95},{"y":1.0,"x":0.9,"idx":95},{"y":1.0,"x":0.95,"idx":95},{"y":1.0,"x":1.0,"idx":95},{"y":1.0,"x":1.05,"idx":95},{"y":1.0,"x":1.1,"idx":95},{"y":1.0,"x":1.15,"idx":95},{"y":1.0,"x":1.2,"idx":95},{"y":1.0,"x":1.25,"idx":95},{"y":1.0,"x":1.3,"idx":95},{"y":1.0,"x":1.35,"idx":95},{"y":1.0,"x":1.4,"idx":95},{"y":1.0,"x":1.45,"idx":95},{"y":1.0,"x":1.5,"idx":95},{"y":1.0,"x":1.55,"idx":95},{"y":1.0,"x":1.6,"idx":95},{"y":1.0000001,"x":1.65,"idx":95},{"y":1.0000006,"x":1.7,"idx":95},{"y":1.000002,"x":1.75,"idx":95},{"y":1.0000058,"x":1.8,"idx":95},{"y":1.0000155,"x":1.85,"idx":95},{"y":1.0000391,"x":1.9,"idx":95},{"y":1.0000932,"x":1.95,"idx":95},{"y":1.0,"x":2.0,"idx":95},{"y":1.0,"x":0.0,"idx":96},{"y":1.0,"x":0.05,"idx":96},{"y":1.0,"x":0.1,"idx":96},{"y":1.0,"x":0.15,"idx":96},{"y":1.0,"x":0.2,"idx":96},{"y":1.0,"x":0.25,"idx":96},{"y":1.0,"x":0.3,"idx":96},{"y":1.0,"x":0.35,"idx":96},{"y":1.0,"x":0.4,"idx":96},{"y":1.0,"x":0.45,"idx":96},{"y":1.0,"x":0.5,"idx":96},{"y":1.0,"x":0.55,"idx":96},{"y":1.0,"x":0.6,"idx":96},{"y":1.0,"x":0.65,"idx":96},{"y":1.0,"x":0.7,"idx":96},{"y":1.0,"x":0.75,"idx":96},{"y":1.0,"x":0.8,"idx":96},{"y":1.0,"x":0.85,"idx":96},{"y":1.0,"x":0.9,"idx":96},{"y":1.0,"x":0.95,"idx":96},{"y":1.0,"x":1.0,"idx":96},{"y":1.0,"x":1.05,"idx":96},{"y":1.0,"x":1.1,"idx":96},{"y":1.0,"x":1.15,"idx":96},{"y":1.0,"x":1.2,"idx":96},{"y":1.0,"x":1.25,"idx":96},{"y":1.0,"x":1.3,"idx":96},{"y":1.0,"x":1.35,"idx":96},{"y":1.0,"x":1.4,"idx":96},{"y":1.0,"x":1.45,"idx":96},{"y":1.0,"x":1.5,"idx":96},{"y":1.0,"x":1.55,"idx":96},{"y":1.0,"x":1.6,"idx":96},{"y":1.0,"x":1.65,"idx":96},{"y":1.0000004,"x":1.7,"idx":96},{"y":1.0000013,"x":1.75,"idx":96},{"y":1.0000039,"x":1.8,"idx":96},{"y":1.0000107,"x":1.85,"idx":96},{"y":1.0000273,"x":1.9,"idx":96},{"y":1.0000662,"x":1.95,"idx":96},{"y":1.0,"x":2.0,"idx":96},{"y":1.0,"x":0.0,"idx":97},{"y":1.0,"x":0.05,"idx":97},{"y":1.0,"x":0.1,"idx":97},{"y":1.0,"x":0.15,"idx":97},{"y":1.0,"x":0.2,"idx":97},{"y":1.0,"x":0.25,"idx":97},{"y":1.0,"x":0.3,"idx":97},{"y":1.0,"x":0.35,"idx":97},{"y":1.0,"x":0.4,"idx":97},{"y":1.0,"x":0.45,"idx":97},{"y":1.0,"x":0.5,"idx":97},{"y":1.0,"x":0.55,"idx":97},{"y":1.0,"x":0.6,"idx":97},{"y":1.0,"x":0.65,"idx":97},{"y":1.0,"x":0.7,"idx":97},{"y":1.0,"x":0.75,"idx":97},{"y":1.0,"x":0.8,"idx":97},{"y":1.0,"x":0.85,"idx":97},{"y":1.0,"x":0.9,"idx":97},{"y":1.0,"x":0.95,"idx":97},{"y":1.0,"x":1.0,"idx":97},{"y":1.0,"x":1.05,"idx":97},{"y":1.0,"x":1.1,"idx":97},{"y":1.0,"x":1.15,"idx":97},{"y":1.0,"x":1.2,"idx":97},{"y":1.0,"x":1.25,"idx":97},{"y":1.0,"x":1.3,"idx":97},{"y":1.0,"x":1.35,"idx":97},{"y":1.0,"x":1.4,"idx":97},{"y":1.0,"x":1.45,"idx":97},{"y":1.0,"x":1.5,"idx":97},{"y":1.0,"x":1.55,"idx":97},{"y":1.0,"x":1.6,"idx":97},{"y":1.0,"x":1.65,"idx":97},{"y":1.0000002,"x":1.7,"idx":97},{"y":1.0000008,"x":1.75,"idx":97},{"y":1.0000026,"x":1.8,"idx":97},{"y":1.0000074,"x":1.85,"idx":97},{"y":1.0000191,"x":1.9,"idx":97},{"y":1.0000467,"x":1.95,"idx":97},{"y":1.0,"x":2.0,"idx":97},{"y":1.0,"x":0.0,"idx":98},{"y":1.0,"x":0.05,"idx":98},{"y":1.0,"x":0.1,"idx":98},{"y":1.0,"x":0.15,"idx":98},{"y":1.0,"x":0.2,"idx":98},{"y":1.0,"x":0.25,"idx":98},{"y":1.0,"x":0.3,"idx":98},{"y":1.0,"x":0.35,"idx":98},{"y":1.0,"x":0.4,"idx":98},{"y":1.0,"x":0.45,"idx":98},{"y":1.0,"x":0.5,"idx":98},{"y":1.0,"x":0.55,"idx":98},{"y":1.0,"x":0.6,"idx":98},{"y":1.0,"x":0.65,"idx":98},{"y":1.0,"x":0.7,"idx":98},{"y":1.0,"x":0.75,"idx":98},{"y":1.0,"x":0.8,"idx":98},{"y":1.0,"x":0.85,"idx":98},{"y":1.0,"x":0.9,"idx":98},{"y":1.0,"x":0.95,"idx":98},{"y":1.0,"x":1.0,"idx":98},{"y":1.0,"x":1.05,"idx":98},{"y":1.0,"x":1.1,"idx":98},{"y":1.0,"x":1.15,"idx":98},{"y":1.0,"x":1.2,"idx":98},{"y":1.0,"x":1.25,"idx":98},{"y":1.0,"x":1.3,"idx":98},{"y":1.0,"x":1.35,"idx":98},{"y":1.0,"x":1.4,"idx":98},{"y":1.0,"x":1.45,"idx":98},{"y":1.0,"x":1.5,"idx":98},{"y":1.0,"x":1.55,"idx":98},{"y":1.0,"x":1.6,"idx":98},{"y":1.0,"x":1.65,"idx":98},{"y":1.0000001,"x":1.7,"idx":98},{"y":1.0000005,"x":1.75,"idx":98},{"y":1.0000017,"x":1.8,"idx":98},{"y":1.000005,"x":1.85,"idx":98},{"y":1.0000132,"x":1.9,"idx":98},{"y":1.0000329,"x":1.95,"idx":98},{"y":1.0,"x":2.0,"idx":98},{"y":1.0,"x":0.0,"idx":99},{"y":1.0,"x":0.05,"idx":99},{"y":1.0,"x":0.1,"idx":99},{"y":1.0,"x":0.15,"idx":99},{"y":1.0,"x":0.2,"idx":99},{"y":1.0,"x":0.25,"idx":99},{"y":1.0,"x":0.3,"idx":99},{"y":1.0,"x":0.35,"idx":99},{"y":1.0,"x":0.4,"idx":99},{"y":1.0,"x":0.45,"idx":99},{"y":1.0,"x":0.5,"idx":99},{"y":1.0,"x":0.55,"idx":99},{"y":1.0,"x":0.6,"idx":99},{"y":1.0,"x":0.65,"idx":99},{"y":1.0,"x":0.7,"idx":99},{"y":1.0,"x":0.75,"idx":99},{"y":1.0,"x":0.8,"idx":99},{"y":1.0,"x":0.85,"idx":99},{"y":1.0,"x":0.9,"idx":99},{"y":1.0,"x":0.95,"idx":99},{"y":1.0,"x":1.0,"idx":99},{"y":1.0,"x":1.05,"idx":99},{"y":1.0,"x":1.1,"idx":99},{"y":1.0,"x":1.15,"idx":99},{"y":1.0,"x":1.2,"idx":99},{"y":1.0,"x":1.25,"idx":99},{"y":1.0,"x":1.3,"idx":99},{"y":1.0,"x":1.35,"idx":99},{"y":1.0,"x":1.4,"idx":99},{"y":1.0,"x":1.45,"idx":99},{"y":1.0,"x":1.5,"idx":99},{"y":1.0,"x":1.55,"idx":99},{"y":1.0,"x":1.6,"idx":99},{"y":1.0,"x":1.65,"idx":99},{"y":1.0,"x":1.7,"idx":99},{"y":1.0000002,"x":1.75,"idx":99},{"y":1.0000011,"x":1.8,"idx":99},{"y":1.0000033,"x":1.85,"idx":99},{"y":1.0000091,"x":1.9,"idx":99},{"y":1.0000231,"x":1.95,"idx":99},{"y":1.0,"x":2.0,"idx":99},{"y":1.0,"x":0.0,"idx":100},{"y":1.0,"x":0.05,"idx":100},{"y":1.0,"x":0.1,"idx":100},{"y":1.0,"x":0.15,"idx":100},{"y":1.0,"x":0.2,"idx":100},{"y":1.0,"x":0.25,"idx":100},{"y":1.0,"x":0.3,"idx":100},{"y":1.0,"x":0.35,"idx":100},{"y":1.0,"x":0.4,"idx":100},{"y":1.0,"x":0.45,"idx":100},{"y":1.0,"x":0.5,"idx":100},{"y":1.0,"x":0.55,"idx":100},{"y":1.0,"x":0.6,"idx":100},{"y":1.0,"x":0.65,"idx":100},{"y":1.0,"x":0.7,"idx":100},{"y":1.0,"x":0.75,"idx":100},{"y":1.0,"x":0.8,"idx":100},{"y":1.0,"x":0.85,"idx":100},{"y":1.0,"x":0.9,"idx":100},{"y":1.0,"x":0.95,"idx":100},{"y":1.0,"x":1.0,"idx":100},{"y":1.0,"x":1.05,"idx":100},{"y":1.0,"x":1.1,"idx":100},{"y":1.0,"x":1.15,"idx":100},{"y":1.0,"x":1.2,"idx":100},{"y":1.0,"x":1.25,"idx":100},{"y":1.0,"x":1.3,"idx":100},{"y":1.0,"x":1.35,"idx":100},{"y":1.0,"x":1.4,"idx":100},{"y":1.0,"x":1.45,"idx":100},{"y":1.0,"x":1.5,"idx":100},{"y":1.0,"x":1.55,"idx":100},{"y":1.0,"x":1.6,"idx":100},{"y":1.0,"x":1.65,"idx":100},{"y":1.0,"x":1.7,"idx":100},{"y":1.0000001,"x":1.75,"idx":100},{"y":1.0000007,"x":1.8,"idx":100},{"y":1.0000021,"x":1.85,"idx":100},{"y":1.0000062,"x":1.9,"idx":100},{"y":1.0000161,"x":1.95,"idx":100},{"y":1.0,"x":2.0,"idx":100}]},"transform":[{"filter":"datum.idx == selectedDt"}],"params":[{"name":"selectedDt","value":0,"bind":{"input":"range","name":"Time interval idx: ","min":0,"max":100,"step":1}}],"mark":"line","encoding":{"x":{"field":"x","type":"quantitative","title":"X"},"y":{"field":"y","type":"quantitative","title":"Flow Velocity","scale":{"domain":[0.8,2.1]}}}});</script></div>
+</section>
+</section>
+<section id="wrapping-up" class="level2">
+<h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
+<p>What started as simple primitive Java array manipulation has evolved into something much more engaging! By accumulating our simulation states instead of overwriting those, we’ve made some progress to create interactive visualizations to be able to describe the temporal dynamics of our fluid dynamics simulation.</p>
+<p>This exploration originally began while I was preparing <a href="https://scicloj.github.io/scinoj-light-1/sessions.html#d-viscous-fluid-flow-data-analysis-using-burgers-equation">a talk</a> for the SciCloj Light conference, where I wanted to explore better storytelling through data visualization.</p>
+<p>So far, I’ve only scratched the surface of what’s possible. Beyond Vega-Lite, many other visualization tools offer diverse options to be creative and make data come alive. I believe interactive visualizations can transform dry numbers into compelling stories.</p>
+<p>I’ll continue exploring these possibilities and share more discoveries along the way if I find any! ✨</p>
+<div style="background-color:grey;height:2px;width:100%;"></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/scicloj/cfd/data_viz/interactive_visualization.clj">src/scicloj/cfd/data_viz/interactive_visualization.clj</a></small></small></pre></div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/clojurecivitas\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
