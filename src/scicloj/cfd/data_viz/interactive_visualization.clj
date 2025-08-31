@@ -14,7 +14,7 @@
    [scicloj.kindly.v4.kind :as kind]
    [scicloj.cfd.intro.linear-1d-convection-with-array :as lin-conv]))
 
-;; In my [earlier post](./scicloj/cfd/intro/linear_1d_convection_with_array.html),
+;; In my [earlier post](../intro/linear_1d_convection_with_array.html),
 ;; I demonstrated how to implement a linear fluid dynamics simulation (linear convection equation)
 ;; using primitive Java arrays in a one-dimensional setting.
 ;; The example showed how the flow velocity array gets recalculated and overwritten
