@@ -15,7 +15,16 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.34</generator>
-<lastBuildDate>Sat, 30 Aug 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Wed, 03 Sep 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title></title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/scicloj/clay/pdf.pdf</link>
+  <description><![CDATA[  ]]></description>
+  <guid>https://clojurecivitas.github.io/scicloj/clay/pdf.pdf</guid>
+  <pubDate>Wed, 03 Sep 2025 00:00:00 GMT</pubDate>
+  <media:content url="https://clojurecivitas.github.io/scicloj/clay/pdf.jpg" medium="image" type="image/jpeg"/>
+</item>
 <item>
   <title>Exploring Time Series Data Visualization</title>
   <dc:creator>Siyoung Byun</dc:creator>
@@ -174,14 +183,6 @@
   <description><![CDATA[ A simple probability puzzle turns into a journey through triangular numbers and tessellated hexagons. ]]></description>
   <guid>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html</guid>
   <pubDate>Thu, 05 Jun 2025 00:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>What if… we were taught transducers first?</title>
-  <dc:creator>Sean Corfield</dc:creator>
-  <link>https://clojurecivitas.github.io/clojure/transducers/what_if.html</link>
-  <description><![CDATA[  ]]></description>
-  <guid>https://clojurecivitas.github.io/clojure/transducers/what_if.html</guid>
-  <pubDate>Sat, 31 May 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
