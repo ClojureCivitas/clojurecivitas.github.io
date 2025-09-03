@@ -4,7 +4,7 @@ category: clay
 tags: [clay, workflow, pdf]
 format:
   pdf: {title: 'Two Columns, One Namespace: Clojure to PDF'}
-date: '2025-08-21'
+date: '2025-09-03'
 toc: true
 classoption: [twocolumn]
 include-in-header: {text: '\AddToHook{env/Highlighting/begin}{\small}'}
@@ -22,7 +22,8 @@ author:
   links:
   - {icon: github, href: 'https://github.com/timothypratley'}
 colorlinks: true
-draft: true
+image: pdf.jpg
+
 
 ---
 <style></style><style>.printedClojure .sourceCode {

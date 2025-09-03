@@ -7,8 +7,8 @@
                      :quarto {:author      :timothypratley
                               :description "Transform your Clojure code into a beautiful, journal-style PDF, complete with math, charts, and images."
                               :type        :post
-                              :date        "2025-08-21"
-                              :draft       true
+                              :date        "2025-09-03"
+                              :image       "pdf.jpg"
                               :category    :clay
                               :tags        [:clay :workflow :pdf]
                               :documentclass "article"
