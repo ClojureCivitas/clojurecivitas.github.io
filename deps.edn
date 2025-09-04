@@ -26,10 +26,12 @@
  {;; Build the site with `clojure -M:clay -A:markdown`
   ;; Run Clay in watch mode with `clojure -M:clay`
   :clay       {:main-opts ["-m" "scicloj.clay.v2.main"]
-               :jvm-opts  ["-Dclojure.main.report=stderr"]}
+               :jvm-opts  ["-Dclojure.main.report=stderr"
+                           "--add-opens=java.base/java.nio=ALL-UNNAMED"]}
   ;; When debugging libraries
   :local-deps {:override-deps {org.scicloj/clay          {:local/root "../clay"}
                                org.scicloj/kindly        {:local/root "../kindly"}
                                org.scicloj/kindly-advice {:local/root "../kindly-advice"}
                                org.scicloj/kindly-render {:local/root "../kindly-render"}}}
-  :neil       {:project {:name io.github.timothypratley/clojurecivitas}}}}
+  :neil       {:project {:name io.github.timothypratley/clojurecivitas}}
+  :dev        {:jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"]}}}

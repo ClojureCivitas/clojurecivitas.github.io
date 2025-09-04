@@ -35,3 +35,4 @@ _site/
 .calva/repl.calva-repl
 .calva/mcp-server/port
 .portal/vs-code.edn
+**/password.edn
