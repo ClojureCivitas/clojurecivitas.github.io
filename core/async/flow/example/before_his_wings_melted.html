@@ -646,6 +646,15 @@ Claxxus initializing
 <div class="sourceClojure">
 <div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(flow/resume asynctopolis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<div class="printedClojure">
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> report-chan </span>(<span class="at">:report-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(async/poll! report-chan)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -656,24 +665,21 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Claxxus transitioning :clojure.core.async.flow/resume
-Randomius transitioning :clojure.core.async.flow/resume
-Talon, set flight!
-SQUARK: 4
-Tallystrix transitioning :clojure.core.async.flow/resume
+<pre><code>Tallystrix transitioning :clojure.core.async.flow/resume
 Chronon transitioning :clojure.core.async.flow/resume
 Chronon running
+Randomius transitioning :clojure.core.async.flow/resume
+Talon, set flight!
+Claxxus transitioning :clojure.core.async.flow/resume
+Chronon transforms :alarm true to :out
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="va">true</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> report-chan </span>(<span class="at">:report-chan</span> chs))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(async/poll! report-chan)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(flow/inject asynctopolis [<span class="at">:Tallystrix</span> <span class="at">:poke</span>] [<span class="va">true</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -685,37 +691,32 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Randomius transform 4 from :stat to :out
-Tallystrix transforming :stat 4
-</code></pre>
-</div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(flow/inject asynctopolis [<span class="at">:Tallystrix</span> <span class="at">:poke</span>] [<span class="va">true</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-THREAD OUT
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<pre><code>Chronon transforms :alarm true to :out
+<pre><code>SQUARK: 6
+Randomius transform 6 from :stat to :out
 Tallystrix transforming :poke true
+Tallystrix transforming :stat 6
 </code></pre>
 </div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb20"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(flow/inject asynctopolis [<span class="at">:Tallystrix</span> <span class="at">:stat</span>] [<span class="st">"abc1000"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(flow/inject asynctopolis [<span class="at">:Tallystrix</span> <span class="at">:stat</span>] [<span class="st">"abc1000"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+THREAD OUT
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>Tallystrix transforming :poke true
+</code></pre>
+</div>
 </div>
 <div class="printedClojure">
 <div class="sourceCode" id="cb21"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>#object [FutureTask]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -734,12 +735,11 @@ THREAD OUT
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Tallystrix transforming :poke true
-Tallystrix transforming :stat abc1000
+<pre><code>Tallystrix transforming :stat abc1000
 </code></pre>
 </div>
 </div>
-<svg viewbox="0 0 246.0 129.0" width="100%"><defs><marker id="edgeShapeMarker" markerheight="10" markerunits="strokeWidth" markerwidth="10" orient="auto" refx="6" refy="3"><path d="M0,0 L0,6 L6,3 z" fill="currentColor"></path></marker></defs><g id="G"><rect fill="red" height="129.0" stroke="currentColor" width="246.0"></rect><g id="Tallystrix" transform="translate(96.0, 17.0)"><rect fill="none" height="100.0" stroke="currentColor" width="54.0"></rect><foreignobject style="overflow:visible;" y="-12.5"><div style="font-size:8px;height:100%;width:100%;" xmlns="http://www.w3.org/1999/xhtml">Tallystrix</div></foreignobject><g id="Tallystrix_stat" transform="translate(12.0, 44.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">stat</div></foreignobject></g><g id="Tallystrix_poke" transform="translate(12.0, 12.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">poke</div></foreignobject></g><g id="Tallystrix_alert" transform="translate(12.0, 76.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">alert</div></foreignobject></g></g><g id="Chronon" transform="translate(12.0, 17.0)"><rect fill="none" height="36.0" stroke="currentColor" width="54.0"></rect><foreignobject style="overflow:visible;" y="-12.5"><div style="font-size:8px;height:100%;width:100%;" xmlns="http://www.w3.org/1999/xhtml">Chronon</div></foreignobject><g id="Chronon_out" transform="translate(12.0, 12.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">out</div></foreignobject></g></g><g id="Claxxus" transform="translate(180.0, 81.0)"><rect fill="none" height="36.0" stroke="currentColor" width="54.0"></rect><foreignobject style="overflow:visible;" y="-12.5"><div style="font-size:8px;height:100%;width:100%;" xmlns="http://www.w3.org/1999/xhtml">Claxxus</div></foreignobject><g id="Claxxus_in" transform="translate(12.0, 12.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">in</div></foreignobject></g></g><g id="Randomius" transform="translate(12.0, 78.0)"><rect fill="none" height="36.0" stroke="currentColor" width="54.0"></rect><foreignobject style="overflow:visible;" y="-12.5"><div style="font-size:8px;height:100%;width:100%;" xmlns="http://www.w3.org/1999/xhtml">Randomius</div></foreignobject><g id="Randomius_out" transform="translate(12.0, 12.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">out</div></foreignobject></g></g><g id="Randomius_out_Tallystrix_stat"><path d="M54.0,96.0L81.0,96.0 81.0,67.0 108.0,67.0" fill="none" marker-end="url(#edgeShapeMarker)" stroke="currentColor"></path></g><g id="Chronon_out_Tallystrix_poke"><path d="M54.0,35.0L108.0,35.0" fill="none" marker-end="url(#edgeShapeMarker)" stroke="currentColor"></path></g><g id="Tallystrix_alert_Claxxus_in"><path d="M138.0,99.0L192.0,99.0" fill="none" marker-end="url(#edgeShapeMarker)" stroke="currentColor"></path></g></g></svg>
+<svg viewbox="0 0 246.0 129.0" width="100%"><defs><marker id="edgeShapeMarker" markerheight="10" markerunits="strokeWidth" markerwidth="10" orient="auto" refx="6" refy="3"><path d="M0,0 L0,6 L6,3 z" fill="currentColor"></path></marker></defs><g id="G"><rect fill="none" height="129.0" stroke="currentColor" width="246.0"></rect><g id="Tallystrix" transform="translate(96.0, 17.0)"><rect fill="none" height="100.0" stroke="currentColor" width="54.0"></rect><foreignobject style="overflow:visible;" y="-12.5"><div style="font-size:8px;height:100%;width:100%;" xmlns="http://www.w3.org/1999/xhtml">Tallystrix</div></foreignobject><g id="Tallystrix_stat" transform="translate(12.0, 44.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">stat</div></foreignobject></g><g id="Tallystrix_poke" transform="translate(12.0, 12.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">poke</div></foreignobject></g><g id="Tallystrix_alert" transform="translate(12.0, 76.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">alert</div></foreignobject></g></g><g id="Chronon" transform="translate(12.0, 17.0)"><rect fill="none" height="36.0" stroke="currentColor" width="54.0"></rect><foreignobject style="overflow:visible;" y="-12.5"><div style="font-size:8px;height:100%;width:100%;" xmlns="http://www.w3.org/1999/xhtml">Chronon</div></foreignobject><g id="Chronon_out" transform="translate(12.0, 12.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">out</div></foreignobject></g></g><g id="Claxxus" transform="translate(180.0, 81.0)"><rect fill="none" height="36.0" stroke="currentColor" width="54.0"></rect><foreignobject style="overflow:visible;" y="-12.5"><div style="font-size:8px;height:100%;width:100%;" xmlns="http://www.w3.org/1999/xhtml">Claxxus</div></foreignobject><g id="Claxxus_in" transform="translate(12.0, 12.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">in</div></foreignobject></g></g><g id="Randomius" transform="translate(12.0, 78.0)"><rect fill="none" height="36.0" stroke="currentColor" width="54.0"></rect><foreignobject style="overflow:visible;" y="-12.5"><div style="font-size:8px;height:100%;width:100%;" xmlns="http://www.w3.org/1999/xhtml">Randomius</div></foreignobject><g id="Randomius_out" transform="translate(12.0, 12.0)"><rect fill="none" height="12.0" stroke="currentColor" width="30.0"></rect><foreignobject height="12.0" style="overflow:visible;" width="30.0"><div style="align-items:center;display:flex;font-size:8px;height:100%;justify-content:center;width:100%;" xmlns="http://www.w3.org/1999/xhtml">out</div></foreignobject></g></g><g id="Randomius_out_Tallystrix_stat"><path d="M54.0,96.0L81.0,96.0 81.0,67.0 108.0,67.0" fill="none" marker-end="url(#edgeShapeMarker)" stroke="currentColor"></path></g><g id="Chronon_out_Tallystrix_poke"><path d="M54.0,35.0L108.0,35.0" fill="none" marker-end="url(#edgeShapeMarker)" stroke="currentColor"></path></g><g id="Tallystrix_alert_Claxxus_in"><path d="M138.0,99.0L192.0,99.0" fill="none" marker-end="url(#edgeShapeMarker)" stroke="currentColor"></path></g></g></svg>
 <p>Tallystrix takes only numbers, <code>"abc1000"</code> was not acceptable.</p>
 </section>
 <section id="conclusion" class="level2">

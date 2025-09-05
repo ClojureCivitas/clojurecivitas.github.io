@@ -15,7 +15,16 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.34</generator>
-<lastBuildDate>Wed, 03 Sep 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Fri, 05 Sep 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>Mermaid.js</title>
+  <dc:creator>Emil Bengtsson</dc:creator>
+  <link>https://clojurecivitas.github.io/scicloj/clay/mermaid.html</link>
+  <description><![CDATA[ Explain complex concepts with mermaid.js ]]></description>
+  <guid>https://clojurecivitas.github.io/scicloj/clay/mermaid.html</guid>
+  <pubDate>Fri, 05 Sep 2025 00:00:00 GMT</pubDate>
+  <media:content url="https://clojurecivitas.github.io/scicloj/clay/mermaid.png" medium="image" type="image/png" height="151" width="144"/>
+</item>
 <item>
   <title></title>
   <dc:creator>Timothy Pratley</dc:creator>
@@ -175,14 +184,6 @@
   <description><![CDATA[  ]]></description>
   <guid>https://clojurecivitas.github.io/internationalization/transliteration.html</guid>
   <pubDate>Sun, 08 Jun 2025 00:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>The Hidden Geometry of Dice</title>
-  <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html</link>
-  <description><![CDATA[ A simple probability puzzle turns into a journey through triangular numbers and tessellated hexagons. ]]></description>
-  <guid>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/the_hidden_geometry_of_dice.html</guid>
-  <pubDate>Thu, 05 Jun 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
