@@ -20,7 +20,9 @@
   org.eclipse.elk/org.eclipse.elk.alg.common  {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.alg.layered {:mvn/version "0.10.0"}
   backtick/backtick                           {:mvn/version "0.3.5"}
-  camel-snake-kebab/camel-snake-kebab         {:mvn/version "0.4.3"}}
+  camel-snake-kebab/camel-snake-kebab         {:mvn/version "0.4.3"}
+  io.github.alza-bitz/snowpark-clj {:git/url "https://github.com/alza-bitz/snowpark-clj.git"
+                                    :git/sha "7856d9ca2080b188f9feec115ca709d3f54877b0"}}
 
  :aliases
  {;; Build the site with `clojure -M:clay -A:markdown`

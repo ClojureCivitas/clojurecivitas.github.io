@@ -1,5 +1,6 @@
 ^{:kindly/hide-code true     ; don't render this code to the HTML document
   :clay             {:title  "Clojure Support for Popular Data Tools: A Data Engineer's Perspective, and a New Clojure API for Snowflake"
+                     :external-requirements ["password.edn"]
                      :quarto {:author   :alza-bitz
                               :draft    true           ; remove to publish
                               :type     :post
@@ -71,10 +72,6 @@
 ;; The [README](https://github.com/alza-bitz/snowpark-clj/blob/main/README.md) provides usage examples for all the current features, but I've copied the essential ones here to illustrate the API:
 
 ;; #### Feature 1. Load data from local and save to a Snowflake table
-
-(require '[clojure.repl.deps :refer [add-lib]])
-(add-lib 'io.github.alza-bitz/snowpark-clj {:git/url "https://github.com/alza-bitz/snowpark-clj.git"
-                                            :git/sha "7856d9ca2080b188f9feec115ca709d3f54877b0"})
 
 (require '[snowpark-clj.core :as sp])
 
