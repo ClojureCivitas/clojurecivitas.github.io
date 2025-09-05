@@ -1,0 +1,13 @@
+{:url "https://vkvupnf-yyb56283.snowflakecomputing.com"
+ :user "ALZA"
+ :password #mask #include "password.edn"
+ :role "SNOWFLAKE_LEARNING_ROLE"
+ :warehouse "SNOWFLAKE_LEARNING_WH"
+ :db "SNOWFLAKE_LEARNING_DB"
+ :schema "SNOWPARK_CLJ_TEST_SCHEMA"
+ ;; SSL Configuration - for dev container environment
+ ;; https://community.snowflake.com/s/article/How-to-turn-off-OCSP-checking-in-Snowflake-client-drivers
+ ;; Driver version 3.22.0 or higher:
+ ;; :disableOCSPChecks true
+ ;; Driver version 3.5.0 or higher:
+ :insecureMode true}
