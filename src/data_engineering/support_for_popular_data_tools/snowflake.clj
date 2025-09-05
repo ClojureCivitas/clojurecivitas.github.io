@@ -5,8 +5,9 @@
                               :type     :post
                               :date     "2025-09-04"
                               :category :clojure
-                              :tags     [:metadata :civitas]}}}
-(ns data-engineering.clojure-support-for-popular-data-tools)
+                              :tags     [:metadata :civitas]
+                              :canonical-url "https://alza-bitz.github.io/clojure-support-for-popular-data-tools"}}}
+(ns data-engineering.support-for-popular-data-tools.snowflake)
 
 ;; In this article I look at the extent of Clojure support for some popular on-cluster data processing tools that Clojure users might need for their data engineering or data science tasks. Then for [Snowflake](https://snowflake.com) in particular **I go further and present a new Clojure API.**
 
@@ -31,6 +32,8 @@
 ;; | **On-cluster batch and stream processing** | | | 5. [Databricks](https://databricks.com) (see [Spark Interop with Geni](#spark_interop_with_geni) below),\<br\>6. [Snowflake](https://snowflake.com) (see [Snowflake Interop](#snowflake_interop_with_a_new_clojure_api!) below) |
 
 ;; Please note, I don't wish to make any critical judgments based on either the summary analysis above or the more detailed analysis below. The goal is to understand the situation with respect to Clojure support and highlight any gaps, although I suppose I am also inadvertently highlighting the difficulties of maintaining open source software!
+
+;; With that said, let's dive into the details for Spark, Kafka and Snowflake.
 
 ;; ### Spark Interop with Geni
 
@@ -82,13 +85,13 @@
    {:id 3 :name "Charlie" :age 35 :department "Engineering" :salary 80000}])
 
 ;; Create session and save data
-(with-open [session (sp/create-session "src/data_engineering/snowflake.edn")]
+(with-open [session (sp/create-session "src/data_engineering/support_for_popular_data_tools/snowflake.edn")]
   (-> (sp/create-dataframe session employee-data)
       (sp/save-as-table "employees" :overwrite)))
 
 ;; #### Feature 2. Compute over Snowflake table(s) on-cluster to produce a smaller result for local processing
 
-(with-open [session (sp/create-session "src/data_engineering/snowflake.edn")]
+(with-open [session (sp/create-session "src/data_engineering/support_for_popular_data_tools/snowflake.edn")]
   (let [table-df (sp/table session "employees")]
     (-> table-df
         (sp/filter (sp/gt (sp/col table-df :salary) (sp/lit 70000)))
