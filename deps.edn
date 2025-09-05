@@ -14,6 +14,7 @@
   org.scicloj/clay                            {:mvn/version "2-beta53"
                                                #_#_:git/url "https://github.com/scicloj/clay.git"
                                                #_#_:git/sha "b5ebd1a98d7deba6c165a72077ffa08554f4c93a"}
+  org.scicloj/kindly                          {:mvn/version "4-beta19"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph       {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph.json  {:mvn/version "0.10.0"}
