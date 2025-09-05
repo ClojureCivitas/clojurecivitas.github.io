@@ -2,7 +2,7 @@
   :clay             {:title  "Mermaid.js"
                      :format [:quarto :html]
                      :quarto {:author      :emilbengtsson
-                              :description "Use mermaid.js from within clay"
+                              :description "Explain complex concepts with mermaid.js"
                               :type        :post
                               :date        "2025-09-05"
                               :image       "mermaid.png"

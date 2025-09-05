@@ -87,7 +87,12 @@
    :image       "https://avatars.githubusercontent.com/u/4629681?v=4"
    :email       ""
    :affiliation [:scicloj]
-   :links       [{:icon "github" :href "https://github.com/joinr"}]}]
+   :links       [{:icon "github" :href "https://github.com/joinr"}]}
+  {:id          :emilbengtsson
+   :name        "Emil Bengtsson"
+   :url         "https://emil0r.com"
+   :image       "https://avatars.githubusercontent.com/u/49733?v=4"
+   :links       [{:icon "github" :href "https://github.com/emil0r"}]}]
 
  :affiliation
  [{:id   :clojure.core
