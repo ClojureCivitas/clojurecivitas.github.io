@@ -1,12 +1,5 @@
 [
   {
-    "listing": "/pages.html",
-    "items": [
-      "/civitas/explorer.html",
-      "/civitas/authors.html"
-    ]
-  },
-  {
     "listing": "/posts.html",
     "items": [
       "/scicloj/clay/mermaid.html",
@@ -56,6 +49,13 @@
       "/blog/kirahowe/2020-09-02-the-life-you-can-save.html",
       "/blog/kirahowe/2020-08-03-why-is-web-development-so-complicated.html",
       "/blog/kirahowe/2019-12-10-searching-for-sunday.html"
+    ]
+  },
+  {
+    "listing": "/pages.html",
+    "items": [
+      "/civitas/explorer.html",
+      "/civitas/authors.html"
     ]
   }
 ]

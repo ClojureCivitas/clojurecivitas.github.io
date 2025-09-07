@@ -6,11 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Sam Umbach">
-<meta name="author" content="Timothy Pratley">
-<meta name="dcterms.date" content="2025-06-25">
+<meta name="author" content="Alex Coyle">
+<meta name="dcterms.date" content="2025-09-04">
 
-<title>Convergence of Random Events – Clojure Civitas</title>
+<title>Clojure Support for Popular Data Tools: A Data Engineer’s Perspective, and a New Clojure API for Snowflake – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -111,12 +110,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
+<meta name="quarto:status" content="draft">
 
 
-<meta property="og:title" content="Convergence of Random Events – Clojure Civitas">
+<meta property="og:title" content="Clojure Support for Popular Data Tools: A Data Engineer’s Perspective, and a New Clojure API for Snowflake – Clojure Civitas">
 <meta property="og:description" content="">
 <meta property="og:image" content="https://clojurecivitas.github.io/images/civitas-icon.svg">
 <meta property="og:site_name" content="Clojure Civitas">
+<link rel="canonical" href="https://alza-bitz.github.io/clojure-support-for-popular-data-tools">
 </head>
 
 <body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -293,7 +294,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
+  <header id="quarto-header" class="headroom fixed-top"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
@@ -355,31 +356,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Convergence of Random Events</h1>
+<h1 class="title">Clojure Support for Popular Data Tools: A Data Engineer’s Perspective, and a New Clojure API for Snowflake</h1>
 </div>
 
 
 <div class="quarto-title-meta-author">
-  <div class="quarto-title-meta-heading">Authors</div>
-  <div class="quarto-title-meta-heading">Affiliations</div>
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
   
     <div class="quarto-title-meta-contents">
-    <p class="author"><a href="https://github.com/samumbach">Sam Umbach</a> <a href="mailto:samumbach@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+    <p class="author"><a href="https://github.com/alza-bitz">Alex Coyle</a> <a href="mailto:true" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
   </div>
   <div class="quarto-title-meta-contents">
         <p class="affiliation">
-            <a href="https://clojure.camp/">
-            Clojure Camp
-            </a>
-          </p>
-      </div>
-    <div class="quarto-title-meta-contents">
-    <p class="author"><a href="https://timothypratley.blogspot.com/p/httpswww.html">Timothy Pratley</a> <a href="mailto:timothypratley@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
-  </div>
-  <div class="quarto-title-meta-contents">
-        <p class="affiliation">
-            <a href="https://hummi.app">
-            Hummi
+            <a href="https://scicloj.github.io/">
+            Scicloj
             </a>
           </p>
       </div>
@@ -391,7 +382,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 25, 2025</p>
+      <p class="date">September 4, 2025</p>
     </div>
   </div>
   
@@ -413,135 +404,121 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="central_limit_theorem_convergence_files/md-default0.js" type="text/javascript"></script>
-<script src="central_limit_theorem_convergence_files/md-default1.js" type="text/javascript"></script>
-<p>Life is full of random events.</p>
-<p>We learn that multiple coin flips are “independent events” – no matter whether the past flip was heads or tails, the next flip is 50/50. (So why do they show the last few results at the routlette table? Hint: Don’t play routlette.) We learn that about half of babies are male and half female, so chances are 50/50 that your new little sibling will be a boy or a girl.</p>
-<p>I found the answer to “Of my 8 children, what are the chances that 4 are girls and 4 are boys?” counterintuitive. The central limit theorem is crucial to intuition around this question.</p>
-<p>When I initially encountered the Monte Hall problem, the correct answer wasn’t obvious or intuitive, but the mathemetical explanation is surprisingly understandable. We’ll try here to make the central limit theorem more understandable as well.</p>
-<p>Start with a single random event – value drawn from [0.0, 1.0)</p>
+<script src="snowflake_files/md-default0.js" type="text/javascript"></script>
+<script src="snowflake_files/md-default1.js" type="text/javascript"></script>
+<p>In this article I look at the extent of Clojure support for some popular on-cluster data processing tools that Clojure users might need for their data engineering or data science tasks. Then for <a href="https://snowflake.com">Snowflake</a> in particular <strong>I go further and present a new Clojure API.</strong></p>
+<p>Why is the level of Clojure support important? As an example, consider that <a href="https://scicloj.org">Scicloj</a> is mostly focused on in-memory processing. As such, if you need to work with a large dataset it will be necessary to compute on-cluster and extract a smaller result before continuing your data science task locally.</p>
+<p>However, without sufficient Clojure support for on-cluster processing, anyone needing that facility for their data science or data engineering task would be forced to reach outside the Clojure ecosystem. That adds complexity in terms of interop, compatibility and overall stack requirements.</p>
+<p>With that in mind, let’s examine the level of Clojure support for some popular on-cluster data processing tools. For each tool I selected its official Clojure library if one exists, or if not the most popular and well-known community-supported alternative with at least 100 stars and 10 contributors on GitHub. I then used the following criteria against the library to classify it as “supported” or “support unknown”:</p>
+<ol type="1">
+<li>CI/CD build passing</li>
+<li>Most recent commit less than 12 months ago</li>
+<li>Most recent release less than 12 months ago</li>
+<li>Maintainers responded to any issue or question less than 12 months ago</li>
+<li>Maintainers either accepted or rejected any PR less than 12 months ago</li>
+</ol>
+<p>If I couldn’t find any such library at all, I classified it as having “no support”.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Tool Category</th>
+<th>Supported</th>
+<th>Support Unknown</th>
+<th>No Support</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>On-cluster batch processing</strong></td>
+<td></td>
+<td>1. <a href="https://spark.apache.org">Spark</a> (see <a href="#spark_interop_with_geni">Spark Interop with Geni</a> below)</td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>On-cluster stream processing</strong></td>
+<td></td>
+<td>2. <a href="https://kafka.apache.org/documentation/streams">Kafka Streams</a> (see <a href="#kafka_interop_with_jackdaw">Kafka Interop with Jackdaw</a> below)</td>
+<td>3. <a href="https://spark.apache.org/streaming">Spark Structured Streaming</a>,&lt;br&gt;4. <a href="https://flink.apache.org">Flink</a></td>
+</tr>
+<tr class="odd">
+<td><strong>On-cluster batch and stream processing</strong></td>
+<td></td>
+<td></td>
+<td>5. <a href="https://databricks.com">Databricks</a> (see <a href="#spark_interop_with_geni">Spark Interop with Geni</a> below),&lt;br&gt;6. <a href="https://snowflake.com">Snowflake</a> (see <a href="#snowflake_interop_with_a_new_clojure_api!">Snowflake Interop</a> below)</td>
+</tr>
+</tbody>
+</table>
+<p>Please note, I don’t wish to make any critical judgments based on either the summary analysis above or the more detailed analysis below. The goal is to understand the situation with respect to Clojure support and highlight any gaps, although I suppose I am also inadvertently highlighting the difficulties of maintaining open source software!</p>
+<p>With that said, let’s dive into the details for Spark, Kafka and Snowflake.</p>
+<section id="spark-interop-with-geni" class="level3">
+<h3 class="anchored" data-anchor-id="spark-interop-with-geni">Spark Interop with Geni</h3>
+<p><a href="https://github.com/zero-one-group/geni">Geni</a> is the go-to library for Spark interop. Some months back, I was motivated to evaluate the coverage of Spark features. In particular, I wanted to understand what would be involved to support <a href="https://spark.apache.org/spark-connect/">Spark Connect</a> as it would reduce the complexity of computing on-cluster directly from the Clojure REPL.</p>
+<p>However, I found a number of issues that would need to be addressed in order to support Spark Connect and Databricks:</p>
+<ol type="1">
+<li>Problems with the <a href="https://github.com/zero-one-group/geni/issues/345">default session</a>.</li>
+<li>Problems with <a href="https://github.com/zero-one-group/geni/issues/356">support for Databricks</a>, although I suspect this is related to point 1.</li>
+</ol>
+<p>Also, in general by my criteria the support classification is “support unknown”: 1. CI/CD build <a href="https://github.com/zero-one-group/geni/actions">failing.</a> 1. Version <a href="https://cljdoc.org/d/zero.one/geni/0.0.42/doc/readme%20%20https://cljdoc.org/builds/73977">0.0.42 api docs broken</a>, also affects version 0.0.41 1. No commits since November 2023. 1. No releases since November 2023. 1. No PRs accepted or rejected since November 2023. 1. No response when attempting to contact the author or maintainers.</p>
+</section>
+<section id="kafka-interop-with-jackdaw" class="level3">
+<h3 class="anchored" data-anchor-id="kafka-interop-with-jackdaw">Kafka Interop with Jackdaw</h3>
+<p><a href="https://github.com/FundingCircle/jackdaw">Jackdaw</a> is the go-to library for Kafka interop. However, by my criteria the support classification is also “support unknown”:</p>
+<ol type="1">
+<li>No commits since August 2024.</li>
+<li>No releases since December 2023.</li>
+<li>No PRs accepted or rejected since August 2024. As a further example, <a href="https://github.com/FundingCircle/jackdaw/pull/374">here’s a PR</a> raised in May 2024 but not yet commented on either way by the maintainers.</li>
+</ol>
+</section>
+<section id="snowflake-interop-with-a-new-clojure-api" class="level3">
+<h3 class="anchored" data-anchor-id="snowflake-interop-with-a-new-clojure-api">Snowflake Interop with a New Clojure API!</h3>
+<p>Although the <a href="https://docs.snowflake.com/en/developer-guide/snowpark/java">Snowpark</a> library has Java and Scala bindings, it doesn’t provide anything for Clojure. As such, it’s currently not possible to interact with Snowflake using the Clojure way.</p>
+<p>To address this gap, I decided to try my hand at creating a <a href="https://github.com/alza-bitz/snowflake-clj">Clojure API for Snowflake</a> as part of a broader effort to improve the overall situation regarding Clojure support for popular data tools.</p>
+<p>The aim is to validate this approach as a foundation for enabling a wide range of data science or data engineering use cases from the Clojure REPL, in situations where Snowflake is the data warehouse of choice.</p>
+<p>The <a href="https://github.com/alza-bitz/snowpark-clj/blob/main/README.md">README</a> provides usage examples for all the current features, but I’ve copied the essential ones here to illustrate the API:</p>
+<section id="feature-1.-load-data-from-local-and-save-to-a-snowflake-table" class="level4">
+<h4 class="anchored" data-anchor-id="feature-1.-load-data-from-local-and-save-to-a-snowflake-table">Feature 1. Load data from local and save to a Snowflake table</h4>
+<p>(require ’[clojure.repl.deps :refer [add-lib]]) (add-lib ’io.github.alza-bitz/snowpark-clj {:git/url “https://github.com/alza-bitz/snowpark-clj.git” :git/sha “7856d9ca2080b188f9feec115ca709d3f54877b0”})</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">rand</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">require</span> '[snowpark-clj.core <span class="at">:as</span> sp])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Sample data</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> employee-data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  [{<span class="at">:id</span> <span class="dv">1</span> <span class="at">:name</span> <span class="st">"Alice"</span> <span class="at">:age</span> <span class="dv">25</span> <span class="at">:department</span> <span class="st">"Engineering"</span> <span class="at">:salary</span> <span class="dv">75000</span>}</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:id</span> <span class="dv">2</span> <span class="at">:name</span> <span class="st">"Bob"</span> <span class="at">:age</span> <span class="dv">30</span> <span class="at">:department</span> <span class="st">"Marketing"</span> <span class="at">:salary</span> <span class="dv">65000</span>}</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:id</span> <span class="dv">3</span> <span class="at">:name</span> <span class="st">"Charlie"</span> <span class="at">:age</span> <span class="dv">35</span> <span class="at">:department</span> <span class="st">"Engineering"</span> <span class="at">:salary</span> <span class="dv">80000</span>}])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Create session and save data</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">with-open</span> [session (sp/create-session <span class="st">"src/data_engineering/support_for_popular_data_tools/snowflake.edn"</span>)]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">-&gt;</span> (sp/create-dataframe session employee-data)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>      (sp/save-as-table <span class="st">"employees"</span> <span class="at">:overwrite</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.7308629450472759</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="va">nil</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>One way to combine random events is to take the average:</p>
+</section>
+<section id="feature-2.-compute-over-snowflake-tables-on-cluster-to-produce-a-smaller-result-for-local-processing" class="level4">
+<h4 class="anchored" data-anchor-id="feature-2.-compute-over-snowflake-tables-on-cluster-to-produce-a-smaller-result-for-local-processing">Feature 2. Compute over Snowflake table(s) on-cluster to produce a smaller result for local processing</h4>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> avg </span>[nums]</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">/</span> (<span class="kw">reduce</span> <span class="kw">+</span> nums) (<span class="kw">count</span> nums)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(avg [<span class="fl">0.0</span> <span class="fl">1.0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">with-open</span> [session (sp/create-session <span class="st">"src/data_engineering/support_for_popular_data_tools/snowflake.edn"</span>)]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [table-df (sp/table session <span class="st">"employees"</span>)]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">-&gt;</span> table-df</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        (sp/filter (sp/gt (sp/col table-df <span class="at">:salary</span>) (sp/lit <span class="dv">70000</span>)))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        (sp/select [<span class="at">:name</span> <span class="at">:salary</span>])</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        (sp/collect))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>[{<span class="at">:name</span> <span class="st">"Alice"</span>, <span class="at">:salary</span> <span class="dv">75000</span>} {<span class="at">:name</span> <span class="st">"Charlie"</span>, <span class="at">:salary</span> <span class="dv">80000</span>}]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Let’s try taking the average of several events together:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(avg [(<span class="kw">rand</span>) (<span class="kw">rand</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.31295974994850456</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(avg [(<span class="kw">rand</span>) (<span class="kw">rand</span>) (<span class="kw">rand</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.46587685619407154</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>This is getting repetitive. We can make the computer repeat for us:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(avg (<span class="kw">repeatedly</span> <span class="dv">3</span> <span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.5303701708469987</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The more events that you average, the closer the result comes to 0.5:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(avg (<span class="kw">repeatedly</span> <span class="dv">30</span> <span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.5375246119839087</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(avg (<span class="kw">repeatedly</span> <span class="dv">300</span> <span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.521614830500397</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Let’s try taking several events together:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> event </span>[]</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(event)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.1178777466522849</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> combined-event </span>[number-of-events]</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  (avg (<span class="kw">repeatedly</span> number-of-events event)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb20"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(combined-event <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb21"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.2792451180357163</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb22"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(combined-event <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb23"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.9812487800100389</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb24"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>(combined-event <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb25"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.6219336609718839</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Let’s look at a series of multiple of these combined event</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb26"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">repeatedly</span> <span class="dv">5</span> #(combined-event <span class="dv">2</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb27"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.6088465937002481</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.9237861261895706</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.8747695677904854</span></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.5251462293961238</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.5862369020200051</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb28"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">repeatedly</span> <span class="dv">5</span> #(combined-event <span class="dv">5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb29"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.6840550708309252</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.4035912099527216</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.48125067526456294</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.4136561440965737</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.09117979614215863</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb30"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">repeatedly</span> <span class="dv">5</span> #(combined-event <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb31"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.3637798907000537</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.4413919192678783</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.45068530002944607</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.5185115013280447</span></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.4430705844907651</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>As we combine a larger number of events, the values cluster more closely to the middle of the original distribution.</p>
-<p>And regardless of the shape of the original event distribution, the result of combining more and more events will approach the normal distribution – it’s a unique function toward which these combinations always converge.</p>
-<p>This is true for both continuous variables (like <code>(rand)</code>) or discrete variables (like dice <code>(rand-nth [1 2 3 4 5 6])</code>), and it’s true even for oddly shaped distributions. When you combine enough of them, they take on the character of the bell-shaped curve.</p>
-<p>Learn More at <a href="https://www.youtube.com/watch?v=zeJD6dqJ5lo">3Blue1Brown - But what is the Central Limit Theorem?</a></p>
+<p>As an early-stage proof-of-concept, it only covers the essential parts of the underlying API without being too concerned with performance or completeness. Other more advanced features are noted and planned, pending further elaboration.</p>
+<p><strong>I hope you find it useful and I welcome any feedback or contributions!</strong></p>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/math/stats/central_limit_theorem_convergence.clj">src/math/stats/central_limit_theorem_convergence.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/data_engineering/support_for_popular_data_tools/snowflake.clj">src/data_engineering/support_for_popular_data_tools/snowflake.clj</a></small></small></pre></div>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
