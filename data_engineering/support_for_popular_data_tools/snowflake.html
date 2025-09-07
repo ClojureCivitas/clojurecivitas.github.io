@@ -406,7 +406,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="snowflake_files/md-default0.js" type="text/javascript"></script>
 <script src="snowflake_files/md-default1.js" type="text/javascript"></script>
 <p>In this article I look at the extent of Clojure support for some popular on-cluster data processing tools that Clojure users might need for their data engineering or data science tasks. Then for <a href="https://snowflake.com">Snowflake</a> in particular <strong>I go further and present a new Clojure API.</strong></p>
-<p>Why is the level of Clojure support important? As an example, consider that <a href="https://scicloj.org">Scicloj</a> is mostly focused on in-memory processing. As such, if you need to work with a large dataset it will be necessary to compute on-cluster and extract a smaller result before continuing your data science task locally.</p>
+<p>Why is the level of Clojure support important? As an example, consider that <a href="https://scicloj.org">Scicloj</a> is mostly focused on cases where your data fits on a single machine. As such, if you need to work with a large dataset it will be necessary to compute on-cluster and extract a smaller result before continuing your data science task locally.</p>
 <p>However, without sufficient Clojure support for on-cluster processing, anyone needing that facility for their data science or data engineering task would be forced to reach outside the Clojure ecosystem. That adds complexity in terms of interop, compatibility and overall stack requirements.</p>
 <p>With that in mind, let’s examine the level of Clojure support for some popular on-cluster data processing tools. For each tool I selected its official Clojure library if one exists, or if not the most popular and well-known community-supported alternative with at least 100 stars and 10 contributors on GitHub. I then used the following criteria against the library to classify it as “supported” or “support unknown”:</p>
 <ol type="1">
@@ -476,7 +476,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The <a href="https://github.com/alza-bitz/snowpark-clj/blob/main/README.md">README</a> provides usage examples for all the current features, but I’ve copied the essential ones here to illustrate the API:</p>
 <section id="feature-1.-load-data-from-local-and-save-to-a-snowflake-table" class="level4">
 <h4 class="anchored" data-anchor-id="feature-1.-load-data-from-local-and-save-to-a-snowflake-table">Feature 1. Load data from local and save to a Snowflake table</h4>
-<p>(require ’[clojure.repl.deps :refer [add-lib]]) (add-lib ’io.github.alza-bitz/snowpark-clj {:git/url “https://github.com/alza-bitz/snowpark-clj.git” :git/sha “7856d9ca2080b188f9feec115ca709d3f54877b0”})</p>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">require</span> '[snowpark-clj.core <span class="at">:as</span> sp])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
