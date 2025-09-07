@@ -26,6 +26,14 @@
   <media:content url="https://clojurecivitas.github.io/scicloj/clay/mermaid.png" medium="image" type="image/png" height="151" width="144"/>
 </item>
 <item>
+  <title>Clojure Support for Popular Data Tools: A Data Engineer’s Perspective, and a New Clojure API for Snowflake</title>
+  <dc:creator>Alex Coyle</dc:creator>
+  <link>https://clojurecivitas.github.io/data_engineering/support_for_popular_data_tools/snowflake.html</link>
+  <description><![CDATA[  ]]></description>
+  <guid>https://clojurecivitas.github.io/data_engineering/support_for_popular_data_tools/snowflake.html</guid>
+  <pubDate>Thu, 04 Sep 2025 00:00:00 GMT</pubDate>
+</item>
+<item>
   <title></title>
   <dc:creator>Timothy Pratley</dc:creator>
   <link>https://clojurecivitas.github.io/scicloj/clay/pdf.pdf</link>
@@ -176,14 +184,6 @@
   <description><![CDATA[ Sharing ideas and pirate treasure with ClojureCivitas. ]]></description>
   <guid>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.html</guid>
   <pubDate>Wed, 18 Jun 2025 00:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>About Transliteration</title>
-  <dc:creator>Elango Cheran</dc:creator>
-  <link>https://clojurecivitas.github.io/internationalization/transliteration.html</link>
-  <description><![CDATA[  ]]></description>
-  <guid>https://clojurecivitas.github.io/internationalization/transliteration.html</guid>
-  <pubDate>Sun, 08 Jun 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>

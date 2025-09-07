@@ -3,6 +3,7 @@
     "listing": "/posts.html",
     "items": [
       "/scicloj/clay/mermaid.html",
+      "/data_engineering/support_for_popular_data_tools/snowflake.html",
       "/scicloj/clay/pdf.pdf",
       "/scicloj/cfd/data_viz/interactive_visualization.html",
       "/civitas/why/i_should_write_more.html",
