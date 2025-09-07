@@ -94,7 +94,12 @@
    :image       "https://avatars.githubusercontent.com/u/1161048?v=4"
    :email       ""
    :affiliation [:scicloj]
-   :links       [{:icon "github" :href "https://github.com/alza-bitz"}]}]
+   :links       [{:icon "github" :href "https://github.com/alza-bitz"}]}
+  {:id          :emilbengtsson
+   :name        "Emil Bengtsson"
+   :url         "https://emil0r.com"
+   :image       "https://avatars.githubusercontent.com/u/49733?v=4"
+   :links       [{:icon "github" :href "https://github.com/emil0r"}]}]
 
  :affiliation
  [{:id   :clojure.core
