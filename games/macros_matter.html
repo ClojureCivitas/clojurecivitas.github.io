@@ -450,7 +450,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    [<span class="at">:strong</span> ~(<span class="kw">str</span> <span class="st">"Wow, so random "</span> (<span class="kw">rand</span>))])</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:div</span> [<span class="va">#'my-component</span>]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<script type="application/x-scittle">(defn my-component [] [:strong "Wow, so random 0.6366498596629945"])</script><div><div id="id6"><script type="application/x-scittle">(reagent.dom/render [(var my-component)] (js/document.getElementById "id6"))</script></div></div>
+<script type="application/x-scittle">(defn my-component [] [:strong "Wow, so random 0.27243974053802267"])</script><div><div id="id6"><script type="application/x-scittle">(reagent.dom/render [(var my-component)] (js/document.getElementById "id6"))</script></div></div>
 <p>This is weird right, why do we need <code>~</code>? Well, when we define <code>my-component</code> we are writing symbolic code. This is going to be interpreted in the browser, not in Clojure. We can conveniently insert calculations made in Clojure into our UI code. It’s like Scittle just inherited macros! That’s exciting… in a way JavaScript has inherited macros.</p>
 <p>Speaking of JavaScript, we need to bring in the MatterJS. MatterJS handles the physics simulation and rendering for our mini-app.</p>
 <div class="sourceClojure">
