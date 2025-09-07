@@ -29,7 +29,7 @@ format:
 <script src="snowflake_files/md-default0.js" type="text/javascript"></script><script src="snowflake_files/md-default1.js" type="text/javascript"></script>
 In this article I look at the extent of Clojure support for some popular on-cluster data processing tools that Clojure users might need for their data engineering or data science tasks. Then for [Snowflake](https://snowflake.com) in particular **I go further and present a new Clojure API.**
 
-Why is the level of Clojure support important? As an example, consider that [Scicloj](https://scicloj.org) is mostly focused on in-memory processing. As such, if you need to work with a large dataset it will be necessary to compute on-cluster and extract a smaller result before continuing your data science task locally.
+Why is the level of Clojure support important? As an example, consider that [Scicloj](https://scicloj.org) is mostly focused on cases where your data fits on a single machine. As such, if you need to work with a large dataset it will be necessary to compute on-cluster and extract a smaller result before continuing your data science task locally.
 
 However, without sufficient Clojure support for on-cluster processing, anyone needing that facility for their data science or data engineering task would be forced to reach outside the Clojure ecosystem. That adds complexity in terms of interop, compatibility and overall stack requirements.
 
@@ -93,10 +93,6 @@ The [README](https://github.com/alza-bitz/snowpark-clj/blob/main/README.md) prov
 
 
 #### Feature 1. Load data from local and save to a Snowflake table
-
-(require '[clojure.repl.deps :refer [add-lib]])
-(add-lib 'io.github.alza-bitz/snowpark-clj {:git/url "https://github.com/alza-bitz/snowpark-clj.git"
-                                            :git/sha "7856d9ca2080b188f9feec115ca709d3f54877b0"})
 
 
 ::: {.sourceClojure}
