@@ -88,6 +88,13 @@
    :email       ""
    :affiliation [:scicloj]
    :links       [{:icon "github" :href "https://github.com/joinr"}]}
+  {:id          :alza-bitz
+   :name        "Alex Coyle"
+   :url         "https://github.com/alza-bitz"
+   :image       "https://avatars.githubusercontent.com/u/1161048?v=4"
+   :email       ""
+   :affiliation [:scicloj]
+   :links       [{:icon "github" :href "https://github.com/alza-bitz"}]}
   {:id          :emilbengtsson
    :name        "Emil Bengtsson"
    :url         "https://emil0r.com"
