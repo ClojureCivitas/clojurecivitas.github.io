@@ -6,11 +6,12 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Sam Umbach">
 <meta name="author" content="Timothy Pratley">
-<meta name="dcterms.date" content="2025-06-25">
+<meta name="dcterms.date" content="2025-09-07">
+<meta name="keywords" content="instaparse, parsing, grammar">
+<meta name="description" content="Build physics simulations from words with Instaparse, sans compilation.">
 
-<title>Convergence of Random Events – Clojure Civitas</title>
+<title>A Grammar of Physics – Clojure Civitas</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -113,10 +114,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
 
 
-<meta property="og:title" content="Convergence of Random Events – Clojure Civitas">
-<meta property="og:description" content="">
-<meta property="og:image" content="https://clojurecivitas.github.io/images/civitas-icon.svg">
+<meta property="og:title" content="A Grammar of Physics – Clojure Civitas">
+<meta property="og:description" content="Build physics simulations from words with Instaparse, sans compilation.">
+<meta property="og:image" content="https://clojurecivitas.github.io/instaparse/grammar_of_physics/rigid_body.png">
 <meta property="og:site_name" content="Clojure Civitas">
+<meta property="og:image:height" content="372">
+<meta property="og:image:width" content="664">
 </head>
 
 <body class="nav-fixed fullcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -355,24 +358,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Convergence of Random Events</h1>
+<h1 class="title">A Grammar of Physics</h1>
 </div>
 
+<div>
+  <div class="description">
+    Build physics simulations from words with Instaparse, sans compilation.
+  </div>
+</div>
 
 <div class="quarto-title-meta-author">
-  <div class="quarto-title-meta-heading">Authors</div>
-  <div class="quarto-title-meta-heading">Affiliations</div>
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
   
-    <div class="quarto-title-meta-contents">
-    <p class="author"><a href="https://github.com/samumbach">Sam Umbach</a> <a href="mailto:samumbach@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
-  </div>
-  <div class="quarto-title-meta-contents">
-        <p class="affiliation">
-            <a href="https://clojure.camp/">
-            Clojure Camp
-            </a>
-          </p>
-      </div>
     <div class="quarto-title-meta-contents">
     <p class="author"><a href="https://timothypratley.blogspot.com/p/httpswww.html">Timothy Pratley</a> <a href="mailto:timothypratley@gmail.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
   </div>
@@ -391,7 +389,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 25, 2025</p>
+      <p class="date">September 7, 2025</p>
     </div>
   </div>
   
@@ -399,6 +397,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
   
 
+<div>
+  <div class="keywords">
+    <div class="block-title">Keywords</div>
+    <p>instaparse, parsing, grammar</p>
+  </div>
+</div>
 
 </header>
 
@@ -413,135 +417,140 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="central_limit_theorem_convergence_files/md-default0.js" type="text/javascript"></script>
-<script src="central_limit_theorem_convergence_files/md-default1.js" type="text/javascript"></script>
-<p>Life is full of random events.</p>
-<p>We learn that multiple coin flips are “independent events” – no matter whether the past flip was heads or tails, the next flip is 50/50. (So why do they show the last few results at the routlette table? Hint: Don’t play routlette.) We learn that about half of babies are male and half female, so chances are 50/50 that your new little sibling will be a boy or a girl.</p>
-<p>I found the answer to “Of my 8 children, what are the chances that 4 are girls and 4 are boys?” counterintuitive. The central limit theorem is crucial to intuition around this question.</p>
-<p>When I initially encountered the Monte Hall problem, the correct answer wasn’t obvious or intuitive, but the mathemetical explanation is surprisingly understandable. We’ll try here to make the central limit theorem more understandable as well.</p>
-<p>Start with a single random event – value drawn from [0.0, 1.0)</p>
+<script src="rigid_body_files/md-default0.js" type="text/javascript"></script>
+<script src="rigid_body_files/md-default1.js" type="text/javascript"></script>
+<p>As Clojurists, we naturally think in terms of data structures and transformations. Yet we often overlook one of our most powerful tools: the ability to create custom languages through grammars. Today we’ll explore how the amazing <a href="https://github.com/Engelberg/instaparse">Instaparse</a> can be used to define a grammar of physics, and how a custom evaluator can bring that grammar to life as a physics simulation.</p>
+<section id="the-experiment" class="level2">
+<h2 class="anchored" data-anchor-id="the-experiment">The Experiment</h2>
+<div><div class="text-muted small mb-2">Click and drag the objects to move them</div><div id="matter-canvas-container" style="width:100%;"></div><div class="d-flex justify-content-between align-items-center mb-3"><div class="btn-group btn-group-sm"><button class="btn btn-danger" onclick="explode()">explode</button><button class="btn btn-outline-primary" onclick="rotate()">rotate</button></div><div class="btn-group btn-group-sm"><button class="btn btn-outline-secondary" onclick="loadExample(0)">load1</button><button class="btn btn-outline-secondary" onclick="loadExample(1)">load2</button><button class="btn btn-outline-secondary" onclick="loadExample(2)">load3</button><button class="btn btn-outline-secondary" onclick="loadExample(3)">load4</button><button class="btn btn-outline-secondary" onclick="loadExample(4)">load5</button></div></div><div class="mb-3"><textarea class="form-control font-monospace mb-2 bg-light" id="program" rows="12" style="font-family:monospace;font-size:0.85rem;"></textarea><div class="d-flex justify-content-end mb-2"><button class="btn btn-success" onclick="evalProgram()">evaluate</button></div><pre class="alert alert-danger mt-2" id="parse-error" role="alert" style="font-family:monospace;font-size:0.85rem;"></pre></div></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Modify the scene and click “evaluate” to see the changes. Try replacing <code>--</code> connections with <code>%%</code> springs.</p>
+</div>
+</div>
+<p>What you see above is a rigid body simulation. The scene was generated from a text description using a Domain-Specific Language (DSL) for physics.</p>
+</section>
+<section id="the-hypothesis" class="level2">
+<h2 class="anchored" data-anchor-id="the-hypothesis">The Hypothesis</h2>
+<p>Look familiar? If you have worked with graph visualization tools like Graphviz, you will recognize the declarative style. But instead of describing visual relationships, we are describing <em>physical</em> ones: bodies, constraints, and composites.</p>
+<p>The beauty lies in the syntax: <code>ball -- a</code> creates a rigid connection, <code>a ~~ b</code> forms a rope, and <code>b %% floor</code> adds a spring. Functions like <code>domino</code> let us abstract common patterns. Attributes in brackets fine-tune physical properties like mass and stiffness.</p>
+<p>Some affordances for layout are made with the <code>grid</code> function, but a lot more could be done here to automate positioning.</p>
+</section>
+<section id="the-theory" class="level2">
+<h2 class="anchored" data-anchor-id="the-theory">The Theory</h2>
+<p>Here is my formal grammar of rigid body physics for simulations.</p>
+<div class="mb-3"><textarea class="form-control font-monospace bg-light" id="grammar" rows="18" style="font-family:monospace;font-size:0.85rem;"></textarea><div class="btn-group btn-group-sm mt-2"><button class="btn btn-primary" onclick="instaparse()">Instaparse</button><button class="btn btn-outline-secondary" onclick="resetGrammar()">reset</button></div><div class="alert alert-danger mt-2" id="grammar-error" role="alert" style="font-family:monospace;font-size:0.85rem;"></div></div>
+<p>This EBNF (Extended Backus-Naur Form) specification defines our language’s constructs, including bodies with various shapes, constraints, functions, calls, numbers, and symbols.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Try changing the grammar, clicking Instaparse, and see what happens.</p>
+</div>
+</div>
+</section>
+<section id="the-application" class="level2">
+<h2 class="anchored" data-anchor-id="the-application">The Application</h2>
+<p>Instaparse takes the grammar and makes a parser. When we parse a program the result is an Abstract Syntax Tree (AST).</p>
+<div class="mb-3"><h4 class="h5 text-muted mb-3 anchored">Abstract Syntax Tree</h4><pre class="border rounded p-3 bg-light" id="ast" style="font-family:monospace;font-size:0.85rem;max-height:500px;min-height:200px;overflow:auto;"></pre></div>
+<p>The AST is the structure of our physics program. Every concept is organized into a tree that preserves syntax and semantics, as data.</p>
+</section>
+<section id="the-equation" class="level2">
+<h2 class="anchored" data-anchor-id="the-equation">The Equation</h2>
+<p>The AST is a data representation of our program, not a data representation of the simulation itself. To bring it to life, we need to evaluate the program. The full implementation is in <a href="rigid_body.cljs">rigid_body.cljs</a>, but for now, let’s examine a small part of it.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>        <span class="at">:call</span> (<span class="kw">let</span> [[fn-name &amp; args] xs</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>                   fn-val (<span class="kw">or</span> (<span class="kw">get-in</span> env [<span class="at">:labels</span> fn-name])</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                              (<span class="kw">get</span> core fn-name)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>                              (<span class="kw">throw</span> (ex-info (<span class="kw">str</span> <span class="st">"Function not found: "</span> fn-name)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>                                              {<span class="at">:id</span> <span class="at">::function-not-found</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>                                               <span class="at">:fn-name</span> fn-name</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                                               <span class="at">:env</span> env})))</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                   [env arg-vals] (eval-vector env args)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>                   [fn-env result] (<span class="kw">apply</span> fn-val env arg-vals)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                   env (<span class="kw">merge</span> env (<span class="kw">select-keys</span> fn-env (<span class="kw">vals</span> entity-plural)))]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>               [env result])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This is the rule for handling <code>:call</code> nodes in the AST. The body of the call node contains a function name and arguments. We look up the function in the environment. Arguments are evaluated, the function is applied, and the environment modified.</p>
+<p>Our evaluator walks the AST, interprets each node according to our physics semantics, and adds bodies, constraints, and composites into an environment. That environment is then traversed to hydrate a Matter.js rigid body simulation.</p>
+<p>What I love most about the evaluator and hydration is that all the tedious <code>Matter.World.add(Matter.Bodies.create(...))</code> nonsense disappears. When all you have is a code API, boilerplate clutters up your simulation to the point that it becomes difficult to reason about. The textual descriptions, in contrast, only describe the domain.</p>
+<p>Here we start to see how programs beat data representations; <strong>compression through implication</strong>. Our statement <code>domino: (x, y =&gt; rectangle x y 10 50)</code> labels a function that implies object creation. When we write <code>ball -- a</code>, it implies lookup by label and constraint creation. Programs let us work at the level of <em>intent</em>.</p>
+<p>An alternative solution is to create a “world builder” that writes the simulation as data. Indeed, there is fertile middle ground here. Our program produces a data representation from the AST before hydrating the world, so this approach can work in conjunction with a world builder. The grammar feels more powerful and compositional for initial creation, whereas a world builder excels at making adjustments in a more tactile way.</p>
+</section>
+<section id="breaking-the-laws-of-compilation" class="level2">
+<h2 class="anchored" data-anchor-id="breaking-the-laws-of-compilation">Breaking the Laws of Compilation</h2>
+<p>This Instaparse demo runs in your browser, but <a href="rigid_body.cljs">rigid_body.cljs</a> has not been compiled to JavaScript. Isn’t that impossible? Libraries like Instaparse require compilation!</p>
+<p><a href="https://github.com/babashka/scittle">Scittle</a> brings the Small Clojure Interpreter (SCI) to the browser as a script. Scittle interprets ClojureScript without compilation. <a href="https://timothypratley.github.io/scittle-kitchen/">Scittle Kitchen</a> is a collection of pre-prepared ClojureScript libraries as scittle plugins, including Instaparse. Currently, there are 15 unofficial plugins, including asami, clara-rules, emmy, and geom.</p>
+</section>
+<section id="the-laboratory" class="level2">
+<h2 class="anchored" data-anchor-id="the-laboratory">The Laboratory</h2>
+<p>I include the plugins and <a href="rigid_body.cljs">rigid_body.cljs</a> in this page as scripts:</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">rand</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(kind/hiccup</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a> [<span class="at">:div</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"</span>}]</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/dev/scittle.js"</span>}]</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/dev/scittle.pprint.js"</span>}]</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/dev/scittle.instaparse.js"</span>}]</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:src</span> <span class="st">"https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/dev/scittle.cljs-devtools.js"</span>}]</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  [<span class="at">:script</span> {<span class="at">:type</span> <span class="st">"application/x-scittle"</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">:src</span> <span class="st">"rigid_body.cljs"</span>}]])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.8910803981963661</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div><script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script><script src="https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/dev/scittle.js"></script><script src="https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/dev/scittle.pprint.js"></script><script src="https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/dev/scittle.instaparse.js"></script><script src="https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/dev/scittle.cljs-devtools.js"></script><script src="rigid_body.cljs" type="application/x-scittle"></script></div>
+<p>This loads Matter.js for the physics simulation, Scittle for ClojureScript evaluation, the Instaparse plugin, development tools, and our custom evaluator.</p>
+<p>When I save this namespace, Clay reloads the page for me. When I save <a href="rigid_body.cljs">rigid_body.cljs</a>, Clay hot-loads just the code for me. This is a convenient way to mess around with an idea, and produce a working artifact that I can share with people.</p>
+</section>
+<section id="the-universe-of-possibilities" class="level2">
+<h2 class="anchored" data-anchor-id="the-universe-of-possibilities">The Universe of Possibilities</h2>
+<p>The Grammar of Graphics influenced data visualization by providing a systematic way to describe visual mappings. Libraries like ggplot2 and Vega became powerful precisely because they gave users a <em>language</em> to express their intent. Can we apply this same principle in physics?</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<p>One way to combine random events is to take the average:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> avg </span>[nums]</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">/</span> (<span class="kw">reduce</span> <span class="kw">+</span> nums) (<span class="kw">count</span> nums)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout-title-container flex-fill">
+Note
 </div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>(avg [<span class="fl">0.0</span> <span class="fl">1.0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb5"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="callout-body-container callout-body">
+<p>In the lab, we build setups to explore principles, test boundaries, and learn by doing. By constructing a grammar and evaluator, we create a playground for ideas.</p>
 </div>
-<p>Let’s try taking the average of several events together:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(avg [(<span class="kw">rand</span>) (<span class="kw">rand</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.4874778850695863</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>A well-thought-out set of grammars for physical simulation setup would enable modeling and experimentation. Consider how experimental physics setups are naturally described as connected components: <code>laser -&gt; mirror -&gt; beam-splitter -&gt; detector</code> could define an interferometer setup. The value is in being able to quickly and precisely describe an experiment, making it easy to communicate, share, and reproduce. Imagine chemical reaction networks where <code>H2 + O2 =&gt; H2O [catalyst=Pt, temp=400K]</code> defines stoichiometry and conditions, or ecosystem models where <code>grass -&gt; rabbit -&gt; fox</code> creates food webs with population dynamics.</p>
+<p>It’s possible to build up libraries of functional compositions of the components in such a grammar. With these you could quickly prototype setups by combining and adjusting. This would make it easier to share experimental designs as text, or generate documentation and visualizations.</p>
+</section>
+<section id="the-result" class="level2">
+<h2 class="anchored" data-anchor-id="the-result">The Result</h2>
+<p>The intersection of grammars and physics is worth exploring. Tools like <a href="https://github.com/babashka/scittle">Scittle</a>, <a href="https://timothypratley.github.io/scittle-kitchen/">Scittle Kitchen</a>, and <a href="https://github.com/scicloj/clay">Clay</a> make it fun to try ideas with minimal setup, from the comfort of my favorite editor.</p>
+<p>We explored three ideas:</p>
+<p><strong>1. Grammar</strong>: By creating a grammar tailored to physics simulation, we make concepts accessible through syntax, and a means of combination.</p>
+<p><strong>2. Interpretation</strong>: Our evaluator transforms the parsed AST into physics simulations, applies functions, and makes Matter.js API calls.</p>
+<p><strong>3. Uncompiled</strong>: Instaparse enables redefinition of the grammar on the fly, and Scittle-kitchen allows me to use it without compilation.</p>
+<p>Scittle Kitchen plugins include many other interesting ClojureScript libraries. If grammars aren’t your cup of tea, I’m sure you’ll find something else of interest.</p>
+<p>Until next time, keep parsing the possibilities.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="rigid_body.png" class="img-fluid figure-img"></p>
+<figcaption>Lasers, splitters, mirrors</figcaption>
+</figure>
 </div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(avg [(<span class="kw">rand</span>) (<span class="kw">rand</span>) (<span class="kw">rand</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.6104975785904383</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>This is getting repetitive. We can make the computer repeat for us:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(avg (<span class="kw">repeatedly</span> <span class="dv">3</span> <span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.21748408285513623</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The more events that you average, the closer the result comes to 0.5:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(avg (<span class="kw">repeatedly</span> <span class="dv">30</span> <span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.4862206211951493</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb14"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(avg (<span class="kw">repeatedly</span> <span class="dv">300</span> <span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.5348994059968935</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Let’s try taking several events together:</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> event </span>[]</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">rand</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(event)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.12325588387031616</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> combined-event </span>[number-of-events]</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  (avg (<span class="kw">repeatedly</span> number-of-events event)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb20"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(combined-event <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb21"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.533214246033506</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb22"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(combined-event <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb23"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.9457261088839604</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb24"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>(combined-event <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb25"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.5253327762671366</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Let’s look at a series of multiple of these combined event</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb26"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">repeatedly</span> <span class="dv">5</span> #(combined-event <span class="dv">2</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb27"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.716983986366464</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.7235031344580073</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.4874502829198491</span></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.5854130802367028</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.7410776317333219</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb28"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">repeatedly</span> <span class="dv">5</span> #(combined-event <span class="dv">5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb29"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.3520783726723411</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.41135215611519993</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.4236156135018664</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.6812800282149079</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.29818516133190276</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb30"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">repeatedly</span> <span class="dv">5</span> #(combined-event <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="printedClojure">
-<div class="sourceCode" id="cb31"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">0.4929924151786473</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.5263214534481471</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.6066100278376453</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.5643482800102025</span></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a> <span class="fl">0.4042437294175759</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>As we combine a larger number of events, the values cluster more closely to the middle of the original distribution.</p>
-<p>And regardless of the shape of the original event distribution, the result of combining more and more events will approach the normal distribution – it’s a unique function toward which these combinations always converge.</p>
-<p>This is true for both continuous variables (like <code>(rand)</code>) or discrete variables (like dice <code>(rand-nth [1 2 3 4 5 6])</code>), and it’s true even for oddly shaped distributions. When you combine enough of them, they take on the character of the bell-shaped curve.</p>
-<p>Learn More at <a href="https://www.youtube.com/watch?v=zeJD6dqJ5lo">3Blue1Brown - But what is the Central Limit Theorem?</a></p>
 <div style="background-color:grey;height:2px;width:100%;"></div>
-<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/math/stats/central_limit_theorem_convergence.clj">src/math/stats/central_limit_theorem_convergence.clj</a></small></small></pre></div>
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/instaparse/grammar_of_physics/rigid_body.clj">src/instaparse/grammar_of_physics/rigid_body.clj</a></small></small></pre></div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

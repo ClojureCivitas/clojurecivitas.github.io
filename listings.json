@@ -2,6 +2,7 @@
   {
     "listing": "/posts.html",
     "items": [
+      "/instaparse/grammar_of_physics/rigid_body.html",
       "/scicloj/clay/mermaid.html",
       "/data_engineering/support_for_popular_data_tools/snowflake.html",
       "/scicloj/clay/pdf.pdf",

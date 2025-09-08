@@ -456,7 +456,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    (.getName))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="st">"clojure_PLUS_.print.objects_and_protocols$eval72729$_PERCENT__PERCENT___72730$_PERCENT__PERCENT__PERCENT___72731"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="st">"clojure_PLUS_.print.objects_and_protocols$eval72749$_PERCENT__PERCENT___72750$_PERCENT__PERCENT__PERCENT___72751"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Whoa, that’s pretty gross. We’d prefer to demunge the names at least.</p>
 <div class="sourceClojure">
@@ -469,7 +469,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    (class-name))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="st">"clojure+.print.objects-and-protocols/eval72736/%%--72737/%%%--72738"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="st">"clojure+.print.objects-and-protocols/eval72756/%%--72757/%%%--72758"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Notice the <code>/evalNNNNN/</code> part? To create a function, Clojure creates a new class. The <code>/evalNNNNN/</code> counts every time it evaluates. This is useful in the sense that it identifies the class for that evaluation. But we almost never care for that detail (more on that later). For the same reason our strangely named functions have <code>--NNNNN</code> appended to them, because they are sub evaluations of the top-level evaluation.</p>
 <p>Let’s do away with that noise for the moment:</p>

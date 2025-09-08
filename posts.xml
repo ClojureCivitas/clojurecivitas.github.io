@@ -15,7 +15,15 @@
 <link>https://clojurecivitas.github.io/posts.html</link>
 </image>
 <generator>quarto-1.7.34</generator>
-<lastBuildDate>Fri, 05 Sep 2025 00:00:00 GMT</lastBuildDate>
+<lastBuildDate>Sun, 07 Sep 2025 00:00:00 GMT</lastBuildDate>
+<item>
+  <title>A Grammar of Physics</title>
+  <dc:creator>Timothy Pratley</dc:creator>
+  <link>https://clojurecivitas.github.io/instaparse/grammar_of_physics/rigid_body.html</link>
+  <description><![CDATA[ Build physics simulations from words with Instaparse, sans compilation. ]]></description>
+  <guid>https://clojurecivitas.github.io/instaparse/grammar_of_physics/rigid_body.html</guid>
+  <pubDate>Sun, 07 Sep 2025 00:00:00 GMT</pubDate>
+</item>
 <item>
   <title>Mermaid.js</title>
   <dc:creator>Emil Bengtsson</dc:creator>
@@ -176,14 +184,6 @@
   <description><![CDATA[  ]]></description>
   <guid>https://clojurecivitas.github.io/internationalization/transliteration2.html</guid>
   <pubDate>Sun, 22 Jun 2025 00:00:00 GMT</pubDate>
-</item>
-<item>
-  <title>Five Pirates Treasure Splitting</title>
-  <dc:creator>Timothy Pratley</dc:creator>
-  <link>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.html</link>
-  <description><![CDATA[ Sharing ideas and pirate treasure with ClojureCivitas. ]]></description>
-  <guid>https://clojurecivitas.github.io/math/stats/quantquestions/what_are_the_odds/five_pirates_treasure.html</guid>
-  <pubDate>Wed, 18 Jun 2025 00:00:00 GMT</pubDate>
 </item>
 </channel>
 </rss>
