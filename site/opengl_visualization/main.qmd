@@ -30,9 +30,39 @@ quarto render site
 
 ::: {.sourceClojure}
 ```clojure
+(def window-width 640)
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def window-height 480)
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
 (defn tmpname
   []
   (str (System/getProperty "java.io.tmpdir") "/civitas-" (java.util.UUID/randomUUID) ".tmp"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn screenshot
+  []
+  (let [filename (tmpname)
+        buffer   (java.nio.ByteBuffer/allocateDirect (* 4 window-width window-height))]
+    (GL11/glReadPixels 0 0 window-width window-height GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE buffer)
+    (STBImageWrite/stbi_write_png filename window-width window-height 4 buffer (* 4 window-width))
+    (-> filename io/file (ImageIO/read))))
 ```
 :::
 
@@ -50,22 +80,6 @@ quarto render site
 ```clojure
 true
 
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(def window-width 640)
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(def window-height 480)
 ```
 :::
 
@@ -157,34 +171,7 @@ nil
 
 ::: {.sourceClojure}
 ```clojure
-(def buffer (java.nio.ByteBuffer/allocateDirect (* 4 window-width window-height)))
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(GL11/glReadPixels 0 0 window-width window-height GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE buffer)
-```
-:::
-
-
-
-::: {.printedClojure}
-```clojure
-nil
-
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(let [filename (tmpname)]
-  (STBImageWrite/stbi_write_png filename window-width window-height 4 buffer (* 4 window-width))
-  (-> filename io/file (ImageIO/read)))
+(screenshot)
 ```
 :::
 

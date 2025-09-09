@@ -18,15 +18,22 @@
 ;; clj -M:clay -A:markdown
 ;; quarto render site
 
+(def window-width 640)
+(def window-height 480)
+
 (defn tmpname
   []
   (str (System/getProperty "java.io.tmpdir") "/civitas-" (java.util.UUID/randomUUID) ".tmp"))
 
+(defn screenshot
+  []
+  (let [filename (tmpname)
+        buffer   (java.nio.ByteBuffer/allocateDirect (* 4 window-width window-height))]
+    (GL11/glReadPixels 0 0 window-width window-height GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE buffer)
+    (STBImageWrite/stbi_write_png filename window-width window-height 4 buffer (* 4 window-width))
+    (-> filename io/file (ImageIO/read))))
 
 (GLFW/glfwInit)
-
-(def window-width 640)
-(def window-height 480)
 
 (def window
   (do
@@ -35,6 +42,7 @@
     (GLFW/glfwWindowHint GLFW/GLFW_STENCIL_BITS 8)
     (GLFW/glfwWindowHint GLFW/GLFW_VISIBLE GLFW/GLFW_FALSE)
     (GLFW/glfwCreateWindow window-width window-height "Invisible Window" 0 0)))
+
 (do
   (GLFW/glfwMakeContextCurrent window)
   (GL/createCapabilities))
@@ -43,11 +51,7 @@
 (GL11/glClearDepth 0.0)
 (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
 
-(def buffer (java.nio.ByteBuffer/allocateDirect (* 4 window-width window-height)))
-(GL11/glReadPixels 0 0 window-width window-height GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE buffer)
-(let [filename (tmpname)]
-  (STBImageWrite/stbi_write_png filename window-width window-height 4 buffer (* 4 window-width))
-  (-> filename io/file (ImageIO/read)))
+(screenshot)
 
 (GLFW/glfwDestroyWindow window)
 (GLFW/glfwTerminate)
