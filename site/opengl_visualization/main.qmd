@@ -34,28 +34,9 @@ clay -M:clay needs an editing change before it displays
 
 
 
-::: {.callout-important collapse=false}
-## integration.txt (Datei oder Verzeichnis nicht gefunden)
-```
-                  clojure.core/eval              core.clj: 3232
-                                ...                           
-opengl-visualization.main/eval35658            REPL Input:     
-                                ...                           
-                 clojure.core/slurp              core.clj: 7089 (repeats 2 times)
-                                ...                           
-             clojure.java.io/reader                io.clj:   89
-             clojure.java.io/reader                io.clj:  105
-               clojure.java.io/fn/G                io.clj:   72
-                 clojure.java.io/fn                io.clj:  168
-               clojure.java.io/fn/G                io.clj:   72
-                 clojure.java.io/fn                io.clj:  261
-               clojure.java.io/fn/G                io.clj:   72
-                 clojure.java.io/fn                io.clj:  232
-     java.io.FileInputStream.<init>  FileInputStream.java:  139
-       java.io.FileInputStream.open  FileInputStream.java:  185
-      java.io.FileInputStream.open0  FileInputStream.java:     
-java.io.FileNotFoundException: integration.txt (Datei oder Verzeichnis nicht gefunden)
-
+::: {.printedClojure}
+```clojure
+"test\n"
 
 ```
 :::
