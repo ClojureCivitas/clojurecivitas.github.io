@@ -1,5 +1,6 @@
 ^{:kindly/hide-code true
   :clay             {:title  "OpenGL Visualization with LWJGL"
+                     :external-requirements ["integration.txt"]
                      :quarto {:author   [:janwedekind]
                               :type     :post
                               :date     "2025-09-08"
@@ -10,5 +11,6 @@
     (:import [javax.imageio ImageIO]))
 
 ;; https://scicloj.github.io/clay/clay_book.examples.html
+;; clay -M:clay needs an editing change before it displays
 
-(-> "src/opengl_visualization/mach-diamonds.jpg" io/file (ImageIO/read))
+(slurp "integration.txt")
