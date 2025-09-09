@@ -4,10 +4,9 @@
                   :description "How to create notebooks with secrets, large files, and slow processes."
                   :image       "skip-if-unchanged.jpg"
                   :type        :post
-                  :date        "2025-07-25"
+                  :date        "2025-09-09"
                   :category    :clay
-                  :tags        [:clay :workflow]
-                  :draft       true}}}
+                  :tags        [:clay :workflow]}}}
 (ns scicloj.clay.skip-if-unchanged-example)
 
 ;; Usually, when we wish to create Clojure Civitas posts, we enjoy the fact
@@ -27,8 +26,7 @@
 ;; that file in your Pull Request.
 
 ;; The `.qmd` file is all that Civitas needs to include your notebook in the
-;; website. As long as the `.qmd` file is included in the PR, and is not older than
-;; your source `.clj` file, Civitas will just rely on it and not even try
+;; website. As long as the `.qmd` file is already there, Civitas will just rely on it and not even try
 ;; to generate it in GitHub Actions.
 
 ;; To do that, you will need to make the file locally with a Quarto target.
@@ -47,10 +45,10 @@
   (clay/make! {:source-path "scicloj/clay/skip_if_unchanged_example.clj"
                :aliases [:markdown]}))
 
-;; Now, need to `git add` the generated `qmd` file.
+;; Now `git add` the generated `qmd` file.
 
 ;; ```sh
-;; git add -f site/scicloj/clay/skip_if_unchanged_example.clj
+;; git add -f site/scicloj/clay/skip_if_unchanged_example.qmd
 ;; ```
 
 ;; Also we need to add some metadata to this namespace.
