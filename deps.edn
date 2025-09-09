@@ -11,9 +11,9 @@
   metosin/malli                               {:mvn/version "0.19.1"}
   clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
   clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
-  org.scicloj/clay                            {:mvn/version "2-beta54"
-                                               #_#_:git/url "https://github.com/scicloj/clay.git"
-                                               #_#_:git/sha "b5ebd1a98d7deba6c165a72077ffa08554f4c93a"}
+  org.scicloj/clay                            {#_#_:mvn/version "2-beta54"
+                                               :git/url "https://github.com/scicloj/clay.git"
+                                               :git/sha "8734a5e1d5ccd255424ab174187093a66658a954"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph       {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph.json  {:mvn/version "0.10.0"}
