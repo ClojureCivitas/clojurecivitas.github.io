@@ -6,7 +6,7 @@ author:
   links:
   - {icon: github, href: 'https://github.com/wedesoft'}
 type: post
-date: '2025-09-08'
+date: '2025-09-09'
 category: clojure
 tags: [visualization]
 format:
@@ -21,14 +21,26 @@ format:
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="main_files/md-default0.js" type="text/javascript"></script><script src="main_files/md-default1.js" type="text/javascript"></script>
+<script src="main_files/md-default1.js" type="text/javascript"></script><script src="main_files/md-default2.js" type="text/javascript"></script>
 https://scicloj.github.io/clay/clay_book.examples.html
-clay -M:clay needs an editing change before it displays
+
+clj -M:clay -A:markdown
+quarto render site
 
 
 ::: {.sourceClojure}
 ```clojure
-(slurp "integration.txt")
+(defn tmpname
+  []
+  (str (System/getProperty "java.io.tmpdir") "/civitas-" (java.util.UUID/randomUUID) ".tmp"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GLFW/glfwInit)
 ```
 :::
 
@@ -36,7 +48,185 @@ clay -M:clay needs an editing change before it displays
 
 ::: {.printedClojure}
 ```clojure
-"test\n"
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def window-width 640)
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def window-height 480)
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def window
+  (do
+    (GLFW/glfwDefaultWindowHints)
+    (GLFW/glfwWindowHint GLFW/GLFW_DEPTH_BITS 24)
+    (GLFW/glfwWindowHint GLFW/GLFW_STENCIL_BITS 8)
+    (GLFW/glfwWindowHint GLFW/GLFW_VISIBLE GLFW/GLFW_FALSE)
+    (GLFW/glfwCreateWindow window-width window-height "Invisible Window" 0 0)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(do
+  (GLFW/glfwMakeContextCurrent window)
+  (GL/createCapabilities))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+#object [GLCapabilities]
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GL11/glClearColor 1.0 0.5 0.25 1.0)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GL11/glClearDepth 0.0)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def buffer (java.nio.ByteBuffer/allocateDirect (* 4 window-width window-height)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GL11/glReadPixels 0 0 window-width window-height GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE buffer)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(let [filename (tmpname)]
+  (STBImageWrite/stbi_write_png filename window-width window-height 4 buffer (* 4 window-width))
+  (-> filename io/file (ImageIO/read)))
+```
+:::
+
+
+::: {.clay-image}
+
+```{=html}
+<img class="clay-image" src="main_files/image0.png" />
+```
+
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GLFW/glfwDestroyWindow window)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GLFW/glfwTerminate)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
 
 ```
 :::
