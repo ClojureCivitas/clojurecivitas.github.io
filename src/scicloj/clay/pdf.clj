@@ -19,7 +19,8 @@
                               :number-sections true
                               :geometry      ["top=30mm" "left=20mm" "heightrounded"]
                               :include-in-header {:text "\\AddToHook{env/Highlighting/begin}{\\small}"}}}}
-(ns scicloj.clay.pdf)
+(ns scicloj.clay.pdf
+  (:require [scicloj.kindly.v4.kind :as kind]))
 
 ;; ---
 
@@ -130,6 +131,16 @@
 
 ;; You can add figures, tables, and code blocks using Clojure code.
 
+;; SVG hiccup will be rendered and present in the PDF.
+
+(kind/hiccup
+ [:svg
+  [:circle {:r 50 :cx 50 :cy 50
+            :fill "lightgreen"}]
+  [:circle {:r 30 :cx 50 :cy 50
+            :fill "lightblue"}]]
+ {:caption "Inline SVG"})
+
 ;; For more details and advanced options, see the [Quarto PDF documentation](https://quarto.org/docs/output-formats/pdf-basics.html).
 
 ;; ---
@@ -141,14 +152,12 @@
 
 (def scatter-ds
   (tc/dataset {:x [1 2 3 4 5]
-               :y [10 20 15 25 18]
-               :z [1 2 1 2 1]}))
+               :y [10 20 15 25 18]}))
 
 (-> scatter-ds
     (tp/base {:=title "Sample Scatter Plot"})
     (tp/layer-point {:=x :x
-                     :=y :y
-                     :=color :z}))
+                     :=y :y}))
 
 ;; Tableplot lets you create histograms, scatter plots, bar charts, and more.
 ;; These charts will appear in your PDF just as they do in your HTML output.

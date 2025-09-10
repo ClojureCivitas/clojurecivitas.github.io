@@ -24,7 +24,6 @@ author:
 colorlinks: true
 image: pdf.jpg
 
-
 ---
 <style></style><style>.printedClojure .sourceCode {
   background-color: transparent;
@@ -34,7 +33,7 @@ image: pdf.jpg
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="pdf.pdf_files/md-default0.js" type="text/javascript"></script><script src="pdf.pdf_files/md-default1.js" type="text/javascript"></script>
+<script src="pdf_files/md-default3.js" type="text/javascript"></script><script src="pdf_files/md-default4.js" type="text/javascript"></script>
 ---
 
 
@@ -74,7 +73,7 @@ image: pdf.jpg
 :::
 
 
-![](ploty-chart-1.png)
+![](pdf_files/plotly-chart0.png)
 
 Example math:
 
@@ -185,6 +184,24 @@ $$
 
 You can add figures, tables, and code blocks using Clojure code.
 
+SVG hiccup will be rendered and present in the PDF.
+
+
+::: {.sourceClojure}
+```clojure
+(kind/hiccup
+ [:svg
+  [:circle {:r 50 :cx 50 :cy 50
+            :fill "lightgreen"}]
+  [:circle {:r 30 :cx 50 :cy 50
+            :fill "lightblue"}]]
+ {:caption "Inline SVG"})
+```
+:::
+
+
+![Inline SVG](pdf_files/image5.svg)
+
 For more details and advanced options, see the [Quarto PDF documentation](https://quarto.org/docs/output-formats/pdf-basics.html).
 
 ---
@@ -200,8 +217,7 @@ Let's create a simple dataset and visualize it using Tablecloth and Tableplot:
 ```clojure
 (def scatter-ds
   (tc/dataset {:x [1 2 3 4 5]
-               :y [10 20 15 25 18]
-               :z [1 2 1 2 1]}))
+               :y [10 20 15 25 18]}))
 ```
 :::
 
@@ -212,13 +228,12 @@ Let's create a simple dataset and visualize it using Tablecloth and Tableplot:
 (-> scatter-ds
     (tp/base {:=title "Sample Scatter Plot"})
     (tp/layer-point {:=x :x
-                     :=y :y
-                     :=color :z}))
+                     :=y :y}))
 ```
 :::
 
 
-![](ploty-chart-2.png)
+![](pdf_files/plotly-chart6.png)
 
 Tableplot lets you create histograms, scatter plots, bar charts, and more.
 These charts will appear in your PDF just as they do in your HTML output.
