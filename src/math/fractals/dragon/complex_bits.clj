@@ -2,7 +2,8 @@
   :clay {:title  "Dragon Curve Fractal - Complex & Bits"
          :quarto {:type     :post
                   :author   [:harold]
-                  :date     "2025-09-01"
+                  :date     "2025-09-10"
+                  :draft    true
                   :description "A familiar image is re-discovered in a sequence of complex numbers and the binary representation of the natural numbers."
                   :image    "dragon-curve.png"
                   :category :math
