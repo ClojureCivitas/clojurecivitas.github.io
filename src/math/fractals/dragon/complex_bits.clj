@@ -3,8 +3,7 @@
          :quarto {:type     :post
                   :author   [:harold]
                   :date     "2025-09-10"
-                  :draft    true
-                  :description "A familiar image is re-discovered in a sequence of complex numbers and the binary representation of the natural numbers."
+                  :description "A familiar image is re-discovered in a sequence of complex numbers, and the binary bits of natural numbers."
                   :image    "dragon-curve.png"
                   :category :math
                   :tags     [:fractals :dragon :curve :complex :imaginary :binary]
