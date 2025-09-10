@@ -64,6 +64,7 @@ However, I found a number of issues that would need to be addressed in order to 
 1.  Problems with [support for Databricks](https://github.com/zero-one-group/geni/issues/356), although I suspect this is related to point 1.
 
 Also, in general by my criteria the support classification is "support unknown":
+
 1.  CI/CD build [failing.](https://github.com/zero-one-group/geni/actions)
 1.  Version [0.0.42 api docs broken](https://cljdoc.org/d/zero.one/geni/0.0.42/doc/readme%20%20https://cljdoc.org/builds/73977), also affects version 0.0.41
 1. No commits since November 2023.
