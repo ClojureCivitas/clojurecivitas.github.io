@@ -45,8 +45,8 @@ If I couldn't find any such library at all, I classified it as having "no suppor
 | Tool Category | Supported | Support Unknown | No Support |
 |---------------|---------------------|--------------|---------------|
 | **On-cluster batch processing** | | 1. [Spark](https://spark.apache.org) (see [Spark Interop with Geni](#spark_interop_with_geni) below) | |
-| **On-cluster stream processing** | | 2. [Kafka Streams](https://kafka.apache.org/documentation/streams) (see [Kafka Interop with Jackdaw](#kafka_interop_with_jackdaw) below) | 3. [Spark Structured Streaming](https://spark.apache.org/streaming),\<br\>4. [Flink](https://flink.apache.org) |
-| **On-cluster batch and stream processing** | | | 5. [Databricks](https://databricks.com) (see [Spark Interop with Geni](#spark_interop_with_geni) below),\<br\>6. [Snowflake](https://snowflake.com) (see [Snowflake Interop](#snowflake_interop_with_a_new_clojure_api!) below) |
+| **On-cluster stream processing** | | 2. [Kafka Streams](https://kafka.apache.org/documentation/streams) (see [Kafka Interop with Jackdaw](#kafka_interop_with_jackdaw) below) | 3. [Spark Structured Streaming](https://spark.apache.org/streaming),<br>4. [Flink](https://flink.apache.org) |
+| **On-cluster batch and stream processing** | | | 5. [Databricks](https://databricks.com) (see [Spark Interop with Geni](#spark_interop_with_geni) below),<br>6. [Snowflake](https://snowflake.com) (see [Snowflake Interop](#snowflake_interop_with_a_new_clojure_api!) below) |
 
 Please note, I don't wish to make any critical judgments based on either the summary analysis above or the more detailed analysis below. The goal is to understand the situation with respect to Clojure support and highlight any gaps, although I suppose I am also inadvertently highlighting the difficulties of maintaining open source software!
 
@@ -63,6 +63,7 @@ However, I found a number of issues that would need to be addressed in order to 
 1.  Problems with [support for Databricks](https://github.com/zero-one-group/geni/issues/356), although I suspect this is related to point 1.
 
 Also, in general by my criteria the support classification is "support unknown":
+
 1.  CI/CD build [failing.](https://github.com/zero-one-group/geni/actions)
 1.  Version [0.0.42 api docs broken](https://cljdoc.org/d/zero.one/geni/0.0.42/doc/readme%20%20https://cljdoc.org/builds/73977), also affects version 0.0.41
 1. No commits since November 2023.
