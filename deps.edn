@@ -27,10 +27,16 @@
   org.lwjgl/lwjgl$natives-linux               {:mvn/version "3.3.6"}
   org.lwjgl/lwjgl-opengl                      {:mvn/version "3.3.6"}
   org.lwjgl/lwjgl-opengl$natives-linux        {:mvn/version "3.3.6"}
+  org.lwjgl/lwjgl-opengl$natives-windows      {:mvn/version "3.3.6"}
+  org.lwjgl/lwjgl-opengl$natives-macos        {:mvn/version "3.3.6"}
   org.lwjgl/lwjgl-glfw                        {:mvn/version "3.3.6"}
   org.lwjgl/lwjgl-glfw$natives-linux          {:mvn/version "3.3.6"}
+  org.lwjgl/lwjgl-glfw$natives-windows        {:mvn/version "3.3.6"}
+  org.lwjgl/lwjgl-glfw$natives-macos          {:mvn/version "3.3.6"}
   org.lwjgl/lwjgl-stb                         {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-stb$natives-linux           {:mvn/version "3.3.6"}}
+  org.lwjgl/lwjgl-stb$natives-linux           {:mvn/version "3.3.6"}
+  org.lwjgl/lwjgl-stb$natives-windows         {:mvn/version "3.3.6"}
+  org.lwjgl/lwjgl-stb$natives-macos           {:mvn/version "3.3.6"}}
 
  :aliases
  {;; Build the site with `clojure -M:clay -A:markdown`
