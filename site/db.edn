@@ -99,7 +99,11 @@
    :name        "Emil Bengtsson"
    :url         "https://emil0r.com"
    :image       "https://avatars.githubusercontent.com/u/49733?v=4"
-   :links       [{:icon "github" :href "https://github.com/emil0r"}]}]
+   :links       [{:icon "github" :href "https://github.com/emil0r"}]}
+  {:id          :kloimhardt
+   :name        "Markus Agwin Kloimwieder"
+   :url         "https://github.com/kloimhardt"
+   :affiliation [:scicloj]}]
 
  :affiliation
  [{:id   :clojure.core
