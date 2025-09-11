@@ -3,6 +3,7 @@
                      :quarto {:author   :kloimhardt
                               :type     :post
                               :date     "2025-09-10"
+                              :image    "sicm_ch01.png"
                               :category :libs
                               :tags     [:emmy :physics]}}}
 
@@ -64,14 +65,14 @@
 (do
   (defn points->plot [paths x-axis-name y-axis-name]
     (let [coord-encoding (fn [coord] {:field coord :type "quantitative" :scale {:zero false}})
-          paths-to-data  (flatten 
-                          (map (fn [[id data]] 
-                                 (map (fn [[t x y z]] 
+          paths-to-data  (flatten
+                          (map (fn [[id data]]
+                                 (map (fn [[t x y z]]
                                         {:id id :t t :x x :y y :z z}) data)) paths))]
       {:$schema "https://vega.github.io/schema/vega-lite/v2.json"
        :data    {:values paths-to-data}
-       :encoding 
-       {:x (coord-encoding x-axis-name) 
+       :encoding
+       {:x (coord-encoding x-axis-name)
         :y (coord-encoding y-axis-name)}
        :layer
        [{:mark "line"
@@ -167,10 +168,10 @@
           initial-qs)]
     (lg/make-path t0 q0 t1 q1 minimizing-qs)))
 
-(def free-path 
+(def free-path
   (fnd-path (lg/L-free-particle 3.0) 0.0 1.0 pi-half 0.0 initial-qs))
 
-(def harmonic-path 
+(def harmonic-path
   (fnd-path (lg/L-harmonic 1.0 1.0) 0.0 1.0 pi-half 0.0 initial-qs))
 
 (md "Make a plot of these one dimensional paths, this time not in the x-z plane but in the t-z plane. This shows that, upon optimization, the initial-path turns into a streight line and a sinusoidal curve respectively.")
