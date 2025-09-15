@@ -10,9 +10,11 @@
     (:require [clojure.java.io :as io])
     (:import [javax.imageio ImageIO]
              [org.lwjgl.glfw GLFW]
-             [org.lwjgl.opengl GL GL11]
+             [org.lwjgl.opengl GL GL11 GL20]
              [org.lwjgl.stb STBImageWrite]))
 
+;; ### Getting dependencies
+;;
 ;; We need to get some things and we can use add-libs to fetch dependencies
 
 ;; ```Clojure
@@ -27,10 +29,12 @@
 ;; (require '[clojure.java.io :as io])
 ;; (import '[javax.imageio ImageIO]
 ;;         '[org.lwjgl.glfw GLFW]
-;;         '[org.lwjgl.opengl GL GL11]
+;;         '[org.lwjgl.opengl GL GL11 GL20]
 ;;         '[org.lwjgl.stb STBImageWrite])
 ;; ```
 
+;; ### Creating the window
+;;
 ;; Next we choose the window width and height.
 (def window-width 640)
 (def window-height 480)
@@ -67,6 +71,8 @@
   (GLFW/glfwMakeContextCurrent window)
   (GL/createCapabilities))
 
+;; ### Clearing the window
+;;
 ;; A simple test is to set a clear color, clear depth, and clear the window.
 (do
   (GL11/glClearColor 1.0 0.5 0.25 1.0)
@@ -74,6 +80,30 @@
   (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
   (screenshot))
 
+;; ### Defining methods for creating shader programs
+;;
+;;
+(defn make-shader [source shader-type]
+  (let [shader (GL20/glCreateShader shader-type)]
+    (GL20/glShaderSource shader source)
+    (GL20/glCompileShader shader)
+    (when (zero? (GL20/glGetShaderi shader GL20/GL_COMPILE_STATUS))
+      (throw (Exception. (GL20/glGetShaderInfoLog shader 1024))))
+    shader))
+
+(defn make-program [& shaders]
+  (let [program (GL20/glCreateProgram)]
+    (doseq [shader shaders]
+           (GL20/glAttachShader program shader)
+           (GL20/glDeleteShader shader))
+    (GL20/glLinkProgram program)
+    (when (zero? (GL20/glGetProgrami program GL20/GL_LINK_STATUS))
+      (throw (Exception. (GL20/glGetProgramInfoLog program 1024))))
+    program))
+
+
+;; ### Finishing up
+;;
 ;; When we are finished, we destroy the window.
 (GLFW/glfwDestroyWindow window)
 
