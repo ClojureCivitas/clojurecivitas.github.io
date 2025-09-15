@@ -2,7 +2,6 @@
   :clay             {:title  "Clojure Support for Popular Data Tools: A Data Engineer's Perspective, and a New Clojure API for Snowflake"
                      :external-requirements ["password.edn"]
                      :quarto {:author   :alza-bitz
-                              :draft    false
                               :type     :post
                               :date     "2025-09-04"
                               :category :clojure
