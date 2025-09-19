@@ -22,8 +22,9 @@
 (def md
   (comp kindly/hide-code kind/md))
 
-(md "# Emmy, the Algebra System: Classical Mechanics Chapter One")
 (md "The following examples are taken from the open-access book [Structure and Interpretation of Classical Mechanics (SICM)](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/9579/sicm_edition_2.zip/chapter001.html).")
+
+(md "Another notebook can be found on the [Road to Reality website](https://reality.mentat.org/essays/reality/introduction#welcome-to-the-road-to-reality!) by [Sam Ritchie](https://samritchie.io/index/), the author (along with [Colin Smith](https://github.com/littleredcomputer)) of [Emmy, the Computer Algebra System](https://emmy.mentat.org).")
 
 (md "## 1.4 Computing Actions")
 (md "First task: Calculate the action for the free particle along a path. Consider the particle moving at uniform speed along a straight line.")
@@ -442,7 +443,7 @@
     ((ang-mom-z 'm) rectangular-state)
     ((compose (ang-mom-z 'm) (F->C s->r)) spherical-state)))
 
-(md "Using sherical coordinates, calculate the generalized forces and the generalized momenta of a planet moving in a central potential. Thus show that the momentum conjugate to the third coordinate $\\phi$ is (1) conserved (because the respective force is zero) and (2) identical the z-component of the angular momentum.")
+(md "Using spherical coordinates, calculate the generalized forces and the generalized momenta of a planet moving in a central potential. Thus show that the momentum conjugate to the third coordinate $\\phi$ is (1) conserved (because the respective force is zero) and (2) identical the z-component of the angular momentum.")
 
 (def V (literal-function 'V))
 
