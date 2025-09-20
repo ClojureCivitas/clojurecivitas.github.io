@@ -4,7 +4,7 @@
                               :type     :post
                               :date     "2025-09-16"
                               :category :finance
-                              :tags     [:metadata :civitas :cim :finance :portfolio]}}}
+                              :tags     [:metadata :civitas "cim" :finance :portfolio]}}}
 
 (ns finance.portfolio-analysis.alpha-beta-regression
   (:require [libpython-clj2.python :refer [py. py.. py.-] :as py]
