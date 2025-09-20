@@ -110,14 +110,13 @@
    :image       "https://avatars.githubusercontent.com/u/36920869?v=4"
    :email       "edwardaw@connect.hku.hk"
    :affiliation [:cim]
-   :links       [{:icon "github" :href "https://github.com/emil0r"}]}
+   :links       [{:icon "github" :href "https://github.com/W-Edward"}]}
   {:id          :mattb
    :name        "Matthias Buehlmaier"
-   :affiliation [:cim] 
-  }
-  {:id           :tanvi
-   :name         "Tanvi Nagar"
-   :affiliation  [:cim] }]
+   :affiliation [:cim]}
+  {:id          :tanvi
+   :name        "Tanvi Nagar"
+   :affiliation [:cim]}]
 
  :affiliation
  [{:id   :clojure.core
@@ -136,9 +135,9 @@
   {:id   :techascent
    :name "TechAscent"
    :url "https://techascent.com"}
-  {:id   :hku_cim
+  {:id   :cim
    :name "cim"
-   :url "https://cim.hkubs.hku.hk/"
+   :url  "https://cim.hkubs.hku.hk/"
   }]
 
  :topic
