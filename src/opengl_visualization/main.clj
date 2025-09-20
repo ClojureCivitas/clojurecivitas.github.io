@@ -9,10 +9,11 @@
 (ns opengl-visualization.main
     (:require [clojure.java.io :as io])
     (:import [javax.imageio ImageIO]
+             [java.awt.image BufferedImage]
              [org.lwjgl BufferUtils]
              [org.lwjgl.glfw GLFW]
-             [org.lwjgl.opengl GL GL11 GL15 GL20 GL30]
-             [org.lwjgl.stb STBImageWrite]))
+             [org.lwjgl.opengl GL GL11 GL13 GL15 GL20 GL30]
+             [org.lwjgl.stb STBImage STBImageWrite]))
 
 ;; ### Getting dependencies
 ;;
@@ -42,9 +43,13 @@
 (def window-height 480)
 
 ;; We define a function to create a temporary file name.
+(defn tmpdir
+  []
+  (System/getProperty "java.io.tmpdir"))
+
 (defn tmpname
   []
-  (str (System/getProperty "java.io.tmpdir") "/civitas-" (java.util.UUID/randomUUID) ".tmp"))
+  (str (tmpdir) "/civitas-" (java.util.UUID/randomUUID) ".tmp"))
 
 ;; The following function is used to create screenshots for this article.
 ;; We read the pixels, write them to a temporary file using the STB library and then convert it to an ImageIO object.
@@ -152,6 +157,7 @@ void main()
 
 (def-make-buffer make-float-buffer BufferUtils/createFloatBuffer)
 (def-make-buffer make-int-buffer BufferUtils/createIntBuffer)
+(def-make-buffer make-byte-buffer BufferUtils/createByteBuffer)
 
 ;; We define a simple background quad spanning the entire window.
 ;; We use normalised device coordinates (NDC) which are between -1 and 1.
@@ -200,6 +206,85 @@ void main()
 
 ;; ### Finishing up
 
+(GL20/glDeleteProgram program)
+
+;; ### Rendering the Moon
+
+;; Download lunar color image
+(defn download [url target]
+  (with-open [in (io/input-stream url)
+              out (io/output-stream target)]
+    (io/copy in out)))
+
+(def moon-tif "src/opengl_visualization/lroc_color_poles_8k.tif")
+
+(when (not (.exists (io/file moon-tif)))
+  (download "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_8k.tif" moon-tif))
+
+;; Use ImageIO to convert it to PNG
+(def moon-png "src/opengl_visualization/lroc_color_poles_8k.png")
+(when (not (.exists (io/file moon-png)))
+  (ImageIO/write (ImageIO/read (io/file moon-tif)) "png" (io/file moon-png)))
+
+;; Loading the image
+(def width (int-array 1))
+(def height (int-array 1))
+(def channels (int-array 1))
+(def buffer (STBImage/stbi_load moon-png width height channels 4))
+(aget width 0)
+(aget height 0)
+(def data (byte-array (* (aget width 0) (aget height 0) 4)))
+(.get buffer data)
+(.flip buffer)
+(STBImage/stbi_image_free buffer)
+(def texture (GL11/glGenTextures))
+
+(GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+(GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGBA (aget width 0) (aget height 0) 0 GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE (make-byte-buffer data))
+(GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR_MIPMAP_LINEAR)
+(GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
+(GL30/glGenerateMipmap GL11/GL_TEXTURE_2D)
+(GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+
+(def vertex-moon "#version 130
+in mediump vec3 point;
+void main()
+{
+  gl_Position = vec4(point, 1);
+}")
+
+(def fragment-moon "#version 130
+uniform vec2 iResolution;
+uniform sampler2D moon;
+out vec4 fragColor;
+void main()
+{
+  fragColor = texture(moon, gl_FragCoord.xy / iResolution.xy);
+}")
+
+(def vertex-moon-shader (make-shader vertex-moon GL20/GL_VERTEX_SHADER))
+(def fragment-moon-shader (make-shader fragment-moon GL20/GL_FRAGMENT_SHADER))
+(def moon-program (make-program vertex-moon-shader fragment-moon-shader))
+
+(GL20/glUseProgram moon-program)
+(GL20/glUniform2f (GL20/glGetUniformLocation moon-program "iResolution") window-width window-height)
+(GL20/glUniform1i (GL20/glGetUniformLocation moon-program "moon") 0)
+(GL13/glActiveTexture GL13/GL_TEXTURE0)
+(GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+
+(GL20/glVertexAttribPointer (GL20/glGetAttribLocation moon-program "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+(GL20/glEnableVertexAttribArray 0)
+
+(GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0)
+(screenshot)
+
+;; Finish up
+(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+(GL15/glDeleteBuffers idx)
+(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+(GL15/glDeleteBuffers vbo)
+
+(GL11/glDeleteTextures texture)
 (GL20/glDeleteProgram program)
 
 ;; When we are finished, we destroy the window.
