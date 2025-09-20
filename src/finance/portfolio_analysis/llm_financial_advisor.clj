@@ -6,7 +6,7 @@
                               :type     :post
                               :date     "2025-09-20"
                               :category :finance
-                              :tags     [:metadata :civitas :cim :finance :portfolio :llm]}}}
+                              :tags     [:metadata :civitas "cim" :finance :portfolio :llm]}}}
 (ns finance.portfolio-analysis.llm-financial-advisor
   (:require [clojure.data.json :as json]
             [clojure.edn :as edn]

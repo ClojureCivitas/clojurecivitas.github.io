@@ -21,7 +21,7 @@ category: finance
 tags:
 - metadata
 - civitas
-- {name: cim, url: 'https://cim.hkubs.hku.hk/'}
+- cim
 - finance
 - portfolio
 - llm
