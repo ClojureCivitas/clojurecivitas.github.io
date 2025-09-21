@@ -429,6 +429,8 @@ void main()
 (GL20/glDeleteProgram program)
 (GL11/glDeleteTextures texture)
 
+;; ### Finalizing GLFW
+;;
 ;; When we are finished, we destroy the window.
 (GLFW/glfwDestroyWindow window)
 
