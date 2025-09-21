@@ -7,7 +7,8 @@
                               :category :clojure
                               :tags     [:visualization]}}}
 (ns opengl-visualization.main
-    (:require [clojure.java.io :as io])
+    (:require [clojure.java.io :as io]
+              [clojure.math :refer (to-radians)])
     (:import [javax.imageio ImageIO]
              [java.awt.image BufferedImage]
              [org.lwjgl BufferUtils]
@@ -122,7 +123,7 @@
 
 ;; The following code shows a simple vertex shader which passes through the vertex coordinates.
 (def vertex-source "#version 130
-in mediump vec3 point;
+in vec3 point;
 void main()
 {
   gl_Position = vec4(point, 1);
@@ -241,19 +242,20 @@ void main()
 
 (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
 (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGBA (aget width 0) (aget height 0) 0 GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE (make-byte-buffer data))
-(GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR_MIPMAP_LINEAR)
+(GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
 (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
-(GL30/glGenerateMipmap GL11/GL_TEXTURE_2D)
+(GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
+(GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
 (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
 
-(def vertex-moon "#version 130
-in mediump vec3 point;
+(def vertex-tex "#version 130
+in vec3 point;
 void main()
 {
   gl_Position = vec4(point, 1);
 }")
 
-(def fragment-moon "#version 130
+(def fragment-tex "#version 130
 uniform vec2 iResolution;
 uniform sampler2D moon;
 out vec4 fragColor;
@@ -262,18 +264,18 @@ void main()
   fragColor = texture(moon, gl_FragCoord.xy / iResolution.xy);
 }")
 
-(def vertex-moon-shader (make-shader vertex-moon GL20/GL_VERTEX_SHADER))
-(def fragment-moon-shader (make-shader fragment-moon GL20/GL_FRAGMENT_SHADER))
-(def moon-program (make-program vertex-moon-shader fragment-moon-shader))
+(def vertex-tex-shader (make-shader vertex-tex GL20/GL_VERTEX_SHADER))
+(def fragment-tex-shader (make-shader fragment-tex GL20/GL_FRAGMENT_SHADER))
+(def tex-program (make-program vertex-tex-shader fragment-tex-shader))
 
-(GL20/glUseProgram moon-program)
-(GL20/glUniform2f (GL20/glGetUniformLocation moon-program "iResolution") window-width window-height)
-(GL20/glUniform1i (GL20/glGetUniformLocation moon-program "moon") 0)
+(GL20/glVertexAttribPointer (GL20/glGetAttribLocation tex-program "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+(GL20/glEnableVertexAttribArray 0)
+
+(GL20/glUseProgram tex-program)
+(GL20/glUniform2f (GL20/glGetUniformLocation tex-program "iResolution") window-width window-height)
+(GL20/glUniform1i (GL20/glGetUniformLocation tex-program "moon") 0)
 (GL13/glActiveTexture GL13/GL_TEXTURE0)
 (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
-
-(GL20/glVertexAttribPointer (GL20/glGetAttribLocation moon-program "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
-(GL20/glEnableVertexAttribArray 0)
 
 (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0)
 (screenshot)
@@ -283,9 +285,121 @@ void main()
 (GL15/glDeleteBuffers idx)
 (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
 (GL15/glDeleteBuffers vbo)
-
-(GL11/glDeleteTextures texture)
+(GL30/glBindVertexArray 0)
+(GL15/glDeleteBuffers vao)
 (GL20/glDeleteProgram program)
+
+;; We define a simple background quad spanning the entire window.
+;; We use normalised device coordinates (NDC) which are between -1 and 1.
+(def vertices-cube
+  (float-array [-1.0 -1.0 -1.0
+                 1.0 -1.0 -1.0
+                 1.0  1.0 -1.0
+                -1.0  1.0 -1.0
+                -1.0 -1.0  1.0
+                 1.0 -1.0  1.0
+                 1.0  1.0  1.0
+                -1.0  1.0  1.0]))
+
+;; The index array defines the order of the vertices.
+(def indices-cube
+  (int-array [0 1 2 3
+              4 5 6 7
+              0 3 7 4
+              1 2 6 5
+              3 2 6 7
+              0 1 5 4]))
+
+;; We define a vertex array object (VAO) which acts like a context for the vertex and index buffer.
+(def vao-cube (GL30/glGenVertexArrays))
+(GL30/glBindVertexArray vao-cube)
+
+;; We define a vertex buffer object (VBO) which contains the vertex data.
+(def vbo-cube (GL15/glGenBuffers))
+(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-cube)
+(def vertices-buffer-cube (make-float-buffer vertices-cube))
+(GL15/glBufferData GL15/GL_ARRAY_BUFFER vertices-buffer-cube GL15/GL_STATIC_DRAW)
+
+;; We also define an index buffer object (IBO) which contains the index data.
+(def idx-cube (GL15/glGenBuffers))
+(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER idx-cube)
+(def indices-buffer-cube (make-int-buffer indices-cube))
+(GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer-cube GL15/GL_STATIC_DRAW)
+
+(def vertex-moon "#version 130
+uniform float fov;
+uniform float alpha;
+uniform float beta;
+uniform float distance;
+uniform vec2 iResolution;
+in vec3 point;
+out vec3 vpoint;
+void main()
+{
+  // Rotate by alpha around y axis
+  vec3 ps = vec3(point.x * cos(alpha) - point.z * sin(alpha), point.y, point.x * sin(alpha) + point.z * cos(alpha));
+  // Rotate by beta around x axis
+  vec3 pss = vec3(ps.x, ps.y * cos(beta) - ps.z * sin(beta), ps.y * sin(beta) + ps.z * cos(beta));
+  // Translate
+  vec3 psss = pss + vec3(0, 0, distance);
+  // Projection
+  float f = 1.0 / tan(fov / 2.0);
+  float aspect = iResolution.x / iResolution.y;
+  float proj_x = psss.x / psss.z * f;
+  float proj_y = psss.y / psss.z * f * aspect;
+  float proj_z = psss.z / (2.0 * distance);
+  gl_Position = vec4(proj_x, proj_y, proj_z, 1);
+  vpoint = point;
+}")
+
+(def fragment-moon "#version 130
+#define PI 3.1415926535897932384626433832795
+uniform sampler2D moon;
+in vec3 vpoint;
+out vec4 fragColor;
+void main()
+{
+  // Convert vpoint to lat, lon
+  float lon = atan(vpoint.z, vpoint.x) / (2.0 * PI) + 0.5;
+  float lat = atan(vpoint.y, length(vpoint.xz)) / PI + 0.5;
+  fragColor = texture(moon, vec2(lon, lat));
+}")
+
+(def vertex-shader-moon (make-shader vertex-moon GL30/GL_VERTEX_SHADER))
+(def fragment-shader-moon (make-shader fragment-moon GL30/GL_FRAGMENT_SHADER))
+(def program-moon (make-program vertex-shader-moon fragment-shader-moon))
+
+(GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+(GL20/glEnableVertexAttribArray 0)
+
+;; Set uniforms
+(GL20/glUseProgram program-moon)
+(GL20/glUniform2f (GL20/glGetUniformLocation program-moon "iResolution") window-width window-height)
+(GL20/glUniform1f (GL20/glGetUniformLocation program-moon "fov") (to-radians 60.0))
+(GL20/glUniform1f (GL20/glGetUniformLocation program-moon "alpha") (to-radians -30.0))
+(GL20/glUniform1f (GL20/glGetUniformLocation program-moon "beta") (to-radians 20.0))
+(GL20/glUniform1f (GL20/glGetUniformLocation program-moon "distance") 5.0)
+(GL20/glUniform1i (GL20/glGetUniformLocation program-moon "moon") 0)
+(GL13/glActiveTexture GL13/GL_TEXTURE0)
+(GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+
+(GL11/glEnable GL11/GL_DEPTH_TEST)
+(GL11/glClearColor 0.0 0.0 0.0 1.0)
+(GL11/glClearDepth 1.0)
+(GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+(GL11/glDrawElements GL11/GL_QUADS 24 GL11/GL_UNSIGNED_INT 0)
+(screenshot)
+
+;; Finish up
+(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+(GL15/glDeleteBuffers idx-cube)
+(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+(GL15/glDeleteBuffers vbo-cube)
+(GL30/glBindVertexArray 0)
+(GL15/glDeleteBuffers vao)
+
+(GL20/glDeleteProgram program)
+(GL11/glDeleteTextures texture)
 
 ;; When we are finished, we destroy the window.
 (GLFW/glfwDestroyWindow window)
