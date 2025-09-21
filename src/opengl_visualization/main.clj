@@ -16,7 +16,7 @@
              [org.lwjgl.opengl GL GL11 GL13 GL15 GL20 GL30]
              [org.lwjgl.stb STBImage STBImageWrite]))
 
-;; ### Getting dependencies
+;; ## Getting dependencies
 ;;
 ;; We need to get some things and we can use add-libs to fetch dependencies
 
@@ -37,7 +37,7 @@
 ;;         '[org.lwjgl.stb STBImageWrite])
 ;; ```
 
-;; ### Creating the window
+;; ## Creating the window
 ;;
 ;; Next we choose the window width and height.
 (def window-width 640)
@@ -90,6 +90,7 @@
   (GLFW/glfwMakeContextCurrent window)
   (GL/createCapabilities))
 
+;; ## Basic rendering
 ;; ### Clearing the window
 ;;
 ;; A simple test is to set a clear color, clear depth, and clear the window.
@@ -156,9 +157,10 @@ void main()
        (.flip buffer#)
        buffer#)))
 
-(def-make-buffer make-float-buffer BufferUtils/createFloatBuffer)
-(def-make-buffer make-int-buffer BufferUtils/createIntBuffer)
-(def-make-buffer make-byte-buffer BufferUtils/createByteBuffer)
+(do
+  (def-make-buffer make-float-buffer BufferUtils/createFloatBuffer)
+  (def-make-buffer make-int-buffer BufferUtils/createIntBuffer)
+  (def-make-buffer make-byte-buffer BufferUtils/createByteBuffer))
 
 ;; We define a simple background quad spanning the entire window.
 ;; We use normalised device coordinates (NDC) which are between -1 and 1.
@@ -192,25 +194,29 @@ void main()
 
 ;; The data of each vertex is defined by 3 floats (x, y, z).
 ;; We need to specify the layout of the vertex buffer object so that OpenGL knows how to interpret it.
-(GL20/glVertexAttribPointer (GL20/glGetAttribLocation program "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
-(GL20/glEnableVertexAttribArray 0)
+(do
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glEnableVertexAttribArray 0))
 
 ;; ### Rendering the quad
 ;;
 ;; We select the program and define the uniform variable iResolution.
-(GL20/glUseProgram program)
-(GL20/glUniform2f (GL20/glGetUniformLocation program "iResolution") window-width window-height)
+(do
+  (GL20/glUseProgram program)
+  (GL20/glUniform2f (GL20/glGetUniformLocation program "iResolution") window-width window-height))
 
 ;; Since the correct VAO is already bound, we are now ready to draw the quad.
 (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0)
 (screenshot)
 
 ;; ### Finishing up
-
+;;
+;; We only delete the program since we are going to use the vertex buffer in the next example.
 (GL20/glDeleteProgram program)
 
-;; ### Rendering the Moon
-
+;; ## Rendering the Moon
+;; ### Getting the NASA data
+;;
 ;; Download lunar color image
 (defn download [url target]
   (with-open [in (io/input-stream url)
@@ -227,27 +233,32 @@ void main()
 (when (not (.exists (io/file moon-png)))
   (ImageIO/write (ImageIO/read (io/file moon-tif)) "png" (io/file moon-png)))
 
+;; ### Create a texture
+;;
 ;; Loading the image
-(def width (int-array 1))
-(def height (int-array 1))
-(def channels (int-array 1))
-(def buffer (STBImage/stbi_load moon-png width height channels 4))
-(aget width 0)
-(aget height 0)
-(def data (byte-array (* (aget width 0) (aget height 0) 4)))
-(.get buffer data)
-(.flip buffer)
-(STBImage/stbi_image_free buffer)
-(def texture (GL11/glGenTextures))
+(do
+  (def width (int-array 1))
+  (def height (int-array 1))
+  (def channels (int-array 1))
+  (def buffer (STBImage/stbi_load moon-png width height channels 4))
+  (def data (byte-array (* (aget width 0) (aget height 0) 4)))
+  (.get buffer data)
+  (.flip buffer)
+  (STBImage/stbi_image_free buffer)
+  (def texture (GL11/glGenTextures)))
 
-(GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
-(GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGBA (aget width 0) (aget height 0) 0 GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE (make-byte-buffer data))
-(GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
-(GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
-(GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
-(GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
-(GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+;; ### Set up the texture
+(do
+  (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+  (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGBA (aget width 0) (aget height 0)
+                     0 GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE (make-byte-buffer data))
+  (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
+  (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
+  (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
+  (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
+  (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
 
+;; ### Rendering the texture
 (def vertex-tex "#version 130
 in vec3 point;
 void main()
@@ -268,29 +279,33 @@ void main()
 (def fragment-tex-shader (make-shader fragment-tex GL20/GL_FRAGMENT_SHADER))
 (def tex-program (make-program vertex-tex-shader fragment-tex-shader))
 
-(GL20/glVertexAttribPointer (GL20/glGetAttribLocation tex-program "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
-(GL20/glEnableVertexAttribArray 0)
+(do
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation tex-program "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glEnableVertexAttribArray 0))
 
-(GL20/glUseProgram tex-program)
-(GL20/glUniform2f (GL20/glGetUniformLocation tex-program "iResolution") window-width window-height)
-(GL20/glUniform1i (GL20/glGetUniformLocation tex-program "moon") 0)
-(GL13/glActiveTexture GL13/GL_TEXTURE0)
-(GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+(do
+  (GL20/glUseProgram tex-program)
+  (GL20/glUniform2f (GL20/glGetUniformLocation tex-program "iResolution") window-width window-height)
+  (GL20/glUniform1i (GL20/glGetUniformLocation tex-program "moon") 0)
+  (GL13/glActiveTexture GL13/GL_TEXTURE0)
+  (GL11/glBindTexture GL11/GL_TEXTURE_2D texture))
 
 (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0)
 (screenshot)
 
-;; Finish up
-(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
-(GL15/glDeleteBuffers idx)
-(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-(GL15/glDeleteBuffers vbo)
-(GL30/glBindVertexArray 0)
-(GL15/glDeleteBuffers vao)
-(GL20/glDeleteProgram program)
+;; ### Finishing up
+(do
+  (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+  (GL15/glDeleteBuffers idx)
+  (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+  (GL15/glDeleteBuffers vbo)
+  (GL30/glBindVertexArray 0)
+  (GL15/glDeleteBuffers vao)
+  (GL20/glDeleteProgram program))
 
-;; We define a simple background quad spanning the entire window.
-;; We use normalised device coordinates (NDC) which are between -1 and 1.
+;;; ## Render a 3D cube
+;;;
+;;; ### Create vertex data
 (def vertices-cube
   (float-array [-1.0 -1.0 -1.0
                  1.0 -1.0 -1.0
@@ -310,6 +325,8 @@ void main()
               3 2 6 7
               0 1 5 4]))
 
+;; ### Initialize vertex buffer array
+;;
 ;; We define a vertex array object (VAO) which acts like a context for the vertex and index buffer.
 (def vao-cube (GL30/glGenVertexArrays))
 (GL30/glBindVertexArray vao-cube)
@@ -326,6 +343,9 @@ void main()
 (def indices-buffer-cube (make-int-buffer indices-cube))
 (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer-cube GL15/GL_STATIC_DRAW)
 
+;;; ### Shader program mapping texture onto cube
+;;;
+;;; We first define a vertex shader, which takes cube coordinates, rotates, translates, and projects them.
 (def vertex-moon "#version 130
 uniform float fov;
 uniform float alpha;
@@ -352,6 +372,7 @@ void main()
   vpoint = point;
 }")
 
+;;; The fragment shader maps the texture onto the cube.
 (def fragment-moon "#version 130
 #define PI 3.1415926535897932384626433832795
 uniform sampler2D moon;
@@ -369,34 +390,41 @@ void main()
 (def fragment-shader-moon (make-shader fragment-moon GL30/GL_FRAGMENT_SHADER))
 (def program-moon (make-program vertex-shader-moon fragment-shader-moon))
 
-(GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
-(GL20/glEnableVertexAttribArray 0)
+(do
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glEnableVertexAttribArray 0))
 
+;; ### Rendering the cube
+;;
 ;; Set uniforms
-(GL20/glUseProgram program-moon)
-(GL20/glUniform2f (GL20/glGetUniformLocation program-moon "iResolution") window-width window-height)
-(GL20/glUniform1f (GL20/glGetUniformLocation program-moon "fov") (to-radians 60.0))
-(GL20/glUniform1f (GL20/glGetUniformLocation program-moon "alpha") (to-radians -30.0))
-(GL20/glUniform1f (GL20/glGetUniformLocation program-moon "beta") (to-radians 20.0))
-(GL20/glUniform1f (GL20/glGetUniformLocation program-moon "distance") 5.0)
-(GL20/glUniform1i (GL20/glGetUniformLocation program-moon "moon") 0)
-(GL13/glActiveTexture GL13/GL_TEXTURE0)
-(GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+(do
+  (GL20/glUseProgram program-moon)
+  (GL20/glUniform2f (GL20/glGetUniformLocation program-moon "iResolution") window-width window-height)
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "fov") (to-radians 60.0))
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "alpha") (to-radians -30.0))
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "beta") (to-radians 20.0))
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "distance") 5.0)
+  (GL20/glUniform1i (GL20/glGetUniformLocation program-moon "moon") 0)
+  (GL13/glActiveTexture GL13/GL_TEXTURE0)
+  (GL11/glBindTexture GL11/GL_TEXTURE_2D texture))
 
-(GL11/glEnable GL11/GL_DEPTH_TEST)
-(GL11/glClearColor 0.0 0.0 0.0 1.0)
-(GL11/glClearDepth 1.0)
-(GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
-(GL11/glDrawElements GL11/GL_QUADS 24 GL11/GL_UNSIGNED_INT 0)
-(screenshot)
+;; Enable depth testing and render.
+(do
+  (GL11/glEnable GL11/GL_DEPTH_TEST)
+  (GL11/glClearColor 0.0 0.0 0.0 1.0)
+  (GL11/glClearDepth 1.0)
+  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+  (GL11/glDrawElements GL11/GL_QUADS 24 GL11/GL_UNSIGNED_INT 0)
+  (screenshot))
 
-;; Finish up
-(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
-(GL15/glDeleteBuffers idx-cube)
-(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-(GL15/glDeleteBuffers vbo-cube)
-(GL30/glBindVertexArray 0)
-(GL15/glDeleteBuffers vao)
+;; ### Finishing up
+(do
+  (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+  (GL15/glDeleteBuffers idx-cube)
+  (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+  (GL15/glDeleteBuffers vbo-cube)
+  (GL30/glBindVertexArray 0)
+  (GL15/glDeleteBuffers vao))
 
 (GL20/glDeleteProgram program)
 (GL11/glDeleteTextures texture)
