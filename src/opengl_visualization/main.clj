@@ -240,23 +240,20 @@ void main()
   (def width (int-array 1))
   (def height (int-array 1))
   (def channels (int-array 1))
-  (def buffer (STBImage/stbi_load moon-png width height channels 4))
-  (def data (byte-array (* (aget width 0) (aget height 0) 4)))
-  (.get buffer data)
-  (.flip buffer)
-  (STBImage/stbi_image_free buffer)
-  (def texture (GL11/glGenTextures)))
+  (def buffer (STBImage/stbi_load moon-png width height channels 4)))
 
 ;; ### Set up the texture
 (do
+  (def texture (GL11/glGenTextures))
   (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
   (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGBA (aget width 0) (aget height 0)
-                     0 GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE (make-byte-buffer data))
+                     0 GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE buffer)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
-  (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
+  (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
+  (STBImage/stbi_image_free buffer))
 
 ;; ### Rendering the texture
 (def vertex-tex "#version 130
