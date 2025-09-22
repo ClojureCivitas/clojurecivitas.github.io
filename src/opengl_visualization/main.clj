@@ -412,22 +412,31 @@ void main()
 
 ;; ## Approximating a sphere
 ;;
-;; Get corners of cube
+;; ### Creating the vertex data
+;;
+;; Get all points of cube.
 (def points (map #(apply vec3 %) (partition 3 vertices-cube)))
 points
 
+;; Get one corner of each face.
 (def corners (map (fn [[i _ _ _]] (nth points i)) (partition 4 indices-cube)))
 corners
 
+;; Get first spanning vectpr of face.
 (def u-vectors (map (fn [[i j _ _]] (sub (nth points j) (nth points i))) (partition 4 indices-cube)))
 u-vectors
 
+;; Get second spanning vector of face.
 (def v-vectors (map (fn [[i _ _ l]] (sub (nth points l) (nth points i))) (partition 4 indices-cube)))
 v-vectors
 
+;; Subsample the faces and project onto sphere by normalizing the vectors.
 (defn sphere-points [n c u v] (for [j (range (inc n)) i (range (inc n))] (normalize (add c (add (mult u (/ i n)) (mult v (/ j n)))))))
+
+;; Connect points with faces to create a mesh.
 (defn sphere-indices [n face] (for [j (range n) i (range n)] (let [offset (+ (* face (inc n) (inc n)) (* j (inc n)) i)] [offset (inc offset) (+ offset n 2) (+ offset n 1)])))
 
+;; ### Rendering a coarse approximation of the sphere.
 (def n 2)
 (def vertices-sphere (float-array (flatten (map (partial sphere-points n) corners u-vectors v-vectors))))
 (def indices-sphere (int-array (flatten (map (partial sphere-indices n) (range 6)))))
@@ -443,6 +452,7 @@ v-vectors
   (GL11/glDrawElements GL11/GL_QUADS (count indices-sphere) GL11/GL_UNSIGNED_INT 0)
   (screenshot))
 
+;; ### Rendering a fine approximation of the sphere.
 (def n2 16)
 (def vertices-sphere-2 (float-array (flatten (map (partial sphere-points n2) corners u-vectors v-vectors))))
 (def indices-sphere-2 (int-array (flatten (map (partial sphere-indices n2) (range 6)))))
