@@ -11,7 +11,6 @@
               [clojure.math :refer (to-radians)]
               [fastmath.vector :refer (vec3 sub add mult normalize)])
     (:import [javax.imageio ImageIO]
-             [java.awt.image BufferedImage]
              [org.lwjgl BufferUtils]
              [org.lwjgl.glfw GLFW]
              [org.lwjgl.opengl GL GL11 GL13 GL15 GL20 GL30]
@@ -301,9 +300,11 @@ void main()
   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
   (GL15/glDeleteBuffers vbo)
   (GL30/glBindVertexArray 0)
-  (GL15/glDeleteBuffers vao)
-  (GL20/glDeleteProgram program))
+  (GL15/glDeleteBuffers vao))
+
 (teardown-vao vao)
+
+(GL20/glDeleteProgram tex-program)
 
 ;;; ## Render a 3D cube
 ;;;
@@ -370,7 +371,7 @@ out vec4 fragColor;
 void main()
 {
   // Convert vpoint to lat, lon
-  float lon = atan(vpoint.z, vpoint.x) / (2.0 * PI) + 0.5;
+  float lon = atan(vpoint.x, -vpoint.z) / (2.0 * PI) + 0.5;
   float lat = atan(vpoint.y, length(vpoint.xz)) / PI + 0.5;
   fragColor = texture(moon, vec2(lon, lat));
 }")
@@ -389,10 +390,10 @@ void main()
 (do
   (GL20/glUseProgram program-moon)
   (GL20/glUniform2f (GL20/glGetUniformLocation program-moon "iResolution") window-width window-height)
-  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "fov") (to-radians 50.0))
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "fov") (to-radians 25.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "alpha") (to-radians -30.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "beta") (to-radians 20.0))
-  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "distance") 5.0)
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "distance") 10.0)
   (GL20/glUniform1i (GL20/glGetUniformLocation program-moon "moon") 0)
   (GL13/glActiveTexture GL13/GL_TEXTURE0)
   (GL11/glBindTexture GL11/GL_TEXTURE_2D texture))
@@ -468,9 +469,61 @@ v-vectors
   (GL11/glDrawElements GL11/GL_QUADS (count indices-sphere-2) GL11/GL_UNSIGNED_INT 0)
   (screenshot))
 
-(teardown-vao vao-sphere)
+(GL20/glDeleteProgram program-moon)
 
-(GL20/glDeleteProgram program)
+;; ### Adding ambient and diffuse reflection
+(def fragment-moon-diffuse "#version 130
+#define PI 3.1415926535897932384626433832795
+uniform vec3 light;
+uniform float ambient;
+uniform float diffuse;
+uniform sampler2D moon;
+in vec3 vpoint;
+out vec4 fragColor;
+void main()
+{
+  // Convert vpoint to lat, lon
+  float phong = ambient + diffuse * max(0.0, dot(light, normalize(vpoint)));
+  float lon = atan(vpoint.x, -vpoint.z) / (2.0 * PI) + 0.5;
+  float lat = atan(vpoint.y, length(vpoint.xz)) / PI + 0.5;
+  fragColor = vec4(texture(moon, vec2(lon, lat)).rgb * phong, 1);
+}")
+
+(def vertex-shader-diffuse (make-shader vertex-moon GL30/GL_VERTEX_SHADER))
+(def fragment-shader-diffuse (make-shader fragment-moon-diffuse GL30/GL_FRAGMENT_SHADER))
+(def program-diffuse (make-program vertex-shader-diffuse fragment-shader-diffuse))
+
+(do
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-diffuse "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glEnableVertexAttribArray 0))
+
+ (def light (normalize (vec3 -1 0 -1)))
+
+(do
+  (GL20/glUseProgram program-diffuse)
+  (GL20/glUniform2f (GL20/glGetUniformLocation program-diffuse "iResolution") window-width window-height)
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "fov") (to-radians 25.0))
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "alpha") (to-radians 0.0))
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "beta") (to-radians 0.0))
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "distance") 10.0)
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "ambient") 0.2)
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "diffuse") 0.8)
+  (GL20/glUniform3f (GL20/glGetUniformLocation program-diffuse "light") (light 0) (light 1) (light 2))
+  (GL20/glUniform1i (GL20/glGetUniformLocation program-diffuse "moon") 0)
+  (GL13/glActiveTexture GL13/GL_TEXTURE0)
+  (GL11/glBindTexture GL11/GL_TEXTURE_2D texture))
+
+;; Enable backface culling and render.
+(do
+  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+  (GL11/glDrawElements GL11/GL_QUADS (count indices-sphere-2) GL11/GL_UNSIGNED_INT 0)
+  (screenshot))
+
+;; Destruct vertex array object
+(teardown-vao vao-sphere)
+(GL20/glDeleteProgram program-diffuse)
+
+;; Delete the texture
 (GL11/glDeleteTextures texture)
 
 ;; ### Finalizing GLFW
