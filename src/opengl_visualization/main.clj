@@ -206,7 +206,7 @@ void main()
   (GL20/glUniform2f (GL20/glGetUniformLocation program "iResolution") window-width window-height))
 
 ;; Since the correct VAO is already bound, we are now ready to draw the quad.
-(GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0)
+(GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0)
 (screenshot)
 
 ;; ### Finishing up
@@ -316,11 +316,11 @@ void main()
 ;; The index array defines the order of the vertices.
 (def indices-cube
   (int-array [0 1 2 3
-              4 5 6 7
+              7 6 5 4
               0 3 7 4
-              1 2 6 5
+              5 6 2 1
               3 2 6 7
-              0 1 5 4]))
+              4 5 1 0]))
 
 ;; ### Initialize vertex buffer array
 ;;
@@ -407,11 +407,12 @@ void main()
 
 ;; Enable depth testing and render.
 (do
-  (GL11/glEnable GL11/GL_DEPTH_TEST)
+  (GL11/glEnable GL11/GL_CULL_FACE)
+  (GL11/glCullFace GL11/GL_BACK)
   (GL11/glClearColor 0.0 0.0 0.0 1.0)
   (GL11/glClearDepth 1.0)
   (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
-  (GL11/glDrawElements GL11/GL_QUADS 24 GL11/GL_UNSIGNED_INT 0)
+  (GL11/glDrawElements GL11/GL_QUADS (count indices-cube) GL11/GL_UNSIGNED_INT 0)
   (screenshot))
 
 ;; ### Finishing up
@@ -422,6 +423,9 @@ void main()
   (GL15/glDeleteBuffers vbo-cube)
   (GL30/glBindVertexArray 0)
   (GL15/glDeleteBuffers vao))
+
+;; ## Approximating a sphere
+
 
 (GL20/glDeleteProgram program)
 (GL11/glDeleteTextures texture)
