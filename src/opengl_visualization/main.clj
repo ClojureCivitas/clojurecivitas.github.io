@@ -9,8 +9,7 @@
 (ns opengl-visualization.main
     (:require [clojure.java.io :as io]
               [clojure.math :refer (to-radians)]
-              [fastmath.vector :refer (vec3 sub add mult)]
-              )
+              [fastmath.vector :refer (vec3 sub add mult normalize)])
     (:import [javax.imageio ImageIO]
              [java.awt.image BufferedImage]
              [org.lwjgl BufferUtils]
@@ -291,7 +290,7 @@ void main()
   (GL13/glActiveTexture GL13/GL_TEXTURE0)
   (GL11/glBindTexture GL11/GL_TEXTURE_2D texture))
 
-(GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0)
+(GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0)
 (screenshot)
 
 ;; ### Finishing up
@@ -426,25 +425,61 @@ void main()
   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
   (GL15/glDeleteBuffers vbo-cube)
   (GL30/glBindVertexArray 0)
-  (GL15/glDeleteBuffers vao))
+  (GL15/glDeleteBuffers vao-cube))
 
 ;; ## Approximating a sphere
 ;;
 ;; Get corners of cube
-(def corners (map #(apply vec3 %) (partition 3 vertices-cube)))
+(def points (map #(apply vec3 %) (partition 3 vertices-cube)))
+points
+
+(def corners (map (fn [[i _ _ _]] (nth points i)) (partition 4 indices-cube)))
 corners
 
-(def u-vectors (map (fn [[i j _ _]] (sub (nth corners j) (nth corners i))) (partition 4 indices-cube)))
+(def u-vectors (map (fn [[i j _ _]] (sub (nth points j) (nth points i))) (partition 4 indices-cube)))
 u-vectors
 
-(def v-vectors (map (fn [[i _ _ l]] (sub (nth corners l) (nth corners i))) (partition 4 indices-cube)))
+(def v-vectors (map (fn [[i _ _ l]] (sub (nth points l) (nth points i))) (partition 4 indices-cube)))
 v-vectors
 
-(defn sphere-points [n c u v] (for [j (range (inc n)) i (range (inc n))] (add c (add (mult u (/ i n)) (mult v  (/ j n))))))
+(defn sphere-points [n c u v] (for [j (range (inc n)) i (range (inc n))] (normalize (add c (add (mult u (/ i n)) (mult v (/ j n)))))))
 (defn sphere-indices [n face] (for [j (range n) i (range n)] (let [offset (+ (* face (inc n) (inc n)) (* j (inc n)) i)] [offset (inc offset) (+ offset n 2) (+ offset n 1)])))
 
 (def n 2)
 (def vertices-sphere (float-array (flatten (map (partial sphere-points n) corners u-vectors v-vectors))))
+(def indices-sphere (int-array (flatten (map (partial sphere-indices n) (range 6)))))
+
+(def vao-sphere (GL30/glGenVertexArrays))
+(GL30/glBindVertexArray vao-sphere)
+
+(def vbo-sphere (GL15/glGenBuffers))
+(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-sphere)
+(def vertices-buffer-sphere (make-float-buffer vertices-sphere))
+(GL15/glBufferData GL15/GL_ARRAY_BUFFER vertices-buffer-sphere GL15/GL_STATIC_DRAW)
+
+(def idx-sphere (GL15/glGenBuffers))
+(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER idx-sphere)
+(def indices-buffer-sphere (make-int-buffer indices-sphere))
+(GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer-sphere GL15/GL_STATIC_DRAW)
+
+(do
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glEnableVertexAttribArray 0))
+
+(do
+  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+  (GL11/glDrawElements GL11/GL_QUADS (count indices-sphere) GL11/GL_UNSIGNED_INT 0)
+  (screenshot))
+
+(do
+  (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+  (GL15/glDeleteBuffers idx-sphere)
+  (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+  (GL15/glDeleteBuffers vbo-sphere)
+  (GL30/glBindVertexArray 0)
+  (GL15/glDeleteBuffers vao-sphere))
+
+
 (GL20/glDeleteProgram program)
 (GL11/glDeleteTextures texture)
 
