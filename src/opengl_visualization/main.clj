@@ -8,7 +8,9 @@
                               :tags     [:visualization]}}}
 (ns opengl-visualization.main
     (:require [clojure.java.io :as io]
-              [clojure.math :refer (to-radians)])
+              [clojure.math :refer (to-radians)]
+              [fastmath.vector :refer (vec3 sub add mult)]
+              )
     (:import [javax.imageio ImageIO]
              [java.awt.image BufferedImage]
              [org.lwjgl BufferUtils]
@@ -241,6 +243,8 @@ void main()
   (def height (int-array 1))
   (def channels (int-array 1))
   (def buffer (STBImage/stbi_load moon-png width height channels 4)))
+(aget width 0)
+(aget height 0)
 
 ;; ### Set up the texture
 (do
@@ -425,8 +429,22 @@ void main()
   (GL15/glDeleteBuffers vao))
 
 ;; ## Approximating a sphere
+;;
+;; Get corners of cube
+(def corners (map #(apply vec3 %) (partition 3 vertices-cube)))
+corners
 
+(def u-vectors (map (fn [[i j _ _]] (sub (nth corners j) (nth corners i))) (partition 4 indices-cube)))
+u-vectors
 
+(def v-vectors (map (fn [[i _ _ l]] (sub (nth corners l) (nth corners i))) (partition 4 indices-cube)))
+v-vectors
+
+(defn sphere-points [n c u v] (for [j (range (inc n)) i (range (inc n))] (add c (add (mult u (/ i n)) (mult v  (/ j n))))))
+(defn sphere-indices [n face] (for [j (range n) i (range n)] (let [offset (+ (* face (inc n) (inc n)) (* j (inc n)) i)] [offset (inc offset) (+ offset n 2) (+ offset n 1)])))
+
+(def n 2)
+(def vertices-sphere (float-array (flatten (map (partial sphere-points n) corners u-vectors v-vectors))))
 (GL20/glDeleteProgram program)
 (GL11/glDeleteTextures texture)
 
