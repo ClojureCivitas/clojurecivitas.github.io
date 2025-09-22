@@ -177,21 +177,22 @@ void main()
 
 ;; ### Setting up the vertex buffer
 ;;
-;; We define a vertex array object (VAO) which acts like a context for the vertex and index buffer.
-(def vao (GL30/glGenVertexArrays))
-(GL30/glBindVertexArray vao)
-
-;; We define a vertex buffer object (VBO) which contains the vertex data.
-(def vbo (GL15/glGenBuffers))
-(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo)
-(def vertices-buffer (make-float-buffer vertices))
-(GL15/glBufferData GL15/GL_ARRAY_BUFFER vertices-buffer GL15/GL_STATIC_DRAW)
-
-;; We also define an index buffer object (IBO) which contains the index data.
-(def idx (GL15/glGenBuffers))
-(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER idx)
-(def indices-buffer (make-int-buffer indices))
-(GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer GL15/GL_STATIC_DRAW)
+;; We add a convenience function to setup VAO, VBO, and IBO.
+;; * We define a vertex array object (VAO) which acts like a context for the vertex and index buffer.
+;; * We define a vertex buffer object (VBO) which contains the vertex data.
+;; * We also define an index buffer object (IBO) which contains the index data.
+(defn setup-vao [vertices indices]
+  (let [vao (GL30/glGenVertexArrays)
+        vbo (GL15/glGenBuffers)
+        ibo (GL15/glGenBuffers)]
+    (GL30/glBindVertexArray vao)
+    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo)
+    (GL15/glBufferData GL15/GL_ARRAY_BUFFER (make-float-buffer vertices) GL15/GL_STATIC_DRAW)
+    (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER ibo)
+    (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER (make-int-buffer indices) GL15/GL_STATIC_DRAW)
+    {:vao vao :vbo vbo :ibo ibo}))
+;; Now we use the function to setup the VAO, VBO, and IBO.
+(def vao (setup-vao vertices indices))
 
 ;; The data of each vertex is defined by 3 floats (x, y, z).
 ;; We need to specify the layout of the vertex buffer object so that OpenGL knows how to interpret it.
@@ -294,14 +295,15 @@ void main()
 (screenshot)
 
 ;; ### Finishing up
-(do
+(defn teardown-vao [{:keys [vao vbo ibo]}]
   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
-  (GL15/glDeleteBuffers idx)
+  (GL15/glDeleteBuffers ibo)
   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
   (GL15/glDeleteBuffers vbo)
   (GL30/glBindVertexArray 0)
   (GL15/glDeleteBuffers vao)
   (GL20/glDeleteProgram program))
+(teardown-vao vao)
 
 ;;; ## Render a 3D cube
 ;;;
@@ -327,21 +329,8 @@ void main()
 
 ;; ### Initialize vertex buffer array
 ;;
-;; We define a vertex array object (VAO) which acts like a context for the vertex and index buffer.
-(def vao-cube (GL30/glGenVertexArrays))
-(GL30/glBindVertexArray vao-cube)
-
-;; We define a vertex buffer object (VBO) which contains the vertex data.
-(def vbo-cube (GL15/glGenBuffers))
-(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-cube)
-(def vertices-buffer-cube (make-float-buffer vertices-cube))
-(GL15/glBufferData GL15/GL_ARRAY_BUFFER vertices-buffer-cube GL15/GL_STATIC_DRAW)
-
-;; We also define an index buffer object (IBO) which contains the index data.
-(def idx-cube (GL15/glGenBuffers))
-(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER idx-cube)
-(def indices-buffer-cube (make-int-buffer indices-cube))
-(GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer-cube GL15/GL_STATIC_DRAW)
+;; We use the function from earlier to set up the VAO, VBO, and IBO.
+(def vao-cube (setup-vao vertices-cube indices-cube))
 
 ;;; ### Shader program mapping texture onto cube
 ;;;
@@ -400,7 +389,7 @@ void main()
 (do
   (GL20/glUseProgram program-moon)
   (GL20/glUniform2f (GL20/glGetUniformLocation program-moon "iResolution") window-width window-height)
-  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "fov") (to-radians 60.0))
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "fov") (to-radians 50.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "alpha") (to-radians -30.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "beta") (to-radians 20.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "distance") 5.0)
@@ -419,13 +408,7 @@ void main()
   (screenshot))
 
 ;; ### Finishing up
-(do
-  (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
-  (GL15/glDeleteBuffers idx-cube)
-  (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-  (GL15/glDeleteBuffers vbo-cube)
-  (GL30/glBindVertexArray 0)
-  (GL15/glDeleteBuffers vao-cube))
+(teardown-vao vao-cube)
 
 ;; ## Approximating a sphere
 ;;
@@ -449,18 +432,7 @@ v-vectors
 (def vertices-sphere (float-array (flatten (map (partial sphere-points n) corners u-vectors v-vectors))))
 (def indices-sphere (int-array (flatten (map (partial sphere-indices n) (range 6)))))
 
-(def vao-sphere (GL30/glGenVertexArrays))
-(GL30/glBindVertexArray vao-sphere)
-
-(def vbo-sphere (GL15/glGenBuffers))
-(GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo-sphere)
-(def vertices-buffer-sphere (make-float-buffer vertices-sphere))
-(GL15/glBufferData GL15/GL_ARRAY_BUFFER vertices-buffer-sphere GL15/GL_STATIC_DRAW)
-
-(def idx-sphere (GL15/glGenBuffers))
-(GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER idx-sphere)
-(def indices-buffer-sphere (make-int-buffer indices-sphere))
-(GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER indices-buffer-sphere GL15/GL_STATIC_DRAW)
+(def vao-sphere (setup-vao vertices-sphere indices-sphere))
 
 (do
   (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
@@ -471,14 +443,22 @@ v-vectors
   (GL11/glDrawElements GL11/GL_QUADS (count indices-sphere) GL11/GL_UNSIGNED_INT 0)
   (screenshot))
 
-(do
-  (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
-  (GL15/glDeleteBuffers idx-sphere)
-  (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
-  (GL15/glDeleteBuffers vbo-sphere)
-  (GL30/glBindVertexArray 0)
-  (GL15/glDeleteBuffers vao-sphere))
+(def n2 16)
+(def vertices-sphere-2 (float-array (flatten (map (partial sphere-points n2) corners u-vectors v-vectors))))
+(def indices-sphere-2 (int-array (flatten (map (partial sphere-indices n2) (range 6)))))
 
+(def vao-sphere (setup-vao vertices-sphere-2 indices-sphere-2))
+
+(do
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glEnableVertexAttribArray 0))
+
+(do
+  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+  (GL11/glDrawElements GL11/GL_QUADS (count indices-sphere-2) GL11/GL_UNSIGNED_INT 0)
+  (screenshot))
+
+(teardown-vao vao-sphere)
 
 (GL20/glDeleteProgram program)
 (GL11/glDeleteTextures texture)
