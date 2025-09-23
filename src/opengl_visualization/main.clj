@@ -70,8 +70,6 @@
 (def window
   (do
     (GLFW/glfwDefaultWindowHints)
-    (GLFW/glfwWindowHint GLFW/GLFW_DEPTH_BITS 24)
-    (GLFW/glfwWindowHint GLFW/GLFW_STENCIL_BITS 8)
     (GLFW/glfwWindowHint GLFW/GLFW_VISIBLE GLFW/GLFW_FALSE)
     (GLFW/glfwCreateWindow window-width window-height "Invisible Window" 0 0)))
 
@@ -96,8 +94,7 @@
 ;; A simple test is to set a clear color, clear depth, and clear the window.
 (do
   (GL11/glClearColor 1.0 0.5 0.25 1.0)
-  (GL11/glClearDepth 0.0)
-  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
   (screenshot))
 
 ;; ### Creating shader programs
@@ -346,18 +343,16 @@ in vec3 point;
 out vec3 vpoint;
 void main()
 {
-  // Rotate by alpha around y axis
-  vec3 ps = vec3(point.x * cos(alpha) - point.z * sin(alpha), point.y, point.x * sin(alpha) + point.z * cos(alpha));
-  // Rotate by beta around x axis
-  vec3 pss = vec3(ps.x, ps.y * cos(beta) - ps.z * sin(beta), ps.y * sin(beta) + ps.z * cos(beta));
-  // Translate
-  vec3 psss = pss + vec3(0, 0, distance);
-  // Projection
+  // Rotate and translate vertex
+  mat3 rot_y = mat3(vec3(cos(alpha), 0, sin(alpha)), vec3(0, 1, 0), vec3(-sin(alpha), 0, cos(alpha)));
+  mat3 rot_x = mat3(vec3(1, 0, 0), vec3(0, cos(beta), -sin(beta)), vec3(0, sin(beta), cos(beta)));
+  vec3 p = rot_x * rot_y * point + vec3(0, 0, distance);
+  // Project vertex creating normalized device coordinates
   float f = 1.0 / tan(fov / 2.0);
   float aspect = iResolution.x / iResolution.y;
-  float proj_x = psss.x / psss.z * f;
-  float proj_y = psss.y / psss.z * f * aspect;
-  float proj_z = psss.z / (2.0 * distance);
+  float proj_x = p.x / p.z * f;
+  float proj_y = p.y / p.z * f * aspect;
+  float proj_z = p.z / (2.0 * distance);
   gl_Position = vec4(proj_x, proj_y, proj_z, 1);
   vpoint = point;
 }")
@@ -391,8 +386,8 @@ void main()
   (GL20/glUseProgram program-moon)
   (GL20/glUniform2f (GL20/glGetUniformLocation program-moon "iResolution") window-width window-height)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "fov") (to-radians 25.0))
-  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "alpha") (to-radians -30.0))
-  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "beta") (to-radians 20.0))
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "alpha") (to-radians 30.0))
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "beta") (to-radians -20.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "distance") 10.0)
   (GL20/glUniform1i (GL20/glGetUniformLocation program-moon "moon") 0)
   (GL13/glActiveTexture GL13/GL_TEXTURE0)
@@ -403,8 +398,7 @@ void main()
   (GL11/glEnable GL11/GL_CULL_FACE)
   (GL11/glCullFace GL11/GL_BACK)
   (GL11/glClearColor 0.0 0.0 0.0 1.0)
-  (GL11/glClearDepth 1.0)
-  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
   (GL11/glDrawElements GL11/GL_QUADS (count indices-cube) GL11/GL_UNSIGNED_INT 0)
   (screenshot))
 
@@ -449,7 +443,7 @@ v-vectors
   (GL20/glEnableVertexAttribArray 0))
 
 (do
-  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
   (GL11/glDrawElements GL11/GL_QUADS (count indices-sphere) GL11/GL_UNSIGNED_INT 0)
   (screenshot))
 
@@ -465,7 +459,7 @@ v-vectors
   (GL20/glEnableVertexAttribArray 0))
 
 (do
-  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
   (GL11/glDrawElements GL11/GL_QUADS (count indices-sphere-2) GL11/GL_UNSIGNED_INT 0)
   (screenshot))
 
@@ -502,12 +496,12 @@ void main()
 (do
   (GL20/glUseProgram program-diffuse)
   (GL20/glUniform2f (GL20/glGetUniformLocation program-diffuse "iResolution") window-width window-height)
-  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "fov") (to-radians 25.0))
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "fov") (to-radians 20.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "alpha") (to-radians 0.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "beta") (to-radians 0.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "distance") 10.0)
-  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "ambient") 0.2)
-  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "diffuse") 0.8)
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "ambient") 0.0)
+  (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "diffuse") 1.0)
   (GL20/glUniform3f (GL20/glGetUniformLocation program-diffuse "light") (light 0) (light 1) (light 2))
   (GL20/glUniform1i (GL20/glGetUniformLocation program-diffuse "moon") 0)
   (GL13/glActiveTexture GL13/GL_TEXTURE0)
@@ -515,7 +509,7 @@ void main()
 
 ;; Enable backface culling and render.
 (do
-  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+  (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
   (GL11/glDrawElements GL11/GL_QUADS (count indices-sphere-2) GL11/GL_UNSIGNED_INT 0)
   (screenshot))
 
@@ -526,7 +520,9 @@ void main()
 ;; Delete the texture
 (GL11/glDeleteTextures texture)
 
-;; ### Finalizing GLFW
+;; ### Using normal mapping
+
+;; ## Finalizing GLFW
 ;;
 ;; When we are finished, we destroy the window.
 (GLFW/glfwDestroyWindow window)
