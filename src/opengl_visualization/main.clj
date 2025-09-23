@@ -14,7 +14,7 @@
              [org.lwjgl BufferUtils]
              [org.lwjgl.glfw GLFW]
              [org.lwjgl.opengl GL GL11 GL13 GL15 GL20 GL30]
-             [org.lwjgl.stb STBImage STBImageWrite]))
+             [org.lwjgl.stb STBImageWrite]))
 
 ;; ## Getting dependencies
 ;;
@@ -33,7 +33,7 @@
 ;; (import '[javax.imageio ImageIO]
 ;;         '[org.lwjgl BufferUtils]
 ;;         '[org.lwjgl.glfw GLFW]
-;;         '[org.lwjgl.opengl GL GL11 GL15 GL20 GL30]
+;;         '[org.lwjgl.opengl GL GL11 GL13 GL15 GL20 GL30]
 ;;         '[org.lwjgl.stb STBImageWrite])
 ;; ```
 
@@ -237,34 +237,28 @@ void main()
 (when (not (.exists (io/file moon-tif)))
   (download "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_2k.tif" moon-tif))
 
-;; Use ImageIO to convert it to PNG
-(def moon-png "src/opengl_visualization/lroc_color_poles_2k.png")
-(when (not (.exists (io/file moon-png)))
-  (ImageIO/write (ImageIO/read (io/file moon-tif)) "png" (io/file moon-png)))
-
 ;; ### Create a texture
 ;;
 ;; Loading the image
-(do
-  (def color-width (int-array 1))
-  (def color-height (int-array 1))
-  (def color-channels (int-array 1))
-  (def color-buffer (STBImage/stbi_load moon-png color-width color-height color-channels 4)))
-(aget color-width 0)
-(aget color-height 0)
+(def color (ImageIO/read (io/file moon-tif)))
+(def color-raster (.getRaster color))
+(def color-width (.getWidth color-raster))
+(def color-height (.getHeight color-raster))
+(def color-channels (.getNumBands color-raster))
+(def color-pixels (int-array (* color-width color-height color-channels)))
+(do (.getPixels color-raster 0 0 color-width color-height color-pixels) nil)
 
 ;; Set up the color texture.
 (do
   (def texture-color (GL11/glGenTextures))
   (GL11/glBindTexture GL11/GL_TEXTURE_2D texture-color)
-  (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGBA (aget color-width 0) (aget color-height 0)
-                     0 GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE color-buffer)
+  (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGBA color-width color-height 0
+                     GL11/GL_RGB GL11/GL_UNSIGNED_BYTE (make-byte-buffer (byte-array (map unchecked-byte color-pixels))))
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
-  (GL11/glBindTexture GL11/GL_TEXTURE_2D 0)
-  (STBImage/stbi_image_free color-buffer))
+  (GL11/glBindTexture GL11/GL_TEXTURE_2D 0))
 
 ;; ### Rendering the texture
 (def vertex-tex "
@@ -579,11 +573,11 @@ void main()
 
 ;; The image is read using ImageIO and the floating point elevation data is extracted.
 (def ldem (ImageIO/read (io/file moon-ldem)))
-(def raster (.getRaster ldem))
+(def ldem-raster (.getRaster ldem))
 (def ldem-width (.getWidth ldem))
 (def ldem-height (.getHeight ldem))
-(def pixels (float-array (* ldem-width ldem-height)))
-(do (.getPixels raster 0 0 ldem-width ldem-height pixels) nil)
+(def ldem-pixels (float-array (* ldem-width ldem-height)))
+(do (.getPixels ldem-raster 0 0 ldem-width ldem-height ldem-pixels) nil)
 (def resolution (/ (* 2.0 PI radius) ldem-width))
 
 ;; The floating point pixel data is converted into a texture
@@ -594,7 +588,7 @@ void main()
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
-  (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL30/GL_R32F ldem-width ldem-height 0 GL11/GL_RED GL11/GL_FLOAT pixels))
+  (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL30/GL_R32F ldem-width ldem-height 0 GL11/GL_RED GL11/GL_FLOAT ldem-pixels))
 
 ;; ### Create shader program with normal mapping
 (def vertex-normal "
