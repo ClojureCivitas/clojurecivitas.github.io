@@ -104,7 +104,24 @@
    :name        "Jan Wedekind"
    :url         "https://www.wedesoft.de/"
    :image       "https://avatars.githubusercontent.com/u/28663?v=4"
-   :links       [{:icon "github" :href "https://github.com/wedesoft"}]}]
+   :links       [{:icon "github" :href "https://github.com/wedesoft"}]}
+  {:id          :kloimhardt
+   :name        "Markus Agwin Kloimwieder"
+   :url         "https://github.com/kloimhardt"
+   :affiliation [:scicloj]}
+  {:id          :edwardaw
+   :name        "Edward Widjaja"
+   :url         "https://github.com/W-Edward"
+   :image       "https://avatars.githubusercontent.com/u/36920869?v=4"
+   :email       "edwardaw@connect.hku.hk"
+   :affiliation [:cim]
+   :links       [{:icon "github" :href "https://github.com/W-Edward"}]}
+  {:id          :mattb
+   :name        "Matthias Buehlmaier"
+   :affiliation [:cim]}
+  {:id          :tanvi
+   :name        "Tanvi Nagar"
+   :affiliation [:cim]}]
 
  :affiliation
  [{:id   :clojure.core
@@ -122,7 +139,11 @@
    :url  "https://hummi.app"}
   {:id   :techascent
    :name "TechAscent"
-   :url "https://techascent.com"}]
+   :url "https://techascent.com"}
+  {:id   :cim
+   :name "cim"
+   :url  "https://cim.hkubs.hku.hk/"
+  }]
 
  :topic
  [{:id        :core

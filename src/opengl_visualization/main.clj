@@ -191,6 +191,7 @@ void main()
 ;; ### Setting up the vertex buffer
 ;;
 ;; We add a convenience function to setup VAO, VBO, and IBO.
+;;
 ;; * We define a vertex array object (VAO) which acts like a context for the vertex and index buffer.
 ;; * We define a vertex buffer object (VBO) which contains the vertex data.
 ;; * We also define an index buffer object (IBO) which contains the index data.
@@ -581,6 +582,7 @@ v-vectors
 ;;
 ;; In order to introduce lighting we add ambient and diffuse lighting to the fragment shader.
 ;; We use the ambient and diffuse lighting from the [Phong shading model](https://learnopengl.com/Lighting/Basic-Lighting).
+;;
 ;; * The ambient light is a constant value.
 ;; * The diffuse light is calculated using the dot product of the light vector and the normal vector.
 (def fragment-moon-diffuse "
@@ -694,6 +696,7 @@ void main()
 ;; We reuse the vertex shader from the previous section.
 ;;
 ;; The fragment shader this time is more involved.
+;;
 ;; * A horizon matrix with normal, tangent, and bitangent vectors is computed/
 ;; * The elevation is sampled in four directions from the current 3D point.
 ;; * The elevation values are used to create two surface vectors.
@@ -831,6 +834,7 @@ void main()
 ;; I hope you liked this 3D graphics example.
 ;;
 ;; Note that in practise you will
+;;
 ;; * use higher resolution data and map the data onto texture tiles
 ;; * generate textures containing normal maps offline
 ;; * create a multiresolution map

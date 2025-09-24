@@ -36,3 +36,4 @@ _site/
 .calva/mcp-server/port
 .portal/vs-code.edn
 **/password.edn
+/src/finance/portfolio_analysis/*.edn

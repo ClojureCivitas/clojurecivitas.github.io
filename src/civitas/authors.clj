@@ -34,7 +34,7 @@
 (let [affiliations (db/index-by :id (:affiliation @db/db))]
   (into ^:kind/hiccup [:div]
         (comp (map #(card % affiliations))
-              (partition-all 4)
+              (partition-all 5)
               (map #(into [:div.card-group] %)))
         (->> (:author @db/db)
              (sort-by :name))))
