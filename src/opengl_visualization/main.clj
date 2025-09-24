@@ -2,7 +2,7 @@
   :clay             {:title  "OpenGL Visualization with LWJGL"
                      :external-requirements ["Xorg"]
                      :quarto {:author   [:janwedekind]
-                              :description "A short introduction to LWJGL's OpenGL bindings by using it to render data from NASA's CGI Moon Kit"
+                              :description "Using LWJGL's OpenGL bindings and Fastmath to render data from NASA's CGI Moon Kit"
                               :image    "moon.jpg"
                               :type     :post
                               :date     "2025-09-24"
@@ -63,8 +63,10 @@
   []
   (let [filename (tmpname)
         buffer   (java.nio.ByteBuffer/allocateDirect (* 4 window-width window-height))]
-    (GL11/glReadPixels 0 0 window-width window-height GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE buffer)
-    (STBImageWrite/stbi_write_png filename window-width window-height 4 buffer (* 4 window-width))
+    (GL11/glReadPixels 0 0 window-width window-height
+                       GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE buffer)
+    (STBImageWrite/stbi_write_png filename window-width window-height 4
+                                  buffer (* 4 window-width))
     (-> filename io/file (ImageIO/read))))
 
 ;; We need to initialize the GLFW library.
@@ -198,9 +200,11 @@ void main()
         ibo (GL15/glGenBuffers)]
     (GL30/glBindVertexArray vao)
     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo)
-    (GL15/glBufferData GL15/GL_ARRAY_BUFFER (make-float-buffer vertices) GL15/GL_STATIC_DRAW)
+    (GL15/glBufferData GL15/GL_ARRAY_BUFFER (make-float-buffer vertices)
+                       GL15/GL_STATIC_DRAW)
     (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER ibo)
-    (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER (make-int-buffer indices) GL15/GL_STATIC_DRAW)
+    (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER (make-int-buffer indices)
+                       GL15/GL_STATIC_DRAW)
     {:vao vao :vbo vbo :ibo ibo}))
 ;; Now we use the function to setup the VAO, VBO, and IBO.
 (def vao (setup-vao vertices indices))
@@ -208,7 +212,8 @@ void main()
 ;; The data of each vertex is defined by 3 floats (x, y, z).
 ;; We need to specify the layout of the vertex buffer object so that OpenGL knows how to interpret it.
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 
 ;; ### Rendering the quad
@@ -216,7 +221,8 @@ void main()
 ;; We select the program and define the uniform variable iResolution.
 (do
   (GL20/glUseProgram program)
-  (GL20/glUniform2f (GL20/glGetUniformLocation program "iResolution") window-width window-height))
+  (GL20/glUniform2f (GL20/glGetUniformLocation program "iResolution")
+                    window-width window-height))
 
 ;; Since the correct VAO is already bound from the earlier example, we are now ready to draw the quad.
 (GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0)
@@ -238,11 +244,13 @@ void main()
               out (io/output-stream target)]
     (io/copy in out)))
 
-;; If it does not exist, we download the lunar color map from the [NASA CGI Moon Kit](https://svs.gsfc.nasa.gov/4720/)/
+;; If it does not exist, we download the lunar color map from the [NASA CGI Moon Kit](https://svs.gsfc.nasa.gov/4720/).
 (do
   (def moon-tif "src/opengl_visualization/lroc_color_poles_2k.tif")
   (when (not (.exists (io/file moon-tif)))
-    (download "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_2k.tif" moon-tif)))
+    (download
+      "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_2k.tif"
+      moon-tif)))
 
 ;; ### Create a texture
 ;;
@@ -262,7 +270,8 @@ void main()
   (def texture-color (GL11/glGenTextures))
   (GL11/glBindTexture GL11/GL_TEXTURE_2D texture-color)
   (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGBA color-width color-height 0
-                     GL11/GL_RGB GL11/GL_UNSIGNED_BYTE (make-byte-buffer (byte-array (map unchecked-byte color-pixels))))
+                     GL11/GL_RGB GL11/GL_UNSIGNED_BYTE
+                     (make-byte-buffer (byte-array (map unchecked-byte color-pixels))))
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
@@ -303,13 +312,15 @@ void main()
 
 ;; We need to set up the layout of the vertex data again.
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation tex-program "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation tex-program "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 
 ;; We set the resolution and bind the texture to the texture slot number 0.
 (do
   (GL20/glUseProgram tex-program)
-  (GL20/glUniform2f (GL20/glGetUniformLocation tex-program "iResolution") window-width window-height)
+  (GL20/glUniform2f (GL20/glGetUniformLocation tex-program "iResolution")
+                    window-width window-height)
   (GL20/glUniform1i (GL20/glGetUniformLocation tex-program "moon") 0)
   (GL13/glActiveTexture GL13/GL_TEXTURE0)
   (GL11/glBindTexture GL11/GL_TEXTURE_2D texture-color))
@@ -383,8 +394,12 @@ out vec3 vpoint;
 void main()
 {
   // Rotate and translate vertex
-  mat3 rot_y = mat3(vec3(cos(alpha), 0, sin(alpha)), vec3(0, 1, 0), vec3(-sin(alpha), 0, cos(alpha)));
-  mat3 rot_x = mat3(vec3(1, 0, 0), vec3(0, cos(beta), -sin(beta)), vec3(0, sin(beta), cos(beta)));
+  mat3 rot_y = mat3(vec3(cos(alpha), 0, sin(alpha)),
+                    vec3(0, 1, 0),
+                    vec3(-sin(alpha), 0, cos(alpha)));
+  mat3 rot_x = mat3(vec3(1, 0, 0),
+                    vec3(0, cos(beta), -sin(beta)),
+                    vec3(0, sin(beta), cos(beta)));
   vec3 p = rot_x * rot_y * point + vec3(0, 0, distance);
 
   // Project vertex creating normalized device coordinates
@@ -434,7 +449,8 @@ void main()
 
 ;; We need to set up the memory layout again.
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 
 ;; ### Rendering the cube
@@ -473,29 +489,41 @@ void main()
 ;; ### Creating the vertex data
 ;;
 ;; First we partition the vertex data and convert the triplets to 8 Fastmath vectors.
-(def points (map #(apply vec3 %) (partition 3 vertices-cube)))
+(def points
+  (map #(apply vec3 %)
+       (partition 3 vertices-cube)))
 points
 
 ;; Then we use the index array to get the coordinates of the first corner of each face resulting in 6 Fastmath vectors.
-(def corners (map (fn [[i _ _ _]] (nth points i)) (partition 4 indices-cube)))
+(def corners
+  (map (fn [[i _ _ _]] (nth points i))
+       (partition 4 indices-cube)))
 corners
 
 ;; We get the first spanning vector of each face by subtracting the second corner from the first.
-(def u-vectors (map (fn [[i j _ _]] (sub (nth points j) (nth points i))) (partition 4 indices-cube)))
+(def u-vectors
+  (map (fn [[i j _ _]] (sub (nth points j) (nth points i)))
+       (partition 4 indices-cube)))
 u-vectors
 
 ;; We get the second spanning vector of each face by subtracting the fourth corner from the first.
-(def v-vectors (map (fn [[i _ _ l]] (sub (nth points l) (nth points i))) (partition 4 indices-cube)))
+(def v-vectors
+  (map (fn [[i _ _ l]] (sub (nth points l) (nth points i)))
+       (partition 4 indices-cube)))
 v-vectors
 
 ;; We can now use vector math to subsample the faces and project the points onto a sphere by normalizing the vectors and multiplying with the moon radius.
 (defn sphere-points [n c u v]
-  (for [j (range (inc n)) i (range (inc n))] (mult (normalize (add c (add (mult u (/ i n)) (mult v (/ j n))))) radius)))
+  (for [j (range (inc n)) i (range (inc n))]
+       (mult (normalize (add c (add (mult u (/ i n)) (mult v (/ j n))))) radius)))
 ;; Subdividing once results in 9 corners for a cube face.
 (sphere-points 2 (nth corners 0) (nth u-vectors 0) (nth v-vectors 0))
 
 ;; We also need a function to generate the indices for the quads.
-(defn sphere-indices [n face] (for [j (range n) i (range n)] (let [offset (+ (* face (inc n) (inc n)) (* j (inc n)) i)] [offset (inc offset) (+ offset n 2) (+ offset n 1)])))
+(defn sphere-indices [n face]
+  (for [j (range n) i (range n)]
+       (let [offset (+ (* face (inc n) (inc n)) (* j (inc n)) i)]
+         [offset (inc offset) (+ offset n 2) (+ offset n 1)])))
 ;; Subdividing once results in 4 quads for a cube face.
 (sphere-indices 2 0)
 
@@ -504,13 +532,15 @@ v-vectors
 ;; We subdivide once (n=2) and create a VAO with the data.
 (do
   (def n 2)
-  (def vertices-sphere (float-array (flatten (map (partial sphere-points n) corners u-vectors v-vectors))))
+  (def vertices-sphere (float-array (flatten (map (partial sphere-points n)
+                                                  corners u-vectors v-vectors))))
   (def indices-sphere (int-array (flatten (map (partial sphere-indices n) (range 6)))))
   (def vao-sphere (setup-vao vertices-sphere indices-sphere)))
 
 ;; The layout needs to be configured again.
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 
 ;; The distance needs to be increased, because the points are on a sphere with the radius of the moon.
@@ -535,7 +565,8 @@ v-vectors
 
 ;; We set up the vertex layout again.
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 
 ;; Rendering the mesh now results in a spherical mesh with a texture.
@@ -590,7 +621,8 @@ void main()
 
 ;; We set up the vertex data layout again.
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-diffuse "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-diffuse "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 
 ;; A normalized light vector is defined.
@@ -599,14 +631,16 @@ void main()
 ;; Before rendering we need to set up the various uniform values.
 (do
   (GL20/glUseProgram program-diffuse)
-  (GL20/glUniform2f (GL20/glGetUniformLocation program-diffuse "iResolution") window-width window-height)
+  (GL20/glUniform2f (GL20/glGetUniformLocation program-diffuse "iResolution")
+                    window-width window-height)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "fov") (to-radians 20.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "alpha") (to-radians 0.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "beta") (to-radians 0.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "distance") (* radius 10.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "ambient") 0.0)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "diffuse") 1.6)
-  (GL20/glUniform3f (GL20/glGetUniformLocation program-diffuse "light") (light 0) (light 1) (light 2))
+  (GL20/glUniform3f (GL20/glGetUniformLocation program-diffuse "light")
+                    (light 0) (light 1) (light 2))
   (GL20/glUniform1i (GL20/glGetUniformLocation program-diffuse "moon") 0)
   (GL13/glActiveTexture GL13/GL_TEXTURE0)
   (GL11/glBindTexture GL11/GL_TEXTURE_2D texture-color))
@@ -629,16 +663,20 @@ void main()
 (do
   (def moon-ldem "src/opengl_visualization/ldem_4.tif")
   (when (not (.exists (io/file moon-ldem)))
-    (download "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/ldem_4.tif" moon-ldem)))
+    (download "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/ldem_4.tif"
+              moon-ldem)))
 
 ;; The image is read using ImageIO and the floating point elevation data is extracted.
-(def ldem (ImageIO/read (io/file moon-ldem)))
-(def ldem-raster (.getRaster ldem))
-(def ldem-width (.getWidth ldem))
-(def ldem-height (.getHeight ldem))
-(def ldem-pixels (float-array (* ldem-width ldem-height)))
-(do (.getPixels ldem-raster 0 0 ldem-width ldem-height ldem-pixels) nil)
-(def resolution (/ (* 2.0 PI radius) ldem-width))
+(do
+  (def ldem (ImageIO/read (io/file moon-ldem)))
+  (def ldem-raster (.getRaster ldem))
+  (def ldem-width (.getWidth ldem))
+  (def ldem-height (.getHeight ldem))
+  (def ldem-pixels (float-array (* ldem-width ldem-height)))
+  (do (.getPixels ldem-raster 0 0 ldem-width ldem-height ldem-pixels) nil)
+  (def resolution (/ (* 2.0 PI radius) ldem-width))
+  [ldem-width ldem-height]
+  )
 
 ;; The floating point pixel data is converted into a texture
 (do
@@ -648,7 +686,8 @@ void main()
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
-  (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL30/GL_R32F ldem-width ldem-height 0 GL11/GL_RED GL11/GL_FLOAT ldem-pixels))
+  (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL30/GL_R32F ldem-width ldem-height 0
+                     GL11/GL_RED GL11/GL_FLOAT ldem-pixels))
 
 ;; ### Create shader program with normal mapping
 ;;
@@ -742,13 +781,15 @@ void main()
 
 ;; We set up the vertex data layout again.
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-normal "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-normal "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 
 ;; Apart from the uniform values we also need to set up two textures this time: the color texture and the elevation texture.
 (do
   (GL20/glUseProgram program-normal)
-  (GL20/glUniform2f (GL20/glGetUniformLocation program-normal "iResolution") window-width window-height)
+  (GL20/glUniform2f (GL20/glGetUniformLocation program-normal "iResolution")
+                    window-width window-height)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "fov") (to-radians 20.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "alpha") (to-radians 0.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "beta") (to-radians 0.0))
@@ -756,7 +797,8 @@ void main()
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "resolution") resolution)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "ambient") 0.0)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "diffuse") 1.6)
-  (GL20/glUniform3f (GL20/glGetUniformLocation program-normal "light") (light 0) (light 1) (light 2))
+  (GL20/glUniform3f (GL20/glGetUniformLocation program-normal "light")
+                    (light 0) (light 1) (light 2))
   (GL20/glUniform1i (GL20/glGetUniformLocation program-normal "moon") 0)
   (GL20/glUniform1i (GL20/glGetUniformLocation program-normal "ldem") 1)
   (GL13/glActiveTexture GL13/GL_TEXTURE0)

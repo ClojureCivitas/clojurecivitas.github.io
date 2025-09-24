@@ -5,7 +5,7 @@ author:
   image: https://avatars.githubusercontent.com/u/28663?v=4
   links:
   - {icon: github, href: 'https://github.com/wedesoft'}
-description: A short introduction to LWJGL's OpenGL bindings by using it to render data from NASA's CGI Moon Kit
+description: Using LWJGL's OpenGL bindings and Fastmath to render data from NASA's CGI Moon Kit
 image: moon.jpg
 type: post
 date: '2025-09-24'
@@ -109,8 +109,10 @@ We read the pixels, write them to a temporary file using the STB library and the
   []
   (let [filename (tmpname)
         buffer   (java.nio.ByteBuffer/allocateDirect (* 4 window-width window-height))]
-    (GL11/glReadPixels 0 0 window-width window-height GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE buffer)
-    (STBImageWrite/stbi_write_png filename window-width window-height 4 buffer (* 4 window-width))
+    (GL11/glReadPixels 0 0 window-width window-height
+                       GL11/GL_RGBA GL11/GL_UNSIGNED_BYTE buffer)
+    (STBImageWrite/stbi_write_png filename window-width window-height 4
+                                  buffer (* 4 window-width))
     (-> filename io/file (ImageIO/read))))
 ```
 :::
@@ -175,7 +177,7 @@ Next we need to set up OpenGL rendering for this window.
 
 ::: {.printedClojure}
 ```clojure
-#object[org.lwjgl.opengl.GLCapabilities 0x6c66f8f9 "org.lwjgl.opengl.GLCapabilities@6c66f8f9"]
+#object[org.lwjgl.opengl.GLCapabilities 0x3763ef0d "org.lwjgl.opengl.GLCapabilities@3763ef0d"]
 
 ```
 :::
@@ -391,9 +393,11 @@ We add a convenience function to setup VAO, VBO, and IBO.
         ibo (GL15/glGenBuffers)]
     (GL30/glBindVertexArray vao)
     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo)
-    (GL15/glBufferData GL15/GL_ARRAY_BUFFER (make-float-buffer vertices) GL15/GL_STATIC_DRAW)
+    (GL15/glBufferData GL15/GL_ARRAY_BUFFER (make-float-buffer vertices)
+                       GL15/GL_STATIC_DRAW)
     (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER ibo)
-    (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER (make-int-buffer indices) GL15/GL_STATIC_DRAW)
+    (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER (make-int-buffer indices)
+                       GL15/GL_STATIC_DRAW)
     {:vao vao :vbo vbo :ibo ibo}))
 ```
 :::
@@ -416,7 +420,8 @@ We need to specify the layout of the vertex buffer object so that OpenGL knows h
 ::: {.sourceClojure}
 ```clojure
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 ```
 :::
@@ -441,7 +446,8 @@ We select the program and define the uniform variable iResolution.
 ```clojure
 (do
   (GL20/glUseProgram program)
-  (GL20/glUniform2f (GL20/glGetUniformLocation program "iResolution") window-width window-height))
+  (GL20/glUniform2f (GL20/glGetUniformLocation program "iResolution")
+                    window-width window-height))
 ```
 :::
 
@@ -533,7 +539,7 @@ We define a function to download a file from the web.
 :::
 
 
-If it does not exist, we download the lunar color map from the [NASA CGI Moon Kit](https://svs.gsfc.nasa.gov/4720/)/
+If it does not exist, we download the lunar color map from the [NASA CGI Moon Kit](https://svs.gsfc.nasa.gov/4720/).
 
 
 ::: {.sourceClojure}
@@ -541,7 +547,9 @@ If it does not exist, we download the lunar color map from the [NASA CGI Moon Ki
 (do
   (def moon-tif "src/opengl_visualization/lroc_color_poles_2k.tif")
   (when (not (.exists (io/file moon-tif)))
-    (download "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_2k.tif" moon-tif)))
+    (download
+      "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_2k.tif"
+      moon-tif)))
 ```
 :::
 
@@ -594,7 +602,8 @@ Then we create an OpenGL texture from the RGB data.
   (def texture-color (GL11/glGenTextures))
   (GL11/glBindTexture GL11/GL_TEXTURE_2D texture-color)
   (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL11/GL_RGBA color-width color-height 0
-                     GL11/GL_RGB GL11/GL_UNSIGNED_BYTE (make-byte-buffer (byte-array (map unchecked-byte color-pixels))))
+                     GL11/GL_RGB GL11/GL_UNSIGNED_BYTE
+                     (make-byte-buffer (byte-array (map unchecked-byte color-pixels))))
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
@@ -682,7 +691,8 @@ We need to set up the layout of the vertex data again.
 ::: {.sourceClojure}
 ```clojure
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation tex-program "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation tex-program "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 ```
 :::
@@ -704,7 +714,8 @@ We set the resolution and bind the texture to the texture slot number 0.
 ```clojure
 (do
   (GL20/glUseProgram tex-program)
-  (GL20/glUniform2f (GL20/glGetUniformLocation tex-program "iResolution") window-width window-height)
+  (GL20/glUniform2f (GL20/glGetUniformLocation tex-program "iResolution")
+                    window-width window-height)
   (GL20/glUniform1i (GL20/glGetUniformLocation tex-program "moon") 0)
   (GL13/glActiveTexture GL13/GL_TEXTURE0)
   (GL11/glBindTexture GL11/GL_TEXTURE_2D texture-color))
@@ -875,8 +886,12 @@ out vec3 vpoint;
 void main()
 {
   // Rotate and translate vertex
-  mat3 rot_y = mat3(vec3(cos(alpha), 0, sin(alpha)), vec3(0, 1, 0), vec3(-sin(alpha), 0, cos(alpha)));
-  mat3 rot_x = mat3(vec3(1, 0, 0), vec3(0, cos(beta), -sin(beta)), vec3(0, sin(beta), cos(beta)));
+  mat3 rot_y = mat3(vec3(cos(alpha), 0, sin(alpha)),
+                    vec3(0, 1, 0),
+                    vec3(-sin(alpha), 0, cos(alpha)));
+  mat3 rot_x = mat3(vec3(1, 0, 0),
+                    vec3(0, cos(beta), -sin(beta)),
+                    vec3(0, sin(beta), cos(beta)));
   vec3 p = rot_x * rot_y * point + vec3(0, 0, distance);
 
   // Project vertex creating normalized device coordinates
@@ -956,7 +971,8 @@ We need to set up the memory layout again.
 ::: {.sourceClojure}
 ```clojure
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 ```
 :::
@@ -1063,7 +1079,9 @@ First we partition the vertex data and convert the triplets to 8 Fastmath vector
 
 ::: {.sourceClojure}
 ```clojure
-(def points (map #(apply vec3 %) (partition 3 vertices-cube)))
+(def points
+  (map #(apply vec3 %)
+       (partition 3 vertices-cube)))
 ```
 :::
 
@@ -1097,7 +1115,9 @@ Then we use the index array to get the coordinates of the first corner of each f
 
 ::: {.sourceClojure}
 ```clojure
-(def corners (map (fn [[i _ _ _]] (nth points i)) (partition 4 indices-cube)))
+(def corners
+  (map (fn [[i _ _ _]] (nth points i))
+       (partition 4 indices-cube)))
 ```
 :::
 
@@ -1129,7 +1149,9 @@ We get the first spanning vector of each face by subtracting the second corner f
 
 ::: {.sourceClojure}
 ```clojure
-(def u-vectors (map (fn [[i j _ _]] (sub (nth points j) (nth points i))) (partition 4 indices-cube)))
+(def u-vectors
+  (map (fn [[i j _ _]] (sub (nth points j) (nth points i)))
+       (partition 4 indices-cube)))
 ```
 :::
 
@@ -1161,7 +1183,9 @@ We get the second spanning vector of each face by subtracting the fourth corner 
 
 ::: {.sourceClojure}
 ```clojure
-(def v-vectors (map (fn [[i _ _ l]] (sub (nth points l) (nth points i))) (partition 4 indices-cube)))
+(def v-vectors
+  (map (fn [[i _ _ l]] (sub (nth points l) (nth points i)))
+       (partition 4 indices-cube)))
 ```
 :::
 
@@ -1194,7 +1218,8 @@ We can now use vector math to subsample the faces and project the points onto a 
 ::: {.sourceClojure}
 ```clojure
 (defn sphere-points [n c u v]
-  (for [j (range (inc n)) i (range (inc n))] (mult (normalize (add c (add (mult u (/ i n)) (mult v (/ j n))))) radius)))
+  (for [j (range (inc n)) i (range (inc n))]
+       (mult (normalize (add c (add (mult u (/ i n)) (mult v (/ j n))))) radius)))
 ```
 :::
 
@@ -1231,7 +1256,10 @@ We also need a function to generate the indices for the quads.
 
 ::: {.sourceClojure}
 ```clojure
-(defn sphere-indices [n face] (for [j (range n) i (range n)] (let [offset (+ (* face (inc n) (inc n)) (* j (inc n)) i)] [offset (inc offset) (+ offset n 2) (+ offset n 1)])))
+(defn sphere-indices [n face]
+  (for [j (range n) i (range n)]
+       (let [offset (+ (* face (inc n) (inc n)) (* j (inc n)) i)]
+         [offset (inc offset) (+ offset n 2) (+ offset n 1)])))
 ```
 :::
 
@@ -1265,7 +1293,8 @@ We subdivide once (n=2) and create a VAO with the data.
 ```clojure
 (do
   (def n 2)
-  (def vertices-sphere (float-array (flatten (map (partial sphere-points n) corners u-vectors v-vectors))))
+  (def vertices-sphere (float-array (flatten (map (partial sphere-points n)
+                                                  corners u-vectors v-vectors))))
   (def indices-sphere (int-array (flatten (map (partial sphere-indices n) (range 6)))))
   (def vao-sphere (setup-vao vertices-sphere indices-sphere)))
 ```
@@ -1287,7 +1316,8 @@ The layout needs to be configured again.
 ::: {.sourceClojure}
 ```clojure
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 ```
 :::
@@ -1392,7 +1422,8 @@ We set up the vertex layout again.
 ::: {.sourceClojure}
 ```clojure
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-moon "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 ```
 :::
@@ -1518,7 +1549,8 @@ We set up the vertex data layout again.
 ::: {.sourceClojure}
 ```clojure
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-diffuse "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-diffuse "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 ```
 :::
@@ -1550,14 +1582,16 @@ Before rendering we need to set up the various uniform values.
 ```clojure
 (do
   (GL20/glUseProgram program-diffuse)
-  (GL20/glUniform2f (GL20/glGetUniformLocation program-diffuse "iResolution") window-width window-height)
+  (GL20/glUniform2f (GL20/glGetUniformLocation program-diffuse "iResolution")
+                    window-width window-height)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "fov") (to-radians 20.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "alpha") (to-radians 0.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "beta") (to-radians 0.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "distance") (* radius 10.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "ambient") 0.0)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-diffuse "diffuse") 1.6)
-  (GL20/glUniform3f (GL20/glGetUniformLocation program-diffuse "light") (light 0) (light 1) (light 2))
+  (GL20/glUniform3f (GL20/glGetUniformLocation program-diffuse "light")
+                    (light 0) (light 1) (light 2))
   (GL20/glUniform1i (GL20/glGetUniformLocation program-diffuse "moon") 0)
   (GL13/glActiveTexture GL13/GL_TEXTURE0)
   (GL11/glBindTexture GL11/GL_TEXTURE_2D texture-color))
@@ -1630,7 +1664,8 @@ The lunar elevation data is downloaded from NASA's website.
 (do
   (def moon-ldem "src/opengl_visualization/ldem_4.tif")
   (when (not (.exists (io/file moon-ldem)))
-    (download "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/ldem_4.tif" moon-ldem)))
+    (download "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/ldem_4.tif"
+              moon-ldem)))
 ```
 :::
 
@@ -1649,47 +1684,16 @@ The image is read using ImageIO and the floating point elevation data is extract
 
 ::: {.sourceClojure}
 ```clojure
-(def ldem (ImageIO/read (io/file moon-ldem)))
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(def ldem-raster (.getRaster ldem))
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(def ldem-width (.getWidth ldem))
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(def ldem-height (.getHeight ldem))
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(def ldem-pixels (float-array (* ldem-width ldem-height)))
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(do (.getPixels ldem-raster 0 0 ldem-width ldem-height ldem-pixels) nil)
+(do
+  (def ldem (ImageIO/read (io/file moon-ldem)))
+  (def ldem-raster (.getRaster ldem))
+  (def ldem-width (.getWidth ldem))
+  (def ldem-height (.getHeight ldem))
+  (def ldem-pixels (float-array (* ldem-width ldem-height)))
+  (do (.getPixels ldem-raster 0 0 ldem-width ldem-height ldem-pixels) nil)
+  (def resolution (/ (* 2.0 PI radius) ldem-width))
+  [ldem-width ldem-height]
+  )
 ```
 :::
 
@@ -1697,16 +1701,8 @@ The image is read using ImageIO and the floating point elevation data is extract
 
 ::: {.printedClojure}
 ```clojure
-nil
+[1440 720]
 
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(def resolution (/ (* 2.0 PI radius) ldem-width))
 ```
 :::
 
@@ -1723,7 +1719,8 @@ The floating point pixel data is converted into a texture
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
   (GL11/glTexParameteri GL11/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
-  (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL30/GL_R32F ldem-width ldem-height 0 GL11/GL_RED GL11/GL_FLOAT ldem-pixels))
+  (GL11/glTexImage2D GL11/GL_TEXTURE_2D 0 GL30/GL_R32F ldem-width ldem-height 0
+                     GL11/GL_RED GL11/GL_FLOAT ldem-pixels))
 ```
 :::
 
@@ -1857,7 +1854,8 @@ We set up the vertex data layout again.
 ::: {.sourceClojure}
 ```clojure
 (do
-  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-normal "point") 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+  (GL20/glVertexAttribPointer (GL20/glGetAttribLocation program-normal "point") 3
+                              GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
   (GL20/glEnableVertexAttribArray 0))
 ```
 :::
@@ -1879,7 +1877,8 @@ Apart from the uniform values we also need to set up two textures this time: the
 ```clojure
 (do
   (GL20/glUseProgram program-normal)
-  (GL20/glUniform2f (GL20/glGetUniformLocation program-normal "iResolution") window-width window-height)
+  (GL20/glUniform2f (GL20/glGetUniformLocation program-normal "iResolution")
+                    window-width window-height)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "fov") (to-radians 20.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "alpha") (to-radians 0.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "beta") (to-radians 0.0))
@@ -1887,7 +1886,8 @@ Apart from the uniform values we also need to set up two textures this time: the
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "resolution") resolution)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "ambient") 0.0)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-normal "diffuse") 1.6)
-  (GL20/glUniform3f (GL20/glGetUniformLocation program-normal "light") (light 0) (light 1) (light 2))
+  (GL20/glUniform3f (GL20/glGetUniformLocation program-normal "light")
+                    (light 0) (light 1) (light 2))
   (GL20/glUniform1i (GL20/glGetUniformLocation program-normal "moon") 0)
   (GL20/glUniform1i (GL20/glGetUniformLocation program-normal "ldem") 1)
   (GL13/glActiveTexture GL13/GL_TEXTURE0)
