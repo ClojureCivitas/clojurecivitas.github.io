@@ -37,7 +37,8 @@ First we need to get some libraries and we can use add-libs to fetch them.
            'org.lwjgl/lwjgl-glfw                 {:mvn/version "3.3.6"}
            'org.lwjgl/lwjgl-glfw$natives-linux   {:mvn/version "3.3.6"}
            'org.lwjgl/lwjgl-stb                  {:mvn/version "3.3.6"}
-           'org.lwjgl/lwjgl-stb$natives-linux    {:mvn/version "3.3.6"}})
+           'org.lwjgl/lwjgl-stb$natives-linux    {:mvn/version "3.3.6"}
+           'generateme/fastmath                  {:mvn/version "3.0.0-alpha3"}})
 (require '[clojure.java.io :as io])
 (import '[javax.imageio ImageIO]
         '[org.lwjgl BufferUtils]
@@ -177,7 +178,7 @@ Next we need to set up OpenGL rendering for this window.
 
 ::: {.printedClojure}
 ```clojure
-#object[org.lwjgl.opengl.GLCapabilities 0x3bd92313 "org.lwjgl.opengl.GLCapabilities@3bd92313"]
+#object[org.lwjgl.opengl.GLCapabilities 0x30f1b3c2 "org.lwjgl.opengl.GLCapabilities@30f1b3c2"]
 
 ```
 :::
