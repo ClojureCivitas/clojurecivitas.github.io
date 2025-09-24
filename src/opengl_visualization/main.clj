@@ -785,4 +785,10 @@ void main()
 (GLFW/glfwTerminate)
 
 ;; I hope you liked this 3D graphics example.
-;; Note that if you want to render closeups of the moon, you will use higher resolution data and split it into smaller texture tiles and different resolutions.
+;;
+;; Note that in practise you will
+;; * use higher resolution data and map the data onto texture tiles
+;; * generate textures containing normal maps offline
+;; * create a multiresolution map
+;; * you use tessellation to increase the mesh resolution
+;; * you will use elevation data to deform the mesh
