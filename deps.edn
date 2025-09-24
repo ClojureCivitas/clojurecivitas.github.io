@@ -14,6 +14,7 @@
   org.scicloj/clay                            {#_#_:mvn/version "2-beta54"
                                                :git/url "https://github.com/scicloj/clay.git"
                                                :git/sha "26fb97b5ea2f72a98f8a64d5b8b8abf705767a39"}
+  thi.ng/geom                                 {:mvn/version "1.0.1"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph       {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph.json  {:mvn/version "0.10.0"}
@@ -37,7 +38,8 @@
   org.lwjgl/lwjgl-stb$natives-linux           {:mvn/version "3.3.6"}
   org.lwjgl/lwjgl-stb$natives-windows         {:mvn/version "3.3.6"}
   org.lwjgl/lwjgl-stb$natives-macos           {:mvn/version "3.3.6"}
-  generateme/fastmath                         {:mvn/version "2.4.0"
+  ;; TODO: Latest fastmath is incompatible with tableplot
+  #_#_generateme/fastmath                         {:mvn/version "2.4.0"
                                                :exclusions [com.github.haifengl/smile-mkl org.bytedeco/openblas]}
   clj-http/clj-http                           {:mvn/version "3.13.1"}}
 
