@@ -2,8 +2,10 @@
   :clay             {:title  "OpenGL Visualization with LWJGL"
                      :external-requirements ["Xorg"]
                      :quarto {:author   [:janwedekind]
+                              :description "A short introduction to LWJGL's OpenGL bindings by using it to render data from NASA's CGI Moon Kit"
+                              :image    "moon.jpg"
                               :type     :post
-                              :date     "2025-09-09"
+                              :date     "2025-09-24"
                               :category :clojure
                               :tags     [:visualization]}}}
 (ns opengl-visualization.main

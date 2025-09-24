@@ -5,8 +5,10 @@ author:
   image: https://avatars.githubusercontent.com/u/28663?v=4
   links:
   - {icon: github, href: 'https://github.com/wedesoft'}
+description: A short introduction to LWJGL's OpenGL bindings by using it to render data from NASA's CGI Moon Kit
+image: moon.jpg
 type: post
-date: '2025-09-09'
+date: '2025-09-24'
 category: clojure
 tags: [visualization]
 format:
@@ -173,7 +175,7 @@ Next we need to set up OpenGL rendering for this window.
 
 ::: {.printedClojure}
 ```clojure
-#object[org.lwjgl.opengl.GLCapabilities 0x5ff53273 "org.lwjgl.opengl.GLCapabilities@5ff53273"]
+#object[org.lwjgl.opengl.GLCapabilities 0x6c66f8f9 "org.lwjgl.opengl.GLCapabilities@6c66f8f9"]
 
 ```
 :::
