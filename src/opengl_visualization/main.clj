@@ -460,7 +460,8 @@ void main()
 ;; This shader program requires setup of several uniforms and a texture.
 (do
   (GL20/glUseProgram program-moon)
-  (GL20/glUniform2f (GL20/glGetUniformLocation program-moon "iResolution") window-width window-height)
+  (GL20/glUniform2f (GL20/glGetUniformLocation program-moon "iResolution")
+                    window-width window-height)
   (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "fov") (to-radians 25.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "alpha") (to-radians 30.0))
   (GL20/glUniform1f (GL20/glGetUniformLocation program-moon "beta") (to-radians -20.0))
@@ -698,7 +699,7 @@ void main()
 ;;
 ;; The fragment shader this time is more involved.
 ;;
-;; * A horizon matrix with normal, tangent, and bitangent vectors is computed/
+;; * A horizon matrix with normal, tangent, and bitangent vectors is computed.
 ;; * The elevation is sampled in four directions from the current 3D point.
 ;; * The elevation values are used to create two surface vectors.
 ;; * The cross product of the surface vectors is computed and normalized to get the normal vector.
@@ -839,5 +840,7 @@ void main()
 ;; * use higher resolution data and map the data onto texture tiles
 ;; * generate textures containing normal maps offline
 ;; * create a multiresolution map
-;; * you use tessellation to increase the mesh resolution
-;; * you will use elevation data to deform the mesh
+;; * use tessellation to increase the mesh resolution
+;; * use elevation data to deform the mesh
+;;
+;; Thanks to [Timothy Pratley](https://timothypratley.blogspot.com/p/httpswww.html) for helping getting this post online.
