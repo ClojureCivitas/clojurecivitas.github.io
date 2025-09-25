@@ -835,6 +835,7 @@ void main()
 (GLFW/glfwTerminate)
 
 ;; I hope you liked this 3D graphics example.
+;; You can get an interactive version of the Moon rendering [here](https://github.com/wedesoft/macroexpand-noj-lwjgl).
 ;;
 ;; Note that in practise you will
 ;;

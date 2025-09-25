@@ -180,7 +180,7 @@ Next we need to set up OpenGL rendering for this window.
 
 ::: {.printedClojure}
 ```clojure
-#object[org.lwjgl.opengl.GLCapabilities 0x16809640 "org.lwjgl.opengl.GLCapabilities@16809640"]
+#object[org.lwjgl.opengl.GLCapabilities 0x7a05815c "org.lwjgl.opengl.GLCapabilities@7a05815c"]
 
 ```
 :::
@@ -2017,6 +2017,7 @@ nil
 
 
 I hope you liked this 3D graphics example.
+You can get an interactive version of the Moon rendering [here](https://github.com/wedesoft/macroexpand-noj-lwjgl).
 
 Note that in practise you will
 
