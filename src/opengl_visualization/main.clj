@@ -718,7 +718,6 @@ uniform float resolution;
 uniform sampler2D moon;
 uniform sampler2D ldem;
 in vec3 vpoint;
-in mat3 horizon;
 out vec4 fragColor;
 
 vec3 orthogonal_vector(vec3 n)

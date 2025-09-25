@@ -180,7 +180,7 @@ Next we need to set up OpenGL rendering for this window.
 
 ::: {.printedClojure}
 ```clojure
-#object[org.lwjgl.opengl.GLCapabilities 0x688b081a "org.lwjgl.opengl.GLCapabilities@688b081a"]
+#object[org.lwjgl.opengl.GLCapabilities 0x16809640 "org.lwjgl.opengl.GLCapabilities@16809640"]
 
 ```
 :::
@@ -1740,7 +1740,6 @@ uniform float resolution;
 uniform sampler2D moon;
 uniform sampler2D ldem;
 in vec3 vpoint;
-in mat3 horizon;
 out vec4 fragColor;
 
 vec3 orthogonal_vector(vec3 n)
