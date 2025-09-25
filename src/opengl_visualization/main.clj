@@ -32,7 +32,9 @@
 ;;            'org.lwjgl/lwjgl-stb                  {:mvn/version "3.3.6"}
 ;;            'org.lwjgl/lwjgl-stb$natives-linux    {:mvn/version "3.3.6"}
 ;;            'generateme/fastmath                  {:mvn/version "3.0.0-alpha3"}})
-;; (require '[clojure.java.io :as io])
+;; (require '[clojure.java.io :as io]
+;;          '[clojure.math :refer (PI to-radians)]
+;;          '[fastmath.vector :refer (vec3 sub add mult normalize)])
 ;; (import '[javax.imageio ImageIO]
 ;;         '[org.lwjgl BufferUtils]
 ;;         '[org.lwjgl.glfw GLFW]
