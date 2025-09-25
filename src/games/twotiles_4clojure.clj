@@ -2,9 +2,8 @@
   :clay             {:title  "4Clojure puzzles with twotiles"
                      :quarto {:author   :kloimhardt
                               :type     :post
-                              :draft    true
                               :date     "2025-09-25"
-                              :image    ""
+                              :image    "twotiles_4clojure.png"
                               :category :concepts
                               :tags     [:blockly :graphical-programming]}}}
 
@@ -60,7 +59,7 @@
               ws
               (str code))))))
 
-(md "To memorize this solution, complete the following set of graphical puzzles. The most fun is on mobile devices. Maybe you want to scroll through the workspaces first, to get the idea.")
+(md "To memorize this solution, complete the following set of graphical puzzles. This is most fun on mobile devices. Maybe you want to scroll through the workspaces first, to get the idea.")
 
 ^:kindly/hide-code
 (def add-pr1 (add-ws 'js/pr1))
@@ -123,19 +122,19 @@
 (kind/hiccup (create-ws "pr5" "300px"))
 
 
-(md "## 4Clojure #85: Powerset")
+(md "## 4Clojure Problem 85, Powerset")
 
 (md "Write a function which generates the power set of a given set. The power set of a set x is the set of all subsets of x, including the empty set and x itself.")
 
 (defn powerset
   [original-set]
-  (reduce (fn [result e]
-            (into result
-                  (map (fn [x]
-                         (conj x e))
-                       result)))
-          (hash-set #{ })
-          original-set))
+  (-> (fn [result e]
+        (into result
+              (map (fn [x]
+                     (conj x e))
+                   result)))
+      (reduce (hash-set #{ })
+              original-set)))
 
 (powerset (hash-set 1 2))
 
@@ -155,10 +154,10 @@
                                    (str r "add_ps('" c "');"))
                                  ""
                                  cs)}
-                        (str "Step number " (inc i))])
+                        (str "Step " (inc i))])
                      tupels)))
 
-(md "Again, complete a set of according puzzles step by step. This time, there is only one singe workspace. Start by clicking the first button.")
+(md "Again, complete the according puzzles step by step. This time, there is only one singe workspace. Start by clicking the first button.")
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -173,9 +172,9 @@
      ['(:tiles/vert (fn [result e] :tiles/slot))
       '(:tiles/vert (into :tiles/slot :tiles/slot))
       'result]
-     ['(:tiles/vert (reduce :tiles/slot :tiles/slot :tiles/slot))
+     ['(:tiles/vert (-> :tiles/slot :tiles/slot))
+      '(:tiles/vert (reduce :tiles/slot :tiles/slot))
       '(hash-set #{})
       'original-set]]))
-
 
 (kind/hiccup (create-ws "ps" "500px"))
