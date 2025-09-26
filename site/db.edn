@@ -121,7 +121,10 @@
    :affiliation [:cim]}
   {:id          :tanvi
    :name        "Tanvi Nagar"
-   :affiliation [:cim]}]
+   :affiliation [:cim]}
+  {:id          :luke-zeitlin
+   :name        "Luke Zeitlin"
+   :affiliation []}]
 
  :affiliation
  [{:id   :clojure.core
