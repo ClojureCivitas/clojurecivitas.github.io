@@ -44,12 +44,14 @@
 
 ;; The transformation from raw orders to an analysis-ready format was crucial. Using Tablecloth, the transformation pipeline was surprisingly readable:
 
-^:kindly/hide-code ;; FIXME this is nonsense
+;; ❗ FIXME this is too simplified, I have to change this ❗
+
+^:kindly/hide-code 
 (kind/code
  ";; From customer orders with book lists...
 (-> orders
     (tc/group-by :zakaznik)           ;; Group by customer
-    (tc/aggregate                      ;; Aggregate their purchases
+    (tc/aggregate                     ;; Aggregate their purchases
       {:books #(distinct-books %)})
     ;; ...to binary matrix where each column is a book")
 
@@ -85,12 +87,9 @@
            :xaxis {:tickangle 45}
            :margin {:l 200 :b 50}
            :width 800 :height 600
-           :shapes [{:type "rect"
-                     :x0 -0.5 :y0 -0.5
-                     :x1 80 :y1 80
+           :shapes [{:type "rect" :x0 -0.5 :y0 -0.5 :x1 80 :y1 80
                      :line {:color "yellow" :width 3}}]
-           :annotations [{:x 40 :y 80
-                          :text "Recently published books show <br>much stronger co-purchase patterns"
+           :annotations [{:x 40 :y 80 :text "Recently published books show <br>much stronger co-purchase patterns"
                           :showarrow true :arrowhead 2 :arrowsize 1 :arrowwidth 2 :arrowcolor "yellow"
                           :ax 60 :ay -60
                           :font {:size 12 :color "black"}
@@ -145,9 +144,9 @@
 
 scatter-plot
 
-;; Foreign bestsellers (marked in orange) showed consistently higher correlations with other books. They had broad appeal and were purchased alongside many different titles. Czech authors (in blue), however, showed lower correlations, suggesting their readers were more focused. Many customers would buy just one Czech title, often using it as a "gateway" into our catalog, while foreign bestsellers were part of larger, more diverse purchases.
+;; Foreign bestsellers (marked in orange) showed consistently higher correlations with other books. They had broad appeal and were purchased alongside many different titles. Czech authors (in blue), however, showed lower correlations, suggesting their readers were more focused. Many customers would buy just one Czech title, often using it as a "gateway" into our catalog (strongly supported by Czech author's local campaigns), while foreign bestsellers were part of larger, more diverse purchases.
 
-;; This insight immediately changed our marketing approach. We stopped using generic cross-sell recommendations for Czech authors and instead focused on building author-specific communities through social media campaigns.
+;; This insight immediately changed our marketing approach. We stopped using generic cross-sell recommendations for Czech authors and instead focused on building author-specific communities and started to cooperate with easily reachable Czech authors on cross-selling approach.
 
 ;; ## The Limitation: Correlations Weren't Enough
 
@@ -245,6 +244,8 @@ scatter-plot
 
 ;; This visualization reveals clusters of books that customers buy together, forming natural "reading paths" through our catalog. The thickness of edges represents lift (stronger associations), while node darkness indicates support (popularity).
 
+;; (Remember this data comes from part of the dataset with particular parameters and tresholds.)
+
 ;; ## From Analysis to Production
 
 ;; The final piece was building a prediction function that could recommend books based on a customer's purchase history:
@@ -276,13 +277,13 @@ scatter-plot
    :min-confidence 0.1)
   8))
 
-;; These recommendations are now powering a new "Customers Also Bought" section on our website, complementing our existing "Topically Similar" recommendations with data-driven insights.
+;; These recommendations are now powering a new "Customers Also Bought" section on our website (even still in "manual" mode :), complementing our existing "Topically Similar" recommendations with data-driven insights.
 
 ;; ## Why This Matters for the Clojure Community
 
 ;; This project demonstrates several strengths of Clojure and the SciCloj ecosystem for real-world data science:
 
-;; **1. Readable transformations:** The threading macro (`->`) made complex data pipelines read like narratives. Each step tells a story, making the code understandable to both technical and business stakeholders.
+;; **1. Readable transformations:** The threading macro (`->`) made complex data pipelines read like narratives. Each step tells a story, making the code understandable to both technical and even business stakeholders.
 
 ^:kindly/hide-code
 (kind/code
@@ -296,7 +297,7 @@ scatter-plot
 
 ;; **3. A complete stack:** From data manipulation (Tablecloth) to visualization (Tableplot) to presentation (Clay and Kindly), the SciCloj ecosystem provided everything I needed without leaving Clojure.
 
-;; **4. Production-ready code:** The same code that powers my exploratory analysis can run in production, generating live recommendations for our website.  
+;; **4. Production-ready code:** The same code that powers my exploratory analysis can be run in production later, generating live recommendations for our website (I hope!).
 
 ;; ## The Impact
 
@@ -305,7 +306,7 @@ scatter-plot
 ;; - We are already stopping less effective cross-selling campaigns and starting target author communities
 ;; - Our website now features more data-driven "Customers Also Bought" recommendations
 ;; - We use these insights to optimize B2B offers for corporate clients
-;; - Social media campaigns are more targeted based on purchase pattern clusters
+;; - Our social media campaigns are starting to be better targeted based on purchase pattern clusters
 
 ;; Most importantly, I learned that you don't need a data science team or expensive tools to extract value from your data. With curiosity, the right tools, and a supportive community (shout out to the SciCloj folks on Zulip!), even a beginner can turn raw data into actionable insights.
 
@@ -313,12 +314,13 @@ scatter-plot
 
 ;; ## About the Author
 
-;; **Tomáš Baránek** is a publisher at Jan Melvil Publishing and co-founder of Servantes, developing software for publishers worldwide. He's a computer science graduate exploring Clojure and data science, learning by doing on real publishing challenges.
+;; **Tomáš Baránek** is a publisher at [Jan Melvil Publishing](https://www.melvil.cz) and co-founder of [Servantes](https://www.servant.es), developing software for publishers worldwide. He's a computer science graduate, Clojure enthusiast exploring data science, learning by doing on real publishing challenges. 
 
 ;; **Resources:**
+;; - Author: https://barys.me
 ;; - Full presentation code: [github.com/tombarys/??](https://github.com/tombarys/?)
 ;; - SciCloj community: [scicloj.github.io](https://scicloj.github.io)
-;; - Connect: tomas@barys.me
+;; - Connect: tom@barys.me
 
 ;; ---
 
