@@ -1,3 +1,11 @@
+^{:kindly/hide-code true     ; don't render this code to the HTML document
+  :clay             {:title  "From Correlations to Recommendations"
+                     :quarto {:author   [:tombarys]
+                              :type     :draft
+                              :date     "2025-10-13"
+                              :category :data-analysis
+                              :tags     [:metadata :civitas :data-analysis :market-basket-analysis :book-publishing]}}}
+
 ^:kindly/hide-code
 ^{:clay {:hide-ui-header true}}
 (ns data-analysis.book-sales-analysis.about-apriori
