@@ -3,7 +3,7 @@
                      :quarto {:author   [:tombarys]
                               :image "src/data_analysis/book_sales_analysis/graphviz.png"
                               :description "A Publisher's Journey into Data-Driven Book Sales – exploring how association rule mining can transform business insights using the SciCloj stack."
-                              :type     :draft
+                              :type     :post
                               :date     "2025-10-13"
                               :category :data-analysis
                               :tags     [:metadata :civitas :data-analysis :market-basket-analysis :book-publishing]}}}
