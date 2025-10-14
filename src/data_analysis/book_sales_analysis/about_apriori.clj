@@ -26,6 +26,11 @@
 
 ;; When you run an indie publishing house with over 160 titles and sell thousands of books each month, one question keeps coming back: **Which books do our customers buy together?** This seemingly simple question led me down a fascinating path from basic correlation analysis to building a more robust recommendation system using association rule mining—all with Clojure and the SciCloj ecosystem. 
 
+^:kindly/hide-code
+(kind/image
+ {:src "books.png"
+  :width "100%"
+  :max-width "800px"})
 
 ;; ## The Starting Point: Understanding Our Data
 
@@ -43,7 +48,7 @@
 
 ;; *(for clarity, many columns were omitted here; rows were generated with `(tc/random 5)` from anonymized dataset)*
 
-;; Each row represented one order, with books listed as comma-separated values. There are many exceptions, incosistencies and format-based differences ^[^1]. To analyze purchasing patterns, I needed to transform this into a format where each book became a binary feature: did a customer buy it (1) or not (0)? This transformation is called **one-hot encoding**.
+;; Each row represented one order, with books listed as comma-separated values. There are many exceptions, inconsistencies, and format-based differences ^[^1]. To analyze purchasing patterns, I needed to transform this into a format where each book became a binary feature: did a customer buy it (1) or not (0)? This transformation is called **one-hot encoding**.
 ;;
 ;; ---
 ;; 
@@ -79,7 +84,7 @@
       (tc/reorder-columns [:zakaznik])
       (tc/random 5)
       (tc/head 4)
-      (tc/select-columns #"^:zakaznik|^:book-00.*"))) ;; just quick reduction of table width
+      (tc/select-columns #"^:zakaznik|^:book-00.*"))) 
 
 ^:kindly/hide-code
 (kind/table onehot-sample)
@@ -149,18 +154,17 @@
                      :zeroline true}
              :yaxis {:title "Skewness <br>(more positive → less generic relation)"
                      :zeroline true}
-             :hovermode "closest"
-             :showlegend true
-             :height 650
-             :width 750
+             :hovermode "closest" :showlegend true
+             :height 650 :width 750
              :margin {:l 65 :r 50 :b 65 :t 90}
              :legend {:x 1 :y 1 :xanchor "right"}}}))
 
+^:kindly/hide-code
 scatter-plot
 
 ;; Foreign bestsellers (marked in orange) showed consistently higher correlations with other books. They had broad appeal and were purchased alongside many different titles. Czech authors (in blue), however, showed lower correlations, suggesting their readers were more focused. Many customers would buy just one Czech title, often using it as a "gateway" into our catalog (strongly supported by Czech author's local campaigns), while foreign bestsellers were part of larger, more diverse purchases.
 
-;; This insight immediately changed our marketing approach. We stopped using generic cross-sell recommendations for Czech authors and instead focused on building author-specific communities and started to cooperate with easily reachable Czech authors on cross-selling approach.
+;; This insight immediately changed our marketing approach. We stopped using generic cross-sell recommendations for Czech authors and instead focused on building author-specific communities and started to cooperate with easily reachable local Czech authors on cross-selling approach.
 
 ;; ## The Limitation: Correlations Weren't Enough
 
@@ -296,13 +300,13 @@ scatter-plot
    :min-confidence 0.1)
   8))
 
-;; These recommendations are now powering a new "Customers Also Bought" section on our website (even still in "manual" mode :), complementing our existing "Topically Similar" recommendations with data-driven insights.
+;; These recommendations are now powering a new "Customers Also Bought" section on our website (still in "manual" mode for now), complementing our existing "Topically Similar" recommendations with data-driven insights.
 
 ;; ## Why This Matters for the Clojure Community
 
 ;; This project demonstrates several strengths of Clojure and the SciCloj ecosystem for real-world data science:
 
-;; **1. Readable transformations:** The threading macro (`->`) made complex data pipelines read like narratives. Each step tells a story, making the code understandable to both technical and even business stakeholders.
+;; **1. Readable transformations:** Clojure's threading macro (`->`) made complex data pipelines read like narratives. Each step tells a story, making the code understandable to both technical and even business stakeholders.
 
 ^:kindly/hide-code
 (kind/code
@@ -320,12 +324,12 @@ scatter-plot
 
 ;; ## The Impact
 
-;; This project is still under construction and tangible business results yet to be seen. But:
+;; This project is still under construction and tangible business results have yet to be seen. But:
 
 ;; - We are already stopping less effective cross-selling campaigns and starting target author communities
 ;; - Our website now features more data-driven "Customers Also Bought" recommendations
 ;; - We use these insights to optimize B2B offers for corporate clients
-;; - Our social media campaigns are starting to be better targeted based on purchase pattern clusters
+;; - Our social media campaigns are being better targeted based on purchase pattern clusters
 
 ;; Most importantly, I learned that you don't need a data science team or expensive tools to extract value from your data. With curiosity, the right tools, and a supportive community (shout out to the SciCloj folks on Zulip!), even a beginner can turn raw data into actionable insights.
 
@@ -333,13 +337,12 @@ scatter-plot
 
 ;; ## About the Author
 
-;; **Tomáš Baránek** is a publisher at [Jan Melvil Publishing](https://www.melvil.cz) and co-founder of [Servantes](https://www.servant.es), developing software for publishers worldwide. He's a computer science graduate, Clojure enthusiast exploring data science, learning by doing on real publishing challenges. 
+;; **Tomáš Baránek** is a publisher at [Jan Melvil Publishing](https://www.melvil.cz) and co-founder of [Servantes](https://www.servant.es), developing software for publishers worldwide. He's a computer science graduate, Clojure enthusiast exploring data science, learning by doing on real publishing challenges. You can find him on [Bluesky](https://bsky.app/profile/tombarys.bsky.social) or read his [blog](https://lifehacky.net).
 
 ;; **Resources:**
 ;; - Author: https://barys.me
-;; - Full presentation code: [github.com/tombarys/??](https://github.com/tombarys/?)
+;; - Full presentation code: *to be published*
 ;; - SciCloj community: [scicloj.github.io](https://scicloj.github.io)
-;; - Connect: tom@barys.me
 
 ;; ---
 
