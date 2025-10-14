@@ -1,7 +1,7 @@
 ^{:kindly/hide-code true     ; don't render this code to the HTML document
   :clay             {:title  "From Correlations to Recommendations"
                      :quarto {:author   [:tombarys]
-                              :image "src/data_analysis/book_sales_analysis/graphviz.png"
+                              :image "graphviz.png"
                               :description "A Publisher's Journey into Data-Driven Book Sales – exploring how association rule mining can transform business insights using the SciCloj stack."
                               :type     :post
                               :date     "2025-10-13"

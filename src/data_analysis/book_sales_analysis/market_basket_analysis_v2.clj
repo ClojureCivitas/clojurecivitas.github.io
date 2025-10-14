@@ -154,7 +154,7 @@
 
 ;; ### Stage 1: Generate Analysis (The 15-Minute Step)
 
-(defn generate-market-basket-analysis
+#_(defn generate-market-basket-analysis
   "Generates market basket analysis results.
    
    ⚠️ computationally expensive for bigger subset-size ⚠️
