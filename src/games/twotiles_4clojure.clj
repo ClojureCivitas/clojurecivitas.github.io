@@ -7,7 +7,7 @@
                               :category :concepts
                               :tags     [:blockly :graphical-programming]}}}
 
-(ns games.twotiles-4clojure.clj
+(ns games.twotiles-4clojure
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]))
 
