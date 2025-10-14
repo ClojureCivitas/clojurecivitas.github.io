@@ -255,7 +255,7 @@ scatter-plot
  (tc/head (:rules-grouped quick-formatted) 15)
  {:element/max-height "500px"})
 
-;; Reading these rules is straightforward. For example, if a customer buys Yuval Noah Harari's "Sapiens," there's a 72% chance they'll also purchase "Nexus" (another Harari title), and this combination is nearly twice as likely as random chance (lift = 1.99).
+;; Reading these rules is straightforward. For example, if a customer buys "Zamilujte se do angličtiny", there's a 37% chance they'll also purchase "365 anglických frází a výrazů" (another author's title), and this combination is 6 times as likely as random chance (lift = 6,12).
 
 ;; ## Visualizing the Network
 
