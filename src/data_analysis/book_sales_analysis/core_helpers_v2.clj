@@ -6,9 +6,7 @@
             [tablecloth.column.api :as tcc]
             [clojure.string :as str]
             [java-time.api :as jt]
-            [fastmath.stats :as stats]
-            [scicloj.kindly.v4.kind :as kind]
-            [data-analysis.book-sales-analysis.data-sources-v2 :as data]))
+            [fastmath.stats :as stats]))
 
 ;; ## Data Transformation Functions
 ;; Common data processing functions used across multiple analysis files
