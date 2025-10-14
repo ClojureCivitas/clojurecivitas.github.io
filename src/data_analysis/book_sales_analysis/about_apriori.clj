@@ -1,6 +1,8 @@
 ^{:kindly/hide-code true     ; don't render this code to the HTML document
   :clay             {:title  "From Correlations to Recommendations"
                      :quarto {:author   [:tombarys]
+                              :image "src/data_analysis/book_sales_analysis/graphviz.png"
+                              :description "A Publisher's Journey into Data-Driven Book Sales – exploring how association rule mining can transform business insights using the SciCloj stack."
                               :type     :draft
                               :date     "2025-10-13"
                               :category :data-analysis
@@ -24,7 +26,6 @@
 
 ;; When you run an indie publishing house with over 160 titles and sell thousands of books each month, one question keeps coming back: **Which books do our customers buy together?** This seemingly simple question led me down a fascinating path from basic correlation analysis to building a more robust recommendation system using association rule mining—all with Clojure and the SciCloj ecosystem. 
 
-;; > *Disclaimer: please consider that my experience in Clojure is intermediate and entry-level at SciCloj and data-science. I can still assure you my enthusiasm is high.*
 
 ;; ## The Starting Point: Understanding Our Data
 
@@ -37,7 +38,7 @@
       (tc/random 5)))
 
 ^:kindly/hide-code
-(kind/table 
+(kind/table
  orders-sample {:element/max-height 400})
 
 ;; *(for clarity, many columns were omitted here; rows were generated with `(tc/random 5)` from anonymized dataset)*
@@ -50,18 +51,23 @@
 
 ;; ## The Transformation: Making Data Analysis-Ready
 
-;; The transformation from raw orders to an analysis-ready format was crucial. Using Tablecloth, the transformation pipeline was surprisingly readable:
+;; The transformation from raw orders to an analysis-ready format was crucial. Using Tablecloth, the transformation pipeline was easy (and can be even more simplified).
 
-;; ❗ FIXME this is too simplified, I have to change this ❗
-
-^:kindly/hide-code 
+^:kindly/hide-code
 (kind/code
- ";; From customer orders with book lists...
-(-> orders
-    (tc/group-by :zakaznik)           ;; Group by customer
-    (tc/aggregate                     ;; Aggregate their purchases
-      {:books #(distinct-books %)})
-    ;; ...to binary matrix where each column is a book")
+";; From customer orders with book lists...
+(map
+ (fn [customer-row]
+   (let [customer-name (:zakaznik customer-row)
+         books-bought-set (set (parse-books-from-list (:all-products customer-row)))
+         one-hot-map (reduce (fn [acc book]
+                               (assoc acc book (if (contains? books-bought-set book) 1 0)))
+                             {}
+                             all-titles)]
+     (merge {:zakaznik customer-name}
+            one-hot-map)))
+ (tc/rows customer+orders :as-maps))
+;; ...to binary matrix where each column is a book")
 
 ;; After transformation, each customer became a row, and each book a column with 1 or 0:
 
@@ -73,7 +79,7 @@
       (tc/reorder-columns [:zakaznik])
       (tc/random 5)
       (tc/head 4)
-      (tc/select-columns #"^:zakaznik|^:book-00.*")))
+      (tc/select-columns #"^:zakaznik|^:book-00.*"))) ;; just quick reduction of table width
 
 ^:kindly/hide-code
 (kind/table onehot-sample)
@@ -176,15 +182,20 @@ scatter-plot
 
 ;; One of the most elegant aspects of the Apriori implementation is how it generates larger itemsets from smaller ones without creating duplicates. Consider generating 3-item sets from 2-item sets:
 
+;; ```
+;; We want: [:book-a :book-b :book-c] ✓  
+;; Not:     [:book-a :book-c :book-b] ✗ (same set, different order)  
+;;          [:book-b :book-a :book-c] ✗ (same set, different order)  
+;; ```
+
 ^:kindly/hide-code
 (kind/code
- ";; We want: [:book-a :book-b :book-c] ✓
-;; Not:     [:book-a :book-c :book-b] ✗ (same set, different order)
-;;          [:book-b :book-a :book-c] ✗ (same set, different order)
-
-(defn join-itemsets [frequent-itemsets k]
+ "(defn join-itemsets
+  [frequent-itemsets k]
   (let [k-1 (dec k)
+        ;; Only process itemsets of the correct size
         valid-sets (filter #(= (count %) k-1) frequent-itemsets)
+        ;; Group by prefix (first k-2 elements) for efficiency
         by-prefix (group-by #(vec (take (- k 2) %)) valid-sets)]
     (mapcat
      (fn [[prefix items]]
@@ -192,7 +203,7 @@ scatter-plot
              set2 items
              :let [last1 (last set1)
                    last2 (last set2)]
-             ;; This line ensures canonical ordering
+             ;; Only join if last2 > last1 (enforces canonical order)
              :when (and (not= last1 last2)
                         (pos? (compare last2 last1)))]
          (concat prefix [last1 last2])))
@@ -206,21 +217,21 @@ scatter-plot
 
 ;; **Support** measures how frequently an itemset appears:
 
-^:kindly/hide-code
-(kind/tex
- "\\text{Support}(\\{A, B\\}) = \\dfrac{\\text{orders with A and B}}{\\text{total orders}}")
+;; $$  
+;; \text{Support}(\{A, B\}) = \dfrac{\text{orders with A and B}}{\text{total orders}}  
+;; $$ 
 
 ;; **Confidence** measures how often B appears when A is purchased:
 
-^:kindly/hide-code
-(kind/tex
- "\\text{Confidence}(A \\rightarrow B) = \\dfrac{\\text{Support}(\\{A, B\\})}{\\text{Support}(\\{A\\})}")
+;; $$ 
+;; \text{Confidence}(A \rightarrow B) = \dfrac{\text{Support}(\{A, B\})}{\text{Support}(\{A\})}
+;; $$ 
 
 ;; **Lift** measures whether this happens more than random chance:
 
-^:kindly/hide-code
-(kind/tex
- "\\text{Lift}(A \\rightarrow B) = \\dfrac{\\text{Confidence}(A \\rightarrow B)}{\\text{Support}(\\{B\\})}")
+;; $$ 
+;; "\text{Lift}(A \rightarrow B) = \dfrac{\text{Confidence}(A \rightarrow B)}{\text{Support}(\{B\})}
+;; $$ 
 
 ;; A lift greater than 1 indicates positive association—the items are purchased together more often than if they were independent. A lift of 2.3 means the combination is 2.3 times more likely than chance.
 

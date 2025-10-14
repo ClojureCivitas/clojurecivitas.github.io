@@ -12,8 +12,6 @@
             [clojure.math.combinatorics :as combo]
             [clojure.string :as str]
             [clojure.set]
-            [scicloj.tableplot.v1.plotly :as plotly]
-            [scicloj.kindly.v4.kind :as kind]
             [data-analysis.book-sales-analysis.data-sources-v2 :as data]
             [data-analysis.book-sales-analysis.core-helpers-v2 :as helpers]))
 
@@ -403,7 +401,7 @@
 (comment
   ;; Generate once - takes ~1 minute
   (def quick-analysis
-    (generate-market-basket-analysis data/orders-slides 
+    (generate-market-basket-analysis data/orders-share 
                                      :subset-size 6000 
                                      :min-confidence 0.03))
 
@@ -492,7 +490,7 @@
 
 ;; ### Prediction Demo
 
-;; 🎯 **LIVE DEMO**: Show how the website will make recommendations
+;; 🎯 **LIVE DEMO**: Show how the website should make recommendations
 
 ^:kindly/hide-code
 (comment

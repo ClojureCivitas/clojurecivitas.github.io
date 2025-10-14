@@ -29,9 +29,6 @@
 
 ;; ### Book Metadata
 
-#_(def enriched-book-metadata-ds
-  (helpers/enrich-metadata-csv "data/summary-all-time-all-books-300725.csv"))
-
 ;; ## Quick Access
 ;; Most commonly used datasets with short aliases
 

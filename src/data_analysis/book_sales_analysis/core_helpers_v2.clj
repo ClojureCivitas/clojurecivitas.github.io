@@ -7,15 +7,11 @@
             [clojure.string :as str]
             [java-time.api :as jt]
             [fastmath.stats :as stats]
-            [scicloj.kindly.v4.kind :as kind]))
+            [scicloj.kindly.v4.kind :as kind]
+            [data-analysis.book-sales-analysis.data-sources-v2 :as data]))
 
 ;; ## Data Transformation Functions
 ;; Common data processing functions used across multiple analysis files
-
-;; ### Date Time
-
-(def end-time
-  (jt/local-date 2025 10 1))
 
 ;; ### Scicloj Helpers
 
@@ -118,10 +114,10 @@
                    (map #(str/replace % #"\+" ""))
                    (map #(str/trim %))
                    (map sanitize-str)
-                   (map #(str/replace % #"\-\-.+$" "")) ;; zdvojené názvy
-                   (map #(str/replace % #"\-+$" "")) ;; pomlčky na konci
+                   (map #(str/replace % #"\-\-.+$" "")) 
+                   (map #(str/replace % #"\-+$" "")) 
                    (map #(str/replace % #"^3" "k3"))
-                   (map #(str/replace % #"^5" "k5"));; eliminace čísel 3 na začátku dvou knih
+                   (map #(str/replace % #"^5" "k5"))
                    (remove (fn [item] (some (fn [substr] (str/includes? (name item) substr))
                                             ["balicek" "poukaz" "zapisnik" "limitovana-edice" "taska" "aktualizovane-vydani" "cd" "puvodni-vydani/neni-skladem"
                                              "merch"])))
@@ -129,26 +125,7 @@
                    (mapv keyword))
       nil))
 
-;; ### Melvil Data Enriching and Convenience Functions
-
-(defn months-between "Calculate how many months a product has been on market"
-  [start-date end-date]
-  (let [days (if (and start-date end-date)
-               (jt/time-between start-date end-date :days)
-               0)]
-    (long (Math/round (/ days 30.4375)))))
-
-(defn months-on-market
-  "Months `book` is on a market. Zero if not at all."
-  [books-ds book end-date]
-  (let [date (try
-               (-> books-ds
-                   (tc/select-columns [:titul :datum-zahajeni-prodeje])
-                   (tc/select-rows #(str/starts-with? (name (:titul %)) (name book)))
-                   (tc/get-entry :datum-zahajeni-prodeje 0))
-               (catch Exception e nil))
-        month (if (nil? date) 0 (months-between date end-date))]
-    month))
+;; ### Metadata Enriching and Convenience Functions
 
 (defn czech-author? [book-title]
   (let [czech-books #{:k30-hodin
@@ -182,71 +159,10 @@
       (rand-int 2)
       (if (contains? czech-books (keyword book-title)) 1 0))))
 
-(def category-enrichments
-  {:k30-hodin "podnikani,firemni-kultura"
-   :k5-principu-rodicovstvi "vzdelavani-a-vychova,kariera,psychologie,mezilidska-komunikace"
-   :autismus-bez-masky "psychologie,spolecnost,mezilidska-komunikace"
-   :genialne-potraviny :zdravi
-   :genialni-potraviny :zdravi
-   :jak-zabranit-dalsi-pandemii "budoucnost,spolecnost,ekologie"
-   :krvavy-uterek :historie
-   :male-experimenty "kariera,produktivita,psychologie"
-   :myty-a-nadeje-digitalniho-sveta "budoucnost,spolecnost,kariera"
-   :nestekej-na-sveho-psa "vzdelavani-a-vychova,mezilidska-komunikace"
-   :nove-zbrane-vlivu "podnikani,psychologie,kariera,mezilidska-komunikace"
-   :pamet "zdravi,psychologie"
-   :pomala-produktivita "produktivita,kariera"
-   :poridte-si-druhy-mozek "produktivita,kariera"
-   :prezit "zdravi,psychologie,mezilidska-komunikace"
-   :stastnejsi "psychologie,zdravi,mezilidska-komunikace"
-   :ultrazpracovani-lide :zdravi
-   :vitamin-l "psychologie,mezilidska-komunikace"
-   :zazracna-imunita :zdravi
-   :heureka! "podnikani,firemni-kultura"
-   :zrozeni-evropanu "historie,spolecnost"})
-
-(defn enrich-metadata-csv
-  "Takes a CSV `file` with book titles, subtitles, categories and technical parameters
-   and enriches it with supplemental categories and info about author nationalities."
-  [file]
-  (let [summary-raw-ds (-> (tc/dataset
-                            file
-                            {:key-fn #(keyword (sanitize-column-name-str %))
-                             :separator \;
-                             :parser-fn {:datum-zahajeni-prodeje :string}
-                             :encoding :utf-8})
-                           (tc/update-columns :datum-zahajeni-prodeje
-                                              #(map (fn [date-str]
-                                                      (when (not-empty date-str)
-                                                        (parse-csv-date date-str)))
-                                                    %))
-                           #_(tc/drop-missing [:edice :datum-zahajeni-prodeje]))
-        sanitized-colnames-ds (-> summary-raw-ds
-                                  (tc/rename-columns :all (fn [col] (if col (keyword (sanitize-column-name-str (name col))) col))))
-
-        sanitized-rows-ds (-> sanitized-colnames-ds
-                              (tc/update-columns  [:titul :podtitul :vazba :barevnost :edice :cenova-kategorie :tloustka]
-                                                  (fn [column-data] (map sanitize-column-name-str column-data)))
-                              (tc/update-columns  [:kategorie-na-e-shopu :kategorie-tema]
-                                                  (fn [column-data] (map sanitize-category-str column-data)))
-                              (tc/update-columns [:titul] #(map (comp keyword parse-book-name) %)))
-
-        enriched--categories-ds (tc/update-columns sanitized-rows-ds :kategorie-na-e-shopu
-                                                   (fn [categories]
-                                                     (map (fn [title category]
-                                                            (if-let [enriched-category (get category-enrichments title)]
-                                                              (name enriched-category)
-                                                              category))
-                                                          (sanitized-rows-ds :titul)
-                                                          categories)))
-        enriched-ds (tc/add-column enriched--categories-ds
-                                   :cesky-autor (fn [ds] (map czech-author? (ds :titul))))]
-    (-> enriched-ds
-        (tc/rename-columns {:column-0 :titul}))))
-
 ;; ### One-Hot Encoding Functions
 
-(defn onehot-encode-by-customers
+   
+(defn onehot-encode-by-customers ;; FIXME needs refactor and simplification :)
   "One-hot encode dataset aggregated by customer. 
    Each customer gets one row with 0/1 values for each book they bought.
    Used for market basket analysis, customer segmentation, etc."
@@ -295,21 +211,6 @@
     (if (zero? total-transactions)
       0.0
       (double (/ transactions-with-itemset total-transactions)))))
-
-(defn build-popularity-index
-  "Creates a popularity index (map in format `{:book :popularity}`) for all items in one-hot encoded dataset"
-  [dataset]
-  (let [items (-> dataset (tc/drop-columns :zakaznik) tc/column-names)]
-    (reduce (fn [acc item]
-              (assoc acc item (calculate-support dataset [item])))
-            {}
-            items)))
-
-^:kindly/hide-code
-#_(-> (build-popularity-index (onehot-encode-by-customers data-sources/orders))
-      (tc/dataset)
-      (tc/pivot->longer)
-      (tc/order-by :$value))
 
 
 ^:kindly/hide-code
