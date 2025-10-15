@@ -1,9 +1,10 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Bell State Circuit"
                      :quarto {:author :ludgersolbach
-                              :draft true
-                              :type :post
-                              :date "2025-10-10"}}}
+                              :draft  false
+                              :type   :post
+                              :date   "2025-10-15"
+                              :tags   [:qclojure :quantum-computing :quantum-circuit :simulation :bell-state]}}}
 (ns qclojure.examples.bell-state-circuit 
   (:require
    [scicloj.kindly.v4.kind :as kind]))
@@ -134,30 +135,27 @@ result
 (def ideal-simulator (ideal-sim/create-simulator))
 
 ;; We define some options for the execution, such as the results we want to obtain.
-;; In this case, we want to measure the qubits 100 times (shots).
-(def options {:result-specs {:measurements {:shots 100}}})
+;; In this case, we want to measure the qubits 10000 times, which is called the
+;; number of shots.
+(def options {:result-specs {:measurements {:shots 10000}}})
 
 ;; Now we can execute the circuit using the ideal simulator and the defined options.
 (def ideal-result
   (backend/execute-circuit ideal-simulator bell-state-circuit options))
-
-;; The result is a map that contains the measurement results and other information
-;; about the execution.
-ideal-result
 
 ;; We can visualize the frequencies of the measurements obtained from the
 ;; ideal simulator as a histogram.
 ^kind/hiccup
 (viz/visualize-measurement-histogram :svg (get-in ideal-result [:results :measurement-results :frequencies]))
 
-;; Now we you the hardware simulator to execute the Bell state circuit.
+;; Now we use the hardware simulator to execute the Bell state circuit.
 ;; The hardware simulator simulates the quantum circuit with noise and errors
 ;; that are present in real quantum hardware.
 (def hardware-simulator (hw-sim/create-hardware-simulator))
 
 ;; We can also select a specific quantum device to simulate. We choose the
 ;; IBM Lagos quantum device for this example. The IBM Lagos is a 7-qubit quantum
-;; computer that is available on the IBM Quantum Experience platform.
+;; computer that is available on the IBM Quantum platform.
 (backend/select-device hardware-simulator :ibm-lagos)
 
 ;; We execute the circuit using the hardware simulator and the defined options.
@@ -173,14 +171,20 @@ hardware-result
 (viz/visualize-measurement-histogram :svg (get-in hardware-result [:results :measurement-results :frequencies]))
 
 ;; We results are probabilistic, so we may not get exactly the same results every time we
-;; execute the circuit. However, we should see that the results from the ideal simulator
-;; are closer to the expected Bell state results (|00⟩ and |11⟩ with similar counts) compared to the
-;; hardware simulator, which may show some deviations due to noise and errors.
-;; This demonstrates the impact of quantum noise and errors on the execution of quantum circuits
-;; on real quantum hardware.
+;; execute the circuit. Also the Bell state circuit is very simple, so the differences
+;; between the ideal and hardware simulation results may not be eminently visible.
+;; With a bit of 'luck', we would see a measurement of |01⟩ or |10⟩, because of a bit-flip
+;; caused by the noise of the hardware. However, with more complex circuits, the
+;; differences will show up on the hardware simulator and on real quantum hardware.
+;; We will explore more complex circuits in future examples.
 ;;
 ;; ## Conclusion
 ;; In this example, we created a simple quantum circuit that generates a Bell state,
 ;; visualized the circuit, and executed it using both an ideal simulator and a hardware
-;; simulator provided by QClojure. We observed the differences in the measurement results
-;; between the two simulators, highlighting the effects of noise and errors in quantum computing.
+;; simulator provided by QClojure. We also visualized the measurement results as histograms
+;; to compare the outcomes of the two simulations.
+;;
+;; This example demonstrates the basic concepts of quantum circuits, quantum gates,
+;; and quantum simulators using QClojure. You can build upon this foundation to explore
+;; more complex quantum algorithms and circuits. Please alos check out the tutorial in the
+;; [QClojure documentation](https://cljdoc.org/d/org.soulspace/qclojure).
