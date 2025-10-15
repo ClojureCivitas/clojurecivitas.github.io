@@ -3,6 +3,7 @@
                      :quarto {:author :ludgersolbach
                               :draft true
                               :type :post
+                              :image "bell_state_circuit.svg"
                               :date "2025-10-10"}}}
 (ns qclojure.examples.bell-state-circuit 
   (:require
