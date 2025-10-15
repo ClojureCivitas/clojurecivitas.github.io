@@ -162,9 +162,6 @@ result
 (def hardware-result
   (backend/execute-circuit hardware-simulator bell-state-circuit options))
 
-;; Here is the result of the hardware simulation.
-hardware-result
-
 ;; We can visualize the result of the hardware simulation as a histogram of the
 ;; measurement frequencies to compare it with the ideal simulation result.
 ^kind/hiccup
