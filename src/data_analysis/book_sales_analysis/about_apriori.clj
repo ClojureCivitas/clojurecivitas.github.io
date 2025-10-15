@@ -48,11 +48,11 @@
 
 ;; *(for clarity, many columns were omitted here; rows were generated with `(tc/random 5)` from anonymized dataset)*
 
-;; Each row represented one order, with books listed as comma-separated values. There are many exceptions, inconsistencies, and format-based differences ^[^1]. To analyze purchasing patterns, I needed to transform this into a format where each book became a binary feature: did a customer buy it (1) or not (0)? This transformation is called **one-hot encoding**.
+;; Each row represented one order, with books listed as comma-separated values. There are many exceptions, inconsistencies, and format-based differences [^1]. To analyze purchasing patterns, I needed to transform this into a format where each book became a binary feature: did a customer buy it (1) or not (0)? This transformation is called **one-hot encoding**.
 ;;
 ;; ---
-;; 
-;; 1: We sell e-books and audiobooks too – readers can use our [fantastic app](https://www.melvil.cz/aplikace-melvil/).
+;;
+;; [^1]: We sell e-books and audiobooks too – readers can use our [fantastic app](https://www.melvil.cz/aplikace-melvil/).
 
 ;; ## The Transformation: Making Data Analysis-Ready
 
