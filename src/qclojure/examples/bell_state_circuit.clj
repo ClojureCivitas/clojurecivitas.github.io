@@ -1,9 +1,10 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Bell State Circuit"
                      :quarto {:author :ludgersolbach
-                              :draft  false
+                              :draft  true
                               :type   :post
-                              :date   "2025-10-15"
+                              :image  "bell_state_circuit.svg"
+                              :date   "2025-10-10"
                               :tags   [:qclojure :quantum-computing :quantum-circuit :simulation :bell-state]}}}
 (ns qclojure.examples.bell-state-circuit 
   (:require

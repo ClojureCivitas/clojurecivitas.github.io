@@ -2,6 +2,7 @@
   :clay             {:title  "Remote Sensing - Water Quality"
                      :quarto {:author   :luke-zeitlin
                               :type     :post
+                              :image    "waterquality.jpg"
                               :date     "2025-09-26"
                               :category :clojure
                               :tags     [:clay :reagent :scittle
