@@ -130,6 +130,11 @@
    :affiliation [:cim]}
   {:id          :luke-zeitlin
    :name        "Luke Zeitlin"
+   :affiliation []}
+  {:id          :ludgersolbach
+   :name        "Ludger Solbach"
+   :url         "https://github.com/lsolbach"
+   :links       [{:icon "github" :href "https://github.com/lsolbach"}]
    :affiliation []}]
 
  :affiliation
