@@ -116,6 +116,12 @@
    :email       "edwardaw@connect.hku.hk"
    :affiliation [:cim]
    :links       [{:icon "github" :href "https://github.com/W-Edward"}]}
+  {:id    :tombarys
+   :name  "Tomáš Baránek"
+   :image "https://avatars.githubusercontent.com/u/5729352?v=4"
+   :url   "https://barys.me/#english-section"
+   :email "tom@barys.me"
+   :links [{:icon "github" :href "https://github.com/tombarys"}]}
   {:id          :mattb
    :name        "Matthias Buehlmaier"
    :affiliation [:cim]}
@@ -150,8 +156,7 @@
    :url "https://techascent.com"}
   {:id   :cim
    :name "cim"
-   :url  "https://cim.hkubs.hku.hk/"
-  }]
+   :url  "https://cim.hkubs.hku.hk/"}]
 
  :topic
  [{:id        :core
