@@ -6,9 +6,7 @@
                               :date "2025-10-10"}}}
 (ns qclojure.examples.bell-state-circuit 
   (:require
-    [scicloj.kindly.v4.api :as kindly]
-    [scicloj.kindly.v4.kind :as kind]
-    [org.soulspace.qclojure.application.visualization :as viz]))
+   [scicloj.kindly.v4.kind :as kind]))
 
 ;; # Bell State Circuit Example
 ;; This example demonstrates how to create and visualize a Bell state circuit and how to simulate
@@ -150,7 +148,7 @@ ideal-result
 ;; We can visualize the frequencies of the measurements obtained from the
 ;; ideal simulator as a histogram.
 ^kind/hiccup
-(viz/visualize-measurement-histogram :svg (get-in ideal-result [:results :measurement-result :frequencies]))
+(viz/visualize-measurement-histogram :svg (get-in ideal-result [:results :measurement-results :frequencies]))
 
 ;; Now we you the hardware simulator to execute the Bell state circuit.
 ;; The hardware simulator simulates the quantum circuit with noise and errors
@@ -172,7 +170,7 @@ hardware-result
 ;; We can visualize the result of the hardware simulation as a histogram of the
 ;; measurement frequencies to compare it with the ideal simulation result.
 ^kind/hiccup
-(viz/visualize-measurement-histogram :svg (get-in hardware-result [:results :measurement]))
+(viz/visualize-measurement-histogram :svg (get-in hardware-result [:results :measurement-results :frequencies]))
 
 ;; We results are probabilistic, so we may not get exactly the same results every time we
 ;; execute the circuit. However, we should see that the results from the ideal simulator
