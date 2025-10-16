@@ -204,6 +204,7 @@
 ;; I highly recommend creating a custom keybinding that works with your configuration.
 
 ;; A browser window will be shown when you call Clay.
+
 ;; ![Cursive and Calva have an embedded viewer](macroexpand2025-editor.png)
 
 ;; ### Anyone stuck?
