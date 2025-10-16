@@ -112,8 +112,8 @@
                    (map #(str/replace % #"\+" ""))
                    (map #(str/trim %))
                    (map sanitize-str)
-                   (map #(str/replace % #"\-\-.+$" "")) 
-                   (map #(str/replace % #"\-+$" "")) 
+                   (map #(str/replace % #"\-\-.+$" ""))
+                   (map #(str/replace % #"\-+$" ""))
                    (map #(str/replace % #"^3" "k3"))
                    (map #(str/replace % #"^5" "k5"))
                    (remove (fn [item] (some (fn [substr] (str/includes? (name item) substr))
@@ -124,6 +124,28 @@
       nil))
 
 ;; ### Metadata Enriching and Convenience Functions
+
+(def end-time
+  (jt/local-date 2025 10 1))
+
+(defn months-between "Calculate how many months a product has been on market"
+  [start-date end-date]
+  (let [days (if (and start-date end-date)
+               (jt/time-between start-date end-date :days)
+               0)]
+    (long (Math/round (/ days 30.4375)))))
+
+(defn months-on-market
+  "Months `book` is on a market. Zero if not at all."
+  [books-ds book end-date]
+  (let [date (try
+               (-> books-ds
+                   (tc/select-columns [:titul :datum-zahajeni-prodeje])
+                   (tc/select-rows #(str/starts-with? (name (:titul %)) (name book)))
+                   (tc/get-entry :datum-zahajeni-prodeje 0))
+               (catch Exception e nil))
+        month (if (nil? date) 0 (months-between date end-date))]
+    month))
 
 (defn czech-author? [book-title]
   (let [czech-books #{:k30-hodin
@@ -159,7 +181,7 @@
 
 ;; ### One-Hot Encoding Functions
 
-   
+
 (defn onehot-encode-by-customers ;; FIXME needs refactor and simplification :)
   "One-hot encode dataset aggregated by customer. 
    Each customer gets one row with 0/1 values for each book they bought.
@@ -279,25 +301,23 @@
         tc/dataset
         (tc/add-column :book columns))))
 
-(defn corr-3-col
-  "Creates a correlation matrix with two columns of books \n
-  => _unnamed [4 3]: \n
-      | :book-0 | :book-1 | :correlation |
-      |---------|---------|-------------:|
-      |      :a |      :a |   1.00000000 |
-      |      :a |      :b |  -0.12121831 |
-      |      :b |      :a |  -0.12121831 |
-      |      :b |      :b |   1.00000000 | \n
-  - `flatten` is used here to make a linear sequence of numbers which should match corresponding variable names. \n
-  -  Since we make pairs of names `((for...[a b])` creates a cartesian product) we need to separate these to individual columns, tc/seperate-column does the trick, refer: https://scicloj.github.io/tablecloth/#separate"
-  [ds]
-  (let [names (tc/column-names ds)
-        mat (flatten (stats/correlation-matrix (tc/columns ds)))]
-    (-> (tc/dataset {:book (for [a names b names] [a b])
-                     :correlation mat})
-        (tc/separate-column :book)
-        (tc/rename-columns  {":book-0" :titul-knihy
-                             ":book-1" :book-1}))))
+(defn corr-matrix
+  "Creates a correlation matrix with books sorted by publication date (chronological order) \n
+   `books-onehot` – one-hot encoded dataset"
+  [books-onehot books-meta]
+  (-> (corr-a-x-b (-> books-onehot
+                      (tc/reorder-columns
+                       (sort-by #(months-on-market books-meta % end-time)
+                                (tc/column-names books-onehot)))
+                      (tc/drop-columns [:zakaznik])))
+      (tc/reorder-columns
+       (sort-by #(months-on-market books-meta % end-time)
+                (tc/column-names books-onehot)))
+      (tc/add-column :sort-col
+                     (fn [ds] (map #(months-on-market books-meta % end-time)
+                                   (tc/column ds :book))))
+      (tc/order-by :sort-col)
+      (tc/drop-columns :sort-col)))
 
 
 ;; ### Export helper functions from other namespaces for convenience

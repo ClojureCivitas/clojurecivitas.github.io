@@ -12,7 +12,6 @@
             [clojure.math.combinatorics :as combo]
             [clojure.string :as str]
             [clojure.set]
-            [data-analysis.book-sales-analysis.data-sources-v2 :as data]
             [data-analysis.book-sales-analysis.core-helpers-v2 :as helpers]))
 
 ;; # Market Basket Analysis

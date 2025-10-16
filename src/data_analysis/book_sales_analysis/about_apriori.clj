@@ -21,6 +21,7 @@
             [data-analysis.book-sales-analysis.core-helpers-v2 :as helpers]
             [data-analysis.book-sales-analysis.market-basket-analysis-v2 :as mba]))
 
+
 ;; # From Correlations to Recommendations
 ;; ## A Publisher's Journey into Data-Driven Book Sales
 
@@ -95,6 +96,31 @@
 
 ;; My first instinct was to calculate correlations between all books. A correlation tells you how often two books appear together compared to what you'd expect by chance. When I visualized this as a heatmap, with books ordered chronologically, something fascinating emerged:
 
+;; The core of the correlation calculation is this function (thank you, [@generateme](https://github.com/generateme) for huge [help](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/Correlation.20matrix.20best.20practice.3F/with/530339272)):
+
+^:kindly/hide-code
+(kind/code
+ "; ...
+  
+(defn corr-a-x-b [ds]
+  (let
+   [columns (tc/column-names ds)
+    clean-ds  (tc/drop-columns ds [:zakaznik]))]
+    (-> (zipmap columns (stats/correlation-matrix (tc/columns clean-ds)))
+        tc/dataset
+        (tc/add-column :book columns))))
+  
+; ...")
+
+;; ...which after chronological sorting (see article's repo) enters this plotly element:
+
+^:kindly/hide-code
+(def example-corr-matrix-calculation 
+  (->  data/anonymized-shareable-ds
+       helpers/onehot-encode-by-customers
+       (helpers/corr-matrix data/books-meta)))
+
+
 (kind/plotly
  {:data [{:type "heatmap"
           :z (tc/columns data/corr-matrix-precalculated)
@@ -114,7 +140,7 @@
                           :font {:size 12 :color "black"}
                           :bgcolor "rgba(255, 255, 200, 0.9)" :bordercolor "yellow" :borderwidth 2}]}})
 
-;; The bright red square in the upper-left corner revealed that **recently published books have much stronger co-purchase patterns** than older titles. This made intuitive sense—customers discovering our catalog tend to buy multiple new releases together.
+;; The bright red square in the lower-left corner revealed that **recently published books have much stronger co-purchase patterns** than older titles. This made intuitive sense—customers discovering our catalog tend to buy multiple new releases together.
 
 ;; ## A Surprising Discovery: Czech vs. Foreign Authors
 
@@ -234,7 +260,7 @@ scatter-plot
 ;; **Lift** measures whether this happens more than random chance:
 
 ;; $$ 
-;; "\text{Lift}(A \rightarrow B) = \dfrac{\text{Confidence}(A \rightarrow B)}{\text{Support}(\{B\})}
+;; \text{Lift}(A \rightarrow B) = \dfrac{\text{Confidence}(A \rightarrow B)}{\text{Support}(\{B\})}
 ;; $$ 
 
 ;; A lift greater than 1 indicates positive association—the items are purchased together more often than if they were independent. A lift of 2.3 means the combination is 2.3 times more likely than chance.
@@ -343,6 +369,15 @@ scatter-plot
 ;; - Author: https://barys.me
 ;; - Full presentation code: *to be published*
 ;; - SciCloj community: [scicloj.github.io](https://scicloj.github.io)
+
+;; ## Credits
+
+;; I would like to thank [Daniel Slutsky](https://github.com/daslu) for inviting me to participate in the conference and encouraging me all the time not to give up. I think he is doing an amazing job for this great community. 
+;; I would also like to thank [Timothy Pratley](https://github.com/timothypratley) for his support during the publication process. 
+;; Extra thanks to my friends at [Not Null Makers](https://notnullmakers.com/) for making me a better Clojure person :).
+ 
+
+
 
 ;; ---
 
