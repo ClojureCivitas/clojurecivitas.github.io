@@ -13,6 +13,9 @@
 
 (ns scicloj.clay.workshop.macroexpand2025)
 
+;; The purpose of this workshop is to get up and running with Clay.
+;; So please ask for help if you are stuck or have any questions.
+
 ;; ## What is Clay?
 
 ;; Clay is a tool that turns a Clojure namespace into a Document.
