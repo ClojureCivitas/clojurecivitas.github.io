@@ -2,28 +2,39 @@
   :clay             {:title  "Macroexpand 2025 Noj: Clay Workshop"
                      :quarto {:author      :timothypratley
                               :description "What is Clay, why use it, and how to use it."
-                              :draft       true
                               :type        :post
                               :date        "2025-10-16"
                               :category    :clay
                               :tags        [:clay :workflow]}}}
 (ns scicloj.clay.workshop.macroexpand2025
   (:require [scicloj.tableplot.v1.plotly :as tp]
-            [tablecloth.api :as tc]))
+            [tablecloth.api :as tc]
+            [scicloj.kindly.v4.kind :as kind]))
 
 (ns scicloj.clay.workshop.macroexpand2025)
 
-;; The purpose of this workshop is to get up and running with Clay.
-;; So please ask for help if you are stuck or have any questions.
+;; Welcome to the [Macroexpand Clay Workshop](https://scicloj.github.io/macroexpand-2025/macroexpand_noj.html)!
+
+;; The main goal of this workshop is to get you up and running with Clay.
+;; I'll present an overview of Clay, and then we'll spend time together getting setup and trying it.
+;; Please ask for help if you are stuck or have any questions.
 
 ;; ## What is Clay?
 
 ;; Clay is a tool that turns a Clojure namespace into a Document.
-;; This document was made from the `scicloj.clay.workshop.macroexpand2025` namespace.
 
 ;; Clay renders code, results, comments, markdown and visualizations.
 
 ;; ![Clay makes code into a document](macroexpand2025.png)
+
+;; > Useful for documentation, data exploration, visualization, and blogging.
+
+;; > Bundled with Noj; the SciCloj collection of data science libraries.
+
+;; ## What does Clay produce?
+
+;; HTML or Markdown of comments, code, and values.
+;; This HTML document was made from `src/scicloj/clay/workshop/macroexpand2025.clj`.
 
 ;; ### Code and results
 
@@ -55,7 +66,9 @@
 
 ;; ![hammer and spanner](macroexpand2025.svg)
 
-;; See [Markdown reference](https://quarto.org/docs/authoring/markdown-basics.html).
+;; CommonMark (Quarto).
+;; Quarto has features like footnotes^[Quarto is a well established, widely used publishing solution].
+;; See [Markdown reference](https://quarto.org/docs/authoring/markdown-basics.html) for the full feature set.
 
 ;; ### Visualizations
 
@@ -101,6 +114,21 @@
  [:circle {:r 40 :cx 50 :cy 50 :fill "lightblue"}]
  [:circle {:r 20 :cx 50 :cy 50 :fill "lightgreen"}]]
 
+;; Anything you can do in a web page can be expressed as hiccup, such as including JavaScript in the page.
+
+^:kind/hiccup
+[:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.js"}]
+
+;; `^:kind/hiccup` is Clojure syntax for attaching metadata.
+;; Kindly is a standard for annotation, and helpers for attaching metadata annotations.
+
+(kind/hiccup
+  [:svg {:width "100%"}
+   [:circle {:r 40 :cx 50 :cy 50 :fill "lightblue"}]
+   [:circle {:r 20 :cx 50 :cy 50 :fill "lightgreen"}]])
+
+;; Metadata on values for visualization tools like Clay to know what to do with the value.
+
 ;; ## So - Notebooks?
 
 ;; Yes, Clay interleaves code, results, narrative and visualizations.
@@ -109,12 +137,15 @@
 
 ;; But, there is no execution model or environment.
 
-;; > It's your Clojure code, the way you usually write it.
+;; > You write plain Clojure code, you can run it without Clay.
 
-;; Clay is not _required_ by your code.
+;; Clay is not a dependency of your code.
+
+;; > Write with your normal workflow, sometimes using Clay to visualize as you go.
+
 ;; Clay takes code as input and makes a document.
 
-;; > Produces **HTML**, PDF, presentations and Markdown.
+;; > Produces **HTML** or Markdown which may be further processed into PDF, slides, or websites.
 
 ;; ## Why make documents from code?
 
@@ -125,7 +156,7 @@
 ;; | Sharing ideas is important | Foundation of human progress. Fuels technology, communities, and civilization. |
 ;; | Code crystallizes thinking | Concrete, logical, reproducible, explorable, and extensible. |
 ;; | Edit code not documents | Thinking and coding is the hard part. |
-;; | Publishing matters | Share your idea in a widely accessible format. |
+;; | Publishing matters | Share your idea in a widely accessible formats. |
 
 ;; ## Why use Clay?
 
@@ -137,6 +168,10 @@
 ;; | Coding | Custom execution model | REPL |
 ;; | Publishing | Notebook | Markdown |
 ;; : Clay is _simple_
+
+;; People really enjoy the workflow and results.
+
+;; > "Best notebook experience I've had"
 
 ;; ## How to Clay
 
@@ -168,6 +203,11 @@
 ;; by searching for "Clay".
 ;; I highly recommend creating a custom keybinding that works with your configuration.
 
+;; A browser window will be shown when you call Clay.
+;; ![Cursive and Calva have an embedded viewer](macroexpand2025-editor.png)
+
+;; ### Anyone stuck?
+
 ;; If you are having difficulty getting started,
 ;; you might find it easier to clone an existing project:
 
@@ -178,7 +218,7 @@
 
 ;; ### Live reload
 
-;; Clay can watch for file changes and re-render document.
+;; Clay can watch for file changes and re-render the document.
 ;; Use the "Clay watch" REPL command to toggle live reload mode.
 
 ;; Create or edit a source file and it will be shown in the browser.
@@ -197,7 +237,7 @@
 
 ;; ## Ideas for explorations
 
-;; The purpose of this Workshop is to encourage you to create your own namespace and use clay to render it.
+;; Take some time to create your own namespace and use Clay to render it.
 ;; Here are some tiny ideas you might write about.
 
 ;; ### What is macroexpand?
@@ -229,9 +269,17 @@ freq
 
 (-> scatter-ds
     (tp/base {:=title "Sample Scatter Plot"})
-    (tp/layer-point {:=x     :x
-                     :=y     :y}))
+    (tp/layer-point {:=x :x
+                     :=y :y}))
 
 ;; ## Question time
 
-;; Stuck? Need help? Please speak up!
+;; Please speak up!
+;; Stuck?
+;; Need help?
+;; Want to see a feature demonstrated?
+;; Questions about configuration, Quarto, Markdown, formats, narrowing?
+;; Feature suggestions?
+;; Share your experiences?
+
+;; Remaining questions can be asked in the [#clay-dev channel](https://clojurians.zulipchat.com/#narrow/channel/422115-clay-dev).
