@@ -1,10 +1,10 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Bell State Circuit"
                      :quarto {:author :ludgersolbach
-                              :draft  true
+                              :draft  false
                               :type   :post
                               :image  "bell_state_circuit.svg"
-                              :date   "2025-10-10"
+                              :date   "2025-10-16"
                               :tags   [:qclojure :quantum-computing :quantum-circuit :simulation :bell-state]}}}
 (ns qclojure.examples.bell-state-circuit 
   (:require
@@ -184,5 +184,5 @@ result
 ;;
 ;; This example demonstrates the basic concepts of quantum circuits, quantum gates,
 ;; and quantum simulators using QClojure. You can build upon this foundation to explore
-;; more complex quantum algorithms and circuits. Please alos check out the tutorial in the
+;; more complex quantum algorithms and circuits. Please also check out the tutorial in the
 ;; [QClojure documentation](https://cljdoc.org/d/org.soulspace/qclojure).
