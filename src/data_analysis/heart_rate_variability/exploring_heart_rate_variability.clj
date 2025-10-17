@@ -125,7 +125,7 @@
                                                window-filtered (.bandPassFilter bw
                                                                                 (double-array window-standardized)
                                                                                 4
-                                                                                0
+                                                                                0.04 ; Lower cutoff at 0.04 Hz to remove baseline drift
                                                                                 0.4)
                                                fft (DiscreteFourier. (double-array window-filtered))
                                                _ (.transform fft)
