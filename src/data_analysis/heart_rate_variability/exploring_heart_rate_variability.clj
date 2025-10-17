@@ -122,15 +122,16 @@
                                                window (-> resampled-ppi
                                                           :ppi
                                                           (dtype/sub-buffer start-idx window-size))
-                                               window-standardized (stats/standardize window)
+;; Filter first, then standardize for FFT normalization
                                                window-filtered (.bandPassFilter bw
-                                                                                (double-array window-standardized)
+                                                                                (double-array window)
                                                                                 4
                                                                                 0.04 ; Lower cutoff at 0.04 Hz to remove baseline drift
                                                                                 0.4)
+                                               window-standardized (stats/standardize window-filtered)
 ;; Apply Hann window to reduce spectral leakage
                                                hann-window (-> (Hanning. window-size) .getWindow)
-                                               window-windowed (map * window-filtered hann-window)
+                                               window-windowed (map * window-standardized hann-window)
                                                fft (DiscreteFourier. (double-array window-windowed))
                                                _ (.transform fft)
                                                whole-magnitude (.getMagnitude fft true)]
