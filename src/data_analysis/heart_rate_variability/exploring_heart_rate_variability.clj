@@ -157,15 +157,18 @@
 (defn LF-to-HF [freqs spectrogram]
   (let [ds (tc/dataset {:f freqs
                         :s (:magnitude spectrogram)}
-                       tc/dataset)]
-    (/ (-> ds
-           (tc/select-rows #(<= 0.04 (% :f) 0.15))
-           :s
-           tcc/sum)
-       (-> ds
-           (tc/select-rows #(<= 0.15 (% :f) 0.4))
-           :s
-           tcc/sum))))
+                       tc/dataset)
+        lf-power (-> ds
+                     (tc/select-rows #(<= 0.04 (% :f) 0.15))
+                     :s
+                     tcc/sum)
+        hf-power (-> ds
+                     (tc/select-rows #(<= 0.15 (% :f) 0.4))
+                     :s
+                     tcc/sum)]
+    (if (pos? hf-power)
+      (/ lf-power hf-power)
+      Double/NaN))) ; Return NaN when HF power is zero or negative
 
 (defn plot-with-measures [{:keys [sampling-rate
                                   window-size
