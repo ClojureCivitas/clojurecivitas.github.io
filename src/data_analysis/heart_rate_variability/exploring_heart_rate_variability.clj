@@ -10,6 +10,7 @@
   (:require [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as plotly]
             [tech.v3.datatype :as dtype]
+            [tech.v3.datatype.rolling :as rolling]
             [tech.v3.datatype.functional :as dfn]
             [tech.v3.tensor :as tensor]
             [tech.v3.datatype.datetime :as dt-datetime]
@@ -95,23 +96,37 @@
           hop-size 8
           n-windows (int (/ (- n window-size)
                             hop-size))
-          windows (->> (range n-windows)
-                       (map (fn [w]
-                              [w (let [start-idx (* w hop-size)]
-                                   (-> resampled-ppi
-                                       :ppi
-                                       (dtype/sub-buffer start-idx window-size)))])))
-          rmssds (->> windows
-                      (map (fn [[w window]]
-                             (-> window
-                                 (tcc/shift 1)
-                                 (tcc/- window)
-                                 tcc/sq
-                                 tcc/mean
-                                 tcc/sqrt))))
-          spectrograms (->> windows
-                            (pfor/pmap (fn [[w window]]
-                                         (let [window-standardized (stats/standardize window)
+          ranges (-> ppi-ds
+                     :t
+                     (rolling/variable-rolling-window-ranges
+                      30
+                      {:relative-window-position :left}))
+          range-datasets (->> ranges
+                              (map (fn [r]
+                                     (tc/select-rows ppi-ds r))))
+          reasonable-ppi? #(< 500 % 900)
+          rmssds (->> range-datasets
+                      (map (fn [{:keys [ppi]}]
+                             (->> ppi
+                                  (partition-by reasonable-ppi?)
+                                  (map (fn [part]
+                                         (when (-> part first reasonable-ppi?)
+                                           (map -
+                                                (rest part)
+                                                part))))
+                                  (remove nil?)
+                                  (apply concat)
+                                  double-array
+                                  tcc/sq
+                                  tcc/mean
+                                  math/sqrt))))
+          spectrograms (->> (range n-windows)
+                            (pfor/pmap (fn [w]
+                                         (let [start-idx (* w hop-size)
+                                               window (-> resampled-ppi
+                                                          :ppi
+                                                          (dtype/sub-buffer start-idx window-size))
+                                               window-standardized (stats/standardize window)
                                                window-filtered (.bandPassFilter bw
                                                                                 (double-array window-standardized)
                                                                                 4
@@ -179,7 +194,7 @@
                   (plotly/layer-line {:=x :t
                                       :=y :rmssd})
                   plotly/plot
-                  (assoc-in [:layout :yaxis :range] [0 0.1]))
+                  (assoc-in [:layout :yaxis :range] [0 100]))
        :power-spectrum (kind/plotly
                         {:data [{:x times
                                  :y freqs
@@ -339,8 +354,9 @@
     (-> {:t peak-times}
         tc/dataset
         ;; Calculate peak-to-peak intervals
-        (tc/add-column :ppi #(tcc/- (:t %)
-                                    (tcc/shift (:t %) 1)))
+        (tc/add-column :ppi #(tcc/* 1000
+                                    (tcc/- (:t %)
+                                           (tcc/shift (:t %) 1))))
         (tc/drop-rows [0]))))
 
 ;; ### Plotting the PPI
@@ -375,6 +391,8 @@
       plot-with-measures))
 
 ;; ## A subject's journey
+
+;; The various phases of the WESAD experiments:
 
 (def id->label
   [:transient, :baseline,
