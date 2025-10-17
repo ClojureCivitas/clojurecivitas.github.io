@@ -392,6 +392,8 @@
 
 ;; ## A subject's journey
 
+;; The various phases of the WESAD experiments:
+
 (def id->label
   [:transient, :baseline,
    :stress, :amusement, :meditation,
