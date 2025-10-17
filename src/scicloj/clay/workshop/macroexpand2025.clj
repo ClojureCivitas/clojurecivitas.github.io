@@ -27,7 +27,7 @@
 
 ;; ![Clay makes code into a document](macroexpand2025.png)
 
-;; > Useful for documentation, data exploration, visualization, and blogging.
+;; > Useful for documentation, data exploration, visualization, reports, and blogging.
 
 ;; > Bundled with Noj; the SciCloj collection of data science libraries.
 
