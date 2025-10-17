@@ -2,10 +2,10 @@
 
 <img src="src/images/civitas-icon.svg" alt="Civitas Icon" align="right">
 
-Clojure Civitas makes it easy for you to publish Clojure ideas and explorations
-without the overhead of setting up a new project, blog, or repo.
+Clojure Civitas is a shared [blog](https://clojurecivitas.github.io/posts.html) space for your ideas and explorations.
+Clojure Civitas makes it easy for you to publish Clojure ideas and explorations without the overhead of setting up a new project, blog, or repo.
 Whether you're sketching out a quick experiment or writing a deeper post,
-just fork this repo, create a namespace, write, commit and submit a pull request.
+just fork this repo, add a namespace, write, commit and submit a pull request.
 This is your shared scratch space.
 
 Think. Code. Share.
