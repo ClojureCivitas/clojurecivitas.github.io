@@ -1,6 +1,7 @@
 ^{:clay {:title  "Macroexpand 2025 Noj: Civitas Workshop"
          :quarto {:author      :timothypratley
                   :description "What is Civitas, why use it, and how to use it."
+                  :image       "macroexpand_workshop_tableplot.png"
                   :type        :post
                   :date        "2025-10-17"
                   :category    :clay
