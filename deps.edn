@@ -42,7 +42,7 @@
   generateme/fastmath                         {:mvn/version "3.0.0-alpha3"}
   clj-http/clj-http                           {:mvn/version "3.13.1"}
   
-  org.soulspace/qclojure                      {:mvn/version "0.21.0"}
+  org.soulspace/qclojure                      {:mvn/version "0.22.0"}
   }
 
  :aliases
