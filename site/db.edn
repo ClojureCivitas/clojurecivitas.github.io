@@ -135,7 +135,12 @@
    :name        "Ludger Solbach"
    :url         "https://github.com/lsolbach"
    :links       [{:icon "github" :href "https://github.com/lsolbach"}]
-   :affiliation []}]
+   :affiliation []}
+  {:id    :bsless
+   :name  "Ben Sless"
+   :image "https://avatars.githubusercontent.com/u/21342111?v=4"
+   :url   "https://bsless.github.io/"
+   :links [{:icon "github" :href "https://github.com/bsless"}]}]
 
  :affiliation
  [{:id   :clojure.core
