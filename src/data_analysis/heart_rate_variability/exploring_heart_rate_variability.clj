@@ -1,11 +1,11 @@
 ^{:kindly/hide-code true
-  :clay             {:title  "Exploring Heart Rate Variability"
-                     :external-requirements ["WESAD dataset at /workspace/datasets/WESAD/"]
-                     :quarto {:author :ludgersolbach
-                              :draft true
-                              :type   :post
-                              :date   "2025-10-17"
-                              :tags   [:data-analysis :noj]}}}
+  :clay {:title "Exploring Heart Rate Variability"
+         :external-requirements ["WESAD dataset at /workspace/datasets/WESAD/"]
+         :quarto {:author :ludgersolbach
+                  :draft true
+                  :type :post
+                  :date "2025-10-17"
+                  :tags [:data-analysis :noj]}}}
 (ns data-analysis.heart-rate-variability.exploring-heart-rate-variability
   (:require [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as plotly]
@@ -26,7 +26,6 @@
             [scicloj.kindly.v4.kind :as kind]
             [scicloj.tableplot.v1.plotly :as plotly]
             [java-time.api :as jt]))
-
 
 ;; # Exploring HRV - DRAFT 🛠
 
@@ -50,14 +49,12 @@
   (:import [com.github.psambit9791.jdsp.signal CrossCorrelation]
            [com.github.psambit9791.jdsp.signal.peaks FindPeak]
            [com.github.psambit9791.jdsp.filter Butterworth]
-           [com.github.psambit9791.jdsp.transform DiscreteFourier]))
-
+           [com.github.psambit9791.jdsp.transform DiscreteFourier]
+           [com.github.psambit9791.jdsp.windows Hanning]))
 
 ;; ## My pulse-to-pulse intervals
 
-
 ;; (extracted from PPG data)
-
 
 (def my-ppi
   (-> (tc/dataset "src/data_analysis/heart_rate_variability/ppi-series.csv"
@@ -75,10 +72,9 @@
                     :=height 300 :=width 700})
       (plotly/layer-bar {:=y :ppi})))
 
-
 (def compute-measures
   (fn [ppi-ds {:keys [sampling-rate
-                      window-size-in-sec ]}]
+                      window-size-in-sec]}]
     (let [spline (interp/interpolation
                   :cubic
                   (:t ppi-ds)
@@ -92,8 +88,8 @@
           bw (com.github.psambit9791.jdsp.filter.Butterworth.
               sampling-rate)
           n (tc/row-count resampled-ppi)
-          window-size (* window-size-in-sec  sampling-rate)
-          hop-size 8
+          window-size (* window-size-in-sec sampling-rate)
+          hop-size (* 5 sampling-rate) ; 5-second hops for reasonable overlap
           n-windows (int (/ (- n window-size)
                             hop-size))
           ranges (-> ppi-ds
@@ -126,13 +122,17 @@
                                                window (-> resampled-ppi
                                                           :ppi
                                                           (dtype/sub-buffer start-idx window-size))
-                                               window-standardized (stats/standardize window)
+;; Filter first, then standardize for FFT normalization
                                                window-filtered (.bandPassFilter bw
-                                                                                (double-array window-standardized)
+                                                                                (double-array window)
                                                                                 4
-                                                                                0
+                                                                                0.04 ; Lower cutoff at 0.04 Hz to remove baseline drift
                                                                                 0.4)
-                                               fft (DiscreteFourier. (double-array window-filtered))
+                                               window-standardized (stats/standardize window-filtered)
+;; Apply Hann window to reduce spectral leakage
+                                               hann-window (-> (Hanning. window-size) .getWindow)
+                                               window-windowed (map * window-standardized hann-window)
+                                               fft (DiscreteFourier. (double-array window-windowed))
                                                _ (.transform fft)
                                                whole-magnitude (.getMagnitude fft true)]
                                            {:t (* w hop-size (/ 1.0 sampling-rate))
@@ -140,16 +140,15 @@
                                             :magnitude (take 40 whole-magnitude)})))
                             vec)]
       {:sampling-rate sampling-rate
+       :window-size window-size ;; Added: FFT window size needed for freq resolution
        :resampled-ppi resampled-ppi
        :rmssds rmssds
        :spectrograms spectrograms})))
-
 
 (comment
   (compute-measures my-ppi
                     {:sampling-rate 10
                      :window-size-in-sec 60}))
-
 
 ;; [An Overview of Heart Rate Variability Metrics and Norms](https://pmc.ncbi.nlm.nih.gov/articles/PMC5624990/)
 ;; by Fred Shaffer, & J P Ginsberg.
@@ -158,28 +157,35 @@
 (defn LF-to-HF [freqs spectrogram]
   (let [ds (tc/dataset {:f freqs
                         :s (:magnitude spectrogram)}
-                       tc/dataset)]
-    (/ (-> ds
-           (tc/select-rows #(<= 0.04 (% :f) 0.15))
-           :s
-           tcc/sum)
-       (-> ds
-           (tc/select-rows #(<= 0.15 (% :f) 0.4))
-           :s
-           tcc/sum))))
-
+                       tc/dataset)
+        lf-power (-> ds
+                     (tc/select-rows #(<= 0.04 (% :f) 0.15))
+                     :s
+                     tcc/sum)
+        hf-power (-> ds
+                     (tc/select-rows #(<= 0.15 (% :f) 0.4))
+                     :s
+                     tcc/sum)]
+    (if (pos? hf-power)
+      (/ lf-power hf-power)
+      Double/NaN))) ; Return NaN when HF power is zero or negative
 
 (defn plot-with-measures [{:keys [sampling-rate
+                                  window-size
                                   resampled-ppi
                                   rmssds
                                   spectrograms]}]
   (when spectrograms
-    (let [n (-> spectrograms first :magnitude count)
+    (let [;; Number of frequency bins we're displaying (truncated spectrum)
+          n (-> spectrograms first :magnitude count)
+          ;; Correct frequency resolution based on FFT window size
+          ;; freq_resolution = sampling_rate / FFT_size
+          freq-resolution (/ sampling-rate window-size)
+          ;; Nyquist frequency (maximum representable frequency)
           Nyquist-freq (/ sampling-rate 2.0)
-          freq-resolution (/ Nyquist-freq n)
           times (map (comp str :t) spectrograms)
-          freqs (tcc/* (range n)
-                       freq-resolution)]
+          ;; Generate frequency values for the n bins we're displaying
+          freqs (tcc/* (range n) freq-resolution)]
       {:resampled-ppi (-> resampled-ppi
                           (plotly/base {:=height 300 :=width 700})
                           (plotly/layer-bar (merge {:=x :t
@@ -206,7 +212,7 @@
                                   :width 700
                                   :margin {:t 25}
                                   :xaxis {:title {:text "t"}}
-                                  :yaxis {:title {:text "freq"}}}})
+                                  :yaxis {:title {:text "freq (Hz)"}}}})
        :mean-power-spectrum (-> {:freq freqs
                                  :mean-power (-> spectrograms
                                                  (->> (map :magnitude))
@@ -227,13 +233,11 @@
                             (assoc-in [:layout :yaxis :range] [0 4])
                             (assoc-in [:layout :yaxis :title] {:text "LF/HF"}))})))
 
-
 (delay
   (-> my-ppi
       (compute-measures {:sampling-rate 10
                          :window-size-in-sec 60})
       plot-with-measures))
-
 
 ;; ## Analysing ECG data
 
@@ -265,8 +269,8 @@
                     :ECG (-> ld
                              (get-in [:signal :chest :ECG])
                              (py. flatten))
-                    :label  (-> ld
-                                (get :label))})))))
+                    :label (-> ld
+                               (get :label))})))))
 
 (delay
   (labelled-dataset 5))
@@ -275,7 +279,7 @@
 
 ;; [Pan-Tompkins Algorithm](https://en.wikipedia.org/wiki/Pan%E2%80%93Tompkins_algorithm)
 
-;; [Unupervised ECG QRS Detection](https://hooman650.github.io/ECG-QRS.html) by Hooman SedghamizHooman Sedghamiz
+;; [Unupervised ECG QRS Detection](https://hooman650.github.io/ECG-QRS.html) by Hooman Sedghamiz
 
 ;; scipy: `peaks = signal.find_peaks(signal, height=mean, distance=200)`
 ;; JDSP equivalent:
@@ -289,7 +293,6 @@
         ;; Then filter by distance
         final-peaks (.filterByPeakDistance peak-obj height-filtered distance)]
     final-peaks)) ; Returns int[] of peak row-numbers
-
 
 (delay
   (let [bw (com.github.psambit9791.jdsp.filter.Butterworth.
@@ -328,7 +331,6 @@
         (plotly/layer-point {:=y :peak
                              :=name "peak"}))))
 
-
 (defn extract-ppi
   "Extract peak-to-peak intervals from ECG signal.
   Returns dataset with columns: :t (time in seconds), :ppi (interval in seconds)"
@@ -345,8 +347,9 @@
                                                       4 5 15))
                      ;; Differentiate and square
                      (tc/add-column :sqdiff
-                                    #(tcc/- (:filtered %)
-                                            (tcc/shift (:filtered %) 1))))
+                                    #(tcc/sq
+                                      (tcc/- (:filtered %)
+                                             (tcc/shift (:filtered %) 1)))))
         ;; Find peaks with distance constraint (200 samples = ~0.29s)
         peak-indices (find-peaks (:sqdiff pipeline)
                                  {:distance 200})
@@ -381,7 +384,6 @@
          extract-ppi
          (compute-measures measures-params)))))
 
-
 (delay
   (-> {:ppi-params {:subject-id 5
                     :row-interval [0 1000000]}
@@ -413,24 +415,40 @@
          (tc/add-column :offset #(cons 0 (reductions + (:n %))))
          (tc/select-columns [:offset :n :label])))))
 
-
 (delay
   (label-intervals 5))
 
-
 (delay
   (let [subject 5]
-    (kind/fragment
-     (-> (label-intervals subject)
-         (tc/select-rows #(not= (:label %) :ignore))
-         #_(tc/select-rows #(= (:label %) :meditation))
-         (tc/rows :as-maps)
-         (->> (mapcat (fn [{:keys [offset n label]}]
-                        [label
-                         (try (-> {:ppi-params {:subject-id subject
-                                                :row-interval [offset (+ offset n)]}
-                                   :measures-params {:sampling-rate 10
-                                                     :window-size-in-sec 120}}
-                                  WESAD-spectrograms
-                                  plot-with-measures)
-                              (catch Exception e 'unavailable))])))))))
+    (-> (label-intervals subject)
+        (tc/select-rows #(not= (:label %) :ignore))
+        #_(tc/select-rows #(= (:label %) :meditation))
+        (tc/rows :as-maps)
+        (->> (mapcat (fn [{:keys [offset n label]}]
+                       [label
+                        (try (-> {:ppi-params {:subject-id subject
+                                               :row-interval [offset (+ offset n)]}
+                                  :measures-params {:sampling-rate 10
+                                                    :window-size-in-sec 120}}
+                                 WESAD-spectrograms
+                                 plot-with-measures)
+                             (catch Exception e 'unavailable))]))))))
+
+;; ## Conclusion
+
+;; - measures are tricky
+;; - domain knowledge matters
+;; - workflow matters
+;; - visualization matters
+
+
+
+
+
+
+
+
+
+
+
+
