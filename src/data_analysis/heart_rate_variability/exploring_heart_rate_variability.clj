@@ -339,8 +339,9 @@
                                                       4 5 15))
                      ;; Differentiate and square
                      (tc/add-column :sqdiff
-                                    #(tcc/- (:filtered %)
-                                            (tcc/shift (:filtered %) 1))))
+                                    #(tcc/sq
+                                      (tcc/- (:filtered %)
+                                             (tcc/shift (:filtered %) 1)))))
         ;; Find peaks with distance constraint (200 samples = ~0.29s)
         peak-indices (find-peaks (:sqdiff pipeline)
                                  {:distance 200})
