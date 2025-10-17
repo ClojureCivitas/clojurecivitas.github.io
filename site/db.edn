@@ -266,6 +266,13 @@
    :topic  [:web :web/backend]
    :level  2}
 
+  {:id     "replicant"
+   :title  "Replicant Documentation"
+   :url    "https://replicant.fun/"
+   :format :library-docs
+   :topic  [:web :web/backend]
+   :level  2}
+
   ;; ===== DATA =====
   {:id     "tablecloth"
    :title  "Tablecloth: Dataframe Library"
