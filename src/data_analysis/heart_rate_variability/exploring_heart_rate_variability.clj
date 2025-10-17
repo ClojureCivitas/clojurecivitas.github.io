@@ -95,13 +95,23 @@
           hop-size 8
           n-windows (int (/ (- n window-size)
                             hop-size))
-          spectrograms (->> (range n-windows)
-                            (pfor/pmap (fn [w]
-                                         (let [start-idx (* w hop-size)
-                                               window (-> resampled-ppi
-                                                          :ppi
-                                                          (dtype/sub-buffer start-idx window-size))
-                                               window-standardized (stats/standardize window)
+          windows (->> (range n-windows)
+                       (map (fn [w]
+                              [w (let [start-idx (* w hop-size)]
+                                   (-> resampled-ppi
+                                       :ppi
+                                       (dtype/sub-buffer start-idx window-size)))])))
+          rmssds (->> windows
+                      (map (fn [[w window]]
+                             (-> window
+                                 (tcc/shift 1)
+                                 (tcc/- window)
+                                 tcc/sq
+                                 tcc/mean
+                                 tcc/sqrt))))
+          spectrograms (->> windows
+                            (pfor/pmap (fn [[w window]]
+                                         (let [window-standardized (stats/standardize window)
                                                window-filtered (.bandPassFilter bw
                                                                                 (double-array window-standardized)
                                                                                 4
@@ -116,6 +126,7 @@
                             vec)]
       {:sampling-rate sampling-rate
        :resampled-ppi resampled-ppi
+       :rmssds rmssds
        :spectrograms spectrograms})))
 
 
@@ -145,6 +156,7 @@
 
 (defn plot-with-measures [{:keys [sampling-rate
                                   resampled-ppi
+                                  rmssds
                                   spectrograms]}]
   (when spectrograms
     (let [n (-> spectrograms first :magnitude count)
@@ -160,6 +172,14 @@
                                                    (when (:label resampled-ppi)
                                                      {:=color :label
                                                       :=color-type :nominal}))))
+       :rmssd (-> {:t times
+                   :rmssd rmssds}
+                  tc/dataset
+                  (plotly/base {:=height 300 :=width 700})
+                  (plotly/layer-line {:=x :t
+                                      :=y :rmssd})
+                  plotly/plot
+                  (assoc-in [:layout :yaxis :range] [0 0.1]))
        :power-spectrum (kind/plotly
                         {:data [{:x times
                                  :y freqs
@@ -340,17 +360,17 @@
 
 (def WESAD-spectrograms
   (memoize
-   (fn [{:keys [ppi-params spectrogram-params]}]
+   (fn [{:keys [ppi-params measures-params]}]
      (-> ppi-params
          extract-ppi
-         (compute-measures spectrogram-params)))))
+         (compute-measures measures-params)))))
 
 
 (delay
   (-> {:ppi-params {:subject-id 5
                     :row-interval [0 1000000]}
-       :spectrogram-params {:sampling-rate 10
-                            :window-size-in-sec 120}}
+       :measures-params {:sampling-rate 10
+                         :window-size-in-sec 120}}
       WESAD-spectrograms
       plot-with-measures))
 
@@ -382,18 +402,17 @@
 
 (delay
   (let [subject 5]
-    (-> (label-intervals subject)
-        (tc/select-rows #(not= (:label %) :ignore))
-        #_(tc/select-rows #(= (:label %) :meditation))
-        (tc/rows :as-maps)
-        (->> (map (fn [{:keys [offset n label]}]
-                    [label
-                     (try (-> {:ppi-params {:subject-id subject
-                                            :row-interval [offset (+ offset n)]}
-                               :spectrogram-params {:sampling-rate 10
-                                                    :window-size-in-sec 120}}
-                              WESAD-spectrograms
-                              plot-with-measures
-                              ;; :LF-to-HF-series
-                              )
-                          (catch Exception e 'unavailable))]))))))
+    (kind/fragment
+     (-> (label-intervals subject)
+         (tc/select-rows #(not= (:label %) :ignore))
+         #_(tc/select-rows #(= (:label %) :meditation))
+         (tc/rows :as-maps)
+         (->> (mapcat (fn [{:keys [offset n label]}]
+                        [label
+                         (try (-> {:ppi-params {:subject-id subject
+                                                :row-interval [offset (+ offset n)]}
+                                   :measures-params {:sampling-rate 10
+                                                     :window-size-in-sec 120}}
+                                  WESAD-spectrograms
+                                  plot-with-measures)
+                              (catch Exception e 'unavailable))])))))))
