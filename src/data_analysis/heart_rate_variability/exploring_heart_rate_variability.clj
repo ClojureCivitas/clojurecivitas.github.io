@@ -1,11 +1,11 @@
 ^{:kindly/hide-code true
-  :clay             {:title  "Exploring Heart Rate Variability"
-                     :external-requirements ["WESAD dataset at /workspace/datasets/WESAD/"]
-                     :quarto {:author :ludgersolbach
-                              :draft true
-                              :type   :post
-                              :date   "2025-10-17"
-                              :tags   [:data-analysis :noj]}}}
+  :clay {:title "Exploring Heart Rate Variability"
+         :external-requirements ["WESAD dataset at /workspace/datasets/WESAD/"]
+         :quarto {:author :ludgersolbach
+                  :draft true
+                  :type :post
+                  :date "2025-10-17"
+                  :tags [:data-analysis :noj]}}}
 (ns data-analysis.heart-rate-variability.exploring-heart-rate-variability
   (:require [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as plotly]
@@ -26,7 +26,6 @@
             [scicloj.kindly.v4.kind :as kind]
             [scicloj.tableplot.v1.plotly :as plotly]
             [java-time.api :as jt]))
-
 
 ;; # Exploring HRV - DRAFT 🛠
 
@@ -52,12 +51,9 @@
            [com.github.psambit9791.jdsp.filter Butterworth]
            [com.github.psambit9791.jdsp.transform DiscreteFourier]))
 
-
 ;; ## My pulse-to-pulse intervals
 
-
 ;; (extracted from PPG data)
-
 
 (def my-ppi
   (-> (tc/dataset "src/data_analysis/heart_rate_variability/ppi-series.csv"
@@ -75,10 +71,9 @@
                     :=height 300 :=width 700})
       (plotly/layer-bar {:=y :ppi})))
 
-
 (def compute-measures
   (fn [ppi-ds {:keys [sampling-rate
-                      window-size-in-sec ]}]
+                      window-size-in-sec]}]
     (let [spline (interp/interpolation
                   :cubic
                   (:t ppi-ds)
@@ -92,7 +87,7 @@
           bw (com.github.psambit9791.jdsp.filter.Butterworth.
               sampling-rate)
           n (tc/row-count resampled-ppi)
-          window-size (* window-size-in-sec  sampling-rate)
+          window-size (* window-size-in-sec sampling-rate)
           hop-size 8
           n-windows (int (/ (- n window-size)
                             hop-size))
@@ -140,16 +135,15 @@
                                             :magnitude (take 40 whole-magnitude)})))
                             vec)]
       {:sampling-rate sampling-rate
+       :window-size window-size ;; Added: FFT window size needed for freq resolution
        :resampled-ppi resampled-ppi
        :rmssds rmssds
        :spectrograms spectrograms})))
-
 
 (comment
   (compute-measures my-ppi
                     {:sampling-rate 10
                      :window-size-in-sec 60}))
-
 
 ;; [An Overview of Heart Rate Variability Metrics and Norms](https://pmc.ncbi.nlm.nih.gov/articles/PMC5624990/)
 ;; by Fred Shaffer, & J P Ginsberg.
@@ -168,18 +162,22 @@
            :s
            tcc/sum))))
 
-
 (defn plot-with-measures [{:keys [sampling-rate
+                                  window-size
                                   resampled-ppi
                                   rmssds
                                   spectrograms]}]
   (when spectrograms
-    (let [n (-> spectrograms first :magnitude count)
+    (let [;; Number of frequency bins we're displaying (truncated spectrum)
+          n (-> spectrograms first :magnitude count)
+          ;; Correct frequency resolution based on FFT window size
+          ;; freq_resolution = sampling_rate / FFT_size
+          freq-resolution (/ sampling-rate window-size)
+          ;; Nyquist frequency (maximum representable frequency)
           Nyquist-freq (/ sampling-rate 2.0)
-          freq-resolution (/ Nyquist-freq n)
           times (map (comp str :t) spectrograms)
-          freqs (tcc/* (range n)
-                       freq-resolution)]
+          ;; Generate frequency values for the n bins we're displaying
+          freqs (tcc/* (range n) freq-resolution)]
       {:resampled-ppi (-> resampled-ppi
                           (plotly/base {:=height 300 :=width 700})
                           (plotly/layer-bar (merge {:=x :t
@@ -206,7 +204,7 @@
                                   :width 700
                                   :margin {:t 25}
                                   :xaxis {:title {:text "t"}}
-                                  :yaxis {:title {:text "freq"}}}})
+                                  :yaxis {:title {:text "freq (Hz)"}}}})
        :mean-power-spectrum (-> {:freq freqs
                                  :mean-power (-> spectrograms
                                                  (->> (map :magnitude))
@@ -227,13 +225,11 @@
                             (assoc-in [:layout :yaxis :range] [0 4])
                             (assoc-in [:layout :yaxis :title] {:text "LF/HF"}))})))
 
-
 (delay
   (-> my-ppi
       (compute-measures {:sampling-rate 10
                          :window-size-in-sec 60})
       plot-with-measures))
-
 
 ;; ## Analysing ECG data
 
@@ -265,8 +261,8 @@
                     :ECG (-> ld
                              (get-in [:signal :chest :ECG])
                              (py. flatten))
-                    :label  (-> ld
-                                (get :label))})))))
+                    :label (-> ld
+                               (get :label))})))))
 
 (delay
   (labelled-dataset 5))
@@ -289,7 +285,6 @@
         ;; Then filter by distance
         final-peaks (.filterByPeakDistance peak-obj height-filtered distance)]
     final-peaks)) ; Returns int[] of peak row-numbers
-
 
 (delay
   (let [bw (com.github.psambit9791.jdsp.filter.Butterworth.
@@ -327,7 +322,6 @@
                             :=name "squared difference"})
         (plotly/layer-point {:=y :peak
                              :=name "peak"}))))
-
 
 (defn extract-ppi
   "Extract peak-to-peak intervals from ECG signal.
@@ -381,7 +375,6 @@
          extract-ppi
          (compute-measures measures-params)))))
 
-
 (delay
   (-> {:ppi-params {:subject-id 5
                     :row-interval [0 1000000]}
@@ -413,10 +406,8 @@
          (tc/add-column :offset #(cons 0 (reductions + (:n %))))
          (tc/select-columns [:offset :n :label])))))
 
-
 (delay
   (label-intervals 5))
-
 
 (delay
   (let [subject 5]
@@ -433,11 +424,6 @@
                                  WESAD-spectrograms
                                  plot-with-measures)
                              (catch Exception e 'unavailable))]))))))
-
-
-
-
-
 
 ;; ## Conclusion
 
