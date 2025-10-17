@@ -420,17 +420,40 @@
 
 (delay
   (let [subject 5]
-    (kind/fragment
-     (-> (label-intervals subject)
-         (tc/select-rows #(not= (:label %) :ignore))
-         #_(tc/select-rows #(= (:label %) :meditation))
-         (tc/rows :as-maps)
-         (->> (mapcat (fn [{:keys [offset n label]}]
-                        [label
-                         (try (-> {:ppi-params {:subject-id subject
-                                                :row-interval [offset (+ offset n)]}
-                                   :measures-params {:sampling-rate 10
-                                                     :window-size-in-sec 120}}
-                                  WESAD-spectrograms
-                                  plot-with-measures)
-                              (catch Exception e 'unavailable))])))))))
+    (-> (label-intervals subject)
+        (tc/select-rows #(not= (:label %) :ignore))
+        #_(tc/select-rows #(= (:label %) :meditation))
+        (tc/rows :as-maps)
+        (->> (mapcat (fn [{:keys [offset n label]}]
+                       [label
+                        (try (-> {:ppi-params {:subject-id subject
+                                               :row-interval [offset (+ offset n)]}
+                                  :measures-params {:sampling-rate 10
+                                                    :window-size-in-sec 120}}
+                                 WESAD-spectrograms
+                                 plot-with-measures)
+                             (catch Exception e 'unavailable))]))))))
+
+
+
+
+
+
+;; ## Conclusion
+
+;; - measures are tricky
+;; - domain knowledge matters
+;; - workflow matters
+;; - visualization matters
+
+
+
+
+
+
+
+
+
+
+
+
