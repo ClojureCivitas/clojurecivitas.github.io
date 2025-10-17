@@ -41,6 +41,8 @@
   org.lwjgl/lwjgl-stb$natives-macos           {:mvn/version "3.3.6"}
   generateme/fastmath                         {:mvn/version "3.0.0-alpha3"}
   clj-http/clj-http                           {:mvn/version "3.13.1"}
+
+  com.github.psambit9791/jdsp                 {:mvn/version "3.1.0"}
   
   org.soulspace/qclojure                      {:mvn/version "0.21.0"}
   }
