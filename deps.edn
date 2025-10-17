@@ -44,7 +44,7 @@
 
   com.github.psambit9791/jdsp                 {:mvn/version "3.1.0"}
   
-  org.soulspace/qclojure                      {:mvn/version "0.21.0"}
+  org.soulspace/qclojure                      {:mvn/version "0.22.0"}
   }
 
  :aliases
