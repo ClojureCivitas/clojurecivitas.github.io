@@ -57,6 +57,10 @@
 (defn cube-spiral [radius]
   (mapcat cube-ring (range radius)))
 
+(defn spiral [radius]
+  (->> (cube-spiral radius)
+       (map cube-to-cartesian-flat)))
+
 (defn walk-radially [start-pos dir steps]
   (->> (iterate #(neighbor % dir) start-pos)
        (take (inc steps))))
