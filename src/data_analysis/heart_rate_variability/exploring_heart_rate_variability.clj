@@ -49,7 +49,8 @@
   (:import [com.github.psambit9791.jdsp.signal CrossCorrelation]
            [com.github.psambit9791.jdsp.signal.peaks FindPeak]
            [com.github.psambit9791.jdsp.filter Butterworth]
-           [com.github.psambit9791.jdsp.transform DiscreteFourier]))
+           [com.github.psambit9791.jdsp.transform DiscreteFourier]
+           [com.github.psambit9791.jdsp.windows Hanning]))
 
 ;; ## My pulse-to-pulse intervals
 
@@ -127,7 +128,10 @@
                                                                                 4
                                                                                 0.04 ; Lower cutoff at 0.04 Hz to remove baseline drift
                                                                                 0.4)
-                                               fft (DiscreteFourier. (double-array window-filtered))
+;; Apply Hann window to reduce spectral leakage
+                                               hann-window (-> (Hanning. window-size) .getWindow)
+                                               window-windowed (map * window-filtered hann-window)
+                                               fft (DiscreteFourier. (double-array window-windowed))
                                                _ (.transform fft)
                                                whole-magnitude (.getMagnitude fft true)]
                                            {:t (* w hop-size (/ 1.0 sampling-rate))
