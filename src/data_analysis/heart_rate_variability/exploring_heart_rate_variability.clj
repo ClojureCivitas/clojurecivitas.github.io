@@ -27,7 +27,7 @@
             [java-time.api :as jt]))
 
 
-;; # Exploring HRV
+;; # Exploring HRV - DRAFT 🛠
 
 (ns data-analysis.heart-rate-variability.exploring-heart-rate-variability
   (:require [tech.v3.datatype :as dtype]
@@ -75,8 +75,7 @@
       (plotly/layer-bar {:=y :ppi})))
 
 
-
-(def compute-spectrograms
+(def compute-measures
   (fn [ppi-ds {:keys [sampling-rate
                       window-size-in-sec ]}]
     (let [spline (interp/interpolation
@@ -96,13 +95,23 @@
           hop-size 8
           n-windows (int (/ (- n window-size)
                             hop-size))
-          spectrograms (->> (range n-windows)
-                            (pfor/pmap (fn [w]
-                                         (let [start-idx (* w hop-size)
-                                               window (-> resampled-ppi
-                                                          :ppi
-                                                          (dtype/sub-buffer start-idx window-size))
-                                               window-standardized (stats/standardize window)
+          windows (->> (range n-windows)
+                       (map (fn [w]
+                              [w (let [start-idx (* w hop-size)]
+                                   (-> resampled-ppi
+                                       :ppi
+                                       (dtype/sub-buffer start-idx window-size)))])))
+          rmssds (->> windows
+                      (map (fn [[w window]]
+                             (-> window
+                                 (tcc/shift 1)
+                                 (tcc/- window)
+                                 tcc/sq
+                                 tcc/mean
+                                 tcc/sqrt))))
+          spectrograms (->> windows
+                            (pfor/pmap (fn [[w window]]
+                                         (let [window-standardized (stats/standardize window)
                                                window-filtered (.bandPassFilter bw
                                                                                 (double-array window-standardized)
                                                                                 4
@@ -117,14 +126,14 @@
                             vec)]
       {:sampling-rate sampling-rate
        :resampled-ppi resampled-ppi
+       :rmssds rmssds
        :spectrograms spectrograms})))
 
 
 (comment
-  (compute-spectrograms my-ppi
-                        {:sampling-rate 10
-                         :window-size-in-sec 60}))
-
+  (compute-measures my-ppi
+                    {:sampling-rate 10
+                     :window-size-in-sec 60}))
 
 
 ;; [An Overview of Heart Rate Variability Metrics and Norms](https://pmc.ncbi.nlm.nih.gov/articles/PMC5624990/)
@@ -145,63 +154,70 @@
            tcc/sum))))
 
 
-
-(defn plot-with-power-spectrum [{:keys [sampling-rate
-                                        resampled-ppi
-                                        spectrograms]}]
+(defn plot-with-measures [{:keys [sampling-rate
+                                  resampled-ppi
+                                  rmssds
+                                  spectrograms]}]
   (when spectrograms
-    (kind/fragment
-     (let [n (-> spectrograms first :magnitude count)
-           Nyquist-freq (/ sampling-rate 2.0)
-           freq-resolution (/ Nyquist-freq n)
-           times (map (comp str :t) spectrograms)
-           freqs (tcc/* (range n)
-                        freq-resolution)]
-       [(-> resampled-ppi
-            (plotly/base {:=height 300 :=width 700})
-            (plotly/layer-bar (merge {:=x :t
-                                      :=y :ppi}
-                                     (when (:label resampled-ppi)
-                                       {:=color :label
-                                        :=color-type :nominal}))))
-        (kind/plotly
-         {:data [{:x times
-                  :y freqs
-                  :z (-> (mapv :magnitude spectrograms)
-                         (tensor/transpose [1 0]))
-                  :type :heatmap
-                  :showscale false}]
-          :layout {:height 300
-                   :width 700
-                   :margin {:t 25}
-                   :xaxis {:title {:text "t"}}
-                   :yaxis {:title {:text "freq"}}}})
-        (-> {:freq freqs
-             :mean-power (-> spectrograms
-                             (->> (map :magnitude))
-                             tensor/->tensor
-                             (tensor/reduce-axis dfn/mean 0))}
-            tc/dataset
-            (plotly/base {:=height 300 :=width 700})
-            (plotly/layer-bar {:=x :freq
-                               :=y :mean-power}))
-        (-> {:t times
-             :LF-to-HF (->> spectrograms
-                            (map (partial LF-to-HF freqs)))}
-            tc/dataset
-            (plotly/base {:=height 300 :=width 700})
-            (plotly/layer-line {:=x :t
-                                :=y :LF-to-HF})
-            plotly/plot
-            (assoc-in [:layout :yaxis :range] [0 4])
-            (assoc-in [:layout :yaxis :title] {:text "LF/HF"}))]))))
+    (let [n (-> spectrograms first :magnitude count)
+          Nyquist-freq (/ sampling-rate 2.0)
+          freq-resolution (/ Nyquist-freq n)
+          times (map (comp str :t) spectrograms)
+          freqs (tcc/* (range n)
+                       freq-resolution)]
+      {:resampled-ppi (-> resampled-ppi
+                          (plotly/base {:=height 300 :=width 700})
+                          (plotly/layer-bar (merge {:=x :t
+                                                    :=y :ppi}
+                                                   (when (:label resampled-ppi)
+                                                     {:=color :label
+                                                      :=color-type :nominal}))))
+       :rmssd (-> {:t times
+                   :rmssd rmssds}
+                  tc/dataset
+                  (plotly/base {:=height 300 :=width 700})
+                  (plotly/layer-line {:=x :t
+                                      :=y :rmssd})
+                  plotly/plot
+                  (assoc-in [:layout :yaxis :range] [0 0.1]))
+       :power-spectrum (kind/plotly
+                        {:data [{:x times
+                                 :y freqs
+                                 :z (-> (mapv :magnitude spectrograms)
+                                        (tensor/transpose [1 0]))
+                                 :type :heatmap
+                                 :showscale false}]
+                         :layout {:height 300
+                                  :width 700
+                                  :margin {:t 25}
+                                  :xaxis {:title {:text "t"}}
+                                  :yaxis {:title {:text "freq"}}}})
+       :mean-power-spectrum (-> {:freq freqs
+                                 :mean-power (-> spectrograms
+                                                 (->> (map :magnitude))
+                                                 tensor/->tensor
+                                                 (tensor/reduce-axis dfn/mean 0))}
+                                tc/dataset
+                                (plotly/base {:=height 300 :=width 700})
+                                (plotly/layer-bar {:=x :freq
+                                                   :=y :mean-power}))
+       :LF-to-HF-series (-> {:t times
+                             :LF-to-HF (->> spectrograms
+                                            (map (partial LF-to-HF freqs)))}
+                            tc/dataset
+                            (plotly/base {:=height 300 :=width 700})
+                            (plotly/layer-line {:=x :t
+                                                :=y :LF-to-HF})
+                            plotly/plot
+                            (assoc-in [:layout :yaxis :range] [0 4])
+                            (assoc-in [:layout :yaxis :title] {:text "LF/HF"}))})))
 
 
 (delay
   (-> my-ppi
-      (compute-spectrograms {:sampling-rate 10
-                             :window-size-in-sec 60})
-      plot-with-power-spectrum))
+      (compute-measures {:sampling-rate 10
+                         :window-size-in-sec 60})
+      plot-with-measures))
 
 
 ;; ## Analysing ECG data
@@ -327,7 +343,6 @@
                                     (tcc/shift (:t %) 1)))
         (tc/drop-rows [0]))))
 
-
 ;; ### Plotting the PPI
 
 (delay
@@ -341,22 +356,63 @@
       (plotly/layer-bar {:=x :t
                          :=y :ppi})))
 
-;; ## Spectrograms again
+;; ### Measures again
 
 (def WESAD-spectrograms
   (memoize
-   (fn [{:keys [ppi-params spectrogram-params]}]
+   (fn [{:keys [ppi-params measures-params]}]
      (-> ppi-params
          extract-ppi
-         (compute-spectrograms spectrogram-params)))))
+         (compute-measures measures-params)))))
 
 
 (delay
   (-> {:ppi-params {:subject-id 5
                     :row-interval [0 1000000]}
-       :spectrogram-params {:sampling-rate 10
-                            :window-size-in-sec 120}}
+       :measures-params {:sampling-rate 10
+                         :window-size-in-sec 120}}
       WESAD-spectrograms
-      plot-with-power-spectrum))
+      plot-with-measures))
+
+;; ## A subject's journey
+
+(def id->label
+  [:transient, :baseline,
+   :stress, :amusement, :meditation,
+   :ignore :ignore :ignore])
+
+(def label-intervals
+  (memoize
+   (fn [subject]
+     (-> (labelled-dataset subject)
+         :label
+         (->> (partition-by identity)
+              (map (fn [part]
+                     [(-> part first int id->label)
+                      (count part)])))
+         tc/dataset
+         (tc/rename-columns [:label :n])
+         (tc/add-column :offset #(cons 0 (reductions + (:n %))))
+         (tc/select-columns [:offset :n :label])))))
 
 
+(delay
+  (label-intervals 5))
+
+
+(delay
+  (let [subject 5]
+    (kind/fragment
+     (-> (label-intervals subject)
+         (tc/select-rows #(not= (:label %) :ignore))
+         #_(tc/select-rows #(= (:label %) :meditation))
+         (tc/rows :as-maps)
+         (->> (mapcat (fn [{:keys [offset n label]}]
+                        [label
+                         (try (-> {:ppi-params {:subject-id subject
+                                                :row-interval [offset (+ offset n)]}
+                                   :measures-params {:sampling-rate 10
+                                                     :window-size-in-sec 120}}
+                                  WESAD-spectrograms
+                                  plot-with-measures)
+                              (catch Exception e 'unavailable))])))))))
