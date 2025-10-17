@@ -89,7 +89,7 @@
               sampling-rate)
           n (tc/row-count resampled-ppi)
           window-size (* window-size-in-sec sampling-rate)
-          hop-size 8
+          hop-size (* 5 sampling-rate) ; 5-second hops for reasonable overlap
           n-windows (int (/ (- n window-size)
                             hop-size))
           ranges (-> ppi-ds
