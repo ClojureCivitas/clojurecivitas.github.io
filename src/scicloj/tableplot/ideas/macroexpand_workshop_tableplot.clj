@@ -1,6 +1,5 @@
 ^{:clay {:title  "Macroexpand 2025 Noj: Civitas Workshop"
          :quarto {:author      :timothypratley
-                  :description "What is Civitas, why use it, and how to use it."
                   :image       "macroexpand_workshop_tableplot.png"
                   :type        :post
                   :date        "2025-10-17"
@@ -10,9 +9,8 @@
   (:require [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as tp]))
 
-;; We built this code in the Civitas Workshop,
-;; we selected Tableplot as the topic to write about.
-
+;; We built this code in the Civitas Workshop.
+;; We selected Tableplot as the topic to write about.
 
 ;; Everything about Tableplot is inspired by R,
 ;; there everything is about tables - dataframes.
@@ -25,8 +23,7 @@
                :y [10 20 15 25 18]
                :z [1 2 1 2 1]}))
 
-;; Why is the plot not Kindly annotated?
-;; Tableplot returns annotated values
+;; We call tableplot on the dataset:
 
 (-> scatter-ds
     (tp/base {:=title "Sample Scatter Plot"})
@@ -34,7 +31,7 @@
                      :=y :y}))
 
 ;; Why is the plot not Kindly annotated?
-;; Tableplot returns annotated values
+;; Tableplot returns annotated values.
 
 (-> scatter-ds
     (tp/base {:=title "Sample Scatter Plot"})
@@ -55,7 +52,7 @@
 
 ;; Other types of plots:
 
-;; using layer-bar instead of layer-point
+;; Using layer-bar instead of layer-point
 
 (-> scatter-ds
     (tp/base {:=title "Sample Scatter Plot"})
