@@ -275,7 +275,7 @@
 
 ;; [Pan-Tompkins Algorithm](https://en.wikipedia.org/wiki/Pan%E2%80%93Tompkins_algorithm)
 
-;; [Unupervised ECG QRS Detection](https://hooman650.github.io/ECG-QRS.html) by Hooman SedghamizHooman Sedghamiz
+;; [Unupervised ECG QRS Detection](https://hooman650.github.io/ECG-QRS.html) by Hooman Sedghamiz
 
 ;; scipy: `peaks = signal.find_peaks(signal, height=mean, distance=200)`
 ;; JDSP equivalent:
