@@ -12,6 +12,10 @@
    [clojure.spec.alpha :as s]
    [babashka.http-client.websocket :as ws]
    [malli.core :as m]
+   [malli.util :as mu]
+   [malli.transform :as mt]
+   [malli.provider :as mp]
+   [malli.error :as me]
    [clojure.edn :as edn]
    [jsonista.core :as json]
    [scicloj.kindly.v4.api :as kindly]
@@ -70,14 +74,16 @@
 
 ^:kindly/hide-code
 (defn demo
-  [xs schema]
-  (let [validator (m/validator schema)]
-    {:value xs
-     :valid? (map validator xs)}))
+  ([xs schema]
+   (demo xs schema m/validator))
+  ([xs schema worker]
+   (let [validator (worker schema)]
+     {:value (map pr-str xs)
+      :valid? (map validator xs)})))
 
 ;; ---
 
-;; ## Abstract
+;; # Abstract
 
 ;; The post goes over the elements of `metosin/malli`, a high performance, data driven, schema library for Clojure(Script)
 ;; Unlike plumatic/schema and clojure.spec, it contains additional
@@ -87,12 +93,12 @@
 ;; demonstrate how to use it effectively and touch on its potential
 ;; applications for data exploration
 
-;; ## Introduction
+;; # Introduction
 
 ;; Malli is a high performance library for data driven schemas in Clojure(Script).
 
 
-;; ### Schemas
+;; ## Schemas
 
 ;; Schemas are a way of specifying facts about data at a certain point.
 ;; In Clojure, we usually enforce them at system boundaries.
@@ -102,7 +108,7 @@
 ;; Malli is an alternative to clojure.spec and plumatic/schema, with
 ;; different design goals and considerations.
 
-;; ### Data Driven
+;; ## Data Driven
 
 ;; Malli's schema syntax is Just Data.
 ;; Schemas can be serialized, persisted and round tripped.
@@ -114,7 +120,7 @@
  [:int {:min 1 :max 3}] ; this is the malli schema
  4)
 
-;; ### High performance
+;; ## High performance
 
 ;; Even for a very simple use case
 
@@ -129,7 +135,7 @@
 
 ;; Malli is about 20x faster than clojure.spec
 
-;; ## Mechanics
+;; # Mechanics
 
 ;; Before we can enjoy High Performance (TM), we need to learn _mechanics_
 
@@ -141,6 +147,8 @@
 ;; - Comparator schemas - equality, disequality, ordering, etc.
 ;; - Conjunctions - `and`, map descriptions, concatenation, tuples.
 ;; - Disjunctions - `or`, multi schemas (like multi methods), sequence alternations. These backtrack.
+
+;; Sequence pattern schemas are orthogonal to this group but deserve a separate discussion.
 
 ;; Schemas syntax can be:
 ;; - keywords: `:int`
@@ -166,9 +174,9 @@
 ;; - encoder/decoder: decoder _tries_ to decode a value according to schema and supplied transformer. Encoder goes the other way.
 ;; - coercer: decodes then validates.
 
-;; ### Base Values
+;; ## Base Values
 
-;; #### Predicate schemas
+;; ### Predicate schemas
 
 ;; This is a long list, you don't have to remember all of them
 
@@ -182,7 +190,7 @@
 
 ;; Predicate schemas don't receive any arguments.
 
-;; #### Type schemas
+;; ### Type schemas
 
 (keys (m/type-schemas))
 
@@ -194,11 +202,11 @@
   (apply str (repeat 20 "a"))]
  [:string {:min 5 :max 10}])
 
-;; ### Boxes!
+;; ## Boxes!
 
 ;; > what's in the box?!
 
-;; #### Seqable, every, vector, oh my
+;; ### Seqable, every, vector, oh my
 
 ^:kind/table
 (let [schemas [:vector :sequential :seqable :every :set]
@@ -225,7 +233,7 @@
  [{1 2 3 4} {1 2 3 :a} {3 4}]
  [:map-of {:min 2 :max 4} :int :int])
 
-;; #### Maybe Not
+;; ### Maybe Not
 
 ^:kind/table
 (demo
@@ -234,7 +242,7 @@
 
 (m/validate [:not :int] 'cthulhu)
 
-;; #### References and schemas schemas
+;; ### References and schemas schemas
 
 ;; While this requires getting into registries (LATER), consider this example
 
@@ -247,7 +255,7 @@
    ]
   [16 [64 [26 [1 [13 nil]]]]])
 
-;; ### Comparators
+;; ## Comparators
 
 [:>
  :>=
@@ -256,7 +264,7 @@
  :=
  :not=]
 
-;; #### Egal
+;; ### Egal
 
 ;; That's your ground single value. Some(1)
 
@@ -267,20 +275,20 @@
 (m/validate [:not= 1] 1)
 (m/validate [:not= 1] "1")
 
-;; #### Everything else
+;; ### Everything else
 
 (m/validate [:> 1] 2)
 (m/validate [:> 1] 1)
 
-;; ### Conjunctions
+;; ## Conjunctions
 
-;; #### Tuples
+;; ### Tuples
 
 ;; We've seen a tuple before, but for completeness
 
 (m/validate [:tuple :int :boolean] [1 true])
 
-;; #### Maps
+;; ### Maps
 
 ;; Maps are the bread and butter of information transfer in the Clojure
 ;; world, and frankly, around the web (what are JSON objects?).
@@ -321,3 +329,306 @@
             :city "Tampere"
             :zip 33100
             :lonlat [61.4858322, 23.7854658]}})
+
+;; ## Disjunctions
+
+;; ### or(n) - Unions
+
+;; when a value can be one of several things
+
+^:kind/table
+(demo
+ [:foo 'foo "foo"]
+ [:or :keyword :symbol])
+
+;; That's neat, but how can we tell them apart?
+;; Use an orn (or named) and a parser
+
+^:kind/table
+(demo
+ [:foo 'foo "foo"]
+ [:orn [:a :keyword] [:b :symbol]]
+ m/parser)
+
+;; ### Enums - closed sets
+
+^:kind/table
+(demo
+ [1 2 3 4]
+ [:enum 1 2 3])
+
+;; ### multi - discriminating unions
+
+;; multi schemas are very flexible, but their most common use case will be with a map and discriminating field.
+;; That field will often be an event type or version.
+
+;; For example, let's look at the Binance user data stream
+
+;;```json
+;; {
+;;  "e": "GRID_UPDATE", // Event Type
+;;  "T": 1669262908216, // Transaction Time
+;;  "E": 1669262908218, // Event Time
+;;  "gu": {
+;; 			  "si": 176057039, // Strategy ID
+;; 			  "st": "GRID", // Strategy Type
+;; 			  "ss": "WORKING", // Strategy Status
+;; 			  "s": "BTCUSDT", // Symbol
+;; 			  "r": "-0.00300716", // Realized PNL
+;; 			  "up": "16720", // Unmatched Average Price
+;; 			  "uq": "-0.001", // Unmatched Qty
+;; 			  "uf": "-0.00300716", // Unmatched Fee
+;; 			  "mp": "0.0", // Matched PNL
+;; 			  "ut": 1669262908197 // Update Time
+;; 		    }
+;; }
+;; {
+;;  "e":"CONDITIONAL_ORDER_TRIGGER_REJECT",      // Event Type
+;;  "E":1685517224945,      // Event Time
+;;  "T":1685517224955,      // me message send Time
+;;  "or":{
+;;        "s":"ETHUSDT",      // Symbol
+;;        "i":155618472834,      // orderId
+;;        "r":"Due to the order could not be filled immediately, the FOK order has been rejected. The order will not be recorded in the order history",      // reject reason
+;;        }
+;;  }
+;;```
+
+(def grid-update
+  {:e "GRID_UPDATE",
+   :T 1669262908216,
+   :E 1669262908218,
+   :gu {:r "-0.00300716",
+        :uq "-0.001",
+        :s "BTCUSDT",
+        :up "16720",
+        :uf "-0.00300716",
+        :st "GRID",
+        :ss "WORKING",
+        :ut 1669262908197,
+        :mp "0.0",
+        :si 176057039}})
+
+(def conditional-order-trigger-reject
+  {:e "CONDITIONAL_ORDER_TRIGGER_REJECT",
+   :E 1685517224945,
+   :T 1685517224955,
+   :or {:s "ETHUSDT",
+        :i 155618472834,
+        :r "Due to the order could not be filled immediately, the FOK order has been rejected. The order will not be recorded in the order history"}})
+
+;; Notice how we have a different schema for each event type:
+
+(def BinanceUserEvent
+  [:multi {:dispatch :e}
+   ["GRID_UPDATE"
+    [:map
+     [:e [:= "GRID_UPDATE"]]
+     [:T {:min 0} :int]
+     [:E {:min 0} :int]
+     [:gu [:map
+           [:r :string]
+           [:uq :string]
+           [:s :string]
+           [:up :string]
+           [:uf :string]
+           [:st :string] ; can and should be enum
+           [:ss [:enum "NEW" "WORKING" "CANCELLED" "EXPIRED"]]
+           [:ut {:min 0} :int]
+           [:mp :string]
+           [:si {:min 0} :int]]]]]
+   ["CONDITIONAL_ORDER_TRIGGER_REJECT"
+    [:map
+     [:e [:= "CONDITIONAL_ORDER_TRIGGER_REJECT"]]
+     [:T {:min 0} :int]
+     [:E {:min 0} :int]
+     [:or [:map
+           [:s :string]
+           [:i {:min 0} :int]
+           [:r :string]]]]]])
+
+(m/validate BinanceUserEvent grid-update)
+(m/parse BinanceUserEvent grid-update)
+(m/parse BinanceUserEvent conditional-order-trigger-reject)
+
+;; ### Schema transformations
+
+;; Notice how the previous schema has common elements? Can we pull them apart?
+
+;; We can bring in merge from malli utils schemas
+
+(def BaseEvent
+  [:map
+   [:T {:min 0} :int]
+   [:E {:min 0} :int]])
+
+(def BinanceUserEvent2
+  [:multi {:dispatch :e}
+   ["GRID_UPDATE"
+    [:merge
+     BaseEvent
+     [:map
+      [:e [:= "GRID_UPDATE"]]
+      [:gu [:map
+            [:r :string]
+            [:uq :string]
+            [:s :string]
+            [:up :string]
+            [:uf :string]
+            [:st :string] ; can and should be enum
+            [:ss [:enum "NEW" "WORKING" "CANCELLED" "EXPIRED"]]
+            [:ut {:min 0} :int]
+            [:mp :string]
+            [:si {:min 0} :int]]]]]]
+   ["CONDITIONAL_ORDER_TRIGGER_REJECT"
+    [:merge
+     BaseEvent
+     [:map
+      [:e [:= "CONDITIONAL_ORDER_TRIGGER_REJECT"]]
+      [:or [:map
+            [:s :string]
+            [:i {:min 0} :int]
+            [:r :string]]]]]]])
+
+(def registry (merge (mu/schemas) (m/default-schemas)))
+(m/validate BinanceUserEvent2 grid-update {:registry registry})
+(m/parse BinanceUserEvent2 grid-update {:registry registry})
+
+;; ## Schema Workers
+
+;; Now that we're more familiar with schemas' building blocks, we can go
+;; slightly deeper into what we can do with them.
+
+;; ### Validator
+
+;; We've already seen validation, `m/validate` calls `m/validator` to
+;; get a validation function and invokes it.
+;; A validator is a function which returns true if the data conforms to the schema.
+
+(m/validate BinanceUserEvent2 grid-update {:registry registry})
+
+;; ### Parser
+
+;; we've also seen parsing at work.
+
+;; Schemas supporting alternation also support tagged alternation:
+;; - or -> orn
+;; - alt -> altn
+
+;; multi, being a discriminating union, tags its cases by default as we've seen.
+
+(m/parse BinanceUserEvent2 conditional-order-trigger-reject {:registry registry})
+
+;; Another case of elements that can be tagged is the concatenation schema.
+;; It represents a sequence of elements, and behaves like a regular expression:
+
+(m/parse
+ [:catn
+  [:nums [:* :int]]
+  [:flag :boolean]
+  [:opts [:* :string]]]
+ [1 2 3 true "a" "b"])
+
+
+(m/parse
+ [:catn
+  [:nums [:* :int]]
+  [:flag :boolean]
+  [:opts [:* :string]]]
+ [true "a" "b"])
+
+;; ### Explainer
+
+;; Life is not just about the happy path.
+;; In that case, we might need to communicate to our users, or ourselves, what's wrong with the data at hand.
+;; For that, we can explain the error
+
+;; No error, no explanation
+
+(m/explain BinanceUserEvent2 grid-update {:registry registry})
+
+;; Yes error, yes explanation
+
+(m/explain BinanceUserEvent2 (dissoc grid-update :E) {:registry registry})
+
+;; That's not very human readable, is it?
+;; Let's use the malli.error ns
+
+(-> BinanceUserEvent2
+    (m/explain (dissoc grid-update :E) {:registry registry})
+    me/humanize)
+
+;; That's more like it
+
+;; You can customize your error messages, including making them dynamic,
+;; and localize them according to locale.
+;; That's neat but we won't go into it now. It's all in the README.
+
+;; ### Transformers, more than meets the eye
+
+;; Transformers are a deep cup, and once you've reached its bottom, you may never be the same.
+;; To avoid any adverse side effects, we'll satisfy ourselves with a few sips.
+
+;; Direct your attention back to the Binance User Event scheme. Some fields in it could clearly be some accurate number types, but since the web and JSON are limited, they are serialized as strings to avoid precision and rounding errors.
+;; Our schemas should ideally deal in the world of ought and not IS, meaning we should describe what the data means to the best of our abilities and help it get there
+
+;; A string is not an int
+
+(m/validate :int "1")
+
+;; But it could be with a transformer
+
+(m/decode :int "1" mt/string-transformer)
+
+;; Wouldn't it be nice if we could use big decimals instead of strings?
+;; but we could
+
+(def BinanceUserEvent3
+  [:multi {:dispatch :e}
+   ["GRID_UPDATE"
+    [:merge
+     BaseEvent
+     [:map
+      [:e [:= "GRID_UPDATE"]]
+      [:gu [:map
+            [:r decimal?]
+            [:uq decimal?]
+            [:s :string]
+            [:up decimal?]
+            [:uf decimal?]
+            [:st :string] ; can and should be enum
+            [:ss [:enum "NEW" "WORKING" "CANCELLED" "EXPIRED"]]
+            [:ut {:min 0} :int]
+            [:mp decimal?]
+            [:si {:min 0} :int]]]]]]
+   ["CONDITIONAL_ORDER_TRIGGER_REJECT"
+    [:merge
+     BaseEvent
+     [:map
+      [:e [:= "CONDITIONAL_ORDER_TRIGGER_REJECT"]]
+      [:or [:map
+            [:s :string]
+            [:i {:min 0} :int]
+            [:r :string]]]]]]])
+
+;; We validate and..
+
+(m/validate BinanceUserEvent3 grid-update {:registry registry})
+
+;; That didn't work
+;; Let's decode first
+(def decoded (m/decode BinanceUserEvent3 grid-update {:registry registry} mt/string-transformer))
+(m/validate BinanceUserEvent3 decoded {:registry registry})
+
+;; Neato
+
+;; If we want to fuse the decoding and validation step, we can use a coercer
+
+(m/coerce
+ BinanceUserEvent3
+ grid-update
+ mt/string-transformer
+ {:registry registry})
+
+;; If the value passes muster, we get a coerced value back, otherwise
+;; coercion will fail in a configurable fashion.
