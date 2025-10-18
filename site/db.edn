@@ -127,6 +127,7 @@
    :affiliation [:cim]}
   {:id          :tanvi
    :name        "Tanvi Nagar"
+   :email       "tanvi@connect.hku.hk"
    :affiliation [:cim]}
   {:id          :luke-zeitlin
    :name        "Luke Zeitlin"
