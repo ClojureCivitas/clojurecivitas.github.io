@@ -714,6 +714,45 @@ inferred
 
 ;; # Function Schemas
 
+;; ```clojure
+;; (defn square [x] (* x x))
+;; (m/=> square [:=> [:cat int?] nat-int?])
+;;
+;; (defn plus
+;;   ([x] x)
+;;   ([x y] (+ x y)))
+;;
+;; (m/=> plus [:function
+;;             [:=> [:cat int?] int?]
+;;             [:=> [:cat int? int?] int?]])
+;;
+;; (defn plus1
+;;   "Adds one to the number"
+;;   {:malli/schema [:=> [:cat :int] :int]}
+;;   [x] (inc x))
+;; ```
+
+;; These, or inline annotations, can be used to emit clj-kondo configurations or instrument live functions
+
+;; #### emit clj-kondo configurations
+
+;; ```clojure
+;; (require '[malli.clj-kondo :as mc])
+;; (mc/emit!)
+;; ```
+
+;; #### Instrument functions
+
+;; To instrument and report functions:
+;; (require '[malli.dev :as dev])
+;; (require '[malli.dev.pretty :as pretty])
+;; (dev/start! {:report (pretty/reporter)})
+
+;; to only instrument functions, for instances such as test time:
+;; ```clojure
+;; (require '[malli.instrument :as mi])
+;; ```
+
 ;; # Custom Schemas
 
 ;; ## Case study - URL schema
