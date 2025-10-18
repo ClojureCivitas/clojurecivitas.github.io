@@ -16,6 +16,7 @@
    [malli.util :as mu]
    [malli.transform :as mt]
    [malli.provider :as mp]
+   [malli.generator :as mg]
    [malli.error :as me]
    [clojure.edn :as edn]
    [jsonista.core :as json]
@@ -653,6 +654,14 @@ only-in-encoded
 ;; confusing they are, so if you can avoid the non trivial use cases,
 ;; please do.
 
+;; # Generators
+
+;; We can generate data based on our schema
+
+(mg/generate BinanceUserEvent3 {:registry registry})
+
+;; # Providers
+
 ;; # Custom Schemas
 
 ;; ## Case study - URL schema
@@ -704,20 +713,20 @@ only-in-encoded
 ;; CharacterAlignment
 ;; ```
 
-;; - Why?
+;; #### Why?
 ;;   - Domain Modeling
 ;;   - What do schemas *mean*?
 ;;   - They model our domain with types and predicates
 ;;   - Similar to a type system
 ;;   - Types reflect the domain entities and data
 ;;   - We don't have `IntegerInRange100` entity or property
-;; - Reuse
+;; #### Reuse
 ;;   - `MySchema` can be used in more than one place.
 ;;   - By naming the domain entity we make it possible to be reused correctly
 ;;   - One change propagates across the code base.
 ;;   - No need to change every occurrence of `:campaign-id`
 
-;; How?
+;; #### How?
 
 (def CampaignID [:int {:max 100 :min 0}])
 (def Message [:map [:campaign-id CampaignID]])
@@ -729,19 +738,19 @@ only-in-encoded
 (def Foo IntRange0To100)
 (def Message [:map [:campaign-id CampaignID] [:foo Foo]])
 
-;; - Use good case
-;;   - Use `PascalCase` for `def` forms
-;; -   `camelCase` is not `PascalCase`
+;; ### Use good case
+;; - Use `PascalCase` for `def` forms
+;;   - `camelCase` is not `PascalCase`
 ;; - Acronyms have a consistent case
 ;;   - `url` `:url` `URL`, not `Url`
 ;; -   Therefor `UserID` not `UserId`
 ;; - Use `::snake-case` or `"PascalCase"` for schema references
-;; - Example
+;; ####  Example
 ;; ```clojure
 ;; QueryParams
 ;; ::query-params
 ;; ```
-;; - Don't
+;; #### Don't
 ;;   - `SHOUT-CASE`
 ;;     - Have some style
 ;;     - This is Clojure, everything in `def` is constant anyway
@@ -753,27 +762,31 @@ only-in-encoded
 
 ;; Schema references as strings or keywords for custom schema types require a registry, see the cons example above.
 
-;; - Avoid noisy names
-;;   - No need to add a `-schema` suffix to everything
-;;   - A good and consistent naming convention can make it clear
-;;   - Works well with using a good case
-;;   - Compare `User` vs. `USER-SCHEMA`
-;;   - This advice is doubly relevant if all the schemas are in a `*.schema` namespace. DRY.
+;; ### Avoid noisy names
+;; - No need to add a `-schema` suffix to everything
+;; - A good and consistent naming convention can make it clear
+;; - Works well with using a good case
+;; - Compare `User` vs. `USER-SCHEMA`
+;; - This advice is doubly relevant if all the schemas are in a `*.schema` namespace. DRY.
 
-;; - Prefer the narrowest schema
+;; ## Prefer the narrowest schema
 ;;   - Always ask - does this make sense
+;; ### Example
+
 ;; ```clojure
 ;; [:map
 ;;  [:messages-recieved int?]]
 ;; ```
-;; - Example
-;;   - Is it possible to have received a negative number of messages?
-;;   - Is it legal in our domain model to have received 0?
-;;   - `nat-int?` and `pos-int?` are a fit for those cases
+
+;; - Is it possible to have received a negative number of messages?
+;; - Is it legal in our domain model to have received 0?
+;; - `nat-int?` and `pos-int?` are a fit for those cases
 
 ;; ## [Make Illegal States Impossible](https://www.youtube.com/watch?v=IcgmSRJHu_8)
-;;  - If you're into that
-;; 	- Example - Versions
+
+;; If you're into that
+
+;; #### Example - Versions
 ;; ```clojure
 ;; (def Version [:enum 1 2 3])
 ;; (def MessageV1 [:map [:version Version]])
@@ -783,12 +796,16 @@ only-in-encoded
 ;;  [2 MessageV2]
 ;;  ,,,]
 ;; ```
-;; - Where's the hole?
-;; 	- Is this a valid version 1 message?
+
+;; Where's the hole?
+
+;; Is this a valid version 1 message?
+
 ;; ```clojure
 ;; {:version 3}
 ;; ```
-;; - Example - optional keys
+
+;; #### Example - optional keys
 ;; 		- Ingest messages from two sources
 ;; ```clojure
 ;; [:map
@@ -796,10 +813,11 @@ only-in-encoded
 ;;  :from-a {:optional true} schema-a
 ;;  :from-b {:optional true} schema-b]
 ;; ```
-;; - Pat ourselves on the back because we cover two options with one schema
-;;   - Wrong! This schema covers 4 options, 2 of them are incorrect!
-;;   - We can find this out when we generate values
-;;   - Split
+;; Pat ourselves on the back because we cover two options with one schema
+;; - Wrong! This schema covers 4 options, 2 of them are incorrect!
+;; - We can find this out when we generate values
+
+;; Split:
 ;; ```clojure
 ;; (def Common  [:map ,,,])
 ;; (def FromA (mu/merge Common [:map [:from-a schema-a]]))
@@ -849,5 +867,3 @@ pos-int?
 
 ;; - Prefer defining new schemas over functions
 ;; - Prefer decoding over string validation - add a decoder
-
-
