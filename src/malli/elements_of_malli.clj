@@ -655,6 +655,41 @@ only-in-encoded
 
 ;; # Custom Schemas
 
+;; ## Case study - URL schema
+
+;; We already have a URI schema, but let's assume we need one for a URL.
+
+;; Instead of doing
+
+[:and :string [:fn (fn [x] (try (java.net.URL. x) (catch Exception _ false)))]]
+
+;; We can use the most common schema constructor, `-simple-schema`
+
+(defn -url-schema
+  []
+  (m/-simple-schema
+   {:type :url,
+    :pred (fn [x] (instance? java.net.URL x))}))
+
+(m/validate (-url-schema) (java.net.URL. "https://logseq.com"))
+
+;; What about strings, though? Add a transformer:
+
+
+(defn -url-schema
+  []
+  (m/-simple-schema
+   {:type :url,
+    :pred (fn [x] (instance? java.net.URL x))
+    :type-properties
+    {:decode/string
+     (fn [s]
+       (when (string? s)
+         (try (java.net.URL. s)
+              (catch Exception _ s))))}}))
+
+(m/coerce (-url-schema) "https://logseq.com" mt/string-transformer)
+
 ;; # Recommendations and Best Practices (The Meta)
 
 ;; ## Names
