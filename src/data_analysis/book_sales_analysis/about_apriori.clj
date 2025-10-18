@@ -367,7 +367,7 @@ scatter-plot
 
 ;; **Resources:**
 ;; - Author: https://barys.me
-;; - Full presentation code: *to be published*
+;; - Full presentation code: https://github.com/tombarys/macroexpand25
 ;; - SciCloj community: [scicloj.github.io](https://scicloj.github.io)
 
 ;; ## Credits
