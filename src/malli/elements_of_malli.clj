@@ -66,7 +66,7 @@
             :on-error (fn [_ws er] (println 'error er))
             :on-message #'msg-handler
             }))
-
+ {:min 0}
   (def ping-task (schedule! (fn [] (ws/ping! ws (.getBytes ""))) 20 TimeUnit/SECONDS))
   (comment
     (.cancel ping-task true))
@@ -660,7 +660,59 @@ only-in-encoded
 
 (mg/generate BinanceUserEvent3 {:registry registry})
 
+;; Generators come preconfigured for all built in schemas so you can
+;; often generate sample data for your systems or functions, or use your
+;; schemas for property based testing.
+
 ;; # Providers
+
+;; Providers take a collection of sample data and infer its schema
+
+;; Take this sample of bybit trade data
+
+(def sample-ticks
+  [{:type "snapshot", :topic "publicTrade.BTCUSDT", :ts 1760687689578, :data [{:L "MinusTick", :v "0.002", :T 1760687689577, :s "BTCUSDT", :RPI false, :BT false, :seq 466892370942, :S "Sell", :p "105653.50", :i "93ba826d-6b81-5b72-931d-63875d54c7e4"}]}
+   {:type "snapshot", :topic "publicTrade.BTCUSDT", :ts 1760687689768, :data [{:L "ZeroMinusTick", :v "0.018", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "fafc47e0-2819-5c06-96d2-5768cbeb3051"} {:L "ZeroMinusTick", :v "0.012", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "ec3f9fda-5a95-5d11-90f1-4283554b8da4"} {:L "ZeroMinusTick", :v "0.094", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "dc961e7e-5aec-5ed6-a9f6-0ac5897c6a67"} {:L "ZeroMinusTick", :v "0.110", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "360d016c-4d56-5c15-9df2-f6ba8890087c"} {:L "ZeroMinusTick", :v "0.001", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "1590886e-b196-5a7b-a6c7-bc5c8fb745d3"} {:L "ZeroMinusTick", :v "0.078", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "8d0bb4e6-e06f-5b81-ae07-b90c0b837a34"} {:L "ZeroMinusTick", :v "0.018", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "232d8f6f-bb53-59d3-b65e-730e435e4899"} {:L "ZeroMinusTick", :v "0.001", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "bf3269fa-c2cb-5593-98d9-c5226304ede9"} {:L "ZeroMinusTick", :v "0.292", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "8df9fd38-bb97-5632-a614-573e19ac2507"} {:L "ZeroMinusTick", :v "0.070", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "e5daf591-3582-5b77-a768-12c9e1b0445a"} {:L "ZeroMinusTick", :v "0.159", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "cc98c5df-b110-550d-98a7-efbefd66910e"} {:L "ZeroMinusTick", :v "0.684", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "e1d0e730-61fc-5e86-8c97-0eec249e4780"} {:L "ZeroMinusTick", :v "0.121", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "5fc09172-51f0-50f2-947f-724369549dd6"} {:L "ZeroMinusTick", :v "0.098", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "91d4c814-bbbf-56b4-92d6-77e258563c4c"} {:L "ZeroMinusTick", :v "0.120", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "a8a069eb-c394-5687-a024-dab98724c252"} {:L "ZeroMinusTick", :v "0.344", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "8ad6c8df-6370-59ff-b44d-b27ef7d9b62c"} {:L "ZeroMinusTick", :v "0.037", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "ccb5562f-dd86-5a59-9636-0954a6d5b64e"} {:L "ZeroMinusTick", :v "0.480", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "05af0c08-9419-5192-a89c-62691508e7ef"} {:L "ZeroMinusTick", :v "0.335", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "eeb18f9b-67fd-590b-b88c-48f8e6446074"} {:L "ZeroMinusTick", :v "0.180", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "71beffe9-78d3-599c-8bee-5f537e5cc503"} {:L "ZeroMinusTick", :v "0.052", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "31837edf-7f6b-54ef-957e-1808eab3ab47"} {:L "ZeroMinusTick", :v "0.034", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "5d02fae3-d30d-5b7b-8c7f-98bb3a81c733"} {:L "ZeroMinusTick", :v "0.007", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.50", :i "a6df6d9d-db5e-5578-b0e3-188fce09815e"} {:L "MinusTick", :v "0.021", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.30", :i "c4d464a6-fb20-52f3-ae43-a4e5f588d961"} {:L "MinusTick", :v "0.033", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.10", :i "c5587dd8-781c-5313-a4b0-8027567f76e3"} {:L "MinusTick", :v "0.054", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105653.00", :i "f399338c-acbe-5d6a-b4be-104d48f52613"} {:L "MinusTick", :v "0.054", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105651.00", :i "39474de8-0575-584d-869c-c122499f2948"} {:L "MinusTick", :v "0.001", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105650.70", :i "2f027b0f-a9c3-50dd-905f-87fbe18ec26b"} {:L "MinusTick", :v "0.012", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105650.30", :i "6e1f3f52-efcc-540d-b861-c444697fbb3e"} {:L "MinusTick", :v "0.001", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105650.00", :i "ee2595c6-9f26-56fc-9657-0d0e249b2372"} {:L "MinusTick", :v "0.118", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105649.90", :i "ad2e2db6-a4a9-5441-b508-85c5c77c5781"} {:L "ZeroMinusTick", :v "0.024", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105649.90", :i "8a369055-4bae-53de-9d12-72718063844a"} {:L "ZeroMinusTick", :v "0.300", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105649.90", :i "73a8fbbf-3c1c-50cc-901c-526e7e49688c"} {:L "ZeroMinusTick", :v "0.353", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105649.90", :i "a67e9394-2e7e-5851-9f30-f00c631dfe6e"} {:L "MinusTick", :v "1.000", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105647.70", :i "d109112f-fb88-5574-b3eb-92bcf2781587"} {:L "MinusTick", :v "0.012", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105647.20", :i "486f76fa-cf63-5685-aa56-cc351839c89e"} {:L "MinusTick", :v "0.001", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105647.10", :i "f93e22c4-bc7d-54a6-9810-4644294d843f"} {:L "MinusTick", :v "0.001", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105646.70", :i "42aa3bec-5653-50ca-9dea-4f52c6700be6"} {:L "MinusTick", :v "0.004", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105645.50", :i "03e38529-924c-5de5-9ff1-791dca4946c8"} {:L "ZeroMinusTick", :v "1.000", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105645.50", :i "ba77df19-f71e-5564-9ec5-6bebb6c56ea7"} {:L "ZeroMinusTick", :v "0.019", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105645.50", :i "f1f5568f-ef0d-54ff-885d-d6180e3faf6f"} {:L "MinusTick", :v "0.004", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105644.80", :i "6950961a-a04c-5686-a88b-99a91868aeb7"} {:L "ZeroMinusTick", :v "0.004", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105644.80", :i "1e73fc89-5809-51df-8827-dd41b714268a"} {:L "ZeroMinusTick", :v "1.000", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105644.80", :i "4758e224-f702-55e1-b64d-7810f484f872"} {:L "ZeroMinusTick", :v "0.597", :T 1760687689766, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371220, :S "Sell", :p "105644.80", :i "63c45c73-b146-5f06-a220-fe6f3789716f"}]}
+   {:type "snapshot", :topic "publicTrade.BTCUSDT", :ts 1760687689773, :data [{:L "PlusTick", :v "0.001", :T 1760687689771, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371322, :S "Sell", :p "105648.00", :i "bbdd826e-f257-5da9-85f8-1e639459e842"}]}
+   {:type "snapshot", :topic "publicTrade.BTCUSDT", :ts 1760687689774, :data [{:L "MinusTick", :v "0.012", :T 1760687689772, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371409, :S "Buy", :p "105647.80", :i "4cfd148d-8e47-5f75-b1a8-8236fab529ff"}]}
+   {:type "snapshot", :topic "publicTrade.BTCUSDT", :ts 1760687689774, :data [{:L "MinusTick", :v "0.001", :T 1760687689772, :s "BTCUSDT", :RPI false, :BT false, :seq 466892371416, :S "Sell", :p "105645.80", :i "40eb0a6e-1828-566a-b2d2-1ce5380bf00d"}]}])
+
+(def inferred (mp/provide sample-ticks))
+inferred
+
+;; Even if this isn't the ideal schema we'd want to work with, it's a good rough starting spot
+
+(def idealized
+  [:map
+   [:type [:= "snapshot"]]
+   [:topic :string]
+   [:ts :int]
+   [:data
+    [:vector
+     [:map
+      [:L [:enum "PlusTick" "MinusTick" "ZeroMinusTick"]]
+      [:v [decimal? {:min 0}]]
+      [:T :int]
+      [:s :string]
+      [:RPI :boolean]
+      [:BT :boolean]
+      [:seq :int]
+      [:S :string]
+      [:p [decimal? {:min 0}]]
+      [:i :uuid]]]]])
+
+(m/coerce idealized (first sample-ticks) mt/string-transformer)
+
+;; That's nicer.
+
+;; Another nice aspect of providers is even if we only have one sample,
+;; they can save us some boilerplate in typing out the schema
+
+(mp/provide [(first grid-update)])
+
+;; That's how I filled out the grid update schema for this example.
+
+;; # Function Schemas
 
 ;; # Custom Schemas
 
