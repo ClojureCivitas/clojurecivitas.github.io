@@ -11,6 +11,7 @@
   (:require
    [clojure.spec.alpha :as s]
    [babashka.http-client.websocket :as ws]
+   [clojure.data :as data]
    [malli.core :as m]
    [malli.util :as mu]
    [malli.transform :as mt]
@@ -631,4 +632,187 @@
  {:registry registry})
 
 ;; If the value passes muster, we get a coerced value back, otherwise
-;; coercion will fail in a configurable fashion.
+;; coercion will fail in a configurable fashion and explode by default.
+
+;; The opposite of decoding is encoding. Some values must be converted to other types before getting sent over the wire. Big decimals to strings, java Instants to string or UNIX timestamps, etc.
+
+(let [[only-in-decoded only-in-encoded in-both] (data/diff decoded (m/encode BinanceUserEvent3 decoded {:registry registry} mt/string-transformer))]
+  (def only-in-encoded only-in-encoded)
+  (def only-in-decoded only-in-decoded)
+  (def in-both in-both))
+
+only-in-decoded
+only-in-encoded
+
+;; Integers got encoded as strings, decimals didn't
+
+;; This could potentially be an issue for malli
+
+;; Transformers are actually interceptors and can be composed and
+;; chained in a variety of interesting ways. Interesting in how
+;; confusing they are, so if you can avoid the non trivial use cases,
+;; please do.
+
+;; # Custom Schemas
+
+;; # Recommendations and Best Practices (The Meta)
+
+;; ## Names
+
+;; Choosing names is hard. Choose names that map to domain entities and attributes:
+
+;; ```clojure
+;; IntRange100 => CampaignID
+;; User
+;; Version
+;; CampaignName
+;; CharacterAlignment
+;; ```
+
+;; - Why?
+;;   - Domain Modeling
+;;   - What do schemas *mean*?
+;;   - They model our domain with types and predicates
+;;   - Similar to a type system
+;;   - Types reflect the domain entities and data
+;;   - We don't have `IntegerInRange100` entity or property
+;; - Reuse
+;;   - `MySchema` can be used in more than one place.
+;;   - By naming the domain entity we make it possible to be reused correctly
+;;   - One change propagates across the code base.
+;;   - No need to change every occurrence of `:campaign-id`
+
+;; How?
+
+(def CampaignID [:int {:max 100 :min 0}])
+(def Message [:map [:campaign-id CampaignID]])
+
+;; IF for some esoteric reason it appears more than once, feel free to define that range
+
+(def IntRange0To100 [:int {:max 100 :min 0}])
+(def CampaignID IntRange0To100)
+(def Foo IntRange0To100)
+(def Message [:map [:campaign-id CampaignID] [:foo Foo]])
+
+;; - Use good case
+;;   - Use `PascalCase` for `def` forms
+;; -   `camelCase` is not `PascalCase`
+;; - Acronyms have a consistent case
+;;   - `url` `:url` `URL`, not `Url`
+;; -   Therefor `UserID` not `UserId`
+;; - Use `::snake-case` or `"PascalCase"` for schema references
+;; - Example
+;; ```clojure
+;; QueryParams
+;; ::query-params
+;; ```
+;; - Don't
+;;   - `SHOUT-CASE`
+;;     - Have some style
+;;     - This is Clojure, everything in `def` is constant anyway
+;;   - `snake-case`
+;;     - It is good to provide a way to visually distinguish domain model definitions from any values
+;; - Rationale
+;;   - Need a way to visually distinguish schemas
+;;   - The convention across the programming world is naming types and domain entities in `PascalCase`
+
+;; Schema references as strings or keywords for custom schema types require a registry, see the cons example above.
+
+;; - Avoid noisy names
+;;   - No need to add a `-schema` suffix to everything
+;;   - A good and consistent naming convention can make it clear
+;;   - Works well with using a good case
+;;   - Compare `User` vs. `USER-SCHEMA`
+;;   - This advice is doubly relevant if all the schemas are in a `*.schema` namespace. DRY.
+
+;; - Prefer the narrowest schema
+;;   - Always ask - does this make sense
+;; ```clojure
+;; [:map
+;;  [:messages-recieved int?]]
+;; ```
+;; - Example
+;;   - Is it possible to have received a negative number of messages?
+;;   - Is it legal in our domain model to have received 0?
+;;   - `nat-int?` and `pos-int?` are a fit for those cases
+
+;; ## [Make Illegal States Impossible](https://www.youtube.com/watch?v=IcgmSRJHu_8)
+;;  - If you're into that
+;; 	- Example - Versions
+;; ```clojure
+;; (def Version [:enum 1 2 3])
+;; (def MessageV1 [:map [:version Version]])
+;; ,,,
+;; [:multi {:dispatch :version}
+;;  [1 MessageV1]
+;;  [2 MessageV2]
+;;  ,,,]
+;; ```
+;; - Where's the hole?
+;; 	- Is this a valid version 1 message?
+;; ```clojure
+;; {:version 3}
+;; ```
+;; - Example - optional keys
+;; 		- Ingest messages from two sources
+;; ```clojure
+;; [:map
+;;  ,,, ;; common
+;;  :from-a {:optional true} schema-a
+;;  :from-b {:optional true} schema-b]
+;; ```
+;; - Pat ourselves on the back because we cover two options with one schema
+;;   - Wrong! This schema covers 4 options, 2 of them are incorrect!
+;;   - We can find this out when we generate values
+;;   - Split
+;; ```clojure
+;; (def Common  [:map ,,,])
+;; (def FromA (mu/merge Common [:map [:from-a schema-a]]))
+;; (def FromB (mu/merge Common [:map [:from-b schema-b]]))
+;; (def Message [:or FromA FromB])
+;; ```
+
+;; This also gives better generators
+
+;; ## Prefer built ins to ad-hoc schemas
+
+;; #### numbers
+
+;; Type schemas are flexible
+
+;; Good:
+
+[:int {:min 0 :max 100}]
+
+;; meh
+[:and int? [:>= 0] [:<= 100]]
+
+;; Bad:
+[:and
+ int?
+ [:fn
+  {:error/message "should be in range 1-100"}
+  #(and (<= 0 %) (<= % 100))]]
+
+;; Sometimes predicates are sufficient
+[:int {:min 0}]
+pos-int?
+
+;; #### Strings
+
+;; Good
+
+[:string {:max 256}]
+
+;; Bad
+
+[:and
+ string?
+ [:fn
+  {:error/message "should be < 256 characters"}
+  #(>= 256 (count %))]]
+
+;; - Prefer defining new schemas over functions
+;; - Prefer decoding over string validation - add a decoder
+
+
