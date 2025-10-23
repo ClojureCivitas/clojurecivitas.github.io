@@ -23,13 +23,20 @@
 ;; ### Vector
 ;; - GeoJSON
 ;; - Shapefile
+;; #### Notes:
+;; Maybe [Factual/geo](https://github.com/Factual/geo) is good for some of this?
 ;;
 ;; ## Serverless
 ;; - COG
 ;; - PMTiles
+;; ### Notes:
+;; [The Cloud Native Geo guide](https://guide.cloudnativegeo.org/) may be a useful starting
+;; pount for some of this
 ;;
 ;; ## Image processing
 ;; Routing / Network analysis
+;; - [GTFS](https://en.wikipedia.org/wiki/GTFS)
+;; - [MATSim](https://github.com/matsim-org)
 ;;
 ;; ## Spatial DBs
 ;; - postGIS
@@ -61,8 +68,13 @@
 ;; # Template Projects
 ;; Some [deps-new](https://github.com/seancorfield/deps-new) or similar templates for
 ;; getting started on GIS projects.
-
-
+;;
+;; # Existing articles for Clojure GIS
+;; Perhaps we can link to, rework or use some existing work including:
+;; - [Seattle Parks - Scicloj](https://scicloj.github.io/clojure-data-scrapbook/projects/geography/seattle-parks/index.html)
+;; - [Chicago Bikes - Scicloj](https://scicloj.github.io/clojure-data-scrapbook/projects/geography/chicago-bikes/index.html)
+;; - [Remote sensing water - Civitas](https://clojurecivitas.github.io/earth_observation/waterquality.html)
+;; - [Cesium - Civitas](https://clojurecivitas.github.io/cesium/geovis.html)
 ^:kindly/hide-code
 (comment
   ,
