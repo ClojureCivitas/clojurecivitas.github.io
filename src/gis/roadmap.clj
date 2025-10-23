@@ -1,4 +1,11 @@
-^:kindly/hide-code
+^{:kindly/hide-code true
+  :clay             {:title  "GIS roadmap"
+                     :quarto {:author   :luke-zeitlin
+                              :type     :collaboration
+                              :date     "2025-10-23"
+                              :category :gis
+                              :tags     [:gis]}}}
+
 (ns gis.roadmap
   (:require [scicloj.kindly.v4.kind :as kind]))
 
