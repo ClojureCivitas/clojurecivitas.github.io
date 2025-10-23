@@ -3,6 +3,7 @@
                      :quarto {:author   :luke-zeitlin
                               :type     :collaboration
                               :date     "2025-10-23"
+                              :draft    true
                               :category :gis
                               :tags     [:gis]}}}
 
