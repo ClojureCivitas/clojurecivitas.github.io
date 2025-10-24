@@ -14,27 +14,48 @@
 ;; The plan is to present a cohesive story for GIS work in the Clojure ecosystem.
 ;; At present this document can serve as a location to add notes, todos and thoughts.
 ;; Some future version of it may serve as a landing page.
-
+;; # Why Clojure?
+;; A few words about why clojure is good for GIS...
+;; -  Clojure's ability to interact with multiple host environments (Java, JS, Python, etc).
+;; - Same language on the front and backend
+;; - Ergonomic data workflow
+;; - Interactive development
 ;; # GIS Task Categories 
 ;; ## Image formats
 ;; ### Raster
-;; - GeoTIFF
+;; #### GeoTIFF
+;; A guide for interacting with this format. Read, write, display.
+;; 
+;; - Interop Java ([GeoTools example](https://gist.github.com/the80srobot/3042990))
+;; - Python bindings (rasterio)
+;; - Thought: pathway to a pure clojure library for geotiffs (whithout GDAL dep)?
+;; - display / frontend (openlayers, leaflet, other)
+;; #### NetCDF
+;; #### HDF
 ;; 
 ;; ### Vector
-;; - GeoJSON
-;; - Shapefile
+;; #### GeoJSON
+;; - json->edn
+;; - spec validation for geoJSON
+;; - review [FarmLogs/geojson](https://github.com/FarmLogs/geojson)
+;; #### Shapefile
+;; - [ovid](https://github.com/willcohen/ovid)
 ;; #### Notes:
 ;; Maybe [Factual/geo](https://github.com/Factual/geo) is good for some of this?
 ;;
 ;; ## Serverless
-;; - COG
-;; - PMTiles
+;; ### COG
+;; See GeoTIFF
+;; ### PMTiles
+;; - Reading: Timeverse PMtiles (Java interop)
+;; - Creation: CLI / Babashka?
 ;; ### Notes:
 ;; [The Cloud Native Geo guide](https://guide.cloudnativegeo.org/) may be a useful starting
 ;; pount for some of this
 ;;
 ;; ## Image processing
 ;; Routing / Network analysis
+;; ### Some articles to review
 ;; - [GTFS](https://en.wikipedia.org/wiki/GTFS)
 ;; - [MATSim](https://github.com/matsim-org)
 ;;
@@ -43,8 +64,11 @@
 ;; - MBTiles / sqllite
 ;;
 ;; ## Spatial reference systems
-;; - Coordinate system conversions
-;; - H3
+;; ### Coordinate system conversions
+;; - [Coordinate Systems article](https://mgimond.github.io/Spatial/chp09_0.html) maybe a good starting point for a clojure oriented article on the same.
+
+;; ### H3
+;; - again, [Factual/geo](https://github.com/factual/geo) may be a good starting point.
 ;;
 ;; ## Map widgets
 ;; - Leaflet
@@ -75,6 +99,7 @@
 ;; - [Chicago Bikes - Scicloj](https://scicloj.github.io/clojure-data-scrapbook/projects/geography/chicago-bikes/index.html)
 ;; - [Remote sensing water - Civitas](https://clojurecivitas.github.io/earth_observation/waterquality.html)
 ;; - [Cesium - Civitas](https://clojurecivitas.github.io/cesium/geovis.html)
+;; - [Clojure Maps Examples](https://github.com/joannecheng/clojure-map-examples)
 ^:kindly/hide-code
 (comment
   ,
