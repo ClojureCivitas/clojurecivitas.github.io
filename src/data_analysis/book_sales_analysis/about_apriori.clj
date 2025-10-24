@@ -362,16 +362,17 @@ scatter-plot
 ;; ---
 
 ;; ## About the Author
-
+;;
 ;; **Tomáš Baránek** is a publisher at [Jan Melvil Publishing](https://www.melvil.cz) and co-founder of [Servantes](https://www.servant.es), developing software for publishers worldwide. He's a computer science graduate, Clojure enthusiast exploring data science, learning by doing on real publishing challenges. You can find him on [Bluesky](https://bsky.app/profile/tombarys.bsky.social) or read his [blog](https://lifehacky.net).
-
+;;
 ;; **Resources:**
-;; - Author: https://barys.me
-;; - Full presentation code: https://github.com/tombarys/macroexpand25
+;;
+;; - Author: [https://barys.me](https://barys.me) 
+;; - Full presentation code: [https://github.com/tombarys/macroexpand25](https://github.com/tombarys/macroexpand25)
 ;; - SciCloj community: [scicloj.github.io](https://scicloj.github.io)
 
 ;; ## Credits
-
+;;
 ;; I would like to thank [Daniel Slutsky](https://github.com/daslu) for inviting me to participate in the conference and encouraging me all the time not to give up. I think he is doing an amazing job for this great community. 
 ;; I would also like to thank [Timothy Pratley](https://github.com/timothypratley) for his support during the publication process. 
 ;; Extra thanks to my friends at [Not Null Makers](https://notnullmakers.com/) for making me a better Clojure person :).
@@ -381,4 +382,4 @@ scatter-plot
 
 ;; ---
 
-;; *This article is based on a presentation at Macroexpand conference, October 2025.*
+;; *This article is based on my presentation at [Macroexpand conference](https://scicloj.github.io/macroexpand-2025/), October 2025.*
