@@ -1,10 +1,10 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Bell State Circuit"
                      :quarto {:author :ludgersolbach
-                              :draft  true
+                              :draft  false
                               :type   :post
                               :image  "bell_state_circuit.svg"
-                              :date   "2025-10-10"
+                              :date   "2025-10-16"
                               :tags   [:qclojure :quantum-computing :quantum-circuit :simulation :bell-state]}}}
 (ns qclojure.examples.bell-state-circuit 
   (:require
@@ -59,6 +59,7 @@
 ;; are reversible.
 ;;
 ;; Common quantum gates include:
+;;
 ;; - **Hadamard Gate (H)**: Creates superposition by transforming a qubit from a definite state (|0⟩ or |1⟩)
 ;;   into an equal superposition of both states.
 ;; - **Pauli-X Gate (X)**: Also known as the quantum NOT gate, it flips the state of a qubit (|0⟩ to |1⟩ and vice versa).
@@ -68,6 +69,7 @@
 ;;   qubit is in the state |1⟩. It is essential for creating entanglement between qubits. 
 ;;
 ;; ## What is a Bell State?
+;;
 ;; A Bell state is a specific quantum state of two qubits that represents the simplest and most
 ;; well-known example of quantum entanglement. The Bell states are maximally entangled states
 ;; and are used in various quantum information protocols, including quantum teleportation and
@@ -85,8 +87,10 @@
 ;; which means that other combinations like |01⟩ or |10⟩ will never be observed in this state.
 ;;
 ;; ## Creating the Bell State Circuit
+;;
 ;; The following code creates a simple quantum circuit that generates a Bell state.
 ;; First, we need to require the necessary namespaces from QClojure.
+
 (require '[org.soulspace.qclojure.domain.state :as state]
          '[org.soulspace.qclojure.domain.circuit :as circuit]
          '[org.soulspace.qclojure.application.visualization :as viz]
@@ -103,22 +107,28 @@
       (circuit/cnot-gate 0 1)))
 
 ;; We can visualize the circuit as ASCII art for the REPL.
+
 ^kind/code
 (viz/visualize-circuit :ascii bell-state-circuit)
 
 ;; For notebooks and documents, we can also visualize the circuit as SVG.
+
 ^kind/hiccup
 (viz/visualize-circuit :svg bell-state-circuit)
 
 ;; ## Executing the Bell State Circuit
+;;
 ;; To quickly test the circuit in the REPL, we can use the execute-circuit function
 ;; from the circuit namespace.
+
 (def result (circuit/execute-circuit bell-state-circuit))
 
 ;; The result is a map that contains the final state of the qubits after executing the circuit.
+
 result
 
 ;; ## Using Simulators to Execute the Circuit
+;;
 ;; We can also use a quantum backend to execute the circuit with more options.
 ;; QClojure provides two different simulator backends: an ideal simulator backend
 ;; and a hardware simulator backend.
@@ -127,44 +137,53 @@ result
 ;; that are present in real quantum hardware.
 ;;
 ;; First, we need to require the necessary namespaces for the simulators.
+
 (require 
  '[org.soulspace.qclojure.application.backend :as backend]
  '[org.soulspace.qclojure.adapter.backend.ideal-simulator :as ideal-sim]
  '[org.soulspace.qclojure.adapter.backend.hardware-simulator :as hw-sim])
 
 ;; Let's first use the ideal simulator to execute the Bell state circuit.
+
 (def ideal-simulator (ideal-sim/create-simulator))
 
 ;; We define some options for the execution, such as the results we want to obtain.
 ;; In this case, we want to measure the qubits 10000 times, which is called the
 ;; number of shots.
+
 (def options {:result-specs {:measurements {:shots 10000}}})
 
 ;; Now we can execute the circuit using the ideal simulator and the defined options.
+
 (def ideal-result
   (backend/execute-circuit ideal-simulator bell-state-circuit options))
 
 ;; We can visualize the frequencies of the measurements obtained from the
 ;; ideal simulator as a histogram.
+
 ^kind/hiccup
 (viz/visualize-measurement-histogram :svg (get-in ideal-result [:results :measurement-results :frequencies]))
 
 ;; Now we use the hardware simulator to execute the Bell state circuit.
 ;; The hardware simulator simulates the quantum circuit with noise and errors
 ;; that are present in real quantum hardware.
+
 (def hardware-simulator (hw-sim/create-hardware-simulator))
 
 ;; We can also select a specific quantum device to simulate. We choose the
 ;; IBM Lagos quantum device for this example. The IBM Lagos is a 7-qubit quantum
 ;; computer that is available on the IBM Quantum platform.
+
 (backend/select-device hardware-simulator :ibm-lagos)
 
 ;; We execute the circuit using the hardware simulator and the defined options.
+
 (def hardware-result
   (backend/execute-circuit hardware-simulator bell-state-circuit options))
 
 ;; We can visualize the result of the hardware simulation as a histogram of the
 ;; measurement frequencies to compare it with the ideal simulation result.
+
 ^kind/hiccup
 (viz/visualize-measurement-histogram :svg (get-in hardware-result [:results :measurement-results :frequencies]))
 
@@ -177,6 +196,7 @@ result
 ;; We will explore more complex circuits in future examples.
 ;;
 ;; ## Conclusion
+;;
 ;; In this example, we created a simple quantum circuit that generates a Bell state,
 ;; visualized the circuit, and executed it using both an ideal simulator and a hardware
 ;; simulator provided by QClojure. We also visualized the measurement results as histograms
@@ -184,5 +204,5 @@ result
 ;;
 ;; This example demonstrates the basic concepts of quantum circuits, quantum gates,
 ;; and quantum simulators using QClojure. You can build upon this foundation to explore
-;; more complex quantum algorithms and circuits. Please alos check out the tutorial in the
+;; more complex quantum algorithms and circuits. Please also check out the tutorial in the
 ;; [QClojure documentation](https://cljdoc.org/d/org.soulspace/qclojure).

@@ -127,6 +127,7 @@
    :affiliation [:cim]}
   {:id          :tanvi
    :name        "Tanvi Nagar"
+   :email       "tanvi@connect.hku.hk"
    :affiliation [:cim]}
   {:id          :luke-zeitlin
    :name        "Luke Zeitlin"
@@ -135,7 +136,12 @@
    :name        "Ludger Solbach"
    :url         "https://github.com/lsolbach"
    :links       [{:icon "github" :href "https://github.com/lsolbach"}]
-   :affiliation []}]
+   :affiliation []}
+  {:id    :bsless
+   :name  "Ben Sless"
+   :image "https://avatars.githubusercontent.com/u/21342111?v=4"
+   :url   "https://bsless.github.io/"
+   :links [{:icon "github" :href "https://github.com/bsless"}]}]
 
  :affiliation
  [{:id   :clojure.core
@@ -263,6 +269,13 @@
    :title  "Luminus Web Framework"
    :url    "https://luminusweb.com/"
    :format :framework
+   :topic  [:web :web/backend]
+   :level  2}
+
+  {:id     "replicant"
+   :title  "Replicant Documentation"
+   :url    "https://replicant.fun/"
+   :format :library-docs
    :topic  [:web :web/backend]
    :level  2}
 
