@@ -141,7 +141,13 @@
    :name  "Ben Sless"
    :image "https://avatars.githubusercontent.com/u/21342111?v=4"
    :url   "https://bsless.github.io/"
-   :links [{:icon "github" :href "https://github.com/bsless"}]}]
+   :links [{:icon "github" :href "https://github.com/bsless"}]}
+  {:id          :com.github/teodorlu
+   :name        "Teodor Heggelund"
+   :url         "https://teod.eu/"
+   :image       "https://play.teod.eu/img/teodor-heggelund-skitur.jpg"
+   :links       [{:icon "github" :href "https://github.com/teodorlu"}]}
+  ,]
 
  :affiliation
  [{:id   :clojure.core
