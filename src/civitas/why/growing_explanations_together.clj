@@ -1,5 +1,5 @@
 ^{:clay {:title "Growing explanations together" :quarto {:author :com.github/teodorlu :draft true :type :post :date "2025-10-26"}}}
-(ns civitas.growing-explanations-together
+(ns civitas.why.growing-explanations-together
   (:require [babashka.fs :as fs]
             [scicloj.kindly.v4.kind :as kind]))
 
