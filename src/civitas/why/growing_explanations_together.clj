@@ -128,7 +128,7 @@
 ;; Curation has not yet been visibly tackled (as I see it), but the foundation has been laid.
 ;; In my Memex presentation, I argued that we need [knowledge playlists][knowledge playlist].
 ;; Today, I prefer the term _explanation playlist_.
-;; I define an explanation playlyst as
+;; I define an explanation playlist as
 ;;
 ;; > an ordered list of contextualized explanations that can be consumed from start to end.
 ;;
