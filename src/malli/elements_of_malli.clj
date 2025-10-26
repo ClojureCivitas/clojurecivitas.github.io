@@ -1,5 +1,5 @@
 ^:kindly/hide-code
-^{:clay {:title  "Eelements of Malli"
+^{:clay {:title  "Elements of Malli"
          :quarto {:type        :post
                   :author      [:bsless]
                   :date        "2025-10-18"
