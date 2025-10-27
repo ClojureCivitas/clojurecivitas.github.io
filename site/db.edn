@@ -21,6 +21,12 @@
    :url         "https://scicloj.github.io/contributors/daslu/"
    :affiliation [:scicloj]
    :links       [{:icon "github" :href "https://github.com/daslu"}]}
+  {:id          :danielsz
+   :name        "Daniel Szmulewicz"
+   :image       "https://avatars.githubusercontent.com/u/859131?v=4"
+   :url         "https://danielsz.github.io/"
+   :affiliation []
+   :links       [{:icon "github" :href "https://github.com/danielsz"}]}
   {:id          :alexmiller
    :name        "Alex Miller"
    :image       "https://avatars.githubusercontent.com/u/171129?v=4"
