@@ -84,9 +84,6 @@
 ;; Maybe [Factual/geo](https://github.com/Factual/geo) is good for some of this?
 ;;
 ;; ## Cloud Optimized
-;; ### COG
-;; See GeoTIFF
-;; ### ZARR
 ;; ### PMTiles
 ;; - Reading: Timeverse PMtiles (Java interop)
 ;; - Creation: CLI / Babashka?
