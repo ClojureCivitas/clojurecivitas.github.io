@@ -141,7 +141,13 @@
    :name  "Ben Sless"
    :image "https://avatars.githubusercontent.com/u/21342111?v=4"
    :url   "https://bsless.github.io/"
-   :links [{:icon "github" :href "https://github.com/bsless"}]}]
+   :links [{:icon "github" :href "https://github.com/bsless"}]}
+  {:id          :generateme
+   :name        "Tomasz Sulej"
+   :image       "https://avatars.githubusercontent.com/u/38646601?v=4"
+   :url         "https://github.com/genmeblog"
+   :affiliation [:scicloj]
+   :links       [{:icon "github" :href "https://github.com/genmeblog"}]}]
 
  :affiliation
  [{:id   :clojure.core
