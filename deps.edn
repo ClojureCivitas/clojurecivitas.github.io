@@ -48,6 +48,7 @@
   
   org.soulspace/qclojure                      {:mvn/version "0.22.0"}
   org.babashka/http-client                    {:mvn/version "0.4.22"}
+  com.github.danielsz/bioscoop                {:mvn/version "1.0.5"}
   }
 
  :aliases
