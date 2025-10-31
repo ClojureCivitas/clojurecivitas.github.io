@@ -153,6 +153,7 @@
 ;; Sequence pattern schemas are orthogonal to this group but deserve a separate discussion.
 
 ;; Schemas syntax can be:
+
 ;; - keywords: `:int`
 ;; - functions or vars: `int?`
 ;; - vector with properties and maybe children: `[:int {:min 1}]`, `[:map {:closed true} [:a :int]]`
@@ -170,6 +171,7 @@
 (v 4)
 
 ;; The worker functions are:
+
 ;; - validator: Any -> Boolean.
 ;; - explainer: Any -> null | Explanation.
 ;; - parser/unparser: parser converts disjunctions to tagged tuples.
@@ -514,6 +516,7 @@
 ;; we've also seen parsing at work.
 
 ;; Schemas supporting alternation also support tagged alternation:
+
 ;; - or -> orn
 ;; - alt -> altn
 
@@ -905,6 +908,7 @@ inferred
 ;;  :from-b {:optional true} schema-b]
 ;; ```
 ;; Pat ourselves on the back because we cover two options with one schema
+
 ;; - Wrong! This schema covers 4 options, 2 of them are incorrect!
 ;; - We can find this out when we generate values
 
