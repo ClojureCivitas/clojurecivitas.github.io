@@ -22,11 +22,11 @@
 ;; Don't complect!
 ;; Don't pull lots of dependencies!
 ;; By building with simpler pieces, you learn more.
-;; You avoid frontend hell where the browser must load 53 MB of compiled Javascript to say "Welcome!"
+;; You avoid frontend hell where the browser must load 53 MB of compiled Javascript to say "Welcome!".
 ;; This is how you build a simple system.
 ;;
 ;; The web is a wonderful place, and I encourage you strongly to make a part of it your own!
-;; I find it *completely amazing that I can type up some random shit about [the kind of things I like to learn], make a URL for that idea, and give it to a friend.
+;; I am amazed that I can type up some random shit about [the kind of things I like to learn], make a URL for that idea, and give it to a friend.
 ;; How wonderful is that!
 ;; And how *quick* is that!
 ;; Before the World Wide Web, Tim Berners Lee had to print a piece of paper and give it to his colleague.
@@ -35,10 +35,10 @@
 ;; [the kind of things I like to learn]: https://play.teod.eu/computing-learning-designing-researching/
 ;;
 ;; A simple web site is just a folder of files.
-;; You don't have to run any programs to make that!
-;; Just write an HTML file and publish.
-;; If you want to avoid writing plain HTML, you are in control, you can write a program to make the HTML.
-;; For me personally, [Babashka] my tool of choice for that.
+;; You don't need a fancy setup to make a folder of files!
+;; Just write HTML and publish.
+;; If you later want to avoid writing plain HTML, you are in control, you can write a program to generate the HTML.
+;; [Babashka] is my tool of choice for that.
 ;; I can write the HTML generation program in the programming language I prefer (Clojure), and regenerate my web site quickly without a running JVM.
 ;; Oh, the joy!
 ;; The experience with Babashka-powered knowledge on the web got me so excited I had to present [Build Your Own Little Memex with Babashka] on the first Babashka conference.
