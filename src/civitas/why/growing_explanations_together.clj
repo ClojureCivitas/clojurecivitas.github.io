@@ -1,5 +1,5 @@
 ^{:kindly/hide-code true
-  :clay {:title "Growing explanations together" :quarto {:author :com.github/teodorlu :draft true :type :post :date "2025-11-01"}}}
+  :clay {:title "Growing explanations together" :quarto {:author :com.github/teodorlu :type :post :date "2025-11-01"}}}
 (ns civitas.why.growing-explanations-together
   (:require [clojure.edn]
             [scicloj.kindly.v4.kind :as kind]))
