@@ -138,6 +138,8 @@ clojure -M:clay -A:markdown
 quarto preview site
 ```
 
+(`bb site-preview` will run these two commands for you.)
+
 This will open a browser displaying the site locally.
 
 If you would like to preview a single file, then add the path relative to `src`:
