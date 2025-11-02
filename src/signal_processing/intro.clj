@@ -92,8 +92,9 @@ violin-components-dataset
 (-> violin-components-dataset
     (tc/head 100)
     (tc/pivot->longer (complement #{:time}))
+    (tc/rename-columns {:$value :amplitude})
     (plotly/layer-line {:=x :time
-                        :=y :$value
+                        :=y :amplitude
                         :=color :$column}))
 
 (def violin-dataset
