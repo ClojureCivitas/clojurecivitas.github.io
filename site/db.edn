@@ -163,9 +163,9 @@
    :name        "Burin Choomnuan"
    :url         "https://choomnuan.com"
    :image       "https://avatars.githubusercontent.com/burinc"
-   :links       [{:icon "github" :href "https://github.com/burinc"}]}
-   :affiliation []
-  ,]
+   :links       [{:icon "github" :href "https://github.com/burinc"}]
+   :affiliation []}
+ ,]
 
  :affiliation
  [{:id   :clojure.core
