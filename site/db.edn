@@ -159,6 +159,12 @@
    :url         "https://teod.eu/"
    :image       "https://play.teod.eu/img/teodor-heggelund-skitur.jpg"
    :links       [{:icon "github" :href "https://github.com/teodorlu"}]}
+  {:id          :burinc
+   :name        "Burin Choomnuan"
+   :url         "https://choomnuan.com"
+   :image       "https://avatars.githubusercontent.com/burinc"
+   :links       [{:icon "github" :href "https://github.com/burinc"}]}
+   :affiliation []
   ,]
 
  :affiliation
