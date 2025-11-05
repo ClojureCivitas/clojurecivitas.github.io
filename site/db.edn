@@ -1,18 +1,18 @@
 {:author
- [{:id    :chouser
-   :name  "Chris Houser"
-   :image "https://avatars.githubusercontent.com/u/36110?v=4"
-   :url   "https://chouser.us/"
-   :links [{:icon "github" :href "https://github.com/chouser"}]}
-  {:id :eugnes
-   :name "Eugen Nesbakken"
-   :image "https://avatars.githubusercontent.com/u/46522650"
+ [{:id          :chouser
+   :name        "Chris Houser"
+   :image       "https://avatars.githubusercontent.com/u/36110?v=4"
+   :url         "https://chouser.us/"
+   :links       [{:icon "github" :href "https://github.com/chouser"}]}
+  {:id          :eugnes
+   :name        "Eugen Nesbakken"
+   :image       "https://avatars.githubusercontent.com/u/46522650"
    :affiliation [:bu :endor]
-   :links [{:icon "github" :href "https://github.com/eugnes03"}]}
-  {:id :ezmiller
-   :name "Ethan Miller"
-   :image "https://avatars.githubusercontent.com/u/772738?v=4"
-   :url "https://github.com/ezmiller"
+   :links       [{:icon "github" :href "https://github.com/eugnes03"}]}
+  {:id          :ezmiller
+   :name        "Ethan Miller"
+   :image       "https://avatars.githubusercontent.com/u/772738?v=4"
+   :url         "https://github.com/ezmiller"
    :affiliation [:scicloj]}
   {:id          :kirahowe
    :name        "Kira Howe"
