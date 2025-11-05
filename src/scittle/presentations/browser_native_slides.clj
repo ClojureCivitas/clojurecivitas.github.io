@@ -70,7 +70,7 @@
 (kind/hiccup
  [:div#minimal-demo {:style {:min-height "500px"}}
   [:script {:type "application/x-scittle"
-            :src "minimal.cljs?v=4"}]])
+            :src "minimal.cljs"}]])
 
 ;; ## How It Works
 
@@ -101,7 +101,7 @@
 (kind/hiccup
  [:div#keyboard-demo {:style {:min-height "550px"}}
   [:script {:type "application/x-scittle"
-            :src "keyboard_nav.cljs?v=16"}]])
+            :src "keyboard_nav.cljs"}]])
 
 ;; ## Thumbnail Overview
 
@@ -122,7 +122,7 @@
 (kind/hiccup
  [:div#thumbnails-demo {:style {:min-height "550px"}}
   [:script {:type "application/x-scittle"
-            :src "thumbnails.cljs?v=6"}]])
+            :src "thumbnails.cljs"}]])
 
 ;; ## Live Code Editor
 
@@ -147,7 +147,7 @@
 (kind/hiccup
  [:div#code-editor-demo {:style {:min-height "700px"}}
   [:script {:type "application/x-scittle"
-            :src "code_editor.cljs?v=2"}]])
+            :src "code_editor.cljs"}]])
 
 ;; ## Shadow-cljs vs Scittle: Choosing the Right Tool
 
