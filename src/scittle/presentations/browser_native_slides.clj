@@ -36,6 +36,7 @@
 
 ;; You want to create a technical presentation with live code examples.
 ;; Traditional ClojureScript requires:
+
 ;; - shadow-cljs or Figwheel configuration
 ;; - Build tool setup and dependencies
 ;; - Webpack or bundler configuration
@@ -75,6 +76,7 @@
 ;; ## How It Works
 
 ;; The flow is straightforward:
+
 ;; 1. Load Scittle.js from a CDN
 ;; 2. Load the Reagent plugin
 ;; 3. Write ClojureScript in a script tag with type="application/x-scittle"
@@ -109,6 +111,7 @@
 ;; Thumbnails provide visual context and make navigation instant.
 ;;
 ;; **Why thumbnails matter:**
+
 ;; - Quick overview of all slides
 ;; - Jump to any section instantly
 ;; - See where you are in the presentation
@@ -131,6 +134,7 @@
 ;; ClojureScript code at runtime, in the browser.
 ;;
 ;; **Perfect for:**
+
 ;; - Interactive tutorials
 ;; - Live coding demonstrations
 ;; - Teaching ClojureScript
@@ -211,6 +215,7 @@
 ;; ### When to Use Scittle
 
 ;; **Perfect for:**
+
 ;; - Technical presentations with live demos
 ;; - Interactive documentation
 ;; - Quick prototypes and experiments
@@ -221,6 +226,7 @@
 ;; ### When to Use Shadow-cljs
 
 ;; **Better for:**
+
 ;; - Production web applications
 ;; - Large codebases with many dependencies
 ;; - Performance-critical applications
@@ -251,6 +257,7 @@
 ;; ### Leverage CDN Libraries
 
 ;; Scittle has plugins for popular libraries:
+
 ;; - **Reagent** - React wrapper (`scittle.reagent`)
 ;; - **Re-frame** - State management (`scittle.re-frame`)
 ;; - **Promesa** - Promises (`scittle.promesa`)
@@ -259,6 +266,7 @@
 ;; ### Use Browser DevTools
 
 ;; Scittle code is debuggable in Chrome/Firefox DevTools:
+
 ;; - Set breakpoints in your ClojureScript code
 ;; - Inspect atoms and state in the console
 ;; - Use `js/console.log` for quick debugging
@@ -267,6 +275,7 @@
 ;; ### Performance Considerations
 
 ;; **Keep it snappy:**
+
 ;; - Minimize initial script size (under 100KB recommended)
 ;; - Use lazy loading for heavy computations
 ;; - Cache expensive calculations in atoms
@@ -307,6 +316,7 @@
 ;; **Problem:** Loading scripts from different domains.
 ;;
 ;; **Solution:** Either:
+
 ;; - Host all files on the same domain
 ;; - Use a CORS proxy for development
 ;; - Configure server to allow CORS headers
@@ -314,6 +324,7 @@
 ;; ### 4. Not All npm Packages Work
 
 ;; Scittle can't use npm packages directly. Workarounds:
+
 ;; - Use CDN versions (unpkg.com, jsdelivr.com)
 ;; - Look for Scittle-compatible plugins
 ;; - Use browser-native APIs instead
@@ -321,6 +332,7 @@
 ;; ### 5. Error Messages
 
 ;; Scittle error messages can be cryptic. Tips:
+
 ;; - Check browser console for stack traces
 ;; - Use `(js/console.log)` liberally during development
 ;; - Test small code snippets in isolation
@@ -383,12 +395,14 @@
 ;; Just open an HTML file and start coding.
 ;;
 ;; **Perfect for:**
+
 ;; - Learning ClojureScript
 ;; - Creating interactive presentations
 ;; - Building quick prototypes
 ;; - Teaching and documentation
 ;;
 ;; **Remember:**
+
 ;; - Use Shadow-cljs for production applications
 ;; - Use Scittle for everything else
 ;;
