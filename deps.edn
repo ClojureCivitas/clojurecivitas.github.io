@@ -11,9 +11,9 @@
   metosin/malli                               {:mvn/version "0.19.1"}
   clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
   clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
-  org.scicloj/clay                            {#_#_:mvn/version "2-beta57"
-                                               :git/url "https://github.com/scicloj/clay.git"
-                                               :git/sha "0240b1a4248fb2b1e67b933cbd51ef02a805ada9"}
+  org.scicloj/clay                            {:mvn/version "2.0.2"
+                                               #_#_:git/url "https://github.com/scicloj/clay.git"
+                                               #_#_:git/sha "0240b1a4248fb2b1e67b933cbd51ef02a805ada9"}
   org.scicloj/kindly                          {:mvn/version "4-beta20"}
   thi.ng/geom                                 {:mvn/version "1.0.1"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
@@ -43,9 +43,9 @@
 
   generateme/fastmath                         {:mvn/version "3.0.0-alpha4"}
   clojure2d/clojure2d                         {:mvn/version "1.5.0-alpha1"}
-  
+
   com.github.psambit9791/jdsp                 {:mvn/version "3.1.0"}
-  
+
   org.soulspace/qclojure                      {:mvn/version "0.22.0"}
   org.babashka/http-client                    {:mvn/version "0.4.22"}
   com.github.danielsz/bioscoop                {:mvn/version "1.0.5"}
