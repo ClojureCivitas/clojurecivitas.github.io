@@ -4,6 +4,11 @@
    :image "https://avatars.githubusercontent.com/u/36110?v=4"
    :url   "https://chouser.us/"
    :links [{:icon "github" :href "https://github.com/chouser"}]}
+  {:id :eugnes
+   :name "Eugen Nesbakken"
+   :image "https://avatars.githubusercontent.com/u/46522650"
+   :affiliation [:bu :endor]
+   :links [{:icon "github" :href "https://github.com/eugnes03"}]}
   {:id :ezmiller
    :name "Ethan Miller"
    :image "https://avatars.githubusercontent.com/u/772738?v=4"
@@ -19,7 +24,7 @@
    :name        "Daniel Slutsky"
    :image       "https://avatars.githubusercontent.com/u/5673102?v=4"
    :url         "https://scicloj.github.io/contributors/daslu/"
-   :affiliation [:scicloj]
+   :affiliation [:scicloj :endor]
    :links       [{:icon "github" :href "https://github.com/daslu"}]}
   {:id          :danielsz
    :name        "Daniel Szmulewicz"
@@ -180,7 +185,13 @@
    :url "https://techascent.com"}
   {:id   :cim
    :name "cim"
-   :url  "https://cim.hkubs.hku.hk/"}]
+   :url  "https://cim.hkubs.hku.hk/"}
+  {:id   :endor
+   :name "Endor Global"
+   :url  "https://endor.global"}
+  {:id   :bu
+   :name "Boston University"
+   :url  "https://www.bu.edu/"}]
 
  :topic
  [{:id        :core
