@@ -54,43 +54,68 @@
          '[tablecloth.api :as tc]
          '[scicloj.tableplot.v1.plotly :as plotly])
 
-
-(def violin-components
-  [[:A4 440 3800]
-   [:A5 880 2750]
-   [:E6 1320 600]
-   [:A6 1760 700]
-   [:C#7 2200 1900]])
-
 (def sample-rate 44100.0)
 
-(def violin-components-dataset
+(def example-wave
   (let [duration 10
         num-samples (* duration sample-rate)
         time (dtype/make-reader :float32
                                 num-samples
-                                (/ idx sample-rate))]
-    (->> violin-components
-         (map (fn [[label freq amp]]
-                [label (-> time
-                           (dfn/* (* 2 Math/PI freq))
-                           dfn/sin
-                           (dfn/* amp))]))
-         (into {:time time})
-         tc/dataset)))
+                                (/ idx sample-rate))
+        freq 440
+        amp 3800
+        amplitude (-> time
+                      (dfn/* (* 2 Math/PI freq))
+                      dfn/sin
+                      (dfn/* amp))]
+    (tc/dataset {:time time
+                 :amplitude amplitude})))
 
+example-wave
+
+(-> example-wave
+    (tc/head 200)
+    (plotly/layer-line {:=x :time
+                        :=y :amplitude}))
+
+
+(def violin-components
+  [[:A4 440 3800]
+   [:A5 880 2750]
+   [:e6 1320 600]
+   [:a6 1760 700]
+   [:c#7 2200 1900]])
+
+(DEF VIOLIN-COMPONENTS-DATASET
+  (LET [DURATION 10
+        NUM-SAMPLES (* DURATION SAMPLE-RATE)
+        TIME (DTYPE/MAKE-READER :FLOAT32
+                                NUM-SAMPLES
+                                (/ IDX SAMPLE-RATE))]
+       (->> VIOLIN-COMPONENTS
+            (MAP (FN [[LABEL FREQ AMP]]
+                     [LABEL (-> TIME
+                                (DFN/* (* 2 mATH/pi FREQ))
+                                DFN/SIN
+                                (DFN/* AMP))]))
+            (INTO {:TIME TIME})
+            TC/DATASET)))
 
 violin-components-dataset
 
 
 (-> violin-components-dataset
-    (tc/head 1000)
+    (tc/head 200)
     (plotly/layer-line {:=x :time
                         :=y :A4}))
 
+(-> violin-components-dataset
+    (tc/head 200)
+    (tc/pivot->longer (complement #{:time})))
+
 
 (-> violin-components-dataset
-    (tc/head 100)
+    (tc/head 200)
     (tc/pivot->longer (complement #{:time}))
     (tc/rename-columns {:$value :amplitude})
     (plotly/layer-line {:=x :time
@@ -108,7 +133,7 @@ violin-components-dataset
 
 
 (-> violin-dataset
-    (tc/head 400)
+    (tc/head 200)
     (plotly/layer-line {:=x :time
                         :=y :violin}))
 
