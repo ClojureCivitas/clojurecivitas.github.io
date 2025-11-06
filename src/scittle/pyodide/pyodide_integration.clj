@@ -1,3 +1,4 @@
+
 ^:kindly/hide-code
 ^{:kindly/options {:html/deps [:scittle :reagent]}
   :clay {:title "Python + ClojureScript: Pyodide Integration with Scittle"
@@ -61,6 +62,20 @@
 
 ;; **Think of it as Python's REPL, but in your browser.**
 
+;; ## Loading Pyodide
+
+;; Before we can run any demos, we need to load Pyodide once. This happens automatically
+;; when you visit this page - the scripts below will load Pyodide from the CDN and
+;; initialize our shared bridge that all demos will use.
+
+^:kindly/hide-code
+(kind/html
+ "<script src=\"https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.js\"></script>")
+
+^:kindly/hide-code
+(kind/html
+ "<script type=\"application/x-scittle\" src=\"pyodide_bridge.cljs\"></script>")
+
 ;; ## Simple Example: Hello Python
 
 ;; Let's start with the simplest possible example - loading Pyodide and running Python code.
@@ -74,14 +89,10 @@
 
 ;; ### Try It Live
 
+^:kindly/hide-code
 (kind/hiccup
  [:div#hello-python-demo {:style {:min-height "400px"}}
-  ;; Load Pyodide CDN first - this provides js/loadPyodide
-  [:script {:src "https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.js"}]
-  ;; Then load the shared Pyodide bridge
-  [:script {:type "application/x-scittle"
-            :src "pyodide_bridge.cljs"}]
-  ;; Finally load the demo
+  ;; Load the demo (Pyodide and bridge already loaded globally)
   [:script {:type "application/x-scittle"
             :src "hello_python.cljs"}]])
 
@@ -108,6 +119,7 @@
 
 ;; ### Try It Live
 
+^:kindly/hide-code
 (kind/hiccup
  [:div#code-editor-demo {:style {:min-height "500px"}}
   ;; Load the code editor (Pyodide is already loaded from first demo)
@@ -127,6 +139,7 @@
 
 ;; ### Try It Live
 
+^:kindly/hide-code
 (kind/hiccup
  [:div#data-visualization-demo {:style {:min-height "700px"}}
   ;; Load the data visualization demo (uses already-loaded Pyodide)
@@ -155,6 +168,7 @@
 
 ;; ### Try It Live
 
+^:kindly/hide-code
 (kind/hiccup
  [:div#pandas-demo {:style {:min-height "700px"}}
   ;; Load the pandas demo (uses already-loaded Pyodide)
@@ -214,11 +228,88 @@
 
 ;; ### Try It Live
 
+^:kindly/hide-code
 (kind/hiccup
  [:div#pandas-viz-demo {:style {:min-height "800px"}}
   ;; Load the combined pandas + matplotlib workflow demo
   [:script {:type "application/x-scittle"
             :src "pandas_viz_demo.cljs"}]])
+
+;; ## Interactive Data Analysis
+
+;; Want to analyze your own data? Upload CSV files and explore them interactively with Pandas!
+
+;; ### Key Features
+
+;; - **CSV Upload** - Drag & drop or click to upload your data files
+;; - **Data Preview** - See your data in formatted tables
+;; - **Statistical Summary** - Automatic descriptive statistics
+;; - **Data Info** - Column types, null counts, memory usage
+;; - **Export Results** - Download processed data as CSV
+
+;; ### What You Can Do
+
+;; The demo processes your CSV data through Pandas and displays:
+
+;; - First 10 rows of your dataset
+;; - Complete statistical summary (mean, std, min, max, quartiles)
+;; - Data types for each column
+;; - Null value counts
+;; - Memory usage information
+
+;; Perfect for quick exploratory data analysis without installing anything!
+
+;; ### Try It Live
+
+^:kindly/hide-code
+(kind/hiccup
+ [:div#interactive-data-analysis
+  ;; Load the interactive data analysis demo (uses already-loaded Pyodide)
+  [:script {:type "application/x-scittle"
+            :src "interactive_data_analysis.cljs"}]])
+
+;; ## Time Series Analysis
+
+;; Analyze temporal patterns with moving averages, trends, and volatility using Pandas and Matplotlib!
+
+;; ### Two Complete Examples
+
+;; **📈 Stock Market Analysis:**
+
+;; - Price trends with 5-day and 10-day moving averages
+;; - Daily returns (percentage changes)
+;; - Trading volume analysis
+;; - 5-day rolling volatility (risk measurement)
+
+;; **🌡️ Sensor Data Analysis:**
+
+;; - Temperature and humidity patterns over 24 hours
+;; - 3-hour moving averages for trend smoothing
+;; - Correlation analysis (temperature vs humidity)
+;; - Daily pattern visualization
+
+;; ### Time Series Techniques
+
+;; - **Moving Averages** - Smooth out noise to reveal trends
+;; - **Returns Analysis** - Calculate daily percentage changes
+;; - **Volatility Metrics** - Measure fluctuation using rolling standard deviation
+;; - **Correlation Analysis** - Understand relationships between variables
+;; - **Pattern Recognition** - Detect daily/seasonal patterns
+
+;; ### What You'll Learn
+
+;; - How to calculate and visualize moving averages
+;; - Identifying trend direction and potential reversals
+;; - Measuring market/data stability and risk
+;; - Understanding inverse correlations in environmental data
+;; - Analyzing complete 24-hour cycles
+
+^:kindly/hide-code
+(kind/hiccup
+ [:div#time-series-analysis
+  ;; Load the time series analysis demo (uses already-loaded Pyodide)
+  [:script {:type "application/x-scittle"
+            :src "time_series_demo.cljs"}]])
 
 ;; ## What's Possible?
 
@@ -230,22 +321,32 @@
 ;; - 🐼 **Data Analysis** - Process and analyze data with Pandas DataFrames
 ;; - 📈 **Statistical Analysis** - Descriptive statistics, correlations, grouping
 ;; - 🎯 **Complete Workflows** - Combine pandas analysis with matplotlib visualizations
+;; - 📂 **File Upload & Processing** - Analyze your own CSV data files
+;; - 📉 **Time Series Analysis** - Moving averages, trends, volatility, and patterns
 ;; - 🎨 **Custom UIs** - Wrap Python functionality in beautiful ClojureScript UIs
 
 ;; ## Next Steps
 
-;; Explore more advanced features:
+;; Want to dive deeper? Try:
 
-;; - Advanced pandas operations (joins, pivots, time series)
-;; - Interactive data exploration with dynamic filtering
+;; - Experimenting with the Interactive Data Analysis demo above - upload your own CSV files!
+;; - Exploring the Time Series Analysis demo - switch between stock and sensor data
+;; - Modifying the code in any demo to create your own visualizations
+
+;; Or explore advanced topics:
+
+;; - Advanced pandas operations (joins, pivots, time series decomposition)
 ;; - Machine learning with scikit-learn
 ;; - Custom Python packages and modules
+;; - Building complete data science applications
 
 ;; ---
 
 ;; ## Acknowledgments
 
 ;; A special thanks to [Timothy Pratley](https://github.com/timothypratley) for creating ClojureCivitas - a welcoming space where the Clojure community can come together to share knowledge, experiences, and our collective love for the Clojure/ClojureScript ecosystem. Projects like this thrive when we have platforms to showcase what's possible and inspire others to explore.
+
+;; Huge appreciation to [Daniel Slutsky](https://github.com/daslu) for co-creating and maintaining the incredible [Scicloj](https://scicloj.github.io/) ecosystem of tools - including Clay, Kindly, and many other libraries that make sharing and exploring data in Clojure not just easier, but genuinely fun. This article wouldn't exist without Clay's elegant approach to literate programming and data visualization.
 
 ;; ---
 
