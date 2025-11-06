@@ -178,3 +178,240 @@ output
 ")]
       (.runPythonAsync pyodide capture-code))
     (js/Promise.reject (js/Error. "Pyodide not initialized"))))
+
+;; ============================================================================
+;; CSV & DataFrame Functions
+;; ============================================================================
+
+(defn load-csv-to-dataframe
+  "Load CSV content into a Pandas DataFrame.
+
+   Parameters:
+   - csv-content: String content of CSV file
+   - options: Map of parsing options
+     - :df-name - Name for the DataFrame variable (default: 'df')
+     - :delimiter - CSV delimiter (default: ',')
+     - :has-header - Whether CSV has header row (default: true)
+
+   Returns promise resolving to:
+   {:success true :df-name 'df'} or
+   {:success false :error 'error message'}
+
+   Example:
+   (load-csv-to-dataframe csv-content {:df-name \"sales_data\"})"
+  [csv-content & {:keys [df-name delimiter has-header]
+                  :or {df-name "df"
+                       delimiter ","
+                       has-header true}}]
+  (if-let [pyodide @pyodide-instance]
+    (-> ;; Store CSV content in Pyodide namespace
+     (js/Promise.resolve
+      (aset (.-globals pyodide) "__csv_content__" csv-content))
+     (.then (fn []
+              ;; Load pandas if not already loaded
+              (.loadPackage pyodide "pandas")))
+     (.then (fn []
+              ;; Parse CSV and create DataFrame
+              (let [header-param (if has-header "header=0" "header=None")
+                    python-code (str "
+import pandas as pd
+import io
+import json
+
+def load_dataframe():
+    try:
+        df_name = '" df-name "'
+        df = pd.read_csv(
+            io.StringIO(__csv_content__),
+            delimiter='" delimiter "',
+            " header-param "
+        )
+        # Store in global namespace
+        globals()[df_name] = df
+
+        result = {
+            'success': True,
+            'df_name': df_name,
+            'shape': list(df.shape),
+            'columns': list(df.columns),
+            'dtypes': {col: str(dtype) for col, dtype in df.dtypes.items()}
+        }
+        return json.dumps(result)
+    except Exception as e:
+        import traceback
+        error_msg = str(e) if str(e) else 'Unknown error'
+        return json.dumps({'success': False, 'error': error_msg, 'traceback': traceback.format_exc()})
+
+load_dataframe()
+")]
+                (.runPythonAsync pyodide python-code))))
+     (.then (fn [result]
+              (js/console.log "Raw Python result:" result)
+              (let [result-js (js->clj (js/JSON.parse result) :keywordize-keys true)]
+                (if (:success result-js)
+                  (do
+                    (js/console.log "✓ DataFrame created:" (:df_name result-js))
+                    result-js)
+                  (do
+                    (js/console.error "✗ DataFrame creation failed:" (:error result-js))
+                    (when (:traceback result-js)
+                      (js/console.error "Python traceback:" (:traceback result-js)))
+                    result-js)))))
+     (.catch (fn [err]
+               (js/console.error "✗ CSV loading error:" err)
+               {:success false :error (str "CSV loading failed: " (.-message err))})))
+    (js/Promise.resolve
+     {:success false :error "Pyodide not initialized"})))
+
+(defn get-dataframe-info
+  "Get detailed information about a DataFrame.
+
+   Parameters:
+   - df-name: Name of the DataFrame variable
+
+   Returns promise with:
+   {:success true
+    :shape [rows cols]
+    :columns [...]
+    :dtypes {...}
+    :null-counts {...}
+    :memory-usage 'size in KB'}
+
+   Example:
+   (get-dataframe-info \"df\")"
+  [df-name]
+  (if-let [pyodide @pyodide-instance]
+    (-> (.runPythonAsync pyodide (str "
+import json
+
+def get_info():
+    try:
+        info = {
+            'success': True,
+            'shape': list(" df-name ".shape),
+            'columns': list(" df-name ".columns),
+            'dtypes': {col: str(dtype) for col, dtype in " df-name ".dtypes.items()},
+            'null_counts': " df-name ".isnull().sum().to_dict(),
+            'memory_usage': round(" df-name ".memory_usage(deep=True).sum() / 1024, 2)
+        }
+        return json.dumps(info)
+    except Exception as e:
+        return json.dumps({'success': False, 'error': str(e)})
+
+get_info()
+"))
+        (.then (fn [result]
+                 (js->clj (js/JSON.parse result) :keywordize-keys true)))
+        (.catch (fn [err]
+                  {:success false :error (.-message err)})))
+    (js/Promise.resolve
+     {:success false :error "Pyodide not initialized"})))
+
+(defn get-dataframe-preview
+  "Get HTML preview of DataFrame.
+
+   Parameters:
+   - df-name: Name of the DataFrame variable
+   - n-rows: Number of rows to display (default: 10)
+
+   Returns promise with:
+   {:success true :html 'HTML table string'}
+
+   Example:
+   (get-dataframe-preview \"df\" 20)"
+  [df-name & {:keys [n-rows] :or {n-rows 10}}]
+  (if-let [pyodide @pyodide-instance]
+    (-> (.runPythonAsync pyodide (str "
+import json
+
+def get_preview():
+    try:
+        preview_html = " df-name ".head(" n-rows ").to_html(
+            classes='dataframe-table',
+            border=0,
+            index=True,
+            na_rep='NaN',
+            float_format=lambda x: f'{x:.2f}' if pd.notna(x) else 'NaN'
+        )
+        return json.dumps({'success': True, 'html': preview_html})
+    except Exception as e:
+        return json.dumps({'success': False, 'error': str(e)})
+
+get_preview()
+"))
+        (.then (fn [result]
+                 (js->clj (js/JSON.parse result) :keywordize-keys true)))
+        (.catch (fn [err]
+                  {:success false :error (.-message err)})))
+    (js/Promise.resolve
+     {:success false :error "Pyodide not initialized"})))
+
+(defn get-dataframe-statistics
+  "Get statistical summary of DataFrame.
+
+   Parameters:
+   - df-name: Name of the DataFrame variable
+
+   Returns promise with:
+   {:success true :stats-html 'HTML table of statistics'}
+
+   Example:
+   (get-dataframe-statistics \"df\")"
+  [df-name]
+  (if-let [pyodide @pyodide-instance]
+    (-> (.runPythonAsync pyodide (str "
+import json
+
+def get_stats():
+    try:
+        stats_html = " df-name ".describe().to_html(
+            classes='stats-table',
+            border=0,
+            float_format=lambda x: f'{x:.2f}'
+        )
+        return json.dumps({'success': True, 'stats_html': stats_html})
+    except Exception as e:
+        return json.dumps({'success': False, 'error': str(e)})
+
+get_stats()
+"))
+        (.then (fn [result]
+                 (js->clj (js/JSON.parse result) :keywordize-keys true)))
+        (.catch (fn [err]
+                  {:success false :error (.-message err)})))
+    (js/Promise.resolve
+     {:success false :error "Pyodide not initialized"})))
+
+(defn export-dataframe-to-csv
+  "Export DataFrame to CSV string.
+
+   Parameters:
+   - df-name: Name of the DataFrame variable
+   - include-index?: Include index column (default: false)
+
+   Returns promise with:
+   {:success true :csv 'CSV string'} or
+   {:success false :error 'error message'}
+
+   Example:
+   (export-dataframe-to-csv \"df\")"
+  [df-name & {:keys [include-index?] :or {include-index? false}}]
+  (if-let [pyodide @pyodide-instance]
+    (-> (.runPythonAsync pyodide (str "
+import json
+
+def export_csv():
+    try:
+        csv_str = " df-name ".to_csv(index=" (if include-index? "True" "False") ")
+        return json.dumps({'success': True, 'csv': csv_str})
+    except Exception as e:
+        return json.dumps({'success': False, 'error': str(e)})
+
+export_csv()
+"))
+        (.then (fn [result]
+                 (js->clj (js/JSON.parse result) :keywordize-keys true)))
+        (.catch (fn [err]
+                  {:success false :error (.-message err)})))
+    (js/Promise.resolve
+     {:success false :error "Pyodide not initialized"})))
