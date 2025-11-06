@@ -1,5 +1,5 @@
 ^{:kindly/hide-code true
-  :clay {:title "DSP Intro"
+  :clay {:title "DSP Study Group - Intro: Building the Violin Sound from Sine Waves"
          :quarto {:author [:eugnes :daslu]
                   :description "Starting the journey of DSP in Clojure."
                   :category :clojure
