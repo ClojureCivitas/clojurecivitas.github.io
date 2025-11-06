@@ -1,5 +1,7 @@
 project:
   type: website
+  resources:
+    - "*.cljs"
 
 website:
   title: "Clojure Civitas"
