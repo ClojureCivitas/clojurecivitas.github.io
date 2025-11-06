@@ -40,6 +40,7 @@
 ;; ## The Vision
 
 ;; Imagine being able to:
+
 ;; - Write Python data science code in your browser
 ;; - Visualize data with matplotlib without any backend
 ;; - Process data with pandas entirely client-side
@@ -51,6 +52,7 @@
 ;; ## What is Pyodide?
 
 ;; [Pyodide](https://pyodide.org/) is a Python distribution compiled to WebAssembly that runs entirely in the browser. It includes:
+
 ;; - Full Python 3.11 interpreter
 ;; - NumPy, Pandas, Matplotlib, SciPy
 ;; - 100+ scientific packages
@@ -64,6 +66,7 @@
 ;; Let's start with the simplest possible example - loading Pyodide and running Python code.
 
 ;; The demo below shows a basic Python REPL where you can:
+
 ;; - Load Pyodide from CDN
 ;; - Execute Python expressions
 ;; - See results instantly
@@ -116,6 +119,7 @@
 ;; Now for the exciting part - creating beautiful data visualizations with Python's matplotlib library!
 
 ;; The demo below captures matplotlib plots as base64 PNG images and displays them inline. This technique:
+
 ;; - Uses matplotlib's non-interactive 'Agg' backend
 ;; - Captures plots as PNG data
 ;; - Displays high-quality visualizations
@@ -136,12 +140,14 @@
 ;; ### Why Pandas in the Browser?
 
 ;; Pandas is the standard tool for data analysis in Python. With Pyodide, you can:
+
 ;; - Load and manipulate tabular data
 ;; - Perform statistical analysis
 ;; - Filter, group, and transform datasets
 ;; - All without a backend server!
 
 ;; The demo includes examples of:
+
 ;; - **Creating DataFrames** - Build tables from Python dictionaries
 ;; - **Statistical Analysis** - Summary statistics and correlations
 ;; - **Data Transformations** - Filter, calculate, sort, and rank
@@ -162,6 +168,7 @@
 ;; ### Why Combine Them?
 
 ;; In real-world data science, you rarely use just one tool. You:
+
 ;; 1. **Load and clean data** with Pandas
 ;; 2. **Analyze and transform** to extract insights
 ;; 3. **Visualize results** with Matplotlib
@@ -170,6 +177,7 @@
 ;; ### Complete Workflow Examples
 
 ;; **Sales Trend Analysis:**
+
 ;; - Load monthly sales data into DataFrame
 ;; - Calculate profit and margins
 ;; - Generate statistical summary
@@ -177,18 +185,21 @@
 ;; - Display both tables and visualizations
 
 ;; **Product Performance:**
+
 ;; - Analyze product sales across quarters
 ;; - Aggregate by product category
 ;; - Compare units sold and revenue
 ;; - Show horizontal and vertical bar charts
 
 ;; **Regional Breakdown:**
+
 ;; - Multi-dimensional analysis by region and quarter
 ;; - Create pivot tables
 ;; - Generate 4 different chart types
 ;; - Display comprehensive dashboard
 
 ;; **Time Series Analysis:**
+
 ;; - 90 days of daily sales data
 ;; - Calculate 7-day and 30-day moving averages
 ;; - Aggregate to monthly totals
@@ -224,6 +235,7 @@
 ;; ## Next Steps
 
 ;; Explore more advanced features:
+
 ;; - Advanced pandas operations (joins, pivots, time series)
 ;; - Interactive data exploration with dynamic filtering
 ;; - Machine learning with scikit-learn
