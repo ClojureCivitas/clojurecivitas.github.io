@@ -4,7 +4,7 @@
                   :description "Starting the journey of DSP in Clojure."
                   :category :clojure
                   :type :post
-                  :date "2025-11-02"
+                  :date "2025-11-07"
                   :tags [:dsp :math :music]
                   :draft true}}}
 (ns signal-processing.intro
@@ -17,15 +17,35 @@
 
 ;; # Introduction to Digital Signal Processing
 ;;
-;; Welcome! Let's explore how to generate and manipulate audio signals in Clojure.
-;; We'll start simple - creating a single tone - then build up to synthesizing
-;; a more complex sound like a violin.
+;; **Notes from the [Scicloj DSP Study Group](https://scicloj.github.io/docs/community/groups/dsp-study/)**  
+;; *First meeting - Nov. 2nd 2025*
 ;;
-;; ## What is Digital Signal Processing?
+;; Welcome! These are notes from our first study group session, where we're learning
+;; digital signal processing together using Clojure. We're following the excellent book
+;; [**Think DSP** by Allen B. Downey](https://greenteapress.com/wp/think-dsp/) (available free online).
+;;
+;; **Huge thanks to Professor Downey** for writing such an accessible and free introduction to DSP, and for sharing with us the work-in-progress notebooks of [Think DSP 2](https://allendowney.github.io/ThinkDSP2/index.html).
+;;
+;;;; ## What is Digital Signal Processing?
 ;;
 ;; Sound waves are continuous vibrations in the air. To work with them on a computer,
 ;; we need to **sample** them - take measurements at regular intervals. The **sample rate**
 ;; tells us how many measurements per second. CD-quality audio uses 44,100 samples per second.
+;;
+;; This session covers concepts from **Chapter 1: Sounds and Signals** of Think DSP.
+
+;; ## Clojure Libraries We're Using
+;;
+;; To work with DSP in Clojure, we're using tools from the Scicloj ecosystem:
+;;
+;; - **[Kindly](https://scicloj.github.io/kindly-noted/kindly)** - Visualization protocol that renders our data as interactive HTML elements (through Clay)
+;; - **[dtype-next](https://github.com/cnuernber/dtype-next)** - Efficient numerical arrays and vectorized operations (like NumPy for Clojure)
+;; - **[Tablecloth](https://scicloj.github.io/tablecloth/)** - DataFrame library for data manipulation and transformation
+;; - **[Tableplot](https://scicloj.github.io/tableplot/)** - Declarative plotting library built on Plotly
+;;
+;; These libraries let us work with large audio datasets efficiently while keeping our code
+;; clean and interactive. The `tech.v3.datatype.functional` namespace (aliased as `dfn`) provides
+;; vectorized math operations that work on entire arrays at once - essential for DSP!
 
 (require '[scicloj.kindly.v4.kind :as kind]
          '[tech.v3.datatype :as dtype]
@@ -42,6 +62,7 @@
 (def sample-rate 44100.0)
 
 ;; Now let's create the actual waveform. We'll generate 10 seconds of audio:
+;;
 ;; - Create a time axis from 0 to 10 seconds
 ;; - Calculate the sine wave: amplitude × sin(2π × frequency × time)
 ;; - Store everything in a dataset so we can plot and analyze it
@@ -147,7 +168,16 @@ violin-components-dataset
     (tc/pivot->longer (complement #{:time})))
 
 ;; Plot all harmonics on the same chart, colored by frequency.
-;; Notice how the higher harmonics oscillate faster!
+;; Notice the mathematical relationships between these waves:
+;;
+;; - **A5 (880 Hz)** oscillates exactly twice as fast as A4 (440 Hz) - this is **one octave** higher
+;; - **E6 (1320 Hz)** is 3× the fundamental frequency (the 3rd harmonic)
+;; - **A6 (1760 Hz)** is 4× the fundamental (the 4th harmonic, two octaves up)
+;; - **C#7 (2200 Hz)** is 5× the fundamental (the 5th harmonic)
+;;
+;; These integer multiples create the **harmonic series**, which is fundamental to music theory
+;; and acoustics. When waves are related by simple ratios like 2:1, 3:1, 4:1, they blend together
+;; harmoniously - this is why octaves and perfect fifths sound so consonant!
 
 (-> violin-components-dataset
     (tc/head 200)
@@ -192,20 +222,28 @@ violin-components-dataset
     (dfn// 7000.0)
     audio)
 
-;; ## What's Next?
+;; ## What We Learned
 ;;
-;; You've now learned the fundamentals of digital signal processing:
-;; - Sampling and sample rates
-;; - Generating sine waves
-;; - Additive synthesis with harmonics
+;; In this first session, we covered the fundamentals from Chapter 1 of Think DSP:
 ;;
-;; From here, you could explore:
-;; - Envelopes (attack, decay, sustain, release) to shape sounds over time
-;; - Filters (low-pass, high-pass) to sculpt frequency content
-;; - Modulation (vibrato, tremolo) for expressive effects
-;; - The Fourier transform to analyze existing sounds
+;; - **Sampling and sample rates** - Converting continuous signals to discrete measurements
+;; - **Generating sine waves** - The building blocks of all sound
+;; - **Additive synthesis with harmonics** - Creating complex sounds from simple components
 ;;
-;; Happy signal processing!
+;; ## Next Steps
+;;
+;; In our next study group meetings, we'll explore:
+;;
+;; - **Chapter 2:** Harmonics and the Fourier transform
+;; - **Chapter 3:** Non-periodic signals and spectrograms
+;; - **Chapter 4:** Noise and filtering
+;;
+;; Join us at the [Scicloj DSP Study Group](https://scicloj.github.io/docs/community/groups/dsp-study/)!
+;;
+;; ---
+;;
+;; *Again, huge thanks to Allen B. Downey for Think DSP. If you find this resource valuable,
+;; consider [supporting his work](https://greenteapress.com/wp/) or sharing it with others.*
 
 
 
