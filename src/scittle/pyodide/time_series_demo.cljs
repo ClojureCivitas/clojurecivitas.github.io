@@ -88,262 +88,243 @@
                       ;; Stock analysis
                       "
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import io
 import base64
 import json
 
-# Load data
-df = pd.read_csv(io.StringIO(csv_content))
-df['Date'] = pd.to_datetime(df['Date'])
-df = df.sort_values('Date')
+try:
+    # Load the CSV data
+    df = pd.read_csv(io.StringIO(csv_content))
+    df['Date'] = pd.to_datetime(df['Date'])
+    df = df.sort_values('Date')
+    
+    # Calculate moving averages
+    df['MA_5'] = df['Price'].rolling(window=5, min_periods=1).mean()
+    df['MA_10'] = df['Price'].rolling(window=10, min_periods=1).mean()
+    
+    # Calculate returns and volatility
+    df['Returns'] = df['Price'].pct_change() * 100
+    df['Volatility'] = df['Returns'].rolling(window=5, min_periods=1).std()
+    
+    plots = []
+    
+    # Plot 1: Price with Moving Averages
+    plt.figure(figsize=(10, 5))
+    plt.plot(df['Date'], df['Price'], label='Price', linewidth=2, color='#3B82F6')
+    plt.plot(df['Date'], df['MA_5'], label='5-Day MA', linestyle='--', color='#10B981')
+    plt.plot(df['Date'], df['MA_10'], label='10-Day MA', linestyle='--', color='#F59E0B')
+    plt.title('Stock Price with Moving Averages', fontsize=14, fontweight='bold')
+    plt.xlabel('Date')
+    plt.ylabel('Price ($)')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+    buf.seek(0)
+    plots.append({
+        'title': '📈 Stock Price with Moving Averages',
+        'data': base64.b64encode(buf.read()).decode('utf-8')
+    })
+    plt.close()
+    
+    # Plot 2: Daily Returns
+    plt.figure(figsize=(10, 4))
+    plt.bar(df['Date'], df['Returns'], color=['#EF4444' if x < 0 else '#10B981' for x in df['Returns']], alpha=0.6)
+    plt.axhline(y=0, color='black', linestyle='-', linewidth=0.8)
+    plt.title('Daily Returns (%)', fontsize=14, fontweight='bold')
+    plt.xlabel('Date')
+    plt.ylabel('Returns (%)')
+    plt.grid(True, alpha=0.3, axis='y')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+    buf.seek(0)
+    plots.append({
+        'title': '📊 Daily Returns',
+        'data': base64.b64encode(buf.read()).decode('utf-8')
+    })
+    plt.close()
+    
+    # Plot 3: Volume
+    plt.figure(figsize=(10, 4))
+    plt.bar(df['Date'], df['Volume'], color='#8B5CF6', alpha=0.6)
+    plt.title('Trading Volume', fontsize=14, fontweight='bold')
+    plt.xlabel('Date')
+    plt.ylabel('Volume')
+    plt.grid(True, alpha=0.3, axis='y')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+    buf.seek(0)
+    plots.append({
+        'title': '📊 Trading Volume',
+        'data': base64.b64encode(buf.read()).decode('utf-8')
+    })
+    plt.close()
+    
+    # Plot 4: Volatility
+    plt.figure(figsize=(10, 4))
+    plt.plot(df['Date'], df['Volatility'], color='#F59E0B', linewidth=2)
+    plt.fill_between(df['Date'], df['Volatility'], alpha=0.3, color='#F59E0B')
+    plt.title('5-Day Rolling Volatility', fontsize=14, fontweight='bold')
+    plt.xlabel('Date')
+    plt.ylabel('Volatility (%)')
+    plt.grid(True, alpha=0.3)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+    buf.seek(0)
+    plots.append({
+        'title': '📉 Rolling Volatility',
+        'data': base64.b64encode(buf.read()).decode('utf-8')
+    })
+    plt.close()
+    
+    result = {
+        'success': True,
+        'plots': plots
+    }
+    output = json.dumps(result)
+    
+except Exception as e:
+    import traceback
+    result = {
+        'success': False,
+        'error': str(e),
+        'traceback': traceback.format_exc()
+    }
+    output = json.dumps(result)
 
-plots = []
-
-# 1. Price with Moving Averages
-plt.figure(figsize=(12, 6))
-plt.plot(df['Date'], df['Price'], label='Price', linewidth=2, color='steelblue', marker='o', markersize=4)
-
-# Calculate moving averages
-df['MA_5'] = df['Price'].rolling(window=5).mean()
-df['MA_10'] = df['Price'].rolling(window=10).mean()
-
-plt.plot(df['Date'], df['MA_5'], label='5-Day MA', linewidth=2, linestyle='--', color='orange')
-plt.plot(df['Date'], df['MA_10'], label='10-Day MA', linewidth=2, linestyle='--', color='red')
-
-plt.title('Stock Price with Moving Averages', fontsize=16, fontweight='bold')
-plt.xlabel('Date', fontsize=12)
-plt.ylabel('Price ($)', fontsize=12)
-plt.legend()
-plt.grid(True, alpha=0.3)
-plt.xticks(rotation=45)
-plt.tight_layout()
-
-buf = io.BytesIO()
-plt.savefig(buf, format='png', dpi=100, facecolor='white')
-buf.seek(0)
-plots.append({
-    'title': 'Price with Moving Averages',
-    'data': base64.b64encode(buf.read()).decode()
-})
-plt.close()
-
-# 2. Daily Returns
-df['Returns'] = df['Price'].pct_change() * 100
-plt.figure(figsize=(12, 6))
-colors = ['green' if x > 0 else 'red' for x in df['Returns']]
-plt.bar(range(len(df)), df['Returns'], color=colors, alpha=0.7)
-plt.axhline(y=0, color='black', linestyle='-', linewidth=0.5)
-plt.title('Daily Returns (%)', fontsize=16, fontweight='bold')
-plt.xlabel('Day', fontsize=12)
-plt.ylabel('Return (%)', fontsize=12)
-plt.grid(True, alpha=0.3, axis='y')
-plt.tight_layout()
-
-buf = io.BytesIO()
-plt.savefig(buf, format='png', dpi=100, facecolor='white')
-buf.seek(0)
-plots.append({
-    'title': 'Daily Returns',
-    'data': base64.b64encode(buf.read()).decode()
-})
-plt.close()
-
-# 3. Volume Analysis
-plt.figure(figsize=(12, 6))
-plt.bar(df['Date'], df['Volume'], color='coral', alpha=0.7, edgecolor='black')
-plt.title('Trading Volume', fontsize=16, fontweight='bold')
-plt.xlabel('Date', fontsize=12)
-plt.ylabel('Volume', fontsize=12)
-plt.xticks(rotation=45)
-plt.grid(True, alpha=0.3, axis='y')
-plt.tight_layout()
-
-buf = io.BytesIO()
-plt.savefig(buf, format='png', dpi=100, facecolor='white')
-buf.seek(0)
-plots.append({
-    'title': 'Trading Volume',
-    'data': base64.b64encode(buf.read()).decode()
-})
-plt.close()
-
-# 4. Volatility (Rolling Std)
-df['Volatility'] = df['Returns'].rolling(window=5).std()
-plt.figure(figsize=(12, 6))
-plt.plot(df['Date'], df['Volatility'], linewidth=2, color='purple', marker='o', markersize=4)
-plt.title('5-Day Rolling Volatility', fontsize=16, fontweight='bold')
-plt.xlabel('Date', fontsize=12)
-plt.ylabel('Volatility (Std Dev of Returns)', fontsize=12)
-plt.grid(True, alpha=0.3)
-plt.xticks(rotation=45)
-plt.tight_layout()
-
-buf = io.BytesIO()
-plt.savefig(buf, format='png', dpi=100, facecolor='white')
-buf.seek(0)
-plots.append({
-    'title': 'Rolling Volatility',
-    'data': base64.b64encode(buf.read()).decode()
-})
-plt.close()
-
-# Statistics
-stats = {
-    'mean_price': float(df['Price'].mean()),
-    'std_price': float(df['Price'].std()),
-    'min_price': float(df['Price'].min()),
-    'max_price': float(df['Price'].max()),
-    'mean_volume': float(df['Volume'].mean()),
-    'total_return': float(((df['Price'].iloc[-1] / df['Price'].iloc[0]) - 1) * 100),
-    'avg_daily_return': float(df['Returns'].mean()),
-    'volatility': float(df['Returns'].std())
-}
-
-json.dumps({'success': True, 'plots': plots, 'stats': stats})
+output
 "
                       ;; Sensor analysis
                       "
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import io
 import base64
 import json
 
-# Load data
-df = pd.read_csv(io.StringIO(csv_content))
-df['Timestamp'] = pd.to_datetime(df['Timestamp'])
-df = df.sort_values('Timestamp')
-df['Hour'] = df['Timestamp'].dt.hour
+try:
+    # Load the CSV data
+    df = pd.read_csv(io.StringIO(csv_content))
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+    df = df.sort_values('Timestamp')
+    
+    # Calculate moving averages
+    df['Temp_MA_3'] = df['Temperature'].rolling(window=3, min_periods=1).mean()
+    df['Humidity_MA_3'] = df['Humidity'].rolling(window=3, min_periods=1).mean()
+    
+    # Calculate correlation
+    temp_humidity_corr = df['Temperature'].corr(df['Humidity'])
+    
+    plots = []
+    
+    # Plot 1: Temperature with Moving Average
+    plt.figure(figsize=(10, 4))
+    plt.plot(df['Timestamp'], df['Temperature'], label='Temperature', linewidth=2, color='#EF4444')
+    plt.plot(df['Timestamp'], df['Temp_MA_3'], label='3-Hour MA', linestyle='--', color='#F59E0B')
+    plt.title('Temperature Over 24 Hours', fontsize=14, fontweight='bold')
+    plt.xlabel('Time')
+    plt.ylabel('Temperature (°C)')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+    buf.seek(0)
+    plots.append({
+        'title': '🌡️ Temperature Patterns',
+        'data': base64.b64encode(buf.read()).decode('utf-8')
+    })
+    plt.close()
+    
+    # Plot 2: Humidity with Moving Average
+    plt.figure(figsize=(10, 4))
+    plt.plot(df['Timestamp'], df['Humidity'], label='Humidity', linewidth=2, color='#3B82F6')
+    plt.plot(df['Timestamp'], df['Humidity_MA_3'], label='3-Hour MA', linestyle='--', color='#10B981')
+    plt.title('Humidity Over 24 Hours', fontsize=14, fontweight='bold')
+    plt.xlabel('Time')
+    plt.ylabel('Humidity (%)')
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+    buf.seek(0)
+    plots.append({
+        'title': '💧 Humidity Patterns',
+        'data': base64.b64encode(buf.read()).decode('utf-8')
+    })
+    plt.close()
+    
+    # Plot 3: Temperature vs Humidity Correlation
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+    
+    # Scatter plot
+    ax1.scatter(df['Temperature'], df['Humidity'], color='#8B5CF6', alpha=0.6, s=50)
+    ax1.set_xlabel('Temperature (°C)')
+    ax1.set_ylabel('Humidity (%)')
+    ax1.set_title(f'Temperature vs Humidity (r={temp_humidity_corr:.2f})', fontweight='bold')
+    ax1.grid(True, alpha=0.3)
+    
+    # Dual axis time series
+    ax2_humidity = ax2.twinx()
+    line1 = ax2.plot(df['Timestamp'], df['Temperature'], color='#EF4444', linewidth=2, label='Temperature')
+    line2 = ax2_humidity.plot(df['Timestamp'], df['Humidity'], color='#3B82F6', linewidth=2, label='Humidity')
+    ax2.set_xlabel('Time')
+    ax2.set_ylabel('Temperature (°C)', color='#EF4444')
+    ax2_humidity.set_ylabel('Humidity (%)', color='#3B82F6')
+    ax2.tick_params(axis='y', labelcolor='#EF4444')
+    ax2_humidity.tick_params(axis='y', labelcolor='#3B82F6')
+    ax2.set_title('Inverse Correlation Pattern', fontweight='bold')
+    plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45)
+    
+    plt.tight_layout()
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+    buf.seek(0)
+    plots.append({
+        'title': '🔗 Temperature-Humidity Correlation',
+        'data': base64.b64encode(buf.read()).decode('utf-8')
+    })
+    plt.close()
+    
+    result = {
+        'success': True,
+        'plots': plots
+    }
+    output = json.dumps(result)
+    
+except Exception as e:
+    import traceback
+    result = {
+        'success': False,
+        'error': str(e),
+        'traceback': traceback.format_exc()
+    }
+    output = json.dumps(result)
 
-plots = []
-
-# 1. Temperature Trend
-plt.figure(figsize=(12, 6))
-plt.plot(df['Hour'], df['Temperature'], marker='o', linewidth=2,
-         markersize=6, color='orangered', label='Temperature')
-
-# Add moving average
-df['Temp_MA'] = df['Temperature'].rolling(window=3).mean()
-plt.plot(df['Hour'], df['Temp_MA'], linewidth=2, linestyle='--',
-         color='darkred', label='3-Hour MA')
-
-plt.title('Temperature Over 24 Hours', fontsize=16, fontweight='bold')
-plt.xlabel('Hour of Day', fontsize=12)
-plt.ylabel('Temperature (°C)', fontsize=12)
-plt.legend()
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
-
-buf = io.BytesIO()
-plt.savefig(buf, format='png', dpi=100, facecolor='white')
-buf.seek(0)
-plots.append({
-    'title': 'Temperature Trend',
-    'data': base64.b64encode(buf.read()).decode()
-})
-plt.close()
-
-# 2. Humidity Trend
-plt.figure(figsize=(12, 6))
-plt.plot(df['Hour'], df['Humidity'], marker='s', linewidth=2,
-         markersize=6, color='dodgerblue', label='Humidity')
-
-df['Humid_MA'] = df['Humidity'].rolling(window=3).mean()
-plt.plot(df['Hour'], df['Humid_MA'], linewidth=2, linestyle='--',
-         color='darkblue', label='3-Hour MA')
-
-plt.title('Humidity Over 24 Hours', fontsize=16, fontweight='bold')
-plt.xlabel('Hour of Day', fontsize=12)
-plt.ylabel('Humidity (%)', fontsize=12)
-plt.legend()
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
-
-buf = io.BytesIO()
-plt.savefig(buf, format='png', dpi=100, facecolor='white')
-buf.seek(0)
-plots.append({
-    'title': 'Humidity Trend',
-    'data': base64.b64encode(buf.read()).decode()
-})
-plt.close()
-
-# 3. Temperature vs Humidity (Scatter)
-plt.figure(figsize=(10, 8))
-scatter = plt.scatter(df['Temperature'], df['Humidity'],
-                     c=df['Hour'], cmap='viridis',
-                     s=100, alpha=0.6, edgecolors='black')
-plt.colorbar(scatter, label='Hour of Day')
-
-# Add trend line
-z = np.polyfit(df['Temperature'], df['Humidity'], 1)
-p = np.poly1d(z)
-plt.plot(df['Temperature'], p(df['Temperature']),
-         'r--', linewidth=2, label=f'Trend: y={z[0]:.2f}x+{z[1]:.2f}')
-
-plt.title('Temperature vs Humidity Relationship', fontsize=16, fontweight='bold')
-plt.xlabel('Temperature (°C)', fontsize=12)
-plt.ylabel('Humidity (%)', fontsize=12)
-plt.legend()
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
-
-buf = io.BytesIO()
-plt.savefig(buf, format='png', dpi=100, facecolor='white')
-buf.seek(0)
-plots.append({
-    'title': 'Temperature vs Humidity',
-    'data': base64.b64encode(buf.read()).decode()
-})
-plt.close()
-
-# 4. Daily Pattern (Heatmap style)
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
-
-# Temperature pattern
-ax1.bar(df['Hour'], df['Temperature'], color='orangered', alpha=0.7, edgecolor='black')
-ax1.set_title('Temperature Pattern', fontsize=14, fontweight='bold')
-ax1.set_xlabel('Hour of Day', fontsize=11)
-ax1.set_ylabel('Temperature (°C)', fontsize=11)
-ax1.grid(True, alpha=0.3, axis='y')
-
-# Humidity pattern
-ax2.bar(df['Hour'], df['Humidity'], color='dodgerblue', alpha=0.7, edgecolor='black')
-ax2.set_title('Humidity Pattern', fontsize=14, fontweight='bold')
-ax2.set_xlabel('Hour of Day', fontsize=11)
-ax2.set_ylabel('Humidity (%)', fontsize=11)
-ax2.grid(True, alpha=0.3, axis='y')
-
-plt.tight_layout()
-
-buf = io.BytesIO()
-plt.savefig(buf, format='png', dpi=100, facecolor='white')
-buf.seek(0)
-plots.append({
-    'title': 'Daily Patterns',
-    'data': base64.b64encode(buf.read()).decode()
-})
-plt.close()
-
-# Statistics
-stats = {
-    'mean_temp': float(df['Temperature'].mean()),
-    'std_temp': float(df['Temperature'].std()),
-    'min_temp': float(df['Temperature'].min()),
-    'max_temp': float(df['Temperature'].max()),
-    'mean_humid': float(df['Humidity'].mean()),
-    'std_humid': float(df['Humidity'].std()),
-    'correlation': float(df['Temperature'].corr(df['Humidity']))
-}
-
-json.dumps({'success': True, 'plots': plots, 'stats': stats})
+output
 ")]
-    (-> (pyodide/set-global "csv_content" csv-content)
-        (.then (fn []
-                 (pyodide/load-packages ["pandas" "matplotlib" "numpy"])))
+    ;; Set global first (synchronous)
+    (pyodide/set-global "csv_content" csv-content)
+    ;; Then run the async chain
+    (-> (pyodide/load-packages ["pandas" "matplotlib" "numpy"])
         (.then (fn []
                  (pyodide/run-python python-code)))
         (.then (fn [result]
@@ -536,14 +517,20 @@ json.dumps({'success': True, 'plots': plots, 'stats': stats})
 (defonce init-done?
   (do
     (js/console.log "🚀 Time Series Analysis demo mounted")
-    (-> (pyodide/init!)
-        (.then (fn []
-                 (js/console.log "✓ Pyodide ready, loading packages...")
-                 (pyodide/load-packages ["pandas" "matplotlib" "numpy"])))
-        (.then (fn []
-                 (js/console.log "✓ Packages loaded, running initial analysis...")
-                 (reset! ready? true)
-                 (analyze-time-series! sample-stock-data :stock))))
+    ;; Wait for Pyodide to be ready, then load packages
+    (letfn [(try-load []
+              (if (pyodide/ready?)
+                (do
+                  (js/console.log "✓ Pyodide ready, loading packages...")
+                  (-> (pyodide/load-packages ["pandas" "matplotlib" "numpy"])
+                      (.then (fn []
+                               (js/console.log "✓ Packages loaded, running initial analysis...")
+                               (reset! ready? true)
+                               (analyze-time-series! sample-stock-data :stock)))))
+                (do
+                  (js/console.log "⏳ Pyodide not ready, retrying in 500ms...")
+                  (js/setTimeout try-load 500))))]
+      (js/setTimeout try-load 100))
     true))
 
-(rdom/render [main-component] (js/document.getElementById "time-series-demo"))
+(rdom/render [main-component] (js/document.getElementById "time-series-analysis"))

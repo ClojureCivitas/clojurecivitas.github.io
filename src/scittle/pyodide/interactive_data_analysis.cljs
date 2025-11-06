@@ -488,11 +488,16 @@
 (defonce init-done?
   (do
     (js/console.log "🚀 Interactive Data Analysis demo mounted")
-    ;; Initialize Pyodide first
-    (-> (pyodide/init!)
-        (.then (fn []
-                 (js/console.log "✓ Pyodide ready, loading pandas...")
-                 (load-pandas!))))
+    ;; Wait for Pyodide to be ready, then load pandas
+    (letfn [(try-load []
+              (if (pyodide/ready?)
+                (do
+                  (js/console.log "✓ Pyodide ready, loading pandas...")
+                  (load-pandas!))
+                (do
+                  (js/console.log "⏳ Pyodide not ready, retrying in 500ms...")
+                  (js/setTimeout try-load 500))))]
+      (js/setTimeout try-load 100))
     true))
 
 (rdom/render [main-component] (js/document.getElementById "interactive-data-analysis"))
