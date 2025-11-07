@@ -8,6 +8,21 @@
 ;; Combined Pandas + Matplotlib Demo - Complete Data Science Workflows
 ;; ============================================================================
 
+;; ============================================================================
+;; Dark Mode Support
+;; ============================================================================
+
+(defn dark-mode?
+  "Check if dark mode is currently active by looking for 'quarto-dark' class on body"
+  []
+  (when-let [body (js/document.querySelector "body")]
+    (.contains (.-classList body) "quarto-dark")))
+
+(defn get-color
+  "Get appropriate color based on dark mode state"
+  [light-color dark-color]
+  (if (dark-mode?) dark-color light-color))
+
 (defonce code (r/atom "# Sales Trend Analysis - Complete Workflow
 import pandas as pd
 import numpy as np
@@ -363,20 +378,26 @@ plt.tight_layout()"})
    [:h2 {:style {:font-size "28px"
                  :font-weight "bold"
                  :margin-bottom "8px"
-                 :color "#111827"}}
+                 :color (get-color "#111827" "#F3F4F6")}}
     "🎯 Complete Data Science Workflows"]
-   [:p {:style {:color "#6B7280"
+   [:p {:style {:color (get-color "#6B7280" "#9CA3AF")
                 :margin-bottom "24px"
                 :font-size "16px"}}
     "Combine Pandas data analysis with Matplotlib visualizations for complete end-to-end workflows!"]
    ;; Info banner
-   [:div {:style {:background-color (if @libs-loaded? "#D1FAE5" "#DBEAFE")
-                  :border-left (str "4px solid " (if @libs-loaded? "#10B981" "#3B82F6"))
+   [:div {:style {:background-color (if @libs-loaded?
+                                      (get-color "#D1FAE5" "#064E3B")
+                                      (get-color "#DBEAFE" "#1E3A8A"))
+                  :border-left (str "4px solid " (if @libs-loaded?
+                                                   (get-color "#10B981" "#34D399")
+                                                   (get-color "#3B82F6" "#60A5FA")))
                   :padding "16px"
                   :margin-bottom "24px"
                   :border-radius "4px"}}
     [:p {:style {:font-size "14px"
-                 :color (if @libs-loaded? "#065F46" "#1E40AF")
+                 :color (if @libs-loaded?
+                          (get-color "#065F46" "#6EE7B7")
+                          (get-color "#1E40AF" "#BFDBFE"))
                  :margin "0"}}
      (if @libs-loaded?
        "✓ Pandas & Matplotlib are loaded and ready!"
@@ -387,15 +408,15 @@ plt.tight_layout()"})
                      :font-size "14px"
                      :font-weight "600"
                      :margin-bottom "8px"
-                     :color "#374151"}}
+                     :color (get-color "#374151" "#D1D5DB")}}
      "Complete Workflow Examples:"]
     [:div {:style {:display "flex"
                    :gap "8px"
                    :flex-wrap "wrap"}}
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#D1D5DB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#4B5563"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -403,9 +424,9 @@ plt.tight_layout()"})
                :on-click #(load-example! :sales-trend)}
       "📈 Sales Trend"]
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#D1D5DB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#4B5563"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -413,9 +434,9 @@ plt.tight_layout()"})
                :on-click #(load-example! :product-analysis)}
       "📦 Product Analysis"]
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#D1D5DB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#4B5563"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -423,9 +444,9 @@ plt.tight_layout()"})
                :on-click #(load-example! :regional-breakdown)}
       "🗺️ Regional Analysis"]
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#D1D5DB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#4B5563"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -438,7 +459,7 @@ plt.tight_layout()"})
                      :font-size "14px"
                      :font-weight "600"
                      :margin-bottom "8px"
-                     :color "#374151"}}
+                     :color (get-color "#374151" "#D1D5DB")}}
      "Python Code (Pandas + Matplotlib):"]
     [:textarea {:value @code
                 :on-change #(reset! code (.. % -target -value))
@@ -447,11 +468,11 @@ plt.tight_layout()"})
                         :padding "12px"
                         :font-family "monospace"
                         :font-size "13px"
-                        :border "2px solid #D1D5DB"
+                        :border (str "2px solid " (get-color "#D1D5DB" "#4B5563"))
                         :border-radius "6px"
                         :resize "vertical"
-                        :background-color "#FFFFFF"
-                        :color "#111827"
+                        :background-color (get-color "#FFFFFF" "#1F2937")
+                        :color (get-color "#111827" "#F3F4F6")
                         :line-height "1.5"}}]]
    ;; Run button
    [:button {:style {:width "100%"
@@ -476,8 +497,8 @@ plt.tight_layout()"})
       (not @libs-loaded?) "Loading Libraries..."
       :else "🎯 Run Complete Workflow")]
    ;; Output area
-   [:div {:style {:background-color "#FFFFFF"
-                  :border "2px solid #E5E7EB"
+   [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
+                  :border (str "2px solid " (get-color "#E5E7EB" "#4B5563"))
                   :border-radius "8px"
                   :padding "20px"
                   :min-height "500px"}}
@@ -492,7 +513,8 @@ plt.tight_layout()"})
        ;; Tables section
        (when @output-html
          [:div {:style {:margin-bottom "24px"}}
-          [:style "
+          [:style
+           (str "
 .dataframe {
   border-collapse: collapse;
   width: 100%;
@@ -501,44 +523,45 @@ plt.tight_layout()"})
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 .dataframe thead tr {
-  background-color: #F3F4F6;
+  background-color: " (get-color "#F3F4F6" "#374151") ";
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: " (get-color "#374151" "#E5E7EB") ";
 }
 .dataframe th,
 .dataframe td {
   padding: 12px 15px;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid " (get-color "#E5E7EB" "#4B5563") ";
   text-align: left;
+  color: " (get-color "#111827" "#F3F4F6") ";
 }
 .dataframe tbody tr:hover {
-  background-color: #F9FAFB;
+  background-color: " (get-color "#F9FAFB" "#2D3748") ";
 }
 .dataframe tbody tr:last-of-type {
-  border-bottom: 2px solid #D1D5DB;
+  border-bottom: 2px solid " (get-color "#D1D5DB" "#6B7280") ";
 }
 h3 {
-  color: #374151;
+  color: " (get-color "#374151" "#D1D5DB") ";
   font-size: 18px;
   font-weight: 600;
   margin: 24px 0 12px 0;
   padding-bottom: 8px;
-  border-bottom: 2px solid #E5E7EB;
-}"]
+  border-bottom: 2px solid " (get-color "#E5E7EB" "#4B5563") ";
+}")]
           [:div {:dangerouslySetInnerHTML {:__html @output-html}}]])
        ;; Visualization section
        (when @output-image
          [:div {:style {:margin-top "24px"
                         :padding-top "24px"
-                        :border-top "2px solid #E5E7EB"}}
-          [:h3 {:style {:color "#374151"
+                        :border-top (str "2px solid " (get-color "#E5E7EB" "#4B5563"))}}
+          [:h3 {:style {:color (get-color "#374151" "#D1D5DB")
                         :font-size "18px"
                         :font-weight "600"
                         :margin-bottom "16px"}}
            "📊 Visualizations"]
           [:div {:style {:text-align "center"
-                         :background-color "#F9FAFB"
+                         :background-color (get-color "#F9FAFB" "#1F2937")
                          :padding "20px"
                          :border-radius "8px"}}
            [:img {:src (str "data:image/png;base64," @output-image)
@@ -550,7 +573,7 @@ h3 {
     (when (and (not @output-html) (not @output-image))
       [:div {:style {:padding "60px 40px"
                      :text-align "center"
-                     :color "#6B7280"
+                     :color (get-color "#6B7280" "#9CA3AF")
                      :font-size "14px"}}
        [:p {:style {:margin "0"}} @output-text]])]])
 

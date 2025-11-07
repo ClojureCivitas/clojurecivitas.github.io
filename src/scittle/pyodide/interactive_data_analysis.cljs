@@ -9,6 +9,21 @@
 ;; Upload CSV, analyze with Pandas, visualize results
 ;; ============================================================================
 
+;; ============================================================================
+;; Dark Mode Support
+;; ============================================================================
+
+(defn dark-mode?
+  "Check if dark mode is currently active by looking for 'quarto-dark' class on body"
+  []
+  (when-let [body (js/document.querySelector "body")]
+    (.contains (.-classList body) "quarto-dark")))
+
+(defn get-color
+  "Get appropriate color based on dark mode state"
+  [light-color dark-color]
+  (if (dark-mode?) dark-color light-color))
+
 ;; Sample CSV data for quick testing
 (def sample-sales-csv
   "Date,Product,Region,Sales,Profit
@@ -118,17 +133,17 @@
   (let [status (pyodide/status)
         loading @loading?
         badge-config (cond
-                       loading {:color "#3B82F6" :text "Processing..."}
-                       (= status :error) {:color "#EF4444" :text "Error"}
-                       (and (= status :ready) @pandas-ready?) {:color "#10B981" :text "Ready"}
-                       (= status :ready) {:color "#F59E0B" :text "Loading Pandas..."}
-                       (= status :loading) {:color "#3B82F6" :text "Loading Pyodide..."}
-                       :else {:color "#6B7280" :text "Not Started"})]
+                       loading {:color (get-color "#3B82F6" "#60A5FA") :text "Processing..."}
+                       (= status :error) {:color (get-color "#EF4444" "#F87171") :text "Error"}
+                       (and (= status :ready) @pandas-ready?) {:color (get-color "#10B981" "#34D399") :text "Ready"}
+                       (= status :ready) {:color (get-color "#F59E0B" "#FBBF24") :text "Loading Pandas..."}
+                       (= status :loading) {:color (get-color "#3B82F6" "#60A5FA") :text "Loading Pyodide..."}
+                       :else {:color (get-color "#6B7280" "#9CA3AF") :text "Not Started"})]
     [:div {:style {:display "flex"
                    :align-items "center"
                    :gap "12px"
                    :padding "12px 16px"
-                   :background-color "#F9FAFB"
+                   :background-color (get-color "#F9FAFB" "#1F2937")
                    :border-radius "8px"
                    :margin-bottom "20px"}}
      [:div {:style {:display "flex"
@@ -140,13 +155,13 @@
                      :background-color (:color badge-config)}}]
       [:span {:style {:font-size "14px"
                       :font-weight "600"
-                      :color "#374151"}}
+                      :color (get-color "#374151" "#D1D5DB")}}
        "Status: " (:text badge-config)]]]))
 
 (defn file-upload-section
   []
-  [:div {:style {:background-color "#FFFFFF"
-                 :border "2px dashed #D1D5DB"
+  [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
+                 :border (str "2px dashed " (get-color "#D1D5DB" "#4B5563"))
                  :border-radius "8px"
                  :padding "24px"
                  :margin-bottom "20px"
@@ -154,9 +169,9 @@
    [:h3 {:style {:font-size "18px"
                  :font-weight "bold"
                  :margin-bottom "12px"
-                 :color "#111827"}}
+                 :color (get-color "#111827" "#F3F4F6")}}
     "📤 Upload CSV Data"]
-   [:p {:style {:color "#6B7280"
+   [:p {:style {:color (get-color "#6B7280" "#9CA3AF")
                 :margin-bottom "16px"
                 :font-size "14px"}}
     "Upload a CSV file or use the sample data below"]
@@ -179,7 +194,7 @@
    ;; Sample data button
    [:div {:style {:margin-top "12px"}}
     [:button {:style {:padding "10px 20px"
-                      :background-color "#8B5CF6"
+                      :background-color (get-color "#8B5CF6" "#7C3AED")
                       :color "#FFFFFF"
                       :border "none"
                       :border-radius "6px"
@@ -199,77 +214,77 @@
     (when (:success info)
       (let [[rows cols] (:shape info)
             memory (:memory_usage info)]
-        [:div {:style {:background-color "#EFF6FF"
-                       :border "1px solid #BFDBFE"
+        [:div {:style {:background-color (get-color "#EFF6FF" "#1E3A8A")
+                       :border (str "1px solid " (get-color "#BFDBFE" "#3B82F6"))
                        :border-radius "8px"
                        :padding "20px"
                        :margin-bottom "20px"}}
          [:h3 {:style {:font-size "18px"
                        :font-weight "bold"
                        :margin-bottom "16px"
-                       :color "#1E40AF"}}
+                       :color (get-color "#1E40AF" "#93C5FD")}}
           "📊 DataFrame Information"]
          ;; Stats grid
          [:div {:style {:display "grid"
                         :grid-template-columns "repeat(3, 1fr)"
                         :gap "12px"
                         :margin-bottom "16px"}}
-          [:div {:style {:background-color "#FFFFFF"
+          [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
                          :padding "12px"
                          :border-radius "6px"
                          :text-align "center"}}
            [:div {:style {:font-size "12px"
-                          :color "#6B7280"
+                          :color (get-color "#6B7280" "#9CA3AF")
                           :margin-bottom "4px"}}
             "Rows"]
            [:div {:style {:font-size "24px"
                           :font-weight "bold"
-                          :color "#3B82F6"}}
+                          :color (get-color "#3B82F6" "#60A5FA")}}
             rows]]
-          [:div {:style {:background-color "#FFFFFF"
+          [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
                          :padding "12px"
                          :border-radius "6px"
                          :text-align "center"}}
            [:div {:style {:font-size "12px"
-                          :color "#6B7280"
+                          :color (get-color "#6B7280" "#9CA3AF")
                           :margin-bottom "4px"}}
             "Columns"]
            [:div {:style {:font-size "24px"
                           :font-weight "bold"
-                          :color "#10B981"}}
+                          :color (get-color "#10B981" "#34D399")}}
             cols]]
-          [:div {:style {:background-color "#FFFFFF"
+          [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
                          :padding "12px"
                          :border-radius "6px"
                          :text-align "center"}}
            [:div {:style {:font-size "12px"
-                          :color "#6B7280"
+                          :color (get-color "#6B7280" "#9CA3AF")
                           :margin-bottom "4px"}}
             "Memory"]
            [:div {:style {:font-size "24px"
                           :font-weight "bold"
-                          :color "#8B5CF6"}}
+                          :color (get-color "#8B5CF6" "#A78BFA")}}
             memory " KB"]]]
          ;; Column details
          [:div
           [:h4 {:style {:font-size "14px"
                         :font-weight "600"
                         :margin-bottom "8px"
-                        :color "#374151"}}
+                        :color (get-color "#374151" "#D1D5DB")}}
            "Column Types:"]
           [:div {:style {:display "grid"
                          :grid-template-columns "repeat(2, 1fr)"
                          :gap "8px"}}
            (for [[col dtype] (:dtypes info)]
              ^{:key col}
-             [:div {:style {:background-color "#FFFFFF"
+             [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
                             :padding "8px 12px"
                             :border-radius "4px"
                             :display "flex"
                             :justify-content "space-between"
                             :font-size "13px"}}
-              [:span {:style {:color "#374151"}} col]
-              [:span {:style {:color "#6B7280"
+              [:span {:style {:color (get-color "#374151" "#D1D5DB")}} col]
+              [:span {:style {:color (get-color "#6B7280" "#9CA3AF")
                               :font-family "monospace"
                               :font-size "11px"}}
                dtype]])]]]))))
@@ -278,8 +293,8 @@
   []
   (when-let [preview @df-preview]
     (when (:success preview)
-      [:div {:style {:background-color "#FFFFFF"
-                     :border "1px solid #E5E7EB"
+      [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
+                     :border (str "1px solid " (get-color "#E5E7EB" "#4B5563"))
                      :border-radius "8px"
                      :padding "20px"
                      :margin-bottom "20px"
@@ -287,10 +302,11 @@
        [:h3 {:style {:font-size "18px"
                      :font-weight "bold"
                      :margin-bottom "12px"
-                     :color "#111827"}}
+                     :color (get-color "#111827" "#F3F4F6")}}
         "👁️ Data Preview (First 10 Rows)"]
        [:div {:dangerouslySetInnerHTML {:__html (:html preview)}}]
-       [:style "
+       [:style
+        (str "
          .dataframe-table {
            width: 100%;
            border-collapse: collapse;
@@ -300,24 +316,25 @@
          .dataframe-table th, .dataframe-table td {
            padding: 10px 12px;
            text-align: left;
-           border-bottom: 1px solid #E5E7EB;
+           border-bottom: 1px solid " (get-color "#E5E7EB" "#4B5563") ";
+           color: " (get-color "#111827" "#F3F4F6") ";
          }
          .dataframe-table th {
-           background-color: #F3F4F6;
+           background-color: " (get-color "#F3F4F6" "#374151") ";
            font-weight: 600;
-           color: #374151;
+           color: " (get-color "#374151" "#E5E7EB") ";
          }
          .dataframe-table tr:hover {
-           background-color: #F9FAFB;
+           background-color: " (get-color "#F9FAFB" "#2D3748") ";
          }
-       "]])))
+       ")]])))
 
 (defn dataframe-statistics
   []
   (when-let [stats @df-stats]
     (when (:success stats)
-      [:div {:style {:background-color "#FFFFFF"
-                     :border "1px solid #E5E7EB"
+      [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
+                     :border (str "1px solid " (get-color "#E5E7EB" "#4B5563"))
                      :border-radius "8px"
                      :padding "20px"
                      :margin-bottom "20px"
@@ -325,10 +342,11 @@
        [:h3 {:style {:font-size "18px"
                      :font-weight "bold"
                      :margin-bottom "12px"
-                     :color "#111827"}}
+                     :color (get-color "#111827" "#F3F4F6")}}
         "📈 Statistical Summary"]
        [:div {:dangerouslySetInnerHTML {:__html (:stats_html stats)}}]
-       [:style "
+       [:style
+        (str "
          .stats-table {
            width: 100%;
            border-collapse: collapse;
@@ -338,23 +356,24 @@
          .stats-table th, .stats-table td {
            padding: 10px 12px;
            text-align: left;
-           border-bottom: 1px solid #E5E7EB;
+           border-bottom: 1px solid " (get-color "#E5E7EB" "#4B5563") ";
+           color: " (get-color "#111827" "#F3F4F6") ";
          }
          .stats-table th {
-           background-color: #F3F4F6;
+           background-color: " (get-color "#F3F4F6" "#374151") ";
            font-weight: 600;
-           color: #374151;
+           color: " (get-color "#374151" "#E5E7EB") ";
          }
          .stats-table tr:hover {
-           background-color: #F9FAFB;
+           background-color: " (get-color "#F9FAFB" "#2D3748") ";
          }
-       "]])))
+       ")]])))
 
 (defn export-section
   []
   (when @df-info
-    [:div {:style {:background-color "#F0FDF4"
-                   :border "1px solid #BBF7D0"
+    [:div {:style {:background-color (get-color "#F0FDF4" "#064E3B")
+                   :border (str "1px solid " (get-color "#BBF7D0" "#10B981"))
                    :border-radius "8px"
                    :padding "16px"
                    :margin-bottom "20px"
@@ -364,15 +383,15 @@
      [:div
       [:h4 {:style {:font-size "16px"
                     :font-weight "600"
-                    :color "#166534"
+                    :color (get-color "#166534" "#6EE7B7")
                     :margin-bottom "4px"}}
        "💾 Export Data"]
       [:p {:style {:font-size "14px"
-                   :color "#15803D"
+                   :color (get-color "#15803D" "#86EFAC")
                    :margin "0"}}
        "Download the processed DataFrame as CSV"]]
      [:button {:style {:padding "10px 20px"
-                       :background-color "#10B981"
+                       :background-color (get-color "#10B981" "#059669")
                        :color "#FFFFFF"
                        :border "none"
                        :border-radius "6px"
@@ -385,18 +404,18 @@
 (defn error-display
   []
   (when @error-msg
-    [:div {:style {:background-color "#FEE2E2"
-                   :border "1px solid #FCA5A5"
+    [:div {:style {:background-color (get-color "#FEE2E2" "#7F1D1D")
+                   :border (str "1px solid " (get-color "#FCA5A5" "#EF4444"))
                    :border-radius "8px"
                    :padding "16px"
                    :margin-bottom "20px"}}
      [:h4 {:style {:font-size "16px"
                    :font-weight "600"
-                   :color "#991B1B"
+                   :color (get-color "#991B1B" "#FCA5A5")
                    :margin-bottom "8px"}}
       "⚠️ Error"]
      [:p {:style {:font-size "14px"
-                  :color "#DC2626"
+                  :color (get-color "#DC2626" "#FEE2E2")
                   :margin "0"}}
       @error-msg]]))
 
@@ -413,12 +432,12 @@
                     :gap "16px"}}
       [:div {:style {:width "48px"
                      :height "48px"
-                     :border "4px solid #E5E7EB"
-                     :border-top-color "#3B82F6"
+                     :border (str "4px solid " (get-color "#E5E7EB" "#4B5563"))
+                     :border-top-color (get-color "#3B82F6" "#60A5FA")
                      :border-radius "50%"
                      :animation "spin 1s linear infinite"}}]
       [:p {:style {:font-size "16px"
-                   :color "#6B7280"
+                   :color (get-color "#6B7280" "#9CA3AF")
                    :font-weight "500"}}
        "Analyzing data..."]
       [:style "@keyframes spin { to { transform: rotate(360deg); } }"]]]))
@@ -433,18 +452,19 @@
                  :margin-bottom "8px"
                  :background "linear-gradient(to right, #3B82F6, #8B5CF6)"
                  :-webkit-background-clip "text"
-                 :-webkit-text-fill-color "transparent"}}
+                 :-webkit-text-fill-color "transparent"
+                 :background-clip "text"}}
     "🐍 Interactive Data Analysis"]
-   [:p {:style {:color "#6B7280"
+   [:p {:style {:color (get-color "#6B7280" "#9CA3AF")
                 :margin-bottom "24px"
                 :font-size "16px"}}
     "Upload CSV data and analyze it with Pandas - all in your browser!"]
-   [:div {:style {:background-color "#EFF6FF"
-                  :border-left "4px solid #3B82F6"
+   [:div {:style {:background-color (get-color "#EFF6FF" "#1E3A8A")
+                  :border-left (str "4px solid " (get-color "#3B82F6" "#60A5FA"))
                   :padding "16px"
                   :margin-bottom "24px"}}
     [:p {:style {:font-size "14px"
-                 :color "#1E40AF"
+                 :color (get-color "#1E40AF" "#BFDBFE")
                  :margin "0"}}
      "💡 This demo shows how to upload CSV files, create Pandas DataFrames, "
      "and perform data analysis entirely in the browser using Pyodide."]]
@@ -466,8 +486,8 @@
    ;; Footer
    [:div {:style {:margin-top "32px"
                   :padding-top "24px"
-                  :border-top "1px solid #E5E7EB"
-                  :color "#6B7280"
+                  :border-top (str "1px solid " (get-color "#E5E7EB" "#4B5563"))
+                  :color (get-color "#6B7280" "#9CA3AF")
                   :font-size "14px"}}
     [:p "✨ " [:strong "Features:"]]
     [:ul {:style {:margin "8px 0"

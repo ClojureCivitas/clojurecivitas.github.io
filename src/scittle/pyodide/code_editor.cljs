@@ -8,6 +8,21 @@
 ;; Interactive Python Code Editor
 ;; ============================================================================
 
+;; ============================================================================
+;; Dark Mode Support
+;; ============================================================================
+
+(defn dark-mode?
+  "Check if dark mode is currently active by looking for 'quarto-dark' class on body"
+  []
+  (when-let [body (js/document.querySelector "body")]
+    (.contains (.-classList body) "quarto-dark")))
+
+(defn get-color
+  "Get appropriate color based on dark mode state"
+  [light-color dark-color]
+  (if (dark-mode?) dark-color light-color))
+
 (defonce code (r/atom "# Try some Python code!\nimport math\n\nradius = 5\narea = math.pi * radius ** 2\nprint(f'Circle area: {area:.2f}')"))
 
 (defonce output (r/atom ""))
@@ -40,14 +55,16 @@
                  :padding "24px"}}
    [:h2 {:style {:font-size "24px"
                  :font-weight "bold"
-                 :margin-bottom "16px"}}
+                 :margin-bottom "16px"
+                 :color (get-color "#111827" "#F3F4F6")}}
     "Python Code Editor 💻"]
 
-   [:div {:style {:background-color "#FEF3C7"
-                  :border-left "4px solid #F59E0B"
+   [:div {:style {:background-color (get-color "#FEF3C7" "#78350F")
+                  :border-left (str "4px solid " (get-color "#F59E0B" "#FCD34D"))
                   :padding "16px"
                   :margin-bottom "24px"}}
-    [:p {:style {:font-size "14px" :color "#374151"}}
+    [:p {:style {:font-size "14px"
+                 :color (get-color "#374151" "#FDE68A")}}
      "Write Python code below and click Run to execute it in your browser!"]]
 
    ;; Code editor
@@ -55,7 +72,8 @@
     [:label {:style {:display "block"
                      :font-size "14px"
                      :font-weight "600"
-                     :margin-bottom "8px"}}
+                     :margin-bottom "8px"
+                     :color (get-color "#374151" "#D1D5DB")}}
      "Python Code:"]
     [:textarea {:value @code
                 :on-change #(reset! code (.. % -target -value))
@@ -64,14 +82,18 @@
                         :padding "12px"
                         :font-family "monospace"
                         :font-size "14px"
-                        :border "2px solid #D1D5DB"
+                        :background-color (get-color "#FFFFFF" "#1F2937")
+                        :color (get-color "#111827" "#F3F4F6")
+                        :border (str "2px solid " (get-color "#D1D5DB" "#4B5563"))
                         :border-radius "6px"
                         :resize "vertical"}}]]
 
    ;; Run button
    [:button {:style {:width "100%"
                      :padding "12px 24px"
-                     :background-color (if @running? "#9CA3AF" "#10B981")
+                     :background-color (if @running?
+                                         (get-color "#9CA3AF" "#6B7280")
+                                         (get-color "#10B981" "#059669"))
                      :color "#FFFFFF"
                      :border "none"
                      :border-radius "6px"
@@ -91,13 +113,14 @@
     [:label {:style {:display "block"
                      :font-size "14px"
                      :font-weight "600"
-                     :margin-bottom "8px"}}
+                     :margin-bottom "8px"
+                     :color (get-color "#374151" "#D1D5DB")}}
      "Output:"]
-    [:pre {:style {:background-color "#F9FAFB"
-                   :color "#1F2937"
+    [:pre {:style {:background-color (get-color "#F9FAFB" "#1F2937")
+                   :color (get-color "#1F2937" "#F3F4F6")
                    :padding "16px"
                    :border-radius "6px"
-                   :border "2px solid #E5E7EB"
+                   :border (str "2px solid " (get-color "#E5E7EB" "#4B5563"))
                    :font-family "monospace"
                    :font-size "14px"
                    :min-height "120px"
