@@ -5,6 +5,21 @@
    [scittle.pyodide.pyodide-bridge :as pyodide]))
 
 ;; ============================================================================
+;; Dark Mode Helpers
+;; ============================================================================
+
+(defn dark-mode?
+  "Check if dark mode is currently active by looking for 'quarto-dark' class on body"
+  []
+  (when-let [body (js/document.querySelector "body")]
+    (.contains (.-classList body) "quarto-dark")))
+
+(defn get-color
+  "Get appropriate color based on dark mode state"
+  [light-color dark-color]
+  (if (dark-mode?) dark-color light-color))
+
+;; ============================================================================
 ;; Pandas DataFrame Analysis Demo
 ;; ============================================================================
 
@@ -198,20 +213,24 @@ print(df.to_html(index=False, border=0, classes='dataframe'))"})
    [:h2 {:style {:font-size "28px"
                  :font-weight "bold"
                  :margin-bottom "8px"
-                 :color "#111827"}}
+                 :color (get-color "#111827" "#F3F4F6")}}
     "🐼 DataFrame Analysis with Pandas"]
-   [:p {:style {:color "#6B7280"
+   [:p {:style {:color (get-color "#6B7280" "#9CA3AF")
                 :margin-bottom "24px"
                 :font-size "16px"}}
     "Analyze and manipulate data using Python's pandas library for powerful data science workflows in your browser!"]
    ;; Info banner
-   [:div {:style {:background-color (if @pandas-loaded? "#D1FAE5" "#DBEAFE")
+   [:div {:style {:background-color (if @pandas-loaded?
+                                      (get-color "#D1FAE5" "#064E3B")
+                                      (get-color "#DBEAFE" "#1E3A8A"))
                   :border-left (str "4px solid " (if @pandas-loaded? "#10B981" "#3B82F6"))
                   :padding "16px"
                   :margin-bottom "24px"
                   :border-radius "4px"}}
     [:p {:style {:font-size "14px"
-                 :color (if @pandas-loaded? "#065F46" "#1E40AF")
+                 :color (if @pandas-loaded?
+                          (get-color "#065F46" "#6EE7B7")
+                          (get-color "#1E40AF" "#93C5FD"))
                  :margin "0"}}
      (if @pandas-loaded?
        "✓ Pandas is loaded and ready!"
@@ -222,15 +241,15 @@ print(df.to_html(index=False, border=0, classes='dataframe'))"})
                      :font-size "14px"
                      :font-weight "600"
                      :margin-bottom "8px"
-                     :color "#374151"}}
+                     :color (get-color "#374151" "#D1D5DB")}}
      "Quick Examples:"]
     [:div {:style {:display "flex"
                    :gap "8px"
                    :flex-wrap "wrap"}}
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#E5E7EB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#6B7280"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -238,9 +257,9 @@ print(df.to_html(index=False, border=0, classes='dataframe'))"})
                :on-click #(load-example! :basic-dataframe)}
       "📋 Basic DataFrame"]
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#E5E7EB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#6B7280"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -248,9 +267,9 @@ print(df.to_html(index=False, border=0, classes='dataframe'))"})
                :on-click #(load-example! :statistics)}
       "📊 Statistics"]
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#E5E7EB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#6B7280"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -258,9 +277,9 @@ print(df.to_html(index=False, border=0, classes='dataframe'))"})
                :on-click #(load-example! :filtering)}
       "🔍 Filtering"]
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#E5E7EB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#6B7280"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -268,9 +287,9 @@ print(df.to_html(index=False, border=0, classes='dataframe'))"})
                :on-click #(load-example! :grouping)}
       "📈 Grouping"]
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#E5E7EB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#6B7280"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -283,7 +302,7 @@ print(df.to_html(index=False, border=0, classes='dataframe'))"})
                      :font-size "14px"
                      :font-weight "600"
                      :margin-bottom "8px"
-                     :color "#374151"}}
+                     :color (get-color "#374151" "#D1D5DB")}}
      "Python Code (Pandas):"]
     [:textarea {:value @code
                 :on-change #(reset! code (.. % -target -value))
@@ -292,11 +311,11 @@ print(df.to_html(index=False, border=0, classes='dataframe'))"})
                         :padding "12px"
                         :font-family "monospace"
                         :font-size "14px"
-                        :border "2px solid #D1D5DB"
+                        :border (str "2px solid " (get-color "#D1D5DB" "#4B5563"))
                         :border-radius "6px"
                         :resize "vertical"
-                        :background-color "#FFFFFF"
-                        :color "#111827"}}]]
+                        :background-color (get-color "#FFFFFF" "#1F2937")
+                        :color (get-color "#111827" "#F3F4F6")}}]]
    ;; Run button
    [:button {:style {:width "100%"
                      :padding "14px 24px"
@@ -320,8 +339,8 @@ print(df.to_html(index=False, border=0, classes='dataframe'))"})
       (not @pandas-loaded?) "Loading Pandas..."
       :else "🐼 Run Analysis")]
    ;; Output area
-   [:div {:style {:background-color "#FFFFFF"
-                  :border "2px solid #E5E7EB"
+   [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
+                  :border (str "2px solid " (get-color "#E5E7EB" "#4B5563"))
                   :border-radius "8px"
                   :padding "20px"
                   :min-height "400px"}}
@@ -329,12 +348,12 @@ print(df.to_html(index=False, border=0, classes='dataframe'))"})
                      :font-size "14px"
                      :font-weight "600"
                      :margin-bottom "12px"
-                     :color "#374151"}}
+                     :color (get-color "#374151" "#D1D5DB")}}
      "Analysis Results:"]
     (if @output-html
       [:div {:style {:overflow-x "auto"}}
-       ;; Add custom CSS for pandas tables
-       [:style "
+       ;; Add custom CSS for pandas tables with dark mode support
+       [:style (str "
 .dataframe {
   border-collapse: collapse;
   width: 100%;
@@ -343,32 +362,33 @@ print(df.to_html(index=False, border=0, classes='dataframe'))"})
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 .dataframe thead tr {
-  background-color: #F3F4F6;
+  background-color: " (get-color "#F3F4F6" "#374151") ";
   text-align: left;
   font-weight: 600;
-  color: #374151;
+  color: " (get-color "#374151" "#E5E7EB") ";
 }
 .dataframe th,
 .dataframe td {
   padding: 12px 15px;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid " (get-color "#E5E7EB" "#4B5563") ";
+  color: " (get-color "#111827" "#F3F4F6") ";
 }
 .dataframe tbody tr:hover {
-  background-color: #F9FAFB;
+  background-color: " (get-color "#F9FAFB" "#2D3748") ";
 }
 .dataframe tbody tr:last-of-type {
-  border-bottom: 2px solid #D1D5DB;
+  border-bottom: 2px solid " (get-color "#D1D5DB" "#6B7280") ";
 }
 h4 {
-  color: #374151;
+  color: " (get-color "#374151" "#D1D5DB") ";
   font-size: 16px;
   font-weight: 600;
   margin: 20px 0 10px 0;
-}"]
+}")]
        [:div {:dangerouslySetInnerHTML {:__html @output-html}}]]
       [:div {:style {:padding "40px"
                      :text-align "center"
-                     :color "#6B7280"
+                     :color (get-color "#6B7280" "#9CA3AF")
                      :font-size "14px"}}
        [:p {:style {:margin "0"}} @output-text]])]])
 

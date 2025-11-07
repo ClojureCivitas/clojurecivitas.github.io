@@ -9,6 +9,21 @@
 ;; Uses shared pyodide-bridge for Pyodide state
 ;; ============================================================================
 
+;; ============================================================================
+;; Dark Mode Support
+;; ============================================================================
+
+(defn dark-mode?
+  "Check if dark mode is currently active by looking for 'quarto-dark' class on body"
+  []
+  (when-let [body (js/document.querySelector "body")]
+    (.contains (.-classList body) "quarto-dark")))
+
+(defn get-color
+  "Get appropriate color based on dark mode state"
+  [light-color dark-color]
+  (if (dark-mode?) dark-color light-color))
+
 ;; Local state - only UI/output state, Pyodide state is in bridge
 (defonce code (r/atom "# Write your Python code here\nprint('Hello, World!')\n\n# Try some calculations\nresult = 2 + 2\nprint(f'2 + 2 = {result}')"))
 
@@ -134,7 +149,10 @@ sys.stderr = _output_capture
        :on-change #(reset! code (.. % -target -value))
        :disabled (not= status :ready)
        :placeholder "Write your Python code here..."
-       :style {:background-color (if (= status :ready) "#ffffff" "#f5f5f5")
+       :style {:background-color (if (= status :ready)
+                                   (get-color "#ffffff" "#1F2937")
+                                   (get-color "#f5f5f5" "#374151"))
+               :color (get-color "#111827" "#F3F4F6")
                :resize "vertical"}}]]))
 
 (defn output-display

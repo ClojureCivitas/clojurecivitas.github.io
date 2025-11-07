@@ -4,6 +4,21 @@
             [scittle.pyodide.pyodide-bridge :as pyodide]))
 
 ;; ============================================================================
+;; Dark Mode Helpers
+;; ============================================================================
+
+(defn dark-mode?
+  "Check if dark mode is currently active by looking for 'quarto-dark' class on body"
+  []
+  (when-let [body (js/document.querySelector "body")]
+    (.contains (.-classList body) "quarto-dark")))
+
+(defn get-color
+  "Get appropriate color based on dark mode state"
+  [light-color dark-color]
+  (if (dark-mode?) dark-color light-color))
+
+;; ============================================================================
 ;; Matplotlib Data Visualization Demo
 ;; ============================================================================
 
@@ -134,20 +149,24 @@ plt.axis('equal')"})
    [:h2 {:style {:font-size "28px"
                  :font-weight "bold"
                  :margin-bottom "8px"
-                 :color "#111827"}}
+                 :color (get-color "#111827" "#F3F4F6")}}
     "📊 Data Visualization with Matplotlib"]
-   [:p {:style {:color "#6B7280"
+   [:p {:style {:color (get-color "#6B7280" "#9CA3AF")
                 :margin-bottom "24px"
                 :font-size "16px"}}
     "Create beautiful charts and visualizations using Python's matplotlib library, running entirely in your browser!"]
    ;; Info banner
-   [:div {:style {:background-color (if @matplotlib-loaded? "#D1FAE5" "#DBEAFE")
+   [:div {:style {:background-color (if @matplotlib-loaded?
+                                      (get-color "#D1FAE5" "#064E3B")
+                                      (get-color "#DBEAFE" "#1E3A8A"))
                   :border-left (str "4px solid " (if @matplotlib-loaded? "#10B981" "#3B82F6"))
                   :padding "16px"
                   :margin-bottom "24px"
                   :border-radius "4px"}}
     [:p {:style {:font-size "14px"
-                 :color (if @matplotlib-loaded? "#065F46" "#1E40AF")
+                 :color (if @matplotlib-loaded?
+                          (get-color "#065F46" "#6EE7B7")
+                          (get-color "#1E40AF" "#93C5FD"))
                  :margin "0"}}
      (if @matplotlib-loaded?
        "✓ Matplotlib is loaded and ready!"
@@ -158,15 +177,15 @@ plt.axis('equal')"})
                      :font-size "14px"
                      :font-weight "600"
                      :margin-bottom "8px"
-                     :color "#374151"}}
+                     :color (get-color "#374151" "#D1D5DB")}}
      "Quick Examples:"]
     [:div {:style {:display "flex"
                    :gap "8px"
                    :flex-wrap "wrap"}}
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#E5E7EB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#6B7280"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -174,9 +193,9 @@ plt.axis('equal')"})
                :on-click #(load-example! :line-chart)}
       "📈 Line Chart"]
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#E5E7EB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#6B7280"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -184,9 +203,9 @@ plt.axis('equal')"})
                :on-click #(load-example! :bar-chart)}
       "📊 Bar Chart"]
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#E5E7EB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#6B7280"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -194,9 +213,9 @@ plt.axis('equal')"})
                :on-click #(load-example! :scatter-plot)}
       "⚫ Scatter Plot"]
      [:button {:style {:padding "8px 16px"
-                       :background-color "#F3F4F6"
-                       :color "#374151"
-                       :border "1px solid #D1D5DB"
+                       :background-color (get-color "#F3F4F6" "#374151")
+                       :color (get-color "#374151" "#E5E7EB")
+                       :border (str "1px solid " (get-color "#D1D5DB" "#6B7280"))
                        :border-radius "6px"
                        :font-size "14px"
                        :cursor "pointer"
@@ -209,7 +228,7 @@ plt.axis('equal')"})
                      :font-size "14px"
                      :font-weight "600"
                      :margin-bottom "8px"
-                     :color "#374151"}}
+                     :color (get-color "#374151" "#D1D5DB")}}
      "Python Code (Matplotlib):"]
     [:textarea {:value @code
                 :on-change #(reset! code (.. % -target -value))
@@ -218,11 +237,11 @@ plt.axis('equal')"})
                         :padding "12px"
                         :font-family "monospace"
                         :font-size "14px"
-                        :border "2px solid #D1D5DB"
+                        :border (str "2px solid " (get-color "#D1D5DB" "#4B5563"))
                         :border-radius "6px"
                         :resize "vertical"
-                        :background-color "#FFFFFF"
-                        :color "#111827"}}]]
+                        :background-color (get-color "#FFFFFF" "#1F2937")
+                        :color (get-color "#111827" "#F3F4F6")}}]]
    ;; Generate button
    [:button {:style {:width "100%"
                      :padding "14px 24px"
@@ -246,8 +265,8 @@ plt.axis('equal')"})
       (not @matplotlib-loaded?) "Loading Matplotlib..."
       :else "📊 Generate Chart")]
    ;; Output area
-   [:div {:style {:background-color "#FFFFFF"
-                  :border "2px solid #E5E7EB"
+   [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
+                  :border (str "2px solid " (get-color "#E5E7EB" "#4B5563"))
                   :border-radius "8px"
                   :padding "20px"
                   :min-height "400px"}}
@@ -255,7 +274,7 @@ plt.axis('equal')"})
                      :font-size "14px"
                      :font-weight "600"
                      :margin-bottom "12px"
-                     :color "#374151"}}
+                     :color (get-color "#374151" "#D1D5DB")}}
      "Visualization Output:"]
     (if @output-image
       [:div {:style {:text-align "center"}}
@@ -267,7 +286,7 @@ plt.axis('equal')"})
                       :box-shadow "0 2px 8px rgba(0,0,0,0.1)"}}]]
       [:div {:style {:padding "40px"
                      :text-align "center"
-                     :color "#6B7280"
+                     :color (get-color "#6B7280" "#9CA3AF")
                      :font-size "14px"}}
        [:p {:style {:margin "0"}} @output-text]])]])
 

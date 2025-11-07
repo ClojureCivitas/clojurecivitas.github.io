@@ -9,6 +9,21 @@
 ;; Uses shared pyodide-bridge for state management
 ;; ============================================================================
 
+;; ============================================================================
+;; Dark Mode Support
+;; ============================================================================
+
+(defn dark-mode?
+  "Check if dark mode is currently active by looking for 'quarto-dark' class on body"
+  []
+  (when-let [body (js/document.querySelector "body")]
+    (.contains (.-classList body) "quarto-dark")))
+
+(defn get-color
+  "Get appropriate color based on dark mode state"
+  [light-color dark-color]
+  (if (dark-mode?) dark-color light-color))
+
 ;; Local state (output only - Pyodide state is in bridge)
 (defonce output (r/atom "Click 'Initialize Pyodide' to start..."))
 
@@ -51,11 +66,16 @@
   []
   (let [status (pyodide/status)
         badge-style (case status
-                      :not-started {:background-color "#E5E7EB" :color "#374151"}
-                      :loading {:background-color "#DBEAFE" :color "#1E40AF"}
-                      :ready {:background-color "#D1FAE5" :color "#065F46"}
-                      :error {:background-color "#FEE2E2" :color "#991B1B"}
-                      {:background-color "#E5E7EB" :color "#374151"})
+                      :not-started {:background-color (get-color "#E5E7EB" "#4B5563")
+                                    :color (get-color "#374151" "#D1D5DB")}
+                      :loading {:background-color (get-color "#DBEAFE" "#1E3A8A")
+                                :color (get-color "#1E40AF" "#93C5FD")}
+                      :ready {:background-color (get-color "#D1FAE5" "#064E3B")
+                              :color (get-color "#065F46" "#6EE7B7")}
+                      :error {:background-color (get-color "#FEE2E2" "#7F1D1D")
+                              :color (get-color "#991B1B" "#FCA5A5")}
+                      {:background-color (get-color "#E5E7EB" "#4B5563")
+                       :color (get-color "#374151" "#D1D5DB")})
         badge-text (case status
                      :not-started "Not Started"
                      :loading "Loading..."
@@ -66,7 +86,10 @@
                    :align-items "center"
                    :gap "8px"
                    :margin-bottom "16px"}}
-     [:div {:style {:font-size "14px" :font-weight "600"}} "Pyodide Status:"]
+     [:div {:style {:font-size "14px"
+                    :font-weight "600"
+                    :color (get-color "#111827" "#F3F4F6")}}
+      "Pyodide Status:"]
      [:span {:style (merge {:padding "6px 12px"
                             :border-radius "9999px"
                             :font-size "12px"
@@ -127,7 +150,14 @@
 
 (defn output-display
   []
-  [:div.bg-gray-900.text-green-400.p-4.rounded-lg.font-mono.text-sm.min-h-24.whitespace-pre-wrap
+  [:div {:style {:background-color (get-color "#111827" "#0F172A")
+                 :color (get-color "#10B981" "#6EE7B7")
+                 :padding "16px"
+                 :border-radius "8px"
+                 :font-family "monospace"
+                 :font-size "14px"
+                 :min-height "96px"
+                 :white-space "pre-wrap"}}
    @output])
 
 (defn main-component
@@ -137,13 +167,15 @@
                  :padding "24px"}}
    [:h2 {:style {:font-size "24px"
                  :font-weight "bold"
-                 :margin-bottom "16px"}}
+                 :margin-bottom "16px"
+                 :color (get-color "#111827" "#F3F4F6")}}
     "Hello Python! 🐍"]
-   [:div {:style {:background-color "#EFF6FF"
-                  :border-left "4px solid #3B82F6"
+   [:div {:style {:background-color (get-color "#EFF6FF" "#1E3A8A")
+                  :border-left (str "4px solid " (get-color "#3B82F6" "#60A5FA"))
                   :padding "16px"
                   :margin-bottom "24px"}}
-    [:p {:style {:font-size "14px" :color "#374151"}}
+    [:p {:style {:font-size "14px"
+                 :color (get-color "#374151" "#BFDBFE")}}
      "This demo shows the simplest possible Pyodide integration. "
      "Click the button below to load the Python interpreter in your browser, "
      "then try the example buttons!"]]
@@ -168,7 +200,9 @@
      [example-buttons])
    [output-display]
    (when (= (pyodide/status) :ready)
-     [:div {:style {:margin-top "16px" :font-size "12px" :color "#6B7280"}}
+     [:div {:style {:margin-top "16px"
+                    :font-size "12px"
+                    :color (get-color "#6B7280" "#9CA3AF")}}
       [:p "✓ Pyodide is running entirely in your browser"]
       [:p "✓ No server required"]
       [:p "✓ Full Python 3.11 interpreter"]])])

@@ -9,6 +9,21 @@
 ;; Moving averages, trends, seasonality analysis
 ;; ============================================================================
 
+;; ============================================================================
+;; Dark Mode Support
+;; ============================================================================
+
+(defn dark-mode?
+  "Check if dark mode is currently active by looking for 'quarto-dark' class on body"
+  []
+  (when-let [body (js/document.querySelector "body")]
+    (.contains (.-classList body) "quarto-dark")))
+
+(defn get-color
+  "Get appropriate color based on dark mode state"
+  [light-color dark-color]
+  (if (dark-mode?) dark-color light-color))
+
 ;; Sample time series data
 (def sample-stock-data
   "Date,Price,Volume
@@ -348,23 +363,29 @@ output
 
 (defn dataset-selector
   []
-  [:div {:style {:background-color "#FFFFFF"
-                 :border "1px solid #E5E7EB"
+  [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
+                 :border (str "1px solid " (get-color "#E5E7EB" "#4B5563"))
                  :border-radius "8px"
                  :padding "20px"
                  :margin-bottom "20px"}}
    [:h3 {:style {:font-size "18px"
                  :font-weight "bold"
                  :margin-bottom "12px"
-                 :color "#111827"}}
+                 :color (get-color "#111827" "#F3F4F6")}}
     "📊 Select Dataset"]
    [:div {:style {:display "grid"
                   :grid-template-columns "1fr 1fr"
                   :gap "12px"}}
     [:button {:style {:padding "16px"
-                      :background-color (if (= @current-dataset :stock) "#3B82F6" "#FFFFFF")
-                      :color (if (= @current-dataset :stock) "#FFFFFF" "#374151")
-                      :border (str "2px solid " (if (= @current-dataset :stock) "#3B82F6" "#D1D5DB"))
+                      :background-color (if (= @current-dataset :stock)
+                                          (get-color "#3B82F6" "#2563EB")
+                                          (get-color "#FFFFFF" "#1F2937"))
+                      :color (if (= @current-dataset :stock)
+                               "#FFFFFF"
+                               (get-color "#374151" "#D1D5DB"))
+                      :border (str "2px solid " (if (= @current-dataset :stock)
+                                                  (get-color "#3B82F6" "#2563EB")
+                                                  (get-color "#D1D5DB" "#4B5563")))
                       :border-radius "8px"
                       :font-weight "600"
                       :cursor "pointer"
@@ -381,9 +402,15 @@ output
       "Price, volume, moving averages"]]
 
     [:button {:style {:padding "16px"
-                      :background-color (if (= @current-dataset :sensor) "#10B981" "#FFFFFF")
-                      :color (if (= @current-dataset :sensor) "#FFFFFF" "#374151")
-                      :border (str "2px solid " (if (= @current-dataset :sensor) "#10B981" "#D1D5DB"))
+                      :background-color (if (= @current-dataset :sensor)
+                                          (get-color "#10B981" "#059669")
+                                          (get-color "#FFFFFF" "#1F2937"))
+                      :color (if (= @current-dataset :sensor)
+                               "#FFFFFF"
+                               (get-color "#374151" "#D1D5DB"))
+                      :border (str "2px solid " (if (= @current-dataset :sensor)
+                                                  (get-color "#10B981" "#059669")
+                                                  (get-color "#D1D5DB" "#4B5563")))
                       :border-radius "8px"
                       :font-weight "600"
                       :cursor "pointer"
@@ -405,15 +432,15 @@ output
     [:div {:style {:space-y "24px"}}
      (for [[idx plot] (map-indexed vector @plots)]
        ^{:key idx}
-       [:div {:style {:background-color "#FFFFFF"
-                      :border "1px solid #E5E7EB"
+       [:div {:style {:background-color (get-color "#FFFFFF" "#1F2937")
+                      :border (str "1px solid " (get-color "#E5E7EB" "#4B5563"))
                       :border-radius "8px"
                       :padding "20px"
                       :margin-bottom "20px"}}
         [:h3 {:style {:font-size "18px"
                       :font-weight "bold"
                       :margin-bottom "12px"
-                      :color "#111827"}}
+                      :color (get-color "#111827" "#F3F4F6")}}
          (:title plot)]
         [:img {:src (str "data:image/png;base64," (:data plot))
                :style {:max-width "100%"
@@ -435,12 +462,12 @@ output
                     :gap "16px"}}
       [:div {:style {:width "48px"
                      :height "48px"
-                     :border "4px solid #E5E7EB"
-                     :border-top-color "#3B82F6"
+                     :border (str "4px solid " (get-color "#E5E7EB" "#4B5563"))
+                     :border-top-color (get-color "#3B82F6" "#60A5FA")
                      :border-radius "50%"
                      :animation "spin 1s linear infinite"}}]
       [:p {:style {:font-size "16px"
-                   :color "#6B7280"
+                   :color (get-color "#6B7280" "#9CA3AF")
                    :font-weight "500"}}
        "Analyzing time series data..."]
       [:style "@keyframes spin { to { transform: rotate(360deg); } }"]]]))
@@ -448,18 +475,18 @@ output
 (defn error-display
   []
   (when @error-msg
-    [:div {:style {:background-color "#FEE2E2"
-                   :border "1px solid #FCA5A5"
+    [:div {:style {:background-color (get-color "#FEE2E2" "#7F1D1D")
+                   :border (str "1px solid " (get-color "#FCA5A5" "#EF4444"))
                    :border-radius "8px"
                    :padding "16px"
                    :margin-bottom "20px"}}
      [:h4 {:style {:font-size "16px"
                    :font-weight "600"
-                   :color "#991B1B"
+                   :color (get-color "#991B1B" "#FCA5A5")
                    :margin-bottom "8px"}}
       "⚠️ Error"]
      [:p {:style {:font-size "14px"
-                  :color "#DC2626"
+                  :color (get-color "#DC2626" "#FEE2E2")
                   :margin "0"}}
       @error-msg]]))
 
@@ -473,18 +500,19 @@ output
                  :margin-bottom "8px"
                  :background "linear-gradient(to right, #3B82F6, #10B981)"
                  :-webkit-background-clip "text"
-                 :-webkit-text-fill-color "transparent"}}
+                 :-webkit-text-fill-color "transparent"
+                 :background-clip "text"}}
     "📈 Time Series Analysis"]
-   [:p {:style {:color "#6B7280"
+   [:p {:style {:color (get-color "#6B7280" "#9CA3AF")
                 :margin-bottom "24px"
                 :font-size "16px"}}
     "Analyze temporal patterns with moving averages, trends, and volatility"]
-   [:div {:style {:background-color "#EFF6FF"
-                  :border-left "4px solid #3B82F6"
+   [:div {:style {:background-color (get-color "#EFF6FF" "#1E3A8A")
+                  :border-left (str "4px solid " (get-color "#3B82F6" "#60A5FA"))
                   :padding "16px"
                   :margin-bottom "24px"}}
     [:p {:style {:font-size "14px"
-                 :color "#1E40AF"
+                 :color (get-color "#1E40AF" "#BFDBFE")
                  :margin "0"}}
      "💡 Explore how time series data reveals patterns, trends, and relationships. "
      "This demo uses Pandas for data manipulation and Matplotlib for visualization."]]
@@ -497,8 +525,8 @@ output
    (when (seq @plots)
      [:div {:style {:margin-top "32px"
                     :padding-top "24px"
-                    :border-top "1px solid #E5E7EB"
-                    :color "#6B7280"
+                    :border-top (str "1px solid " (get-color "#E5E7EB" "#4B5563"))
+                    :color (get-color "#6B7280" "#9CA3AF")
                     :font-size "14px"}}
       [:p "✨ " [:strong "Time Series Techniques:"]]
       [:ul {:style {:margin "8px 0"
