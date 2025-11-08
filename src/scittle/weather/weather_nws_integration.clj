@@ -6,6 +6,7 @@
                   :type :post
                   :date "2025-11-07"
                   :category :libs
+                  :image "weather.png"
                   :tags [:scittle
                          :clojurescript
                          :reagent
