@@ -6,6 +6,52 @@
             [clojure.string :as str]))
 
 ;; ============================================================================
+;; Theme Styles
+;; ============================================================================
+
+(defn theme-styles
+  "CSS for light and dark mode support using Quarto's data-bs-theme attribute"
+  []
+  [:style "
+    /* Light mode (default) */
+    [data-bs-theme='light'] {
+      --card-bg: #ffffff;
+      --card-secondary-bg: #f9fafb;
+      --input-bg: #ffffff;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-tertiary: #9ca3af;
+      --border-color: #e5e7eb;
+      --border-color-dark: #d1d5db;
+      --button-bg: #f3f4f6;
+      --button-hover: #e5e7eb;
+      --button-text: #374151;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark mode */
+    [data-bs-theme='dark'] {
+      --card-bg: #1f2937;
+      --card-secondary-bg: #111827;
+      --input-bg: #111827;
+      --text-primary: #f3f4f6;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
+      --border-color: #374151;
+      --border-color-dark: #4b5563;
+      --button-bg: #374151;
+      --button-hover: #4b5563;
+      --button-text: #f3f4f6;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Hover states - applied universally */
+    button:not(.btn-primary):hover {
+      background: var(--button-hover) !important;
+    }
+  "])
+
+;; ============================================================================
 ;; API Functions (Inline from weather_api.cljs)
 ;; ============================================================================
 
@@ -53,12 +99,14 @@
 ;; Temperature Conversion Utilities
 ;; ============================================================================
 
-(defn celsius-to-fahrenheit [c]
+(defn celsius-to-fahrenheit
   "Convert Celsius to Fahrenheit"
+  [c]
   (when c (+ (* c 1.8) 32)))
 
-(defn celsius-to-kelvin [c]
+(defn celsius-to-kelvin
   "Convert Celsius to Kelvin"
+  [c]
   (when c (+ c 273.15)))
 
 (defn format-temp
@@ -84,12 +132,14 @@
           index (mod (Math/round (/ degrees 22.5)) 16)]
       (nth directions index))))
 
-(defn meters-to-miles [m]
+(defn meters-to-miles
   "Convert meters to miles"
+  [m]
   (when m (* m 0.000621371)))
 
-(defn mps-to-mph [mps]
+(defn mps-to-mph
   "Convert meters per second to miles per hour"
+  [mps]
   (when mps (* mps 2.237)))
 
 ;; ============================================================================
@@ -103,12 +153,13 @@
    :font-family "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"})
 
 (def card-style
-  {:background "#ffffff"
-   :border "1px solid #e0e0e0"
+  {:background "var(--card-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"
+   :border "1px solid var(--border-color, #e5e7eb)"
    :border-radius "12px"
    :padding "24px"
    :margin-bottom "20px"
-   :box-shadow "0 2px 8px rgba(0,0,0,0.1)"})
+   :box-shadow "0 2px 8px var(--shadow-color, rgba(0,0,0,0.1))"})
 
 (def header-style
   {:text-align "center"
@@ -117,12 +168,12 @@
 (def title-style
   {:font-size "28px"
    :font-weight "600"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin "0 0 10px 0"})
 
 (def subtitle-style
   {:font-size "14px"
-   :color "#666"
+   :color "var(--text-tertiary, #9ca3af)"
    :margin 0})
 
 (def input-group-style
@@ -133,11 +184,14 @@
 
 (def input-style
   {:padding "10px 15px"
-   :border "1px solid #ddd"
+   :background "var(--input-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
    :font-size "14px"
    :flex "1"
-   :min-width "120px"})
+   :min-width "120px"
+   :box-shadow "inset 0 1px 2px var(--shadow-color, rgba(0,0,0,0.05))"})
 
 (def button-style
   {:padding "10px 20px"
@@ -161,12 +215,15 @@
 
 (def quick-button-style
   {:padding "8px 16px"
-   :background "#f3f4f6"
-   :border "1px solid #e5e7eb"
+   :background "var(--button-bg, #f3f4f6)"
+   :color "var(--button-text, #374151)"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
    :cursor "pointer"
    :font-size "13px"
-   :transition "all 0.2s"})
+   :font-weight "500"
+   :transition "all 0.2s"
+   :box-shadow "0 1px 2px var(--shadow-color, rgba(0,0,0,0.1))"})
 
 (def temp-display-style
   {:text-align "center"
@@ -176,13 +233,13 @@
 (def large-temp-style
   {:font-size "72px"
    :font-weight "300"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin "0"
    :line-height "1"})
 
 (def condition-text-style
   {:font-size "20px"
-   :color "#4b5563"
+   :color "var(--text-secondary, #6b7280)"
    :margin "10px 0 20px 0"})
 
 (def unit-toggle-style
@@ -193,9 +250,10 @@
 
 (def unit-button-style
   {:padding "6px 16px"
-   :border "1px solid #ddd"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
-   :background "#fff"
+   :background "var(--button-bg, #f3f4f6)"
+   :color "var(--button-text, #374151)"
    :cursor "pointer"
    :font-size "14px"
    :transition "all 0.2s"})
@@ -214,13 +272,13 @@
 
 (def metric-card-style
   {:padding "15px"
-   :background "#f9fafb"
+   :background "var(--card-secondary-bg, #f9fafb)"
    :border-radius "8px"
-   :border "1px solid #e5e7eb"})
+   :border "1px solid var(--border-color, #e5e7eb)"})
 
 (def metric-label-style
   {:font-size "13px"
-   :color "#6b7280"
+   :color "#9ca3af"
    :margin "0 0 5px 0"
    :font-weight "500"
    :text-transform "uppercase"
@@ -228,7 +286,7 @@
 
 (def metric-value-style
   {:font-size "24px"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin "0"
    :font-weight "500"})
 
@@ -237,13 +295,13 @@
    :padding-top "20px"
    :border-top "1px solid #e0e0e0"
    :font-size "13px"
-   :color "#6b7280"
+   :color "#9ca3af"
    :text-align "center"})
 
 (def loading-style
   {:text-align "center"
    :padding "40px"
-   :color "#6b7280"})
+   :color "#9ca3af"})
 
 (def error-style
   {:background "#fef2f2"
@@ -279,7 +337,8 @@
   [:div {:style error-style}
    [:strong "Error: "] message])
 
-(defn unit-toggle-buttons [{:keys [current-unit on-change]}]
+(defn unit-toggle-buttons
+  [{:keys [current-unit on-change]}]
   [:div {:style unit-toggle-style}
    (for [unit ["F" "C" "K"]]
      ^{:key unit}
@@ -290,12 +349,14 @@
        :on-click #(on-change unit)}
       unit])])
 
-(defn metric-card [{:keys [label value]}]
+(defn metric-card
+  [{:keys [label value]}]
   [:div {:style metric-card-style}
    [:div {:style metric-label-style} label]
    [:div {:style metric-value-style} (or value "—")]])
 
-(defn temperature-display [{:keys [temp-c unit condition]}]
+(defn temperature-display
+  [{:keys [temp-c unit condition]}]
   [:div {:style temp-display-style}
    [:div {:style large-temp-style}
     (format-temp temp-c unit)]
@@ -351,7 +412,8 @@
         {:label "Wind Chill"
          :value (format-temp wind-chill-c unit)}])]))
 
-(defn station-info [{:keys [observations]}]
+(defn station-info
+  [{:keys [observations]}]
   (let [props (:properties observations)
         station (:station props)
         timestamp (:timestamp props)
@@ -362,7 +424,8 @@
       (when timestamp
         (.toLocaleString (js/Date. timestamp)))]]))
 
-(defn weather-display [{:keys [observations unit on-unit-change]}]
+(defn weather-display
+  [{:keys [observations unit on-unit-change]}]
   (let [props (:properties observations)
         temp-c (:value (:temperature props))
         condition (:textDescription props)]
@@ -383,7 +446,12 @@
      [station-info
       {:observations observations}]]))
 
-(defn location-input [{:keys [lat lon on-lat-change on-lon-change on-fetch]}]
+(defn location-input
+  [{:keys [lat
+           lon
+           on-lat-change
+           on-lon-change
+           on-fetch]}]
   [:div
    [:div {:style input-group-style}
     [:input {:type "number"
@@ -404,15 +472,14 @@
               :on-mouse-out #(set! (.. % -target -style -background) "#3b82f6")}
      "Get Conditions"]]])
 
-(defn quick-city-buttons [{:keys [cities on-select]}]
+(defn quick-city-buttons
+  [{:keys [cities on-select]}]
   [:div {:style quick-buttons-style}
    (for [city cities]
      ^{:key (:name city)}
      [:button
       {:style quick-button-style
-       :on-click #(on-select city)
-       :on-mouse-over #(set! (.. % -target -style -background) "#e5e7eb")
-       :on-mouse-out #(set! (.. % -target -style -background) "#f3f4f6")}
+       :on-click #(on-select city)}
       (:name city)])])
 
 ;; ============================================================================
@@ -460,31 +527,33 @@
           (fetch-conditions))]
 
     (fn []
-      [:div {:style container-style}
-       [:div {:style header-style}
-        [:h1 {:style title-style} "☀️ Current Weather Conditions"]
-        [:p {:style subtitle-style}
-         "Detailed weather metrics from NOAA National Weather Service"]]
+      [:div
+       [theme-styles]
+       [:div {:style container-style}
+        [:div {:style header-style}
+         [:h1 {:style title-style} "☀️ Current Weather Conditions"]
+         [:p {:style subtitle-style}
+          "Detailed weather metrics from NOAA National Weather Service"]]
 
-       [:div {:style card-style}
-        [location-input
-         {:lat @lat
-          :lon @lon
-          :on-lat-change #(reset! lat %)
-          :on-lon-change #(reset! lon %)
-          :on-fetch fetch-conditions}]
+        [:div {:style card-style}
+         [location-input
+          {:lat @lat
+           :lon @lon
+           :on-lat-change #(reset! lat %)
+           :on-lon-change #(reset! lon %)
+           :on-fetch fetch-conditions}]
 
-        [quick-city-buttons
-         {:cities quick-cities
-          :on-select select-city}]]
+         [quick-city-buttons
+          {:cities quick-cities
+           :on-select select-city}]]
 
-       (cond
-         @loading? [loading-spinner]
-         @error [error-message {:message @error}]
-         @observations [weather-display
-                        {:observations @observations
-                         :unit @unit
-                         :on-unit-change #(reset! unit %)}])])))
+        (cond
+          @loading? [loading-spinner]
+          @error [error-message {:message @error}]
+          @observations [weather-display
+                         {:observations @observations
+                          :unit @unit
+                          :on-unit-change #(reset! unit %)}])]])))
 
 ;; ============================================================================
 ;; Mount

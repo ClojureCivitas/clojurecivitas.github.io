@@ -47,6 +47,7 @@
 ;; ### Free and Accessible
 
 ;; Most weather APIs require:
+;;
 ;; - Signing up for an account
 ;; - Managing API keys
 ;; - Dealing with rate limits
@@ -107,6 +108,7 @@
 ;; Use the returned URLs to fetch the specific weather data you need: forecasts, hourly predictions, current conditions, etc.
 
 ;; This design is smart because:
+;;
 ;; - Forecasts are generated for grid points, not exact coordinates
 ;; - It allows the API to scale efficiently
 ;; - You get all relevant endpoints in one initial request
@@ -150,6 +152,7 @@
 ;; - **Your browser** - That's it!
 
 ;; All demos will be embedded right in this article. You can:
+;;
 ;; - Run them immediately
 ;; - View the source code
 ;; - Copy and adapt for your own projects
@@ -395,11 +398,11 @@
     A --> C[Severe - Orange]
     A --> D[Moderate - Yellow]
     A --> E[Minor - Green]
-    
+
     F[Urgency] --> G[Immediate - Red]
     F --> H[Expected - Orange]
     F --> I[Future - Blue]
-    
+
     J[Certainty] --> K[Observed - Green]
     J --> L[Likely - Blue]
     J --> M[Possible - Purple]")

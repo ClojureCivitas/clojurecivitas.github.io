@@ -34,6 +34,52 @@
 ;; Severity Utilities
 ;; ============================================================================
 
+;; ============================================================================
+;; Theme Styles
+;; ============================================================================
+
+(defn theme-styles
+  "CSS for light and dark mode support using Quarto's data-bs-theme attribute"
+  []
+  [:style "
+    /* Light mode (default) */
+    [data-bs-theme='light'] {
+      --card-bg: #ffffff;
+      --card-secondary-bg: #f9fafb;
+      --input-bg: #ffffff;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-tertiary: #9ca3af;
+      --border-color: #e5e7eb;
+      --border-color-dark: #d1d5db;
+      --button-bg: #f3f4f6;
+      --button-hover: #e5e7eb;
+      --button-text: #374151;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark mode */
+    [data-bs-theme='dark'] {
+      --card-bg: #1f2937;
+      --card-secondary-bg: #111827;
+      --input-bg: #111827;
+      --text-primary: #f3f4f6;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
+      --border-color: #374151;
+      --border-color-dark: #4b5563;
+      --button-bg: #374151;
+      --button-hover: #4b5563;
+      --button-text: #f3f4f6;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Hover states - applied universally */
+    button:not(.btn-primary):hover {
+      background: var(--button-hover) !important;
+    }
+  "])
+
 (defn get-severity-color
   "Map severity level to color."
   [severity]
@@ -104,12 +150,13 @@
    :font-family "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"})
 
 (def card-style
-  {:background "#ffffff"
-   :border "1px solid #e0e0e0"
+  {:background "var(--card-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"
+   :border "1px solid var(--border-color, #e5e7eb)"
    :border-radius "12px"
    :padding "24px"
    :margin-bottom "20px"
-   :box-shadow "0 2px 8px rgba(0,0,0,0.1)"})
+   :box-shadow "0 2px 8px var(--shadow-color, rgba(0,0,0,0.1))"})
 
 (def header-style
   {:text-align "center"
@@ -118,12 +165,12 @@
 (def title-style
   {:font-size "28px"
    :font-weight "600"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin "0 0 10px 0"})
 
 (def subtitle-style
   {:font-size "14px"
-   :color "#666"
+   :color "var(--text-tertiary, #9ca3af)"
    :margin 0})
 
 (def input-group-style
@@ -134,7 +181,9 @@
 
 (def input-style
   {:padding "10px 15px"
-   :border "1px solid #ddd"
+   :background "var(--input-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
    :font-size "14px"
    :flex "1"
@@ -159,8 +208,9 @@
 
 (def quick-button-style
   {:padding "8px 16px"
-   :background "#f3f4f6"
-   :border "1px solid #e5e7eb"
+   :background "var(--button-bg, #f3f4f6)"
+   :color "var(--button-text, #374151)"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
    :cursor "pointer"
    :font-size "13px"
@@ -172,11 +222,12 @@
    :gap "15px"})
 
 (defn alert-card-style [severity-color]
-  {:background "#ffffff"
+  {:background "var(--card-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"
    :border-left (str "4px solid " severity-color)
    :border-radius "8px"
    :padding "20px"
-   :box-shadow "0 2px 6px rgba(0,0,0,0.1)"
+   :box-shadow "0 2px 6px var(--shadow-color, rgba(0,0,0,0.1))"
    :transition "all 0.2s"})
 
 (def alert-header-style
@@ -192,7 +243,7 @@
 (def alert-event-style
   {:font-size "20px"
    :font-weight "600"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin "0 0 8px 0"
    :display "flex"
    :align-items "center"
@@ -200,7 +251,7 @@
 
 (def alert-headline-style
   {:font-size "14px"
-   :color "#4b5563"
+   :color "var(--text-secondary, #6b7280)"
    :margin "0 0 12px 0"
    :line-height "1.4"})
 
@@ -222,12 +273,12 @@
 
 (def expand-button-style
   {:background "transparent"
-   :border "1px solid #d1d5db"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
    :padding "8px 16px"
    :cursor "pointer"
    :font-size "13px"
-   :color "#4b5563"
+   :color "var(--text-secondary, #6b7280)"
    :transition "all 0.2s"
    :display "flex"
    :align-items "center"
@@ -236,11 +287,11 @@
 (def expanded-details-style
   {:margin-top "15px"
    :padding-top "15px"
-   :border-top "1px solid #e5e7eb"})
+   :border-top "1px solid var(--border-color, #e5e7eb)"})
 
 (def description-style
   {:font-size "14px"
-   :color "#374151"
+   :color "var(--text-secondary, #6b7280)"
    :line-height "1.6"
    :margin "0 0 15px 0"
    :white-space "pre-wrap"})
@@ -251,21 +302,22 @@
    :gap "10px"
    :margin-top "15px"
    :padding "12px"
-   :background "#f9fafb"
+   :background "var(--card-secondary-bg, #f9fafb)"
+   :border "1px solid var(--border-color, #e5e7eb)"
    :border-radius "6px"})
 
 (def time-item-style
   {:font-size "13px"
-   :color "#6b7280"})
+   :color "var(--text-secondary, #6b7280)"})
 
 (def time-label-style
   {:font-weight "600"
-   :color "#374151"})
+   :color "var(--text-primary, #1f2937)"})
 
 (def no-alerts-style
   {:text-align "center"
    :padding "40px"
-   :color "#6b7280"})
+   :color "var(--text-tertiary, #9ca3af)"})
 
 (def no-alerts-icon-style
   {:font-size "64px"
@@ -274,17 +326,17 @@
 (def no-alerts-text-style
   {:font-size "18px"
    :font-weight "500"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin "0 0 8px 0"})
 
 (def no-alerts-subtext-style
   {:font-size "14px"
-   :color "#6b7280"})
+   :color "var(--text-tertiary, #9ca3af)"})
 
 (def loading-style
   {:text-align "center"
    :padding "40px"
-   :color "#6b7280"})
+   :color "var(--text-tertiary, #9ca3af)"})
 
 (def error-style
   {:background "#fef2f2"
@@ -297,7 +349,7 @@
 (def location-display-style
   {:font-size "18px"
    :font-weight "500"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin-bottom "20px"})
 
 ;; ============================================================================
@@ -356,8 +408,8 @@
      [:button
       {:style quick-button-style
        :on-click #(on-select city)
-       :on-mouse-over #(set! (.. % -target -style -background) "#e5e7eb")
-       :on-mouse-out #(set! (.. % -target -style -background) "#f3f4f6")}
+       :on-mouse-over #(set! (.. % -target -style -background) "#4b5563")
+       :on-mouse-out #(set! (.. % -target -style -background) "#374151")}
       (:name city)])])
 
 (defn alert-card-component [{:keys [alert]}]
@@ -389,7 +441,7 @@
        [:button
         {:style expand-button-style
          :on-click #(swap! expanded? not)
-         :on-mouse-over #(set! (.. % -target -style -background) "#f3f4f6")
+         :on-mouse-over #(set! (.. % -target -style -background) "#374151")
          :on-mouse-out #(set! (.. % -target -style -background) "transparent")}
         [:span (if @expanded? "▼" "▶")]
         [:span (if @expanded? "Hide Details" "View Details")]]

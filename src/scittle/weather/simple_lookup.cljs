@@ -19,6 +19,52 @@
 ;; Inline API Functions (simplified for this demo)
 ;; ============================================================================
 
+;; ============================================================================
+;; Theme Styles
+;; ============================================================================
+
+(defn theme-styles
+  "CSS for light and dark mode support using Quarto's data-bs-theme attribute"
+  []
+  [:style "
+    /* Light mode (default) */
+    [data-bs-theme='light'] {
+      --card-bg: #ffffff;
+      --card-secondary-bg: #f9fafb;
+      --input-bg: #ffffff;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-tertiary: #9ca3af;
+      --border-color: #e5e7eb;
+      --border-color-dark: #d1d5db;
+      --button-bg: #f3f4f6;
+      --button-hover: #e5e7eb;
+      --button-text: #374151;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark mode */
+    [data-bs-theme='dark'] {
+      --card-bg: #1f2937;
+      --card-secondary-bg: #111827;
+      --input-bg: #111827;
+      --text-primary: #f3f4f6;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
+      --border-color: #374151;
+      --border-color-dark: #4b5563;
+      --button-bg: #374151;
+      --button-hover: #4b5563;
+      --button-text: #f3f4f6;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Hover states - applied universally */
+    button:not(.btn-primary):hover {
+      background: var(--button-hover) !important;
+    }
+  "])
+
 (defn fetch-json
   "Fetch JSON from URL with error handling."
   [{:keys [url on-success on-error]}]
@@ -68,20 +114,23 @@
 ;; ============================================================================
 
 (def card-style
-  {:background "#ffffff"
-   :border "1px solid #e0e0e0"
+  {:background "var(--card-bg, #ffffff)"
+   :border "1px solid var(--border-color, #e5e7eb)"
    :border-radius "8px"
    :padding "20px"
-   :box-shadow "0 2px 4px rgba(0,0,0,0.1)"
+   :box-shadow "0 2px 4px var(--shadow-color, rgba(0,0,0,0.1))"
    :margin-bottom "20px"})
 
 (def input-style
   {:width "100%"
    :padding "10px"
-   :border "1px solid #ddd"
+   :background "var(--input-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "4px"
    :font-size "14px"
-   :margin-bottom "10px"})
+   :margin-bottom "10px"
+   :box-shadow "inset 0 1px 2px var(--shadow-color, rgba(0,0,0,0.1))"})
 
 (def button-style
   {:background "#2196f3"
@@ -91,17 +140,21 @@
    :border-radius "4px"
    :cursor "pointer"
    :font-size "16px"
+   :font-weight "500"
    :width "100%"
-   :transition "background 0.3s"})
+   :transition "background 0.3s, transform 0.1s"
+   :box-shadow "0 2px 4px rgba(0,0,0,0.1)"})
 
 (def button-hover-style
   (merge button-style
-         {:background "#1976d2"}))
+         {:background "#1976d2"
+          :box-shadow "0 4px 8px rgba(0,0,0,0.15)"}))
 
 (def button-disabled-style
   (merge button-style
          {:background "#ccc"
-          :cursor "not-allowed"}))
+          :cursor "not-allowed"
+          :box-shadow "none"}))
 
 ;; ============================================================================
 ;; Components
@@ -121,7 +174,7 @@
                   :animation "spin 1s linear infinite"}}]
    [:style "@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }"]
    [:p {:style {:margin-top "15px"
-                :color "#666"}}
+                :color "var(--text-tertiary, #9ca3af)"}}
     "Fetching weather data..."]])
 
 (defn error-display
@@ -133,7 +186,7 @@
    [:h4 {:style {:margin-top 0
                  :color "#c62828"}}
     "⚠️ Error"]
-   [:p {:style {:color "#666"}}
+   [:p {:style {:color "var(--text-tertiary, #9ca3af)"}}
     error]
    (when on-retry
      [:button {:on-click on-retry
@@ -158,20 +211,20 @@
                   :margin "30px 0"}}
     [:div {:style {:font-size "48px"
                    :font-weight "bold"
-                   :color "#333"}}
+                   :color "var(--text-primary, #1f2937)"}}
      (:temperature data) "°" (:temperatureUnit data)]
     [:div {:style {:font-size "18px"
-                   :color "#666"
+                   :color "var(--text-tertiary, #9ca3af)"
                    :margin-top "10px"}}
      (:shortForecast data)]]
 
-   [:div {:style {:background "#f5f5f5"
+   [:div {:style {:background "var(--card-secondary-bg, #f9fafb)"
                   :padding "15px"
                   :border-radius "4px"
                   :margin-top "20px"}}
     [:p {:style {:margin 0
                  :line-height 1.6
-                 :color "#555"}}
+                 :color "var(--text-secondary, #6b7280)"}}
      (:detailedForecast data)]]])
 
 (defn input-form
@@ -180,7 +233,7 @@
   [:div {:style card-style}
    [:h3 {:style {:margin-top 0}}
     "🌍 Enter Coordinates"]
-   [:p {:style {:color "#666"
+   [:p {:style {:color "var(--text-tertiary, #9ca3af)"
                 :font-size "14px"
                 :margin-bottom "15px"}}
     "Enter latitude and longitude to get weather data"]
@@ -188,7 +241,7 @@
    [:div
     [:label {:style {:display "block"
                      :margin-bottom "5px"
-                     :color "#555"
+                     :color "var(--text-secondary, #6b7280)"
                      :font-weight "500"}}
      "Latitude"]
     [:input {:type "number"
@@ -203,7 +256,7 @@
    [:div
     [:label {:style {:display "block"
                      :margin-bottom "5px"
-                     :color "#555"
+                     :color "var(--text-secondary, #6b7280)"
                      :font-weight "500"}}
      "Longitude"]
     [:input {:type "number"
@@ -229,7 +282,7 @@
   "Quick access buttons for major cities."
   [{:keys [on-select loading?]}]
   [:div {:style {:margin-top "20px"}}
-   [:p {:style {:color "#666"
+   [:p {:style {:color "var(--text-tertiary, #9ca3af)"
                 :font-size "14px"
                 :margin-bottom "10px"}}
     "Or try these cities:"]
@@ -246,13 +299,15 @@
       [:button {:on-click #(on-select lat lon)
                 :disabled loading?
                 :style {:padding "6px 12px"
-                        :background (if loading? "#ccc" "transparent")
-                        :color (if loading? "#999" "#2196f3")
-                        :border "1px solid #2196f3"
+                        :background (if loading? "var(--button-bg, #f3f4f6)" "var(--button-bg, #f3f4f6)")
+                        :color (if loading? "var(--text-tertiary, #9ca3af)" "#60a5fa")
+                        :border (if loading? "1px solid var(--border-color, #e5e7eb)" "2px solid #60a5fa")
                         :border-radius "20px"
                         :cursor (if loading? "not-allowed" "pointer")
                         :font-size "13px"
-                        :transition "all 0.2s"}}
+                        :font-weight "500"
+                        :transition "all 0.2s"
+                        :box-shadow (when-not loading? "0 1px 3px var(--shadow-color, rgba(0,0,0,0.1))")}}
        city])]])
 
 ;; ============================================================================
@@ -284,14 +339,16 @@
                                       (reset! error err))}))]
 
     (fn []
-      [:div {:style {:max-width "600px"
-                     :margin "0 auto"
-                     :padding "20px"
-                     :font-family "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"}}
-       [:h1 {:style {:text-align "center"
-                     :color "#333"
-                     :margin-bottom "30px"}}
-        "☀️ Simple Weather Lookup"]
+      [:<>
+       [theme-styles]
+       [:div {:style {:max-width "600px"
+                      :margin "0 auto"
+                      :padding "20px"
+                      :font-family "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"}}
+        [:h1 {:style {:text-align "center"
+                      :color "var(--text-primary, #1f2937)"
+                      :margin-bottom "30px"}}
+         "☀️ Simple Weather Lookup"]]
 
        ;; Input Form
        [input-form
@@ -336,7 +393,7 @@
                   (not @weather-data))
          [:div {:style {:text-align "center"
                         :margin-top "40px"
-                        :color "#999"
+                        :color "var(--text-tertiary, #9ca3af)"
                         :font-size "14px"}}
           [:p "Enter coordinates above or click a city to get started"]
           [:p {:style {:margin-top "10px"}}
