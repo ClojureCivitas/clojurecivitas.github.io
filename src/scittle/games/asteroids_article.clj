@@ -6,7 +6,7 @@
                   :type :post
                   :date "2025-11-09"
                   :category :games
-                  :image "asteroids.png"
+                  :image "asteroids-01.png"
                   :tags [:scittle
                          :clojurescript
                          :reagent
