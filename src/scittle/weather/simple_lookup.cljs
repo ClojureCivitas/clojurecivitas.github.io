@@ -1,11 +1,11 @@
 (ns scittle.weather.simple-lookup
   "Simple weather lookup demo - minimal example showing basic API usage.
-   
+
    This is the simplest possible weather app:
    - Two input fields for coordinates
    - One button to fetch weather
    - Display location and temperature
-   
+
    Demonstrates:
    - Basic API call with keyword arguments
    - Loading state
@@ -27,8 +27,9 @@
   "CSS for light and dark mode support using Quarto's data-bs-theme attribute"
   []
   [:style "
-    /* Light mode (default) */
-    [data-bs-theme='light'] {
+    /* Light mode (default) - inherits from parent */
+    [data-bs-theme='light'],
+    [data-bs-theme='light'] * {
       --card-bg: #ffffff;
       --card-secondary-bg: #f9fafb;
       --input-bg: #ffffff;
@@ -43,8 +44,9 @@
       --shadow-color: rgba(0, 0, 0, 0.1);
     }
 
-    /* Dark mode */
-    [data-bs-theme='dark'] {
+    /* Dark mode - inherits from parent */
+    [data-bs-theme='dark'],
+    [data-bs-theme='dark'] * {
       --card-bg: #1f2937;
       --card-secondary-bg: #111827;
       --input-bg: #111827;
@@ -58,7 +60,24 @@
       --button-text: #f3f4f6;
       --shadow-color: rgba(0, 0, 0, 0.3);
     }
-    
+
+    /* Also check for Quarto's dark class on body */
+    .quarto-dark,
+    .quarto-dark * {
+      --card-bg: #1f2937;
+      --card-secondary-bg: #111827;
+      --input-bg: #111827;
+      --text-primary: #f3f4f6;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
+      --border-color: #374151;
+      --border-color-dark: #4b5563;
+      --button-bg: #374151;
+      --button-hover: #4b5563;
+      --button-text: #f3f4f6;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
     /* Hover states - applied universally */
     button:not(.btn-primary):hover {
       background: var(--button-hover) !important;

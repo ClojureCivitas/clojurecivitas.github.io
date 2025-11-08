@@ -13,8 +13,9 @@
   "CSS for light and dark mode support using Quarto's data-bs-theme attribute"
   []
   [:style "
-    /* Light mode (default) */
-    [data-bs-theme='light'] {
+    /* Light mode (default) - inherits from parent */
+    [data-bs-theme='light'],
+    [data-bs-theme='light'] * {
       --card-bg: #ffffff;
       --card-secondary-bg: #f9fafb;
       --input-bg: #ffffff;
@@ -29,8 +30,26 @@
       --shadow-color: rgba(0, 0, 0, 0.1);
     }
 
-    /* Dark mode */
-    [data-bs-theme='dark'] {
+    /* Dark mode - inherits from parent */
+    [data-bs-theme='dark'],
+    [data-bs-theme='dark'] * {
+      --card-bg: #1f2937;
+      --card-secondary-bg: #111827;
+      --input-bg: #111827;
+      --text-primary: #f3f4f6;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
+      --border-color: #374151;
+      --border-color-dark: #4b5563;
+      --button-bg: #374151;
+      --button-hover: #4b5563;
+      --button-text: #f3f4f6;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Also check for Quarto's dark class on body */
+    .quarto-dark,
+    .quarto-dark * {
       --card-bg: #1f2937;
       --card-secondary-bg: #111827;
       --input-bg: #111827;
@@ -254,13 +273,13 @@
 (def tabs-container-style
   {:display "flex"
    :gap "5px"
-   :border-bottom "2px solid #374151"
+   :border-bottom "2px solid var(--border-color-dark, #4b5563)"
    :margin-bottom "20px"})
 
 (defn tab-style [active?]
   {:padding "12px 24px"
    :background (if active? "#3b82f6" "transparent")
-   :color (if active? "white" "#6b7280")
+   :color (if active? "white" "var(--text-secondary, #6b7280)")
    :border "none"
    :border-bottom (if active? "2px solid #3b82f6" "2px solid transparent")
    :cursor "pointer"
@@ -338,7 +357,7 @@
 
 (def metric-label-style
   {:font-size "12px"
-   :color "#9ca3af"
+   :color "var(--text-tertiary, #9ca3af)"
    :margin-bottom "5px"
    :text-transform "uppercase"
    :font-weight "600"})
@@ -363,7 +382,7 @@
 (def loading-style
   {:text-align "center"
    :padding "60px"
-   :color "#9ca3af"})
+   :color "var(--text-tertiary, #9ca3af)"})
 
 ;; ============================================================================
 ;; Quick Cities
@@ -430,7 +449,7 @@
          :on-click #(on-unit-change u)}
         u])]]
 
-   [:div {:style {:font-size "13px" :color "#9ca3af"}}
+   [:div {:style {:font-size "13px" :color "var(--text-tertiary, #9ca3af)"}}
     "🔄 Auto-refresh: Off"]])
 
 (defn tabs-navigation [{:keys [active-tab on-tab-change]}]
@@ -491,7 +510,7 @@
          (get-weather-icon (:shortForecast period))]
         [:div {:style {:font-size "24px" :font-weight "600" :color "#3b82f6"}}
          (format-temp (:temperature period) unit)]
-        [:div {:style {:font-size "13px" :color "#9ca3af" :margin-top "8px"}}
+        [:div {:style {:font-size "13px" :color "var(--text-tertiary, #9ca3af)" :margin-top "8px"}}
          (:shortForecast period)]])]))
 
 (defn hourly-view [{:keys [hourly unit]}]
@@ -518,7 +537,7 @@
        [:div {:style {:font-size "64px"}} "✅"]
        [:div {:style {:font-size "18px" :font-weight "500" :margin-top "15px"}}
         "No Active Weather Alerts"]
-       [:div {:style {:font-size "14px" :color "#9ca3af" :margin-top "8px"}}
+       [:div {:style {:font-size "14px" :color "var(--text-tertiary, #9ca3af)" :margin-top "8px"}}
         "All clear! No weather warnings or advisories."]]
 
       [:div
