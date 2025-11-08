@@ -97,6 +97,7 @@
   #js {:video true :audio false})")
 
 ;; This is the same technology used by:
+;;
 ;; - Video conferencing apps (Zoom, Google Meet)
 ;; - Social media camera features (Instagram, Snapchat)
 ;; - WebRTC peer-to-peer video calls
@@ -104,6 +105,7 @@
 ;; **2. HTML5 Canvas API**
 
 ;; The Canvas API allows us to:
+;;
 ;; - Capture video frames as images
 ;; - Extract pixel data for processing
 ;; - Draw overlays and visual feedback
@@ -120,6 +122,7 @@
 ;; **3. jsQR Library**
 
 ;; jsQR is a pure JavaScript QR code detection library that:
+;;
 ;; - Works entirely in the browser (no server needed)
 ;; - Processes ImageData from canvas
 ;; - Returns decoded QR code content
@@ -174,6 +177,7 @@
     :error nil}))            ; Error message")
 
 ;; This simple state management pattern:
+;;
 ;; - Keeps everything in one place
 ;; - Makes state updates predictable
 ;; - Works perfectly with Reagent's reactivity
@@ -193,6 +197,7 @@
    :on-error (fn [error] ...)})")
 
 ;; Benefits of keyword arguments:
+;;
 ;; - **Self-documenting** - Clear what each parameter does
 ;; - **Flexible** - Order doesn't matter
 ;; - **Optional parameters** - Easy to add defaults
@@ -203,15 +208,18 @@
 ;; The scanner has several key functions:
 
 ;; **Camera Management:**
+;;
 ;; - `start-stream!` - Request camera access with callbacks
 ;; - `stop-stream!` - Clean up camera resources
 
 ;; **Scanning Functions:**
+;;
 ;; - `scan-qr-code` - Capture frame and detect QR codes
 ;; - `start-qr-scanning!` - Begin continuous scanning loop
 ;; - `stop-qr-scanning!` - Stop the scanning loop
 
 ;; **Utility Functions:**
+;;
 ;; - `copy-to-clipboard!` - Copy results to clipboard
 ;; - `clear-qr-results!` - Clear all scanned results
 ;; - `generate-id` - Create unique IDs for results
