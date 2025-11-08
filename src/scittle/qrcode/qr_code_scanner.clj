@@ -193,6 +193,7 @@
    :on-error (fn [error] ...)})")
 
 ;; Benefits of keyword arguments:
+;;
 ;; - **Self-documenting** - Clear what each parameter does
 ;; - **Flexible** - Order doesn't matter
 ;; - **Optional parameters** - Easy to add defaults
@@ -203,15 +204,18 @@
 ;; The scanner has several key functions:
 
 ;; **Camera Management:**
+;;
 ;; - `start-stream!` - Request camera access with callbacks
 ;; - `stop-stream!` - Clean up camera resources
 
 ;; **Scanning Functions:**
+;;
 ;; - `scan-qr-code` - Capture frame and detect QR codes
 ;; - `start-qr-scanning!` - Begin continuous scanning loop
 ;; - `stop-qr-scanning!` - Stop the scanning loop
 
 ;; **Utility Functions:**
+;;
 ;; - `copy-to-clipboard!` - Copy results to clipboard
 ;; - `clear-qr-results!` - Clear all scanned results
 ;; - `generate-id` - Create unique IDs for results

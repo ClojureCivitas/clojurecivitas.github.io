@@ -6,6 +6,52 @@
             [clojure.string :as str]))
 
 ;; ============================================================================
+;; Theme Styles
+;; ============================================================================
+
+(defn theme-styles
+  "CSS for light and dark mode support using Quarto's data-bs-theme attribute"
+  []
+  [:style "
+    /* Light mode (default) */
+    [data-bs-theme='light'] {
+      --card-bg: #ffffff;
+      --card-secondary-bg: #f9fafb;
+      --input-bg: #ffffff;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-tertiary: #9ca3af;
+      --border-color: #e5e7eb;
+      --border-color-dark: #d1d5db;
+      --button-bg: #f3f4f6;
+      --button-hover: #e5e7eb;
+      --button-text: #374151;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark mode */
+    [data-bs-theme='dark'] {
+      --card-bg: #1f2937;
+      --card-secondary-bg: #111827;
+      --input-bg: #111827;
+      --text-primary: #f3f4f6;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
+      --border-color: #374151;
+      --border-color-dark: #4b5563;
+      --button-bg: #374151;
+      --button-hover: #4b5563;
+      --button-text: #f3f4f6;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Hover states - applied universally */
+    button:not(.btn-primary):hover {
+      background: var(--button-hover) !important;
+    }
+  "])
+
+;; ============================================================================
 ;; API Functions (Inline)
 ;; ============================================================================
 
@@ -103,12 +149,14 @@
 ;; Temperature Conversion
 ;; ============================================================================
 
-(defn fahrenheit-to-celsius [f]
+(defn fahrenheit-to-celsius
   "Convert Fahrenheit to Celsius"
+  [f]
   (when f (* (- f 32) 0.5556)))
 
-(defn fahrenheit-to-kelvin [f]
+(defn fahrenheit-to-kelvin
   "Convert Fahrenheit to Kelvin"
+  [f]
   (when f (+ (fahrenheit-to-celsius f) 273.15)))
 
 (defn format-temp
@@ -121,8 +169,9 @@
       "K" (str (Math/round (fahrenheit-to-kelvin fahrenheit)) "K")
       (str fahrenheit "°F"))))
 
-(defn mps-to-mph [mps]
+(defn mps-to-mph
   "Convert meters per second to miles per hour"
+  [mps]
   (when mps (* mps 2.237)))
 
 ;; ============================================================================
@@ -136,12 +185,13 @@
    :font-family "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"})
 
 (def card-style
-  {:background "#ffffff"
-   :border "1px solid #e0e0e0"
+  {:background "var(--card-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"
+   :border "1px solid var(--border-color, #e5e7eb)"
    :border-radius "12px"
    :padding "24px"
    :margin-bottom "20px"
-   :box-shadow "0 2px 8px rgba(0,0,0,0.1)"})
+   :box-shadow "0 2px 8px var(--shadow-color, rgba(0,0,0,0.1))"})
 
 (def header-style
   {:text-align "center"
@@ -150,12 +200,12 @@
 (def title-style
   {:font-size "28px"
    :font-weight "600"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin "0 0 10px 0"})
 
 (def subtitle-style
   {:font-size "14px"
-   :color "#666"
+   :color "var(--text-tertiary, #9ca3af)"
    :margin 0})
 
 (def input-group-style
@@ -166,11 +216,13 @@
 
 (def input-style
   {:padding "10px 15px"
-   :border "1px solid #ddd"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
    :font-size "14px"
    :flex "1"
-   :min-width "120px"})
+   :min-width "120px"
+   :background "var(--input-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"})
 
 (def button-style
   {:padding "10px 20px"
@@ -191,8 +243,9 @@
 
 (def quick-button-style
   {:padding "8px 16px"
-   :background "#f3f4f6"
-   :border "1px solid #e5e7eb"
+   :background "var(--button-bg, #f3f4f6)"
+   :color "var(--button-text, #374151)"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
    :cursor "pointer"
    :font-size "13px"
@@ -214,13 +267,14 @@
 (def slider-label-style
   {:font-size "14px"
    :font-weight "500"
-   :color "#4b5563"})
+   :color "var(--text-secondary, #6b7280)"})
 
 (def slider-button-style
   {:padding "6px 14px"
-   :border "1px solid #ddd"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
-   :background "#fff"
+   :background "var(--button-bg, #f3f4f6)"
+   :color "var(--button-text, #374151)"
    :cursor "pointer"
    :font-size "13px"
    :transition "all 0.2s"})
@@ -237,9 +291,10 @@
 
 (def unit-button-style
   {:padding "6px 14px"
-   :border "1px solid #ddd"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
-   :background "#fff"
+   :background "var(--button-bg, #f3f4f6)"
+   :color "var(--button-text, #374151)"
    :cursor "pointer"
    :font-size "13px"
    :transition "all 0.2s"})
@@ -264,15 +319,15 @@
    :padding "5px"})
 
 (def hour-card-style
-  {:background "#ffffff"
-   :border "1px solid #e5e7eb"
+  {:background "var(--card-secondary-bg, #f9fafb)"
+   :border "1px solid var(--border-color, #e5e7eb)"
    :border-radius "10px"
    :padding "16px"
    :min-width "140px"
    :text-align "center"
    :flex-shrink "0"
    :transition "all 0.2s"
-   :box-shadow "0 1px 3px rgba(0,0,0,0.1)"})
+   :box-shadow "0 1px 3px var(--shadow-color, rgba(0,0,0,0.1))"})
 
 (def hour-card-current-style
   (merge hour-card-style
@@ -288,7 +343,7 @@
 (def time-label-style
   {:font-size "14px"
    :font-weight "600"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin "0 0 8px 0"})
 
 (def weather-icon-style
@@ -308,13 +363,13 @@
 
 (def wind-display-style
   {:font-size "12px"
-   :color "#6b7280"
+   :color "#9ca3af"
    :margin "4px 0"})
 
 (def loading-style
   {:text-align "center"
    :padding "40px"
-   :color "#6b7280"})
+   :color "#9ca3af"})
 
 (def error-style
   {:background "#fef2f2"
@@ -327,7 +382,7 @@
 (def location-display-style
   {:font-size "18px"
    :font-weight "500"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin-bottom "15px"})
 
 ;; ============================================================================
@@ -347,7 +402,8 @@
 ;; Components
 ;; ============================================================================
 
-(defn loading-spinner []
+(defn loading-spinner
+  []
   [:div {:style loading-style}
    [:div {:style {:font-size "40px" :margin-bottom "10px"}} "⏳"]
    [:div "Loading hourly forecast..."]])
@@ -356,7 +412,8 @@
   [:div {:style error-style}
    [:strong "Error: "] message])
 
-(defn location-input [{:keys [lat lon on-lat-change on-lon-change on-fetch]}]
+(defn location-input
+  [{:keys [lat lon on-lat-change on-lon-change on-fetch]}]
   [:div
    [:div {:style input-group-style}
     [:input {:type "number"
@@ -372,23 +429,21 @@
              :step "0.0001"
              :style input-style}]
     [:button {:on-click on-fetch
-              :style button-style
-              :on-mouse-over #(set! (.. % -target -style -background) "#2563eb")
-              :on-mouse-out #(set! (.. % -target -style -background) "#3b82f6")}
+              :style button-style}
      "Get Hourly Forecast"]]])
 
-(defn quick-city-buttons [{:keys [cities on-select]}]
+(defn quick-city-buttons
+  [{:keys [cities on-select]}]
   [:div {:style quick-buttons-style}
    (for [city cities]
      ^{:key (:name city)}
      [:button
       {:style quick-button-style
-       :on-click #(on-select city)
-       :on-mouse-over #(set! (.. % -target -style -background) "#e5e7eb")
-       :on-mouse-out #(set! (.. % -target -style -background) "#f3f4f6")}
+       :on-click #(on-select city)}
       (:name city)])])
 
-(defn controls-bar [{:keys [hours-to-show on-hours-change unit on-unit-change]}]
+(defn controls-bar
+  [{:keys [hours-to-show on-hours-change unit on-unit-change]}]
   [:div {:style controls-bar-style}
    [:div {:style slider-group-style}
     [:span {:style slider-label-style} "Show:"]
@@ -409,39 +464,35 @@
         :on-click #(on-unit-change u)}
        u])]])
 
-(defn hour-card [{:keys [period unit]}]
-  (let [hovering? (r/atom false)]
-    (fn [{:keys [period unit]}]
-      (let [{:keys [startTime temperature windSpeed shortForecast
-                    probabilityOfPrecipitation]} period
-            date (parse-iso-time startTime)
-            is-current? (is-current-hour? date)
-            precip-value (get-in probabilityOfPrecipitation [:value])
-            icon (get-weather-icon shortForecast)
-            wind-mph (when windSpeed
-                       (let [wind-str (str windSpeed)
-                             matches (re-find #"(\d+)" wind-str)]
-                         (when matches (js/parseInt (second matches)))))]
-        [:div
-         {:style (cond
-                   is-current? hour-card-current-style
-                   @hovering? hour-card-hover-style
-                   :else hour-card-style)
-          :on-mouse-enter #(reset! hovering? true)
-          :on-mouse-leave #(reset! hovering? false)}
+(defn hour-card
+  [{:keys [period unit]}]
+  (let [{:keys [startTime temperature windSpeed shortForecast
+                probabilityOfPrecipitation]} period
+        date (parse-iso-time startTime)
+        is-current? (is-current-hour? date)
+        precip-value (get-in probabilityOfPrecipitation [:value])
+        icon (get-weather-icon shortForecast)
+        wind-mph (when windSpeed
+                   (let [wind-str (str windSpeed)
+                         matches (re-find #"(\d+)" wind-str)]
+                     (when matches (js/parseInt (second matches)))))]
+    [:div
+     {:style (if is-current?
+               hour-card-current-style
+               hour-card-style)}
 
-         [:div {:style time-label-style}
-          (if is-current? "🔵 Now" (format-hour-time date))]
-         [:div {:style weather-icon-style} icon]
-         [:div {:style temp-display-style} (format-temp temperature unit)]
+     [:div {:style time-label-style}
+      (if is-current? "🔵 Now" (format-hour-time date))]
+     [:div {:style weather-icon-style} icon]
+     [:div {:style temp-display-style} (format-temp temperature unit)]
 
-         (when (and precip-value (> precip-value 0))
-           [:div {:style precip-display-style}
-            "💧 " precip-value "%"])
+     (when (and precip-value (> precip-value 0))
+       [:div {:style precip-display-style}
+        "💧 " precip-value "%"])
 
-         (when wind-mph
-           [:div {:style wind-display-style}
-            "💨 " wind-mph " mph"])]))))
+     (when wind-mph
+       [:div {:style wind-display-style}
+        "💨 " wind-mph " mph"])]))
 
 (defn hourly-timeline [{:keys [periods unit hours-to-show timeline-ref]}]
   (let [displayed-periods (take hours-to-show periods)]
@@ -452,8 +503,14 @@
         ^{:key (:number period)}
         [hour-card {:period period :unit unit}])]]))
 
-(defn forecast-display [{:keys [forecast-data location-name unit hours-to-show
-                                on-hours-change on-unit-change timeline-ref]}]
+(defn forecast-display
+  [{:keys [forecast-data
+           location-name
+           unit
+           hours-to-show
+           on-hours-change
+           on-unit-change
+           timeline-ref]}]
   (let [periods (get-in forecast-data [:properties :periods])]
     [:div
      [:div {:style location-display-style} "📍 " location-name]
@@ -527,11 +584,13 @@
           (fetch-forecast))]
 
     (fn []
-      [:div {:style container-style}
-       [:div {:style header-style}
-        [:h1 {:style title-style} "⏰ Hourly Weather Forecast"]
-        [:p {:style subtitle-style}
-         "Hour-by-hour predictions with interactive timeline"]]
+      [:<>
+       [theme-styles]
+       [:div {:style container-style}
+        [:div {:style header-style}
+         [:h1 {:style title-style} "⏰ Hourly Weather Forecast"]
+         [:p {:style subtitle-style}
+          "Hour-by-hour predictions with interactive timeline"]]]
 
        [:div {:style card-style}
         [location-input

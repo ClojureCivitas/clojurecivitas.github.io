@@ -1,9 +1,9 @@
 (ns scittle.weather.weather-api
   "National Weather Service API integration with keyword arguments.
-   
+
    All functions use keyword argument maps for clarity and flexibility.
    No API key required - completely free!
-   
+
    Main API Reference: https://www.weather.gov/documentation/services-web-api"
   (:require [clojure.string :as str]))
 
@@ -21,17 +21,17 @@
 
 (defn fetch-json
   "Fetch JSON data from a URL with error handling.
-  
+
   Uses browser's native fetch API - no external dependencies.
-  
+
   Args (keyword map):
     :url        - URL to fetch (string, required)
     :on-success - Success callback receiving parsed data (fn, required)
     :on-error   - Error callback receiving error message (fn, optional)
-    
+
   The success callback receives the parsed JSON as a Clojure map.
   The error callback receives an error message string.
-  
+
   Example:
     (fetch-json
       {:url \"https://api.weather.gov/points/40,-74\"
@@ -55,16 +55,16 @@
 
 (defn fetch-points
   "Get NWS grid points and forecast URLs for given coordinates.
-  
+
   This is typically the first API call - it returns URLs for all weather
   products available at the given location.
-  
+
   Args (keyword map):
     :lat        - Latitude (number, required, range: -90 to 90)
     :lon        - Longitude (number, required, range: -180 to 180)
     :on-success - Success callback receiving location data (fn, required)
     :on-error   - Error callback receiving error message (fn, optional)
-  
+
   Success callback receives a map with:
     :forecast             - URL for 7-day forecast
     :forecastHourly       - URL for hourly forecast
@@ -74,7 +74,7 @@
     :gridId               - Grid identifier
     :gridX, :gridY        - Grid coordinates
     :city, :state         - Location name
-  
+
   Example:
     (fetch-points
       {:lat 40.7128
@@ -110,14 +110,14 @@
 
 (defn fetch-forecast
   "Fetch 7-day forecast from a forecast URL.
-  
+
   Returns periods (typically 14 periods: day/night for 7 days).
-  
+
   Args (keyword map):
     :url        - Forecast URL from points API (string, required)
     :on-success - Success callback receiving forecast periods (fn, required)
     :on-error   - Error callback receiving error message (fn, optional)
-  
+
   Success callback receives a vector of period maps, each containing:
     :number              - Period number
     :name                - Period name (e.g., \"Tonight\", \"Friday\")
@@ -128,7 +128,7 @@
     :icon                - Weather icon URL
     :shortForecast       - Brief description
     :detailedForecast    - Detailed description
-  
+
   Example:
     (fetch-forecast
       {:url forecast-url
@@ -151,15 +151,15 @@
 
 (defn fetch-hourly-forecast
   "Fetch hourly forecast from a forecast URL.
-  
+
   Args (keyword map):
     :url        - Hourly forecast URL from points API (string, required)
     :on-success - Success callback receiving hourly periods (fn, required)
     :on-error   - Error callback receiving error message (fn, optional)
-  
+
   Success callback receives a vector of hourly period maps.
   Each period has the same structure as the regular forecast.
-  
+
   Example:
     (fetch-hourly-forecast
       {:url hourly-url
@@ -183,17 +183,17 @@
 
 (defn fetch-observation-stations
   "Get list of observation stations near a location.
-  
+
   Args (keyword map):
     :url        - Observation stations URL from points API (string, required)
     :on-success - Success callback receiving station list (fn, required)
     :on-error   - Error callback receiving error message (fn, optional)
-  
+
   Success callback receives a vector of station maps, each containing:
     :stationIdentifier - Station ID (e.g., \"KJFK\")
     :name              - Station name
     :elevation         - Elevation data
-  
+
   Example:
     (fetch-observation-stations
       {:url stations-url
@@ -221,12 +221,12 @@
 
 (defn fetch-current-observations
   "Get current weather observations from a station.
-  
+
   Args (keyword map):
     :station-id - Station identifier (string, required, e.g., \"KJFK\")
     :on-success - Success callback receiving observation data (fn, required)
     :on-error   - Error callback receiving error message (fn, optional)
-  
+
   Success callback receives a map with current conditions:
     :temperature          - Current temperature with :value and :unitCode
     :dewpoint            - Dewpoint temperature
@@ -237,7 +237,7 @@
     :visibility          - Visibility distance
     :textDescription     - Weather description
     :timestamp           - Observation time
-  
+
   Example:
     (fetch-current-observations
       {:station-id \"KJFK\"
@@ -262,13 +262,13 @@
 
 (defn fetch-alerts-for-point
   "Fetch active weather alerts for a specific location.
-  
+
   Args (keyword map):
     :lat        - Latitude (number, required)
     :lon        - Longitude (number, required)
     :on-success - Success callback receiving alerts list (fn, required)
     :on-error   - Error callback receiving error message (fn, optional)
-  
+
   Success callback receives a vector of alert maps, each containing:
     :event       - Alert type (e.g., \"Tornado Warning\")
     :headline    - Brief headline
@@ -278,7 +278,7 @@
     :certainty   - Certainty level
     :onset       - Start time
     :ends        - End time
-  
+
   Example:
     (fetch-alerts-for-point
       {:lat 40.7128
@@ -307,7 +307,7 @@
 
 (defn fetch-complete-weather
   "Fetch comprehensive weather data for given coordinates.
-  
+
   This is a convenience function that:
   1. Fetches points data
   2. Fetches 7-day forecast
@@ -315,15 +315,15 @@
   4. Fetches observation stations
   5. Fetches current observations from nearest station
   6. Fetches active alerts
-  
+
   All data is collected and returned in a single callback.
-  
+
   Args (keyword map):
     :lat        - Latitude (number, required)
     :lon        - Longitude (number, required)
     :on-success - Success callback receiving complete weather data (fn, required)
     :on-error   - Error callback receiving error message (fn, optional)
-  
+
   Success callback receives a map with:
     :points   - Location and grid information
     :forecast - 7-day forecast periods
@@ -331,13 +331,13 @@
     :stations - Nearby weather stations
     :current  - Current observations
     :alerts   - Active weather alerts
-  
+
   Example:
     (fetch-complete-weather
       {:lat 40.7128
        :lon -74.0060
        :on-success (fn [weather]
-                     (js/console.log \"Location:\" 
+                     (js/console.log \"Location:\"
                                      (get-in weather [:points :city]))
                      (js/console.log \"Current temp:\"
                                      (get-in weather [:current :temperature :value]))
@@ -401,13 +401,13 @@
 
 (defn get-weather-icon
   "Map NWS icon URLs to emoji representations.
-  
+
   Args:
     icon-url - NWS icon URL (string)
-  
+
   Returns:
     Emoji string representing the weather condition.
-  
+
   Example:
     (get-weather-icon \"https://api.weather.gov/icons/land/day/rain\")
     ;; => \"🌧️\""

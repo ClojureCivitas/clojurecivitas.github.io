@@ -6,6 +6,52 @@
             [clojure.string :as str]))
 
 ;; ============================================================================
+;; Theme Styles
+;; ============================================================================
+
+(defn theme-styles
+  "CSS for light and dark mode support using Quarto's data-bs-theme attribute"
+  []
+  [:style "
+    /* Light mode (default) */
+    [data-bs-theme='light'] {
+      --card-bg: #ffffff;
+      --card-secondary-bg: #f9fafb;
+      --input-bg: #ffffff;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-tertiary: #9ca3af;
+      --border-color: #e5e7eb;
+      --border-color-dark: #d1d5db;
+      --button-bg: #f3f4f6;
+      --button-hover: #e5e7eb;
+      --button-text: #374151;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark mode */
+    [data-bs-theme='dark'] {
+      --card-bg: #1f2937;
+      --card-secondary-bg: #111827;
+      --input-bg: #111827;
+      --text-primary: #f3f4f6;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
+      --border-color: #374151;
+      --border-color-dark: #4b5563;
+      --button-bg: #374151;
+      --button-hover: #4b5563;
+      --button-text: #f3f4f6;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Hover states - applied universally */
+    button:not(.btn-primary):hover {
+      background: var(--button-hover) !important;
+    }
+  "])
+
+;; ============================================================================
 ;; API Functions (Consolidated)
 ;; ============================================================================
 
@@ -82,16 +128,20 @@
 ;; Utilities (from previous demos)
 ;; ============================================================================
 
-(defn celsius-to-fahrenheit [c]
+(defn celsius-to-fahrenheit
+  [c]
   (when c (+ (* c 1.8) 32)))
 
-(defn fahrenheit-to-celsius [f]
+(defn fahrenheit-to-celsius
+  [f]
   (when f (* (- f 32) 0.5556)))
 
-(defn fahrenheit-to-kelvin [f]
+(defn fahrenheit-to-kelvin
+  [f]
   (when f (+ (fahrenheit-to-celsius f) 273.15)))
 
-(defn format-temp [fahrenheit unit]
+(defn format-temp
+  [fahrenheit unit]
   (when fahrenheit
     (case unit
       "F" (str fahrenheit "°F")
@@ -99,7 +149,8 @@
       "K" (str (Math/round (fahrenheit-to-kelvin fahrenheit)) "K")
       (str fahrenheit "°F"))))
 
-(defn get-weather-icon [short-forecast]
+(defn get-weather-icon
+  [short-forecast]
   (let [forecast-lower (str/lower-case (or short-forecast ""))]
     (cond
       (re-find #"thunder|tstorm" forecast-lower) "⛈️"
@@ -146,12 +197,13 @@
    :opacity "0.8"})
 
 (def card-style
-  {:background "#ffffff"
-   :border "1px solid #e0e0e0"
+  {:background "var(--card-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"
+   :border "1px solid var(--border-color, #e5e7eb)"
    :border-radius "12px"
    :padding "24px"
    :margin-bottom "20px"
-   :box-shadow "0 2px 8px rgba(0,0,0,0.1)"})
+   :box-shadow "0 2px 8px var(--shadow-color, rgba(0,0,0,0.1))"})
 
 (def location-search-style
   {:display "grid"
@@ -161,9 +213,12 @@
 
 (def input-style
   {:padding "12px 15px"
-   :border "1px solid #ddd"
+   :background "var(--input-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "8px"
-   :font-size "14px"})
+   :font-size "14px"
+   :box-shadow "inset 0 1px 2px var(--shadow-color, rgba(0,0,0,0.05))"})
 
 (def button-primary-style
   {:padding "12px 24px"
@@ -174,7 +229,8 @@
    :cursor "pointer"
    :font-size "14px"
    :font-weight "600"
-   :transition "all 0.2s"})
+   :transition "all 0.2s"
+   :box-shadow "0 2px 4px rgba(0,0,0,0.3)"})
 
 (def quick-cities-grid-style
   {:display "grid"
@@ -184,18 +240,21 @@
 
 (def city-button-style
   {:padding "10px"
-   :background "#f3f4f6"
-   :border "1px solid #e5e7eb"
+   :background "var(--button-bg, #f3f4f6)"
+   :color "var(--button-text, #374151)"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "8px"
    :cursor "pointer"
    :font-size "13px"
+   :font-weight "500"
    :text-align "center"
-   :transition "all 0.2s"})
+   :transition "all 0.2s"
+   :box-shadow "0 1px 2px var(--shadow-color, rgba(0,0,0,0.1))"})
 
 (def tabs-container-style
   {:display "flex"
    :gap "5px"
-   :border-bottom "2px solid #e5e7eb"
+   :border-bottom "2px solid #374151"
    :margin-bottom "20px"})
 
 (defn tab-style [active?]
@@ -215,7 +274,7 @@
    :justify-content "space-between"
    :align-items "center"
    :padding "15px"
-   :background "#f9fafb"
+   :background "var(--card-secondary-bg, #f9fafb)"
    :border-radius "8px"
    :margin-bottom "20px"
    :flex-wrap "wrap"
@@ -229,7 +288,7 @@
 (def setting-label-style
   {:font-size "14px"
    :font-weight "500"
-   :color "#4b5563"})
+   :color "var(--text-secondary, #6b7280)"})
 
 (def toggle-buttons-style
   {:display "flex"
@@ -237,9 +296,9 @@
 
 (defn toggle-button-style [active?]
   {:padding "6px 14px"
-   :background (if active? "#3b82f6" "white")
-   :color (if active? "white" "#6b7280")
-   :border "1px solid #d1d5db"
+   :background (if active? "#3b82f6" "var(--button-bg, #f3f4f6)")
+   :color (if active? "white" "var(--button-text, #374151)")
+   :border (if active? "1px solid #3b82f6" "1px solid var(--border-color-dark, #d1d5db)")
    :border-radius "6px"
    :cursor "pointer"
    :font-size "13px"
@@ -257,13 +316,13 @@
 (def temp-display-style
   {:font-size "72px"
    :font-weight "300"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :line-height "1"
    :margin "0"})
 
 (def condition-text-style
   {:font-size "18px"
-   :color "#6b7280"
+   :color "var(--text-tertiary, #9ca3af)"
    :margin "10px 0"})
 
 (def metrics-quick-grid-style
@@ -273,19 +332,20 @@
 
 (def metric-item-style
   {:padding "12px"
-   :background "#f9fafb"
+   :background "var(--card-secondary-bg, #f9fafb)"
+   :border "1px solid var(--border-color, #e5e7eb)"
    :border-radius "8px"})
 
 (def metric-label-style
   {:font-size "12px"
-   :color "#6b7280"
+   :color "#9ca3af"
    :margin-bottom "5px"
    :text-transform "uppercase"
    :font-weight "600"})
 
 (def metric-value-style
   {:font-size "20px"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :font-weight "500"})
 
 (def forecast-mini-grid-style
@@ -295,14 +355,15 @@
 
 (def forecast-mini-card-style
   {:padding "15px"
-   :background "#f9fafb"
+   :background "var(--card-secondary-bg, #f9fafb)"
+   :border "1px solid var(--border-color, #e5e7eb)"
    :border-radius "8px"
    :text-align "center"})
 
 (def loading-style
   {:text-align "center"
    :padding "60px"
-   :color "#6b7280"})
+   :color "#9ca3af"})
 
 ;; ============================================================================
 ;; Quick Cities
@@ -354,9 +415,7 @@
       ^{:key (:name city)}
       [:button
        {:style city-button-style
-        :on-click #(on-city-select city)
-        :on-mouse-over #(set! (.. % -target -style -background) "#e5e7eb")
-        :on-mouse-out #(set! (.. % -target -style -background) "#f3f4f6")}
+        :on-click #(on-city-select city)}
        (:name city)])]])
 
 (defn settings-bar [{:keys [unit on-unit-change]}]
@@ -371,7 +430,7 @@
          :on-click #(on-unit-change u)}
         u])]]
 
-   [:div {:style {:font-size "13px" :color "#6b7280"}}
+   [:div {:style {:font-size "13px" :color "#9ca3af"}}
     "🔄 Auto-refresh: Off"]])
 
 (defn tabs-navigation [{:keys [active-tab on-tab-change]}]
@@ -432,7 +491,7 @@
          (get-weather-icon (:shortForecast period))]
         [:div {:style {:font-size "24px" :font-weight "600" :color "#3b82f6"}}
          (format-temp (:temperature period) unit)]
-        [:div {:style {:font-size "13px" :color "#6b7280" :margin-top "8px"}}
+        [:div {:style {:font-size "13px" :color "#9ca3af" :margin-top "8px"}}
          (:shortForecast period)]])]))
 
 (defn hourly-view [{:keys [hourly unit]}]
@@ -459,7 +518,7 @@
        [:div {:style {:font-size "64px"}} "✅"]
        [:div {:style {:font-size "18px" :font-weight "500" :margin-top "15px"}}
         "No Active Weather Alerts"]
-       [:div {:style {:font-size "14px" :color "#6b7280" :margin-top "8px"}}
+       [:div {:style {:font-size "14px" :color "#9ca3af" :margin-top "8px"}}
         "All clear! No weather warnings or advisories."]]
 
       [:div
@@ -552,33 +611,35 @@
           (fetch-all-weather))]
 
     (fn []
-      [:div {:style app-container-style}
-       [:div {:style header-card-style}
-        [:h1 {:style app-title-style}
-         [:span "☀️"] [:span "Weather Dashboard"]]
-        (when @location-name
-          [:div {:style location-header-style}
-           "📍 " @location-name])
-        (when @last-updated
-          [:div {:style last-updated-style}
-           "Last updated: " (.toLocaleTimeString @last-updated)])]
+      [:div
+       [theme-styles]
+       [:div {:style app-container-style}
+        [:div {:style header-card-style}
+         [:h1 {:style app-title-style}
+          [:span "☀️"] [:span "Weather Dashboard"]]
+         (when @location-name
+           [:div {:style location-header-style}
+            "📍 " @location-name])
+         (when @last-updated
+           [:div {:style last-updated-style}
+            "Last updated: " (.toLocaleTimeString @last-updated)])]
 
-       [location-search-panel
-        {:lat @lat
-         :lon @lon
-         :on-lat-change #(reset! lat %)
-         :on-lon-change #(reset! lon %)
-         :on-fetch fetch-all-weather
-         :cities quick-cities
-         :on-city-select select-city}]
+        [location-search-panel
+         {:lat @lat
+          :lon @lon
+          :on-lat-change #(reset! lat %)
+          :on-lon-change #(reset! lon %)
+          :on-fetch fetch-all-weather
+          :cities quick-cities
+          :on-city-select select-city}]
 
-       (cond
-         @loading? [loading-spinner]
-         @weather-data [weather-dashboard
-                        {:weather-data @weather-data
-                         :location-name @location-name
-                         :unit @unit
-                         :on-unit-change #(reset! unit %)}])])))
+        (cond
+          @loading? [loading-spinner]
+          @weather-data [weather-dashboard
+                         {:weather-data @weather-data
+                          :location-name @location-name
+                          :unit @unit
+                          :on-unit-change #(reset! unit %)}])]])))
 
 ;; ============================================================================
 ;; Mount

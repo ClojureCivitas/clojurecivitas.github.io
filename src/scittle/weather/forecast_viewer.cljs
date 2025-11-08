@@ -6,6 +6,52 @@
             [clojure.string :as str]))
 
 ;; ============================================================================
+;; Theme Styles
+;; ============================================================================
+
+(defn theme-styles
+  "CSS for light and dark mode support using Quarto's data-bs-theme attribute"
+  []
+  [:style "
+    /* Light mode (default) */
+    [data-bs-theme='light'] {
+      --card-bg: #ffffff;
+      --card-secondary-bg: #f9fafb;
+      --input-bg: #ffffff;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-tertiary: #9ca3af;
+      --border-color: #e5e7eb;
+      --border-color-dark: #d1d5db;
+      --button-bg: #f3f4f6;
+      --button-hover: #e5e7eb;
+      --button-text: #374151;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dark mode */
+    [data-bs-theme='dark'] {
+      --card-bg: #1f2937;
+      --card-secondary-bg: #111827;
+      --input-bg: #111827;
+      --text-primary: #f3f4f6;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
+      --border-color: #374151;
+      --border-color-dark: #4b5563;
+      --button-bg: #374151;
+      --button-hover: #4b5563;
+      --button-text: #f3f4f6;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Hover states - applied universally */
+    button:not(.btn-primary):hover {
+      background: var(--button-hover) !important;
+    }
+  "])
+
+;; ============================================================================
 ;; API Functions (Inline)
 ;; ============================================================================
 
@@ -64,12 +110,14 @@
 ;; Temperature Conversion
 ;; ============================================================================
 
-(defn fahrenheit-to-celsius [f]
+(defn fahrenheit-to-celsius
   "Convert Fahrenheit to Celsius"
+  [f]
   (when f (* (- f 32) 0.5556)))
 
-(defn fahrenheit-to-kelvin [f]
+(defn fahrenheit-to-kelvin
   "Convert Fahrenheit to Kelvin"
+  [f]
   (when f (+ (fahrenheit-to-celsius f) 273.15)))
 
 (defn format-temp
@@ -93,8 +141,9 @@
    :font-family "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"})
 
 (def card-style
-  {:background "#ffffff"
-   :border "1px solid #e0e0e0"
+  {:background "var(--card-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"
+   :border "1px solid var(--border-color, #e5e7eb)"
    :border-radius "12px"
    :padding "24px"
    :margin-bottom "20px"
@@ -107,12 +156,12 @@
 (def title-style
   {:font-size "28px"
    :font-weight "600"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin "0 0 10px 0"})
 
 (def subtitle-style
   {:font-size "14px"
-   :color "#666"
+   :color "var(--text-tertiary, #9ca3af)"
    :margin 0})
 
 (def input-group-style
@@ -123,11 +172,14 @@
 
 (def input-style
   {:padding "10px 15px"
-   :border "1px solid #ddd"
+   :background "var(--input-bg, #ffffff)"
+   :color "var(--text-primary, #1f2937)"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
    :font-size "14px"
    :flex "1"
-   :min-width "120px"})
+   :min-width "120px"
+   :box-shadow "inset 0 1px 2px var(--shadow-color, rgba(0,0,0,0.05))"})
 
 (def button-style
   {:padding "10px 20px"
@@ -138,7 +190,8 @@
    :cursor "pointer"
    :font-size "14px"
    :font-weight "500"
-   :transition "background 0.2s"})
+   :transition "background 0.2s"
+   :box-shadow "0 2px 4px rgba(0,0,0,0.3)"})
 
 (def quick-buttons-style
   {:display "flex"
@@ -148,12 +201,15 @@
 
 (def quick-button-style
   {:padding "8px 16px"
-   :background "#f3f4f6"
-   :border "1px solid #e5e7eb"
+   :background "var(--button-bg, #f3f4f6)"
+   :color "var(--button-text, #374151)"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
    :cursor "pointer"
    :font-size "13px"
-   :transition "all 0.2s"})
+   :font-weight "500"
+   :transition "all 0.2s"
+   :box-shadow "0 1px 2px var(--shadow-color, rgba(0,0,0,0.1))"})
 
 (def controls-bar-style
   {:display "flex"
@@ -169,9 +225,10 @@
 
 (def toggle-button-style
   {:padding "8px 16px"
-   :border "1px solid #ddd"
+   :border "1px solid var(--border-color-dark, #d1d5db)"
    :border-radius "6px"
-   :background "#fff"
+   :background "var(--button-bg, #f3f4f6)"
+   :color "var(--button-text, #374151)"
    :cursor "pointer"
    :font-size "14px"
    :transition "all 0.2s"})
@@ -189,13 +246,13 @@
    :margin-top "20px"})
 
 (def forecast-card-style
-  {:background "#ffffff"
-   :border "1px solid #e5e7eb"
+  {:background "var(--card-secondary-bg, #f9fafb)"
+   :border "1px solid var(--border-color, #e5e7eb)"
    :border-radius "10px"
    :padding "20px"
    :text-align "center"
    :transition "all 0.2s"
-   :box-shadow "0 1px 3px rgba(0,0,0,0.1)"})
+   :box-shadow "0 1px 3px var(--shadow-color, rgba(0,0,0,0.1))"})
 
 (def forecast-card-hover-style
   (merge forecast-card-style
@@ -205,7 +262,7 @@
 (def period-name-style
   {:font-size "16px"
    :font-weight "600"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin "0 0 10px 0"})
 
 (def weather-icon-style
@@ -220,13 +277,13 @@
 
 (def forecast-text-style
   {:font-size "14px"
-   :color "#4b5563"
+   :color "var(--text-secondary, #6b7280)"
    :margin "10px 0 5px 0"
    :line-height "1.4"})
 
 (def wind-style
   {:font-size "13px"
-   :color "#6b7280"
+   :color "#9ca3af"
    :margin "5px 0"})
 
 (def precip-style
@@ -238,7 +295,7 @@
 (def loading-style
   {:text-align "center"
    :padding "40px"
-   :color "#6b7280"})
+   :color "#9ca3af"})
 
 (def error-style
   {:background "#fef2f2"
@@ -251,7 +308,7 @@
 (def location-display-style
   {:font-size "18px"
    :font-weight "500"
-   :color "#1a1a1a"
+   :color "var(--text-primary, #1f2937)"
    :margin-bottom "10px"})
 
 ;; ============================================================================
@@ -276,11 +333,13 @@
    [:div {:style {:font-size "40px" :margin-bottom "10px"}} "⏳"]
    [:div "Loading forecast data..."]])
 
-(defn error-message [{:keys [message]}]
+(defn error-message
+  [{:keys [message]}]
   [:div {:style error-style}
    [:strong "Error: "] message])
 
-(defn location-input [{:keys [lat lon on-lat-change on-lon-change on-fetch]}]
+(defn location-input
+  [{:keys [lat lon on-lat-change on-lon-change on-fetch]}]
   [:div
    [:div {:style input-group-style}
     [:input {:type "number"
@@ -301,18 +360,21 @@
               :on-mouse-out #(set! (.. % -target -style -background) "#3b82f6")}
      "Get Forecast"]]])
 
-(defn quick-city-buttons [{:keys [cities on-select]}]
+(defn quick-city-buttons
+  [{:keys [cities on-select]}]
   [:div {:style quick-buttons-style}
    (for [city cities]
      ^{:key (:name city)}
      [:button
       {:style quick-button-style
-       :on-click #(on-select city)
-       :on-mouse-over #(set! (.. % -target -style -background) "#e5e7eb")
-       :on-mouse-out #(set! (.. % -target -style -background) "#f3f4f6")}
+       :on-click #(on-select city)}
       (:name city)])])
 
-(defn controls-bar [{:keys [show-all? on-toggle-periods unit on-unit-change]}]
+(defn controls-bar
+  [{:keys [show-all?
+           on-toggle-periods
+           unit
+           on-unit-change]}]
   [:div {:style controls-bar-style}
    [:div {:style toggle-group-style}
     [:button
@@ -332,7 +394,8 @@
         :on-click #(on-unit-change u)}
        u])]])
 
-(defn forecast-card [{:keys [period unit]}]
+(defn forecast-card
+  [{:keys [period unit]}]
   (let [hovering? (r/atom false)]
     (fn [{:keys [period unit]}]
       (let [{:keys [name temperature windSpeed windDirection
@@ -357,14 +420,21 @@
            [:div {:style precip-style}
             "💧 " precip-value "% chance"])]))))
 
-(defn forecast-grid [{:keys [periods unit show-all?]}]
+(defn forecast-grid
+  [{:keys [periods unit show-all?]}]
   (let [displayed-periods (if show-all? periods (take 7 periods))]
     [:div {:style forecast-grid-style}
      (for [period displayed-periods]
        ^{:key (:number period)}
        [forecast-card {:period period :unit unit}])]))
 
-(defn forecast-display [{:keys [forecast-data location-name unit show-all? on-toggle-periods on-unit-change]}]
+(defn forecast-display
+  [{:keys [forecast-data
+           location-name
+           unit
+           show-all?
+           on-toggle-periods
+           on-unit-change]}]
   (let [periods (get-in forecast-data [:properties :periods])]
     [:div
      [:div {:style location-display-style} "📍 " location-name]
@@ -384,7 +454,8 @@
 ;; Main Component
 ;; ============================================================================
 
-(defn main-component []
+(defn main-component
+  []
   (let [lat (r/atom "35.2271")
         lon (r/atom "-80.8431")
         location-name (r/atom "Charlotte, NC")
