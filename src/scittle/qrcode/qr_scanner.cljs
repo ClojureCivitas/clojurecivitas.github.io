@@ -50,7 +50,7 @@
 
 (defn show-toast!
   "Show a success toast message
-  
+
   Usage:
     (show-toast! {:message \"QR Code detected!\"})"
   [{:keys [message duration]}]
@@ -90,9 +90,9 @@
 
 (defn start-stream!
   "Start camera stream
-  
+
   Usage:
-    (start-stream! 
+    (start-stream!
       {:on-success (fn [stream] ...)
        :on-error (fn [error] ...)})"
   [{:keys [on-success on-error]}]
@@ -112,7 +112,7 @@
 
 (defn scan-qr-code
   "Scan for QR code in video feed
-  
+
   Usage:
     (scan-qr-code
       {:video-element video-el
@@ -152,7 +152,7 @@
 
 (defn start-qr-scanning!
   "Start continuous QR code scanning
-  
+
   Usage:
     (start-qr-scanning!
       {:video-element video-el
@@ -188,7 +188,7 @@
 
 (defn copy-to-clipboard!
   "Copy text to clipboard
-  
+
   Usage:
     (copy-to-clipboard!
       {:text \"Hello World\"
