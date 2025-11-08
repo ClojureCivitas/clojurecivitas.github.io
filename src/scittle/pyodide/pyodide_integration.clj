@@ -7,6 +7,7 @@
                   :type :post
                   :date "2025-11-05"
                   :category :libs
+                  :image "pyodide-01.png"
                   :tags [:scittle
                          :clojurescript
                          :python
