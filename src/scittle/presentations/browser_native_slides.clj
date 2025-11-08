@@ -6,6 +6,7 @@
                   :type :post
                   :date "2025-11-04"
                   :category :libs
+                  :image "presentation-01.png"
                   :tags [:scittle
                          :clojurescript
                          :reagent
