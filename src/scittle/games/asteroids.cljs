@@ -30,6 +30,8 @@
 (def ufo-size 20)
 (def ufo-speed 2)
 (def hyperspace-cooldown 120)
+(def max-asteroids 50) ;; Safety limit to prevent lag
+(def max-particles 200) ;; Safety limit to prevent lag
 
 ;; ============================================================================
 ;; Game State
@@ -54,7 +56,15 @@
            :game-status :ready
            :hyperspace-cooldown 0
            :frame-count 0
-           :ufo-timer 0}))
+           :ufo-timer 0
+           ;; Touch controls state
+           :touch-controls {:joystick {:active false
+                                       :x 0
+                                       :y 0
+                                       :angle 0
+                                       :distance 0}
+                            :fire-button false
+                            :hyperspace-button false}}))
 
 ;; ============================================================================
 ;; Vector Math Helpers
@@ -251,7 +261,7 @@
       (swap! game-state update :particles
              #(vec (concat % (create-particles :x (:x (:ship @game-state))
                                                :y (:y (:ship @game-state))
-                                               :count 20
+                                               :count 12
                                                :color "#FFFFFF")))))))
 
 ;; ============================================================================
@@ -350,37 +360,73 @@
                           :when (> (:life new-p) 0)]
                       new-p))))
 
-      ;; Check bullet-asteroid collisions
-      (doseq [bullet bullets
-              :when (not (:from-ufo bullet))
-              asteroid asteroids]
-        (when (check-collision :obj1 bullet :obj2 asteroid
-                               :radius1 2 :radius2 (:size asteroid))
-          (swap! game-state update :bullets #(vec (remove (fn [b] (= b bullet)) %)))
-          (swap! game-state update :asteroids #(vec (remove (fn [a] (= a asteroid)) %)))
-          (swap! game-state update :asteroids
-                 #(vec (concat % (split-asteroid :asteroid asteroid))))
-          (swap! game-state update :score + (get asteroid-points (:size-type asteroid)))
-          (swap! game-state update :particles
-                 #(vec (concat % (create-particles :x (:x asteroid)
-                                                   :y (:y asteroid)
-                                                   :count 10
-                                                   :color "#FFFFFF"))))))
+      ;; Check bullet-asteroid collisions (FIXED to prevent duplicate hits)
+      (let [hit-bullets (atom #{})
+            hit-asteroids (atom #{})
+            new-asteroids (atom [])
+            score-added (atom 0)
+            new-particles (atom [])]
 
-      ;; Check bullet-UFO collisions
-      (doseq [bullet bullets
-              :when (not (:from-ufo bullet))
-              ufo ufos]
-        (when (check-collision :obj1 bullet :obj2 ufo
-                               :radius1 2 :radius2 ufo-size)
-          (swap! game-state update :bullets #(vec (remove (fn [b] (= b bullet)) %)))
-          (swap! game-state update :ufos #(vec (remove (fn [u] (= u ufo)) %)))
-          (swap! game-state update :score + 200)
+        ;; Find all collisions (but don't apply yet)
+        (doseq [bullet bullets
+                :when (and (not (:from-ufo bullet))
+                           (not (contains? @hit-bullets bullet)))
+                asteroid asteroids
+                :when (not (contains? @hit-asteroids asteroid))]
+          (when (check-collision :obj1 bullet :obj2 asteroid
+                                 :radius1 2 :radius2 (:size asteroid))
+            ;; Mark as hit
+            (swap! hit-bullets conj bullet)
+            (swap! hit-asteroids conj asteroid)
+            ;; Collect new asteroids and effects
+            (swap! new-asteroids concat (split-asteroid :asteroid asteroid))
+            (swap! score-added + (get asteroid-points (:size-type asteroid)))
+            (swap! new-particles concat (create-particles :x (:x asteroid)
+                                                          :y (:y asteroid)
+                                                          :count 5
+                                                          :color "#FFFFFF"))))
+
+        ;; Apply all collision effects at once
+        (when (seq @hit-bullets)
+          (swap! game-state update :bullets #(vec (remove (fn [b] (contains? @hit-bullets b)) %)))
+          (swap! game-state update :asteroids #(vec (remove (fn [a] (contains? @hit-asteroids a)) %)))
+          ;; Only add new asteroids if we're under the limit
+          (swap! game-state update :asteroids
+                 #(let [current (vec (remove (fn [a] (contains? @hit-asteroids a)) %))
+                        new-ones @new-asteroids
+                        combined (concat current new-ones)]
+                    (vec (take max-asteroids combined))))
+          (swap! game-state update :score + @score-added)
+          ;; Limit particles to prevent lag
           (swap! game-state update :particles
-                 #(vec (concat % (create-particles :x (:x ufo)
-                                                   :y (:y ufo)
-                                                   :count 15
-                                                   :color "#FF00FF"))))))
+                 #(vec (take max-particles (concat % @new-particles))))))
+
+      ;; Check bullet-UFO collisions (FIXED to prevent duplicate hits)
+      (let [hit-bullets (atom #{})
+            hit-ufos (atom #{})
+            score-added (atom 0)
+            new-particles (atom [])]
+
+        (doseq [bullet bullets
+                :when (and (not (:from-ufo bullet))
+                           (not (contains? @hit-bullets bullet)))
+                ufo ufos
+                :when (not (contains? @hit-ufos ufo))]
+          (when (check-collision :obj1 bullet :obj2 ufo
+                                 :radius1 2 :radius2 ufo-size)
+            (swap! hit-bullets conj bullet)
+            (swap! hit-ufos conj ufo)
+            (swap! score-added + 200)
+            (swap! new-particles concat (create-particles :x (:x ufo)
+                                                          :y (:y ufo)
+                                                          :count 8
+                                                          :color "#FF00FF"))))
+
+        (when (seq @hit-bullets)
+          (swap! game-state update :bullets #(vec (remove (fn [b] (contains? @hit-bullets b)) %)))
+          (swap! game-state update :ufos #(vec (remove (fn [u] (contains? @hit-ufos u)) %)))
+          (swap! game-state update :score + @score-added)
+          (swap! game-state update :particles #(vec (concat % @new-particles)))))
 
       ;; Check ship-asteroid collisions
       (when (= (:invulnerable ship) 0)
@@ -391,7 +437,7 @@
             (swap! game-state update :particles
                    #(vec (concat % (create-particles :x (:x ship)
                                                      :y (:y ship)
-                                                     :count 20
+                                                     :count 12
                                                      :color "#FFFFFF"))))
             (reset-ship!)
             (when (<= (:lives @game-state) 0)
@@ -409,7 +455,7 @@
             (swap! game-state update :particles
                    #(vec (concat % (create-particles :x (:x ship)
                                                      :y (:y ship)
-                                                     :count 20
+                                                     :count 12
                                                      :color "#FFFFFF"))))
             (reset-ship!)
             (when (<= (:lives @game-state) 0)
@@ -560,6 +606,41 @@
 ;; Game Control
 ;; ============================================================================
 
+;; ============================================================================
+;; Touch Control Helpers
+;; ============================================================================
+
+(defn calculate-joystick-angle
+  "Calculates angle from joystick center to touch point"
+  [& {:keys [center-x center-y touch-x touch-y]}]
+  (let [dx (- touch-x center-x)
+        dy (- touch-y center-y)]
+    (Math/atan2 dy dx)))
+
+(defn calculate-joystick-distance
+  "Calculates distance from joystick center to touch point"
+  [& {:keys [center-x center-y touch-x touch-y max-distance]}]
+  (let [dx (- touch-x center-x)
+        dy (- touch-y center-y)
+        dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
+    (min dist max-distance)))
+
+(defn normalize-joystick-input
+  "Normalizes joystick distance to 0-1 range"
+  [& {:keys [distance max-distance]}]
+  (/ distance max-distance))
+
+(defn find-touch-by-id
+  "Finds a touch in a TouchList by its identifier"
+  [touch-list touch-id]
+  (when touch-list
+    (loop [i 0]
+      (when (< i (.-length touch-list))
+        (let [touch (aget touch-list i)]
+          (if (= (.-identifier touch) touch-id)
+            touch
+            (recur (inc i))))))))
+
 (defn start-game!
   "Starts a new game"
   []
@@ -581,7 +662,15 @@
          :game-status :playing
          :hyperspace-cooldown 0
          :frame-count 0
-         :ufo-timer 600)
+         :ufo-timer 600
+         ;; Reset touch controls
+         :touch-controls {:joystick {:active false
+                                     :x 0
+                                     :y 0
+                                     :angle 0
+                                     :distance 0}
+                          :fire-button false
+                          :hyperspace-button false})
   (init-level! :level 1))
 
 ;; ============================================================================
@@ -619,15 +708,36 @@
             ;; Game loop
             (letfn [(game-loop []
                       (when (= (:game-status @game-state) :playing)
-                        ;; Handle rotation
-                        (when (contains? @keys-pressed "ArrowLeft")
-                          (swap! game-state update-in [:ship :angle] - rotation-speed))
-                        (when (contains? @keys-pressed "ArrowRight")
-                          (swap! game-state update-in [:ship :angle] + rotation-speed))
-                        ;; Handle thrust
-                        (if (contains? @keys-pressed "ArrowUp")
-                          (swap! game-state assoc-in [:ship :thrusting] true)
-                          (swap! game-state assoc-in [:ship :thrusting] false)))
+                        (let [joystick (get-in @game-state [:touch-controls :joystick])]
+                          ;; Handle keyboard rotation
+                          (when (contains? @keys-pressed "ArrowLeft")
+                            (swap! game-state update-in [:ship :angle] - rotation-speed))
+                          (when (contains? @keys-pressed "ArrowRight")
+                            (swap! game-state update-in [:ship :angle] + rotation-speed))
+
+                          ;; Handle touch joystick rotation and thrust
+                          (when (:active joystick)
+                            (let [normalized-distance (normalize-joystick-input
+                                                       :distance (:distance joystick)
+                                                       :max-distance 50)
+                                  joy-angle (:angle joystick)]
+                              ;; Convert joystick angle to ship angle
+                              ;; Joystick angle is in screen space, need to convert to ship rotation
+                              (swap! game-state assoc-in [:ship :angle]
+                                     (+ joy-angle (/ Math/PI 2)))
+                              ;; Set thrusting based on joystick distance
+                              (swap! game-state assoc-in [:ship :thrusting]
+                                     (> normalized-distance 0.3))))
+
+                          ;; Handle keyboard thrust
+                          (when (and (not (:active joystick))
+                                     (contains? @keys-pressed "ArrowUp"))
+                            (swap! game-state assoc-in [:ship :thrusting] true))
+
+                          ;; Turn off thrusting if no input
+                          (when (and (not (:active joystick))
+                                     (not (contains? @keys-pressed "ArrowUp")))
+                            (swap! game-state assoc-in [:ship :thrusting] false))))
 
                       (update-game!)
                       (draw-game! :ctx ctx)
@@ -648,6 +758,201 @@
                           :background "#000000"}}])})))
 
 ;; ============================================================================
+;; Touch Controls Components
+;; ============================================================================
+
+(defn virtual-joystick
+  "Virtual joystick for touch controls"
+  []
+  (let [joystick-ref (atom nil)
+        touch-id (atom nil)
+        joystick-size 120
+        max-distance 50]
+    (r/create-class
+     {:component-did-mount
+      (fn []
+        (when-let [joystick @joystick-ref]
+          (let [get-joystick-center (fn []
+                                      (let [rect (.getBoundingClientRect joystick)]
+                                        {:x (+ (.-left rect) (/ (.-width rect) 2))
+                                         :y (+ (.-top rect) (/ (.-height rect) 2))}))
+
+                handle-touch-start (fn [e]
+                                     (.preventDefault e)
+                                     (let [touch (aget (.-touches e) 0)]
+                                       (reset! touch-id (.-identifier touch))
+                                       (swap! game-state assoc-in [:touch-controls :joystick :active] true)))
+
+                handle-touch-move (fn [e]
+                                    (.preventDefault e)
+                                    (when @touch-id
+                                      (let [touches (.-touches e)
+                                            touch (find-touch-by-id touches @touch-id)]
+                                        (when touch
+                                          (let [center (get-joystick-center)
+                                                touch-x (.-clientX touch)
+                                                touch-y (.-clientY touch)
+                                                angle (calculate-joystick-angle
+                                                       :center-x (:x center)
+                                                       :center-y (:y center)
+                                                       :touch-x touch-x
+                                                       :touch-y touch-y)
+                                                distance (calculate-joystick-distance
+                                                          :center-x (:x center)
+                                                          :center-y (:y center)
+                                                          :touch-x touch-x
+                                                          :touch-y touch-y
+                                                          :max-distance max-distance)]
+                                            (swap! game-state assoc-in [:touch-controls :joystick]
+                                                   {:active true
+                                                    :angle angle
+                                                    :distance distance
+                                                    :x (* (Math/cos angle) distance)
+                                                    :y (* (Math/sin angle) distance)}))))))
+
+                handle-touch-end (fn [e]
+                                   (.preventDefault e)
+                                   (let [touches (.-changedTouches e)
+                                         released-touch (find-touch-by-id touches @touch-id)]
+                                     (when released-touch
+                                       (reset! touch-id nil)
+                                       (swap! game-state assoc-in [:touch-controls :joystick]
+                                              {:active false :x 0 :y 0 :angle 0 :distance 0}))))]
+
+            (.addEventListener joystick "touchstart" handle-touch-start)
+            (.addEventListener joystick "touchmove" handle-touch-move)
+            (.addEventListener joystick "touchend" handle-touch-end)
+            (.addEventListener joystick "touchcancel" handle-touch-end))))
+
+      :render
+      (fn []
+        (let [{:keys [active x y]} (get-in @game-state [:touch-controls :joystick])]
+          [:div {:ref #(reset! joystick-ref %)
+                 :style {:position "fixed"
+                         :bottom "40px"
+                         :left "40px"
+                         :width (str joystick-size "px")
+                         :height (str joystick-size "px")
+                         :border-radius "50%"
+                         :background "rgba(255, 255, 255, 0.2)"
+                         :border "3px solid rgba(255, 255, 255, 0.5)"
+                         :touch-action "none"
+                         :user-select "none"
+                         :z-index 1000
+                         :display "flex"
+                         :align-items "center"
+                         :justify-content "center"}}
+           [:div {:style {:position "absolute"
+                          :width "60px"
+                          :height "60px"
+                          :border-radius "50%"
+                          :background (if active
+                                        "rgba(76, 175, 80, 0.8)"
+                                        "rgba(255, 255, 255, 0.5)")
+                          :transform (if active
+                                       (str "translate(" x "px, " y "px)")
+                                       "translate(0, 0)")
+                          :transition (if active "none" "all 0.1s ease")
+                          :border "2px solid rgba(255, 255, 255, 0.8)"
+                          :box-shadow "0 2px 8px rgba(0, 0, 0, 0.3)"}}]
+           [:div {:style {:position "absolute"
+                          :color "rgba(255, 255, 255, 0.8)"
+                          :font-size "12px"
+                          :font-weight "bold"
+                          :pointer-events "none"}}
+            "MOVE"]]))})))
+
+(defn touch-action-button
+  "Touch button for actions (fire, hyperspace)"
+  [& {:keys [label bottom right on-press on-release color]}]
+  (let [button-ref (atom nil)
+        touch-id (atom nil)]
+    (r/create-class
+     {:component-did-mount
+      (fn []
+        (when-let [button @button-ref]
+          (let [handle-touch-start (fn [e]
+                                     (.preventDefault e)
+                                     (let [touch (aget (.-touches e) 0)]
+                                       (reset! touch-id (.-identifier touch))
+                                       (when on-press (on-press))))
+
+                handle-touch-end (fn [e]
+                                   (.preventDefault e)
+                                   (let [touches (.-changedTouches e)
+                                         released-touch (find-touch-by-id touches @touch-id)]
+                                     (when released-touch
+                                       (reset! touch-id nil)
+                                       (when on-release (on-release)))))]
+
+            (.addEventListener button "touchstart" handle-touch-start)
+            (.addEventListener button "touchend" handle-touch-end)
+            (.addEventListener button "touchcancel" handle-touch-end))))
+
+      :render
+      (fn []
+        (let [is-pressed (case label
+                           "FIRE" (get-in @game-state [:touch-controls :fire-button])
+                           "HYPER" (get-in @game-state [:touch-controls :hyperspace-button])
+                           false)]
+          [:div {:ref #(reset! button-ref %)
+                 :style {:position "fixed"
+                         :bottom bottom
+                         :right right
+                         :width "80px"
+                         :height "80px"
+                         :border-radius "50%"
+                         :background (if is-pressed
+                                       (str "rgba(" (or color "255, 255, 255") ", 0.9)")
+                                       (str "rgba(" (or color "255, 255, 255") ", 0.4)"))
+                         :border "3px solid rgba(255, 255, 255, 0.8)"
+                         :touch-action "none"
+                         :user-select "none"
+                         :z-index 1000
+                         :display "flex"
+                         :align-items "center"
+                         :justify-content "center"
+                         :font-weight "bold"
+                         :color (if is-pressed "rgba(0, 0, 0, 0.8)" "rgba(255, 255, 255, 0.9)")
+                         :font-size "14px"
+                         :text-align "center"
+                         :box-shadow "0 2px 8px rgba(0, 0, 0, 0.3)"
+                         :transition "all 0.1s ease"}}
+           label]))})))
+
+(defn touch-controls
+  "Main touch controls component"
+  []
+  (when (= (:game-status @game-state) :playing)
+    [:div {:style {:position "fixed"
+                   :top 0
+                   :left 0
+                   :width "100%"
+                   :height "100%"
+                   :pointer-events "none"
+                   :z-index 999}}
+     [:div {:style {:pointer-events "auto"}}
+      [virtual-joystick]
+      [touch-action-button
+       :label "FIRE"
+       :bottom "130px"
+       :right "40px"
+       :color "76, 175, 80"
+       :on-press #(do
+                    (swap! game-state assoc-in [:touch-controls :fire-button] true)
+                    (fire-bullet!))
+       :on-release #(swap! game-state assoc-in [:touch-controls :fire-button] false)]
+      [touch-action-button
+       :label "HYPER"
+       :bottom "40px"
+       :right "40px"
+       :color "255, 152, 0"
+       :on-press #(do
+                    (swap! game-state assoc-in [:touch-controls :hyperspace-button] true)
+                    (hyperspace!))
+       :on-release #(swap! game-state assoc-in [:touch-controls :hyperspace-button] false)]]]))
+
+;; ============================================================================
 ;; UI Components
 ;; ============================================================================
 
@@ -662,20 +967,54 @@
    [:h4 {:style {:margin-bottom "10px"
                  :color "#4caf50"}}
     "How to Play:"]
-   [:ul {:style {:margin "0"
-                 :padding-left "20px"
-                 :color "#666"
-                 :font-size "14px"
-                 :line-height "1.6"}}
-    [:li "← → Arrow Keys - Rotate ship"]
-    [:li "↑ Arrow Key - Thrust forward"]
-    [:li "Spacebar - Fire bullets"]
-    [:li "X Key - Hyperspace jump (risky - 10% chance of death!)"]
-    [:li "Destroy all asteroids to advance levels"]
-    [:li "Large asteroids split into medium, medium into small"]
-    [:li "Watch out for UFOs - they shoot back!"]
-    [:li "Screen wraps around at edges"]
-    [:li "Physics-based movement with momentum"]]])
+
+   ;; Desktop controls
+   [:div {:style {:margin-bottom "15px"}}
+    [:h5 {:style {:margin "10px 0 5px 0"
+                  :color "#333"
+                  :font-size "14px"}}
+     "🖥️ Desktop Controls:"]
+    [:ul {:style {:margin "0"
+                  :padding-left "20px"
+                  :color "#666"
+                  :font-size "14px"
+                  :line-height "1.6"}}
+     [:li "← → Arrow Keys - Rotate ship"]
+     [:li "↑ Arrow Key - Thrust forward"]
+     [:li "Spacebar - Fire bullets"]
+     [:li "X Key - Hyperspace jump (risky - 10% chance of death!)"]]]
+
+   ;; Mobile controls
+   [:div {:style {:margin-bottom "15px"}}
+    [:h5 {:style {:margin "10px 0 5px 0"
+                  :color "#333"
+                  :font-size "14px"}}
+     "📱 Mobile Controls:"]
+    [:ul {:style {:margin "0"
+                  :padding-left "20px"
+                  :color "#666"
+                  :font-size "14px"
+                  :line-height "1.6"}}
+     [:li "Virtual Joystick (bottom-left) - Rotate and thrust ship"]
+     [:li "FIRE Button (right) - Fire bullets"]
+     [:li "HYPER Button (right) - Hyperspace jump"]]]
+
+   ;; Game rules
+   [:div
+    [:h5 {:style {:margin "10px 0 5px 0"
+                  :color "#333"
+                  :font-size "14px"}}
+     "🎮 Game Rules:"]
+    [:ul {:style {:margin "0"
+                  :padding-left "20px"
+                  :color "#666"
+                  :font-size "14px"
+                  :line-height "1.6"}}
+     [:li "Destroy all asteroids to advance levels"]
+     [:li "Large asteroids split into medium, medium into small"]
+     [:li "Watch out for UFOs - they shoot back!"]
+     [:li "Screen wraps around at edges"]
+     [:li "Physics-based movement with momentum"]]]])
 
 (defn game-controls
   "Game control buttons"
@@ -775,7 +1114,7 @@
     [:p {:style {:margin-bottom "20px"
                  :color "#666"
                  :font-size "14px"}}
-     "Defend your ship from asteroids and UFOs!"]
+     "Defend your ship from asteroids and UFOs! Works on desktop and mobile!"]
 
     ;; Game controls
     [game-controls]
@@ -785,6 +1124,9 @@
                    :justify-content "center"
                    :margin "20px 0"}}
      [game-canvas]]
+
+    ;; Touch controls overlay
+    [touch-controls]
 
     ;; Game tips
     [game-tips]]])
