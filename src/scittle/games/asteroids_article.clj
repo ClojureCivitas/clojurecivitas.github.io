@@ -297,11 +297,12 @@
 
 ;; #### Code Review Improvement
 
-;; After sharing this code on Slack, Erik provided excellent feedback:
+;; After sharing this code on Slack, [Erik Assum](https://github.com/slipset) provided excellent feedback:
 
 ;; > "Very cool! Looking at the code, in the `hyperspace!` you have multiple swap!s on your gamestate atom. Probs doesn't make a difference here, but it does defeat the purpose of an atom, because you're now susceptible to races (at least in a multi-threaded env), and if you have listeners to the atom state, they'll get more updates than what they bargained for."
 
 ;; **The Problem:** Multiple `swap!` calls meant:
+;;
 ;; - Multiple state updates (5-7 separate modifications)
 ;; - Race condition risk in multi-threaded environments
 ;; - Multiple Reagent re-renders instead of one
@@ -343,6 +344,7 @@
 ;; ```
 
 ;; **Benefits of the improved version:**
+;;
 ;; - Single atomic state update
 ;; - No race conditions
 ;; - One Reagent re-render per hyperspace jump
@@ -790,6 +792,7 @@
 ;; ### Impact of Performance Fixes
 
 ;; **Before fixes:**
+;;
 ;; - Rapid firing → 100+ asteroids in seconds
 ;; - 1000+ particles causing visual chaos
 ;; - Frame rate drops from 60 FPS to < 10 FPS
@@ -797,6 +800,7 @@
 ;; - Mobile devices especially affected
 
 ;; **After fixes:**
+;;
 ;; - Maximum 50 asteroids (smooth on all devices)
 ;; - Maximum 200 particles (clean visual effects)
 ;; - Consistent 60 FPS on desktop and mobile
