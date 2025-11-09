@@ -15,6 +15,14 @@
             [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as plotly]))
 
+(kind/hiccup
+ [:style
+  ".clay-dataset {
+  max-height:400px; 
+  overflow-y: auto;
+}
+"])
+
 ;; # Introduction to Digital Signal Processing
 ;;
 ;; **Notes from the [Scicloj DSP Study Group](https://scicloj.github.io/docs/community/groups/dsp-study/)**  
@@ -224,7 +232,7 @@ violin-components-dataset
 
 ;; ## What We Learned
 ;;
-;; In this first session, we covered the fundamentals from Chapter 1 of Think DSP:
+;; In this first session, we covered a few topics from Chapter 1 of Think DSP:
 ;;
 ;; - **Sampling and sample rates** - Converting continuous signals to discrete measurements
 ;; - **Generating sine waves** - The building blocks of all sound
