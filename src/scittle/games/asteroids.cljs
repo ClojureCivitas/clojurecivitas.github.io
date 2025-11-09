@@ -15,6 +15,70 @@
 ;; Game Constants
 ;; ============================================================================
 
+;; ============================================================================
+;; Audio System (Web Audio API)
+;; ============================================================================
+
+(def audio-context
+  "Web Audio API context for sound generation"
+  (when (exists? js/AudioContext)
+    (js/AudioContext.)))
+
+(defn play-tone
+  "Plays a tone at the specified frequency for the given duration"
+  [& {:keys [frequency duration volume]
+      :or {frequency 440 duration 0.2 volume 0.3}}]
+  (when audio-context
+    (try
+      (let [oscillator (.createOscillator audio-context)
+            gain-node (.createGain audio-context)]
+        (.connect oscillator gain-node)
+        (.connect gain-node (.-destination audio-context))
+        (set! (.-value (.-frequency oscillator)) frequency)
+        (set! (.-value (.-gain gain-node)) volume)
+        (.start oscillator)
+        (.stop oscillator (+ (.-currentTime audio-context) duration)))
+      (catch js/Error e
+        (js/console.error "Audio error:" e)))))
+
+(defn play-laser-sound
+  "Plays a laser shooting sound"
+  []
+  (play-tone :frequency 800 :duration 0.1 :volume 0.2))
+
+(defn play-explosion-sound
+  "Plays an explosion sound for asteroids and UFOs"
+  []
+  (play-tone :frequency 100 :duration 0.2 :volume 0.3))
+
+(defn play-thrust-sound
+  "Plays a ship thrust/engine sound"
+  []
+  (play-tone :frequency 150 :duration 0.08 :volume 0.15))
+
+(defn play-hyperspace-sound
+  "Plays a hyperspace jump sound with descending frequencies"
+  []
+  ;; Descending frequencies for warp effect
+  (doseq [[idx freq] (map-indexed vector [880 660 440 220])]
+    (js/setTimeout
+     #(play-tone :frequency freq :duration 0.1 :volume 0.25)
+     (* idx 50))))
+
+(defn play-hit-sound
+  "Plays a sound when the ship is hit"
+  []
+  (play-tone :frequency 150 :duration 0.3 :volume 0.4))
+
+(defn play-level-complete-sound
+  "Plays a victory sound for completing a level"
+  []
+  ;; Ascending notes for victory
+  (doseq [[idx freq] (map-indexed vector [523 659 784 1047])]
+    (js/setTimeout
+     #(play-tone :frequency freq :duration 0.2 :volume 0.25)
+     (* idx 100))))
+
 (def canvas-width 800)
 (def canvas-height 600)
 (def ship-size 10)
@@ -215,6 +279,7 @@
 (defn fire-bullet!
   "Fires a bullet from the ship"
   []
+  (play-laser-sound) ; Play laser sound
   (let [{:keys [x y angle]} (:ship @game-state)
         bullet-vx (* bullet-speed (Math/cos (- angle (/ Math/PI 2))))
         bullet-vy (* bullet-speed (Math/sin (- angle (/ Math/PI 2))))]
@@ -250,6 +315,7 @@
   "Hyperspace jump with risk"
   []
   (when (<= (:hyperspace-cooldown @game-state) 0)
+    (play-hyperspace-sound) ; Play hyperspace sound
     (let [new-x (rand-int canvas-width)
           new-y (rand-int canvas-height)
           died? (< (rand) 0.1)]
@@ -309,7 +375,7 @@
         (swap! game-state update :ufos conj (create-ufo))
         (swap! game-state assoc :ufo-timer (+ 900 (rand-int 900))))
 
-      ;; Update ship
+;; Update ship
       (swap! game-state update :ship
              (fn [s]
                (let [new-vx (if (:thrusting s)
@@ -327,6 +393,11 @@
                      (update :x #(wrap-position :value (+ % new-vx) :max-val canvas-width))
                      (update :y #(wrap-position :value (+ % new-vy) :max-val canvas-height))
                      (update :invulnerable #(max 0 (dec %)))))))
+
+      ;; Play thrust sound (throttled to every 8 frames)
+      (when (and (:thrusting ship)
+                 (= (mod (:frame-count @game-state) 8) 0))
+        (play-thrust-sound))
 
       ;; Update bullets
       (swap! game-state update :bullets
@@ -398,8 +469,9 @@
                                                           :count 5
                                                           :color "#FFFFFF"))))
 
-        ;; Apply all collision effects at once
+;; Apply all collision effects at once
         (when (seq @hit-bullets)
+          (play-explosion-sound) ; Play explosion sound for asteroid destruction
           (swap! game-state update :bullets #(vec (remove (fn [b] (contains? @hit-bullets b)) %)))
           (swap! game-state update :asteroids #(vec (remove (fn [a] (contains? @hit-asteroids a)) %)))
           ;; Only add new asteroids if we're under the limit
@@ -435,6 +507,7 @@
                                                           :color "#FF00FF"))))
 
         (when (seq @hit-bullets)
+          (play-explosion-sound) ; Play explosion sound for UFO destruction
           (swap! game-state update :bullets #(vec (remove (fn [b] (contains? @hit-bullets b)) %)))
           (swap! game-state update :ufos #(vec (remove (fn [u] (contains? @hit-ufos u)) %)))
           (swap! game-state update :score + @score-added)
@@ -445,6 +518,7 @@
         (doseq [asteroid asteroids]
           (when (check-collision :obj1 ship :obj2 asteroid
                                  :radius1 ship-size :radius2 (:size asteroid))
+            (play-hit-sound) ; Play hit sound when ship is hit
             (swap! game-state update :lives dec)
             (swap! game-state update :particles
                    #(vec (concat % (create-particles :x (:x ship)
@@ -462,6 +536,7 @@
                 :when (:from-ufo bullet)]
           (when (check-collision :obj1 ship :obj2 bullet
                                  :radius1 ship-size :radius2 3)
+            (play-hit-sound) ; Play hit sound when ship is hit by UFO bullet
             (swap! game-state update :bullets #(vec (remove (fn [b] (= b bullet)) %)))
             (swap! game-state update :lives dec)
             (swap! game-state update :particles
@@ -474,8 +549,9 @@
               (swap! game-state assoc :game-status :game-over)
               (swap! game-state update :high-score max (:score @game-state))))))
 
-      ;; Check level complete
+;; Check level complete
       (when (empty? asteroids)
+        (play-level-complete-sound) ; Play victory sound
         (swap! game-state update :level inc)
         (init-level! :level (:level @game-state))))))
 
