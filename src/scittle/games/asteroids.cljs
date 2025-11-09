@@ -311,36 +311,37 @@
 ;; Special Moves
 ;; ============================================================================
 
+(defn hyperspace [state new-x new-y died?]
+  (-> state
+      ;; Teleport ship
+      (assoc-in [:ship :x] new-x)
+      (assoc-in [:ship :y] new-y)
+      (assoc-in [:ship :vx] 0)
+      (assoc-in [:ship :vy] 0)
+      (assoc :hyperspace-cooldown hyperspace-cooldown)
+      ;; Conditionally handle death
+      (#(if died?
+          (-> %
+              (update-in [:lives] dec)
+              (update :particles
+                      (fn [particles]
+                        (vec (concat particles
+                                     (create-particles
+                                      :x new-x
+                                      :y new-y
+                                      :count 12
+                                      :color "#FFFFFF"))))))
+          %))))
+
 (defn hyperspace!
   "Hyperspace jump with risk"
-  []
-  (when (<= (:hyperspace-cooldown @game-state) 0)
-    (play-hyperspace-sound) ; Play hyperspace sound
+  [game-state]
+  (when (<= (:hyperspace-cooldown game-state) 0)
+    (play-hyperspace-sound)             ; Play hyperspace sound
     (let [new-x (rand-int canvas-width)
           new-y (rand-int canvas-height)
           died? (< (rand) 0.1)]
-      (swap! game-state
-             (fn [state]
-               (-> state
-                   ;; Teleport ship
-                   (assoc-in [:ship :x] new-x)
-                   (assoc-in [:ship :y] new-y)
-                   (assoc-in [:ship :vx] 0)
-                   (assoc-in [:ship :vy] 0)
-                   (assoc :hyperspace-cooldown hyperspace-cooldown)
-                   ;; Conditionally handle death
-                   (#(if died?
-                       (-> %
-                           (update-in [:lives] dec)
-                           (update :particles
-                                   (fn [particles]
-                                     (vec (concat particles
-                                                  (create-particles
-                                                   :x new-x
-                                                   :y new-y
-                                                   :count 12
-                                                   :color "#FFFFFF"))))))
-                       %))))))))
+      (hyperspace game-state new-x new-y died?))))
 
 ;; ============================================================================
 ;; Collision Detection
@@ -787,8 +788,8 @@
                                    (when (= (:game-status @game-state) :playing)
                                      (case key
                                        " " (do (fire-bullet!) (.preventDefault e))
-                                       "x" (hyperspace!)
-                                       "X" (hyperspace!)
+                                       "x" (swap! game-state hyperspace!)
+                                       "X" (swap! game-state hyperspace!)
                                        nil)))))
 
             (.addEventListener js/window "keyup"
@@ -1042,7 +1043,7 @@
        :color "255, 152, 0"
        :on-press #(do
                     (swap! game-state assoc-in [:touch-controls :hyperspace-button] true)
-                    (hyperspace!))
+                    (swap! game-state hyperspace!))
        :on-release #(swap! game-state assoc-in [:touch-controls :hyperspace-button] false)]]]))
 
 ;; ============================================================================
