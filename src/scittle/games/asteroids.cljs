@@ -250,19 +250,31 @@
   "Hyperspace jump with risk"
   []
   (when (<= (:hyperspace-cooldown @game-state) 0)
-    (swap! game-state assoc-in [:ship :x] (rand-int canvas-width))
-    (swap! game-state assoc-in [:ship :y] (rand-int canvas-height))
-    (swap! game-state assoc-in [:ship :vx] 0)
-    (swap! game-state assoc-in [:ship :vy] 0)
-    (swap! game-state assoc :hyperspace-cooldown hyperspace-cooldown)
-    ;; 10% chance of explosion (risky!)
-    (when (< (rand) 0.1)
-      (swap! game-state update-in [:lives] dec)
-      (swap! game-state update :particles
-             #(vec (concat % (create-particles :x (:x (:ship @game-state))
-                                               :y (:y (:ship @game-state))
-                                               :count 12
-                                               :color "#FFFFFF")))))))
+    (let [new-x (rand-int canvas-width)
+          new-y (rand-int canvas-height)
+          died? (< (rand) 0.1)]
+      (swap! game-state
+             (fn [state]
+               (-> state
+                   ;; Teleport ship
+                   (assoc-in [:ship :x] new-x)
+                   (assoc-in [:ship :y] new-y)
+                   (assoc-in [:ship :vx] 0)
+                   (assoc-in [:ship :vy] 0)
+                   (assoc :hyperspace-cooldown hyperspace-cooldown)
+                   ;; Conditionally handle death
+                   (#(if died?
+                       (-> %
+                           (update-in [:lives] dec)
+                           (update :particles
+                                   (fn [particles]
+                                     (vec (concat particles
+                                                  (create-particles
+                                                   :x new-x
+                                                   :y new-y
+                                                   :count 12
+                                                   :color "#FFFFFF"))))))
+                       %))))))))
 
 ;; ============================================================================
 ;; Collision Detection
