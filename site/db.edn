@@ -4,6 +4,10 @@
    :image       "https://avatars.githubusercontent.com/u/36110?v=4"
    :url         "https://chouser.us/"
    :links       [{:icon "github" :href "https://github.com/chouser"}]}
+  {:id          :onbreath
+   :name        "Adrian Bendel"
+   :image       "https://avatars.githubusercontent.com/u/65270097?v=4"
+   :links       [{:icon "github" :href "https://github.com/onbreath"}]}
   {:id          :eugnes
    :name        "Eugen Nesbakken"
    :image       "https://avatars.githubusercontent.com/u/46522650"
