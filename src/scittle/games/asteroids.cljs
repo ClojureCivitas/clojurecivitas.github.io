@@ -443,18 +443,21 @@
                           :when (> (:life new-p) 0)]
                       new-p))))
 
-      ;; Check bullet-asteroid collisions (FIXED to prevent duplicate hits)
-      (let [hit-bullets (atom #{})
+      ;; Check bullet-asteroid collisions (FIXED to use current state)
+      (let [current-bullets (:bullets @game-state)
+            current-asteroids (:asteroids @game-state)
+            current-ufos (:ufos @game-state)
+            hit-bullets (atom #{})
             hit-asteroids (atom #{})
             new-asteroids (atom [])
             score-added (atom 0)
             new-particles (atom [])]
 
         ;; Find all collisions (but don't apply yet)
-        (doseq [bullet bullets
+        (doseq [bullet current-bullets
                 :when (and (not (:from-ufo bullet))
                            (not (contains? @hit-bullets bullet)))
-                asteroid asteroids
+                asteroid current-asteroids
                 :when (not (contains? @hit-asteroids asteroid))]
           (when (check-collision :obj1 bullet :obj2 asteroid
                                  :radius1 2 :radius2 (:size asteroid))
@@ -485,16 +488,18 @@
           (swap! game-state update :particles
                  #(vec (take max-particles (concat % @new-particles))))))
 
-      ;; Check bullet-UFO collisions (FIXED to prevent duplicate hits)
-      (let [hit-bullets (atom #{})
+      ;; Check bullet-UFO collisions (FIXED to use current state)
+      (let [current-bullets (:bullets @game-state)
+            current-ufos (:ufos @game-state)
+            hit-bullets (atom #{})
             hit-ufos (atom #{})
             score-added (atom 0)
             new-particles (atom [])]
 
-        (doseq [bullet bullets
+        (doseq [bullet current-bullets
                 :when (and (not (:from-ufo bullet))
                            (not (contains? @hit-bullets bullet)))
-                ufo ufos
+                ufo current-ufos
                 :when (not (contains? @hit-ufos ufo))]
           (when (check-collision :obj1 bullet :obj2 ufo
                                  :radius1 2 :radius2 ufo-size)

@@ -816,6 +816,149 @@
 ;; 5. **Optimize particle counts**: Fewer particles with better placement looks just as good
 ;; 6. **Profile on mobile**: Desktop performance doesn't predict mobile behavior
 
+;; ### The Stale Data Bug - Collision Detection with Old Positions
+
+;; After fixing the exponential explosion bug, we discovered another critical issue: bullets weren't destroying asteroids reliably! This was the **exact same bug** we encountered in our Galaga implementation.
+
+;; #### The Problem: Using Captured State
+
+;; The collision detection code was using bullets and asteroids captured at the START of the `update-game!` function, but checking collisions AFTER updating their positions:
+
+;; ```clojure
+;; ;; ❌ BROKEN: Stale data causes missed collisions
+;; (defn update-game! []
+;;   (when (= (:game-status @game-state) :playing)
+;;     (let [{:keys [bullets asteroids ufos]} @game-state]  ; ← Captured at START
+;;
+;;       ;; Update bullet positions
+;;       (swap! game-state update :bullets
+;;              (fn [bs]
+;;                (vec (for [b bs
+;;                           :let [new-b (-> b
+;;                                           (update :x #(wrap-position ...))
+;;                                           (update :y #(wrap-position ...)))]
+;;                           :when (> (:life new-b) 0)]
+;;                       new-b))))
+;;
+;;       ;; Update asteroid positions  
+;;       (swap! game-state update :asteroids
+;;              (fn [as]
+;;                (vec (for [a as]
+;;                       (-> a
+;;                           (update :x #(wrap-position ...))
+;;                           (update :y #(wrap-position ...)))))))
+;;
+;;       ;; Check collisions - BUG: Uses OLD positions from line 2!
+;;       (doseq [bullet bullets              ; ← OLD positions before movement
+;;               asteroid asteroids]         ; ← OLD positions before movement
+;;         (when (check-collision bullet asteroid)
+;;           ...))
+;; ```
+
+;; **Why This Fails:**
+;;
+;; 1. Frame starts: Bullet at x=100, Asteroid at x=105 (not colliding)
+;; 2. Bullet moves to x=108 (NOW colliding with asteroid!)
+;; 3. Asteroid moves to x=110  
+;; 4. Collision check uses OLD positions (100 vs 105) - NO collision detected!
+;; 5. Result: Bullet passes right through asteroid
+
+;; #### The Fix: Fresh State Captures
+
+;; Capture the CURRENT state right before collision detection, AFTER all position updates:
+
+;; ```clojure
+;; ;; ✅ FIXED: Use current state after position updates
+;; (defn update-game! []
+;;   (when (= (:game-status @game-state) :playing)
+;;     (let [{:keys [bullets asteroids ufos]} @game-state]
+;;
+;;       ;; Update bullet positions
+;;       (swap! game-state update :bullets ...)
+;;
+;;       ;; Update asteroid positions
+;;       (swap! game-state update :asteroids ...)
+;;
+;;       ;; Capture FRESH state after all updates
+;;       (let [current-bullets (:bullets @game-state)     ; ← FRESH after updates
+;;             current-asteroids (:asteroids @game-state) ; ← FRESH after updates
+;;             current-ufos (:ufos @game-state)           ; ← FRESH after updates
+;;             hit-bullets (atom #{})
+;;             hit-asteroids (atom #{})]
+;;
+;;         ;; Now collision detection uses CURRENT positions
+;;         (doseq [bullet current-bullets              ; ← Current frame positions
+;;                 :when (not (contains? @hit-bullets bullet))
+;;                 asteroid current-asteroids]         ; ← Current frame positions
+;;           (when (check-collision bullet asteroid)
+;;             ...))
+;;
+;;         ;; UFO collisions also use current state
+;;         (doseq [bullet current-bullets              ; ← Reuse fresh capture
+;;                 :when (not (contains? @hit-bullets bullet))
+;;                 ufo current-ufos]                   ; ← Current frame positions
+;;           (when (check-collision bullet ufo)
+;;             ...))
+;; ```
+
+;; #### The Key Insight
+
+;; The `let` binding at the function start creates a **snapshot** of the game state. Any subsequent `swap!` calls modify the atom, but the `let` variables still point to the old data. For collision detection to work correctly, we must capture fresh state AFTER all position updates complete.
+
+;; #### Scope Considerations
+
+;; Initially, we made a mistake: we defined `current-bullets` and `current-ufos` in the first collision detection block (asteroids) and tried to use them in the second block (UFOs). This failed because each `let` block has its own scope!
+
+;; **The solution:** Each collision detection block captures its own fresh data:
+
+;; ```clojure
+;; ;; Bullet-Asteroid collisions
+;; (let [current-bullets (:bullets @game-state)
+;;       current-asteroids (:asteroids @game-state)
+;;       current-ufos (:ufos @game-state)  ; ← Also captured for UFO collisions
+;;       ...]
+;;   ...)
+;;
+;; ;; Bullet-UFO collisions (separate scope!)
+;; (let [current-bullets (:bullets @game-state)  ; ← Fresh capture again
+;;       current-ufos (:ufos @game-state)        ; ← Fresh capture again
+;;       ...]
+;;   ...)
+;; ```
+
+;; #### Learning from Galaga
+
+;; This was the identical bug we fixed in our Galaga game! The pattern is common in game loops:
+;;
+;; 1. Capture state at function start for reference
+;; 2. Update multiple collections via `swap!`
+;; 3. Check interactions between updated objects
+;; 4. **Mistake**: Using initial captures instead of current state
+;;
+;; The fix is always the same: capture fresh state right before collision detection.
+
+;; #### Impact After Fix
+
+;; **Before:**
+;; - Bullets often passed through asteroids
+;; - Fast-moving bullets especially problematic
+;; - UFOs seemed invulnerable
+;; - Frustrating gameplay experience
+
+;; **After:**
+;; - Precise collision detection
+;; - Bullets reliably destroy asteroids
+;; - UFOs react properly to hits
+;; - Satisfying, responsive gameplay
+
+;; #### Additional Lessons
+
+;; 7. **Timing matters**: State captured at start vs. end of update cycle matters!
+;; 8. **Test collision detection**: Easy to miss stale data bugs during casual play
+;; 9. **Reuse patterns**: Same bug/fix across multiple games suggests a general principle
+;; 10. **Scope awareness**: Remember that `let` blocks don't share bindings
+;; 11. **Think in terms of frames**: What state exists at each point in the game loop?
+
 ;; ## Retro Sound Effects with Web Audio API
 
 ;; No arcade game is complete without sound! We added authentic retro sound effects using the Web Audio API, following the same pattern used in our Galaga implementation.
