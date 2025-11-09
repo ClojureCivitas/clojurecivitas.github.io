@@ -4,9 +4,8 @@
                   :description "Starting the journey of DSP in Clojure."
                   :category :clojure
                   :type :post
-                  :date "2025-11-07"
-                  :tags [:dsp :math :music]
-                  :draft true}}}
+                  :date "2025-11-10"
+                  :tags [:dsp :math :music]}}}
 (ns dsp.intro
   (:require [scicloj.kindly.v4.kind :as kind]
             [tech.v3.datatype :as dtype]
@@ -15,6 +14,7 @@
             [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as plotly]))
 
+^:kindly/hide-code
 (kind/hiccup
  [:style
   ".clay-dataset {
@@ -23,8 +23,6 @@
 }
 "])
 
-;; # Introduction to Digital Signal Processing
-;;
 ;; **Notes from the [Scicloj DSP Study Group](https://scicloj.github.io/docs/community/groups/dsp-study/)**  
 ;; *First meeting - Nov. 2nd 2025*
 ;;
