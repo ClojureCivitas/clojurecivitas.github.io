@@ -382,47 +382,75 @@
                                       (update :y + (:vy p))
                                       (update :life dec)))
                                 %))))
-;; Check bullet-enemy collisions
-      (doseq [bullet bullets
-              enemy enemies]
-        (when (and (collides? :a bullet :b enemy)
-                   (not= (:state enemy) :destroyed))
-          (let [new-hits (dec (:hits enemy))
-                destroyed? (<= new-hits 0)]
-            (when destroyed?
-              (play-explosion-sound)) ; Play explosion sound
-            ;; Single atomic update for all collision effects
-            (swap! game-state
-                   (fn [state]
-                     (-> state
-                         ;; Remove bullet
-                         (update :bullets #(vec (remove (fn [b] (= b bullet)) %)))
-                         ;; Handle enemy destruction or damage
-                         (update :enemies
-                                 (fn [enemies]
-                                   (if destroyed?
-                                     ;; Destroy enemy
-                                     (vec (remove (fn [e] (= e enemy)) enemies))
-                                     ;; Damage enemy
-                                     (mapv (fn [e]
-                                             (if (= e enemy)
-                                               (assoc e :hits new-hits)
-                                               e))
-                                           enemies))))
-                         ;; Add score if destroyed
-                         (#(if destroyed?
-                             (update % :score + (:points enemy))
-                             %))
-                         ;; Add particles if destroyed
-                         (#(if destroyed?
-                             (update % :particles
-                                     (fn [particles]
-                                       (vec (concat particles
-                                                    (create-particles :x (:x enemy)
-                                                                      :y (:y enemy)
-                                                                      :count 10
-                                                                      :color (:color enemy))))))
-                             %))))))))
+;; FIXED: Batch bullet-enemy collision detection
+      ;; Get FRESH bullets and enemies after updates
+      (let [current-bullets (:bullets @game-state)
+            current-enemies (:enemies @game-state)
+            hit-bullets (atom #{})
+            hit-enemies (atom #{})
+            damaged-enemies (atom {})
+            score-added (atom 0)
+            new-particles (atom [])]
+
+        ;; Collect all collisions (but don't apply yet)
+        (doseq [bullet current-bullets
+                :when (not (contains? @hit-bullets bullet))
+                enemy current-enemies
+                :when (and (not (contains? @hit-enemies enemy))
+                           (not= (:state enemy) :destroyed))]
+          (when (collides? :a bullet :b enemy)
+            ;; Mark bullet as hit
+            (swap! hit-bullets conj bullet)
+
+            (let [new-hits (dec (:hits enemy))
+                  destroyed? (<= new-hits 0)]
+              (if destroyed?
+                ;; Enemy destroyed - mark for removal
+                (do
+                  (swap! hit-enemies conj enemy)
+                  (swap! score-added + (:points enemy))
+                  (swap! new-particles concat
+                         (create-particles :x (:x enemy)
+                                           :y (:y enemy)
+                                           :count 10
+                                           :color (:color enemy))))
+                ;; Enemy damaged - mark for hit count update
+                (swap! damaged-enemies assoc enemy new-hits)))))
+
+        ;; Apply all collision effects at once (single swap!)
+        (when (or (seq @hit-bullets) (seq @hit-enemies) (seq @damaged-enemies))
+          (when (seq @hit-enemies)
+            (play-explosion-sound))
+
+          (swap! game-state
+                 (fn [state]
+                   (-> state
+                       ;; Remove hit bullets
+                       (update :bullets
+                               (fn [bullets]
+                                 (vec (remove #(contains? @hit-bullets %) bullets))))
+                       ;; Remove destroyed enemies and update damaged ones
+                       (update :enemies
+                               (fn [enemies]
+                                 (vec (keep (fn [e]
+                                              (cond
+                                                ;; Enemy destroyed - remove it
+                                                (contains? @hit-enemies e)
+                                                nil
+
+                                                ;; Enemy damaged - update hits
+                                                (contains? @damaged-enemies e)
+                                                (assoc e :hits (get @damaged-enemies e))
+
+                                                ;; Enemy not hit - keep as is
+                                                :else e))
+                                            enemies))))
+                       ;; Add score for destroyed enemies
+                       (update :score + @score-added)
+                       ;; Add particles for destroyed enemies
+                       (update :particles
+                               (fn [particles]
+                                 (vec (concat particles @new-particles)))))))))
 ;; Check enemy bullet-player collisions
       (doseq [bullet enemy-bullets]
         (when (collides? :a bullet :b player)

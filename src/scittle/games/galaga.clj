@@ -284,17 +284,115 @@
 ;;           (/ (+ (:width a) (:width b)) 2))
 ;;        (< (Math/abs (- (:y a) (:y b)))
 ;;           (/ (+ (:height a) (:height b)) 2))))
-;;
-;; ;; Check bullet-enemy collisions
+;; ```
+
+;; ### Critical Bug: Collision Detection Race Conditions
+
+;; During development, we discovered a critical bug that made enemies invulnerable! The problem was subtle but devastating:
+
+;; **The Bug:**
+;; ```clojure
+;; ;; ❌ BROKEN - Enemies won't die!
 ;; (doseq [bullet bullets
 ;;         enemy enemies]
 ;;   (when (collides? :a bullet :b enemy)
-;;     ;; Damage or destroy enemy
-;;     (let [new-hits (dec (:hits enemy))]
-;;       (if (<= new-hits 0)
-;;         (destroy-enemy! :enemy enemy)
-;;         (damage-enemy! :enemy enemy :hits new-hits)))))
+;;     ;; Each collision triggers separate swap!
+;;     (swap! game-state update :bullets remove-bullet)
+;;     (swap! game-state update :enemies remove-enemy)
+;;     ...))
 ;; ```
+
+;; **Two problems here:**
+
+;; 1. **Stale Data**: `bullets` and `enemies` were captured at the start of `update-game!`, but we check collisions AFTER updating bullet positions. So we're checking collisions with OLD positions!
+
+;; 2. **Race Conditions**: Each collision in `doseq` triggers a separate `swap!`, but all iterations use the ORIGINAL collections. If bullet A hits enemies 1 and 2, both iterations try to remove bullet A, causing state corruption.
+
+;; **The Solution: Collision Batching**
+
+;; We adopted the same pattern used in Asteroids (per [Erik Assum](https://github.com/slipset)'s excellent feedback):
+
+;; ```clojure
+;; ;; ✅ FIXED - Batch collision detection
+;; ;; Get FRESH bullets and enemies after updates
+;; (let [current-bullets (:bullets @game-state)
+;;       current-enemies (:enemies @game-state)
+;;       hit-bullets (atom #{})
+;;       hit-enemies (atom #{})
+;;       damaged-enemies (atom {})
+;;       score-added (atom 0)
+;;       new-particles (atom [])]
+;;
+;;   ;; Collect all collisions (but don't apply yet)
+;;   (doseq [bullet current-bullets
+;;           :when (not (contains? @hit-bullets bullet))
+;;           enemy current-enemies
+;;           :when (and (not (contains? @hit-enemies enemy))
+;;                      (not= (:state enemy) :destroyed))]
+;;     (when (collides? :a bullet :b enemy)
+;;       ;; Mark bullet as hit
+;;       (swap! hit-bullets conj bullet)
+;;
+;;       (let [new-hits (dec (:hits enemy))
+;;             destroyed? (<= new-hits 0)]
+;;         (if destroyed?
+;;           ;; Enemy destroyed - mark for removal
+;;           (do
+;;             (swap! hit-enemies conj enemy)
+;;             (swap! score-added + (:points enemy))
+;;             (swap! new-particles concat
+;;                    (create-particles :x (:x enemy)
+;;                                      :y (:y enemy)
+;;                                      :count 10
+;;                                      :color (:color enemy))))
+;;           ;; Enemy damaged - mark for hit count update
+;;           (swap! damaged-enemies assoc enemy new-hits)))))
+;;
+;;   ;; Apply all collision effects at once (single atomic swap!)
+;;   (when (or (seq @hit-bullets) (seq @hit-enemies) (seq @damaged-enemies))
+;;     (when (seq @hit-enemies)
+;;       (play-explosion-sound))
+;;
+;;     (swap! game-state
+;;            (fn [state]
+;;              (-> state
+;;                  ;; Remove hit bullets
+;;                  (update :bullets
+;;                          (fn [bullets]
+;;                            (vec (remove #(contains? @hit-bullets %) bullets))))
+;;                  ;; Remove destroyed enemies and update damaged ones
+;;                  (update :enemies
+;;                          (fn [enemies]
+;;                            (vec (keep (fn [e]
+;;                                         (cond
+;;                                           ;; Enemy destroyed - remove it
+;;                                           (contains? @hit-enemies e)
+;;                                           nil
+;;
+;;                                           ;; Enemy damaged - update hits
+;;                                           (contains? @damaged-enemies e)
+;;                                           (assoc e :hits (get @damaged-enemies e))
+;;
+;;                                           ;; Enemy not hit - keep as is
+;;                                           :else e))
+;;                                       enemies))))
+;;                  ;; Add score for destroyed enemies
+;;                  (update :score + @score-added)
+;;                  ;; Add particles for destroyed enemies
+;;                  (update :particles
+;;                          (fn [particles]
+;;                            (vec (concat particles @new-particles)))))))))
+;; ```
+
+;; **Benefits of the fix:**
+
+;; 1. **Fresh Data**: Capture bullets/enemies AFTER position updates
+;; 2. **No Race Conditions**: Sets track which objects are already hit
+;; 3. **Single Atomic Update**: One `swap!` applies all effects at once
+;; 4. **Proper Boss Damage**: Correctly tracks multi-hit enemies
+;; 5. **Predictable Behavior**: State updates are deterministic
+
+;; This same issue affected our Asteroids game, and the batched approach solved both!
 
 ;; ## Visual Effects
 
