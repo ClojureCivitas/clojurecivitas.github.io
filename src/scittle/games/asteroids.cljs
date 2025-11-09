@@ -240,27 +240,26 @@
 
 (defn init-level!
   "Initializes a new level"
-  [& {:keys [level]}]
+  [{:keys [level ship] :as game-state}]
   (let [num-asteroids (+ 3 level)]
-    (swap! game-state assoc
-           :asteroids (vec (for [_ (range num-asteroids)]
-                             (let [edge (rand-int 4)
-                                   x (case edge
-                                       0 (rand-int canvas-width)
-                                       1 canvas-width
-                                       2 (rand-int canvas-width)
-                                       (rand-int canvas-height))
-                                   y (case edge
-                                       0 0
-                                       1 (rand-int canvas-height)
-                                       2 canvas-height
-                                       0)]
-                               (create-asteroid :x x :y y :size-type :large))))
-           :bullets []
-           :particles []
-           :ufo-timer (+ 600 (rand-int 600))
-           :ship (assoc (:ship @game-state)
-                        :invulnerable 120))))
+    (merge game-state
+           {:asteroids (vec (for [_ (range num-asteroids)]
+                              (let [edge (rand-int 4)
+                                    x (case edge
+                                        0 (rand-int canvas-width)
+                                        1 canvas-width
+                                        2 (rand-int canvas-width)
+                                        (rand-int canvas-height))
+                                    y (case edge
+                                        0 0
+                                        1 (rand-int canvas-height)
+                                        2 canvas-height
+                                        0)]
+                                (create-asteroid :x x :y y :size-type :large))))
+            :bullets []
+            :particles []
+            :ufo-timer (+ 600 (rand-int 600))
+            :ship (assoc ship :invulnerable 120)})))
 
 (defn reset-ship!
   "Resets ship to center"
@@ -559,7 +558,7 @@
       (when (empty? asteroids)
         (play-level-complete-sound) ; Play victory sound
         (swap! game-state update :level inc)
-        (init-level! :level (:level @game-state))))))
+        (swap! game-state init-level!)))))
 
 ;; ============================================================================
 ;; Drawing Functions
@@ -765,7 +764,7 @@
                                      :distance 0}
                           :fire-button false
                           :hyperspace-button false})
-  (init-level! :level 1))
+  (init-level! {:level 1 :ship {}}))
 
 ;; ============================================================================
 ;; Canvas Component
