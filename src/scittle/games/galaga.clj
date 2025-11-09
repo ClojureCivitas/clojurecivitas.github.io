@@ -394,6 +394,292 @@
 
 ;; This same issue affected our Asteroids game, and the batched approach solved both!
 
+;; ## Erik's Pure Function Pattern: State at the Edges
+
+;; After the collision batching improvements, [Erik Assum](https://github.com/slipset) shared an even more profound insight about functional programming and state management:
+
+;; > "swap! takes an f state arg1 arg2 etc as params. So rather than passing anon fns to swap! You can pass named toplevel fns which take the state as first args, and whatever other args that fn might need, and your swap! becomes (swap! game-state do-whatever foo bar baz)"
+
+;; > "What you'll see when you structure the code like that is that the state transforming fns become pure fns from data to data and are trivially unittestable (apart from your random-stuff which is inherently impure), and that the icky bits ie mutating the global state can be moved towards the edge of the program."
+
+;; This principle - **pushing state mutations to the edges** - transforms how we structure game code.
+
+;; ### Understanding Multi-Argument swap!
+
+;; Most developers know `swap!` applies a function to an atom:
+
+;; ```clojure
+;; (swap! atom update-fn)
+;; ```
+
+;; But `swap!` can also pass additional arguments:
+
+;; ```clojure
+;; ;; swap! signature: (swap! atom f & args)
+;; ;; This calls: (f @atom arg1 arg2 arg3)
+;; (swap! game-state my-function arg1 arg2 arg3)
+;; ```
+
+;; The function receives the **current state as its first argument**, followed by any additional arguments you provide!
+
+;; ### Before: Impure Functions with Internal State Mutations
+
+;; Our original Galaga code had functions that read `@game-state` and called `swap!` internally:
+
+;; ```clojure
+;; ;; ❌ Old approach: Impure function with internal swap!
+;; (defn fire-bullet! []
+;;   (play-laser-sound)
+;;   (let [{:keys [player]} @game-state]  ; Reading global state
+;;     (swap! game-state update :bullets   ; Mutating global state
+;;            #(conj % {:x (:x player) :y (:y player) ...}))))
+;;
+;; ;; ❌ Old approach: Function tightly coupled to global atom
+;; (defn move-player! [& {:keys [direction]}]
+;;   (swap! game-state update-in [:player :x]  ; Internal mutation
+;;          #(-> %
+;;               (+ (* direction player-speed))
+;;               (max (/ player-width 2))
+;;               (min (- canvas-width (/ player-width 2))))))
+;;
+;; ;; ❌ Old approach: Reading and mutating inside the function
+;; (defn start-swoop! []
+;;   (let [{:keys [enemies]} @game-state]  ; Reading global state
+;;     (when (and (> (count (filter ...)) 0)
+;;                (< (rand) 0.02))
+;;       (play-swoop-sound)
+;;       (swap! game-state update :enemies ...))))  ; Internal mutation
+;; ```
+
+;; **Problems with this approach:**
+;;
+;; - Functions are **impure** - they read from and write to global state
+;; - **Hard to test** - requires setting up the global atom
+;; - **Difficult to reason about** - state mutations hidden inside functions
+;; - **Not composable** - can't chain or combine transformations
+;; - **Not reusable** - tightly coupled to the specific `game-state` atom
+
+;; ### After: Pure Functions Taking State as First Argument
+
+;; Following Erik's pattern, we refactored all state transformation functions to be pure:
+
+;; ```clojure
+;; ;; ✅ New approach: Pure function taking state as first argument
+;; (defn fire-bullet!
+;;   "Fires a bullet from the player - returns new state"
+;;   [game-state]
+;;   (play-laser-sound)  ; Side effect at the edge
+;;   (let [{:keys [player]} game-state]  ; No @game-state read!
+;;     (update game-state :bullets
+;;             #(conj % {:x (:x player) :y (:y player) ...}))))
+;;
+;; ;; Usage: Clean and explicit!
+;; (swap! game-state fire-bullet!)
+;;
+;; ;; ✅ New approach: Pure function with keyword arguments
+;; (defn move-player!
+;;   "Moves player left or right - returns new state"
+;;   [game-state & {:keys [direction]}]
+;;   (update-in game-state [:player :x]
+;;              #(-> %
+;;                   (+ (* direction player-speed))
+;;                   (max (/ player-width 2))
+;;                   (min (- canvas-width (/ player-width 2))))))
+;;
+;; ;; Usage: Pass additional arguments after the function!
+;; (swap! game-state move-player! :direction 1)
+;;
+;; ;; ✅ New approach: Returns new state or unchanged state
+;; (defn start-swoop!
+;;   "Initiates enemy swoop attack - returns new state"
+;;   [game-state]
+;;   (let [{:keys [enemies]} game-state]  ; No @game-state read!
+;;         formation-enemies (filter #(= (:state %) :formation) enemies)]
+;;     (if (and (> (count formation-enemies) 0)
+;;              (< (rand) 0.02))
+;;       (let [enemy (rand-nth formation-enemies)
+;;             path (generate-swoop-path ...)]
+;;         (play-swoop-sound)  ; Side effect at the edge
+;;         (update game-state :enemies
+;;                 (fn [enemies]
+;;                   (mapv #(if (= % enemy)
+;;                            (assoc % :state :swooping ...)
+;;                            %)
+;;                         enemies))))
+;;       ;; No swoop - return unchanged state
+;;       game-state)))
+;;
+;; ;; Usage: Simple and clean!
+;; (swap! game-state start-swoop!)
+;; ```
+
+;; ### More Examples: init-wave! and enemy-fire!
+
+;; All game functions now follow this pattern:
+
+;; ```clojure
+;; ;; ✅ Pure wave initialization
+;; (defn init-wave!
+;;   "Initializes a new wave - returns new state"
+;;   [game-state & {:keys [wave-num]}]
+;;   (let [new-enemies (vec (map create-enemy formation-positions))]
+;;     (assoc game-state
+;;            :enemies new-enemies
+;;            :bullets []
+;;            :enemy-bullets []
+;;            :formation-offset {:x 0 :y 0})))
+;;
+;; ;; Usage:
+;; (swap! game-state init-wave! :wave-num 1)
+;;
+;; ;; ✅ Pure enemy firing
+;; (defn enemy-fire!
+;;   "Enemy fires bullet at player - returns new state"
+;;   [game-state & {:keys [enemy]}]
+;;   (update game-state :enemy-bullets
+;;           #(conj % {:x (:x enemy)
+;;                     :y (+ (:y enemy) enemy-height) ...})))
+;;
+;; ;; Usage with multiple enemies - single swap! with reduce!
+;; (when (seq firing-enemies)
+;;   (swap! game-state
+;;          (fn [state]
+;;            (reduce (fn [s enemy]
+;;                      (enemy-fire! s :enemy enemy))
+;;                    state
+;;                    firing-enemies))))
+;; ```
+
+;; ### Benefits of Pure Functions
+
+;; **1. Trivially Testable**
+
+;; No atoms needed - just pass data, get data back:
+
+;; ```clojure
+;; (deftest move-player-test
+;;   (let [initial-state {:player {:x 240}}
+;;         new-state (move-player! initial-state :direction 1)]
+;;     (is (> (get-in new-state [:player :x]) 240))))
+;;
+;; (deftest fire-bullet-test
+;;   (let [initial-state {:player {:x 240 :y 560} :bullets []}
+;;         new-state (fire-bullet! initial-state)]
+;;     (is (= 1 (count (:bullets new-state))))
+;;     (is (= 240 (-> new-state :bullets first :x)))))
+;;
+;; (deftest start-swoop-no-enemies-test
+;;   (let [initial-state {:enemies []}
+;;         new-state (start-swoop! initial-state)]
+;;     (is (= initial-state new-state))))  ; Returns unchanged!
+;; ```
+
+;; **2. State Mutations at Program Edges**
+
+;; All `swap!` calls are now at the boundaries:
+
+;; ```clojure
+;; ;; In event handlers (edge of the program)
+;; (.addEventListener js/window "keydown"
+;;   (fn [e]
+;;     (case (.-key e)
+;;       " " (swap! game-state fire-bullet!)  ; Clean!
+;;       nil)))
+;;
+;; ;; In the game loop (edge of the program)
+;; (when (contains? @keys-pressed "ArrowLeft")
+;;   (swap! game-state move-player! :direction -1))
+;;
+;; (when (contains? @keys-pressed "ArrowRight")
+;;   (swap! game-state move-player! :direction 1))
+;;
+;; ;; In the game loop (edge of the program)
+;; (swap! game-state start-swoop!)
+;; ```
+
+;; **3. Composable and Reusable**
+
+;; Pure functions can be composed with threading macros:
+
+;; ```clojure
+;; ;; Test sequences without atoms!
+;; (-> initial-state
+;;     (move-player! :direction 1)
+;;     (fire-bullet!)
+;;     (start-swoop!)
+;;     (:bullets)
+;;     (count))
+;;
+;; ;; Batch multiple transformations
+;; (reduce (fn [state enemy]
+;;           (enemy-fire! state :enemy enemy))
+;;         initial-state
+;;         firing-enemies)
+;; ```
+
+;; **4. Easier to Reason About**
+
+;; ```clojure
+;; ;; ❌ Before: What does this do? Need to read the implementation
+;; (fire-bullet!)
+;;
+;; ;; ✅ After: Clear data transformation
+;; (swap! game-state fire-bullet!)
+;; ;; I know: takes current state, returns new state with bullet added
+;; ```
+
+;; ### The Pattern in Action
+
+;; Here's how it looks in the actual game code:
+
+;; ```clojure
+;; ;; Game initialization
+;; (defn start-game! []
+;;   (swap! game-state assoc
+;;          :player {:x 240 :y 560 :lives 3}
+;;          :bullets []
+;;          :enemy-bullets []
+;;          :enemies []
+;;          :wave 1
+;;          :score 0
+;;          :game-status :playing ...)
+;;   (swap! game-state init-wave! :wave-num 1))  ; Pure function call!
+;;
+;; ;; In the game loop
+;; (swap! game-state start-swoop!)
+;;
+;; ;; Batch enemy firing - single swap!
+;; (when (seq firing-enemies)
+;;   (swap! game-state
+;;          (fn [state]
+;;            (reduce (fn [s enemy]
+;;                      (enemy-fire! s :enemy enemy))
+;;                    state
+;;                    firing-enemies))))
+;;
+;; ;; Wave completion
+;; (when (empty? enemies)
+;;   (play-wave-complete-sound)
+;;   (swap! game-state update :wave inc)
+;;   (js/setTimeout
+;;    #(swap! game-state init-wave! :wave-num (:wave @game-state))
+;;    500))
+;; ```
+
+;; ### Key Principles
+
+;; 1. **`swap!` multi-argument form**: `(swap! atom f arg1 arg2)` calls `(f @atom arg1 arg2)`
+;; 2. **State as first argument**: Functions receive state, return new state
+;; 3. **No `@game-state` reads**: Functions operate on passed state, not global atom
+;; 4. **No internal `swap!`**: All mutations happen at program edges
+;; 5. **Pure data transformations**: Core game logic is pure functions
+;; 6. **Side effects at edges**: Sounds, randomness, I/O happen at boundaries
+
+;; This pattern transforms imperative, stateful code into functional, testable data transformations. As Erik noted: "the state transforming fns become pure fns from data to data and are trivially unittestable."
+
+;; Thank you again, Erik, for these profound insights!
+;; Both the collision batching pattern and the pure function pattern have dramatically improved the codebase. 🙏
+
 ;; ## Visual Effects
 
 ;; ### Particle System
@@ -443,7 +729,7 @@
 
 ;; ## Arcade-Style Sound Effects
 
-;; What's an arcade game without sound? We use the **Web Audio API** to create procedural sound effects that bring the game to life!
+;; What's an arcade game without sound? We use the Web Audio API to create procedural sound effects that bring the game to life!
 
 ;; ### Setting Up Audio
 
@@ -551,6 +837,7 @@
 ;; - **Cross-browser** - Works everywhere JavaScript runs
 
 ;; The frequency values are chosen to be distinctive yet not annoying:
+;;
 ;; - **High frequencies (600-800Hz)**: Action sounds (lasers, swoops)
 ;; - **Low frequencies (100-150Hz)**: Impact sounds (explosions, hits)
 ;; - **Musical notes (C-E-G-C)**: Victory celebrations
@@ -618,15 +905,12 @@
 ;;                 (fn [e]
 ;;                   (.preventDefault e)
 ;;                   (when on-press (on-press)))
-;;
 ;;                 handle-touch-end
 ;;                 (fn [e]
 ;;                   (.preventDefault e)
 ;;                   (when on-release (on-release)))]
-;;
 ;;             (.addEventListener button \"touchstart\" handle-touch-start)
 ;;             (.addEventListener button \"touchend\" handle-touch-end))))
-;;
 ;;       :render
 ;;       (fn []
 ;;         [:div {:ref #(reset! button-ref %)
@@ -638,6 +922,7 @@
 ;; ```
 
 ;; Three buttons provide full control:
+;;
 ;; - **Left Arrow (◀)**: Move left
 ;; - **Right Arrow (▶)**: Move right
 ;; - **FIRE Button**: Shoot bullets
@@ -736,10 +1021,12 @@
 ;; The complete Galaga game is embedded below. Works on both desktop and mobile!
 
 ;; **Desktop Controls:**
+;;
 ;; - Arrow keys to move left/right
 ;; - Spacebar to fire
 
 ;; **Mobile Controls:**
+;;
 ;; - Touch buttons (bottom-left) to move
 ;; - FIRE button (bottom-right) to shoot
 

@@ -189,9 +189,10 @@
 
 ;; Initialize wave
 (defn init-wave!
-  [& {:keys [wave-num]}]
+  "Initializes a new wave - returns new state"
+  [game-state & {:keys [wave-num]}]
   (let [new-enemies (vec (map create-enemy formation-positions))]
-    (swap! game-state assoc
+    (assoc game-state
            :enemies new-enemies
            :bullets []
            :enemy-bullets []
@@ -202,31 +203,34 @@
 ;; ============================================================================
 
 (defn move-player!
-  [& {:keys [direction]}]
-  (swap! game-state update-in [:player :x]
-         #(-> %
-              (+ (* direction player-speed))
-              (max (/ player-width 2))
-              (min (- canvas-width (/ player-width 2))))))
+  "Moves player left or right - returns new state"
+  [game-state & {:keys [direction]}]
+  (update-in game-state [:player :x]
+             #(-> %
+                  (+ (* direction player-speed))
+                  (max (/ player-width 2))
+                  (min (- canvas-width (/ player-width 2))))))
 
 (defn fire-bullet!
-  []
-  (play-laser-sound) ; Play laser sound
-  (let [{:keys [player]} @game-state]
-    (swap! game-state update :bullets
-           #(conj % {:x (:x player)
-                     :y (:y player)
-                     :width bullet-width
-                     :height bullet-height}))))
+  "Fires a bullet from the player - returns new state"
+  [game-state]
+  (play-laser-sound) ; Side effect at the edge
+  (let [{:keys [player]} game-state]
+    (update game-state :bullets
+            #(conj % {:x (:x player)
+                      :y (:y player)
+                      :width bullet-width
+                      :height bullet-height}))))
 
 ;; Enemy fires bullet
 (defn enemy-fire!
-  [& {:keys [enemy]}]
-  (swap! game-state update :enemy-bullets
-         #(conj % {:x (:x enemy)
-                   :y (+ (:y enemy) enemy-height)
-                   :width bullet-width
-                   :height bullet-height})))
+  "Enemy fires bullet at player - returns new state"
+  [game-state & {:keys [enemy]}]
+  (update game-state :enemy-bullets
+          #(conj % {:x (:x enemy)
+                    :y (+ (:y enemy) enemy-height)
+                    :width bullet-width
+                    :height bullet-height})))
 
 ;; ============================================================================
 ;; Collision Detection
@@ -242,22 +246,25 @@
 ;; ============================================================================
 
 (defn start-swoop!
-  []
-  (let [{:keys [enemies]} @game-state
+  "Initiates enemy swoop attack - returns new state"
+  [game-state]
+  (let [{:keys [enemies]} game-state
         formation-enemies (filter #(= (:state %) :formation) enemies)]
-    (when (and (> (count formation-enemies) 0)
-               (< (rand) 0.02)) ; 2% chance per frame
+    (if (and (> (count formation-enemies) 0)
+             (< (rand) 0.02)) ; 2% chance per frame
       (let [enemy (rand-nth formation-enemies)
             path (generate-swoop-path {:start-x (:x enemy) :start-y (:y enemy)})]
-        (play-swoop-sound) ; Play swoop sound
-        (swap! game-state update :enemies
-               (fn [enemies]
-                 (mapv #(if (= % enemy)
-                          (assoc % :state :swooping
-                                 :swoop-path path
-                                 :path-progress 0)
-                          %)
-                       enemies)))))))
+        (play-swoop-sound) ; Side effect at the edge
+        (update game-state :enemies
+                (fn [enemies]
+                  (mapv #(if (= % enemy)
+                           (assoc % :state :swooping
+                                  :swoop-path path
+                                  :path-progress 0)
+                           %)
+                        enemies))))
+      ;; No swoop - return unchanged state
+      game-state)))
 
 (defn update-swooping-enemy
   [enemy]
@@ -357,14 +364,19 @@
                                     e)))))
                          enemies))))
 
-      ;; Start random swoops
-      (start-swoop!)
-      ;; Random enemy firing
+;; Start random swoops
+      (swap! game-state start-swoop!)
+;; Random enemy firing - collect all fires and apply in one swap!
       (let [firing-enemies (filter #(and (= (:state %) :swooping)
                                          (< (rand) 0.02))
                                    enemies)]
-        (doseq [enemy firing-enemies]
-          (enemy-fire! :enemy enemy)))
+        (when (seq firing-enemies)
+          (swap! game-state
+                 (fn [state]
+                   (reduce (fn [s enemy]
+                             (enemy-fire! s :enemy enemy))
+                           state
+                           firing-enemies)))))
       ;; Update bullets
       (swap! game-state update :bullets
              #(vec (filter (fn [b] (> (:y b) 0))
@@ -482,7 +494,7 @@
         (play-wave-complete-sound) ; Play victory sound
         (swap! game-state update :wave inc)
         (js/setTimeout
-         #(init-wave! :wave-num (:wave @game-state))
+         #(swap! game-state init-wave! :wave-num (:wave @game-state))
          500))))) ; Delay slightly to let victory sound play
 
 ;; ============================================================================
@@ -584,7 +596,7 @@
          :touch-controls {:left-pressed false
                           :right-pressed false
                           :fire-pressed false})
-  (init-wave! :wave-num 1))
+  (swap! game-state init-wave! :wave-num 1))
 
 ;; ============================================================================
 ;; Canvas Component
@@ -606,7 +618,7 @@
                                    (swap! keys-pressed conj key)
                                    (when (= (:game-status @game-state) :playing)
                                      (case key
-                                       " " (do (fire-bullet!) (.preventDefault e))
+                                       " " (do (swap! game-state fire-bullet!) (.preventDefault e))
                                        nil)))))
 
             (.addEventListener js/window "keyup"
@@ -614,19 +626,19 @@
                                  (swap! keys-pressed disj (.-key e))))
             ;; Game loop
             (letfn [(game-loop []
-                      ;; Handle continuous movement
+;; Handle continuous movement
                       (when (= (:game-status @game-state) :playing)
                         (let [touch-controls (:touch-controls @game-state)]
                           ;; Keyboard controls
                           (when (contains? @keys-pressed "ArrowLeft")
-                            (move-player! :direction -1))
+                            (swap! game-state move-player! :direction -1))
                           (when (contains? @keys-pressed "ArrowRight")
-                            (move-player! :direction 1))
+                            (swap! game-state move-player! :direction 1))
                           ;; Touch controls
                           (when (:left-pressed touch-controls)
-                            (move-player! :direction -1))
+                            (swap! game-state move-player! :direction -1))
                           (when (:right-pressed touch-controls)
-                            (move-player! :direction 1))))
+                            (swap! game-state move-player! :direction 1))))
                       (update-game!)
                       (draw-game! :ctx ctx)
                       (reset! animation-id (js/requestAnimationFrame game-loop)))]
@@ -731,14 +743,14 @@
        :color "255, 255, 255"
        :on-press #(swap! game-state assoc-in [:touch-controls :right-pressed] true)
        :on-release #(swap! game-state assoc-in [:touch-controls :right-pressed] false)]
-      ;; Fire button
+;; Fire button
       [touch-control-button
        :label "FIRE"
        :position {:bottom "40px" :right "40px"}
        :color "76, 175, 80"
        :on-press #(do
                     (swap! game-state assoc-in [:touch-controls :fire-pressed] true)
-                    (fire-bullet!))
+                    (swap! game-state fire-bullet!))
        :on-release #(swap! game-state assoc-in [:touch-controls :fire-pressed] false)]]]))
 
 ;; ============================================================================
