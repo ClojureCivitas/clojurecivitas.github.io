@@ -9,4 +9,4 @@
                   :draft true}}}
 (ns signal-processing.intro)
 
-;; This notebook was moved to dsp/intro.
+;; This notebook was moved to [dsp/intro](../dsp/intro.html).
