@@ -240,27 +240,26 @@
 
 (defn init-level!
   "Initializes a new level"
-  [& {:keys [level]}]
+  [{:keys [level ship] :as game-state}]
   (let [num-asteroids (+ 3 level)]
-    (swap! game-state assoc
-           :asteroids (vec (for [_ (range num-asteroids)]
-                             (let [edge (rand-int 4)
-                                   x (case edge
-                                       0 (rand-int canvas-width)
-                                       1 canvas-width
-                                       2 (rand-int canvas-width)
-                                       (rand-int canvas-height))
-                                   y (case edge
-                                       0 0
-                                       1 (rand-int canvas-height)
-                                       2 canvas-height
-                                       0)]
-                               (create-asteroid :x x :y y :size-type :large))))
-           :bullets []
-           :particles []
-           :ufo-timer (+ 600 (rand-int 600))
-           :ship (assoc (:ship @game-state)
-                        :invulnerable 120))))
+    (merge game-state
+           {:asteroids (vec (for [_ (range num-asteroids)]
+                              (let [edge (rand-int 4)
+                                    x (case edge
+                                        0 (rand-int canvas-width)
+                                        1 canvas-width
+                                        2 (rand-int canvas-width)
+                                        (rand-int canvas-height))
+                                    y (case edge
+                                        0 0
+                                        1 (rand-int canvas-height)
+                                        2 canvas-height
+                                        0)]
+                                (create-asteroid :x x :y y :size-type :large))))
+            :bullets []
+            :particles []
+            :ufo-timer (+ 600 (rand-int 600))
+            :ship (assoc ship :invulnerable 120)})))
 
 (defn reset-ship!
   "Resets ship to center"
@@ -278,69 +277,69 @@
 
 (defn fire-bullet!
   "Fires a bullet from the ship"
-  []
+  [{:keys [ship] :as game-state}]
   (play-laser-sound) ; Play laser sound
-  (let [{:keys [x y angle]} (:ship @game-state)
+  (let [{:keys [x y angle]} ship
         bullet-vx (* bullet-speed (Math/cos (- angle (/ Math/PI 2))))
         bullet-vy (* bullet-speed (Math/sin (- angle (/ Math/PI 2))))]
-    (swap! game-state update :bullets conj
-           {:x x
-            :y y
-            :vx bullet-vx
-            :vy bullet-vy
-            :life bullet-lifetime})))
+    (update game-state :bullets conj
+            {:x x
+             :y y
+             :vx bullet-vx
+             :vy bullet-vy
+             :life bullet-lifetime})))
 
 (defn ufo-fire!
   "UFO fires bullet at ship"
-  [& {:keys [ufo]}]
-  (let [{:keys [ship]} @game-state
-        dx (- (:x ship) (:x ufo))
+  [{:keys [ship] :as game-state} & {:keys [ufo]}]
+  (let [dx (- (:x ship) (:x ufo))
         dy (- (:y ship) (:y ufo))
         angle (Math/atan2 dy dx)
         bullet-vx (* 5 (Math/cos angle))
         bullet-vy (* 5 (Math/sin angle))]
-    (swap! game-state update :bullets conj
-           {:x (:x ufo)
-            :y (:y ufo)
-            :vx bullet-vx
-            :vy bullet-vy
-            :life bullet-lifetime
-            :from-ufo true})))
+    (update game-state :bullets conj
+            {:x (:x ufo)
+             :y (:y ufo)
+             :vx bullet-vx
+             :vy bullet-vy
+             :life bullet-lifetime
+             :from-ufo true})))
 
 ;; ============================================================================
 ;; Special Moves
 ;; ============================================================================
 
+(defn hyperspace [state new-x new-y died?]
+  (-> state
+      ;; Teleport ship
+      (assoc-in [:ship :x] new-x)
+      (assoc-in [:ship :y] new-y)
+      (assoc-in [:ship :vx] 0)
+      (assoc-in [:ship :vy] 0)
+      (assoc :hyperspace-cooldown hyperspace-cooldown)
+      ;; Conditionally handle death
+      (#(if died?
+          (-> %
+              (update-in [:lives] dec)
+              (update :particles
+                      (fn [particles]
+                        (vec (concat particles
+                                     (create-particles
+                                      :x new-x
+                                      :y new-y
+                                      :count 12
+                                      :color "#FFFFFF"))))))
+          %))))
+
 (defn hyperspace!
   "Hyperspace jump with risk"
-  []
-  (when (<= (:hyperspace-cooldown @game-state) 0)
-    (play-hyperspace-sound) ; Play hyperspace sound
+  [game-state]
+  (when (<= (:hyperspace-cooldown game-state) 0)
+    (play-hyperspace-sound)             ; Play hyperspace sound
     (let [new-x (rand-int canvas-width)
           new-y (rand-int canvas-height)
           died? (< (rand) 0.1)]
-      (swap! game-state
-             (fn [state]
-               (-> state
-                   ;; Teleport ship
-                   (assoc-in [:ship :x] new-x)
-                   (assoc-in [:ship :y] new-y)
-                   (assoc-in [:ship :vx] 0)
-                   (assoc-in [:ship :vy] 0)
-                   (assoc :hyperspace-cooldown hyperspace-cooldown)
-                   ;; Conditionally handle death
-                   (#(if died?
-                       (-> %
-                           (update-in [:lives] dec)
-                           (update :particles
-                                   (fn [particles]
-                                     (vec (concat particles
-                                                  (create-particles
-                                                   :x new-x
-                                                   :y new-y
-                                                   :count 12
-                                                   :color "#FFFFFF"))))))
-                       %))))))))
+      (hyperspace game-state new-x new-y died?))))
 
 ;; ============================================================================
 ;; Collision Detection
@@ -427,7 +426,7 @@
                       (do
                         (when (and (= (mod (:frame-count @game-state) 60) 0)
                                    (< (rand) 0.3))
-                          (ufo-fire! :ufo u))
+                          (swap! game-state ufo-fire! :ufo u))
                         (-> u
                             (update :x + (:vx u))
                             (update :y + (:vy u))))))))
@@ -558,7 +557,7 @@
       (when (empty? asteroids)
         (play-level-complete-sound) ; Play victory sound
         (swap! game-state update :level inc)
-        (init-level! :level (:level @game-state))))))
+        (swap! game-state init-level!)))))
 
 ;; ============================================================================
 ;; Drawing Functions
@@ -764,7 +763,7 @@
                                      :distance 0}
                           :fire-button false
                           :hyperspace-button false})
-  (init-level! :level 1))
+  (init-level! {:level 1 :ship {}}))
 
 ;; ============================================================================
 ;; Canvas Component
@@ -786,9 +785,9 @@
                                    (swap! keys-pressed conj key)
                                    (when (= (:game-status @game-state) :playing)
                                      (case key
-                                       " " (do (fire-bullet!) (.preventDefault e))
-                                       "x" (hyperspace!)
-                                       "X" (hyperspace!)
+                                       " " (do (swap! game-state fire-bullet!) (.preventDefault e))
+                                       "x" (swap! game-state hyperspace!)
+                                       "X" (swap! game-state hyperspace!)
                                        nil)))))
 
             (.addEventListener js/window "keyup"
@@ -1033,7 +1032,7 @@
        :color "76, 175, 80"
        :on-press #(do
                     (swap! game-state assoc-in [:touch-controls :fire-button] true)
-                    (fire-bullet!))
+                    (swap! game-state fire-bullet!))
        :on-release #(swap! game-state assoc-in [:touch-controls :fire-button] false)]
       [touch-action-button
        :label "HYPER"
@@ -1042,7 +1041,7 @@
        :color "255, 152, 0"
        :on-press #(do
                     (swap! game-state assoc-in [:touch-controls :hyperspace-button] true)
-                    (hyperspace!))
+                    (swap! game-state hyperspace!))
        :on-release #(swap! game-state assoc-in [:touch-controls :hyperspace-button] false)]]]))
 
 ;; ============================================================================
