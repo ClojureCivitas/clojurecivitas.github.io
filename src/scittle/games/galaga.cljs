@@ -322,18 +322,25 @@
                                (assoc star :y new-y))))
                          stars))))
 ;; Update formation movement (side-to-side only, no descent)
-      (let [direction (:formation-direction @game-state)]
-        (swap! game-state update :formation-offset
-               (fn [{:keys [x y]}]
-                 (let [new-x (+ x (* direction 0.5))]
-                   (cond
-                     (and (>= new-x 30) (= direction 1))
-                     (do (swap! game-state assoc :formation-direction -1)
-                         {:x 30 :y y}) ; Keep y the same - no descent!
-                     (and (<= new-x -30) (= direction -1))
-                     (do (swap! game-state assoc :formation-direction 1)
-                         {:x -30 :y y}) ; Keep y the same - no descent!
-                     :else {:x new-x :y y})))))
+      (let [direction (:formation-direction @game-state)
+            offset (:formation-offset @game-state)
+            x (:x offset)
+            y (:y offset)
+            new-x (+ x (* direction 0.5))]
+        ;; Single atomic update for formation movement and direction changes
+        (swap! game-state
+               (fn [state]
+                 (cond
+                   (and (>= new-x 30) (= direction 1))
+                   (-> state
+                       (assoc :formation-direction -1)
+                       (assoc :formation-offset {:x 30 :y y}))
+                   (and (<= new-x -30) (= direction -1))
+                   (-> state
+                       (assoc :formation-direction 1)
+                       (assoc :formation-offset {:x -30 :y y}))
+                   :else
+                   (assoc state :formation-offset {:x new-x :y y})))))
       ;; Update enemies
       (swap! game-state update :enemies
              (fn [enemies]
@@ -380,45 +387,68 @@
               enemy enemies]
         (when (and (collides? :a bullet :b enemy)
                    (not= (:state enemy) :destroyed))
-          ;; Remove bullet
-          (swap! game-state update :bullets
-                 #(vec (remove (fn [b] (= b bullet)) %)))
-          ;; Damage enemy
-          (let [new-hits (dec (:hits enemy))]
-            (if (<= new-hits 0)
-              ;; Destroy enemy
-              (do
-                (play-explosion-sound) ; Play explosion sound
-                (swap! game-state update :enemies
-                       #(vec (remove (fn [e] (= e enemy)) %)))
-                (swap! game-state update :score + (:points enemy))
-                (swap! game-state update :particles
-                       #(vec (concat % (create-particles :x (:x enemy)
-                                                         :y (:y enemy)
-                                                         :count 10
-                                                         :color (:color enemy))))))
-              ;; Damage enemy
-              (swap! game-state update :enemies
-                     #(mapv (fn [e]
-                              (if (= e enemy)
-                                (assoc e :hits new-hits)
-                                e))
-                            %))))))
+          (let [new-hits (dec (:hits enemy))
+                destroyed? (<= new-hits 0)]
+            (when destroyed?
+              (play-explosion-sound)) ; Play explosion sound
+            ;; Single atomic update for all collision effects
+            (swap! game-state
+                   (fn [state]
+                     (-> state
+                         ;; Remove bullet
+                         (update :bullets #(vec (remove (fn [b] (= b bullet)) %)))
+                         ;; Handle enemy destruction or damage
+                         (update :enemies
+                                 (fn [enemies]
+                                   (if destroyed?
+                                     ;; Destroy enemy
+                                     (vec (remove (fn [e] (= e enemy)) enemies))
+                                     ;; Damage enemy
+                                     (mapv (fn [e]
+                                             (if (= e enemy)
+                                               (assoc e :hits new-hits)
+                                               e))
+                                           enemies))))
+                         ;; Add score if destroyed
+                         (#(if destroyed?
+                             (update % :score + (:points enemy))
+                             %))
+                         ;; Add particles if destroyed
+                         (#(if destroyed?
+                             (update % :particles
+                                     (fn [particles]
+                                       (vec (concat particles
+                                                    (create-particles :x (:x enemy)
+                                                                      :y (:y enemy)
+                                                                      :count 10
+                                                                      :color (:color enemy))))))
+                             %))))))))
 ;; Check enemy bullet-player collisions
       (doseq [bullet enemy-bullets]
         (when (collides? :a bullet :b player)
           (play-hit-sound) ; Play hit sound
-          (swap! game-state update :enemy-bullets
-                 #(vec (remove (fn [b] (= b bullet)) %)))
-          (swap! game-state update-in [:player :lives] dec)
-          (swap! game-state update :particles
-                 #(vec (concat % (create-particles :x (:x player)
-                                                   :y (:y player)
-                                                   :count 15
-                                                   :color "#FFFF00"))))
-          (when (<= (get-in @game-state [:player :lives]) 0)
-            (swap! game-state assoc :game-status :game-over)
-            (swap! game-state update :high-score max (:score @game-state)))))
+          ;; Single atomic update for all hit effects
+          (let [new-lives (dec (:lives player))
+                game-over? (<= new-lives 0)]
+            (swap! game-state
+                   (fn [state]
+                     (-> state
+                         ;; Remove bullet
+                         (update :enemy-bullets #(vec (remove (fn [b] (= b bullet)) %)))
+                         ;; Decrement lives
+                         (update-in [:player :lives] dec)
+                         ;; Add particles
+                         (update :particles
+                                 #(vec (concat % (create-particles :x (:x player)
+                                                                   :y (:y player)
+                                                                   :count 15
+                                                                   :color "#FFFF00"))))
+                         ;; If game over, update status and high score
+                         (#(if game-over?
+                             (-> %
+                                 (assoc :game-status :game-over)
+                                 (update :high-score max (:score %)))
+                             %))))))))
 ;; Check for wave clear
       (when (empty? enemies)
         (play-wave-complete-sound) ; Play victory sound

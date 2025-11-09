@@ -2,7 +2,7 @@
 ^{:kindly/options {:html/deps [:scittle :reagent]}
   :clay {:title "Build Asteroids with ClojureScript & Scittle"
          :quarto {:author [:burinc]
-                  :description "Create a classic Asteroids arcade game with physics simulation, collision detection, and canvas graphics - now with mobile touch controls! All running in the browser with zero build tools!"
+                  :description "Create a classic Asteroids arcade game with physics simulation, collision detection, canvas graphics, and retro sound effects - now with mobile touch controls! All running in the browser with zero build tools!"
                   :type :post
                   :date "2025-11-09"
                   :category :games
@@ -18,7 +18,9 @@
                          :retro
                          :no-build
                          :mobile
-                         :touch-controls]
+                         :touch-controls
+                         :web-audio
+                         :sound-effects]
                   :keywords [:asteroids-game
                              :canvas-graphics
                              :physics-simulation
@@ -31,7 +33,10 @@
                              :virtual-joystick
                              :performance-optimization
                              :retro-gaming
-                             :arcade-classics]}}}
+                             :arcade-classics
+                             :web-audio-api
+                             :sound-synthesis
+                             :retro-sound-effects]}}}
 
 (ns scittle.games.asteroids-article
   (:require [scicloj.kindly.v4.kind :as kind]))
@@ -61,6 +66,7 @@
 ;; - **Hyperspace jump** with a risky twist (10% chance of destruction!)
 ;; - **UFO enemies** that hunt and shoot at you
 ;; - **Particle effects** for explosions and destruction
+;; - **Retro sound effects** using Web Audio API for authentic arcade audio
 ;; - **Progressive difficulty** with increasing asteroid counts
 ;; - **High score tracking** to compete against yourself
 ;; - **Canvas-based vector graphics** for that authentic retro feel
@@ -287,25 +293,63 @@
 
 ;; ### Hyperspace Jump - The Risky Escape
 
-;; One of the most iconic features! Teleport to safety... or die trying:
+;; One of the most iconic features! Teleport to safety... or die trying.
+
+;; #### Code Review Improvement
+
+;; After sharing this code on Slack, [Erik Assum](https://github.com/slipset) provided excellent feedback:
+
+;; > "Very cool! Looking at the code, in the `hyperspace!` you have multiple swap!s on your gamestate atom. Probs doesn't make a difference here, but it does defeat the purpose of an atom, because you're now susceptible to races (at least in a multi-threaded env), and if you have listeners to the atom state, they'll get more updates than what they bargained for."
+
+;; **The Problem:** Multiple `swap!` calls meant:
+;;
+;; - Multiple state updates (5-7 separate modifications)
+;; - Race condition risk in multi-threaded environments
+;; - Multiple Reagent re-renders instead of one
+;; - Listeners notified multiple times per hyperspace jump
+
+;; **The Solution:** Combine all updates into a single `swap!`:
 
 ;; ```clojure
 ;; (defn hyperspace!
+;;   "Hyperspace jump with risk"
 ;;   []
 ;;   (when (<= (:hyperspace-cooldown @game-state) 0)
-;;     ;; Teleport to random location
-;;     (swap! game-state assoc-in [:ship :x] (rand-int canvas-width))
-;;     (swap! game-state assoc-in [:ship :y] (rand-int canvas-height))
-;;     (swap! game-state assoc-in [:ship :vx] 0)
-;;     (swap! game-state assoc-in [:ship :vy] 0)
-;;     (swap! game-state assoc :hyperspace-cooldown hyperspace-cooldown)
-;;     ;; 10% chance of explosion - risk vs reward!
-;;     (when (< (rand) 0.1)
-;;       (swap! game-state update-in [:lives] dec)
-;;       (swap! game-state update :particles
-;;              #(vec (concat % (create-particles :x ship-x :y ship-y
-;;                                                :count 20 :color \"#FFFFFF\")))))))
+;;     (play-hyperspace-sound) ; Sound effect added!
+;;     (let [new-x (rand-int canvas-width)
+;;           new-y (rand-int canvas-height)
+;;           died? (< (rand) 0.1)]
+;;       (swap! game-state
+;;              (fn [state]
+;;                (-> state
+;;                    ;; Teleport ship
+;;                    (assoc-in [:ship :x] new-x)
+;;                    (assoc-in [:ship :y] new-y)
+;;                    (assoc-in [:ship :vx] 0)
+;;                    (assoc-in [:ship :vy] 0)
+;;                    (assoc :hyperspace-cooldown hyperspace-cooldown)
+;;                    ;; Conditionally handle death (10% chance!)
+;;                    (#(if died?
+;;                        (-> %
+;;                            (update-in [:lives] dec)
+;;                            (update :particles
+;;                                    (fn [particles]
+;;                                      (vec (concat particles
+;;                                                   (create-particles
+;;                                                    :x new-x
+;;                                                    :y new-y
+;;                                                    :count 12
+;;                                                    :color \"#FFFFFF\"))))))
+;;                        %))))))))
 ;; ```
+
+;; **Benefits of the improved version:**
+;;
+;; - Single atomic state update
+;; - No race conditions
+;; - One Reagent re-render per hyperspace jump
+;; - Cleaner threading with `->` macro
+;; - More functional approach with conditional logic
 
 ;; ### UFO Enemies
 
@@ -480,21 +524,23 @@
 
 ;; - **Circle-Circle**: Distance-based detection
 ;; - **Optimization**: Only check active objects
+;; - **Batch Processing**: Collect all collisions before applying
 ;; - **Response**: Separate detection from response logic
 ;; - **Invulnerability**: Temporary immunity after hits
 
 ;; ### 3. Game Feel
 
 ;; - **Particle Effects**: Visual feedback for actions
-;; - **Screen Shake**: Could add impact feedback
-;; - **Sound Effects**: Web Audio API integration
-;; - **Score Popups**: Animated feedback
+;; - **Sound Effects**: Audio feedback for every action
+;; - **Web Audio API**: Procedural sound synthesis
+;; - **Retro Tones**: Frequency-based arcade sounds
 ;; - **Difficulty Curve**: Progressive challenge
 
 ;; ### 4. State Management
 
 ;; - **Single Source of Truth**: One atom for all state
 ;; - **Immutable Updates**: Pure functional transformations
+;; - **Atomic Updates**: Single `swap!` per operation (Erik's feedback)
 ;; - **Predictable Updates**: No side effects in update logic
 ;; - **Reactive Rendering**: Automatic UI updates
 
@@ -746,6 +792,7 @@
 ;; ### Impact of Performance Fixes
 
 ;; **Before fixes:**
+;;
 ;; - Rapid firing → 100+ asteroids in seconds
 ;; - 1000+ particles causing visual chaos
 ;; - Frame rate drops from 60 FPS to < 10 FPS
@@ -753,6 +800,7 @@
 ;; - Mobile devices especially affected
 
 ;; **After fixes:**
+;;
 ;; - Maximum 50 asteroids (smooth on all devices)
 ;; - Maximum 200 particles (clean visual effects)
 ;; - Consistent 60 FPS on desktop and mobile
@@ -767,6 +815,150 @@
 ;; 4. **Add safety limits**: Upper bounds prevent worst-case scenarios
 ;; 5. **Optimize particle counts**: Fewer particles with better placement looks just as good
 ;; 6. **Profile on mobile**: Desktop performance doesn't predict mobile behavior
+
+;; ## Retro Sound Effects with Web Audio API
+
+;; No arcade game is complete without sound! We added authentic retro sound effects using the Web Audio API, following the same pattern used in our Galaga implementation.
+
+;; ### The Audio System Architecture
+
+;; The sound system uses procedurally generated tones to create that classic arcade feel:
+
+;; ```clojure
+;; ;; Initialize Web Audio API context
+;; (def audio-context
+;;   "Web Audio API context for sound generation"
+;;   (when (exists? js/AudioContext)
+;;     (js/AudioContext.)))
+;;
+;; ;; Generic tone generator
+;; (defn play-tone
+;;   "Plays a tone at the specified frequency for the given duration"
+;;   [& {:keys [frequency duration volume]
+;;       :or {frequency 440 duration 0.2 volume 0.3}}]
+;;   (when audio-context
+;;     (try
+;;       (let [oscillator (.createOscillator audio-context)
+;;             gain-node (.createGain audio-context)]
+;;         (.connect oscillator gain-node)
+;;         (.connect gain-node (.-destination audio-context))
+;;         (set! (.-value (.-frequency oscillator)) frequency)
+;;         (set! (.-value (.-gain gain-node)) volume)
+;;         (.start oscillator)
+;;         (.stop oscillator (+ (.-currentTime audio-context) duration)))
+;;       (catch js/Error e
+;;         (js/console.error "Audio error:" e)))))
+;; ```
+
+;; ### Sound Effect Implementations
+
+;; Each game event has its own characteristic sound:
+
+;; ```clojure
+;; ;; 1. Laser Sound - High frequency burst
+;; (defn play-laser-sound []
+;;   (play-tone :frequency 800 :duration 0.1 :volume 0.2))
+;;
+;; ;; 2. Explosion Sound - Low rumble
+;; (defn play-explosion-sound []
+;;   (play-tone :frequency 100 :duration 0.2 :volume 0.3))
+;;
+;; ;; 3. Thrust Sound - Continuous engine hum
+;; (defn play-thrust-sound []
+;;   (play-tone :frequency 150 :duration 0.08 :volume 0.15))
+;;
+;; ;; 4. Hyperspace - Descending frequency sweep
+;; (defn play-hyperspace-sound []
+;;   (doseq [[idx freq] (map-indexed vector [880 660 440 220])]
+;;     (js/setTimeout
+;;      #(play-tone :frequency freq :duration 0.1 :volume 0.25)
+;;      (* idx 50))))
+;;
+;; ;; 5. Hit Sound - Dramatic impact
+;; (defn play-hit-sound []
+;;   (play-tone :frequency 150 :duration 0.3 :volume 0.4))
+;;
+;; ;; 6. Victory Sound - Ascending fanfare
+;; (defn play-level-complete-sound []
+;;   (doseq [[idx freq] (map-indexed vector [523 659 784 1047])]
+;;     (js/setTimeout
+;;      #(play-tone :frequency freq :duration 0.2 :volume 0.25)
+;;      (* idx 100))))
+;; ```
+
+;; ### Integrating Sounds with Game Events
+
+;; Sounds are triggered at key moments for maximum impact:
+
+;; ```clojure
+;; ;; Fire weapon
+;; (defn fire-bullet! []
+;;   (play-laser-sound)  ; Instant audio feedback
+;;   (let [{:keys [x y angle]} (:ship @game-state)]
+;;     (swap! game-state update :bullets conj ...)))
+;;
+;; ;; Asteroid destruction
+;; (when (seq @hit-bullets)
+;;   (play-explosion-sound)
+;;   (swap! game-state update :bullets ...))
+;;
+;; ;; Ship collision
+;; (when (check-collision ship asteroid)
+;;   (play-hit-sound)
+;;   (swap! game-state update :lives dec))
+;;
+;; ;; Level complete
+;; (when (empty? asteroids)
+;;   (play-level-complete-sound)
+;;   (swap! game-state update :level inc))
+;; ```
+
+;; ### Throttling Continuous Sounds
+
+;; The thrust sound needs special handling to avoid audio spam:
+
+;; ```clojure
+;; ;; Play thrust sound (throttled to every 8 frames)
+;; (when (and (:thrusting ship)
+;;            (= (mod (:frame-count @game-state) 8) 0))
+;;   (play-thrust-sound))
+;; ```
+
+;; This creates a continuous engine sound effect while preventing hundreds of simultaneous audio oscillators!
+
+;; ### Sound Design Philosophy
+
+;; The sound effects follow classic arcade game principles:
+
+;; 1. **Laser (800Hz)**: High frequency for energy weapons
+;; 2. **Explosion (100Hz)**: Low rumble for impacts
+;; 3. **Thrust (150Hz)**: Mid-low hum for engines
+;; 4. **Hyperspace (descending)**: Frequency sweep for warp effect
+;; 5. **Hit (150Hz)**: Sustained tone for damage feedback
+;; 6. **Victory (ascending)**: Rising pitch for achievement
+
+;; ### Browser Compatibility
+
+;; The audio system gracefully handles browsers without Web Audio API support:
+
+;; ```clojure
+;; (when audio-context  ; Only play if API available
+;;   (try
+;;     ;; Generate sound
+;;     (catch js/Error e
+;;       (js/console.error "Audio error:" e))))
+;; ```
+
+;; ### Learning from Galaga
+
+;; We followed the same sound implementation pattern from our Galaga game:
+;; - Single `audio-context` initialization
+;; - Generic `play-tone` function for all sounds
+;; - Specific sound functions with descriptive names
+;; - Integration at game event trigger points
+;; - Error handling for unsupported browsers
+
+;; This consistent approach makes it easy to add sound to any Scittle-based game!
 
 ;; ## Try the Game!
 
@@ -812,14 +1004,35 @@
 ;; - Explosion animations
 ;; - Retro CRT shader effects
 
-;; ### 3. Audio
+;; ### 3. Enhanced Audio
 
-;; - Thrust sound loop
-;; - Laser firing sounds
-;; - Explosion effects
-;; - UFO siren
-;; - Background music
-;; - Use Web Audio API for synthesized retro sounds
+;; The game now has retro sound effects! Here are ideas to enhance the audio further:
+
+;; - **Background music loop**: Add ambient space music
+;; - **UFO siren**: Classic arcade UFO warning sound
+;; - **Power-up sounds**: When collecting extra lives or shields
+;; - **Menu sounds**: UI interaction feedback
+;; - **Dynamic volume**: Lower music during intense action
+;; - **Stereo panning**: Position sounds left/right based on screen location
+;; - **Sound variations**: Randomize pitch slightly for variety
+;; - **Mute toggle**: Let players disable sound
+
+;; Example of stereo panning:
+
+;; ```clojure
+;; (defn play-positioned-sound [x]
+;;   (when audio-context
+;;     (let [oscillator (.createOscillator audio-context)
+;;           panner (.createStereoPanner audio-context)
+;;           gain-node (.createGain audio-context)
+;;           ;; Pan from -1 (left) to 1 (right) based on x position
+;;           pan-value (- (* 2 (/ x canvas-width)) 1)]
+;;       (set! (.-value (.-pan panner)) pan-value)
+;;       (.connect oscillator panner)
+;;       (.connect panner gain-node)
+;;       (.connect gain-node (.-destination audio-context))
+;;       ...)))
+;; ```
 
 ;; ### 4. Game Modes
 
@@ -879,12 +1092,14 @@
 
 ;; 1. **Zero-Build Game Development** - Iterate rapidly without tooling
 ;; 2. **Physics Simulation** - Realistic movement with simple math
-;; 3. **Collision Detection** - Efficient spatial queries
+;; 3. **Collision Detection** - Efficient spatial queries with batch processing
 ;; 4. **Canvas Graphics** - Vector-based retro rendering
-;; 5. **Game State Management** - Single atom, pure functions
-;; 6. **Keyword Arguments** - Self-documenting, maintainable code
-;; 7. **Browser APIs** - Canvas, requestAnimationFrame, keyboard events
-;; 8. **Functional Patterns** - Immutable state, pure logic
+;; 5. **Game State Management** - Single atom, pure functions, atomic updates
+;; 6. **Web Audio API** - Procedural sound synthesis for retro effects
+;; 7. **Keyword Arguments** - Self-documenting, maintainable code
+;; 8. **Browser APIs** - Canvas, requestAnimationFrame, keyboard, touch, audio
+;; 9. **Functional Patterns** - Immutable state, pure logic, single `swap!` updates
+;; 10. **Code Review Integration** - Erik's feedback improved our atom usage
 
 ;; ## Technical Highlights
 
@@ -910,8 +1125,31 @@
 ;;   (draw-ship ctx (:ship state))
 ;;   (draw-asteroids ctx (:asteroids state)))
 ;;
+;; ;; Sound (side effects isolated)
+;; (defn play-laser-sound []
+;;   (play-tone :frequency 800 :duration 0.1 :volume 0.2))
+;;
 ;; ;; State updates (atoms)
 ;; (swap! game-state update-in [:ship] update-physics)
+;; ```
+
+;; ### Single Atomic State Updates
+
+;; Following Erik's code review feedback, all state modifications use single `swap!` calls:
+
+;; ```clojure
+;; ;; ❌ Multiple swaps - race conditions!
+;; (swap! game-state assoc-in [:ship :x] new-x)
+;; (swap! game-state assoc-in [:ship :y] new-y)
+;; (swap! game-state assoc-in [:ship :vx] 0)
+;;
+;; ;; ✅ Single atomic update
+;; (swap! game-state
+;;        (fn [state]
+;;          (-> state
+;;              (assoc-in [:ship :x] new-x)
+;;              (assoc-in [:ship :y] new-y)
+;;              (assoc-in [:ship :vx] 0))))
 ;; ```
 
 ;; ### Keyword Arguments Everywhere
@@ -964,7 +1202,9 @@
 ;; - **Cross-Platform Input**: Seamless keyboard and touch control
 ;; - **Robust Collision System**: Batched updates prevent race conditions
 ;; - **Performance Optimization**: Safety limits ensure smooth gameplay
+;; - **Retro Sound Effects**: Web Audio API for authentic arcade audio
 ;; - **Functional Programming**: Pure functions with immutable state
+;; - **Atomic State Updates**: Single `swap!` calls following Erik's guidance
 ;; - **Reactive UI**: Reagent atoms for predictable updates
 ;; - **Zero Build Tools**: Instant development feedback with Scittle
 ;; - **Keyword Arguments**: Self-documenting, maintainable code
@@ -982,6 +1222,7 @@
 ;; - Keep moving! Sitting still makes you an easy target
 ;; - Break up large asteroids early before they become a swarm
 ;; - Use screen wrap-around to your advantage for quick escapes
+;; - Listen to the sounds! Audio cues tell you what's happening on screen
 
 ;; ---
 
