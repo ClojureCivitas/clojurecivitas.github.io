@@ -277,34 +277,33 @@
 
 (defn fire-bullet!
   "Fires a bullet from the ship"
-  []
+  [{:keys [ship] :as game-state}]
   (play-laser-sound) ; Play laser sound
-  (let [{:keys [x y angle]} (:ship @game-state)
+  (let [{:keys [x y angle]} ship
         bullet-vx (* bullet-speed (Math/cos (- angle (/ Math/PI 2))))
         bullet-vy (* bullet-speed (Math/sin (- angle (/ Math/PI 2))))]
-    (swap! game-state update :bullets conj
-           {:x x
-            :y y
-            :vx bullet-vx
-            :vy bullet-vy
-            :life bullet-lifetime})))
+    (update game-state :bullets conj
+            {:x x
+             :y y
+             :vx bullet-vx
+             :vy bullet-vy
+             :life bullet-lifetime})))
 
 (defn ufo-fire!
   "UFO fires bullet at ship"
-  [& {:keys [ufo]}]
-  (let [{:keys [ship]} @game-state
-        dx (- (:x ship) (:x ufo))
+  [{:keys [ship] :as game-state} & {:keys [ufo]}]
+  (let [dx (- (:x ship) (:x ufo))
         dy (- (:y ship) (:y ufo))
         angle (Math/atan2 dy dx)
         bullet-vx (* 5 (Math/cos angle))
         bullet-vy (* 5 (Math/sin angle))]
-    (swap! game-state update :bullets conj
-           {:x (:x ufo)
-            :y (:y ufo)
-            :vx bullet-vx
-            :vy bullet-vy
-            :life bullet-lifetime
-            :from-ufo true})))
+    (update game-state :bullets conj
+            {:x (:x ufo)
+             :y (:y ufo)
+             :vx bullet-vx
+             :vy bullet-vy
+             :life bullet-lifetime
+             :from-ufo true})))
 
 ;; ============================================================================
 ;; Special Moves
@@ -427,7 +426,7 @@
                       (do
                         (when (and (= (mod (:frame-count @game-state) 60) 0)
                                    (< (rand) 0.3))
-                          (ufo-fire! :ufo u))
+                          (swap! game-state ufo-fire! :ufo u))
                         (-> u
                             (update :x + (:vx u))
                             (update :y + (:vy u))))))))
@@ -786,7 +785,7 @@
                                    (swap! keys-pressed conj key)
                                    (when (= (:game-status @game-state) :playing)
                                      (case key
-                                       " " (do (fire-bullet!) (.preventDefault e))
+                                       " " (do (swap! game-state fire-bullet!) (.preventDefault e))
                                        "x" (swap! game-state hyperspace!)
                                        "X" (swap! game-state hyperspace!)
                                        nil)))))
@@ -1033,7 +1032,7 @@
        :color "76, 175, 80"
        :on-press #(do
                     (swap! game-state assoc-in [:touch-controls :fire-button] true)
-                    (fire-bullet!))
+                    (swap! game-state fire-bullet!))
        :on-release #(swap! game-state assoc-in [:touch-controls :fire-button] false)]
       [touch-action-button
        :label "HYPER"
