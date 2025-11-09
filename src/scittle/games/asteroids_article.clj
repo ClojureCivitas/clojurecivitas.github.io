@@ -2,7 +2,7 @@
 ^{:kindly/options {:html/deps [:scittle :reagent]}
   :clay {:title "Build Asteroids with ClojureScript & Scittle"
          :quarto {:author [:burinc]
-                  :description "Create a classic Asteroids arcade game with physics simulation, collision detection, and canvas graphics - all running in the browser with zero build tools!"
+                  :description "Create a classic Asteroids arcade game with physics simulation, collision detection, and canvas graphics - now with mobile touch controls! All running in the browser with zero build tools!"
                   :type :post
                   :date "2025-11-09"
                   :category :games
@@ -16,7 +16,9 @@
                          :physics
                          :arcade
                          :retro
-                         :no-build]
+                         :no-build
+                         :mobile
+                         :touch-controls]
                   :keywords [:asteroids-game
                              :canvas-graphics
                              :physics-simulation
@@ -24,6 +26,10 @@
                              :vector-graphics
                              :game-loop
                              :keyboard-controls
+                             :touch-controls
+                             :mobile-gaming
+                             :virtual-joystick
+                             :performance-optimization
                              :retro-gaming
                              :arcade-classics]}}}
 
@@ -58,8 +64,24 @@
 ;; - **Progressive difficulty** with increasing asteroid counts
 ;; - **High score tracking** to compete against yourself
 ;; - **Canvas-based vector graphics** for that authentic retro feel
+;; - **Mobile touch controls** with virtual joystick and action buttons
+;; - **Performance optimizations** to handle intense gameplay
 
 ;; All of this with keyword arguments for clean, readable code!
+
+;; ## The Journey: From Desktop to Mobile
+
+;; ### A Kid's Request
+
+;; After building the initial desktop version, my kids wanted to play Asteroids on their phones. The problem? No physical keyboard! This led me to add comprehensive mobile support with touch controls.
+
+;; The challenge was creating an intuitive control scheme that matched the precision of keyboard controls while working naturally on a touchscreen. The solution: a virtual joystick for ship control and dedicated buttons for firing and hyperspace jumps.
+
+;; ### The Performance Crisis
+
+;; During testing, my kids discovered a critical bug: rapid firing would cause asteroids to split exponentially, creating hundreds of objects that made the game completely unplayable. The browser would freeze, and the game became a slideshow of particle effects and asteroid outlines.
+
+;; This real-world feedback led to important performance improvements that made the game smooth and enjoyable on both desktop and mobile devices.
 
 ;; ## Why Scittle for Arcade Games?
 
@@ -476,9 +498,289 @@
 ;; - **Predictable Updates**: No side effects in update logic
 ;; - **Reactive Rendering**: Automatic UI updates
 
+;; ## Mobile Touch Controls Implementation
+
+;; ### The Challenge
+
+;; Making Asteroids playable on mobile required solving several problems:
+
+;; 1. **No keyboard**: Touch events completely different from key presses
+;; 2. **Continuous input**: Ship rotation and thrust need smooth, continuous control
+;; 3. **Multiple actions**: Fire bullets while steering and thrusting
+;; 4. **Visual feedback**: Players need to see what they're touching
+
+;; ### The Solution: Virtual Joystick
+
+;; We implemented a virtual joystick that appears in the bottom-left corner when the game starts:
+
+;; ```clojure
+;; ;; Touch state management
+;; (def game-state
+;;   (r/atom {;; ... existing state
+;;            :touch-controls {:joystick {:active false
+;;                                        :x 0
+;;                                        :y 0
+;;                                        :angle 0
+;;                                        :distance 0}
+;;                             :fire-button false
+;;                             :hyperspace-button false}}))
+;;
+;; ;; Helper function to find touch by ID (avoiding array-seq issues)
+;; (defn find-touch-by-id
+;;   [touch-list touch-id]
+;;   (when touch-list
+;;     (loop [i 0]
+;;       (when (< i (.-length touch-list))
+;;         (let [touch (aget touch-list i)]
+;;           (if (= (.-identifier touch) touch-id)
+;;             touch
+;;             (recur (inc i))))))))
+;; ```
+
+;; ### Joystick Physics Calculations
+
+;; The joystick calculates angle and distance from center:
+
+;; ```clojure
+;; (defn calculate-joystick-angle
+;;   [& {:keys [center-x center-y touch-x touch-y]}]
+;;   (let [dx (- touch-x center-x)
+;;         dy (- touch-y center-y)]
+;;     (Math/atan2 dy dx)))
+;;
+;; (defn calculate-joystick-distance
+;;   [& {:keys [center-x center-y touch-x touch-y max-distance]}]
+;;   (let [dx (- touch-x center-x)
+;;         dy (- touch-y center-y)
+;;         dist (Math/sqrt (+ (* dx dx) (* dy dy)))]
+;;     (min dist max-distance)))
+;;
+;; (defn normalize-joystick-input
+;;   [& {:keys [distance max-distance]}]
+;;   (/ distance max-distance))
+;; ```
+
+;; ### Touch Event Handling
+
+;; The virtual joystick component handles `touchstart`, `touchmove`, and `touchend`:
+
+;; ```clojure
+;; (defn virtual-joystick []
+;;   (let [joystick-ref (atom nil)
+;;         touch-id (atom nil)
+;;         max-distance 50]
+;;     (r/create-class
+;;      {:component-did-mount
+;;       (fn []
+;;         (when-let [joystick @joystick-ref]
+;;           ;; touchstart: Record the touch and activate joystick
+;;           (let [handle-touch-start
+;;                 (fn [e]
+;;                   (.preventDefault e)
+;;                   (let [touch (aget (.-touches e) 0)]
+;;                     (reset! touch-id (.-identifier touch))
+;;                     (swap! game-state assoc-in
+;;                            [:touch-controls :joystick :active] true)))
+;;
+;;                 ;; touchmove: Calculate angle and distance
+;;                 handle-touch-move
+;;                 (fn [e]
+;;                   (.preventDefault e)
+;;                   (when @touch-id
+;;                     (let [touches (.-touches e)
+;;                           touch (find-touch-by-id touches @touch-id)]
+;;                       (when touch
+;;                         (let [center (get-joystick-center)
+;;                               angle (calculate-joystick-angle ...)
+;;                               distance (calculate-joystick-distance ...)]
+;;                           (swap! game-state assoc-in
+;;                                  [:touch-controls :joystick]
+;;                                  {:active true :angle angle
+;;                                   :distance distance ...}))))))]
+;;             (.addEventListener joystick \"touchstart\" handle-touch-start)
+;;             (.addEventListener joystick \"touchmove\" handle-touch-move))))
+;;
+;;       :render
+;;       (fn []
+;;         [:div {:style {:position \"fixed\" :bottom \"40px\" :left \"40px\"
+;;                        :width \"120px\" :height \"120px\"
+;;                        :border-radius \"50%\"
+;;                        :background \"rgba(255, 255, 255, 0.2)\"}}
+;;          ;; Inner draggable circle shows touch position
+;;          [:div {:style {:width \"60px\" :height \"60px\"
+;;                        :transform (str \"translate(\" x \"px, \" y \"px)\")}}]])})))
+;; ```
+
+;; ### Action Buttons
+
+;; Separate buttons for firing and hyperspace:
+
+;; ```clojure
+;; (defn touch-action-button
+;;   [& {:keys [label bottom right on-press on-release color]}]
+;;   ;; Creates circular button with touch event handlers
+;;   ;; FIRE button: Green, fires bullets
+;;   ;; HYPER button: Orange, activates hyperspace
+;;   ...)
+;; ```
+
+;; ### Game Loop Integration
+
+;; The game loop checks both keyboard and touch input:
+
+;; ```clojure
+;; (letfn [(game-loop []
+;;           (when (= (:game-status @game-state) :playing)
+;;             (let [joystick (get-in @game-state [:touch-controls :joystick])]
+;;
+;;               ;; Keyboard rotation
+;;               (when (contains? @keys-pressed \"ArrowLeft\")
+;;                 (swap! game-state update-in [:ship :angle] - rotation-speed))
+;;
+;;               ;; Touch joystick rotation and thrust
+;;               (when (:active joystick)
+;;                 (let [normalized-distance (normalize-joystick-input
+;;                                            :distance (:distance joystick)
+;;                                            :max-distance 50)
+;;                       joy-angle (:angle joystick)]
+;;                   ;; Rotate ship to match joystick angle
+;;                   (swap! game-state assoc-in [:ship :angle]
+;;                          (+ joy-angle (/ Math/PI 2)))
+;;                   ;; Thrust when joystick pushed > 30%
+;;                   (swap! game-state assoc-in [:ship :thrusting]
+;;                          (> normalized-distance 0.3))))))
+;;           ...)]
+;;   (game-loop))
+;; ```
+
+;; ### Mobile-Specific Challenges
+
+;; 1. **Touch ID Tracking**: Each touch has a unique identifier to handle multi-touch
+;; 2. **Preventing Default**: Stop browser scrolling and zooming during gameplay
+;; 3. **Visual Feedback**: Button and joystick colors change when active
+;; 4. **Z-Index Management**: Controls overlay the game canvas
+;; 5. **Scittle Compatibility**: Avoiding `array-seq` which isn't available in Scittle
+
+;; ## Critical Performance Fixes
+
+;; ### The Exponential Asteroid Explosion Bug
+
+;; The original collision detection had a fatal flaw:
+
+;; ```clojure
+;; ;; ❌ BROKEN: Multiple bullets can hit same asteroid in one frame
+;; (doseq [bullet bullets
+;;         asteroid asteroids]
+;;   (when (check-collision bullet asteroid)
+;;     (swap! game-state update :bullets remove-bullet)
+;;     (swap! game-state update :asteroids remove-asteroid)
+;;     (swap! game-state update :asteroids concat (split-asteroid asteroid))))
+;; ```
+
+;; **The Problem:** If 3 bullets hit a large asteroid in the same frame:
+;; - Asteroid splits into 2 medium (first hit)
+;; - Those 2 medium split into 4 small (second hit)
+;; - Those 4 small would split further (third hit)
+;; - Result: Exponential growth from 1 asteroid to potentially 8+ asteroids
+;; - Within seconds: hundreds of asteroids and thousands of particles
+;; - Game freezes, becomes unplayable
+
+;; ### The Fix: Collision Batching
+
+;; We collect all collisions first, then apply them once:
+
+;; ```clojure
+;; ;; ✅ FIXED: Batch collision detection and resolution
+;; (let [hit-bullets (atom #{})
+;;       hit-asteroids (atom #{})
+;;       new-asteroids (atom [])
+;;       score-added (atom 0)
+;;       new-particles (atom [])]
+;;
+;;   ;; Find all collisions (but don't apply yet)
+;;   (doseq [bullet bullets
+;;           :when (and (not (:from-ufo bullet))
+;;                      (not (contains? @hit-bullets bullet)))
+;;           asteroid asteroids
+;;           :when (not (contains? @hit-asteroids asteroid))]
+;;     (when (check-collision bullet asteroid)
+;;       ;; Mark as hit (prevents duplicate processing)
+;;       (swap! hit-bullets conj bullet)
+;;       (swap! hit-asteroids conj asteroid)
+;;       ;; Collect effects
+;;       (swap! new-asteroids concat (split-asteroid asteroid))
+;;       (swap! score-added + points)
+;;       (swap! new-particles concat (create-particles ...))))
+;;
+;;   ;; Apply all effects at once
+;;   (when (seq @hit-bullets)
+;;     (swap! game-state update :bullets remove-hit-bullets)
+;;     (swap! game-state update :asteroids remove-hit-asteroids)
+;;     (swap! game-state update :asteroids concat-new-asteroids)))
+;; ```
+
+;; ### Performance Safeguards
+
+;; We added safety limits to prevent performance degradation:
+
+;; ```clojure
+;; ;; Safety limits
+;; (def max-asteroids 50)    ;; Cap total asteroid count
+;; (def max-particles 200)   ;; Cap total particle count
+;;
+;; ;; Reduce particle counts
+;; (defn create-particles [& {:keys [count ...]}]
+;;   ;; Asteroid hit: 10 → 5 particles
+;;   ;; UFO explosion: 15 → 8 particles
+;;   ;; Ship explosion: 20 → 12 particles
+;;   ...)
+;;
+;; ;; Apply limits when adding new objects
+;; (swap! game-state update :asteroids
+;;        #(vec (take max-asteroids (concat current new-ones))))
+;;
+;; (swap! game-state update :particles
+;;        #(vec (take max-particles (concat current new-ones))))
+;; ```
+
+;; ### Impact of Performance Fixes
+
+;; **Before fixes:**
+;; - Rapid firing → 100+ asteroids in seconds
+;; - 1000+ particles causing visual chaos
+;; - Frame rate drops from 60 FPS to < 10 FPS
+;; - Game becomes unplayable, browser may freeze
+;; - Mobile devices especially affected
+
+;; **After fixes:**
+;; - Maximum 50 asteroids (smooth on all devices)
+;; - Maximum 200 particles (clean visual effects)
+;; - Consistent 60 FPS on desktop and mobile
+;; - No collision bugs or exponential growth
+;; - Enjoyable gameplay even during intense action
+
+;; ### Lessons Learned
+
+;; 1. **Test with real users**: Kids found the bug immediately through enthusiastic rapid-fire testing
+;; 2. **Batch state updates**: Collecting changes before applying prevents race conditions
+;; 3. **Use sets for tracking**: Prevents duplicate processing of the same object
+;; 4. **Add safety limits**: Upper bounds prevent worst-case scenarios
+;; 5. **Optimize particle counts**: Fewer particles with better placement looks just as good
+;; 6. **Profile on mobile**: Desktop performance doesn't predict mobile behavior
+
 ;; ## Try the Game!
 
-;; The complete Asteroids game is embedded below. Use arrow keys to rotate and thrust, spacebar to fire, and X for hyperspace!
+;; The complete Asteroids game is embedded below. Works on both desktop and mobile!
+
+;; **Desktop Controls:**
+;; - Arrow keys to rotate and thrust
+;; - Spacebar to fire
+;; - X for hyperspace
+
+;; **Mobile Controls:**
+;; - Virtual joystick (bottom-left) to rotate and thrust
+;; - FIRE button (green, right side) to shoot
+;; - HYPER button (orange, right side) for hyperspace
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -640,11 +942,36 @@
 
 ;; ## Conclusion
 
-;; This Asteroids implementation proves that you don't need complex build tools, game engines, or frameworks to create engaging games. With Scittle, ClojureScript, and the Canvas API, you can build classic arcade games that run anywhere, load instantly, and are easy to modify.
+;; This Asteroids implementation demonstrates that you don't need complex build tools, game engines, or frameworks to create engaging games that work across all devices. With Scittle, ClojureScript, and the Canvas API, you can build classic arcade games that run anywhere, load instantly, and are easy to modify.
+
+;; ### The Development Journey
+
+;; What started as a desktop game evolved through real-world usage:
+
+;; 1. **Initial Build**: Classic desktop keyboard controls
+;; 2. **Kid Testing**: "Dad, can we play on our phones?"
+;; 3. **Mobile Support**: Virtual joystick and touch buttons added
+;; 4. **Performance Crisis**: Kids discovered the exponential asteroid bug
+;; 5. **Optimization**: Collision batching and safety limits implemented
+;; 6. **Polish**: Smooth 60 FPS on both desktop and mobile
+
+;; This iterative process shows the value of real user testing - especially with enthusiastic kids who push games to their limits!
+
+;; ### Technical Achievements
+
+;; The final implementation showcases:
+
+;; - **Cross-Platform Input**: Seamless keyboard and touch control
+;; - **Robust Collision System**: Batched updates prevent race conditions
+;; - **Performance Optimization**: Safety limits ensure smooth gameplay
+;; - **Functional Programming**: Pure functions with immutable state
+;; - **Reactive UI**: Reagent atoms for predictable updates
+;; - **Zero Build Tools**: Instant development feedback with Scittle
+;; - **Keyword Arguments**: Self-documenting, maintainable code
 
 ;; The combination of functional programming, reactive state management, physics simulation, and canvas graphics creates a solid foundation for game development. Whether you're learning ClojureScript, teaching game programming, or just having fun recreating classics, this approach offers immediate feedback and pure development joy.
 
-;; Now get out there and see how high you can score! Watch out for those UFOs - they're smarter than they look! 🚀
+;; Now get out there and see how high you can score! Watch out for those UFOs - they're smarter than they look! And remember, hyperspace is risky but sometimes necessary! 🚀📱
 
 ;; ### Pro Tips for High Scores
 
