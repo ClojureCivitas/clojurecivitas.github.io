@@ -351,6 +351,293 @@
 ;; - Cleaner threading with `->` macro
 ;; - More functional approach with conditional logic
 
+;; ### Erik's Second Improvement: Pure Functions and State at the Edges
+
+;; After reviewing the initial improvement, [Erik Assum](https://github.com/slipset) provided an even more profound insight about functional programming and state management:
+
+;; > "Looking at the commit, I think you can do even better. swap! takes an f state arg1 arg2 etc as params. So rather than passing anon fns to swap! You can pass named toplevel fns which take the state as first args, and whatever other args that fn might need, and your swap! becomes (swap! game-state do-whatever foo bar baz)"
+
+;; > "What you'll see when you structure the code like that is that the state transforming fns become pure fns from data to data and are trivially unittestable (apart from your random-stuff which is inherently impure), and that the icky bits ie mutating the global state can be moved towards the edge of the program. You might even be able to do this with just one swap!"
+
+;; This is a **fundamental principle** in functional programming: push side effects (like `swap!`) to the edges of your program, and keep the core logic pure.
+
+;; #### Understanding Multi-Argument swap!
+
+;; Most developers know `swap!` takes a function and applies it to the atom's value:
+
+;; ```clojure
+;; (swap! atom update-fn)
+;; ```
+
+;; But `swap!` can also pass additional arguments to your function:
+
+;; ```clojure
+;; ;; swap! signature: (swap! atom f & args)
+;; ;; This calls: (f @atom arg1 arg2 arg3)
+;; (swap! game-state my-function arg1 arg2 arg3)
+;; ```
+
+;; This means your state transformation function receives the current state as its first argument, followed by any additional arguments you need!
+
+;; #### Before: Anonymous Functions and Scattered swap! Calls
+
+;; Our original code had anonymous functions mixed with `swap!`:
+
+;; ```clojure
+;; ;; ❌ Old approach: Anonymous function with state reading inside
+;; (defn init-level! [& {:keys [level]}]
+;;   (let [num-asteroids (+ 3 level)]
+;;     (swap! game-state assoc
+;;            :asteroids (vec (for [_ (range num-asteroids)]
+;;                              (create-asteroid-at-edge)))
+;;            :bullets []
+;;            :particles []
+;;            ...)))
+;;
+;; ;; ❌ Old approach: Reading state, then swapping
+;; (defn fire-bullet! []
+;;   (let [{:keys [ship]} @game-state
+;;         bullet-vx (* bullet-speed (Math/cos ...))]
+;;     (swap! game-state update :bullets conj
+;;            {:x (:x ship) :y (:y ship) ...})))
+;; ```
+
+;; **Problems with this approach:**
+;;
+;; - Functions are impure - they read from and write to `game-state`
+;; - Hard to test - requires setting up the global atom
+;; - Difficult to reason about - state mutations scattered throughout
+;; - Not reusable - tightly coupled to the global `game-state` atom
+
+;; #### After: Pure Functions with State as First Argument
+
+;; Erik's improvement transforms these into **pure, testable functions**:
+
+;; ```clojure
+;; ;; ✅ New approach: Pure function taking state as first argument
+;; (defn init-level!
+;;   "Initializes a new level - returns new state"
+;;   [{:keys [level ship] :as game-state}]
+;;   (let [num-asteroids (+ 3 level)]
+;;     (merge game-state
+;;            {:asteroids (vec (for [_ (range num-asteroids)]
+;;                              (create-asteroid-at-edge)))
+;;             :bullets []
+;;             :particles []
+;;             :ufo-timer (+ 600 (rand-int 600))
+;;             :ship (assoc ship :invulnerable 120)})))
+;;
+;; ;; Usage: Pass the function directly to swap!
+;; (swap! game-state init-level!)
+;; ```
+
+;; **Look at that!** No `@game-state`, no nested `swap!`, just a pure function from data to data.
+
+;; #### More Examples: fire-bullet! and ufo-fire!
+
+;; The pattern applies beautifully to all state transformations:
+
+;; ```clojure
+;; ;; ✅ fire-bullet! - Pure function
+;; (defn fire-bullet!
+;;   "Fires a bullet from the ship - returns new state"
+;;   [{:keys [ship] :as game-state}]
+;;   (play-laser-sound)  ; Side effect happens here, not in state logic
+;;   (let [{:keys [x y angle]} ship
+;;         bullet-vx (* bullet-speed (Math/cos (- angle (/ Math/PI 2))))
+;;         bullet-vy (* bullet-speed (Math/sin (- angle (/ Math/PI 2))))]
+;;     (update game-state :bullets conj
+;;             {:x x :y y
+;;              :vx bullet-vx
+;;              :vy bullet-vy
+;;              :life bullet-lifetime})))
+;;
+;; ;; Usage: Clean and simple!
+;; (swap! game-state fire-bullet!)
+;;
+;; ;; ✅ ufo-fire! - Pure function with additional arguments
+;; (defn ufo-fire!
+;;   "UFO fires bullet at ship - returns new state"
+;;   [{:keys [ship] :as game-state} & {:keys [ufo]}]
+;;   (let [dx (- (:x ship) (:x ufo))
+;;         dy (- (:y ship) (:y ufo))
+;;         angle (Math/atan2 dy dx)
+;;         bullet-vx (* 5 (Math/cos angle))
+;;         bullet-vy (* 5 (Math/sin angle))]
+;;     (update game-state :bullets conj
+;;             {:x (:x ufo) :y (:y ufo)
+;;              :vx bullet-vx :vy bullet-vy
+;;              :life bullet-lifetime
+;;              :from-ufo true})))
+;;
+;; ;; Usage: Pass additional arguments after the function!
+;; (swap! game-state ufo-fire! :ufo current-ufo)
+;; ```
+
+;; #### The Pure Function: hyperspace
+
+;; We can go even further and extract the hyperspace logic into a pure function:
+
+;; ```clojure
+;; ;; ✅ Pure hyperspace transformation
+;; (defn hyperspace
+;;   "Pure function for hyperspace jump logic"
+;;   [state new-x new-y died?]
+;;   (-> state
+;;       ;; Teleport ship
+;;       (assoc-in [:ship :x] new-x)
+;;       (assoc-in [:ship :y] new-y)
+;;       (assoc-in [:ship :vx] 0)
+;;       (assoc-in [:ship :vy] 0)
+;;       (assoc :hyperspace-cooldown hyperspace-cooldown)
+;;       ;; Conditionally handle death
+;;       (#(if died?
+;;           (-> %
+;;               (update-in [:lives] dec)
+;;               (update :particles
+;;                       (fn [particles]
+;;                         (vec (concat particles
+;;                                      (create-particles
+;;                                       :x new-x :y new-y
+;;                                       :count 12 :color \"#FFFFFF\"))))))
+;;           %))))
+;;
+;; ;; ✅ hyperspace! - Handles side effects and randomness at the edge
+;; (defn hyperspace!
+;;   "Hyperspace jump with risk - coordinates randomness and sound"
+;;   [game-state]
+;;   (when (<= (:hyperspace-cooldown game-state) 0)
+;;     (play-hyperspace-sound)  ; Side effect
+;;     (let [new-x (rand-int canvas-width)      ; Randomness
+;;           new-y (rand-int canvas-height)     ; Randomness
+;;           died? (< (rand) 0.1)]              ; Randomness
+;;       (hyperspace game-state new-x new-y died?))))  ; Pure logic!
+;;
+;; ;; Usage:
+;; (swap! game-state hyperspace!)
+;; ```
+
+;; Notice how we separated:
+;;
+;; 1. **Randomness and side effects** (`hyperspace!` - at the edge)
+;; 2. **Pure transformation logic** (`hyperspace` - testable core)
+
+;; #### Benefits of This Pattern
+
+;; **1. Trivially Testable**
+
+;; Pure functions are easy to test:
+
+;; ```clojure
+;; ;; Test fire-bullet! without any atoms!
+;; (deftest fire-bullet-test
+;;   (let [initial-state {:ship {:x 400 :y 300 :angle 0}
+;;                        :bullets []}
+;;         new-state (fire-bullet! initial-state)]
+;;     (is (= 1 (count (:bullets new-state))))
+;;     (is (= 400 (-> new-state :bullets first :x)))))
+;;
+;; ;; Test hyperspace death logic
+;; (deftest hyperspace-death-test
+;;   (let [initial-state {:ship {:x 0 :y 0}
+;;                        :lives 3
+;;                        :particles []}
+;;         new-state (hyperspace initial-state 400 300 true)]
+;;     (is (= 2 (:lives new-state)))
+;;     (is (= 400 (get-in new-state [:ship :x])))
+;;     (is (< 0 (count (:particles new-state))))))
+;; ```
+
+;; **2. State Mutations at the Edges**
+
+;; All `swap!` calls are now at the edges of the program:
+
+;; ```clojure
+;; ;; In the game loop (edge of the program)
+;; (when (= key \" \")
+;;   (swap! game-state fire-bullet!))
+;;
+;; ;; In the game loop (edge of the program)
+;; (when empty-asteroids
+;;   (swap! game-state init-level!))
+;;
+;; ;; In the game loop (edge of the program)
+;; (when should-fire-ufo
+;;   (swap! game-state ufo-fire! :ufo current-ufo))
+;; ```
+
+;; The core game logic is now pure functions that transform data!
+
+;; **3. Easier to Reason About**
+
+;; ```clojure
+;; ;; ❌ Before: What does this do? Need to read implementation
+;; (fire-bullet!)
+;;
+;; ;; ✅ After: Clear data transformation
+;; (swap! game-state fire-bullet!)
+;; ;; I know: takes current state, returns new state with bullet added
+;; ```
+
+;; **4. Reusable and Composable**
+
+;; Pure functions can be composed:
+
+;; ```clojure
+;; ;; Compose transformations!
+;; (-> initial-state
+;;     (fire-bullet!)
+;;     (fire-bullet!)
+;;     (fire-bullet!))
+;;
+;; ;; Test edge cases without atoms
+;; (-> empty-state
+;;     (init-level!)
+;;     (fire-bullet!)
+;;     (:bullets)
+;;     (count))
+;; ```
+
+;; #### The Pattern in Action
+
+;; Here's how it looks in the actual game loop:
+
+;; ```clojure
+;; ;; In the game-canvas component
+;; (.addEventListener js/window \"keydown\"
+;;   (fn [e]
+;;     (when (= (:game-status @game-state) :playing)
+;;       (case (.-key e)
+;;         \" \" (swap! game-state fire-bullet!)      ; Clean!
+;;         \"x\" (swap! game-state hyperspace!)        ; Simple!
+;;         \"X\" (swap! game-state hyperspace!)        ; Readable!
+;;         nil))))
+;;
+;; ;; In update-game!
+;; (when (and (= (mod (:frame-count @game-state) 60) 0)
+;;            (< (rand) 0.3))
+;;   (swap! game-state ufo-fire! :ufo u))           ; Clear intent!
+;;
+;; ;; When level complete
+;; (when (empty? asteroids)
+;;   (play-level-complete-sound)
+;;   (swap! game-state update :level inc)
+;;   (swap! game-state init-level!))                ; One swap per action!
+;; ```
+
+;; #### Key Takeaways from Erik's Feedback
+
+;; 1. `swap!` takes multiple arguments: `(swap! atom f arg1 arg2)` calls `(f @atom arg1 arg2)`
+;; 2. State as first argument: Functions receive current state, return new state
+;; 3. Pure functions: No reading `@game-state` inside transformation functions
+;; 4. Side effects at edges: `swap!` calls happen at program boundaries (event handlers, game loop)
+;; 5. Trivially testable: Pure functions need no mocking or setup
+;; 6. Named top-level functions**: Not anonymous functions buried in `swap!` calls
+
+;; This pattern transforms imperative, stateful code into functional, testable data transformations. As Erik noted: "the state transforming fns become pure fns from data to data and are trivially unittestable."
+
+;; Thank you, Erik, for this profound insight! This improvement makes the codebase more maintainable, testable, and exemplifies functional programming best practices. 🙏
+
 ;; ### UFO Enemies
 
 ;; UFOs spawn periodically and actively hunt the player:
@@ -367,21 +654,23 @@
 ;;      :size ufo-size
 ;;      :shoot-timer 0}))
 ;;
+;; ;; Pure function - takes state, returns new state
 ;; (defn ufo-fire!
-;;   [& {:keys [ufo]}]
-;;   (let [{:keys [ship]} @game-state
-;;         ;; Calculate angle to ship
-;;         dx (- (:x ship) (:x ufo))
+;;   "UFO fires bullet at ship - returns new state"
+;;   [{:keys [ship] :as game-state} & {:keys [ufo]}]
+;;   (let [dx (- (:x ship) (:x ufo))
 ;;         dy (- (:y ship) (:y ufo))
 ;;         angle (Math/atan2 dy dx)
-;;         ;; Fire bullet toward ship
 ;;         bullet-vx (* 5 (Math/cos angle))
 ;;         bullet-vy (* 5 (Math/sin angle))]
-;;     (swap! game-state update :bullets conj
-;;            {:x (:x ufo) :y (:y ufo)
-;;             :vx bullet-vx :vy bullet-vy
-;;             :life bullet-lifetime
-;;             :from-ufo true})))
+;;     (update game-state :bullets conj
+;;             {:x (:x ufo) :y (:y ufo)
+;;              :vx bullet-vx :vy bullet-vy
+;;              :life bullet-lifetime
+;;              :from-ufo true})))
+;;
+;; ;; Usage in game loop:
+;; ;; (swap! game-state ufo-fire! :ufo current-ufo)
 ;; ```
 
 ;; ## Game Loop Architecture
@@ -540,8 +829,10 @@
 
 ;; - **Single Source of Truth**: One atom for all state
 ;; - **Immutable Updates**: Pure functional transformations
+;; - **Pure State Functions**: Functions take state, return new state (Erik's feedback)
 ;; - **Atomic Updates**: Single `swap!` per operation (Erik's feedback)
-;; - **Predictable Updates**: No side effects in update logic
+;; - **State at Edges**: Mutations pushed to program boundaries
+;; - **Predictable Updates**: No side effects in core logic
 ;; - **Reactive Rendering**: Automatic UI updates
 
 ;; ## Mobile Touch Controls Implementation
@@ -724,6 +1015,7 @@
 ;; ```
 
 ;; **The Problem:** If 3 bullets hit a large asteroid in the same frame:
+;;
 ;; - Asteroid splits into 2 medium (first hit)
 ;; - Those 2 medium split into 4 small (second hit)
 ;; - Those 4 small would split further (third hit)
@@ -818,7 +1110,7 @@
 
 ;; ### The Stale Data Bug - Collision Detection with Old Positions
 
-;; After fixing the exponential explosion bug, we discovered another critical issue: bullets weren't destroying asteroids reliably! This was the **exact same bug** we encountered in our Galaga implementation.
+;; After fixing the exponential explosion bug, we discovered another critical issue: bullets weren't destroying asteroids reliably! This was the exact same bug we encountered in our Galaga implementation.
 
 ;; #### The Problem: Using Captured State
 
@@ -840,7 +1132,7 @@
 ;;                           :when (> (:life new-b) 0)]
 ;;                       new-b))))
 ;;
-;;       ;; Update asteroid positions  
+;;       ;; Update asteroid positions
 ;;       (swap! game-state update :asteroids
 ;;              (fn [as]
 ;;                (vec (for [a as]
@@ -859,7 +1151,7 @@
 ;;
 ;; 1. Frame starts: Bullet at x=100, Asteroid at x=105 (not colliding)
 ;; 2. Bullet moves to x=108 (NOW colliding with asteroid!)
-;; 3. Asteroid moves to x=110  
+;; 3. Asteroid moves to x=110
 ;; 4. Collision check uses OLD positions (100 vs 105) - NO collision detected!
 ;; 5. Result: Bullet passes right through asteroid
 
@@ -903,13 +1195,13 @@
 
 ;; #### The Key Insight
 
-;; The `let` binding at the function start creates a **snapshot** of the game state. Any subsequent `swap!` calls modify the atom, but the `let` variables still point to the old data. For collision detection to work correctly, we must capture fresh state AFTER all position updates complete.
+;; The `let` binding at the function start creates a snapshot of the game state. Any subsequent `swap!` calls modify the atom, but the `let` variables still point to the old data. For collision detection to work correctly, we must capture fresh state AFTER all position updates complete.
 
 ;; #### Scope Considerations
 
 ;; Initially, we made a mistake: we defined `current-bullets` and `current-ufos` in the first collision detection block (asteroids) and tried to use them in the second block (UFOs). This failed because each `let` block has its own scope!
 
-;; **The solution:** Each collision detection block captures its own fresh data:
+;; The solution: Each collision detection block captures its own fresh data:
 
 ;; ```clojure
 ;; ;; Bullet-Asteroid collisions
@@ -933,19 +1225,21 @@
 ;; 1. Capture state at function start for reference
 ;; 2. Update multiple collections via `swap!`
 ;; 3. Check interactions between updated objects
-;; 4. **Mistake**: Using initial captures instead of current state
+;; 4. Mistake : Using initial captures instead of current state
 ;;
 ;; The fix is always the same: capture fresh state right before collision detection.
 
 ;; #### Impact After Fix
 
 ;; **Before:**
+;;
 ;; - Bullets often passed through asteroids
 ;; - Fast-moving bullets especially problematic
 ;; - UFOs seemed invulnerable
 ;; - Frustrating gameplay experience
 
 ;; **After:**
+;;
 ;; - Precise collision detection
 ;; - Bullets reliably destroy asteroids
 ;; - UFOs react properly to hits
@@ -1095,6 +1389,7 @@
 ;; ### Learning from Galaga
 
 ;; We followed the same sound implementation pattern from our Galaga game:
+;;
 ;; - Single `audio-context` initialization
 ;; - Generic `play-tone` function for all sounds
 ;; - Specific sound functions with descriptive names
@@ -1108,11 +1403,13 @@
 ;; The complete Asteroids game is embedded below. Works on both desktop and mobile!
 
 ;; **Desktop Controls:**
+;;
 ;; - Arrow keys to rotate and thrust
 ;; - Spacebar to fire
 ;; - X for hyperspace
 
 ;; **Mobile Controls:**
+;;
 ;; - Virtual joystick (bottom-left) to rotate and thrust
 ;; - FIRE button (green, right side) to shoot
 ;; - HYPER button (orange, right side) for hyperspace
@@ -1241,8 +1538,8 @@
 ;; 6. **Web Audio API** - Procedural sound synthesis for retro effects
 ;; 7. **Keyword Arguments** - Self-documenting, maintainable code
 ;; 8. **Browser APIs** - Canvas, requestAnimationFrame, keyboard, touch, audio
-;; 9. **Functional Patterns** - Immutable state, pure logic, single `swap!` updates
-;; 10. **Code Review Integration** - Erik's feedback improved our atom usage
+;; 9. **Functional Patterns** - Immutable state, pure logic, pushing state to edges
+;; 10. **Code Review Integration** - Erik's feedback transformed our architecture: single atomic swaps AND pure state transformation functions
 
 ;; ## Technical Highlights
 
@@ -1347,7 +1644,9 @@
 ;; - **Performance Optimization**: Safety limits ensure smooth gameplay
 ;; - **Retro Sound Effects**: Web Audio API for authentic arcade audio
 ;; - **Functional Programming**: Pure functions with immutable state
+;; - **Pure State Transformations**: Functions take state as first arg, return new state
 ;; - **Atomic State Updates**: Single `swap!` calls following Erik's guidance
+;; - **State at the Edges**: Mutations pushed to program boundaries, core logic pure
 ;; - **Reactive UI**: Reagent atoms for predictable updates
 ;; - **Zero Build Tools**: Instant development feedback with Scittle
 ;; - **Keyword Arguments**: Self-documenting, maintainable code
