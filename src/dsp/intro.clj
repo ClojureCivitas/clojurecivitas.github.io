@@ -5,8 +5,7 @@
                   :category :clojure
                   :type :post
                   :date "2025-11-10"
-                  :tags [:dsp :math :music]
-                  :draft true}}}
+                  :tags [:dsp :math :music]}}}
 (ns dsp.intro
   (:require [scicloj.kindly.v4.kind :as kind]
             [tech.v3.datatype :as dtype]
