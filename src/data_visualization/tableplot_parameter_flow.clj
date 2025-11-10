@@ -29,6 +29,35 @@
 ;;
 ;; This tutorial is a brief intro to this feature.
 
+;; ### Background: The Layered Grammar of Graphics
+;;
+;; 💡 *(can skip on first read)*
+;;
+;; Tableplot is inspired by the [**layered grammar of graphics**](https://vita.had.co.nz/papers/layered-grammar.html),
+;; a framework for understanding and building statistical visualizations. Originally developed by
+;; Leland Wilkinson and later refined by Hadley Wickham in ggplot2, the grammar views plots as
+;; compositions of independent components: data, aesthetic mappings, geometric objects, scales,
+;; coordinates, and facets.
+;;
+;; The challenge in implementing such a grammar is achieving multiple goals simultaneously:
+;;
+;; - **Succinct**: Simple things should be simple - sensible defaults for common cases
+;; - **Declarative**: Describe *what* you want, not *how* to draw it
+;; - **Flexible**: Support customization without sacrificing simplicity
+;; - **Observable**: Make the details visible and understandable when needed
+;; - **Extensible**: Allow users to work with internals without breaking abstractions
+;;
+;; Tableplot addresses these challenges by mostly adopting [Hanami](https://github.com/jsa-aerial/hanami)'s
+;; solution as a starting point. Hanami introduced a template-based approach with substitution keys,
+;; allowing hierarchical defaults: you can rely on conventions for quick plots, or override specific
+;; details when needed. The templates approach makes the transformation process observable,
+;; as we'll see in this tutorial.
+;;
+;; **Further reading:**
+;; - [ggplot2: Elegant Graphics for Data Analysis](https://ggplot2-book.org/) - The definitive guide showing how to balance simplicity and flexibility
+;; - [Demystifying stat_ layers in ggplot2](https://yjunechoe.github.io/posts/2020-09-26-demystifying-stat-layers-ggplot2/) - June Choe's exploration of how the grammar elegantly handles data transformations, with special focus on making the internals observable and extensible
+;; - [Analyzing Data with Clojure (Kevin Lynagh, 2012)](https://www.youtube.com/watch?v=xyGggdg31mc) - An early Clojure attempt to handle the challenge of building a grammar of graphics
+
 ;; ## The Challenge: Customizing Grid Colors
 ;;
 ;; Let's start with a basic dataset and plot.
@@ -60,7 +89,7 @@ sample-data
 
 ;; ### A brief look inside
 ;;
-;; *(can skip on first read)*
+;; 💡 *(can skip on first read)*
 
 ;; By default, when used in [Kindly](https://scicloj.github.io/kindly-noted/)-compatible
 ;; tools like [Clay](https://scicloj.github.io/clay/) and in Clojure Civitas posts,
@@ -119,7 +148,7 @@ sample-data
 
 ;; ### A brief look inside
 ;;
-;; *(can skip on first read)*
+;; 💡 *(can skip on first read)*
 
 ;; Let us see what actually has changed in the 
 ;; resulting specification:
@@ -165,7 +194,7 @@ sample-data
 
 ;; ### A brief look inside
 ;;
-;; *(can skip on first read)*
+;; 💡 *(can skip on first read)*
 
 ;; Let us see what happens:
 
@@ -207,7 +236,7 @@ sample-data
 
 ;; ### A brief look inside
 ;;
-;; *(can skip on first read)*
+;; 💡 *(can skip on first read)*
 
 ;; You already know what to expect here:
 
