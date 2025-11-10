@@ -643,18 +643,21 @@
 ;; ### 1. More Instruments
 
 ;; **Bass Synthesizer:**
+
 ;; - Low-frequency oscillators (40-200Hz)
 ;; - Sawtooth or square waves for richness
 ;; - Envelope with longer release
 ;; - Portamento for smooth pitch slides
 
 ;; **Lead Synthesizer:**
+
 ;; - Sawtooth or pulse waves
 ;; - LFO (Low-Frequency Oscillator) for vibrato
 ;; - Filter envelope for brightness changes
 ;; - Higher octaves for lead melodies
 
 ;; **Chord Pads:**
+
 ;; - Multiple oscillators playing simultaneously
 ;; - Slow attack and release (soft envelope)
 ;; - Detuned oscillators for richness
@@ -663,21 +666,25 @@
 ;; ### 2. Audio Effects
 
 ;; **Reverb:**
+
 ;; - Use ConvolverNode with impulse response
 ;; - Simulates acoustic spaces
 ;; - Adds depth and ambiance
 
 ;; **Delay/Echo:**
+
 ;; - DelayNode for time-based effects
 ;; - Feedback loop for multiple echoes
 ;; - Adjust delay time and feedback amount
 
 ;; **Filters:**
+
 ;; - BiquadFilterNode (lowpass, highpass, bandpass)
 ;; - Sweep filter frequency for movement
 ;; - Resonance for emphasis
 
 ;; **Distortion:**
+
 ;; - WaveShaperNode for overdrive
 ;; - Clip waveforms for saturation
 ;; - Add harmonics for grit
@@ -693,16 +700,19 @@
 ;; ```
 
 ;; **Pattern Chaining:**
+
 ;; - Queue patterns to play in sequence
 ;; - Loop through pattern lists
 ;; - Song mode for composition
 
 ;; **Swing/Groove:**
+
 ;; - Delay every other step slightly
 ;; - Creates human feel
 ;; - Adjust swing amount
 
 ;; **Velocity/Accent:**
+
 ;; - Vary volume per step
 ;; - Emphasize certain beats
 ;; - Add dynamics
@@ -721,12 +731,14 @@
 ;; ```
 
 ;; **Chord Generator:**
+
 ;; - Major/minor triads
 ;; - 7th chords
 ;; - Chord progressions
 ;; - Arpeggios
 
 ;; **Key Transposition:**
+
 ;; - Shift all notes by semitones
 ;; - Change key while preserving intervals
 ;; - Modal interchange
@@ -752,11 +764,13 @@
 ;; ```
 
 ;; **Waveform Display:**
+
 ;; - Show time-domain audio data
 ;; - Canvas-based visualization
 ;; - Real-time updates
 
 ;; **Piano Roll:**
+
 ;; - Vertical time axis
 ;; - Horizontal pitch axis
 ;; - Visual note editing
@@ -764,21 +778,25 @@
 ;; ### 6. User Experience
 
 ;; **Preset Patterns:**
+
 ;; - Save favorite patterns
 ;; - Load common rhythms
 ;; - Share patterns via URL
 
 ;; **Keyboard Shortcuts:**
+
 ;; - Computer keyboard as piano
 ;; - Number keys for drums
 ;; - Space for play/stop
 
 ;; **MIDI Support:**
+
 ;; - Connect MIDI keyboards
 ;; - Send MIDI to DAWs
 ;; - Record performances
 
 ;; **Recording:**
+
 ;; - MediaRecorder API
 ;; - Save as WAV/MP3
 ;; - Export patterns
