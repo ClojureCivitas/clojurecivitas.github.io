@@ -136,7 +136,8 @@ example-wave
    [:A5 880 2750] ;; 2nd harmonic (octave above)
    [:E6 1320 600] ;; 3rd harmonic
    [:A6 1760 700] ;; 4th harmonic
-   [:C#7 2200 1900]]);; 5th harmonic
+   [:C#7 2200 1900] ;; 5th harmonic
+   ])
 
 ;; Now let's generate all five harmonics as separate columns in a dataset.
 ;; Each harmonic is a sine wave at its own frequency and amplitude.
