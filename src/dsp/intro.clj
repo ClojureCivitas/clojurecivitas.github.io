@@ -5,7 +5,8 @@
                   :category :clojure
                   :type :post
                   :date "2025-11-10"
-                  :tags [:dsp :math :music]}}}
+                  :tags [:dsp :math :music]
+                  :image "violin.png"}}}
 (ns dsp.intro
   (:require [scicloj.kindly.v4.kind :as kind]
             [tech.v3.datatype :as dtype]
