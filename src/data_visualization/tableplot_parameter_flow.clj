@@ -29,9 +29,9 @@
 ;;
 ;; This tutorial is a brief intro to this feature.
 
-;; ## An example problem
+;; ## The Challenge: Customizing Grid Colors
 ;;
-;; Let's start with a basic dataset and plot:
+;; Let's start with a basic dataset and plot.
 
 ;; Assume we have some data.
 
@@ -44,13 +44,14 @@ sample-data
 ;; In this tutorial, we'll use Tableplot's [Plotly.js](https://plotly.com/javascript/) API,
 ;; which generates interactive Plotly.js visualizations. Tableplot also supports other backends
 ;; like Vega-Lite and an experimental transpilation API.
+
 ;; We can make a basic line plot. This is really easy, because the
 ;; `:x` and `:y` columns are used by default for the plot's axes.
 
 (-> sample-data
     plotly/layer-line)
 
-;; Assume that now wish to to colour the grid lines: vertical by green,
+;; Assume that we now wish to colour the grid lines: vertical by green,
 ;; horizontal by red. After all, what would be a
 ;; better way to teach Tufte's [data-ink ratio](https://infovis-wiki.net/wiki/Data-Ink_Ratio) principle than doing exactly
 ;; what it asks us to avoid, by adding some chartjunk?
@@ -58,6 +59,8 @@ sample-data
 ;; Here are a few ways we can do it.
 
 ;; ### A brief look inside
+;;
+;; *(can skip on first read)*
 
 ;; By default, when used in [Kindly](https://scicloj.github.io/kindly-noted/)-compatible
 ;; tools like [Clay](https://scicloj.github.io/clay/) and in Clojure Civitas posts,
@@ -70,18 +73,22 @@ sample-data
     plotly/layer-line
     kind/pprint)
 
-;; You see, what the API functions such as `plotly/layer-line`
-;; generate certain maps called
-;; [templats](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations),
-;; a brilliant notion coming from
-;; the [Hanami](https://github.com/jsa-aerial/hanami) library.
+;; You see, what API functions such as `plotly/layer-line` generate are
+;; certain maps called
+;; [templates](https://github.com/jsa-aerial/hanami?tab=readme-ov-file#templates-substitution-keys-and-transformations),
+;; a brilliant concept from the [Hanami](https://github.com/jsa-aerial/hanami) library.
 
 ;; This is not the resulting Plotly.js specification yet.
-;; It is a potential for it, specifiying lots of partial intermediate
-;; values, called susbsitution keys.
-;; By Tableplot's convetion, substitution keys will be keywords beginning with `=`,
-;; such as `:=layout` or `:=mark-color`. 
-;; They can have default values, which can also be functions computing
+;; It is a potential for it, specifying lots of partial intermediate
+;; values, called substitution keys.
+;; By Tableplot's convention, substitution keys are keywords beginning with `=`,
+;; such as `:=layout` or `:=mark-color`.
+;;
+;; **Why templates?** They separate *what you want* (data mappings, colors, sizes)
+;; from *how to render it* (the actual Plotly.js specification). This gives you
+;; flexibility: you can override specific details or let defaults handle everything.
+;;
+;; Substitution keys can have default values, which can also be functions computing
 ;; them from the values defined by other keys. On the user side,
 ;; we may override any of these, as we'll see below.
 
@@ -96,7 +103,7 @@ sample-data
 ;; ## Using the relevant substitution keys
 
 ;; Sometimes, what we need can be precisely specified in Tableplot.
-;; You may find the following in Tabelplot's
+;; You may find the following in Tableplot's
 ;; [Plotly API reference](https://scicloj.github.io/tableplot/tableplot_book.plotly_reference.html#yaxis-gridcolor):
 
 ;; - [`:=xaxis-gridcolor`](https://scicloj.github.io/tableplot/tableplot_book.plotly_reference.html#xaxis-gridcolor) - The color for the x axis grid lines
@@ -111,6 +118,8 @@ sample-data
     plotly/layer-line)
 
 ;; ### A brief look inside
+;;
+;; *(can skip on first read)*
 
 ;; Let us see what actually has changed in the 
 ;; resulting specification:
@@ -124,8 +133,8 @@ sample-data
 
 ;; ## Overriding a broader-scope key
 
-;; Sometimes, you will not find exactly what you need in Tabeplot's
-;; prarameter system. Plotly.js itself will always be richer and more
+;; Sometimes, you will not find exactly what you need in Tableplot's
+;; parameter system. Plotly.js itself will always be richer and more
 ;; flexible.
 
 ;; Imagine that the above `:=xaxis-gridcolor` & `:=yaxis-gridcolor` would
@@ -142,12 +151,6 @@ sample-data
 
 ;; - [`:=layout`](https://scicloj.github.io/tableplot/tableplot_book.plotly_reference.html#layout) - The layout part of the resulting Plotly.js specification
 
-;; By the way, if you read further in that link to the docs, you will see
-;; that `:=layout` depends on `:=xaxis-gridcolor` and `:=yaxis-gridcolor`,
-;; among other things. When we specified those narrow-scope keys
-;; in our previous example, we actually went through affecting the
-;; broad-scope key, `:=layout`.
-
 (-> sample-data
     (plotly/base {:=layout {:xaxis {:gridcolor "green"}
                             :yaxis {:gridcolor "red"}}})
@@ -161,6 +164,8 @@ sample-data
 ;; your use case.
 
 ;; ### A brief look inside
+;;
+;; *(can skip on first read)*
 
 ;; Let us see what happens:
 
@@ -174,7 +179,13 @@ sample-data
 ;; As expected this time, the layout is small and simple,
 ;; just what you specified.
 
-;; ### Overriding the target `:=layuot`
+;; By the way, if you read further in that link to the docs, you will see
+;; that `:=layout` depends on `:=xaxis-gridcolor` and `:=yaxis-gridcolor`,
+;; among other things. When we specified those narrow-scope keys
+;; in our previous example, we actually went through affecting the
+;; broad-scope key, `:=layout`.
+
+;; ## Direct Manipulation After `plotly/plot`
 
 ;; Sometimes, you wish to work with Plotly.js high-level notions,
 ;; but in a more refined way, preserving most of what we have.
@@ -195,6 +206,8 @@ sample-data
     (assoc-in [:layout :yaxis :gridcolor] "red"))
 
 ;; ### A brief look inside
+;;
+;; *(can skip on first read)*
 
 ;; You already know what to expect here:
 
@@ -205,3 +218,29 @@ sample-data
     (assoc-in [:layout :yaxis :gridcolor] "red")
     kind/pprint)
 
+;; ## Summary
+;;
+;; Tableplot's parameter substitution system gives you three levels of control:
+;;
+;; 1. **Specific substitution keys** (`:=xaxis-gridcolor`, `:=yaxis-gridcolor`)
+;;    - ✅ Most convenient and discoverable
+;;    - ✅ Preserves all other defaults
+;;    - ❌ Limited to what Tableplot explicitly supports
+;;
+;; 2. **Broad-scope keys** (`:=layout`)
+;;    - ✅ Full Plotly.js flexibility
+;;    - ✅ Declarative, within Tableplot's API
+;;    - ❌ Overrides ALL defaults for that scope
+;;
+;; 3. **Direct data manipulation** (`assoc-in` after `plotly/plot`)
+;;    - ✅ Complete control
+;;    - ✅ Surgical precision - only change what you want
+;;    - ❌ More verbose
+;;    - ❌ Leaves Tableplot's template system
+;;
+;; The key insight: **it's all just data**. Templates with substitution keys give you
+;; flexibility without magic. You can always drop down to plain Clojure data manipulation
+;; when needed.
+;;
+;; For more examples and the complete API reference, see the
+;; [Tableplot documentation](https://scicloj.github.io/tableplot/).
