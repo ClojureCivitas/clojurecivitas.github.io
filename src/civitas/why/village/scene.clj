@@ -4,6 +4,8 @@
           :kindly/options {:kinds-that-hide-code #{:kind/var :kind/hiccup}}
           :quarto         {:author   [:timothypratley]
                            ;;:description ""
+                           :page-layout :full
+                           :navbar   false
                            :draft    true
                            :type     :page
                            :date     "2025-11-12"
@@ -17,7 +19,6 @@
             [clojure.math :as math]
             [clojure.string :as str]
             [scicloj.kindly.v4.kind :as kind]))
-
 
 (kind/hiccup
   '([:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.js"}]
@@ -1190,7 +1191,7 @@ weak minds discuss people.”_")
       (t (temple-mesh))]
      [:g {:transform "translate(0,-25)"}
       (t (granary-mesh 3 3 1 6))]
-     [:g {:transform "translate(25,-10)"}
+     [:g {:transform "translate(22,-10)"}
       (t (circle-mesh 10 6 "url(#cobble)" "circle"))
       (t (obelisk-mesh 2 12 2 4))]
      [:g {:transform "translate(10,20)"}
