@@ -15,11 +15,10 @@
 ^:kindly/hide-code
 (kind/hiccup
  [:style
-  ".printed-clojure {
-  max-height:400px; 
+  ".printedClojure {
+  max-height:600px;
   overflow-y: auto;
-}
-"])
+}"])
 
 ;; ## Introduction
 ;;
@@ -194,3 +193,15 @@ sample-data
     plotly/plot
     (assoc-in [:layout :xaxis :gridcolor] "green")
     (assoc-in [:layout :yaxis :gridcolor] "red"))
+
+;; ### A brief look inside
+
+;; You already know what to expect here:
+
+(-> sample-data
+    plotly/layer-line
+    plotly/plot
+    (assoc-in [:layout :xaxis :gridcolor] "green")
+    (assoc-in [:layout :yaxis :gridcolor] "red")
+    kind/pprint)
+
