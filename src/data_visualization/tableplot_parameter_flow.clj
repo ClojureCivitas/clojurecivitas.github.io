@@ -54,6 +54,7 @@
 ;; as we'll see in this tutorial.
 ;;
 ;; **Further reading:**
+
 ;; - [ggplot2: Elegant Graphics for Data Analysis](https://ggplot2-book.org/) - The definitive guide showing how to balance simplicity and flexibility
 ;; - [Demystifying stat_ layers in ggplot2](https://yjunechoe.github.io/posts/2020-09-26-demystifying-stat-layers-ggplot2/) - June Choe's exploration of how the grammar elegantly handles data transformations, with special focus on making the internals observable and extensible
 ;; - [Analyzing Data with Clojure (Kevin Lynagh, 2012)](https://www.youtube.com/watch?v=xyGggdg31mc) - An early Clojure attempt to handle the challenge of building a grammar of graphics
@@ -74,11 +75,15 @@ sample-data
 ;; which generates interactive Plotly.js visualizations. Tableplot also supports other backends
 ;; like Vega-Lite and an experimental transpilation API.
 
-;; We can make a basic line plot. This is really easy, because the
+;; We can make a basic plot with two layers.
+;; This is really easy with our data, because the
 ;; `:x` and `:y` columns are used by default for the plot's axes.
 
 (-> sample-data
+    (plotly/layer-point {:=mark-size 20})
     plotly/layer-line)
+
+;; ### Goal
 
 ;; Assume that we now wish to colour the grid lines: vertical by green,
 ;; horizontal by red. After all, what would be a
@@ -99,6 +104,7 @@ sample-data
 ;; Clojure data structures.
 
 (-> sample-data
+    (plotly/layer-point {:=mark-size 20})
     plotly/layer-line
     kind/pprint)
 
@@ -125,6 +131,7 @@ sample-data
 ;; Plotly.js specification? This is what `plotly/plot` is for.
 
 (-> sample-data
+    (plotly/layer-point {:=mark-size 20})
     plotly/layer-line
     plotly/plot
     kind/pprint)
@@ -144,6 +151,7 @@ sample-data
 (-> sample-data
     (plotly/base {:=xaxis-gridcolor "green"
                   :=yaxis-gridcolor "red"})
+    (plotly/layer-point {:=mark-size 20})
     plotly/layer-line)
 
 ;; ### A brief look inside
@@ -156,6 +164,7 @@ sample-data
 (-> sample-data
     (plotly/base {:=xaxis-gridcolor "green"
                   :=yaxis-gridcolor "red"})
+    (plotly/layer-point {:=mark-size 20})
     plotly/layer-line
     plotly/plot
     kind/pprint)
@@ -183,6 +192,7 @@ sample-data
 (-> sample-data
     (plotly/base {:=layout {:xaxis {:gridcolor "green"}
                             :yaxis {:gridcolor "red"}}})
+    (plotly/layer-point {:=mark-size 20})
     plotly/layer-line)
 
 ;; Notice that a few other details of the aesthetics have changed,
@@ -201,6 +211,7 @@ sample-data
 (-> sample-data
     (plotly/base {:=layout {:xaxis {:gridcolor "green"}
                             :yaxis {:gridcolor "red"}}})
+    (plotly/layer-point {:=mark-size 20})
     plotly/layer-line
     plotly/plot
     kind/pprint)
@@ -229,6 +240,7 @@ sample-data
 ;; specification, as data.
 
 (-> sample-data
+    (plotly/layer-point {:=mark-size 20})
     plotly/layer-line
     plotly/plot
     (assoc-in [:layout :xaxis :gridcolor] "green")
@@ -241,6 +253,7 @@ sample-data
 ;; You already know what to expect here:
 
 (-> sample-data
+    (plotly/layer-point {:=mark-size 20})
     plotly/layer-line
     plotly/plot
     (assoc-in [:layout :xaxis :gridcolor] "green")
