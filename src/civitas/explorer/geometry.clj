@@ -45,9 +45,9 @@
     [[0 0 0]]
     (loop [results []
            cube (mapv #(* % radius) (directions 4))
-           [[dir _step] & more] (for [dir (range 6)
-                                      step (range radius)]
-                                  [dir step])]
+           [[dir _step] & more] (butlast (for [dir (range 6)
+                                            step (range radius)]
+                                           [dir step]))]
       (if dir
         (recur (conj results cube)
                (neighbor cube dir)
