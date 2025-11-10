@@ -1,11 +1,4 @@
 ---
-description: Getting to know our host city for Clojure/conj 2025. We dive into 311 service data to see what's on the minds of Charlotte's citizens and get a taste of our hands-on data analysis workshop.
-category: conj
-tags: [clay, workflow, conj]
-format:
-  html: {title: 'What''s the Buzz in Charlotte? A Pre-Conj Data Dive'}
-date: '2025-11-10'
-type: post
 author:
 - name: Timothy Pratley
   url: https://timothypratley.blogspot.com/p/httpswww.html
@@ -15,8 +8,14 @@ author:
   - {name: Hummi, url: 'https://hummi.app'}
   links:
   - {icon: github, href: 'https://github.com/timothypratley'}
-draft: true
+description: Getting to know our host city for Clojure/conj 2025. We dive into 311 service data to see what's on the minds of Charlotte's citizens and get a taste of our hands-on data analysis workshop.
+type: post
+date: '2025-11-10'
+category: conj
+tags: [clay, workflow, conj]
 image: charlotte.png
+format:
+  html: {title: 'What''s the Buzz in Charlotte? A Pre-Conj Data Dive'}
 
 ---
 <style></style><style>.printedClojure .sourceCode {
