@@ -64,8 +64,6 @@
 ;;
 ;; Let's start with a basic dataset and plot.
 
-;; Assume we have some data.
-
 (def sample-data
   (tc/dataset {:x [1 2 3 4 5]
                :y [2 4 3 5 7]}))
@@ -134,9 +132,9 @@
 ;; better way to teach Tufte's [data-ink ratio](https://infovis-wiki.net/wiki/Data-Ink_Ratio) principle than doing exactly
 ;; what it asks us to avoid, by adding some chartjunk?
 
-;; Here are a few ways we can do it.
+;; Here are three approaches, each with different tradeoffs.
 
-;; ## Using the relevant substitution keys
+;; ## Approach 1: Using the relevant substitution keys
 
 ;; Sometimes, what we need can be precisely specified in Tableplot.
 ;; You may find the following in Tableplot's
@@ -146,7 +144,9 @@
 ;; - [`:=yaxis-gridcolor`](https://scicloj.github.io/tableplot/tableplot_book.plotly_reference.html#yaxis-gridcolor) - The color for the y axis grid lines
 
 ;; To use them, you can add a `base` before your plot layers,
-;; and configure it with these keys:
+;; and configure it with these keys. We use `plotly/base` because its
+;; parameters flow to all subsequent layers, which is useful when
+;; composing multiple layers with shared settings.
 
 (-> sample-data
     (plotly/base {:=xaxis-gridcolor "green"
@@ -170,11 +170,12 @@
 
 ;; :::
 
-;; ## Overriding a broader-scope key
+;; ## Approach 2: Overriding a broader-scope key
 
-;; Sometimes, you will not find exactly what you need in Tableplot's
-;; parameter system. Plotly.js itself will always be richer and more
-;; flexible.
+;; What if the specific keys you need don't exist in Tableplot yet?
+;; 
+;; Plotly.js itself will always be richer and more flexible than Tableplot's
+;; parameter system.
 
 ;; Imagine that the above `:=xaxis-gridcolor` & `:=yaxis-gridcolor` would
 ;; not be supported.
@@ -183,7 +184,7 @@
 ;; [Styling and Coloring Axes and the Zero-Line](https://plotly.com/javascript/axes/#styling-and-coloring-axes-and-the-zero-line)
 ;; in the Plotly.js docs, you will
 ;; see that, under the `layout` part of the specification,
-;; you can specificy `gridcolor` for each of the axes.
+;; you can specify `gridcolor` for each of the axes.
 
 ;; In Tableplot, we can specify the whole layout using `:=layout`, and thus
 ;; have anything we need in there.
@@ -227,14 +228,14 @@
 
 ;; :::
 
-;; ## Direct Manipulation After `plotly/plot`
+;; ## Approach 3: Direct Manipulation After `plotly/plot`
 
-;; Sometimes, you wish to work with Plotly.js high-level notions,
-;; but in a more refined way, preserving most of what we have.
+;; The previous approaches work within Tableplot's API. But what if you need
+;; more surgical control — to use Plotly.js concepts while preserving most defaults?
 
-;; Can we do it?
+;; Of course we can do that!
 
-;; Of course, the answer has been was in front of us the whole time:
+;; Of course, the answer has been in front of us the whole time:
 ;; [It's just data](https://www.youtube.com/watch?v=jlPaby7suOc&t=1000s).
 
 ;; We do not need to use Tableplot's API for everything.
