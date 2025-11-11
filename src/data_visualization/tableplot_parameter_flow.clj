@@ -67,7 +67,7 @@
 ;; We will use:
 ;; [Kindly](https://scicloj.github.io/kindly-noted/) for annotating visualizations,
 ;; [Tablecloth](https://scicloj.github.io/tablecloth/) for table processing, and
-;; [Tableplot for plotting](https://scicloj.github.io/tableplot/).
+;; [Tableplot](https://scicloj.github.io/tableplot/) for plotting.
 
 
 (require 
