@@ -6,7 +6,8 @@
                   :type :post
                   :draft true
                   :date "2025-11-10"
-                  :tags [:data-visualization :tableplot :tutorial]}}}
+                  :tags [:data-visualization :tableplot :tutorial]
+                  :image "tableplot-parameter-flow.png"}}}
 (ns data-visualization.tableplot-parameter-flow
   (:require [scicloj.kindly.v4.kind :as kind]
             [tablecloth.api :as tc]
