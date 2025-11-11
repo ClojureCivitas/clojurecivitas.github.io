@@ -4,7 +4,6 @@
                   :description "Learn how to customize Tableplot visualizations using substitution parameters."
                   :category :clojure
                   :type :post
-                  :draft true
                   :date "2025-11-11"
                   :tags [:data-visualization :tableplot :tutorial]
                   :image "tableplot-parameter-flow.png"}}}
