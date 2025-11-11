@@ -5,7 +5,7 @@
                   :category :clojure
                   :type :post
                   :draft true
-                  :date "2025-11-10"
+                  :date "2025-11-11"
                   :tags [:data-visualization :tableplot :tutorial]
                   :image "tableplot-parameter-flow.png"}}}
 (ns data-visualization.tableplot-parameter-flow
@@ -240,9 +240,11 @@
 ;; [It's just data](https://www.youtube.com/watch?v=jlPaby7suOc&t=1000s).
 
 ;; We do not need to use Tableplot's API for everything.
-;; 
-;; After we call `plotly/plot`, we can process the actual Plotly.js
-;; specification, as data.
+;; We can call [`plotly/plot`](https://scicloj.github.io/tableplot/tableplot_book.plotly_reference.html#plot)
+;; to realize the actual Plotly.js specification, as data.
+;; Then we can keep processing it using the Clojure standard library,
+;; which has lovely functions like
+;; [`assoc-in`](https://clojuredocs.org/clojure.core/assoc-in).
 
 (-> sample-data
     (plotly/layer-point {:=mark-size 20})
@@ -254,7 +256,15 @@
 ;; ::: {.callout-tip collapse="true"}
 ;; ### A brief look inside
 
-;; You already know what to expect here:
+;; Let us observe the transformation -- before and after the `assoc-in`:
+
+(-> sample-data
+    (plotly/layer-point {:=mark-size 20})
+    plotly/layer-line
+    plotly/plot
+    (assoc-in [:layout :xaxis :gridcolor] "green")
+    (assoc-in [:layout :yaxis :gridcolor] "red")
+    kind/pprint)
 
 (-> sample-data
     (plotly/layer-point {:=mark-size 20})
