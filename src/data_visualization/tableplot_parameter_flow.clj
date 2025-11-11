@@ -64,6 +64,17 @@
 ;;
 ;; Let's start with a basic dataset and plot.
 
+;; We will use:
+;; [Kindly](https://scicloj.github.io/kindly-noted/) for annotating visualizations,
+;; [Tablecloth](https://scicloj.github.io/tablecloth/) for table processing, and
+;; [Tableplot for plotting](https://scicloj.github.io/tableplot/).
+
+
+(require 
+ '[scicloj.kindly.v4.kind :as kind]
+ '[tablecloth.api :as tc]
+ '[scicloj.tableplot.v1.plotly :as plotly])
+
 (def sample-data
   (tc/dataset {:x [1 2 3 4 5]
                :y [2 4 3 5 7]}))
