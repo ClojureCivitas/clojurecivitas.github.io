@@ -2,22 +2,23 @@
   :clay             {:title  "Emmy, the Algebra System: Classical Mechanics Prologue"
                      :quarto {:author   :kloimhardt
                               :type     :post
-                              :date     "2025-09-10"
-                              :image    "sicm_ch01.png"
+                              :date     "2025-11-12"
+                              :image    "fdg_prologue.png"
                               :category :libs
                               :tags     [:emmy :physics]}}}
-(ns mentat-collective.emmy.fdg-ch01
+(ns mentat-collective.emmy.fdg-prologue
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [emmy.env :as e]
+            [emmy.env :as e :refer [->infix simplify Lagrange-equations literal-function]]
             [emmy.mechanics.lagrange :as lg]
+            [emmy.expression.render :as r :refer [->infix]]
             [civitas.repl :as repl]))
 
 ;; Elemetary introduction to Emmy, taken from the first pages of the open-access book
 ;; [Functional Differential Geometry (FDG)](https://mitpress.mit.edu/9780262019347/functional-differential-geometry/).
 ;; The code snippets are executable, copy-paste them to the sidebar of the page.
 
-;; The Emmy maintainer, Sam Ritchie, wrote the source for this page, namely the
+;; The [Emmy]((https://emmy.mentat.org)) maintainer, [Sam Ritchie](https://roadtoreality.substack.com/), wrote the source for this page, namely the
 ;; [LaTex version of FDG](https://github.com/mentat-collective/fdg-book/blob/main/scheme/org/prologue.org).
 
 ^:kindly/hide-code
@@ -184,7 +185,7 @@
 
 ;; By thinking computationally we have reformulated the Lagrange equations into a
 ;; form that is explicit enough to specify a computation. We could convert it into
-;; a program for any symbolic manipulation program because it tells us /how/ to
+;; a program for any symbolic manipulation program because it tells us *how* to
 ;; manipulate expressions to compute the residuals of Lagrange’s equations for a
 ;; purported solution path.[fn:2]
 
@@ -319,12 +320,12 @@
 
 ;; [note by MAK: the following does not work in the sidebar because I could not get
 ;; `literal-function` to work.
-;; As a remedy, I have an [alternative execution environment](https://kloimhardt.github.io/blog/html/sicmutils-as-js-book-part1.html)]
+;; As a remedy, I have an [alternative execution environment](https://kloimhardt.github.io/blog/html/sicmutils-as-js-book-part1.html) ]
 
 (->infix
   (simplify
-    (((e/Lagrange-equations (lg/L-harmonic 'm 'k))
-      (e/literal-function 'x))
+    (((Lagrange-equations (lg/L-harmonic 'm 'k))
+      (literal-function 'x))
      't)))
 
 ;; If this residual is zero we have the Lagrange equation for the harmonic
