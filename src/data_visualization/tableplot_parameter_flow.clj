@@ -233,7 +233,9 @@
 ;; As expected this time, the layout is small and simple,
 ;; just what you specified.
 
-;; By the way, if you read further in that link to the docs, you will see
+;; By the way, if you read about 
+;; [`:=layout`](https://scicloj.github.io/tableplot/tableplot_book.plotly_reference.html#layout)
+;; in the docs, you will see
 ;; that `:=layout` depends on `:=xaxis-gridcolor` and `:=yaxis-gridcolor`,
 ;; among other things. When we specified those narrow-scope keys
 ;; in our previous example, we actually went through affecting the
