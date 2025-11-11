@@ -197,6 +197,8 @@
     (plotly/layer-point {:=mark-size 20})
     plotly/layer-line)
 
+;; ### Oh 🙄 
+
 ;; Notice that a few other details of the aesthetics have changed,
 ;; like the plot's background color.
 
