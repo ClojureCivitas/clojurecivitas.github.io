@@ -29,9 +29,8 @@
 ;;
 ;; This tutorial is a brief intro to this feature.
 
+;; ::: {.callout-tip collapse="true"}
 ;; ### Background: The Layered Grammar of Graphics
-;;
-;; 💡 *(can skip on first read)*
 ;;
 ;; Tableplot is inspired by the [**layered grammar of graphics**](https://vita.had.co.nz/papers/layered-grammar.html),
 ;; a framework for understanding and building statistical visualizations. Originally developed by
@@ -59,7 +58,9 @@
 ;; - [Demystifying stat_ layers in ggplot2](https://yjunechoe.github.io/posts/2020-09-26-demystifying-stat-layers-ggplot2/) - June Choe's exploration of how the grammar elegantly handles data transformations, with special focus on making the internals observable and extensible
 ;; - [Analyzing Data with Clojure (Kevin Lynagh, 2012)](https://www.youtube.com/watch?v=xyGggdg31mc) - An early Clojure attempt to handle the challenge of building a grammar of graphics
 
-;; ## The Challenge: Customizing Grid Colors
+;; :::
+
+;; ## A toy challenge: Customizing Grid Colors
 ;;
 ;; Let's start with a basic dataset and plot.
 
@@ -68,8 +69,6 @@
 (def sample-data
   (tc/dataset {:x [1 2 3 4 5]
                :y [2 4 3 5 7]}))
-
-sample-data
 
 ;; In this tutorial, we'll use Tableplot's [Plotly.js](https://plotly.com/javascript/) API,
 ;; which generates interactive Plotly.js visualizations. Tableplot also supports other backends
@@ -83,18 +82,8 @@ sample-data
     (plotly/layer-point {:=mark-size 20})
     plotly/layer-line)
 
-;; ### Goal
-
-;; Assume that we now wish to colour the grid lines: vertical by green,
-;; horizontal by red. After all, what would be a
-;; better way to teach Tufte's [data-ink ratio](https://infovis-wiki.net/wiki/Data-Ink_Ratio) principle than doing exactly
-;; what it asks us to avoid, by adding some chartjunk?
-
-;; Here are a few ways we can do it.
-
+;; ::: {.callout-tip collapse="true"}
 ;; ### A brief look inside
-;;
-;; 💡 *(can skip on first read)*
 
 ;; By default, when used in [Kindly](https://scicloj.github.io/kindly-noted/)-compatible
 ;; tools like [Clay](https://scicloj.github.io/clay/) and in Clojure Civitas posts,
@@ -136,6 +125,17 @@ sample-data
     plotly/plot
     kind/pprint)
 
+;; :::
+
+;; ### Goal
+
+;; Assume that we now wish to colour the grid lines: vertical by green,
+;; horizontal by red. After all, what would be a
+;; better way to teach Tufte's [data-ink ratio](https://infovis-wiki.net/wiki/Data-Ink_Ratio) principle than doing exactly
+;; what it asks us to avoid, by adding some chartjunk?
+
+;; Here are a few ways we can do it.
+
 ;; ## Using the relevant substitution keys
 
 ;; Sometimes, what we need can be precisely specified in Tableplot.
@@ -154,9 +154,8 @@ sample-data
     (plotly/layer-point {:=mark-size 20})
     plotly/layer-line)
 
+;; ::: {.callout-tip collapse="true"}
 ;; ### A brief look inside
-;;
-;; 💡 *(can skip on first read)*
 
 ;; Let us see what actually has changed in the 
 ;; resulting specification:
@@ -168,6 +167,8 @@ sample-data
     plotly/layer-line
     plotly/plot
     kind/pprint)
+
+;; :::
 
 ;; ## Overriding a broader-scope key
 
@@ -198,13 +199,12 @@ sample-data
 ;; Notice that a few other details of the aesthetics have changed,
 ;; like the plot's background color.
 
-;; That is what happens when we override the whole `:layout`.
+;; That is what happens when we override the whole `:=layout`.
 ;; It is a powerful option, that you may or may not like, depending on
 ;; your use case.
 
+;; ::: {.callout-tip collapse="true"}
 ;; ### A brief look inside
-;;
-;; 💡 *(can skip on first read)*
 
 ;; Let us see what happens:
 
@@ -225,6 +225,8 @@ sample-data
 ;; in our previous example, we actually went through affecting the
 ;; broad-scope key, `:=layout`.
 
+;; :::
+
 ;; ## Direct Manipulation After `plotly/plot`
 
 ;; Sometimes, you wish to work with Plotly.js high-level notions,
@@ -236,6 +238,7 @@ sample-data
 ;; [It's just data](https://www.youtube.com/watch?v=jlPaby7suOc&t=1000s).
 
 ;; We do not need to use Tableplot's API for everything.
+;; 
 ;; After we call `plotly/plot`, we can process the actual Plotly.js
 ;; specification, as data.
 
@@ -246,9 +249,8 @@ sample-data
     (assoc-in [:layout :xaxis :gridcolor] "green")
     (assoc-in [:layout :yaxis :gridcolor] "red"))
 
+;; ::: {.callout-tip collapse="true"}
 ;; ### A brief look inside
-;;
-;; 💡 *(can skip on first read)*
 
 ;; You already know what to expect here:
 
@@ -259,6 +261,8 @@ sample-data
     (assoc-in [:layout :xaxis :gridcolor] "green")
     (assoc-in [:layout :yaxis :gridcolor] "red")
     kind/pprint)
+
+;; :::
 
 ;; ## Summary
 ;;
