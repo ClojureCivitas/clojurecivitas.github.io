@@ -8,13 +8,25 @@
                               :tags     [:emmy :physics]}}}
 
 (ns mentat-collective.emmy.sicm-ch01
-    (:refer-clojure :exclude [+ - * / zero? compare divide numerator denominator infinite? abs ref partial =])
+    (:refer-clojure :exclude [+ - * / zero? compare divide numerator denominator
+                              time infinite? abs ref partial =])
     (:require [emmy.env :refer :all :exclude [r->p]]
               [emmy.mechanics.lagrange :as lg]
               [emmy.numerical.minimize :as mn]
               [mentat-collective.emmy.scheme :refer :all]
               [scicloj.kindly.v4.api :as kindly]
               [scicloj.kindly.v4.kind :as kind]))
+
+^:kindly/hide-code
+(def md
+  (comp kindly/hide-code kind/md))
+
+(md "The following examples are taken from the MIT open-access book [Structure and Interpretation of Classical Mechanics (SICM)](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/9579/sicm_edition_2.zip/chapter001.html).")
+
+(md "Another notebook can be found on the [Road to Reality website](https://reality.mentat.org/essays/reality/introduction#welcome-to-the-road-to-reality!) by [Sam Ritchie](https://roadtoreality.substack.com/p/the-first-executable-essay-is-live), the author (along with [Colin Smith](https://github.com/littleredcomputer)) of [Emmy, the Computer Algebra System](https://emmy.mentat.org).")
+
+;; In adopting MIT-Scheme's `(define ...)`, I trust that Clojure people will bridge that gap quickly
+;; while being sure of the gratitude of all readers of the immutable, dense book.
 
 ^:kindly/hide-code
 (def velocities velocity)
@@ -30,17 +42,6 @@
 
 ^:kindly/hide-code
 (def tex (comp kind/tex emmy.expression.render/->TeX simplify))
-
-^:kindly/hide-code
-(def md
-  (comp kindly/hide-code kind/md))
-
-(md "The following examples are taken from the MIT open-access book [Structure and Interpretation of Classical Mechanics (SICM)](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/9579/sicm_edition_2.zip/chapter001.html).")
-
-(md "Another notebook can be found on the [Road to Reality website](https://reality.mentat.org/essays/reality/introduction#welcome-to-the-road-to-reality!) by [Sam Ritchie](https://roadtoreality.substack.com/p/the-first-executable-essay-is-live), the author (along with [Colin Smith](https://github.com/littleredcomputer)) of [Emmy, the Computer Algebra System](https://emmy.mentat.org).")
-
-;; In adopting MIT-Scheme's `(define ...)`, I trust that Clojure people will bridge that gap quickly
-;; while being sure of the gratitude of all readers of the immutable, dense book.
 
 (md "## 1.4 Computing Actions")
 (md "First task: Calculate the action for the free particle along a path. Consider the particle moving at uniform speed along a straight line.")
