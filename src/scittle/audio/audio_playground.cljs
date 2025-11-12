@@ -1009,29 +1009,44 @@
    label])
 
 (defn piano-key
-  "Piano key component"
+  "Piano key component with improved visibility"
   [& {:keys [note label on-play color]}]
   [:button {:on-click #(when on-play (on-play :note note))
             :style (merge-styles
                     {:width "50px"
                      :height "120px"
-                     :background (or color "white")
-                     :color (if (= color "white") "black" "white")
-                     :border "1px solid #333"
+                     :background (if (= color "white")
+                                   "linear-gradient(to bottom, #ffffff 0%, #f5f5f5 100%)"
+                                   color)
+                     :color (if (= color "white") "#333" "white")
+                     :border "2px solid #333"
                      :cursor "pointer"
                      :font-weight "bold"
                      :font-size "14px"
                      :transition "all 0.1s ease"
-                     :border-radius "0 0 4px 4px"})
+                     :border-radius "0 0 6px 6px"
+                     :box-shadow "0 4px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(0,0,0,0.1)"
+                     :position "relative"})
+            :on-mouse-enter (fn [e]
+                              (set! (.-style.background (.-currentTarget e))
+                                    (if (= color "white")
+                                      "linear-gradient(to bottom, #f0f0f0 0%, #e0e0e0 100%)"
+                                      color)))
+            :on-mouse-leave (fn [e]
+                              (set! (.-style.background (.-currentTarget e))
+                                    (if (= color "white")
+                                      "linear-gradient(to bottom, #ffffff 0%, #f5f5f5 100%)"
+                                      color)))
             :on-mouse-down (fn [e]
                              (when on-play
-                               (set! (.-style.transform (.-currentTarget e)) "scale(0.95)")
+                               (set! (.-style.transform (.-currentTarget e)) "scale(0.95) translateY(2px)")
                                (set! (.-style.boxShadow (.-currentTarget e))
-                                     "inset 0 2px 4px rgba(0,0,0,0.2)")
+                                     "0 2px 3px rgba(0,0,0,0.3), inset 0 2px 4px rgba(0,0,0,0.2)")
                                (on-play :note note)))
             :on-mouse-up (fn [e]
-                           (set! (.-style.transform (.-currentTarget e)) "scale(1)")
-                           (set! (.-style.boxShadow (.-currentTarget e)) "none"))}
+                           (set! (.-style.transform (.-currentTarget e)) "scale(1) translateY(0)")
+                           (set! (.-style.boxShadow (.-currentTarget e))
+                                 "0 4px 6px rgba(0,0,0,0.2), inset 0 -2px 4px rgba(0,0,0,0.1)"))}
    label])
 
 (defn bass-key
