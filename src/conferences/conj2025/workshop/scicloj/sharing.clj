@@ -4,7 +4,7 @@
                               :theme       "moon"
                               :description "Clay, making sharable documents, and how to publish them."
                               :type        :post
-                              :date        "2025-10-12"
+                              :date        "2025-11-12"
                               :category    :clay
                               :tags        [:clay :workflow]}}}
 (ns conferences.conj2025.workshop.scicloj.sharing
