@@ -4,6 +4,8 @@
    [reagent.dom :as rdom]
    [clojure.string :as str]))
 
+;; Cache buster: v1.1.0 - Audio Effects Update
+
 ;; ============================================================================
 ;; Utility Functions
 ;; ============================================================================
@@ -21,6 +23,92 @@
 (defonce master-gain (atom nil))
 (defonce active-oscillators (atom {}))
 
+;; Audio Effects Nodes
+(defonce delay-node (atom nil))
+(defonce delay-feedback-gain (atom nil))
+(defonce delay-wet-gain (atom nil))
+(defonce delay-dry-gain (atom nil))
+
+(defonce reverb-nodes (atom nil))
+(defonce reverb-wet-gain (atom nil))
+(defonce reverb-dry-gain (atom nil))
+
+(defn init-reverb!
+  "Initialize simple algorithmic reverb using comb and allpass filters"
+  []
+  (when @audio-context
+    (try
+      (let [ctx @audio-context
+            ;; Create comb filters (parallel delays with feedback)
+            comb1 (.createDelay ctx 1.0)
+            comb1-gain (.createGain ctx)
+            comb2 (.createDelay ctx 1.0)
+            comb2-gain (.createGain ctx)
+            comb3 (.createDelay ctx 1.0)
+            comb3-gain (.createGain ctx)
+            comb4 (.createDelay ctx 1.0)
+            comb4-gain (.createGain ctx)
+
+            ;; Create allpass filters (for diffusion)
+            allpass1 (.createDelay ctx 1.0)
+            allpass1-gain (.createGain ctx)
+            allpass2 (.createDelay ctx 1.0)
+            allpass2-gain (.createGain ctx)
+
+            ;; Output mixer
+            reverb-mix (.createGain ctx)]
+
+        ;; Setup comb filter delays (prime numbers for natural sound)
+        (set! (.-value (.-delayTime comb1)) 0.0297)
+        (set! (.-value (.-delayTime comb2)) 0.0371)
+        (set! (.-value (.-delayTime comb3)) 0.0411)
+        (set! (.-value (.-delayTime comb4)) 0.0437)
+
+        ;; Comb filter feedback (50%)
+        (set! (.-value (.-gain comb1-gain)) 0.5)
+        (set! (.-value (.-gain comb2-gain)) 0.5)
+        (set! (.-value (.-gain comb3-gain)) 0.5)
+        (set! (.-value (.-gain comb4-gain)) 0.5)
+
+        ;; Setup allpass delays
+        (set! (.-value (.-delayTime allpass1)) 0.005)
+        (set! (.-value (.-delayTime allpass2)) 0.0017)
+        (set! (.-value (.-gain allpass1-gain)) 0.7)
+        (set! (.-value (.-gain allpass2-gain)) 0.7)
+
+        ;; Connect comb filters in parallel
+        (doseq [[delay gain] [[comb1 comb1-gain]
+                              [comb2 comb2-gain]
+                              [comb3 comb3-gain]
+                              [comb4 comb4-gain]]]
+          (.connect @reverb-wet-gain delay)
+          (.connect delay gain)
+          (.connect gain delay)
+          (.connect delay reverb-mix))
+
+        ;; Connect allpass filters in series
+        (.connect reverb-mix allpass1)
+        (.connect allpass1 allpass1-gain)
+        (.connect allpass1-gain allpass1)
+        (.connect allpass1 allpass2)
+        (.connect allpass2 allpass2-gain)
+        (.connect allpass2-gain allpass2)
+        (.connect allpass2 (.-destination ctx))
+
+        ;; Store reverb nodes
+        (reset! reverb-nodes
+                {:combs [{:delay comb1 :gain comb1-gain}
+                         {:delay comb2 :gain comb2-gain}
+                         {:delay comb3 :gain comb3-gain}
+                         {:delay comb4 :gain comb4-gain}]
+                 :allpass [{:delay allpass1 :gain allpass1-gain}
+                           {:delay allpass2 :gain allpass2-gain}]
+                 :mix reverb-mix})
+
+        (js/console.log "🎚️ Reverb initialized"))
+      (catch js/Error e
+        (js/console.error "Failed to initialize reverb:" e)))))
+
 (defn init-audio-context!
   "Initialize Web Audio API context on first user interaction"
   []
@@ -28,14 +116,104 @@
     (try
       (let [AudioContext (or js/window.AudioContext js/window.webkitAudioContext)
             ctx (AudioContext.)
-            gain (.createGain ctx)]
-        (.connect gain (.-destination ctx))
+
+            ;; Master gain
+            gain (.createGain ctx)
+
+            ;; Delay nodes
+            delay (.createDelay ctx 1.0)
+            delay-fb-gain (.createGain ctx)
+            delay-w-gain (.createGain ctx)
+            delay-d-gain (.createGain ctx)
+
+            ;; Reverb output gains
+            reverb-w-gain (.createGain ctx)
+            reverb-d-gain (.createGain ctx)]
+
+        ;; Setup master gain
         (set! (.-value (.-gain gain)) 0.5)
+
+        ;; Setup delay (300ms, 30% feedback, 30% wet)
+        (set! (.-value (.-delayTime delay)) 0.3)
+        (set! (.-value (.-gain delay-fb-gain)) 0.3)
+        (set! (.-value (.-gain delay-w-gain)) 0.3)
+        (set! (.-value (.-gain delay-d-gain)) 0.7)
+
+        ;; Setup reverb mix (30% wet)
+        (set! (.-value (.-gain reverb-w-gain)) 0.3)
+        (set! (.-value (.-gain reverb-d-gain)) 0.7)
+
+        ;; Connect delay chain: master -> delay -> feedback -> delay
+        (.connect gain delay-d-gain) ; dry signal
+        (.connect gain delay) ; to delay
+        (.connect delay delay-fb-gain) ; delay output
+        (.connect delay-fb-gain delay) ; feedback loop
+        (.connect delay delay-w-gain) ; wet signal
+
+        ;; Both signals to reverb
+        (.connect delay-d-gain reverb-d-gain)
+        (.connect delay-w-gain reverb-w-gain)
+
+        ;; Initialize reverb (will connect later)
+        (reset! reverb-nodes nil)
+
+        ;; Output routing
+        (.connect reverb-d-gain (.-destination ctx))
+        (.connect reverb-w-gain (.-destination ctx))
+
+        ;; Store references
         (reset! audio-context ctx)
         (reset! master-gain gain)
-        (js/console.log "🔊 Audio context initialized"))
+        (reset! delay-node delay)
+        (reset! delay-feedback-gain delay-fb-gain)
+        (reset! delay-wet-gain delay-w-gain)
+        (reset! delay-dry-gain delay-d-gain)
+        (reset! reverb-wet-gain reverb-w-gain)
+        (reset! reverb-dry-gain reverb-d-gain)
+
+        ;; Create reverb
+        (init-reverb!)
+
+        (js/console.log "🔊 Audio context initialized with effects"))
       (catch js/Error e
         (js/console.error "Failed to initialize audio context:" e)))))
+
+;; ============================================================================
+;; Audio Effects Controls
+;; ============================================================================
+
+(defn set-delay-time
+  "Set delay time in seconds (0.05-1.0)"
+  [& {:keys [time]}]
+  (when @delay-node
+    (set! (.-value (.-delayTime @delay-node)) time)))
+
+(defn set-delay-feedback
+  "Set delay feedback amount (0.0-0.9)"
+  [& {:keys [feedback]}]
+  (when @delay-feedback-gain
+    (set! (.-value (.-gain @delay-feedback-gain)) feedback)))
+
+(defn set-delay-mix
+  "Set delay wet/dry mix (0.0-1.0, where 1.0 is 100% wet)"
+  [& {:keys [mix]}]
+  (when (and @delay-wet-gain @delay-dry-gain)
+    (set! (.-value (.-gain @delay-wet-gain)) mix)
+    (set! (.-value (.-gain @delay-dry-gain)) (- 1.0 mix))))
+
+(defn set-reverb-size
+  "Set reverb size by adjusting comb filter feedback (0.3-0.8)"
+  [& {:keys [size]}]
+  (when-let [combs (:combs @reverb-nodes)]
+    (doseq [{:keys [gain]} combs]
+      (set! (.-value (.-gain gain)) size))))
+
+(defn set-reverb-mix
+  "Set reverb wet/dry mix (0.0-1.0, where 1.0 is 100% wet)"
+  [& {:keys [mix]}]
+  (when (and @reverb-wet-gain @reverb-dry-gain)
+    (set! (.-value (.-gain @reverb-wet-gain)) mix)
+    (set! (.-value (.-gain @reverb-dry-gain)) (- 1.0 mix))))
 
 ;; ============================================================================
 ;; Core Audio Functions
@@ -319,8 +497,11 @@
 ;; ============================================================================
 
 (defn play-kick
-  "Synthesized kick drum sound using pitch envelope"
-  []
+  "Synthesized kick drum sound using pitch envelope
+   Options:
+   - :velocity - Volume multiplier (0.0-1.0, default: 1.0)"
+  [& {:keys [velocity]
+      :or {velocity 1.0}}]
   (init-audio-context!)
   (when @audio-context
     (try
@@ -335,8 +516,8 @@
         (set! (.-value (.-frequency osc)) 150)
         (.exponentialRampToValueAtTime (.-frequency osc) 50 (+ now 0.1))
 
-        ;; Amplitude envelope
-        (set! (.-value (.-gain gain)) 1)
+        ;; Amplitude envelope with velocity
+        (set! (.-value (.-gain gain)) velocity)
         (.exponentialRampToValueAtTime (.-gain gain) 0.01 (+ now 0.5))
 
         (.start osc now)
@@ -345,8 +526,11 @@
         (js/console.error "Error playing kick:" e)))))
 
 (defn play-snare
-  "Synthesized snare drum using filtered white noise"
-  []
+  "Synthesized snare drum using filtered white noise
+   Options:
+   - :velocity - Volume multiplier (0.0-1.0, default: 0.5)"
+  [& {:keys [velocity]
+      :or {velocity 0.5}}]
   (init-audio-context!)
   (when @audio-context
     (try
@@ -363,7 +547,7 @@
         (.connect filter gain)
         (.connect gain @master-gain)
 
-        (set! (.-value (.-gain gain)) 0.5)
+        (set! (.-value (.-gain gain)) velocity)
         (.exponentialRampToValueAtTime (.-gain gain) 0.01 (+ now 0.1))
 
         (.start source now)
@@ -372,8 +556,11 @@
         (js/console.error "Error playing snare:" e)))))
 
 (defn play-hihat
-  "Synthesized hi-hat using high-pass filtered white noise"
-  []
+  "Synthesized hi-hat using high-pass filtered white noise
+   Options:
+   - :velocity - Volume multiplier (0.0-1.0, default: 0.3)"
+  [& {:keys [velocity]
+      :or {velocity 0.3}}]
   (init-audio-context!)
   (when @audio-context
     (try
@@ -390,7 +577,7 @@
         (.connect filter gain)
         (.connect gain @master-gain)
 
-        (set! (.-value (.-gain gain)) 0.3)
+        (set! (.-value (.-gain gain)) velocity)
         (.exponentialRampToValueAtTime (.-gain gain) 0.01 (+ now 0.05))
 
         (.start source now)
@@ -403,26 +590,36 @@
 ;; ============================================================================
 
 (def sequencer-state
-  "Sequencer state for 16-step beat patterns"
+  "Sequencer state for 16-step beat patterns with velocity control"
   (r/atom {:playing false
            :bpm 120
            :current-step 0
            :pattern {:kick [1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0]
                      :snare [0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0]
                      :hihat [1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0]}
+           ;; Velocity values for each step (0.0 = off, 0.5 = soft, 0.7 = normal, 1.0 = accent)
+           :velocity {:kick [0.7 0.0 0.0 0.0 0.7 0.0 0.0 0.0 0.7 0.0 0.0 0.0 0.7 0.0 0.0 0.0]
+                      :snare [0.0 0.0 0.0 0.0 0.7 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.7 0.0 0.0 0.0]
+                      :hihat [0.7 0.0 0.7 0.0 0.7 0.0 0.7 0.0 0.7 0.0 0.7 0.0 0.7 0.0 0.7 0.0]}
            :interval-id nil}))
 
 (defn play-sequencer-step
-  "Plays the current step in the sequencer"
+  "Plays the current step in the sequencer with velocity control"
   []
-  (let [{:keys [current-step pattern]} @sequencer-state]
-    ;; Play active drums for this step
-    (when (nth (:kick pattern) current-step)
-      (play-kick))
-    (when (nth (:snare pattern) current-step)
-      (play-snare))
-    (when (nth (:hihat pattern) current-step)
-      (play-hihat))
+  (let [{:keys [current-step pattern velocity]} @sequencer-state]
+    ;; Play active drums for this step with their velocity values
+    (when (and (nth (:kick pattern) current-step)
+               (> (nth (:kick velocity) current-step) 0))
+      (play-kick :velocity (nth (:kick velocity) current-step)))
+
+    (when (and (nth (:snare pattern) current-step)
+               (> (nth (:snare velocity) current-step) 0))
+      (play-snare :velocity (nth (:snare velocity) current-step)))
+
+    (when (and (nth (:hihat pattern) current-step)
+               (> (nth (:hihat velocity) current-step) 0))
+      (play-hihat :velocity (nth (:hihat velocity) current-step)))
+
     ;; Advance to next step
     (swap! sequencer-state update :current-step #(mod (inc %) 16))))
 
@@ -436,6 +633,7 @@
           interval-id (js/setInterval play-sequencer-step interval-ms)]
       (swap! sequencer-state assoc
              :playing true
+             :current-step 0
              :interval-id interval-id))))
 
 (defn stop-sequencer
@@ -449,12 +647,32 @@
            :current-step 0)))
 
 (defn toggle-sequencer-step
-  "Toggles a step in the pattern
+  "Toggles a step in the pattern (left-click)
    Options:
    - :track - Keyword for track (:kick, :snare, :hihat)
    - :step - Step index (0-15)"
   [& {:keys [track step]}]
-  (swap! sequencer-state update-in [:pattern track step] not))
+  (swap! sequencer-state update-in [:pattern track step] not)
+  ;; Update velocity: if turning on, set to normal (0.7), if turning off, set to 0.0
+  (let [is-on (nth (get-in @sequencer-state [:pattern track]) step)]
+    (swap! sequencer-state assoc-in [:velocity track step] (if is-on 0.7 0.0))))
+
+(defn cycle-step-velocity
+  "Cycles through velocity levels for a step (right-click)
+   Velocity levels: 0.0 (off) -> 0.5 (soft) -> 0.7 (normal) -> 1.0 (accent) -> 0.0
+   Options:
+   - :track - Keyword for track (:kick, :snare, :hihat)
+   - :step - Step index (0-15)"
+  [& {:keys [track step]}]
+  (let [current-velocity (nth (get-in @sequencer-state [:velocity track]) step)
+        next-velocity (cond
+                        (<= current-velocity 0.0) 0.5 ; off -> soft
+                        (<= current-velocity 0.5) 0.7 ; soft -> normal
+                        (<= current-velocity 0.7) 1.0 ; normal -> accent
+                        :else 0.0)] ; accent -> off
+    (swap! sequencer-state assoc-in [:velocity track step] next-velocity)
+    ;; Update pattern to reflect on/off state
+    (swap! sequencer-state assoc-in [:pattern track step] (if (> next-velocity 0.0) 1 0))))
 
 (defn set-sequencer-bpm
   "Sets the sequencer BPM and restarts if playing"
@@ -463,6 +681,130 @@
     (when was-playing (stop-sequencer))
     (swap! sequencer-state assoc :bpm bpm)
     (when was-playing (start-sequencer))))
+
+(defn clear-pattern
+  "Clears all pattern steps and velocities to 0"
+  []
+  (swap! sequencer-state assoc
+         :pattern {:kick (vec (repeat 16 0))
+                   :snare (vec (repeat 16 0))
+                   :hihat (vec (repeat 16 0))}
+         :velocity {:kick (vec (repeat 16 0.0))
+                    :snare (vec (repeat 16 0.0))
+                    :hihat (vec (repeat 16 0.0))}))
+
+(defn reset-pattern
+  "Resets pattern to the original default pattern"
+  []
+  (swap! sequencer-state assoc
+         :pattern {:kick [1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0]
+                   :snare [0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0]
+                   :hihat [1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0]}
+         :velocity {:kick [0.7 0.0 0.0 0.0 0.7 0.0 0.0 0.0 0.7 0.0 0.0 0.0 0.7 0.0 0.0 0.0]
+                    :snare [0.0 0.0 0.0 0.0 0.7 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.7 0.0 0.0 0.0]
+                    :hihat [0.7 0.0 0.7 0.0 0.7 0.0 0.7 0.0 0.7 0.0 0.7 0.0 0.7 0.0 0.7 0.0]}))
+
+(defn load-preset
+  "Loads a preset pattern by name
+   Available presets:
+   - :basic-rock - Classic rock beat (4-on-the-floor kick, backbeat snare)
+   - :funk-groove - Syncopated funk pattern with ghost notes
+   - :techno-beat - Four-to-the-floor techno with closed hats
+   - :breakbeat - Hip-hop style breakbeat with varied velocity"
+  [& {:keys [preset]}]
+  (case preset
+    :basic-rock
+    (swap! sequencer-state assoc
+           :pattern {:kick [1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0]
+                     :snare [0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0]
+                     :hihat [1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0]}
+           :velocity {:kick [1.0 0.0 0.0 0.0 0.7 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.7 0.0 0.0 0.0]
+                      :snare [0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0]
+                      :hihat [0.7 0.0 0.5 0.0 0.7 0.0 0.5 0.0 0.7 0.0 0.5 0.0 0.7 0.0 0.5 0.0]})
+
+    :funk-groove
+    (swap! sequencer-state assoc
+           :pattern {:kick [1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0]
+                     :snare [0 0 0 0 1 0 0 1 0 0 0 0 1 0 0 0]
+                     :hihat [1 1 1 0 1 1 1 0 1 1 1 0 1 1 1 0]}
+           :velocity {:kick [0.7 0.0 0.0 0.5 0.0 0.0 0.7 0.0 0.0 0.0 0.5 0.0 0.0 0.7 0.0 0.0]
+                      :snare [0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.5 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0]
+                      :hihat [0.7 0.5 0.5 0.0 0.7 0.5 0.5 0.0 0.7 0.5 0.5 0.0 0.7 0.5 0.5 0.0]})
+
+    :techno-beat
+    (swap! sequencer-state assoc
+           :pattern {:kick [1 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0]
+                     :snare [0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0]
+                     :hihat [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]}
+           :velocity {:kick [1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0]
+                      :snare [0.0 0.0 0.0 0.0 0.7 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.7 0.0 0.0 0.0]
+                      :hihat [0.7 0.5 0.7 0.5 0.7 0.5 0.7 0.5 0.7 0.5 0.7 0.5 0.7 0.5 0.7 0.5]})
+
+    :breakbeat
+    (swap! sequencer-state assoc
+           :pattern {:kick [1 0 0 0 0 0 1 0 1 0 0 1 0 0 0 0]
+                     :snare [0 0 0 0 1 0 0 0 0 1 0 0 1 0 0 1]
+                     :hihat [1 0 1 1 1 0 1 0 1 0 1 1 1 0 1 0]}
+           :velocity {:kick [1.0 0.0 0.0 0.0 0.0 0.0 0.7 0.0 0.7 0.0 0.0 0.5 0.0 0.0 0.0 0.0]
+                      :snare [0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.5 0.0 0.0 1.0 0.0 0.0 0.5]
+                      :hihat [0.7 0.0 0.5 0.7 0.7 0.0 0.5 0.0 0.7 0.0 0.5 0.7 0.7 0.0 0.5 0.0]})
+
+    ;; Default: do nothing
+    nil))
+
+(defn save-pattern
+  "Saves the current pattern to LocalStorage with a given name"
+  [& {:keys [name]}]
+  (when (and name (not (str/blank? name)))
+    (try
+      (let [current-pattern {:pattern (:pattern @sequencer-state)
+                             :velocity (:velocity @sequencer-state)
+                             :bpm (:bpm @sequencer-state)}
+            pattern-json (js/JSON.stringify (clj->js current-pattern))]
+        (.setItem js/localStorage (str "drum-pattern-" name) pattern-json)
+        true)
+      (catch js/Error e
+        (js/console.error "Error saving pattern:" e)
+        false))))
+
+(defn load-saved-pattern
+  "Loads a saved pattern from LocalStorage by name"
+  [& {:keys [name]}]
+  (when (and name (not (str/blank? name)))
+    (try
+      (when-let [pattern-json (.getItem js/localStorage (str "drum-pattern-" name))]
+        (let [pattern-data (js->clj (js/JSON.parse pattern-json) :keywordize-keys true)]
+          (swap! sequencer-state assoc
+                 :pattern (:pattern pattern-data)
+                 :velocity (:velocity pattern-data)
+                 :bpm (or (:bpm pattern-data) 120))
+          true))
+      (catch js/Error e
+        (js/console.error "Error loading pattern:" e)
+        false))))
+
+(defn list-saved-patterns
+  "Returns a list of all saved pattern names"
+  []
+  (try
+    (let [keys (for [i (range (.-length js/localStorage))]
+                 (.key js/localStorage i))
+          pattern-keys (filter #(str/starts-with? % "drum-pattern-") keys)]
+      (map #(subs % 13) pattern-keys))
+    (catch js/Error e
+      (js/console.error "Error listing patterns:" e)
+      [])))
+
+(defn delete-saved-pattern
+  "Deletes a saved pattern from LocalStorage by name"
+  [& {:keys [name]}]
+  (when (and name (not (str/blank? name)))
+    (try
+      (.removeItem js/localStorage (str "drum-pattern-" name))
+      true
+      (catch js/Error e
+        (js/console.error "Error deleting pattern:" e)
+        false))))
 
 ;; ============================================================================
 ;; Synthesizer Extensions - Bass, Lead, and Chord Pads
@@ -880,15 +1222,149 @@
                    :color "#333"}}
     (str volume "%")]])
 
+(defn effects-control
+  "Audio effects control panel component"
+  [& {:keys [delay-time delay-feedback delay-mix reverb-size reverb-mix
+             on-delay-time-change on-delay-feedback-change on-delay-mix-change
+             on-reverb-size-change on-reverb-mix-change]}]
+  [:div {:style {:background "white"
+                 :padding "30px"
+                 :border-radius "12px"
+                 :box-shadow "0 2px 8px rgba(0,0,0,0.1)"
+                 :margin-bottom "30px"}}
+   [:h3 {:style {:margin-bottom "20px"
+                 :color "#333"}}
+    "🎚️ Audio Effects"]
+   [:p {:style {:color "#666"
+                :margin-bottom "20px"
+                :font-size "14px"}}
+    "Add depth and space to your sounds with delay and reverb"]
+
+   ;; Delay controls
+   [:div {:style {:margin-bottom "25px"
+                  :padding "20px"
+                  :background "#f8f9fa"
+                  :border-radius "8px"}}
+    [:h4 {:style {:margin-top "0"
+                  :margin-bottom "15px"
+                  :color "#555"
+                  :font-size "16px"}}
+     "🔁 Delay/Echo"]
+    [:div {:style {:display "flex"
+                   :gap "15px"
+                   :flex-wrap "wrap"}}
+     [slider-control
+      :label "Time"
+      :value delay-time
+      :min 0.05
+      :max 1.0
+      :step 0.05
+      :unit " s"
+      :on-change on-delay-time-change]
+     [slider-control
+      :label "Feedback"
+      :value (* delay-feedback 100)
+      :min 0
+      :max 90
+      :step 5
+      :unit "%"
+      :on-change on-delay-feedback-change]
+     [slider-control
+      :label "Mix"
+      :value (* delay-mix 100)
+      :min 0
+      :max 100
+      :step 10
+      :unit "%"
+      :on-change on-delay-mix-change]]]
+
+   ;; Reverb controls
+   [:div {:style {:padding "20px"
+                  :background "#f0f4ff"
+                  :border-radius "8px"}}
+    [:h4 {:style {:margin-top "0"
+                  :margin-bottom "15px"
+                  :color "#555"
+                  :font-size "16px"}}
+     "🌊 Reverb"]
+    [:div {:style {:display "flex"
+                   :gap "15px"
+                   :flex-wrap "wrap"}}
+     [slider-control
+      :label "Size"
+      :value (* reverb-size 100)
+      :min 30
+      :max 80
+      :step 5
+      :unit "%"
+      :on-change on-reverb-size-change]
+     [slider-control
+      :label "Mix"
+      :value (* reverb-mix 100)
+      :min 0
+      :max 100
+      :step 10
+      :unit "%"
+      :on-change on-reverb-mix-change]]]])
+
 ;; ============================================================================
 ;; Main Component
 ;; ============================================================================
+
+(defn velocity-style
+  "Calculate button style based on velocity value"
+  [& {:keys [velocity base-color current-step? step-active?]}]
+  (let [;; Determine opacity and visual intensity based on velocity
+        [opacity color box-shadow]
+        (cond
+          ;; Off (velocity 0.0) - dim gray
+          (= velocity 0.0)
+          [0.3 "#f0f0f0" "none"]
+
+          ;; Soft (velocity 0.5) - lighter color, medium opacity
+          (= velocity 0.5)
+          [0.6 (if step-active? base-color "#f0f0f0") "none"]
+
+          ;; Normal (velocity 0.7) - normal color, high opacity
+          (= velocity 0.7)
+          [0.85 (if step-active? base-color "#f0f0f0") "none"]
+
+          ;; Accent (velocity 1.0) - bright color with glow
+          (= velocity 1.0)
+          [1.0 (if step-active? base-color "#f0f0f0")
+           (if step-active?
+             (str "0 0 10px " base-color ", 0 0 20px " base-color)
+             "none")]
+
+          ;; Fallback
+          :else
+          [0.85 (if step-active? base-color "#f0f0f0") "none"])]
+
+    {:padding "12px 8px"
+     :background color
+     :color (if step-active? "white" "#999")
+     :opacity opacity
+     :border (if current-step?
+               "2px solid #4caf50"
+               "1px solid #ddd")
+     :border-radius "4px"
+     :cursor "pointer"
+     :font-size "12px"
+     :font-weight "bold"
+     :transition "all 0.1s"
+     :box-shadow box-shadow}))
 
 (defn audio-playground
   "Main audio playground component"
   []
   (let [volume-atom (r/atom (get-master-volume))
         active-tone (r/atom nil)
+        ;; Audio effects parameters
+        delay-time (r/atom 0.3)
+        delay-feedback (r/atom 0.3)
+        delay-mix (r/atom 0.3)
+        reverb-size (r/atom 0.5)
+        reverb-mix (r/atom 0.3)
         ;; Bass synthesizer parameters
         bass-waveform (r/atom "sawtooth")
         ;; Lead synthesizer parameters
@@ -925,6 +1401,34 @@
          :on-change (fn [& {:keys [volume]}]
                       (reset! volume-atom volume)
                       (set-master-volume :volume volume))]]
+
+       ;; Audio Effects Control
+       [effects-control
+        :delay-time @delay-time
+        :delay-feedback @delay-feedback
+        :delay-mix @delay-mix
+        :reverb-size @reverb-size
+        :reverb-mix @reverb-mix
+        :on-delay-time-change (fn [e]
+                                (let [val (js/parseFloat (.-value (.-target e)))]
+                                  (reset! delay-time val)
+                                  (set-delay-time :time val)))
+        :on-delay-feedback-change (fn [e]
+                                    (let [val (/ (js/parseInt (.-value (.-target e))) 100)]
+                                      (reset! delay-feedback val)
+                                      (set-delay-feedback :feedback val)))
+        :on-delay-mix-change (fn [e]
+                               (let [val (/ (js/parseInt (.-value (.-target e))) 100)]
+                                 (reset! delay-mix val)
+                                 (set-delay-mix :mix val)))
+        :on-reverb-size-change (fn [e]
+                                 (let [val (/ (js/parseInt (.-value (.-target e))) 100)]
+                                   (reset! reverb-size val)
+                                   (set-reverb-size :size val)))
+        :on-reverb-mix-change (fn [e]
+                                (let [val (/ (js/parseInt (.-value (.-target e))) 100)]
+                                  (reset! reverb-mix val)
+                                  (set-reverb-mix :mix val)))]
 
        ;; Sound Effects Library
        [:div {:style {:background "white"
@@ -1422,7 +1926,198 @@
                            :font-weight "600"
                            :color "#333"
                            :background "white"
-                           :text-align "center"}}]]]
+                           :text-align "center"}}]]
+
+         ;; Clear Pattern Button
+         [:button {:on-click clear-pattern
+                   :style {:padding "12px 24px"
+                           :background "#9e9e9e"
+                           :color "white"
+                           :border "none"
+                           :border-radius "8px"
+                           :cursor "pointer"
+                           :font-weight "600"
+                           :font-size "16px"
+                           :transition "all 0.2s"}}
+          "🗑️ Clear"]
+
+         ;; Reset Pattern Button
+         [:button {:on-click reset-pattern
+                   :style {:padding "12px 24px"
+                           :background "#ff9800"
+                           :color "white"
+                           :border "none"
+                           :border-radius "8px"
+                           :cursor "pointer"
+                           :font-weight "600"
+                           :font-size "16px"
+                           :transition "all 0.2s"}}
+          "🔄 Reset"]]
+
+        ;; Pattern Presets
+        [:div {:style {:display "flex"
+                       :gap "10px"
+                       :margin-bottom "20px"
+                       :flex-wrap "wrap"
+                       :align-items "center"
+                       :padding "15px"
+                       :background "#f8f9fa"
+                       :border-radius "8px"}}
+         [:label {:style {:font-weight "600"
+                          :color "#555"
+                          :min-width "70px"}}
+          "🎵 Presets:"]
+         [:button {:on-click #(load-preset :preset :basic-rock)
+                   :style {:padding "8px 16px"
+                           :background "#4caf50"
+                           :color "white"
+                           :border "none"
+                           :border-radius "6px"
+                           :cursor "pointer"
+                           :font-weight "600"
+                           :font-size "14px"
+                           :transition "all 0.2s"}}
+          "🎸 Rock"]
+         [:button {:on-click #(load-preset :preset :funk-groove)
+                   :style {:padding "8px 16px"
+                           :background "#9c27b0"
+                           :color "white"
+                           :border "none"
+                           :border-radius "6px"
+                           :cursor "pointer"
+                           :font-weight "600"
+                           :font-size "14px"
+                           :transition "all 0.2s"}}
+          "🎺 Funk"]
+         [:button {:on-click #(load-preset :preset :techno-beat)
+                   :style {:padding "8px 16px"
+                           :background "#2196f3"
+                           :color "white"
+                           :border "none"
+                           :border-radius "6px"
+                           :cursor "pointer"
+                           :font-weight "600"
+                           :font-size "14px"
+                           :transition "all 0.2s"}}
+          "🔊 Techno"]
+         [:button {:on-click #(load-preset :preset :breakbeat)
+                   :style {:padding "8px 16px"
+                           :background "#ff5722"
+                           :color "white"
+                           :border "none"
+                           :border-radius "6px"
+                           :cursor "pointer"
+                           :font-weight "600"
+                           :font-size "14px"
+                           :transition "all 0.2s"}}
+          "🎤 Breakbeat"]]
+
+        ;; Save/Load Patterns
+        [:div {:style {:display "flex"
+                       :gap "10px"
+                       :margin-bottom "20px"
+                       :flex-wrap "wrap"
+                       :align-items "center"
+                       :padding "15px"
+                       :background "#e8f5e9"
+                       :border-radius "8px"
+                       :border "1px solid #4caf50"}}
+         [:label {:style {:font-weight "600"
+                          :color "#2e7d32"
+                          :min-width "70px"}}
+          "💾 Save/Load:"]
+         [:input {:type "text"
+                  :placeholder "Pattern name..."
+                  :id "pattern-name-input"
+                  :style {:padding "8px 12px"
+                          :border "2px solid #4caf50"
+                          :border-radius "6px"
+                          :font-size "14px"
+                          :min-width "150px"
+                          :outline "none"
+                          :background "white"
+                          :color "#333"}}]
+         [:button {:on-click (fn []
+                               (let [input (.getElementById js/document "pattern-name-input")
+                                     name (.-value input)]
+                                 (when (save-pattern :name name)
+                                   (set! (.-value input) "")
+                                   (js/alert (str "Pattern '" name "' saved!")))))
+                   :style {:padding "8px 16px"
+                           :background "#4caf50"
+                           :color "white"
+                           :border "none"
+                           :border-radius "6px"
+                           :cursor "pointer"
+                           :font-weight "600"
+                           :font-size "14px"
+                           :transition "all 0.2s"}}
+          "💾 Save"]
+         [:select {:id "pattern-load-select"
+                   :style {:padding "8px 12px"
+                           :border "2px solid #4caf50"
+                           :border-radius "6px"
+                           :font-size "14px"
+                           :min-width "150px"
+                           :cursor "pointer"
+                           :background "white"}}
+          [:option {:value ""} "-- Select Pattern --"]
+          (for [pattern-name (list-saved-patterns)]
+            ^{:key pattern-name}
+            [:option {:value pattern-name} pattern-name])]
+         [:button {:on-click (fn []
+                               (let [select (.getElementById js/document "pattern-load-select")
+                                     name (.-value select)]
+                                 (when (and name (not (str/blank? name)))
+                                   (load-saved-pattern :name name)
+                                   (js/alert (str "Pattern '" name "' loaded!")))))
+                   :style {:padding "8px 16px"
+                           :background "#2196f3"
+                           :color "white"
+                           :border "none"
+                           :border-radius "6px"
+                           :cursor "pointer"
+                           :font-weight "600"
+                           :font-size "14px"
+                           :transition "all 0.2s"}}
+          "📂 Load"]
+         [:button {:on-click (fn []
+                               (let [select (.getElementById js/document "pattern-load-select")
+                                     name (.-value select)]
+                                 (when (and name (not (str/blank? name)))
+                                   (when (js/confirm (str "Delete pattern '" name "'?"))
+                                     (delete-saved-pattern :name name)
+                                     (set! (.-value select) "")
+                                     (js/alert (str "Pattern '" name "' deleted!"))
+                                     ;; Force re-render by updating state
+                                     (swap! sequencer-state assoc :dummy (js/Date.now))))))
+                   :style {:padding "8px 16px"
+                           :background "#f44336"
+                           :color "white"
+                           :border "none"
+                           :border-radius "6px"
+                           :cursor "pointer"
+                           :font-weight "600"
+                           :font-size "14px"
+                           :transition "all 0.2s"}}
+          "🗑️ Delete"]
+
+        ;; Velocity instructions
+         [:div {:style {:display "flex"
+                        :align-items "center"
+                        :gap "8px"
+                        :padding "10px 15px"
+                        :background "#fff3e0"
+                        :border-radius "6px"
+                        :border "1px solid #ffb74d"
+                        :margin-top "15px"
+                        :margin-bottom "15px"}}
+          [:span {:style {:font-size "20px"}} "💡"]
+          [:div {:style {:font-size "13px"
+                         :color "#e65100"
+                         :line-height "1.5"}}
+           [:strong "Velocity Control:"] " Left-click to toggle steps • "
+           [:strong "Right-click"] " to cycle velocity: Off → Soft → Normal → ACCENT ✨"]]]
 
         ;; Pattern Grid
         [:div {:style {:display "grid"
@@ -1435,24 +2130,19 @@
                         :font-size "14px"}}
           "KICK"]
          (for [i (range 16)]
-           ^{:key (str "kick-" i)}
-           [:button {:on-click #(toggle-sequencer-step :track :kick :step i)
-                     :style {:padding "12px 8px"
-                             :background (if (nth (get-in @sequencer-state [:pattern :kick]) i)
-                                           "#e74c3c"
-                                           "#f0f0f0")
-                             :color (if (nth (get-in @sequencer-state [:pattern :kick]) i)
-                                      "white"
-                                      "#999")
-                             :border (if (= i (:current-step @sequencer-state))
-                                       "2px solid #4caf50"
-                                       "1px solid #ddd")
-                             :border-radius "4px"
-                             :cursor "pointer"
-                             :font-size "12px"
-                             :font-weight "bold"
-                             :transition "all 0.1s"}}
-            (if (= i (:current-step @sequencer-state)) "▶" (inc i))])
+           (let [velocity (nth (get-in @sequencer-state [:velocity :kick]) i)
+                 step-active? (nth (get-in @sequencer-state [:pattern :kick]) i)
+                 playing? (:playing @sequencer-state)]
+             ^{:key (str "kick-" i)}
+             [:button {:on-click #(toggle-sequencer-step :track :kick :step i)
+                       :on-context-menu (fn [e]
+                                          (.preventDefault e)
+                                          (cycle-step-velocity :track :kick :step i))
+                       :style (velocity-style :velocity velocity
+                                              :base-color "#e74c3c"
+                                              :current-step? (and playing? (= i (:current-step @sequencer-state)))
+                                              :step-active? step-active?)}
+              (if (and playing? (= i (:current-step @sequencer-state))) "▶" (inc i))]))
 
          ;; Snare row
          [:div {:style {:font-weight "bold"
@@ -1460,24 +2150,19 @@
                         :font-size "14px"}}
           "SNARE"]
          (for [i (range 16)]
-           ^{:key (str "snare-" i)}
-           [:button {:on-click #(toggle-sequencer-step :track :snare :step i)
-                     :style {:padding "12px 8px"
-                             :background (if (nth (get-in @sequencer-state [:pattern :snare]) i)
-                                           "#3498db"
-                                           "#f0f0f0")
-                             :color (if (nth (get-in @sequencer-state [:pattern :snare]) i)
-                                      "white"
-                                      "#999")
-                             :border (if (= i (:current-step @sequencer-state))
-                                       "2px solid #4caf50"
-                                       "1px solid #ddd")
-                             :border-radius "4px"
-                             :cursor "pointer"
-                             :font-size "12px"
-                             :font-weight "bold"
-                             :transition "all 0.1s"}}
-            (if (= i (:current-step @sequencer-state)) "▶" (inc i))])
+           (let [velocity (nth (get-in @sequencer-state [:velocity :snare]) i)
+                 step-active? (nth (get-in @sequencer-state [:pattern :snare]) i)
+                 playing? (:playing @sequencer-state)]
+             ^{:key (str "snare-" i)}
+             [:button {:on-click #(toggle-sequencer-step :track :snare :step i)
+                       :on-context-menu (fn [e]
+                                          (.preventDefault e)
+                                          (cycle-step-velocity :track :snare :step i))
+                       :style (velocity-style :velocity velocity
+                                              :base-color "#3498db"
+                                              :current-step? (and playing? (= i (:current-step @sequencer-state)))
+                                              :step-active? step-active?)}
+              (if (and playing? (= i (:current-step @sequencer-state))) "▶" (inc i))]))
 
          ;; Hi-hat row
          [:div {:style {:font-weight "bold"
@@ -1485,24 +2170,19 @@
                         :font-size "14px"}}
           "HI-HAT"]
          (for [i (range 16)]
-           ^{:key (str "hihat-" i)}
-           [:button {:on-click #(toggle-sequencer-step :track :hihat :step i)
-                     :style {:padding "12px 8px"
-                             :background (if (nth (get-in @sequencer-state [:pattern :hihat]) i)
-                                           "#f39c12"
-                                           "#f0f0f0")
-                             :color (if (nth (get-in @sequencer-state [:pattern :hihat]) i)
-                                      "white"
-                                      "#999")
-                             :border (if (= i (:current-step @sequencer-state))
-                                       "2px solid #4caf50"
-                                       "1px solid #ddd")
-                             :border-radius "4px"
-                             :cursor "pointer"
-                             :font-size "12px"
-                             :font-weight "bold"
-                             :transition "all 0.1s"}}
-            (if (= i (:current-step @sequencer-state)) "▶" (inc i))])]]
+           (let [velocity (nth (get-in @sequencer-state [:velocity :hihat]) i)
+                 step-active? (nth (get-in @sequencer-state [:pattern :hihat]) i)
+                 playing? (:playing @sequencer-state)]
+             ^{:key (str "hihat-" i)}
+             [:button {:on-click #(toggle-sequencer-step :track :hihat :step i)
+                       :on-context-menu (fn [e]
+                                          (.preventDefault e)
+                                          (cycle-step-velocity :track :hihat :step i))
+                       :style (velocity-style :velocity velocity
+                                              :base-color "#f39c12"
+                                              :current-step? (and playing? (= i (:current-step @sequencer-state)))
+                                              :step-active? step-active?)}
+              (if (and playing? (= i (:current-step @sequencer-state))) "▶" (inc i))]))]]
 
        ;; Info Section
        [:div {:style {:background "#e3f2fd"
