@@ -11,7 +11,6 @@
             [scicloj.kindly.v4.kind :as kind]
             [emmy.env :as e :refer [->infix simplify Lagrange-equations literal-function]]
             [emmy.mechanics.lagrange :as lg]
-            [emmy.expression.render :as r :refer [->infix]]
             [civitas.repl :as repl]))
 
 ;; Elemetary introduction to Emmy, taken from the first pages of the open-access book
@@ -21,6 +20,9 @@
 ;; The [Emmy]((https://emmy.mentat.org)) maintainer, [Sam Ritchie](https://roadtoreality.substack.com/), wrote the source for this page, namely the
 ;; [LaTex version of FDG](https://github.com/mentat-collective/fdg-book/blob/main/scheme/org/prologue.org).
 
+;; In adopting MIT-Scheme's `(define ...)`, I trust that Clojure people will bridge that gap quickly
+;; and am sure of the eventual gratitude of all readers of that immutable, dense book. So without further ado ...
+
 ^:kindly/hide-code
 (kind/hiccup
   [:div
@@ -29,62 +31,8 @@
    [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.cljs-ajax.js"}]
    [:script {:src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js", :crossorigin ""}]
    [:script {:src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.reagent.js"}]])
-
-^:kindly/hide-code
-(def md
-  (comp kindly/hide-code kind/md))
-
-
-^:kindly/hide-code
-(kind/scittle
-  '(defn walk [inner outer form]
-    (cond
-      (list? form) (outer (apply list (map inner form)))
-      (seq? form)  (outer (doall (map inner form)))
-      (coll? form) (outer (into (empty form) (map inner form)))
-      :else        (outer form))))
-
-^:kindly/hide-code
-(kind/scittle
-  '(defn postwalk [f form]
-    (walk (partial postwalk f) f form)))
-
-^:kindly/hide-code
-(kind/scittle
-  '(defn postwalk-replace [smap form]
-    (postwalk (fn [x] (if (contains? smap x) (smap x) x)) form)))
-
-^:kindly/hide-code
-(kind/scittle
-  '(defmacro let-scheme [b & e]
-    (concat (list 'let (into [] (apply concat b))) e)))
-
-^:kindly/hide-code
-(kind/scittle
-  '(defmacro define-1 [h & b]
-    (let [body (postwalk-replace {'let 'let-scheme} b)]
-      (if (coll? h)
-        (if (coll? (first h))
-          (list 'defn (ffirst h) (into [] (rest (first h)))
-                (concat (list 'fn (into [] (rest h))) body))
-          (concat (list 'defn (first h) (into [] (rest h)))
-                  body))
-        (concat (list 'def h) body)))))
-
-^:kindly/hide-code
-(kind/scittle
-  '(defmacro define [h & b]
-    (if (and (coll? h) (= (first h) 'tex-inspect))
-      (list 'do
-            (concat ['define-1 (second h)] b)
-            h)
-      (concat ['define-1 h] b))))
-
-^:kindly/hide-code
-(kind/scittle
-  '(defmacro lambda [h b]
-    (list 'fn (into [] h) b)))
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.reagent.js"}]
+   [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
 
 ^:kindly/hide-code
 (kind/scittle
@@ -119,8 +67,10 @@
   (list 'kind/reagent [:h3 (list 'quote (cons 'show-expression b))]))
 
 ^:kindly/hide-code
-(kind/scittle '(declare Gamma))
+(def md
+  (comp kindly/hide-code kind/md))
 
+;;
 ;; ## Programming and Understanding
 
 ;; One way to become aware of the precision required to unambiguously communicate a
@@ -260,6 +210,9 @@
 
 ;; This expression is equivalent to a computer program:[fn:6]
 
+^:kindly/hide-code
+(kind/scittle '(declare Gamma))
+
 (define ((Lagrange-equations Lagrangian) w)
   (- (D (compose ((partial 2) Lagrangian) (Gamma w)))
      (compose ((partial 1) Lagrangian) (Gamma w))))
@@ -310,7 +263,7 @@
     proposed-solution)
    't))
 
-;; [note by MAK: copy-paste the code into the sidebar and verify the above result.]
+;; [note by MAK: copy-paste the `(show-expression ...)` code-snippet into the sidebar, press Ctrl+Enter and verify the above result.]
 
 ;; The residual here shows that for nonzero amplitude, the only solutions allowed
 ;; are ones where $(k - m\omega^2) = 0$ or $\omega = \sqrt{k/m}$.
