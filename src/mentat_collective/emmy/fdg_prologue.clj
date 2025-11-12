@@ -43,22 +43,6 @@
   '(def show-expression (comp ->infix simplify)))
 
 ^:kindly/hide-code
-(kind/scittle
-  '(def velocities velocity))
-
-^:kindly/hide-code
-(kind/scittle
-  '(def coordinates coordinate))
-
-^:kindly/hide-code
-(kind/scittle
-  '(def vector-length count))
-
-^:kindly/hide-code
-(kind/scittle
-  '(defn time [state] (first state)))
-
-^:kindly/hide-code
 (defmacro define [& b]
   (list 'kind/scittle (list 'quote (cons 'define b))))
 
@@ -70,7 +54,6 @@
 (def md
   (comp kindly/hide-code kind/md))
 
-;;
 ;; ## Programming and Understanding
 
 ;; One way to become aware of the precision required to unambiguously communicate a
