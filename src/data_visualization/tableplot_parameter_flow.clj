@@ -276,8 +276,6 @@
     (plotly/layer-point {:=mark-size 20})
     plotly/layer-line
     plotly/plot
-    (assoc-in [:layout :xaxis :gridcolor] "green")
-    (assoc-in [:layout :yaxis :gridcolor] "red")
     kind/pprint)
 
 (-> sample-data

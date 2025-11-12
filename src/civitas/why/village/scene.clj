@@ -411,14 +411,15 @@
   (let [authors (->> (:author @db/db)
                      (sort-by :name))
         n (count authors)
+        colors (cycle (take 11 color/palette))
         r 6]
     [:g
      [:g {:transform "translate(0,-8)"}
       (mu/mo (str n " authors"))]
      [:g {:transform "scale(0.8)"}
-      (for [[{:keys [image]} [x y]] (map vector authors (geom/spiral 100))]
+      (for [[{:keys [image]} [x y] color] (map vector authors (geom/spiral 100) colors)]
         [:g {:transform (str "translate(" (* r x) "," (* r y) ")")}
-         (svg/polygon {:fill         (:dgreen col)
+         (svg/polygon {:fill         color
                        :stroke       (:dblue col)
                        :stroke-width 1}
                       (geom/hex r))
