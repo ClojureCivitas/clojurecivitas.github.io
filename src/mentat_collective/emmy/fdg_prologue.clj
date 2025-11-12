@@ -17,11 +17,11 @@
 ;; [Functional Differential Geometry (FDG)](https://mitpress.mit.edu/9780262019347/functional-differential-geometry/).
 ;; The code snippets are executable, copy-paste them to the sidebar of the page.
 
-;; The [Emmy]((https://emmy.mentat.org)) maintainer, [Sam Ritchie](https://roadtoreality.substack.com/), wrote the source for this page, namely the
+;; The [Emmy](https://emmy.mentat.org) maintainer, [Sam Ritchie](https://roadtoreality.substack.com/), wrote the source for this page, namely the
 ;; [LaTex version of FDG](https://github.com/mentat-collective/fdg-book/blob/main/scheme/org/prologue.org).
 
 ;; In adopting MIT-Scheme's `(define ...)`, I trust that Clojure people will bridge that gap quickly
-;; and am sure of the eventual gratitude of all readers of that immutable, dense book. So without further ado ...
+;; while being sure of the gratitude of all readers of the immutable, dense book. So without further ado ...
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -43,22 +43,6 @@
   '(def show-expression (comp ->infix simplify)))
 
 ^:kindly/hide-code
-(kind/scittle
-  '(def velocities velocity))
-
-^:kindly/hide-code
-(kind/scittle
-  '(def coordinates coordinate))
-
-^:kindly/hide-code
-(kind/scittle
-  '(def vector-length count))
-
-^:kindly/hide-code
-(kind/scittle
-  '(defn time [state] (first state)))
-
-^:kindly/hide-code
 (defmacro define [& b]
   (list 'kind/scittle (list 'quote (cons 'define b))))
 
@@ -70,7 +54,6 @@
 (def md
   (comp kindly/hide-code kind/md))
 
-;;
 ;; ## Programming and Understanding
 
 ;; One way to become aware of the precision required to unambiguously communicate a
