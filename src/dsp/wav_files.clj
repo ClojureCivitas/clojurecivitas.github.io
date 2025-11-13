@@ -6,8 +6,7 @@
                   :type :post
                   :date "2025-11-09"
                   :tags [:dsp :math :music]
-                  :image "wav.png"
-                  :draft true}}}
+                  :image "wav.png"}}}
 (ns dsp.wav-files
   (:require [scicloj.kindly.v4.kind :as kind]
             [clojure.java.io :as io]
