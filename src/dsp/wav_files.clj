@@ -4,7 +4,7 @@
                   :description "Exploring WAV-files for DSP in Clojure."
                   :category :clojure
                   :type :post
-                  :date "2025-11-09"
+                  :date "2025-11-13"
                   :tags [:dsp :math :music]
                   :image "wav.png"}}}
 (ns dsp.wav-files
