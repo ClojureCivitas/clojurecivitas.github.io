@@ -5,6 +5,7 @@
           :quarto         {:author   [:timothypratley]
                            ;;:description ""
                            :page-layout :full
+                           :theme "none"
                            :navbar   false
                            :draft    true
                            :type     :page
@@ -433,7 +434,7 @@
 
 (defn posts []
   (let [r 3
-        n 70
+        n 80
         colors (cycle (take 11 color/palette))]
     [:g
      [:g {:transform "translate(0,-8)"}
