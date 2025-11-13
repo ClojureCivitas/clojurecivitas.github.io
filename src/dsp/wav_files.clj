@@ -306,6 +306,7 @@ wav-format
 ;;
 ;; In the second session and some pairing beyond we prepared for our
 ;; forthcoming sessions on Think DSP by:
+
 ;; - **WAV file format** - Learning about the structure of simple WAV files
 ;; - **File download** - Downloading files with Java
 ;; - **WAV file metadata** - Reading metadata of a WAV file
