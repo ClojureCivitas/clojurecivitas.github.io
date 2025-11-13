@@ -141,6 +141,7 @@ block
 
 ;; As we learned in the [first session](https://clojurecivitas.github.io/dsp/intro.html)
 ;; of the DSP study group:
+
 ;; > Sound waves are continuous vibrations in the air. To work with them on a computer,
 ;; > we need to **sample** them - take measurements at regular intervals. The **sample rate**
 ;; > tells us how many measurements per second. CD-quality audio uses 44,100 samples per second.
