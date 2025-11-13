@@ -161,7 +161,10 @@ block
 ;; - **[javax.sound.sampled](https://docs.oracle.com/en/java/javase/25/docs/api/java.desktop/javax/sound/sampled/package-summary.html)** - Some classes from the Java standard libraries sound package to read WAV Files.
 
 (require '[scicloj.kindly.v4.kind :as kind]
-         '[clojure.java.io :as io])
+         '[clojure.java.io :as io]
+         '[tech.v3.datatype.functional :as dfn]
+         '[tablecloth.api :as tc]
+         '[scicloj.tableplot.v1.plotly :as plotly])
 ^:kindly/hide-code
 (kind/code
  "(import '(javax.sound.sampled AudioFileFormat
