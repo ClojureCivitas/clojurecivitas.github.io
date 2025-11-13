@@ -1,6 +1,6 @@
 ^{:kindly/hide-code true
   :clay {:title "DSP Study Group - Reading audio data from WAV-files"
-         :quarto {:author [:daslu :onbreath]
+         :quarto {:author [:onbreath :daslu]
                   :description "Exploring WAV-files for DSP in Clojure."
                   :category :clojure
                   :type :post
