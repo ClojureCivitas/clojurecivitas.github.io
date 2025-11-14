@@ -3,13 +3,13 @@
   {:clay {:title          "The Search for Meaning Through Collaboration and Code"
           :kindly/options {:kinds-that-hide-code #{:kind/var :kind/hiccup}}
           :quarto         {:author   [:timothypratley]
-                           ;;:description ""
+                           :description "Why we need to share our ideas"
                            :page-layout :full
-                           :theme "none"
+                           :theme    "none"
                            :navbar   false
                            :draft    true
                            :type     :page
-                           :date     "2025-11-12"
+                           :date     "2025-11-14"
                            :category :collaboration
                            :tags     [:clojure :writing :workflow :motivation :community]}}}
   (:require [civitas.db :as db]
@@ -29,8 +29,11 @@
     [:link {:rel "preconnect" :href "https://fonts.gstatic.com" :crossorigin "true"}]
     [:link {:href "https://fonts.googleapis.com/css2?family=Luxurious+Roman&display=swap" :rel "stylesheet"}]
     [:style "body {
+    margin: 0;
+    padding: 0;
     background: darkgreen;
     font-family: \"Luxurious Roman\", \"Times New Roman\", Times, Georgia, serif;
+    color: #FCFFE0;
   }
   h1,h2,h3,h4,h5 {
     font-family: \"Luxurious Roman\", \"Times New Roman\", Times, Georgia, serif;
@@ -1222,3 +1225,401 @@ weak minds discuss people.”_")
              :transform (str "translate(" (* r x) "," (* r y) ")")}
          (svg/polygon attrs (geom/hex (- r 2)))
          slide]))]])
+
+
+
+;This topic has been heavy on my mind because, more and more, we are inundated with vacuous messages clamoring for attention.
+;Across Television, the news, and social media, the signal to noise is deteriorating.
+;Our world is more connected than ever,
+;with more knowledge available than ever,
+;and yet we are flooded with content that lacks substance.
+;
+;This dangerous path risks more than distraction.
+;It threatens the foundation of knowledge our society needs.
+;We risk bad decision making, stagnation, and losing trust in each other.
+;
+;There isn’t one easy solution.
+;But what I do know is that communicating our ideas in long form is necessary.
+;Taking the time to fully explain ourselves.
+;It helps us think more clearly, and gives others the chance to truly hear us.
+;
+;I’ll start by reflecting on why knowledge, ideas, meaning, and collaboration matter.
+;Then I’ll share some tools that I have found to be effective for sharing ideas.
+;
+;The premise of this talk is that code is thinking made concrete.
+;It’s a medium for expressing ideas, exploring, experimenting, and sharing them so others can build upon them.
+;The message is simple: your voice matters.
+;We must speak boldly, and speak with substance.
+;We can build together, create understanding, solve problems, and make progress.
+;When you share your perspective, you make the world richer.
+;For yourself, for this community, and for those who come after.
+;
+;Meaning is purpose and significance.
+;Why something matters, why a design is chosen, why a tool exists.
+;Do we need a scythe or a plow?
+;We find that meaning by doing and by talking about what we did.
+;By making explanations and examples.
+;By sharing ideas.
+;
+;Why should we share ideas?
+;Socrates claimed:
+;“There is only one good, knowledge, and one evil, ignorance.”
+;A shocking statement that knowledge and virtue are directly linked.
+;Surely information alone doesn’t make people moral.
+;Modern philosophy notes that virtue can be eroded by biases, weakness of will, and conflicts of interest.
+;But it is apparent that wrongdoing is often born of misunderstanding and shortsightedness.
+;Socrates’ claim challenges us to fight evil with reason.
+;Conversation, teaching, and collaboration are acts of good.
+;This idea motivates sharing knowledge.
+;It is good to reason together, to challenge our biases and diminish our ignorance.
+;Step by step we can move toward understanding,
+;and that allows us to flourish.
+;
+;Change is inevitable.
+;It comes whether we ask for it or not.
+;Change is often destructive.
+;Destruction is loss.
+;
+;Constructive change is deliberate: we build to replace.
+;How do we make constructive change?
+;Through critical thinking.
+;Evaluation.
+;“Does this idea really make sense?”
+;Being wrong. Being corrected.
+;Arguing not to win, but to discover, to sharpen,
+;to see whether an idea holds.
+;Cooperative, argumentative dialogue using methodical questions to stimulate thinking and expose assumptions.
+;
+;Knowledge is good.
+;Critical thinking and dialogue sharpen it.
+;But ideas must travel to grow.
+;How do we share ideas?
+;Through talking and writing.
+;
+;My favourite way to share an idea is to write a blog post.
+;Indeed my main purpose today is to encourage you to write a blog post.
+;Writing makes your thinking visible.
+;Sharing your ideas is important.
+;That’s how we make progress.
+;It’s a prerequisite for survival.
+;It’s the foundation of human progress.
+;It fuels technology, communities, and civilization.
+;
+;Sharing ideas with code is especially powerful.
+;Code is a set of steps, written in a language, that a computer can read and execute.
+;Coding is a very precise kind of writing.
+;Clojure is an excellent tool for thinking.
+;It gives us a small set of simple composable building blocks.
+;With them we can model ideas clearly.
+;
+;Code crystallizes thinking into something concrete, logical, reproducible, explorable, and extensible.
+;Most importantly, something useful.
+;
+;But code alone is not easily read.
+;Code doesn’t explain itself very well.
+;Code is not widely accessible.
+;
+;Documents on the other hand contain context, narrative, and explanation.
+;With a document, the idea becomes sharable.
+;You can read a document, discuss it, understand it.
+;
+;The document is valuable.
+;“Spoken words fly away, written words remain.”
+;
+;The best documents make us think.
+;Blog posts with code are a great way to make each other think.
+;They combine reasoning with storytelling in a blend of logic and narrative.
+;As Socrates said, “I cannot teach anybody anything. I can only make them think.”
+;
+;Clay embraces exactly that.
+;Clay is a minimalistic Clojure tool for literate programming and data visualization.
+;
+;Clay turns a Clojure namespace into a Document.
+;Clay renders code, results, comments, and visualizations.
+;On the left is my editor, on the right is HTML produced by Clay.
+;This is the heart of what Clay does,
+;so I want to reiterate that I’m editing code with my favorite editor on the left,
+;And viewing a rich document created from the exact same code in a browser on the right.
+;Clay displays a document.
+;The document is constructed from reading and evaluating the code.
+;The code contains comments, and expressions.
+;The document contains rich text, results and visualizations,
+;which are values that result from evaluation.
+;
+;Expressions are evaluated and the result is shown in the document.
+;
+;The narrative of the document is written in comments.
+;Those comments contain markdown for headings, emphasis, lists, links, and blocks.
+;
+;And images of course.
+;
+;Expressions may be annotated;
+;Here is some data displayed as a table.
+;It’s a regular map value with metadata.
+;Requests for visualization are made by attaching metadata to a value or expression.
+;We aren’t calling any code, changing the value, or making a new value.
+;The metadata says
+;“hey if you want to visualize this, it should be shown as a table”.
+;And so Clay renders it as a table.
+;
+;Clay can do Diagrams
+;
+;and Charts.
+;Charts are the only way to compare numbers effectively.
+;We can perceive the relative magnitude, differences, and trends at a glance.
+;Wherever there is data, you need a chart to understand it.
+;
+;You don’t have to use a spreadsheet!
+;The data processing code and the chart can live together.
+;
+;Several charting libraries are supported, so you can find the style that works best for you.
+;My favourite is Tableplot because it is concise and expressive.
+;It does the fundamentals well, without boilerplate.
+;Look how nice this is, all I do is map the column of my dataset to the axis of my chart.
+;
+;There are many more kinds of visualizations available which I won’t cover.
+;Personally, I think it is best to stick to the basics: tables and charts.
+;If you want to get creative there is always Hiccup.
+;
+;Hiccup is the “swiss army knife” that can do anything a webpage can do,
+;such as embedded SVG images.
+;It’s fun to be able to create these visual elements.
+;Or we can include JavaScript.
+;
+;Which means we can load ClojureScript in our page with Scittle.
+;Scittle interprets ClojureScript in the browser without compilation.
+;When I save a ClojureScript file,
+;Clay sends the code to Scittle for evaluation.
+;There is no compile step, so it’s really really fast to update.
+;Only the code is evaluated, the page doesn’t refresh.
+;It’s similar to Shadow and Figwheel, but with less setup.
+;Scittle is convenient for coding and easy to deploy, which is perfect for blog posts.
+;
+;Having ClojureScript at hand enables interactive pages with buttons, animations, and even a REPL.
+;I enjoy using Clay to create the static HTML page elements in Clojure,
+;and loading ClojureScript for things that need to happen in the browser.
+;
+;Clay is similar to notebook systems like Jupyter and Clerk.
+;Most notebook systems do clever cell caching for performance.
+;Clay has no such thing.
+;I prefer this approach of writing plain old Clojure in my existing workflow, managing my REPL and project in the regular Clojure way.
+;
+;Clay produces HTML suitable for publishing.
+;For sending to a colleague, or hosting a website.
+;And Clay produces markdown.
+;
+;Clay integrates with Quarto, which is a fully featured markdown publishing system based on Pandoc. It’s quite popular in the scientific community.
+;Quarto has many authoring features like margin notes, callout blocks, and themes.
+;It is well documented, widely used and robust.
+;
+;While iterating on code you can use Clay to quickly make HTML.
+;The main advantage is speed.
+;You can focus on one chart for example, and iterate on it.
+;When you are ready to publish, you can use the slightly slower route.
+;Clay sends markdown to Quarto on your behalf to produce a website, book, pdf or slideshow.
+;Quarto is optional, but I highly recommend it as an excellent publishing system.
+;
+;Different documents call for different formats.
+;Some belong on the web; others need to be emailed as a PDF.
+;Flexible output options enable your message to travel appropriately.
+;Clay is useful for reports, blogging, tutorials and guides.
+;
+;For API documentation I highly recommend Cljdoc.
+;Cljdoc generates comprehensive references from docstrings on namespaces and functions.
+;Clay complements Cljdoc with markdown articles.
+;In the future I hope we find a way to show visual examples inside the reference itself.
+;
+;Literate programming emphasizes writing code for human understanding first,
+;and machine execution second.
+;The primary source is in natural language,
+;much like an essay,
+;with snippets of code embedded.
+;The difficulty there is how to transform, test and ship your code.
+;Most editors have limited support for it.
+;For me I found that I used to spend so much time wrestling with documents that it really killed the joy of it all.
+;Clay takes the other approach of narrative embedded in code.
+;Documents from code, not code from documents.
+;I find this works better.
+;At first glance it might seem that comments are clunky to edit.
+;That concerned me at first because I care about the words as much as the code.
+;But I found that thinking and coding is the hard part.
+;For ideas involving code, the code should be the source of truth.
+;Documents, built from code, stay in sync with the data and logic that produce them.
+;It’s a  reproducible process.
+;Your source of truth is executable and version-controlled, reducing errors and manual updates that plague traditional writing.
+;
+;Literate or not, this way of making documents from code is reproducible, sharable, useful, and fun.
+;Plain Clojure is perfect for ideas because it is expressive and concise.
+;Clojure is a high-level language.
+;Clojure is reliable, with a non-breaking ecosystem.
+;We are programmers, we like coding.
+;Coding up a namespace is way more fun than writing a document.
+;
+;There are many other tools for data visualization.
+;Why choose Clay in particular?
+;Clay is a simple approach that keeps out of your way.
+;With Clay you get plain HTML and JavaScript, or Markdown.
+;Clay doesn’t take over my code execution.
+;Clay is simple, the outputs are simple,
+;and the outputs compose well for publishing.
+;
+;People really enjoy the workflow and results, saying:
+;“Best notebook experience I’ve had”.
+;“I love this way of building up an idea”.
+;“This was way easier than I expected”.
+;
+;To use Clay add it to the classpath and call make.
+;Pass it some configuration such as the source file,
+;or a single form that you want to visualize.
+;
+;Normally you’d use a REPL command to call make.
+;There are about 10 Clay commands.
+;The important ones are “make current file”, and “make top level form”.
+;
+;When you are editing a namespace and call “Clay make current file”, that namespace is rendered as a HTML document and displayed.
+;The panel on the right is a webpage that was created from the code on the left.
+;
+;Sometimes you want to focus on just one visualization, and in that case you can call “Clay make top level form” and it will show only that form’s result. So if I’m working on a chart for example I can visualize and quickly iterate on it.
+;
+;By default the results are shown in a panel of your editor.
+;If you prefer to use a browser to view the output you can do that instead.
+;
+;There are integrations for most of the Clojure IDEs: Calva, Cider, Conjure and Cursive.
+;
+;Live reload mode updates whenever you save a source file.
+;You can initiate live reload mode by calling the “Clay watch” REPL command or by using the command line interface.
+;The command line interface can also be used for one off builds which can be handy for continuous integration.
+;
+;Clay is a tool you can use to visualize interactively, and to make a sharable document.
+;The main reason to use Clay is to turn code into a document, like this blog post.
+;Which raises the question of where to publish such a blog post.
+;
+;ClojureCivitas is a shared blog space that invites you to publish your ideas.
+;Anyone can publish their ideas here.
+;
+;Walking in feels a bit like an art gallery, don’t you think?
+;
+;There is something wonderful about seeing so many ideas together.
+;Each post has a unique perspective, yet somehow they fit as parts of a bigger picture.
+;
+;Many of the articles contain rich visualizations.
+;
+;Some are interactive, like this one that shows how to build a game.
+;
+;And at the bottom of every article,
+;This is my favourite part,
+;There is a link to the source code on Github, where you can view the code, or clone the repo to experiment locally.
+;
+;Thank you so much to the many authors for sharing your ideas!
+;30 authors have contributed blog posts.
+;I hope that you will join us, and write your own post.
+;
+;So far there are 70 articles about Clojure, art, science and life.
+;All of them I’ve found to be insightful and engaging ideas.
+;They are inspiring, knowledgeable, and well worth reading.
+;They are full of substance.
+;
+;Part of sharing is putting your message where people will find it.
+;Civitas is growing an audience with RSS feeds, announcements, and social networks.
+;If you contribute a post, people will see it.
+;
+;Many programmers, myself included, spend more time working on blog frameworks than writing blog posts.
+;It’s fun working on the machinery,
+;but we don’t produce the thing that the machinery is supposed to deliver.
+;The blog post.
+;A shared space focuses your efforts on writing your blog post.
+;
+;The so-called curse of Lisp is that it always seems to live in a niche.
+;Lisp’s power and flexibility make it easy to go your own way, to build your own new awesome thing.
+;That freedom tends to interfere with broad adoption.
+;I view it as more of a gift than a curse.
+;Clojure is a niche, Clay is a niche, Civitas is a niche.
+;But that’s where I find the fun of coding, learning, and building.
+;Here, we are free to explore, free to change things.
+;Free to innovate.
+;I bring this up because I hope that you will customize Civitas for your own purposes.
+;This is a space where deep creativity and meaningful collaboration can happen.
+;We can each go deep in our own directions, while building something substantive together.
+;The ability to go deep and connect with others is a powerful combo.
+;
+;Contributions don’t have to be grand.
+;They can be plain markdown or code.
+;They can be small, bite sized things.
+;And they can still have a big impact.
+;Visibility motivates visibility.
+;Small ideas aggregate into collective knowledge.
+;Small ideas are just as important as big ones.
+;Whether you want to go big or small,
+;Civitas is a space for you.
+;Your ideas belong here, and people will see them here.
+;
+;It’s easy to try.
+;Fork the git repository, create a namespace, write your idea, and submit a pull request.
+;Merges usually happen within a couple of hours.
+;Once merged the site is automatically deployed,
+;and you’ve got a blog post.
+;
+;Socrates said: “I am neither Athenian nor Greek, but a citizen of the world.”
+;The name Civitas was chosen to represent citizenship in a community, with rights and responsibilities.
+;Sharing knowledge is our civic responsibility.
+;The struggle for freedom and rights happens outside the bounds of what popular channels promote.
+;To be visible requires effort.
+;Turning the TV off, and doing something you believe in.
+;
+;Clay is one of many libraries created by the Scicloj community.
+;Scicloj is an open-source community with the goal of building the Clojure ecosystem, exploring the relevance of Clojure in fields like education, science, and art.
+;Part of that is through developing tools, libraries, and learning resources.
+;The other part is through the meetings and mentorship to enable people to use Clojure effectively for their work.
+;
+;Scicloj is a support system.
+;A community of people who share your interests.
+;People who care about similar problems,
+;with a practice of working together, being visible, trying things out in public, and exploring new domains.
+;Wherever you are going, the Scicloj support system can help you.
+;They hold regular meetups, working groups, and study groups.
+;Communities are a place of collaboration.
+;To labor together.
+;Two or more people working on the same problem will see different facets.
+;Together we can produce something neither would alone.
+;
+;Many great things have come out of Scicloj collaborations, most notably Noj.
+;Noj is a super library that pulls in a curated set of smaller libraries to make it easier to get started in data science.
+;It is tested and documented as a whole, so you can be confident that the sub-libraries work together.
+;Clay is in there for visualization and publishing.
+;Noj is a cohesive bundle of libraries providing dataframes, statistics, visualization, and publishing.
+;Everything you need for data science.
+;If you are wondering about the name Noj, it comes from Cynosure, the north star.
+;Noj serves as a guiding toolkit for data exploration and clarity.
+;
+;My favorite way to collaborate is through pair programming.
+;Ideas take shape through conversation, challenge, and laughter.
+;Two minds bring out clarity that neither could reach alone.
+;I love it.
+;Some people are terrified of it.
+;If that’s you, maybe try it somewhere kind and welcoming.
+;ClojureCamp makes syncing up easy with automatic pair matching, mob sessions, and guided learning.
+;You mark your availability, how many sessions you would like, and your preferences.
+;Then you get matched with someone to code with.
+;It’s a fantastic way to collaborate and search for meaning together.
+;
+;What should we collaborate on?
+;Socrates suggests that: “Strong minds discuss ideas, average minds discuss events, weak minds discuss people.”
+;Let’s discuss ideas.
+;Let’s ask questions, offer evidence, and share our thoughts publicly.
+;
+;Your voice matters.
+;Your ideas can be beacons of knowledge.
+;Share your ideas. Be visible. Collaborate.
+;That is how we build things worth keeping.
+;
+;Change will come.
+;It will break things.
+;That is unavoidable.
+;But we can be agents of constructive change,
+;by thinking critically, together.
+;Spark an idea.
+;Throw out your Television.
+;Write a blog post.
+;Try Clay.
+;Try Civitas.
+;Because together, we can bring about meaningful change.
