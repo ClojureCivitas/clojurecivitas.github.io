@@ -20,7 +20,7 @@
 ;; ## Clojure Jam - The Event
 ;;
 ;; There are many ways of expressing creativity, including through code.
-;; So we want to host a special event in April 2026 (firm dates TBD) to explore
+;; So we want to host a special event in April 2026(18th, 19th, 25th, and 26th) to explore
 ;; creative and artistic coding projects, and call it [Clojure Jam 2026](https://scicloj.github.io/clojure-jam-2026/)!
 ;;
 ;; We are looking for talk submissions such as:
