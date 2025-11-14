@@ -7,7 +7,7 @@
                            :page-layout :full
                            :theme    "none"
                            :navbar   false
-                           :type     :page
+                           :type     :post
                            :date     "2025-11-14"
                            :category :collaboration
                            :tags     [:clojure :writing :workflow :motivation :community]}}}
