@@ -3,7 +3,6 @@
   {:title  "Clojure Jam - Where We Express Ourselves in a Functional Way"
    :quarto {:author      [:syungb :daslu]
             :description "The first creative coding conference hosted by Scicloj"
-            :draft       true
             :type        :post
             :image       "clojure-jam.png"
             :date        "2025-11-14"
@@ -11,9 +10,9 @@
             :tags        [:clojure-jam :conference :creative-coding]}}}
 (ns scicloj.clojure-jam.clojure-jam-2026)
 ;;
-;; Scicloj has been expanding, not only as a group for open source projects with data science in Clojure,
-;; but also as a community that welcomes anyone who wants to learn, contribute,
-;; or share fun stories of their enthusiasm for Clojure.
+;; Scicloj has been expanding, not only as a group for exploring the diverse domains
+;; and use cases for Clojure in data science and beyond, but also as a community
+;; that welcomes anyone who wants to learn, contribute, or share fun stories of their enthusiasm for Clojure.
 ;;
 ;; Over the previous conferences hosted by Scicloj, we’ve had the pleasure of
 ;; meeting many talented and creative minds. It’s been inspiring, and we want more!
@@ -45,3 +44,4 @@
 ;; We’ll definitely continue to organize more events dedicated to working with
 ;; Clojure in data science in the future as we have in the past.
 ;; But we thought it would be worthwhile to make some time to explore all our artistic sides, too.
+;;
