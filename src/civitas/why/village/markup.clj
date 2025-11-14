@@ -34,7 +34,8 @@
    :height           "500%"
    :transform        "scale(0.2)"
    :transform-origin "top left"
-   :padding          "20px"
+   :padding          "10px"
+   :margin            0
    :text-align       "center"
    :border           :none})
 
