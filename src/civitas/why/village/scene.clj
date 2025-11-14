@@ -3,11 +3,10 @@
   {:clay {:title          "The Search for Meaning Through Collaboration and Code"
           :kindly/options {:kinds-that-hide-code #{:kind/var :kind/hiccup}}
           :quarto         {:author   [:timothypratley]
-                           :description "Why we need to share our ideas"
+                           :description "Why we need to share our ideas, and some suggestions on how"
                            :page-layout :full
                            :theme    "none"
                            :navbar   false
-                           :draft    true
                            :type     :page
                            :date     "2025-11-14"
                            :category :collaboration
