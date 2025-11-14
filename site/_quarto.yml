@@ -2,6 +2,8 @@ project:
   type: website
   resources:
     - "*.cljs"
+    - "*.svg"
+    - "*.png"
 
 website:
   title: "Clojure Civitas"
