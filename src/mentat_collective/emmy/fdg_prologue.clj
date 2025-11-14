@@ -13,7 +13,7 @@
             [emmy.mechanics.lagrange :as lg]
             [civitas.repl :as repl]))
 
-;; Elemetary introduction to Emmy, taken from the first pages of the open-access book
+;; Elemetary introduction to Emmy, taken from the first pages of the MIT open-access book
 ;; [Functional Differential Geometry (FDG)](https://mitpress.mit.edu/9780262019347/functional-differential-geometry/).
 ;; The code snippets are executable, copy-paste them to the sidebar of the page.
 
@@ -48,7 +48,7 @@
 
 ^:kindly/hide-code
 (defmacro show-expression [& b]
-  (list 'kind/reagent [:h3 (list 'quote (cons 'show-expression b))]))
+  (list 'kind/reagent [:tt (list 'quote (cons 'show-expression b))]))
 
 ^:kindly/hide-code
 (def md

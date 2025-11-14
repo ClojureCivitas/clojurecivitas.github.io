@@ -25,6 +25,9 @@
 
 (md "Another notebook can be found on the [Road to Reality website](https://reality.mentat.org/essays/reality/introduction#welcome-to-the-road-to-reality!) by [Sam Ritchie](https://roadtoreality.substack.com/p/the-first-executable-essay-is-live), the author (along with [Colin Smith](https://github.com/littleredcomputer)) of [Emmy, the Computer Algebra System](https://emmy.mentat.org).")
 
+;; For interactivity, I have some
+;; [SICM graphical puzzles](https://kloimhardt.github.io/cljtiles.html?page=SICM001).
+
 ;; In adopting MIT-Scheme's `(define ...)`, I trust that Clojure people will bridge that gap quickly
 ;; while being sure of the gratitude of all readers of the immutable, dense book.
 
