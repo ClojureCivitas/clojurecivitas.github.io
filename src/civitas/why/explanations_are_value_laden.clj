@@ -106,5 +106,6 @@
 ;; I value the pursuit of great explanations.
 ;; And I find it worthwhile to pursue great explanations with others.
 ;;
-;; If I only manage to explain something to myself in a moment of light, that explanation doesn't live beyond me.
-;; I would prefer if it could.
+;; I may grasp something in a brief moment.
+;; By turning that understanding into an explanation, the understanding can outlive the moment.
+;; Knowing I can return to that understanding, I can move on.
