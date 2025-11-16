@@ -799,13 +799,11 @@
           font-size: 14px !important;
         }
         .trivia-nav {
-          flex-wrap: wrap;
-          padding: 10px !important;
-          gap: 10px !important;
+          padding: 15px !important;
         }
         .trivia-nav button {
-          padding: 10px 20px !important;
-          font-size: 14px !important;
+          padding: 12px 20px !important;
+          font-size: 15px !important;
         }
         .game-title {
           font-size: 24px !important;
@@ -817,6 +815,9 @@
       
       /* Very small mobile */
       @media (max-width: 480px) {
+        .trivia-container {
+          padding: 5px;
+        }
         .trivia-image img {
           max-height: 200px;
         }
@@ -826,6 +827,13 @@
         .trivia-option-button {
           padding: 12px !important;
           font-size: 13px !important;
+        }
+        .trivia-nav {
+          padding: 10px !important;
+        }
+        .trivia-nav button {
+          padding: 10px 16px !important;
+          font-size: 14px !important;
         }
         .game-title {
           font-size: 20px !important;
@@ -932,27 +940,13 @@
                                :font-size "14px"}}
                    explanation]])])]]
 
-          ;; Navigation
+;; Navigation
           (let [{:keys [current-slide show-result]} @game-state]
             [:div {:class "trivia-nav"
-                   :style {:display "flex"
-                           :justify-content "space-between"
-                           :align-items "center"
-                           :padding "20px"
-                           :gap "20px"}}
-             [:button {:on-click previous-slide
-                       :disabled (= current-slide 0)
-                       :style {:padding "12px 24px"
-                               :background (if (= current-slide 0) "#e0e0e0" "#2196f3")
-                               :color (if (= current-slide 0) "#999" "white")
-                               :border "none"
-                               :border-radius "6px"
-                               :cursor (if (= current-slide 0) "not-allowed" "pointer")
-                               :font-weight "600"
-                               :font-size "16px"}}
-              "← Previous"]
-
-             [:div {:style {:text-align "center"}}
+                   :style {:padding "20px"}}
+             ;; Slide info on top
+             [:div {:style {:text-align "center"
+                            :margin-bottom "15px"}}
               [:p {:style {:margin "0"
                            :font-size "18px"
                            :font-weight "600"
@@ -963,19 +957,37 @@
                            :color "#666"}}
                (str "Score: " (:score @game-state) "/" (total-slides))]]
 
-             [:button {:on-click next-slide
-                       :disabled (nil? show-result)
-                       :style {:padding "12px 24px"
-                               :background (if show-result "#2196f3" "#e0e0e0")
-                               :color (if show-result "white" "#999")
-                               :border "none"
-                               :border-radius "6px"
-                               :cursor (if show-result "pointer" "not-allowed")
-                               :font-weight "600"
-                               :font-size "16px"}}
-              (if (= current-slide (dec (total-slides)))
-                "Finish →"
-                "Next →")]])]])]]))
+             ;; Buttons below
+             [:div {:style {:display "flex"
+                            :justify-content "space-between"
+                            :gap "15px"}}
+              [:button {:on-click previous-slide
+                        :disabled (= current-slide 0)
+                        :style {:padding "12px 24px"
+                                :background (if (= current-slide 0) "#e0e0e0" "#2196f3")
+                                :color (if (= current-slide 0) "#999" "white")
+                                :border "none"
+                                :border-radius "6px"
+                                :cursor (if (= current-slide 0) "not-allowed" "pointer")
+                                :font-weight "600"
+                                :font-size "16px"
+                                :flex "1"}}
+               "← Previous"]
+
+              [:button {:on-click next-slide
+                        :disabled (nil? show-result)
+                        :style {:padding "12px 24px"
+                                :background (if show-result "#2196f3" "#e0e0e0")
+                                :color (if show-result "white" "#999")
+                                :border "none"
+                                :border-radius "6px"
+                                :cursor (if show-result "pointer" "not-allowed")
+                                :font-weight "600"
+                                :font-size "16px"
+                                :flex "1"}}
+               (if (= current-slide (dec (total-slides)))
+                 "Finish →"
+                 "Next →")]]])]])]]))
 
 ;; ============================================================================
 ;; App Initialization
