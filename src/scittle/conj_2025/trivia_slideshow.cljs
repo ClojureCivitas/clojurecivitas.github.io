@@ -375,7 +375,56 @@
               "The Clojure community is known for being welcoming and collaborative"
               "Networking is discouraged to maintain focus"]
     :correct-index 1
-    :explanation "The Clojure community is renowned for its friendly spirit!"}])
+    :explanation "The Clojure community is renowned for its friendly spirit!"}
+
+   ;; New questions for additional photos
+   {:image "/scittle/conj_2025/media/conj-2025_9001.jpg"
+    :question "About hallway conversations..."
+    :options ["Hallway conversations are often where the best insights happen"
+              "Talking in hallways was prohibited to prevent noise"
+              "Hallways were reserved only for sponsors"]
+    :correct-index 0
+    :explanation "Some say the best content at conferences happens in hallway conversations!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_9002.png"
+    :question "About conference meals..."
+    :options ["All attendees had to bring their own food"
+              "Meals and snacks were provided for attendees"
+              "Food was only available to VIP ticket holders"]
+    :correct-index 1
+    :explanation "Providing meals helps attendees focus on learning and networking!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_9003.jpg"
+    :question "About speaker preparation..."
+    :options ["Speakers were given resources and support to prepare great talks"
+              "Speakers had to improvise everything on stage"
+              "Only slides created in Emacs were permitted"]
+    :correct-index 0
+    :explanation "Conference organizers help speakers deliver their best content!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_9004.jpg"
+    :question "About conference swag..."
+    :options ["Conference merchandise and swag helped build community spirit"
+              "Swag bags were illegal at this conference"
+              "Only speakers received any conference items"]
+    :correct-index 0
+    :explanation "Conference swag is a fun way to remember the event!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_9005.jpg"
+    :question "About conference photos..."
+    :options ["Attendees were encouraged to share photos and memories"
+              "All photography was banned for privacy reasons"
+              "Photos could only be taken in black and white"]
+    :correct-index 0
+    :explanation "Sharing photos helps spread the excitement and builds community!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_9006.jpg"
+    :question "About learning outcomes..."
+    :options ["Attendees leave with new knowledge, connections, and inspiration"
+              "The goal was to confuse everyone as much as possible"
+              "Learning was discouraged in favor of entertainment only"]
+    :correct-index 0
+    :explanation "Great conferences transform attendees through learning and connection!"}])
 
 ;; ============================================================================
 ;; Game State
