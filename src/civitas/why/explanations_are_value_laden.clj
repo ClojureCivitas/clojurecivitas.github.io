@@ -1,5 +1,5 @@
 ^{:kindly/hide-code true
-  :clay {:title "Explanations are value laden" :quarto {:author :com.github/teodorlu :type :post :date "2025-11-15"}}}
+  :clay {:title "Explanations are value laden" :quarto {:author :com.github/teodorlu :type :post :date "2025-11-16"}}}
 (ns civitas.why.explanations-are-value-laden
   (:require [scicloj.kindly.v4.kind :as kind]))
 
