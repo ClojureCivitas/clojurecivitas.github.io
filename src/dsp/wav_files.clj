@@ -134,7 +134,7 @@ block
     end")
 
 ;; The header comprises of the **tag** `RIFF`, its **chunk** tagged
-;; with the specific format `WAVE` and a **subchunk** `fmt `, which
+;; with the specific format `WAVE` and a **subchunk** `fmt ⁠`, which
 ;; describes the contained audio data.  This represents some of the
 ;; header information in a WAV file with a single, 16-bit mono sound
 ;; channel and 44.100 samples per second.
@@ -188,10 +188,6 @@ block
 ^:kindly/hide-code
 (def tuning-fork-url
   (str "https://github.com/AllenDowney/ThinkDSP/raw/master/code/" tuning-fork-file))
-
-^:kindly/hide-code
-(def tuning-fork-file
-  "18871__zippi1__sound-bell-440hz.wav")
 
 ^:kindly/hide-code
 (def tuning-fork-file-compressed
@@ -255,13 +251,16 @@ wav-format
 ;; into the correct datatype for each frame manually. For now we just
 ;; put the data for 16-bit mono WAV files into a short-array.
 (defn audio-data [^InputStream is]
-  (let [{:keys [frame-length]} (audio-format is)
-        format                 (-> (AudioSystem/getAudioFileFormat is)
-                                   AudioFileFormat/.getFormat)
-        ^bytes audio-bytes     (with-open [ais (AudioInputStream. is format frame-length)]
-                                 (AudioInputStream/.readAllBytes ais))
-        audio-shorts           (short-array frame-length)
-        bb                     (ByteBuffer/allocate 2)]
+  (let [{:keys
+         [frame-length]} (audio-format is)
+        format           (-> (AudioSystem/getAudioFileFormat is)
+                             AudioFileFormat/.getFormat)
+        ^bytes
+        audio-bytes      (with-open [ais (AudioInputStream. is format
+                                                            frame-length)]
+                           (AudioInputStream/.readAllBytes ais))
+        audio-shorts     (short-array frame-length)
+        bb               (ByteBuffer/allocate 2)]
     (dotimes [i frame-length]
       (ByteBuffer/.clear bb)
       (.order bb ByteOrder/LITTLE_ENDIAN)
