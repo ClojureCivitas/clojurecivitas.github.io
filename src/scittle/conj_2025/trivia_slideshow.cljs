@@ -730,12 +730,20 @@
     [:div
      ;; Add responsive styles
      [:style "
+      /* Base styles - only style our root container, not body */
+      #trivia-app-root {
+        margin: 0;
+        padding: 0;
+        background: #fafafa;
+        min-height: 100vh;
+      }
+      
       .trivia-container {
         padding: 20px;
         max-width: 1200px;
         margin: 0 auto;
         font-family: system-ui, -apple-system, sans-serif;
-        background: #fafafa;
+        background: transparent;
         min-height: 80vh;
       }
       .trivia-content {
@@ -798,8 +806,12 @@
       
       /* Dark mode */
       @media (prefers-color-scheme: dark) {
+        #trivia-app-root {
+          background: #0d0d0d;
+        }
+        
         .trivia-container {
-          background: #1a1a1a;
+          background: transparent;
         }
         .trivia-card {
           background: #2d2d2d;
