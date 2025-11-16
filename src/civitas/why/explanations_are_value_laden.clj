@@ -1,60 +1,22 @@
 ^{:kindly/hide-code true
   :clay {:title "Explanations are value laden" :quarto {:author :com.github/teodorlu :type :post :date "2025-11-15"}}}
 (ns civitas.why.explanations-are-value-laden
-  (:require [civitas.why.growing-explanations-together :as growing-explanations-together]
-            [civitas.why.village.scene :as search-for-meaning]
-            [clojure.string :as str]
-            [scicloj.kindly.v4.kind :as kind]))
+  (:require [scicloj.kindly.v4.kind :as kind]))
 
-::search-for-meaning/anchor
-::growing-explanations-together/anchor
-
-^:kindly/hide-code
-(defonce link-root "")
-
-^:kindly/hide-code
-(defn infer-html-location [anchor]
-  ;; I found this way of doing "checked" links surprisingly pleasant.
-  ;; Funnily enough, the *name* of the anchor (which we currently ignore) could (possibly) turn into a hash-link, eg "/civitas/.../scene#process" for ::search-for-meaning/process
-  ;; But let's not be distracted by shiny, new ways of linking knowledge right now.
-  ;;
-  ;; Second problem: while this link works in production, Clay doesn't care about those URLs.
-  ;; So we'll just redef the def from our REPL while writing this text.
-  (str link-root
-       (str/join
-        "/"
-        (->> (str/split (namespace anchor) #"\.")
-             (map #(str/replace % #"-" "_"))))
-       ".html"))
-
-^:kindly/hide-code
-(comment
-  ;; "test".
-  (def link-root "https://clojurecivitas.github.io/")
-  (infer-html-location ::search-for-meaning/anchor)
-
-  (require '[clojure.java.browse :refer [browse-url]])
-  (mapv (comp browse-url infer-html-location)
-        [::search-for-meaning/anchor ::growing-explanations-together/anchor])
-
-  )
-
-^:kindly/hide-code
-(defn link [anchor linktext]
-  [:a {:href (infer-html-location anchor)} linktext])
+;; This post previously included a light system for linking between documents.
+;; However, that system unfortunately crashed the build process!
+;; So I had to remove it.
+;; See the PR for the removed code: https://github.com/ClojureCivitas/clojurecivitas.github.io/pull/185
 
 ;; # Explanations are value laden
 
 ^:kindly/hide-code
 (kind/hiccup [:p "Timothy Pratley recently wrote about "
-              (link ::search-for-meaning/anchor
-                    [:span "the pursuit of " [:em "meaning"]])
-              " on civitas."
+              [:a {:href "/civitas/why/village/scene.html"} [:span "the pursuit of " [:em "meaning"]]]
+              " on Civitas."
               " Before that; I argued that "
-              (link ::growing-explanations-together/anchor
-                    "Civitas is a great place to grow explanations together")
-              "."
-              ])
+              [:a {:href "/civitas/why/growing_explanations_together.html"} "Civitas is a great place to grow explanations together"]
+              "."])
 
 ;; These two messages are connected.
 ;; Today, I explore how.
