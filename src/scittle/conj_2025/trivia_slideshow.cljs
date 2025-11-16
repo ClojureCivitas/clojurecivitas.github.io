@@ -743,6 +743,12 @@
         flex-wrap: wrap;
         min-height: 400px;
       }
+      .trivia-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        overflow: hidden;
+      }
       .trivia-image {
         flex: 1;
         display: flex;
@@ -766,6 +772,82 @@
         padding: 20px;
         max-width: 600px;
         min-width: 300px;
+      }
+      .trivia-question-text {
+        margin-bottom: 20px;
+        font-size: 24px;
+        color: #333;
+      }
+      .trivia-instruction {
+        margin-bottom: 20px;
+        color: #666;
+        font-size: 14px;
+        font-style: italic;
+      }
+      .trivia-slide-info {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+      }
+      .trivia-score-info {
+        margin: 5px 0 0 0;
+        font-size: 14px;
+        color: #666;
+      }
+      
+      /* Dark mode */
+      @media (prefers-color-scheme: dark) {
+        .trivia-container {
+          background: #1a1a1a;
+        }
+        .trivia-card {
+          background: #2d2d2d;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+        .trivia-image img {
+          box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .trivia-question-text {
+          color: #e0e0e0;
+        }
+        .trivia-instruction {
+          color: #b0b0b0;
+        }
+        .trivia-slide-info {
+          color: #e0e0e0;
+        }
+        .trivia-score-info {
+          color: #b0b0b0;
+        }
+        .trivia-option-button {
+          background: #3d3d3d !important;
+          color: #e0e0e0 !important;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+        }
+        .trivia-option-button:disabled {
+          background: #3d3d3d !important;
+        }
+        .trivia-option-button.correct {
+          background: #4caf50 !important;
+          color: white !important;
+          box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4) !important;
+        }
+        .trivia-option-button.incorrect {
+          background: #f44336 !important;
+          color: white !important;
+          box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4) !important;
+        }
+        .trivia-option-button.correct-answer {
+          background: #81c784 !important;
+          color: white !important;
+        }
+        .game-title {
+          color: #66bb6a !important;
+        }
+        .game-subtitle {
+          color: #b0b0b0 !important;
+        }
       }
       
       /* Mobile styles */
@@ -791,7 +873,7 @@
           max-width: none;
           min-width: unset;
         }
-        .trivia-questions h3 {
+        .trivia-question-text {
           font-size: 20px !important;
         }
         .trivia-option-button {
@@ -821,7 +903,7 @@
         .trivia-image img {
           max-height: 200px;
         }
-        .trivia-questions h3 {
+        .trivia-question-text {
           font-size: 18px !important;
         }
         .trivia-option-button {
@@ -856,10 +938,7 @@
                        :font-size "16px"}}
            "Two Lies and a Truth Edition"]]
 
-         [:div {:style {:background "white"
-                        :border-radius "16px"
-                        :box-shadow "0 4px 16px rgba(0,0,0,0.1)"
-                        :overflow "hidden"}}
+         [:div {:class "trivia-card"}
           [:div {:class "trivia-content"}
            ;; Image section
            [:div {:class "trivia-image"}
@@ -872,16 +951,11 @@
                   {:keys [show-result current-slide answers]} @game-state
                   selected-answer (get-answer-for-slide current-slide)]
               [:<>
-               [:h3 {:style {:margin-bottom "20px"
-                             :font-size "24px"
-                             :color "#333"}}
+               [:h3 {:class "trivia-question-text"}
                 question]
 
                (when-not show-result
-                 [:p {:style {:margin-bottom "20px"
-                              :color "#666"
-                              :font-size "14px"
-                              :font-style "italic"}}
+                 [:p {:class "trivia-instruction"}
                   "Two statements are lies, one is the truth. Pick the truth!"])
 
                [:div {:style {:margin-bottom "20px"}}
@@ -889,6 +963,10 @@
                   ^{:key idx}
                   (let [is-correct? (= idx correct-index)
                         is-selected? (= selected-answer idx)
+                        button-class (str "trivia-option-button"
+                                          (when (and show-result is-selected? is-correct?) " correct")
+                                          (when (and show-result is-selected? (not is-correct?)) " incorrect")
+                                          (when (and show-result is-correct? (not is-selected?)) " correct-answer"))
                         button-color (cond
                                        (and show-result is-selected? is-correct?) "#4caf50"
                                        (and show-result is-selected? (not is-correct?)) "#f44336"
@@ -897,7 +975,7 @@
                         text-color (if (and show-result (or is-selected? is-correct?))
                                      "white"
                                      "#333")]
-                    [:button {:class "trivia-option-button"
+                    [:button {:class button-class
                               :on-click (when-not show-result
                                           #(handle-answer idx))
                               :disabled show-result
@@ -947,14 +1025,9 @@
              ;; Slide info on top
              [:div {:style {:text-align "center"
                             :margin-bottom "15px"}}
-              [:p {:style {:margin "0"
-                           :font-size "18px"
-                           :font-weight "600"
-                           :color "#333"}}
+              [:p {:class "trivia-slide-info"}
                (str "Slide " (inc current-slide) " of " (total-slides))]
-              [:p {:style {:margin "5px 0 0 0"
-                           :font-size "14px"
-                           :color "#666"}}
+              [:p {:class "trivia-score-info"}
                (str "Score: " (:score @game-state) "/" (total-slides))]]
 
              ;; Buttons below
