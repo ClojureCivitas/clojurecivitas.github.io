@@ -59,10 +59,10 @@
 ;; These two messages are connected.
 ;; Today, I explore how.
 ;;
-;; What is whorthwile to explain? Anything? No.
+;; What is worthwhile to explain? Anything? No.
 ;;
 ;; I can explain the number of grains of sand on a beach.
-;; That explanation is *not interesting* compared to what I *could* be explaning.
+;; That explanation is *not interesting* compared to what I *could* be explaining.
 ;; I would rather explain how numbers with units help you gain clarity.
 ;; How you can use a drop of science to spice up your world of software development.
 ;; How a sliver of programming can help you move the world as a designer.
@@ -71,7 +71,7 @@
 ;; I feel zero need to add more mess, chaos, advertisement and coercion into an already confusing and coercive world.
 ;; Why am I bombarded with messaging to change my behavior every place I see?
 ;; Why does this happen even when I use services I pay for?
-;; I dispise this trend.
+;; I despise this trend.
 ;;
 ;; So what?
 ;; Then what?
