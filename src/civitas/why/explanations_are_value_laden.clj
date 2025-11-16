@@ -3,20 +3,19 @@
 (ns civitas.why.explanations-are-value-laden
   (:require [scicloj.kindly.v4.kind :as kind]))
 
-;; This post previously included a light system for linking between documents.
-;; However, that system unfortunately crashed the build process!
-;; So I had to remove it.
-;; See the PR for the removed code: https://github.com/ClojureCivitas/clojurecivitas.github.io/pull/185
-
-;; # Explanations are value laden
+^:kindly/hide-code
+(comment
+  ;; This post previously included a light system for linking between documents.
+  ;; However, that system unfortunately crashed the build process!
+  ;; So I had to remove it.
+  ;; See the PR for the removed code: https://github.com/ClojureCivitas/clojurecivitas.github.io/pull/185
+  )
 
 ^:kindly/hide-code
-(kind/hiccup [:p "Timothy Pratley recently wrote about "
-              [:a {:href "/civitas/why/village/scene.html"} [:span "the pursuit of " [:em "meaning"]]]
-              " on Civitas."
-              " Before that; I argued that "
-              [:a {:href "/civitas/why/growing_explanations_together.html"} "Civitas is a great place to grow explanations together"]
-              "."])
+(kind/hiccup
+ [:p "Timothy Pratley recently wrote about " [:a {:href "/civitas/why/village/scene.html"} "the pursuit of meaning on Civitas."]
+  " Before that; I argued that "
+  [:a {:href "/civitas/why/growing_explanations_together.html"} "Civitas is a great place to grow explanations together"] "."])
 
 ;; These two messages are connected.
 ;; Today, I explore how.
@@ -25,7 +24,7 @@
 ;;
 ;; I can explain the number of grains of sand on a beach.
 ;; That explanation is *not interesting* compared to what I *could* be explaining.
-;; I would rather explain how numbers with units help you gain clarity.
+;; I would rather explain how numbers with units of measure helps you write clearer code.
 ;; How you can use a drop of science to spice up your world of software development.
 ;; How a sliver of programming can help you move the world as a designer.
 ;;
