@@ -154,7 +154,6 @@ block
 ;; ## Libraries We're Using
 ;;
 ;; - **[Kindly](https://scicloj.github.io/kindly-noted/kindly)** - Visualization protocol that renders our data as interactive HTML elements (through Clay)
-;; - **[Kindly](https://scicloj.github.io/kindly-noted/kindly)** - Visualization protocol that renders our data as interactive HTML elements (through Clay)
 ;; - **[dtype-next](https://github.com/cnuernber/dtype-next)** - Efficient numerical arrays and vectorized operations (like NumPy for Clojure)
 ;; - **[Tablecloth](https://scicloj.github.io/tablecloth/)** - DataFrame library for data manipulation and transformation
 ;; - **[Tableplot](https://scicloj.github.io/tableplot/)** - Declarative plotting library built on Plotly
