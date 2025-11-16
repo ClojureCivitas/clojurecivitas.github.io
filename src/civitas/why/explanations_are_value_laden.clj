@@ -1,8 +1,8 @@
 ^{:kindly/hide-code true
   :clay {:title "Explanations are value laden" :quarto {:author :com.github/teodorlu :type :post :date "2025-11-15"}}}
 (ns civitas.why.explanations-are-value-laden
-  (:require [civitas.why.growing-explanations-together :as-alias growing-explanations-together]
-            [civitas.why.village.scene :as-alias search-for-meaning]
+  (:require [civitas.why.growing-explanations-together :as growing-explanations-together]
+            [civitas.why.village.scene :as search-for-meaning]
             [clojure.string :as str]
             [scicloj.kindly.v4.kind :as kind]))
 
