@@ -1,0 +1,723 @@
+(ns scittle.conj-2025.trivia-slideshow
+  (:require [reagent.core :as r]
+            [reagent.dom :as rdom]))
+
+;; ============================================================================
+;; Utility Functions
+;; ============================================================================
+
+(defn merge-styles
+  "Safely merges multiple style maps"
+  [& styles]
+  (apply merge (filter map? styles)))
+
+;; ============================================================================
+;; Trivia Data
+;; ============================================================================
+
+(def trivia-slides
+  "Collection of trivia questions with images from Clojure Conj 2025"
+  [{:image "/scittle/conj_2025/media/conj-2025_0735.png"
+    :question "About this conference venue..."
+    :options ["The conference was held in a converted warehouse in Austin"
+              "The conference was held in Charlotte, North Carolina"
+              "The conference was held at a beach resort in Miami"]
+    :correct-index 1
+    :explanation "Clojure Conj 2025 took place in Charlotte, North Carolina"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0739.png"
+    :question "About the conference badge..."
+    :options ["Badges were written in Clojure code"
+              "Attendees received personalized name badges"
+              "Everyone had to wear anonymous number badges"]
+    :correct-index 1
+    :explanation "Personal name badges help foster connections and community!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0740.png"
+    :question "About conference registration..."
+    :options ["Registration happened only on the first day morning"
+              "You could register online before the event"
+              "Registration required solving a Clojure coding challenge"]
+    :correct-index 1
+    :explanation "Online registration makes attending conferences convenient!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0747.png"
+    :question "About the attendees..."
+    :options ["Over 1,000 developers attended the conference"
+              "Attendees came from over 20 different countries"
+              "Every attendee received a free MacBook Pro"]
+    :correct-index 1
+    :explanation "Clojure Conj attracts a diverse international crowd!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0749.png"
+    :question "About the conference schedule..."
+    :options ["The schedule was revealed only on the day of the conference"
+              "The schedule was published in advance online"
+              "Every session started at random times"]
+    :correct-index 1
+    :explanation "Having the schedule in advance helps attendees plan!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0750.png"
+    :question "About the venue facilities..."
+    :options ["The venue had multiple rooms for concurrent sessions"
+              "All sessions happened in a single giant auditorium"
+              "Sessions were held outdoors in a park"]
+    :correct-index 0
+    :explanation "Multiple tracks allow attendees to choose sessions!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0751.png"
+    :question "About session recordings..."
+    :options ["All sessions were recorded for later viewing"
+              "Photography and recording were strictly forbidden"
+              "Only keynotes were recorded"]
+    :correct-index 0
+    :explanation "Session recordings help spread knowledge!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0753.png"
+    :question "About coffee breaks..."
+    :options ["Coffee and refreshments were available throughout the day"
+              "Attendees had to leave the venue for coffee"
+              "Only water was provided"]
+    :correct-index 0
+    :explanation "Coffee breaks are essential for networking!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0756.png"
+    :question "About speaker diversity..."
+    :options ["Only men were allowed to speak"
+              "The conference welcomed speakers of all backgrounds"
+              "Speakers had to be certified Clojure experts"]
+    :correct-index 1
+    :explanation "Diverse perspectives make conferences richer!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0758.png"
+    :question "About technical level..."
+    :options ["Sessions ranged from beginner to advanced topics"
+              "All sessions were only for expert developers"
+              "Content was exclusively for complete beginners"]
+    :correct-index 0
+    :explanation "A mix of difficulty levels ensures everyone learns!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0759.png"
+    :question "About audience interaction..."
+    :options ["Audience members were encouraged to engage and ask questions"
+              "Silence was mandatory during all sessions"
+              "Interaction was only allowed via written notes"]
+    :correct-index 0
+    :explanation "Active participation enhances learning for everyone!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0760.png"
+    :question "About networking opportunities..."
+    :options ["Attendees communicated only through REPL sessions"
+              "There were dedicated networking breaks and social events"
+              "Networking was forbidden by conference rules"]
+    :correct-index 1
+    :explanation "Clojure Conj provides great networking opportunities!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0761.png"
+    :question "About the code of conduct..."
+    :options ["There was no code of conduct"
+              "The conference had a code of conduct to ensure a welcoming environment"
+              "The code of conduct was written entirely in Clojure"]
+    :correct-index 1
+    :explanation "A code of conduct helps create a safe environment!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0762.png"
+    :question "About session length..."
+    :options ["All sessions were exactly 3 hours long"
+              "Sessions varied in length (talks, workshops, etc.)"
+              "Every session was limited to 5 minutes"]
+    :correct-index 1
+    :explanation "Different formats accommodate different content types!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0764.png"
+    :question "About hands-on learning..."
+    :options ["The conference included interactive workshops"
+              "All learning was purely theoretical"
+              "Laptops were banned from the venue"]
+    :correct-index 0
+    :explanation "Hands-on workshops provide practical experience!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0766.png"
+    :question "About conference presentations..."
+    :options ["All presentations used only live coding, no slides"
+              "Speakers used slides, demos, and various presentation formats"
+              "Presentations were delivered via interpretive dance"]
+    :correct-index 1
+    :explanation "Speakers use diverse presentation styles!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0769.png"
+    :question "About the keynote speakers..."
+    :options ["There were no keynote presentations"
+              "Featured keynote speakers kicked off each day"
+              "Keynotes were only for sponsors"]
+    :correct-index 1
+    :explanation "Keynote speakers deliver inspiring talks!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0774.png"
+    :question "About conference sponsors..."
+    :options ["Sponsors help make the conference possible"
+              "The conference had zero sponsors"
+              "Sponsors were not acknowledged in any way"]
+    :correct-index 0
+    :explanation "Sponsors provide crucial support!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0782.png"
+    :question "About conference accessibility..."
+    :options ["The venue was chosen with accessibility in mind"
+              "Accessibility was not considered"
+              "Only the parking lot was accessible"]
+    :correct-index 0
+    :explanation "Ensuring accessibility is an important priority!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0783.png"
+    :question "About note-taking..."
+    :options ["Attendees were free to take notes on laptops or paper"
+              "Note-taking was forbidden for security reasons"
+              "Notes could only be taken in Clojure code"]
+    :correct-index 0
+    :explanation "Taking notes helps attendees retain knowledge!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0784.png"
+    :question "About the expo hall..."
+    :options ["Companies showcased their products and services"
+              "There was no expo or vendor area"
+              "The expo only sold conference merchandise"]
+    :correct-index 0
+    :explanation "Expo halls provide opportunities to learn about tools!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0787.png"
+    :question "About panel discussions..."
+    :options ["Panel discussions featured multiple experts discussing topics"
+              "Panels were banned from the conference"
+              "Only solo presentations were allowed"]
+    :correct-index 0
+    :explanation "Panel discussions offer diverse perspectives!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0793.png"
+    :question "About social events..."
+    :options ["Evening social events helped attendees connect informally"
+              "Socializing was discouraged after sessions"
+              "All social events were virtual only"]
+    :correct-index 0
+    :explanation "Social events are where great connections are made!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0794.png"
+    :question "About conference badges..."
+    :options ["Badges helped identify attendees, speakers, and organizers"
+              "Everyone wore identical unmarked badges"
+              "Badges were considered old-fashioned and not used"]
+    :correct-index 0
+    :explanation "Different badge types help identify roles!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0796.png"
+    :question "About live streaming..."
+    :options ["Some sessions may have been live streamed"
+              "Live streaming was prohibited"
+              "Every session was available only via live stream"]
+    :correct-index 0
+    :explanation "Live streaming extends reach to remote attendees!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0804.png"
+    :question "About session feedback..."
+    :options ["Attendees could provide feedback on sessions"
+              "Feedback was not collected"
+              "Feedback could only be negative"]
+    :correct-index 0
+    :explanation "Session feedback helps improve future conferences!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0805.png"
+    :question "About the speaker lineup..."
+    :options ["Only Rich Hickey was allowed to speak"
+              "The conference featured talks from community members and experts"
+              "All talks were pre-recorded videos from the 1990s"]
+    :correct-index 1
+    :explanation "Clojure Conj showcases diverse voices!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0810.png"
+    :question "About the conference duration..."
+    :options ["The conference lasted one full day"
+              "The conference spanned multiple days"
+              "The conference was exactly 24 hours non-stop"]
+    :correct-index 1
+    :explanation "Clojure Conj is a multi-day event!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0812.png"
+    :question "About the opening ceremony..."
+    :options ["The conference began with an opening ceremony and welcome"
+              "Sessions started immediately with no introduction"
+              "Opening ceremonies lasted 6 hours"]
+    :correct-index 0
+    :explanation "Opening ceremonies set the tone!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0815.png"
+    :question "About the closing ceremony..."
+    :options ["The conference ended with closing remarks and thanks"
+              "The conference just stopped with no conclusion"
+              "Closing ceremonies were mandatory 3-hour events"]
+    :correct-index 0
+    :explanation "Closing ceremonies celebrate achievements!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0819.png"
+    :question "About future conferences..."
+    :options ["Conference feedback helps shape future events"
+              "Future conferences are never discussed"
+              "Every conference is planned in complete isolation"]
+    :correct-index 0
+    :explanation "Community input makes each conference better!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0821.png"
+    :question "About the conference venue location..."
+    :options ["The venue was conveniently located with nearby hotels"
+              "The venue was on a remote island with no access"
+              "Location was kept secret until the day before"]
+    :correct-index 0
+    :explanation "Convenient locations make travel easier!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0822.png"
+    :question "About session timing..."
+    :options ["Sessions were timed to prevent running over schedule"
+              "Every session could last as long as the speaker wanted"
+              "All sessions ended randomly mid-sentence"]
+    :correct-index 0
+    :explanation "Keeping to schedule ensures attendees can plan their day!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0823.png"
+    :question "About conference size..."
+    :options ["The conference size balanced intimacy with diversity"
+              "Over 50,000 people attended"
+              "Only 3 people total attended"]
+    :correct-index 0
+    :explanation "Conference size affects the experience!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0824.png"
+    :question "About industry representation..."
+    :options ["Attendees came from various industries using Clojure"
+              "Only one specific industry was represented"
+              "Industry professionals were not welcome"]
+    :correct-index 0
+    :explanation "Seeing how Clojure is used across industries provides insights!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0826.png"
+    :question "About collaboration..."
+    :options ["The conference encouraged collaboration and knowledge sharing"
+              "Collaboration was strictly forbidden"
+              "Attendees competed in elimination rounds"]
+    :correct-index 0
+    :explanation "Collaboration is a core value!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0832.png"
+    :question "About inclusivity..."
+    :options ["The conference aimed to be inclusive and welcoming to all"
+              "Only certain people were allowed to attend"
+              "Inclusivity was not considered important"]
+    :correct-index 0
+    :explanation "An inclusive environment benefits everyone!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0834.png"
+    :question "About community building..."
+    :options ["The conference helped strengthen the Clojure community"
+              "Community building was discouraged"
+              "Everyone worked in isolation"]
+    :correct-index 0
+    :explanation "Conferences are essential for building communities!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0835.png"
+    :question "About live demos..."
+    :options ["Demos could only be pre-recorded videos"
+              "Speakers often included live coding and demonstrations"
+              "Demonstrations were not allowed for safety reasons"]
+    :correct-index 1
+    :explanation "Live coding and demos are thrilling!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0837.png"
+    :question "About technical difficulties..."
+    :options ["Backup plans existed for technical issues"
+              "Technical problems resulted in immediate cancellation"
+              "Technology never has problems"]
+    :correct-index 0
+    :explanation "Good planning includes backup plans!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0838.png"
+    :question "About international attendees..."
+    :options ["International attendees were welcomed from around the world"
+              "Only local residents could attend"
+              "International travel was prohibited"]
+    :correct-index 0
+    :explanation "International diversity enriches conferences!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0857.png"
+    :question "About Q&A sessions..."
+    :options ["Questions had to be submitted in writing 2 weeks in advance"
+              "Audience members could ask questions after presentations"
+              "Questions were forbidden to avoid controversy"]
+    :correct-index 1
+    :explanation "Q&A sessions allow deeper exploration!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0858.png"
+    :question "About conference energy..."
+    :options ["Conferences generate excitement and energy in the community"
+              "Low energy is the goal"
+              "Energy drinks were banned"]
+    :correct-index 0
+    :explanation "The energy at conferences is contagious!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0859.png"
+    :question "About post-conference connections..."
+    :options ["Many attendees stay connected after the conference"
+              "All connections end immediately when the conference ends"
+              "Staying in touch was against the rules"]
+    :correct-index 0
+    :explanation "Conferences spark lasting professional relationships!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_0860.png"
+    :question "About the conference community..."
+    :options ["Attendees compete against each other for prizes"
+              "The Clojure community is known for being welcoming and collaborative"
+              "Networking is discouraged to maintain focus"]
+    :correct-index 1
+    :explanation "The Clojure community is renowned for its friendly spirit!"}])
+
+;; ============================================================================
+;; Game State
+;; ============================================================================
+
+(def game-state
+  (r/atom {:current-slide 0
+           :answers []
+           :score 0
+           :game-complete? false
+           :show-result nil}))
+
+;; ============================================================================
+;; Game Logic
+;; ============================================================================
+
+(defn total-slides []
+  (count trivia-slides))
+
+(defn current-slide-data []
+  (nth trivia-slides (:current-slide @game-state)))
+
+(defn handle-answer
+  "Handles when user selects an answer"
+  [option-index]
+  (when (nil? (:show-result @game-state))
+    (let [{:keys [correct-index]} (current-slide-data)
+          is-correct? (= option-index correct-index)
+          current-idx (:current-slide @game-state)]
+      (swap! game-state update :answers
+             (fn [answers]
+               (let [padded (vec (concat answers (repeat (- (inc current-idx) (count answers)) nil)))]
+                 (assoc padded current-idx option-index))))
+      (when is-correct?
+        (swap! game-state update :score inc))
+      (swap! game-state assoc :show-result (if is-correct? :correct :incorrect)))))
+
+(defn next-slide
+  "Moves to next slide or completes game"
+  []
+  (let [next-idx (inc (:current-slide @game-state))]
+    (if (>= next-idx (total-slides))
+      (swap! game-state assoc :game-complete? true)
+      (swap! game-state assoc
+             :current-slide next-idx
+             :show-result nil))))
+
+(defn previous-slide
+  "Moves to previous slide"
+  []
+  (when (> (:current-slide @game-state) 0)
+    (swap! game-state assoc
+           :current-slide (dec (:current-slide @game-state))
+           :show-result nil)))
+
+(defn restart-game
+  "Restarts the trivia game"
+  []
+  (reset! game-state {:current-slide 0
+                      :answers []
+                      :score 0
+                      :game-complete? false
+                      :show-result nil}))
+
+(defn get-answer-for-slide
+  "Gets the user's answer for a specific slide"
+  [slide-idx]
+  (get (:answers @game-state) slide-idx))
+
+;; ============================================================================
+;; UI Components
+;; ============================================================================
+
+(defn image-display
+  "Displays the conference photo"
+  [image-path]
+  [:div {:style {:flex "1"
+                 :display "flex"
+                 :align-items "center"
+                 :justify-content "center"
+                 :padding "20px"}}
+   [:img {:src image-path
+          :alt "Conference photo"
+          :style {:max-width "100%"
+                  :max-height "500px"
+                  :border-radius "12px"
+                  :box-shadow "0 4px 12px rgba(0,0,0,0.15)"
+                  :object-fit "contain"
+                  :image-orientation "from-image"}}]])
+
+(defn option-button
+  "Renders a single answer option button"
+  [option-text index selected? correct-index show-result?]
+  (let [is-correct? (= index correct-index)
+        is-selected? (= selected? index)
+        button-color (cond
+                       (and show-result? is-selected? is-correct?) "#4caf50"
+                       (and show-result? is-selected? (not is-correct?)) "#f44336"
+                       (and show-result? is-correct?) "#81c784"
+                       :else "#e0e0e0")
+        text-color (if (and show-result? (or is-selected? is-correct?))
+                     "white"
+                     "#333")]
+    [:button {:on-click (when-not show-result?
+                          #(handle-answer index))
+              :disabled show-result?
+              :style {:padding "20px"
+                      :margin "10px 0"
+                      :width "100%"
+                      :background button-color
+                      :color text-color
+                      :border "none"
+                      :border-radius "8px"
+                      :cursor (if show-result? "default" "pointer")
+                      :font-size "16px"
+                      :font-weight (if (and show-result? is-correct?) "600" "400")
+                      :text-align "left"
+                      :transition "all 0.3s ease"
+                      :box-shadow (cond
+                                    (and show-result? is-correct?) "0 4px 12px rgba(76, 175, 80, 0.3)"
+                                    (and show-result? is-selected? (not is-correct?)) "0 4px 12px rgba(244, 67, 54, 0.3)"
+                                    :else "0 2px 4px rgba(0,0,0,0.1)")}}
+     option-text
+     (when (and show-result? is-correct?)
+       [:span {:style {:margin-left "10px"}} "✓"])
+     (when (and show-result? is-selected? (not is-correct?))
+       [:span {:style {:margin-left "10px"}} "✗"])]))
+
+(defn trivia-question-panel
+  "Displays the question and answer options"
+  []
+  (let [{:keys [question options correct-index explanation]} (current-slide-data)
+        {:keys [show-result current-slide answers]} @game-state
+        selected-answer (get-answer-for-slide current-slide)]
+    [:div {:style {:flex "1"
+                   :display "flex"
+                   :flex-direction "column"
+                   :padding "20px"
+                   :max-width "600px"}}
+     [:h3 {:style {:margin-bottom "20px"
+                   :font-size "24px"
+                   :color "#333"}}
+      question]
+
+     (when-not show-result
+       [:p {:style {:margin-bottom "20px"
+                    :color "#666"
+                    :font-size "14px"
+                    :font-style "italic"}}
+        "Two statements are lies, one is the truth. Pick the truth!"])
+
+     [:div {:style {:margin-bottom "20px"}}
+      (for [[idx option] (map-indexed vector options)]
+        ^{:key idx}
+        [option-button option idx selected-answer correct-index show-result])]
+
+     (when show-result
+       [:div {:style {:padding "15px"
+                      :background (if (= show-result :correct) "#e8f5e9" "#ffebee")
+                      :border-radius "8px"
+                      :margin-top "15px"}}
+        [:p {:style {:margin "0"
+                     :color (if (= show-result :correct) "#2e7d32" "#c62828")
+                     :font-weight "600"
+                     :margin-bottom "10px"}}
+         (if (= show-result :correct)
+           "🎉 Correct! You found the truth!"
+           "❌ Not quite...")]
+        [:p {:style {:margin "0"
+                     :color "#555"
+                     :font-size "14px"}}
+         explanation]])]))
+
+(defn navigation-controls
+  "Navigation buttons for the slideshow"
+  []
+  (let [{:keys [current-slide show-result]} @game-state]
+    [:div {:style {:display "flex"
+                   :justify-content "space-between"
+                   :align-items "center"
+                   :padding "20px"
+                   :gap "20px"}}
+     [:button {:on-click previous-slide
+               :disabled (= current-slide 0)
+               :style {:padding "12px 24px"
+                       :background (if (= current-slide 0) "#e0e0e0" "#2196f3")
+                       :color (if (= current-slide 0) "#999" "white")
+                       :border "none"
+                       :border-radius "6px"
+                       :cursor (if (= current-slide 0) "not-allowed" "pointer")
+                       :font-weight "600"
+                       :font-size "16px"}}
+      "← Previous"]
+
+     [:div {:style {:text-align "center"}}
+      [:p {:style {:margin "0"
+                   :font-size "18px"
+                   :font-weight "600"
+                   :color "#333"}}
+       (str "Slide " (inc current-slide) " of " (total-slides))]
+      [:p {:style {:margin "5px 0 0 0"
+                   :font-size "14px"
+                   :color "#666"}}
+       (str "Score: " (:score @game-state) "/" (total-slides))]]
+
+     [:button {:on-click next-slide
+               :disabled (nil? show-result)
+               :style {:padding "12px 24px"
+                       :background (if show-result "#2196f3" "#e0e0e0")
+                       :color (if show-result "white" "#999")
+                       :border "none"
+                       :border-radius "6px"
+                       :cursor (if show-result "pointer" "not-allowed")
+                       :font-weight "600"
+                       :font-size "16px"}}
+      (if (= current-slide (dec (total-slides)))
+        "Finish →"
+        "Next →")]]))
+
+(defn game-summary
+  "Final summary screen showing total score and review"
+  []
+  (let [{:keys [score answers]} @game-state
+        percentage (Math/round (* 100 (/ score (total-slides))))
+        grade (cond
+                (>= percentage 90) {:letter "A+" :color "#4caf50" :message "Outstanding! You really know your Clojure Conj!"}
+                (>= percentage 80) {:letter "A" :color "#66bb6a" :message "Excellent work! You paid attention!"}
+                (>= percentage 70) {:letter "B" :color "#ffa726" :message "Good job! Not bad at all!"}
+                (>= percentage 60) {:letter "C" :color "#ff9800" :message "Decent effort! Room for improvement!"}
+                :else {:letter "D" :color "#f44336" :message "Better luck next time!"})]
+    [:div {:style {:padding "40px"
+                   :max-width "800px"
+                   :margin "0 auto"
+                   :text-align "center"}}
+     [:h2 {:style {:color "#4caf50"
+                   :font-size "36px"
+                   :margin-bottom "10px"}}
+      "🎉 Epic Trivia Complete!"]
+
+     [:div {:style {:margin "30px auto"
+                    :width "200px"
+                    :height "200px"
+                    :border-radius "50%"
+                    :background (str "linear-gradient(135deg, " (:color grade) " 0%, " (:color grade) "dd 100%)")
+                    :display "flex"
+                    :flex-direction "column"
+                    :align-items "center"
+                    :justify-content "center"
+                    :box-shadow "0 8px 24px rgba(0,0,0,0.15)"}}
+      [:div {:style {:font-size "64px"
+                     :font-weight "700"
+                     :color "white"
+                     :margin-bottom "5px"}}
+       (:letter grade)]
+      [:div {:style {:font-size "24px"
+                     :font-weight "600"
+                     :color "white"}}
+       (str score "/" (total-slides))]]
+
+     [:p {:style {:font-size "20px"
+                  :color "#666"
+                  :margin-bottom "30px"
+                  :font-weight "500"}}
+      (:message grade)]
+
+     [:div {:style {:background "#f5f5f5"
+                    :padding "20px"
+                    :border-radius "12px"
+                    :margin-bottom "30px"}}
+      [:p {:style {:margin "0 0 10px 0"
+                   :font-size "18px"
+                   :color "#333"}}
+       (str "You got " score " out of " (total-slides) " questions correct")]
+      [:p {:style {:margin "0"
+                   :font-size "18px"
+                   :color "#333"
+                   :font-weight "600"}}
+       (str "That's " percentage "%!")]]
+
+     [:button {:on-click restart-game
+               :style {:padding "15px 40px"
+                       :background "#4caf50"
+                       :color "white"
+                       :border "none"
+                       :border-radius "8px"
+                       :cursor "pointer"
+                       :font-size "18px"
+                       :font-weight "600"
+                       :box-shadow "0 4px 12px rgba(76, 175, 80, 0.3)"
+                       :transition "all 0.2s ease"}
+               :on-mouse-enter #(set! (.. % -target -style -transform) "translateY(-2px)")
+               :on-mouse-leave #(set! (.. % -target -style -transform) "translateY(0)")}
+      "🔄 Play Again"]]))
+
+;; ============================================================================
+;; Main Component
+;; ============================================================================
+
+(defn trivia-game
+  "Main trivia game component"
+  []
+  (let [{:keys [game-complete?]} @game-state]
+    [:div {:style {:padding "20px"
+                   :max-width "1200px"
+                   :margin "0 auto"
+                   :font-family "system-ui, -apple-system, sans-serif"
+                   :background "#fafafa"
+                   :min-height "80vh"}}
+
+     (if game-complete?
+       [game-summary]
+       [:div
+        [:div {:style {:text-align "center"
+                       :margin-bottom "30px"}}
+         [:h1 {:style {:color "#4caf50"
+                       :font-size "32px"
+                       :margin-bottom "10px"}}
+          "🎯 Clojure Conj 2025 Epic Trivia"]
+         [:p {:style {:color "#666"
+                      :font-size "16px"}}
+          "Two Lies and a Truth Edition"]]
+
+        [:div {:style {:background "white"
+                       :border-radius "16px"
+                       :box-shadow "0 4px 16px rgba(0,0,0,0.1)"
+                       :overflow "hidden"}}
+         [:div {:style {:display "flex"
+                        :flex-wrap "wrap"
+                        :min-height "400px"}}
+          [image-display (:image (current-slide-data))]
+          [trivia-question-panel]]
+
+         [navigation-controls]]])]))
+
+;; ============================================================================
+;; App Initialization
+;; ============================================================================
+
+(defn ^:export init
+  "Initialize and mount the trivia game app"
+  []
+  (when-let [root (js/document.getElementById "trivia-app-root")]
+    (rdom/render [trivia-game] root)))
+
+(init)
