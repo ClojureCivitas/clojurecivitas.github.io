@@ -375,7 +375,56 @@
               "The Clojure community is known for being welcoming and collaborative"
               "Networking is discouraged to maintain focus"]
     :correct-index 1
-    :explanation "The Clojure community is renowned for its friendly spirit!"}])
+    :explanation "The Clojure community is renowned for its friendly spirit!"}
+
+   ;; New questions for additional photos
+   {:image "/scittle/conj_2025/media/conj-2025_9001.jpg"
+    :question "About hallway conversations..."
+    :options ["Hallway conversations are often where the best insights happen"
+              "Talking in hallways was prohibited to prevent noise"
+              "Hallways were reserved only for sponsors"]
+    :correct-index 0
+    :explanation "Some say the best content at conferences happens in hallway conversations!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_9002.png"
+    :question "About conference meals..."
+    :options ["All attendees had to bring their own food"
+              "Meals and snacks were provided for attendees"
+              "Food was only available to VIP ticket holders"]
+    :correct-index 1
+    :explanation "Providing meals helps attendees focus on learning and networking!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_9003.jpg"
+    :question "About speaker preparation..."
+    :options ["Speakers were given resources and support to prepare great talks"
+              "Speakers had to improvise everything on stage"
+              "Only slides created in Emacs were permitted"]
+    :correct-index 0
+    :explanation "Conference organizers help speakers deliver their best content!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_9004.jpg"
+    :question "About conference swag..."
+    :options ["Conference merchandise and swag helped build community spirit"
+              "Swag bags were illegal at this conference"
+              "Only speakers received any conference items"]
+    :correct-index 0
+    :explanation "Conference swag is a fun way to remember the event!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_9005.jpg"
+    :question "About conference photos..."
+    :options ["Attendees were encouraged to share photos and memories"
+              "All photography was banned for privacy reasons"
+              "Photos could only be taken in black and white"]
+    :correct-index 0
+    :explanation "Sharing photos helps spread the excitement and builds community!"}
+
+   {:image "/scittle/conj_2025/media/conj-2025_9006.jpg"
+    :question "About learning outcomes..."
+    :options ["Attendees leave with new knowledge, connections, and inspiration"
+              "The goal was to confuse everyone as much as possible"
+              "Learning was discouraged in favor of entertainment only"]
+    :correct-index 0
+    :explanation "Great conferences transform attendees through learning and connection!"}])
 
 ;; ============================================================================
 ;; Game State
@@ -678,37 +727,352 @@
   "Main trivia game component"
   []
   (let [{:keys [game-complete?]} @game-state]
-    [:div {:style {:padding "20px"
-                   :max-width "1200px"
-                   :margin "0 auto"
-                   :font-family "system-ui, -apple-system, sans-serif"
-                   :background "#fafafa"
-                   :min-height "80vh"}}
+    [:div
+     ;; Add responsive styles
+     [:style "
+      /* Base styles - only style our root container, not body */
+      #trivia-app-root {
+        margin: 0;
+        padding: 0;
+        background: #fafafa;
+        min-height: 100vh;
+      }
+      
+      .trivia-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: transparent;
+        min-height: 80vh;
+      }
+      .trivia-content {
+        display: flex;
+        flex-wrap: wrap;
+        min-height: 400px;
+      }
+      .trivia-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        overflow: hidden;
+      }
+      .trivia-image {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        min-width: 300px;
+      }
+      .trivia-image img {
+        max-width: 100%;
+        max-height: 500px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        object-fit: contain;
+        image-orientation: from-image;
+      }
+      .trivia-questions {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        max-width: 600px;
+        min-width: 300px;
+      }
+      .trivia-question-text {
+        margin-bottom: 20px;
+        font-size: 24px;
+        color: #333;
+      }
+      .trivia-instruction {
+        margin-bottom: 20px;
+        color: #666;
+        font-size: 14px;
+        font-style: italic;
+      }
+      .trivia-slide-info {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+      }
+      .trivia-score-info {
+        margin: 5px 0 0 0;
+        font-size: 14px;
+        color: #666;
+      }
+      
+      /* Dark mode */
+      @media (prefers-color-scheme: dark) {
+        #trivia-app-root {
+          background: #0d0d0d;
+        }
+        
+        .trivia-container {
+          background: transparent;
+        }
+        .trivia-card {
+          background: #2d2d2d;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+        .trivia-image img {
+          box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .trivia-question-text {
+          color: #e0e0e0;
+        }
+        .trivia-instruction {
+          color: #b0b0b0;
+        }
+        .trivia-slide-info {
+          color: #e0e0e0;
+        }
+        .trivia-score-info {
+          color: #b0b0b0;
+        }
+        .trivia-option-button {
+          background: #3d3d3d !important;
+          color: #e0e0e0 !important;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+        }
+        .trivia-option-button:disabled {
+          background: #3d3d3d !important;
+        }
+        .trivia-option-button.correct {
+          background: #4caf50 !important;
+          color: white !important;
+          box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4) !important;
+        }
+        .trivia-option-button.incorrect {
+          background: #f44336 !important;
+          color: white !important;
+          box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4) !important;
+        }
+        .trivia-option-button.correct-answer {
+          background: #81c784 !important;
+          color: white !important;
+        }
+        .game-title {
+          color: #66bb6a !important;
+        }
+        .game-subtitle {
+          color: #b0b0b0 !important;
+        }
+      }
+      
+      /* Mobile styles */
+      @media (max-width: 768px) {
+        .trivia-container {
+          padding: 10px;
+        }
+        .trivia-content {
+          flex-direction: column;
+          min-height: auto;
+        }
+        .trivia-image {
+          width: 100%;
+          padding: 10px;
+          min-width: unset;
+        }
+        .trivia-image img {
+          max-height: 300px;
+        }
+        .trivia-questions {
+          width: 100%;
+          padding: 10px;
+          max-width: none;
+          min-width: unset;
+        }
+        .trivia-question-text {
+          font-size: 20px !important;
+        }
+        .trivia-option-button {
+          padding: 15px !important;
+          font-size: 14px !important;
+        }
+        .trivia-nav {
+          padding: 15px !important;
+        }
+        .trivia-nav button {
+          padding: 12px 20px !important;
+          font-size: 15px !important;
+        }
+        .game-title {
+          font-size: 24px !important;
+        }
+        .game-subtitle {
+          font-size: 14px !important;
+        }
+      }
+      
+      /* Very small mobile */
+      @media (max-width: 480px) {
+        .trivia-container {
+          padding: 5px;
+        }
+        .trivia-image img {
+          max-height: 200px;
+        }
+        .trivia-question-text {
+          font-size: 18px !important;
+        }
+        .trivia-option-button {
+          padding: 12px !important;
+          font-size: 13px !important;
+        }
+        .trivia-nav {
+          padding: 10px !important;
+        }
+        .trivia-nav button {
+          padding: 10px 16px !important;
+          font-size: 14px !important;
+        }
+        .game-title {
+          font-size: 20px !important;
+        }
+      }"]
 
-     (if game-complete?
-       [game-summary]
-       [:div
-        [:div {:style {:text-align "center"
-                       :margin-bottom "30px"}}
-         [:h1 {:style {:color "#4caf50"
-                       :font-size "32px"
-                       :margin-bottom "10px"}}
-          "🎯 Clojure Conj 2025 Epic Trivia"]
-         [:p {:style {:color "#666"
-                      :font-size "16px"}}
-          "Two Lies and a Truth Edition"]]
+     [:div {:class "trivia-container"}
+      (if game-complete?
+        [game-summary]
+        [:div
+         [:div {:style {:text-align "center"
+                        :margin-bottom "30px"}}
+          [:h1 {:class "game-title"
+                :style {:color "#4caf50"
+                        :font-size "32px"
+                        :margin-bottom "10px"}}
+           "🎯 Clojure Conj 2025 Epic Trivia"]
+          [:p {:class "game-subtitle"
+               :style {:color "#666"
+                       :font-size "16px"}}
+           "Two Lies and a Truth Edition"]]
 
-        [:div {:style {:background "white"
-                       :border-radius "16px"
-                       :box-shadow "0 4px 16px rgba(0,0,0,0.1)"
-                       :overflow "hidden"}}
-         [:div {:style {:display "flex"
-                        :flex-wrap "wrap"
-                        :min-height "400px"}}
-          [image-display (:image (current-slide-data))]
-          [trivia-question-panel]]
+         [:div {:class "trivia-card"}
+          [:div {:class "trivia-content"}
+           ;; Image section
+           [:div {:class "trivia-image"}
+            [:img {:src (:image (current-slide-data))
+                   :alt "Conference photo"}]]
 
-         [navigation-controls]]])]))
+           ;; Questions section  
+           [:div {:class "trivia-questions"}
+            (let [{:keys [question options correct-index explanation]} (current-slide-data)
+                  {:keys [show-result current-slide answers]} @game-state
+                  selected-answer (get-answer-for-slide current-slide)]
+              [:<>
+               [:h3 {:class "trivia-question-text"}
+                question]
+
+               (when-not show-result
+                 [:p {:class "trivia-instruction"}
+                  "Two statements are lies, one is the truth. Pick the truth!"])
+
+               [:div {:style {:margin-bottom "20px"}}
+                (for [[idx option] (map-indexed vector options)]
+                  ^{:key idx}
+                  (let [is-correct? (= idx correct-index)
+                        is-selected? (= selected-answer idx)
+                        button-class (str "trivia-option-button"
+                                          (when (and show-result is-selected? is-correct?) " correct")
+                                          (when (and show-result is-selected? (not is-correct?)) " incorrect")
+                                          (when (and show-result is-correct? (not is-selected?)) " correct-answer"))
+                        button-color (cond
+                                       (and show-result is-selected? is-correct?) "#4caf50"
+                                       (and show-result is-selected? (not is-correct?)) "#f44336"
+                                       (and show-result is-correct?) "#81c784"
+                                       :else "#e0e0e0")
+                        text-color (if (and show-result (or is-selected? is-correct?))
+                                     "white"
+                                     "#333")]
+                    [:button {:class button-class
+                              :on-click (when-not show-result
+                                          #(handle-answer idx))
+                              :disabled show-result
+                              :style {:padding "20px"
+                                      :margin "10px 0"
+                                      :width "100%"
+                                      :background button-color
+                                      :color text-color
+                                      :border "none"
+                                      :border-radius "8px"
+                                      :cursor (if show-result "default" "pointer")
+                                      :font-size "16px"
+                                      :font-weight (if (and show-result is-correct?) "600" "400")
+                                      :text-align "left"
+                                      :transition "all 0.3s ease"
+                                      :box-shadow (cond
+                                                    (and show-result is-correct?) "0 4px 12px rgba(76, 175, 80, 0.3)"
+                                                    (and show-result is-selected? (not is-correct?)) "0 4px 12px rgba(244, 67, 54, 0.3)"
+                                                    :else "0 2px 4px rgba(0,0,0,0.1)")}}
+                     option
+                     (when (and show-result is-correct?)
+                       [:span {:style {:margin-left "10px"}} "✓"])
+                     (when (and show-result is-selected? (not is-correct?))
+                       [:span {:style {:margin-left "10px"}} "✗"])]))]
+
+               (when show-result
+                 [:div {:style {:padding "15px"
+                                :background (if (= show-result :correct) "#e8f5e9" "#ffebee")
+                                :border-radius "8px"
+                                :margin-top "15px"}}
+                  [:p {:style {:margin "0"
+                               :color (if (= show-result :correct) "#2e7d32" "#c62828")
+                               :font-weight "600"
+                               :margin-bottom "10px"}}
+                   (if (= show-result :correct)
+                     "🎉 Correct! You found the truth!"
+                     "❌ Not quite...")]
+                  [:p {:style {:margin "0"
+                               :color "#555"
+                               :font-size "14px"}}
+                   explanation]])])]]
+
+;; Navigation
+          (let [{:keys [current-slide show-result]} @game-state]
+            [:div {:class "trivia-nav"
+                   :style {:padding "20px"}}
+             ;; Slide info on top
+             [:div {:style {:text-align "center"
+                            :margin-bottom "15px"}}
+              [:p {:class "trivia-slide-info"}
+               (str "Slide " (inc current-slide) " of " (total-slides))]
+              [:p {:class "trivia-score-info"}
+               (str "Score: " (:score @game-state) "/" (total-slides))]]
+
+             ;; Buttons below
+             [:div {:style {:display "flex"
+                            :justify-content "space-between"
+                            :gap "15px"}}
+              [:button {:on-click previous-slide
+                        :disabled (= current-slide 0)
+                        :style {:padding "12px 24px"
+                                :background (if (= current-slide 0) "#e0e0e0" "#2196f3")
+                                :color (if (= current-slide 0) "#999" "white")
+                                :border "none"
+                                :border-radius "6px"
+                                :cursor (if (= current-slide 0) "not-allowed" "pointer")
+                                :font-weight "600"
+                                :font-size "16px"
+                                :flex "1"}}
+               "← Previous"]
+
+              [:button {:on-click next-slide
+                        :disabled (nil? show-result)
+                        :style {:padding "12px 24px"
+                                :background (if show-result "#2196f3" "#e0e0e0")
+                                :color (if show-result "white" "#999")
+                                :border "none"
+                                :border-radius "6px"
+                                :cursor (if show-result "pointer" "not-allowed")
+                                :font-weight "600"
+                                :font-size "16px"
+                                :flex "1"}}
+               (if (= current-slide (dec (total-slides)))
+                 "Finish →"
+                 "Next →")]]])]])]]))
 
 ;; ============================================================================
 ;; App Initialization
