@@ -431,7 +431,8 @@
 ;; ============================================================================
 
 (def game-state
-  (r/atom {:current-slide 0
+  (r/atom {:mode nil ; :game or :slideshow - starts with mode selection
+           :current-slide 0
            :answers []
            :score 0
            :game-complete? false
@@ -483,7 +484,28 @@
 (defn restart-game
   "Restarts the trivia game"
   []
-  (reset! game-state {:current-slide 0
+  (reset! game-state {:mode :game
+                      :current-slide 0
+                      :answers []
+                      :score 0
+                      :game-complete? false
+                      :show-result nil}))
+
+(defn start-slideshow
+  "Starts slideshow mode"
+  []
+  (reset! game-state {:mode :slideshow
+                      :current-slide 0
+                      :answers []
+                      :score 0
+                      :game-complete? false
+                      :show-result nil}))
+
+(defn back-to-menu
+  "Returns to mode selection menu"
+  []
+  (reset! game-state {:mode nil
+                      :current-slide 0
                       :answers []
                       :score 0
                       :game-complete? false
@@ -514,6 +536,117 @@
                   :box-shadow "0 4px 12px rgba(0,0,0,0.15)"
                   :object-fit "contain"
                   :image-orientation "from-image"}}]])
+
+(defn mode-selection
+  "Mode selection screen - choose between game or slideshow"
+  []
+  [:div {:style {:padding "40px"
+                 :max-width "800px"
+                 :margin "0 auto"
+                 :text-align "center"}}
+   [:h1 {:style {:color "#4caf50"
+                 :font-size "42px"
+                 :margin-bottom "20px"}}
+    "🎯 Clojure Conj 2025"]
+
+   [:p {:style {:font-size "18px"
+                :color "#666"
+                :margin-bottom "40px"
+                :line-height "1.6"}}
+    "Choose how you'd like to explore the conference photos and memories"]
+
+   [:div {:style {:display "flex"
+                  :gap "20px"
+                  :flex-wrap "wrap"
+                  :justify-content "center"
+                  :margin-top "30px"}}
+    ;; Game Mode Card
+    [:div {:style {:flex "1"
+                   :min-width "280px"
+                   :max-width "350px"
+                   :background "white"
+                   :border-radius "16px"
+                   :padding "30px"
+                   :box-shadow "0 4px 16px rgba(0,0,0,0.1)"
+                   :transition "transform 0.2s ease, box-shadow 0.2s ease"
+                   :cursor "pointer"}
+           :on-mouse-enter #(do
+                              (set! (.. % -target -style -transform) "translateY(-4px)")
+                              (set! (.. % -target -style -boxShadow) "0 8px 24px rgba(76, 175, 80, 0.2)"))
+           :on-mouse-leave #(do
+                              (set! (.. % -target -style -transform) "translateY(0)")
+                              (set! (.. % -target -style -boxShadow) "0 4px 16px rgba(0,0,0,0.1)"))
+           :on-click restart-game}
+     [:div {:style {:font-size "64px"
+                    :margin-bottom "15px"}}
+      "🎮"]
+     [:h2 {:style {:color "#333"
+                   :font-size "24px"
+                   :margin-bottom "15px"}}
+      "Game Mode"]
+     [:p {:style {:color "#666"
+                  :font-size "15px"
+                  :line-height "1.6"
+                  :margin-bottom "20px"}}
+      "Test your knowledge with our interactive trivia game! Two lies and a truth - can you spot the truth?"]
+     [:button {:style {:padding "12px 24px"
+                       :background "#4caf50"
+                       :color "white"
+                       :border "none"
+                       :border-radius "8px"
+                       :font-size "16px"
+                       :font-weight "600"
+                       :cursor "pointer"
+                       :width "100%"
+                       :box-shadow "0 2px 8px rgba(76, 175, 80, 0.3)"
+                       :transition "all 0.2s ease"}
+               :on-mouse-enter #(set! (.. % -target -style -background) "#45a049")
+               :on-mouse-leave #(set! (.. % -target -style -background) "#4caf50")}
+      "Start Game"]]
+
+    ;; Slideshow Mode Card
+    [:div {:style {:flex "1"
+                   :min-width "280px"
+                   :max-width "350px"
+                   :background "white"
+                   :border-radius "16px"
+                   :padding "30px"
+                   :box-shadow "0 4px 16px rgba(0,0,0,0.1)"
+                   :transition "transform 0.2s ease, box-shadow 0.2s ease"
+                   :cursor "pointer"}
+           :on-mouse-enter #(do
+                              (set! (.. % -target -style -transform) "translateY(-4px)")
+                              (set! (.. % -target -style -boxShadow) "0 8px 24px rgba(33, 150, 243, 0.2)"))
+           :on-mouse-leave #(do
+                              (set! (.. % -target -style -transform) "translateY(0)")
+                              (set! (.. % -target -style -boxShadow) "0 4px 16px rgba(0,0,0,0.1)"))
+           :on-click start-slideshow}
+     [:div {:style {:font-size "64px"
+                    :margin-bottom "15px"}}
+      "🖼️"]
+     [:h2 {:style {:color "#333"
+                   :font-size "24px"
+                   :margin-bottom "15px"}}
+      "Slideshow Mode"]
+     [:p {:style {:color "#666"
+                  :font-size "15px"
+                  :line-height "1.6"
+                  :margin-bottom "20px"}}
+      "Relax and enjoy the conference photos with descriptions. Browse at your own pace."]
+     [:button {:style {:padding "12px 24px"
+                       :background "#2196f3"
+                       :color "white"
+                       :border "none"
+                       :border-radius "8px"
+                       :font-size "16px"
+                       :font-weight "600"
+                       :cursor "pointer"
+                       :width "100%"
+                       :box-shadow "0 2px 8px rgba(33, 150, 243, 0.3)"
+                       :transition "all 0.2s ease"}
+               :on-mouse-enter #(set! (.. % -target -style -background) "#1976d2")
+               :on-mouse-leave #(set! (.. % -target -style -background) "#2196f3")}
+      "Start Slideshow"]]]])
 
 (defn option-button
   "Renders a single answer option button"
@@ -704,20 +837,216 @@
                    :font-weight "600"}}
        (str "That's " percentage "%!")]]
 
-     [:button {:on-click restart-game
-               :style {:padding "15px 40px"
-                       :background "#4caf50"
-                       :color "white"
-                       :border "none"
-                       :border-radius "8px"
-                       :cursor "pointer"
-                       :font-size "18px"
-                       :font-weight "600"
-                       :box-shadow "0 4px 12px rgba(76, 175, 80, 0.3)"
-                       :transition "all 0.2s ease"}
-               :on-mouse-enter #(set! (.. % -target -style -transform) "translateY(-2px)")
-               :on-mouse-leave #(set! (.. % -target -style -transform) "translateY(0)")}
-      "🔄 Play Again"]]))
+     [:div {:style {:display "flex"
+                    :gap "15px"
+                    :justify-content "center"
+                    :flex-wrap "wrap"}}
+      [:button {:on-click restart-game
+                :style {:padding "15px 40px"
+                        :background "#4caf50"
+                        :color "white"
+                        :border "none"
+                        :border-radius "8px"
+                        :cursor "pointer"
+                        :font-size "18px"
+                        :font-weight "600"
+                        :box-shadow "0 4px 12px rgba(76, 175, 80, 0.3)"
+                        :transition "all 0.2s ease"}
+                :on-mouse-enter #(set! (.. % -target -style -transform) "translateY(-2px)")
+                :on-mouse-leave #(set! (.. % -target -style -transform) "translateY(0)")}
+       "🔄 Play Again"]
+      [:button {:on-click back-to-menu
+                :style {:padding "15px 40px"
+                        :background "#757575"
+                        :color "white"
+                        :border "none"
+                        :border-radius "8px"
+                        :cursor "pointer"
+                        :font-size "18px"
+                        :font-weight "600"
+                        :box-shadow "0 4px 12px rgba(117, 117, 117, 0.3)"
+                        :transition "all 0.2s ease"}
+                :on-mouse-enter #(set! (.. % -target -style -transform) "translateY(-2px)")
+                :on-mouse-leave #(set! (.. % -target -style -transform) "translateY(0)")}
+       "🏠 Back to Menu"]]]))
+
+(defn slideshow-viewer
+  "Simple slideshow viewer without game mechanics"
+  []
+  (let [lightbox-open? (r/atom false)]
+    (r/create-class
+     {:component-did-mount
+      (fn [this]
+        (let [handle-key (fn [e]
+                           (let [key (.-key e)]
+                             (case key
+                               "ArrowLeft" (do (.preventDefault e)
+                                               (when (> (:current-slide @game-state) 0)
+                                                 (previous-slide)))
+                               "ArrowRight" (do (.preventDefault e)
+                                                (when (< (:current-slide @game-state) (dec (total-slides)))
+                                                  (next-slide)))
+                               "Escape" (when @lightbox-open?
+                                          (.preventDefault e)
+                                          (reset! lightbox-open? false))
+                               nil)))]
+          (js/document.addEventListener "keydown" handle-key)
+          (aset this "keyHandler" handle-key)))
+
+      :component-will-unmount
+      (fn [this]
+        (when-let [handler (aget this "keyHandler")]
+          (js/document.removeEventListener "keydown" handler)))
+
+      :reagent-render
+      (fn []
+        (let [{:keys [current-slide]} @game-state
+              {:keys [image]} (current-slide-data)]
+          [:div {:class "trivia-container"}
+           ;; Lightbox overlay
+           (when @lightbox-open?
+             [:div {:style {:position "fixed"
+                            :top 0
+                            :left 0
+                            :right 0
+                            :bottom 0
+                            :background "rgba(0,0,0,0.95)"
+                            :z-index 9999
+                            :display "flex"
+                            :align-items "center"
+                            :justify-content "center"
+                            :cursor "pointer"
+                            :animation "fadeIn 0.2s ease"}
+                    :on-click #(reset! lightbox-open? false)}
+              [:div {:style {:position "relative"
+                             :max-width "95vw"
+                             :max-height "95vh"}}
+               [:img {:src image
+                      :alt "Conference photo - full size"
+                      :style {:max-width "95vw"
+                              :max-height "95vh"
+                              :object-fit "contain"
+                              :image-orientation "from-image"}}]
+               [:div {:style {:position "absolute"
+                              :top "10px"
+                              :right "10px"
+                              :background "rgba(255,255,255,0.9)"
+                              :color "#333"
+                              :border "none"
+                              :border-radius "50%"
+                              :width "40px"
+                              :height "40px"
+                              :display "flex"
+                              :align-items "center"
+                              :justify-content "center"
+                              :font-size "24px"
+                              :cursor "pointer"
+                              :font-weight "bold"}}
+                "×"]]])
+
+           ;; Title
+           [:div {:style {:text-align "center"
+                          :margin-bottom "30px"}}
+            [:h1 {:class "game-title"
+                  :style {:color "#2196f3"
+                          :font-size "32px"
+                          :margin-bottom "10px"}}
+             "🖼️ Clojure Conj 2025 Photo Gallery"]
+            [:p {:class "game-subtitle"
+                 :style {:color "#666"
+                         :font-size "16px"}}
+             "Browse through conference memories"]]
+
+           [:div {:class "trivia-card"}
+            ;; Image section - full width
+            [:div {:style {:display "flex"
+                           :align-items "center"
+                           :justify-content "center"
+                           :padding "40px"
+                           :min-height "500px"}}
+             [:img {:src image
+                    :alt "Conference photo"
+                    :on-click #(reset! lightbox-open? true)
+                    :style {:max-width "100%"
+                            :max-height "600px"
+                            :border-radius "12px"
+                            :box-shadow "0 4px 12px rgba(0,0,0,0.15)"
+                            :object-fit "contain"
+                            :image-orientation "from-image"
+                            :cursor "pointer"
+                            :transition "transform 0.2s ease, box-shadow 0.2s ease"}
+                    :on-mouse-enter #(do
+                                       (set! (.. % -target -style -transform) "scale(1.02)")
+                                       (set! (.. % -target -style -boxShadow) "0 8px 24px rgba(0,0,0,0.25)"))
+                    :on-mouse-leave #(do
+                                       (set! (.. % -target -style -transform) "scale(1)")
+                                       (set! (.. % -target -style -boxShadow) "0 4px 12px rgba(0,0,0,0.15)"))}]]
+
+            ;; Navigation
+            [:div {:class "trivia-nav"
+                   :style {:padding "20px"
+                           :border-top "1px solid #e0e0e0"}}
+             [:div {:style {:text-align "center"
+                            :margin-bottom "15px"}}
+              [:p {:class "trivia-slide-info"}
+               (str "Photo " (inc current-slide) " of " (total-slides))]
+              [:p {:style {:margin "5px 0 0 0"
+                           :font-size "13px"
+                           :color "#999"
+                           :font-style "italic"}}
+               "Click image to view full size • Use ← → arrow keys to navigate"]]
+
+             [:div {:style {:display "flex"
+                            :justify-content "space-between"
+                            :gap "15px"}}
+              [:button {:on-click previous-slide
+                        :disabled (= current-slide 0)
+                        :style {:padding "12px 24px"
+                                :background (if (= current-slide 0) "#e0e0e0" "#2196f3")
+                                :color (if (= current-slide 0) "#999" "white")
+                                :border "none"
+                                :border-radius "6px"
+                                :cursor (if (= current-slide 0) "not-allowed" "pointer")
+                                :font-weight "600"
+                                :font-size "16px"
+                                :flex "1"}}
+               "← Previous"]
+
+              [:button {:on-click back-to-menu
+                        :style {:padding "12px 24px"
+                                :background "#757575"
+                                :color "white"
+                                :border "none"
+                                :border-radius "6px"
+                                :cursor "pointer"
+                                :font-weight "600"
+                                :font-size "16px"
+                                :flex "0 0 auto"}}
+               "🏠 Menu"]
+
+              (if (= current-slide (dec (total-slides)))
+                [:button {:on-click back-to-menu
+                          :style {:padding "12px 24px"
+                                  :background "#4caf50"
+                                  :color "white"
+                                  :border "none"
+                                  :border-radius "6px"
+                                  :cursor "pointer"
+                                  :font-weight "600"
+                                  :font-size "16px"
+                                  :flex "1"}}
+                 "✓ Finish"]
+                [:button {:on-click next-slide
+                          :style {:padding "12px 24px"
+                                  :background "#2196f3"
+                                  :color "white"
+                                  :border "none"
+                                  :border-radius "6px"
+                                  :cursor "pointer"
+                                  :font-weight "600"
+                                  :font-size "16px"
+                                  :flex "1"}}
+                 "Next →"])]]]]))})))
 
 ;; ============================================================================
 ;; Main Component
@@ -726,7 +1055,7 @@
 (defn trivia-game
   "Main trivia game component"
   []
-  (let [{:keys [game-complete?]} @game-state]
+  (let [{:keys [mode game-complete?]} @game-state]
     [:div
      ;; Add responsive styles
      [:style "
@@ -934,145 +1263,168 @@
         }
       }"]
 
-     [:div {:class "trivia-container"}
-      (if game-complete?
-        [game-summary]
-        [:div
-         [:div {:style {:text-align "center"
-                        :margin-bottom "30px"}}
-          [:h1 {:class "game-title"
-                :style {:color "#4caf50"
-                        :font-size "32px"
-                        :margin-bottom "10px"}}
-           "🎯 Clojure Conj 2025 Epic Trivia"]
-          [:p {:class "game-subtitle"
-               :style {:color "#666"
-                       :font-size "16px"}}
-           "Two Lies and a Truth Edition"]]
+     ;; Route based on mode
+     (cond
+       ;; No mode selected - show mode selection
+       (nil? mode)
+       [mode-selection]
 
-         [:div {:class "trivia-card"}
-          [:div {:class "trivia-content"}
-           ;; Image section
-           [:div {:class "trivia-image"}
-            [:img {:src (:image (current-slide-data))
-                   :alt "Conference photo"}]]
+       ;; Game mode - show game or summary
+       (= mode :game)
+       (if game-complete?
+         [game-summary]
+         [:div {:class "trivia-container"}
+          [:div {:style {:text-align "center"
+                         :margin-bottom "30px"}}
+           [:h1 {:class "game-title"
+                 :style {:color "#4caf50"
+                         :font-size "32px"
+                         :margin-bottom "10px"}}
+            "🎯 Clojure Conj 2025 Epic Trivia"]
+           [:p {:class "game-subtitle"
+                :style {:color "#666"
+                        :font-size "16px"}}
+            "Two Lies and a Truth Edition"]]
 
-           ;; Questions section  
-           [:div {:class "trivia-questions"}
-            (let [{:keys [question options correct-index explanation]} (current-slide-data)
-                  {:keys [show-result current-slide answers]} @game-state
-                  selected-answer (get-answer-for-slide current-slide)]
-              [:<>
-               [:h3 {:class "trivia-question-text"}
-                question]
+          [:div {:class "trivia-card"}
+           [:div {:class "trivia-content"}
+            ;; Image section
+            [:div {:class "trivia-image"}
+             [:img {:src (:image (current-slide-data))
+                    :alt "Conference photo"}]]
 
-               (when-not show-result
-                 [:p {:class "trivia-instruction"}
-                  "Two statements are lies, one is the truth. Pick the truth!"])
+            ;; Questions section  
+            [:div {:class "trivia-questions"}
+             (let [{:keys [question options correct-index explanation]} (current-slide-data)
+                   {:keys [show-result current-slide answers]} @game-state
+                   selected-answer (get-answer-for-slide current-slide)]
+               [:<>
+                [:h3 {:class "trivia-question-text"}
+                 question]
 
-               [:div {:style {:margin-bottom "20px"}}
-                (for [[idx option] (map-indexed vector options)]
-                  ^{:key idx}
-                  (let [is-correct? (= idx correct-index)
-                        is-selected? (= selected-answer idx)
-                        button-class (str "trivia-option-button"
-                                          (when (and show-result is-selected? is-correct?) " correct")
-                                          (when (and show-result is-selected? (not is-correct?)) " incorrect")
-                                          (when (and show-result is-correct? (not is-selected?)) " correct-answer"))
-                        button-color (cond
-                                       (and show-result is-selected? is-correct?) "#4caf50"
-                                       (and show-result is-selected? (not is-correct?)) "#f44336"
-                                       (and show-result is-correct?) "#81c784"
-                                       :else "#e0e0e0")
-                        text-color (if (and show-result (or is-selected? is-correct?))
-                                     "white"
-                                     "#333")]
-                    [:button {:class button-class
-                              :on-click (when-not show-result
-                                          #(handle-answer idx))
-                              :disabled show-result
-                              :style {:padding "20px"
-                                      :margin "10px 0"
-                                      :width "100%"
-                                      :background button-color
-                                      :color text-color
-                                      :border "none"
-                                      :border-radius "8px"
-                                      :cursor (if show-result "default" "pointer")
-                                      :font-size "16px"
-                                      :font-weight (if (and show-result is-correct?) "600" "400")
-                                      :text-align "left"
-                                      :transition "all 0.3s ease"
-                                      :box-shadow (cond
-                                                    (and show-result is-correct?) "0 4px 12px rgba(76, 175, 80, 0.3)"
-                                                    (and show-result is-selected? (not is-correct?)) "0 4px 12px rgba(244, 67, 54, 0.3)"
-                                                    :else "0 2px 4px rgba(0,0,0,0.1)")}}
-                     option
-                     (when (and show-result is-correct?)
-                       [:span {:style {:margin-left "10px"}} "✓"])
-                     (when (and show-result is-selected? (not is-correct?))
-                       [:span {:style {:margin-left "10px"}} "✗"])]))]
+                (when-not show-result
+                  [:p {:class "trivia-instruction"}
+                   "Two statements are lies, one is the truth. Pick the truth!"])
 
-               (when show-result
-                 [:div {:style {:padding "15px"
-                                :background (if (= show-result :correct) "#e8f5e9" "#ffebee")
-                                :border-radius "8px"
-                                :margin-top "15px"}}
-                  [:p {:style {:margin "0"
-                               :color (if (= show-result :correct) "#2e7d32" "#c62828")
-                               :font-weight "600"
-                               :margin-bottom "10px"}}
-                   (if (= show-result :correct)
-                     "🎉 Correct! You found the truth!"
-                     "❌ Not quite...")]
-                  [:p {:style {:margin "0"
-                               :color "#555"
-                               :font-size "14px"}}
-                   explanation]])])]]
+                [:div {:style {:margin-bottom "20px"}}
+                 (for [[idx option] (map-indexed vector options)]
+                   ^{:key idx}
+                   (let [is-correct? (= idx correct-index)
+                         is-selected? (= selected-answer idx)
+                         button-class (str "trivia-option-button"
+                                           (when (and show-result is-selected? is-correct?) " correct")
+                                           (when (and show-result is-selected? (not is-correct?)) " incorrect")
+                                           (when (and show-result is-correct? (not is-selected?)) " correct-answer"))
+                         button-color (cond
+                                        (and show-result is-selected? is-correct?) "#4caf50"
+                                        (and show-result is-selected? (not is-correct?)) "#f44336"
+                                        (and show-result is-correct?) "#81c784"
+                                        :else "#e0e0e0")
+                         text-color (if (and show-result (or is-selected? is-correct?))
+                                      "white"
+                                      "#333")]
+                     [:button {:class button-class
+                               :on-click (when-not show-result
+                                           #(handle-answer idx))
+                               :disabled show-result
+                               :style {:padding "20px"
+                                       :margin "10px 0"
+                                       :width "100%"
+                                       :background button-color
+                                       :color text-color
+                                       :border "none"
+                                       :border-radius "8px"
+                                       :cursor (if show-result "default" "pointer")
+                                       :font-size "16px"
+                                       :font-weight (if (and show-result is-correct?) "600" "400")
+                                       :text-align "left"
+                                       :transition "all 0.3s ease"
+                                       :box-shadow (cond
+                                                     (and show-result is-correct?) "0 4px 12px rgba(76, 175, 80, 0.3)"
+                                                     (and show-result is-selected? (not is-correct?)) "0 4px 12px rgba(244, 67, 54, 0.3)"
+                                                     :else "0 2px 4px rgba(0,0,0,0.1)")}}
+                      option
+                      (when (and show-result is-correct?)
+                        [:span {:style {:margin-left "10px"}} "✓"])
+                      (when (and show-result is-selected? (not is-correct?))
+                        [:span {:style {:margin-left "10px"}} "✗"])]))]
 
-;; Navigation
-          (let [{:keys [current-slide show-result]} @game-state]
-            [:div {:class "trivia-nav"
-                   :style {:padding "20px"}}
-             ;; Slide info on top
-             [:div {:style {:text-align "center"
-                            :margin-bottom "15px"}}
-              [:p {:class "trivia-slide-info"}
-               (str "Slide " (inc current-slide) " of " (total-slides))]
-              [:p {:class "trivia-score-info"}
-               (str "Score: " (:score @game-state) "/" (total-slides))]]
-
-             ;; Buttons below
-             [:div {:style {:display "flex"
-                            :justify-content "space-between"
-                            :gap "15px"}}
-              [:button {:on-click previous-slide
-                        :disabled (= current-slide 0)
-                        :style {:padding "12px 24px"
-                                :background (if (= current-slide 0) "#e0e0e0" "#2196f3")
-                                :color (if (= current-slide 0) "#999" "white")
-                                :border "none"
-                                :border-radius "6px"
-                                :cursor (if (= current-slide 0) "not-allowed" "pointer")
+                (when show-result
+                  [:div {:style {:padding "15px"
+                                 :background (if (= show-result :correct) "#e8f5e9" "#ffebee")
+                                 :border-radius "8px"
+                                 :margin-top "15px"}}
+                   [:p {:style {:margin "0"
+                                :color (if (= show-result :correct) "#2e7d32" "#c62828")
                                 :font-weight "600"
-                                :font-size "16px"
-                                :flex "1"}}
-               "← Previous"]
+                                :margin-bottom "10px"}}
+                    (if (= show-result :correct)
+                      "🎉 Correct! You found the truth!"
+                      "❌ Not quite...")]
+                   [:p {:style {:margin "0"
+                                :color "#555"
+                                :font-size "14px"}}
+                    explanation]])])]]
 
-              [:button {:on-click next-slide
-                        :disabled (nil? show-result)
-                        :style {:padding "12px 24px"
-                                :background (if show-result "#2196f3" "#e0e0e0")
-                                :color (if show-result "white" "#999")
-                                :border "none"
-                                :border-radius "6px"
-                                :cursor (if show-result "pointer" "not-allowed")
-                                :font-weight "600"
-                                :font-size "16px"
-                                :flex "1"}}
-               (if (= current-slide (dec (total-slides)))
-                 "Finish →"
-                 "Next →")]]])]])]]))
+           ;; Navigation
+           (let [{:keys [current-slide show-result]} @game-state]
+             [:div {:class "trivia-nav"
+                    :style {:padding "20px"}}
+              ;; Slide info on top
+              [:div {:style {:text-align "center"
+                             :margin-bottom "15px"}}
+               [:p {:class "trivia-slide-info"}
+                (str "Slide " (inc current-slide) " of " (total-slides))]
+               [:p {:class "trivia-score-info"}
+                (str "Score: " (:score @game-state) "/" (total-slides))]]
+
+              ;; Buttons below
+              [:div {:style {:display "flex"
+                             :justify-content "space-between"
+                             :gap "15px"}}
+               [:button {:on-click previous-slide
+                         :disabled (= current-slide 0)
+                         :style {:padding "12px 24px"
+                                 :background (if (= current-slide 0) "#e0e0e0" "#2196f3")
+                                 :color (if (= current-slide 0) "#999" "white")
+                                 :border "none"
+                                 :border-radius "6px"
+                                 :cursor (if (= current-slide 0) "not-allowed" "pointer")
+                                 :font-weight "600"
+                                 :font-size "16px"
+                                 :flex "1"}}
+                "← Previous"]
+
+               [:button {:on-click back-to-menu
+                         :style {:padding "12px 24px"
+                                 :background "#757575"
+                                 :color "white"
+                                 :border "none"
+                                 :border-radius "6px"
+                                 :cursor "pointer"
+                                 :font-weight "600"
+                                 :font-size "16px"
+                                 :flex "0 0 auto"}}
+                "🏠"]
+
+               [:button {:on-click next-slide
+                         :disabled (nil? show-result)
+                         :style {:padding "12px 24px"
+                                 :background (if show-result "#2196f3" "#e0e0e0")
+                                 :color (if show-result "white" "#999")
+                                 :border "none"
+                                 :border-radius "6px"
+                                 :cursor (if show-result "pointer" "not-allowed")
+                                 :font-weight "600"
+                                 :font-size "16px"
+                                 :flex "1"}}
+                (if (= current-slide (dec (total-slides)))
+                  "Finish →"
+                  "Next →")]]])]])
+
+       ;; Slideshow mode
+       (= mode :slideshow)
+       [slideshow-viewer])]))
 
 ;; ============================================================================
 ;; App Initialization
