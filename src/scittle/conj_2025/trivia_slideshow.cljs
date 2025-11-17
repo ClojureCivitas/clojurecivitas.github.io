@@ -378,7 +378,7 @@
     :explanation "The Clojure community is renowned for its friendly spirit!"}
 
    ;; New questions for additional photos
-   {:image "/scittle/conj_2025/media/conj-2025_9001.jpg"
+   {:image "/scittle/conj_2025/media/conj-2025_9001.png"
     :question "About hallway conversations..."
     :options ["Hallway conversations are often where the best insights happen"
               "Talking in hallways was prohibited to prevent noise"
@@ -394,7 +394,7 @@
     :correct-index 1
     :explanation "Providing meals helps attendees focus on learning and networking!"}
 
-   {:image "/scittle/conj_2025/media/conj-2025_9003.jpg"
+   {:image "/scittle/conj_2025/media/conj-2025_9003.png"
     :question "About speaker preparation..."
     :options ["Speakers were given resources and support to prepare great talks"
               "Speakers had to improvise everything on stage"
@@ -402,7 +402,7 @@
     :correct-index 0
     :explanation "Conference organizers help speakers deliver their best content!"}
 
-   {:image "/scittle/conj_2025/media/conj-2025_9004.jpg"
+   {:image "/scittle/conj_2025/media/conj-2025_9004.png"
     :question "About conference swag..."
     :options ["Conference merchandise and swag helped build community spirit"
               "Swag bags were illegal at this conference"
@@ -410,7 +410,7 @@
     :correct-index 0
     :explanation "Conference swag is a fun way to remember the event!"}
 
-   {:image "/scittle/conj_2025/media/conj-2025_9005.jpg"
+   {:image "/scittle/conj_2025/media/conj-2025_9005.png"
     :question "About conference photos..."
     :options ["Attendees were encouraged to share photos and memories"
               "All photography was banned for privacy reasons"
@@ -418,7 +418,7 @@
     :correct-index 0
     :explanation "Sharing photos helps spread the excitement and builds community!"}
 
-   {:image "/scittle/conj_2025/media/conj-2025_9006.jpg"
+   {:image "/scittle/conj_2025/media/conj-2025_9006.png"
     :question "About learning outcomes..."
     :options ["Attendees leave with new knowledge, connections, and inspiration"
               "The goal was to confuse everyone as much as possible"
