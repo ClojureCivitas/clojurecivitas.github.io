@@ -873,98 +873,155 @@
 (defn slideshow-viewer
   "Simple slideshow viewer without game mechanics"
   []
-  (let [{:keys [current-slide]} @game-state
-        {:keys [image]} (current-slide-data)]
-    [:div {:class "trivia-container"}
-     ;; Title
-     [:div {:style {:text-align "center"
-                    :margin-bottom "30px"}}
-      [:h1 {:class "game-title"
-            :style {:color "#2196f3"
-                    :font-size "32px"
-                    :margin-bottom "10px"}}
-       "🖼️ Clojure Conj 2025 Photo Gallery"]
-      [:p {:class "game-subtitle"
-           :style {:color "#666"
-                   :font-size "16px"}}
-       "Browse through conference memories"]]
-
-     [:div {:class "trivia-card"}
-      ;; Image section - full width
-      [:div {:style {:display "flex"
-                     :align-items "center"
-                     :justify-content "center"
-                     :padding "40px"
-                     :min-height "500px"}}
-       [:img {:src image
-              :alt "Conference photo"
-              :style {:max-width "100%"
-                      :max-height "600px"
-                      :border-radius "12px"
-                      :box-shadow "0 4px 12px rgba(0,0,0,0.15)"
-                      :object-fit "contain"
-                      :image-orientation "from-image"}}]]
-
-      ;; Navigation
-      [:div {:class "trivia-nav"
-             :style {:padding "20px"
-                     :border-top "1px solid #e0e0e0"}}
-       [:div {:style {:text-align "center"
-                      :margin-bottom "15px"}}
-        [:p {:class "trivia-slide-info"}
-         (str "Photo " (inc current-slide) " of " (total-slides))]]
-
-       [:div {:style {:display "flex"
-                      :justify-content "space-between"
-                      :gap "15px"}}
-        [:button {:on-click previous-slide
-                  :disabled (= current-slide 0)
-                  :style {:padding "12px 24px"
-                          :background (if (= current-slide 0) "#e0e0e0" "#2196f3")
-                          :color (if (= current-slide 0) "#999" "white")
-                          :border "none"
-                          :border-radius "6px"
-                          :cursor (if (= current-slide 0) "not-allowed" "pointer")
-                          :font-weight "600"
-                          :font-size "16px"
-                          :flex "1"}}
-         "← Previous"]
-
-        [:button {:on-click back-to-menu
-                  :style {:padding "12px 24px"
-                          :background "#757575"
-                          :color "white"
-                          :border "none"
-                          :border-radius "6px"
+  (let [lightbox-open? (r/atom false)]
+    (fn []
+      (let [{:keys [current-slide]} @game-state
+            {:keys [image]} (current-slide-data)]
+        [:div {:class "trivia-container"}
+         ;; Lightbox overlay
+         (when @lightbox-open?
+           [:div {:style {:position "fixed"
+                          :top 0
+                          :left 0
+                          :right 0
+                          :bottom 0
+                          :background "rgba(0,0,0,0.95)"
+                          :z-index 9999
+                          :display "flex"
+                          :align-items "center"
+                          :justify-content "center"
                           :cursor "pointer"
-                          :font-weight "600"
-                          :font-size "16px"
-                          :flex "0 0 auto"}}
-         "🏠 Menu"]
+                          :animation "fadeIn 0.2s ease"}
+                  :on-click #(reset! lightbox-open? false)}
+            [:div {:style {:position "relative"
+                           :max-width "95vw"
+                           :max-height "95vh"}}
+             [:img {:src image
+                    :alt "Conference photo - full size"
+                    :style {:max-width "95vw"
+                            :max-height "95vh"
+                            :object-fit "contain"
+                            :image-orientation "from-image"}}]
+             [:div {:style {:position "absolute"
+                            :top "10px"
+                            :right "10px"
+                            :background "rgba(255,255,255,0.9)"
+                            :color "#333"
+                            :border "none"
+                            :border-radius "50%"
+                            :width "40px"
+                            :height "40px"
+                            :display "flex"
+                            :align-items "center"
+                            :justify-content "center"
+                            :font-size "24px"
+                            :cursor "pointer"
+                            :font-weight "bold"}}
+              "×"]]])
 
-        (if (= current-slide (dec (total-slides)))
-          [:button {:on-click back-to-menu
-                    :style {:padding "12px 24px"
-                            :background "#4caf50"
-                            :color "white"
-                            :border "none"
-                            :border-radius "6px"
-                            :cursor "pointer"
-                            :font-weight "600"
-                            :font-size "16px"
-                            :flex "1"}}
-           "✓ Finish"]
-          [:button {:on-click next-slide
-                    :style {:padding "12px 24px"
-                            :background "#2196f3"
-                            :color "white"
-                            :border "none"
-                            :border-radius "6px"
-                            :cursor "pointer"
-                            :font-weight "600"
-                            :font-size "16px"
-                            :flex "1"}}
-           "Next →"])]]]]))
+         ;; Title
+         [:div {:style {:text-align "center"
+                        :margin-bottom "30px"}}
+          [:h1 {:class "game-title"
+                :style {:color "#2196f3"
+                        :font-size "32px"
+                        :margin-bottom "10px"}}
+           "🖼️ Clojure Conj 2025 Photo Gallery"]
+          [:p {:class "game-subtitle"
+               :style {:color "#666"
+                       :font-size "16px"}}
+           "Browse through conference memories"]]
+
+         [:div {:class "trivia-card"}
+          ;; Image section - full width
+          [:div {:style {:display "flex"
+                         :align-items "center"
+                         :justify-content "center"
+                         :padding "40px"
+                         :min-height "500px"}}
+           [:img {:src image
+                  :alt "Conference photo"
+                  :on-click #(reset! lightbox-open? true)
+                  :style {:max-width "100%"
+                          :max-height "600px"
+                          :border-radius "12px"
+                          :box-shadow "0 4px 12px rgba(0,0,0,0.15)"
+                          :object-fit "contain"
+                          :image-orientation "from-image"
+                          :cursor "pointer"
+                          :transition "transform 0.2s ease, box-shadow 0.2s ease"}
+                  :on-mouse-enter #(do
+                                     (set! (.. % -target -style -transform) "scale(1.02)")
+                                     (set! (.. % -target -style -boxShadow) "0 8px 24px rgba(0,0,0,0.25)"))
+                  :on-mouse-leave #(do
+                                     (set! (.. % -target -style -transform) "scale(1)")
+                                     (set! (.. % -target -style -boxShadow) "0 4px 12px rgba(0,0,0,0.15)"))}]]
+
+          ;; Navigation
+          [:div {:class "trivia-nav"
+                 :style {:padding "20px"
+                         :border-top "1px solid #e0e0e0"}}
+           [:div {:style {:text-align "center"
+                          :margin-bottom "15px"}}
+            [:p {:class "trivia-slide-info"}
+             (str "Photo " (inc current-slide) " of " (total-slides))]
+            [:p {:style {:margin "5px 0 0 0"
+                         :font-size "13px"
+                         :color "#999"
+                         :font-style "italic"}}
+             "Click image to view full size"]]
+
+           [:div {:style {:display "flex"
+                          :justify-content "space-between"
+                          :gap "15px"}}
+            [:button {:on-click previous-slide
+                      :disabled (= current-slide 0)
+                      :style {:padding "12px 24px"
+                              :background (if (= current-slide 0) "#e0e0e0" "#2196f3")
+                              :color (if (= current-slide 0) "#999" "white")
+                              :border "none"
+                              :border-radius "6px"
+                              :cursor (if (= current-slide 0) "not-allowed" "pointer")
+                              :font-weight "600"
+                              :font-size "16px"
+                              :flex "1"}}
+             "← Previous"]
+
+            [:button {:on-click back-to-menu
+                      :style {:padding "12px 24px"
+                              :background "#757575"
+                              :color "white"
+                              :border "none"
+                              :border-radius "6px"
+                              :cursor "pointer"
+                              :font-weight "600"
+                              :font-size "16px"
+                              :flex "0 0 auto"}}
+             "🏠 Menu"]
+
+            (if (= current-slide (dec (total-slides)))
+              [:button {:on-click back-to-menu
+                        :style {:padding "12px 24px"
+                                :background "#4caf50"
+                                :color "white"
+                                :border "none"
+                                :border-radius "6px"
+                                :cursor "pointer"
+                                :font-weight "600"
+                                :font-size "16px"
+                                :flex "1"}}
+               "✓ Finish"]
+              [:button {:on-click next-slide
+                        :style {:padding "12px 24px"
+                                :background "#2196f3"
+                                :color "white"
+                                :border "none"
+                                :border-radius "6px"
+                                :cursor "pointer"
+                                :font-weight "600"
+                                :font-size "16px"
+                                :flex "1"}}
+               "Next →"])]]]]))))
 
 ;; ============================================================================
 ;; Main Component
