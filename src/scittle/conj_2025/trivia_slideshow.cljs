@@ -427,7 +427,7 @@
     :explanation "Great conferences transform attendees through learning and connection!"}
 
    {:image "/scittle/conj_2025/media/conj-2025_9007.png"
-    :question "Big announcements at the Conj"
+    :question "About big announcements at the Conj..."
     :options ["Clojure 2.0 is coming in 2026"
               "Datomic will now use SQL syntax"
               "A documentary about Clojure is in the works"]
