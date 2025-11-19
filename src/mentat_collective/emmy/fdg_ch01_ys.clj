@@ -1,8 +1,10 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Infix Notation"
                      :quarto {:author   :kloimhardt
-                              :type     :draft
-                              :date     "2025-11-15"
+                              :type     :post
+                              :description "Emmy can wear a different apparel should the occasion demand it."
+                              :date     "2025-11-19"
+                              :image    "fdg_ch01_ys.jpg"
                               :category :libs
                               :tags     [:emmy :infix :yamlscript]}}}
 
@@ -60,7 +62,10 @@
 (kind/scittle
   '(def D partial))
 
-;; The Clojure code below is taken from the snippets of [a previous entry](https://clojurecivitas.github.io/mentat_collective/emmy/fdg_ch01.html). Please make pull requests to [the source file of this notebook](https://github.com/kloimhardt/clojurecivitas.github.io/blob/infix/src/mentat_collective/emmy/fdg_ch01_ys.clj). It is not necessary to understand what the Clojure code does. As this semantics does not matter here, it is rather the syntax, the notation, that should be compared and critiqued vis-a-vis the proposed infix notation.
+;; The Clojure code below is taken from a [previous Civitas entry](https://clojurecivitas.github.io/mentat_collective/emmy/fdg_ch01.html) (the picture from [Emily's parser game](https://ifdb.org/viewgame?id=urxrv27t7qtu52lb)).
+
+;; It is not necessary to understand what the Clojure code does. As this semantics does not matter here, it is rather the syntax, the notation, that should be compared and given attention to.
+
 
 ;; ## First Example
 
