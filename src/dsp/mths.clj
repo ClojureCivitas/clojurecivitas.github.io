@@ -1,6 +1,6 @@
 ^{:kindly/hide-code true
   :clay {:title "DSP Study Group - Camera PPG data"
-         :quarto {:author [:onbreath :daslu]
+         :quarto {:author [:daslu]
                   :description "Analysing the MTHS dataset of Camera PPG data"
                   :category :clojure
                   :type :post
@@ -8,33 +8,72 @@
                   :tags [:dsp :math :biometrics]}}}
 (ns dsp.mths)
 
-;; ## Intro
+;; ## Introduction
+;;
+;; ### What is Camera PPG?
+;;
+;; **Photoplethysmography (PPG)** is a technique for measuring blood volume changes in tissue, typically used to measure heart rate and blood oxygen levels. Traditional PPG sensors (like those in fitness watches) use dedicated infrared LEDs and photodetectors.
+;;
+;; **Camera PPG** (also called remote PPG or rPPG) is a fascinating alternative: it uses an ordinary smartphone camera to detect these same blood volume changes by analyzing subtle color variations in the skin. When you place your fingertip over the camera, each heartbeat causes a tiny change in blood volume that slightly alters the amount of light absorbed by the tissue. By recording video and analyzing the RGB color channels over time, we can extract vital signs like heart rate and SpO2 (blood oxygen saturation).
+;;
+;; ### The MTHS Dataset
+;;
+;; We're using the [MTHS dataset from the MEDVSE repository](https://github.com/MahdiFarvardin/MEDVSE), which contains smartphone camera PPG data from 60 subjects. For each subject, the dataset provides:
+;;
+;; - **Signal data** (`signal_x.npy`): RGB time series sampled at 30 Hz from fingertip videos
+;; - **Ground truth labels** (`label_x.npy`): Heart rate (bpm) and SpO2 (%) sampled at 1 Hz, measured with clinical-grade equipment
+;;
+;; ### What We'll Explore
+;;
+;; In this notebook, we'll walk through a signal processing pipeline for analyzing Camera PPG data:
+;;
+;; 1. **Loading and visualizing** raw RGB signals from multiple subjects
+;; 2. **Signal preprocessing**: removing DC offset, bandpass filtering to isolate heart rate frequencies (0.5-5 Hz, corresponding to 30-300 bpm), and standardization
+;; 3. **Power spectrum analysis**: using windowed FFT to identify the dominant frequency (heart rate)
+;;
+;; This exploration demonstrates how Clojure's ecosystem—combining tablecloth for data wrangling, dtype-next for efficient numerical computation, jdsp for signal processing, and tableplot for visualization—provides powerful tools for biomedical signal analysis.
 
 ;; ## Setup
 
 (ns dsp.mths
-  (:require [libpython-clj2.require :refer [require-python]]
-            [libpython-clj2.python :refer [py. py.. py.-] :as py]
-            [tech.v3.datatype :as dtype]
-            [tech.v3.datatype.functional :as dfn]
-            [libpython-clj2.python.np-array]
-            [clojure.java.io :as io]
-            [babashka.fs :as fs]
-            [clojure.string :as str]
-            [tablecloth.api :as tc]
-            [tech.v3.dataset.tensor :as ds-tensor]
-            [scicloj.tableplot.v1.plotly :as plotly]
-            [tablecloth.column.api :as tcc]
-            [fastmath.stats :as stats]
-            [scicloj.kindly.v4.kind :as kind]
-            [tech.v3.parallel.for :as pfor]
-            [tech.v3.tensor :as tensor]
-            [tech.v3.dataset :as ds])
-  (:import [com.github.psambit9791.jdsp.filter Butterworth Chebyshev]
-           [com.github.psambit9791.jdsp.signal Detrend]
-           [com.github.psambit9791.jdsp.signal.peaks FindPeak Peak]
-           [com.github.psambit9791.jdsp.transform DiscreteFourier FastFourier]
-           [com.github.psambit9791.jdsp.windows Hanning]))
+  (:require
+   ;; Python interop for loading .npy files
+   [libpython-clj2.require :refer [require-python]]
+   [libpython-clj2.python :refer [py. py.. py.-] :as py]
+   ;; Support for numpy array conversion to dtype-next
+   [libpython-clj2.python.np-array]
+
+   ;; Numerical computing with dtype-next
+   [tech.v3.datatype :as dtype] ; Array operations, shapes, types
+   [tech.v3.datatype.functional :as dfn] ; Vectorized math operations
+   [tech.v3.tensor :as tensor] ; Multi-dimensional array operations
+   [tech.v3.dataset :as ds] ; Dataset core functionality
+   [tech.v3.dataset.tensor :as ds-tensor] ; Dataset <-> tensor conversions
+   [tech.v3.parallel.for :as pfor] ; Parallel processing
+
+   ;; Data manipulation with tablecloth
+   [tablecloth.api :as tc] ; Dataset transformations
+   [tablecloth.column.api :as tcc] ; Column-level operations
+
+   ;; Visualization
+   [scicloj.tableplot.v1.plotly :as plotly] ; Declarative plotting
+   [scicloj.kindly.v4.kind :as kind] ; Rendering hints
+
+   ;; Statistics
+   [fastmath.stats :as stats] ; Statistical functions
+
+   ;; Utilities
+   [clojure.java.io :as io] ; File I/O
+   [babashka.fs :as fs] ; Filesystem operations
+   [clojure.string :as str]) ; String manipulation
+
+  ;; Java DSP library (jdsp) - signal processing tools
+  (:import
+   [com.github.psambit9791.jdsp.filter Butterworth Chebyshev] ; Digital filters
+   [com.github.psambit9791.jdsp.signal Detrend] ; DC removal
+   [com.github.psambit9791.jdsp.signal.peaks FindPeak Peak] ; Peak detection
+   [com.github.psambit9791.jdsp.transform DiscreteFourier FastFourier] ; FFT
+   [com.github.psambit9791.jdsp.windows Hanning])) ; Window functions
 
 (require-python '[numpy :as np])
 
@@ -45,20 +84,32 @@
   max-height:400px; 
   overflow-y: auto;
 }
+.clay-table {
+  max-height:400px; 
+  overflow-y: auto;
+}
 "])
 
 ;; ## Reading data
+;;
+;; The MTHS dataset stores signals and labels as NumPy `.npy` files. Each subject has two files:
+;;
+;; - `signal_X.npy`: RGB time series (3 channels × time samples)
+;; - `label_X.npy`: Ground truth measurements
+;;
+;; We'll use libpython-clj to load these files via NumPy, then convert them to dtype-next structures for efficient processing in Clojure.
 
 ;; We assume you have downloaded the MEDVSE repo alongside your Clojure project repo.
 
 (def data-base-path
   "../MEDVSE/MTHS/Data/")
 
-;; Let us see how we read one file as a Numpy data structure.
+;; Let's see how we read one file as a NumPy array:
 
 (np/load (str data-base-path "/signal_12.npy"))
 
-;; Now, let us read all data and organise it in one data structure.
+;; Now, let's read all data files and organize them in a single map.
+;; We'll use keywords like `[:signal 12]` and `[:label 12]` as keys for easy access.
 
 (def raw-data
   (-> data-base-path
@@ -77,16 +128,15 @@
                          np/load)])))
            (into {}))))
 
-;; Numpy arrays can be inspected using dtype-next:
+;; NumPy arrays can be inspected using dtype-next:
 
-(dtype/shape (raw-data [:signal 23])) ; 30Hz signal
-(dtype/shape (raw-data [:label 23])) ; 1Hz labels
-
+(dtype/shape (raw-data [:signal 23])) ; 30Hz signal → [n-samples, 3] array
+(dtype/shape (raw-data [:label 23])) ; 1Hz labels → [n-samples, 2] array
 
 (def sampling-rate 30)
 
-
-;; A function to read the signal of the i'th subject:
+;; Let's create a helper function to convert a subject's raw signal into a tablecloth dataset
+;; with properly named columns (:R, :G, :B) and a time column (:t in seconds):
 
 (defn signal [i]
   (some-> [:signal i]
@@ -100,6 +150,11 @@
 (signal 23)
 
 ;; ## Plotting
+;;
+;; Let's create a plotting function to visualize all three RGB channels over time.
+;; In Camera PPG, different color channels can have different signal-to-noise ratios
+;; depending on skin tone and lighting conditions. Typically, the green channel is
+;; strongest due to hemoglobin's absorption characteristics.
 
 (defn plot-signal [s]
   (-> s
@@ -112,13 +167,25 @@
       (plotly/layer-line {:=y :B
                           :=mark-color "blue"})))
 
-
 (-> 23
     signal
     plot-signal)
 
-
-;; ## Taking a signal through a pipeline of transformations
+;; ## Signal Processing Pipeline
+;;
+;; Raw Camera PPG signals are noisy and contain artifacts. Before we can extract heart rate,
+;; we need to clean them up through a series of transformations:
+;;
+;; 1. **DC removal (detrending)**: Removes the constant offset, leaving only the AC component
+;;    (the oscillating part due to heartbeats)
+;;
+;; 2. **Bandpass filtering**: Keeps only frequencies in the 0.5-5 Hz range, which corresponds
+;;    to heart rates between 30-300 bpm. This removes high-frequency noise and low-frequency drift.
+;;
+;; 3. **Standardization**: Scales the signal to zero mean and unit variance, making it easier
+;;    to compare across subjects and channels.
+;;
+;; Let's create a utility function to visualize how each transformation affects all subjects:
 
 (defn plot-signals-with-transformations [transformations]
   (kind/table
@@ -132,11 +199,18 @@
                                                     (signal i))
                                         (map plot-signal)
                                         (cons (kind/md (str "### " i))))))
-                      
+
                       kind/table)
     :column-names (concat ["subject" "raw"]
                           (keys transformations))}))
 
+;; ### Transformation Functions
+;;
+;; **DC Removal (Detrending)**
+;;
+;; Removes the constant (DC) component from the signal. This is crucial because camera sensors
+;; capture both the steady ambient light level and the small oscillations from blood volume changes.
+;; We only care about the oscillations.
 
 (defn remove-dc [signal]
   (-> signal
@@ -144,25 +218,32 @@
       (Detrend. "constant")
       .detrendSignal))
 
+;; **Bandpass Filter**
+;;
+;; A 4th-order Butterworth bandpass filter that keeps only the frequencies associated with
+;; normal heart rates (0.5-5 Hz = 30-300 bpm). This is a standard technique in PPG signal processing.
 
-;; Bandpass filter (0.5-5 Hz for heart rate range)
 (defn bandpass-filter [signal {:keys [fs order low-cutoff high-cutoff]}]
   (let [flt (Butterworth. fs)
-        result (.bandPassFilter flt 
-                                (double-array signal) 
-                                order 
-                                low-cutoff 
+        result (.bandPassFilter flt
+                                (double-array signal)
+                                order
+                                low-cutoff
                                 high-cutoff)]
     (vec result)))
 
-
+;; ### Applying the Pipeline
+;;
+;; Now let's apply our complete preprocessing pipeline to all subjects.
+;; We'll visualize the raw signal alongside each transformation step to see
+;; how the signal quality improves:
 
 (let [[low-cutoff high-cutoff] [0.5 5]
       window-size 10
       window-samples (* sampling-rate window-size)
       overlap-fraction 0.5
       hop (* sampling-rate window-samples)
-      windows-starts (range 0 )]
+      windows-starts (range 0)]
   (plot-signals-with-transformations
    {:remove-dc remove-dc
     :bandpass #(bandpass-filter % {:fs sampling-rate
@@ -171,83 +252,144 @@
                                    :high-cutoff high-cutoff})
     :standardize stats/standardize}))
 
+;; ## Power Spectrum Analysis
+;;
+;; To extract the heart rate from our cleaned PPG signal, we'll use **frequency domain analysis**.
+;; The idea is simple: a heartbeat creates a periodic oscillation in the signal, and we can find
+;; the dominant frequency of that oscillation using the Fast Fourier Transform (FFT).
+;;
+;; ### Windowing and Overlap
+;;
+;; Rather than analyzing the entire signal at once, we'll use **windowed analysis**:
+;;
+;; - Split the signal into overlapping windows (e.g., 10-second windows with 5% overlap)
+;; - Apply a **Hanning window** to each segment to reduce spectral leakage
+;; - Compute the FFT for each window
+;; - The resulting power spectrum shows which frequencies are strongest
+;;
+;; The peak frequency in the power spectrum corresponds to the heart rate!
+;;
+;; ### Example: Single Subject Analysis
+;;
+;; Let's walk through the complete pipeline for one subject:
 
+;; (let [;; Frequency range for heart rate (0.65-4 Hz = 39-240 bpm)
+;;       [low-cutoff high-cutoff] [0.65 4]
 
+;;       ;; Window parameters for spectral analysis
+;;       window-size 10 ; seconds
+;;       window-samples (* sampling-rate window-size) ; 300 samples at 30 Hz
 
-;; ## Power spectry (WIP draft, incomplete)
+;;       ;; Create Hanning window to reduce spectral leakage
+;;       hanning (-> window-samples
+;;                   Hanning.
+;;                   .getWindow
+;;                   dtype/as-reader)
 
+;;       ;; Overlap parameters
+;;       overlap-fraction 0.05 ; 5% overlap between windows
+;;       hop (int (* overlap-fraction window-samples))
 
-(let [[low-cutoff high-cutoff] [0.65 4]
-      window-size 10
-      window-samples (* sampling-rate window-size)
-      hanning (-> window-samples
-                  Hanning.
-                  .getWindow
-                  dtype/as-reader)
-      overlap-fraction 0.05
-      hop (int (* overlap-fraction window-samples))
-      subject 51
-      sig (signal subject)
-      n-samples (tc/row-count sig)
-      std (-> sig
-              (tc/update-columns [:R :G :B]
-                                 #(-> %
-                                      remove-dc
-                                      (bandpass-filter {:fs sampling-rate
-                                                        :order 4
-                                                        :low-cutoff low-cutoff
-                                                        :high-cutoff high-cutoff})
-                                      stats/standardize))
-              (tc/select-columns [:R :G :B])
-              ds-tensor/dataset->tensor)
-      n-windows (-> n-samples
-                    (- window-samples)
-                    (quot hop))
-      windows-shape [window-samples
-                     n-windows
-                     3]
-      windows (tensor/compute-tensor
-               windows-shape
-               (fn [i j k]
-                 (std (+ (* j hop) i)
-                      k))
-               :float32)
-      hanninged-windows (tensor/compute-tensor
-                         windows-shape
-                         (fn [i j k]
-                           (* (windows i j k)
-                              (hanning i)))
-                         :float32)
-      power-spectrum (-> hanninged-windows
-                         (tensor/transpose [1 2 0])
-                         (tensor/slice 2)
-                         (->> (mapv (fn [window]
-                                      (let [fft (-> window
-                                                    double-array
-                                                    DiscreteFourier.)]
-                                        (.transform fft)
-                                        (.getMagnitude fft true)))))
-                         tensor/->tensor
-                         (#(tensor/reshape %
-                                           [n-windows
-                                            3
-                                            (-> % first count)]))
-                         (tensor/transpose [2 0 1]))]
-  [(-> windows
-       (dfn/* 100)
-       plotly/imshow)
-   (-> hanninged-windows
-       (dfn/* 100)
-       plotly/imshow)
-   (-> power-spectrum
-       plotly/imshow)
-   (-> power-spectrum
-       (tensor/slice 1)
-       (->> (map (fn [s]
-                   (-> s
-                       ds-tensor/tensor->dataset
-                       (tc/rename-columns [:R :G :B])
-                       plot-signal)))))])
+;;       ;; Select subject to analyze
+;;       subject 51
+;;       sig (signal subject)
+;;       n-samples (tc/row-count sig)
+
+;;       ;; Apply preprocessing pipeline: DC removal → bandpass → standardization
+;;       std (-> sig
+;;               (tc/update-columns [:R :G :B]
+;;                                  #(-> %
+;;                                       remove-dc
+;;                                       (bandpass-filter {:fs sampling-rate
+;;                                                         :order 4
+;;                                                         :low-cutoff low-cutoff
+;;                                                         :high-cutoff high-cutoff})
+;;                                       stats/standardize))
+;;               (tc/select-columns [:R :G :B])
+;;               ds-tensor/dataset->tensor)
+
+;;       ;; Calculate how many windows we can extract
+;;       n-windows (-> n-samples
+;;                     (- window-samples)
+;;                     (quot hop))
+
+;;       ;; Create sliding windows: [time × windows × channels]
+;;       windows-shape [window-samples
+;;                      n-windows
+;;                      3]
+;;       windows (tensor/compute-tensor
+;;                windows-shape
+;;                (fn [i j k]
+;;                  ;; Extract sample at time i, window j, channel k
+;;                  (std (+ (* j hop) i)
+;;                       k))
+;;                :float32)
+
+;;       ;; Apply Hanning window to each segment
+;;       hanninged-windows (tensor/compute-tensor
+;;                          windows-shape
+;;                          (fn [i j k]
+;;                            (* (windows i j k)
+;;                               (hanning i)))
+;;                          :float32)
+
+;;       ;; Compute power spectrum for each window
+;;       power-spectrum (-> hanninged-windows
+;;                          ;; Rearrange to [windows × channels × time]
+;;                          (tensor/transpose [1 2 0])
+;;                          (tensor/slice 2)
+;;                          ;; Apply FFT to each window
+;;                          (->> (mapv (fn [window]
+;;                                       (let [fft (-> window
+;;                                                     double-array
+;;                                                     DiscreteFourier.)]
+;;                                         (.transform fft)
+;;                                         ;; Get magnitude spectrum (power)
+;;                                         (.getMagnitude fft true)))))
+;;                          tensor/->tensor
+;;                          ;; Reshape to [windows × channels × frequencies]
+;;                          (#(tensor/reshape %
+;;                                            [n-windows
+;;                                             3
+;;                                             (-> % first count)]))
+;;                          ;; Transpose to [frequencies × windows × channels] for plotting
+;;                          (tensor/transpose [2 0 1]))]
+;;   ;; ### Visualizations
+;;   ;;
+;;   ;; We'll create several visualizations to understand the signal processing pipeline:
+
+;;   [(-> windows
+;;        (dfn/* 100)
+;;        plotly/imshow
+;;        (kind/hiccup
+;;         [:div
+;;          [:h4 "1. Raw Windowed Signal (after preprocessing)"]
+;;          [:p "Each row is a time sample, showing how the signal varies across windows (columns) and channels."]]))
+
+;;    (-> hanninged-windows
+;;        (dfn/* 100)
+;;        plotly/imshow
+;;        (kind/hiccup
+;;         [:div
+;;          [:h4 "2. After Hanning Window"]
+;;          [:p "Notice how the edges of each window are tapered to zero. This reduces spectral leakage in the FFT."]]))
+
+;;    (-> power-spectrum
+;;        plotly/imshow
+;;        (kind/hiccup
+;;         [:div
+;;          [:h4 "3. Power Spectrum"]
+;;          [:p "Each row is a frequency bin. Bright bands indicate strong frequency components. "
+;;           "The dominant frequency (brightest band in the 0.65-4 Hz range) corresponds to the heart rate."]]))
+
+;;    (-> power-spectrum
+;;        (tensor/slice 1)
+;;        (->> (map (fn [s]
+;;                    (-> s
+;;                        ds-tensor/tensor->dataset
+;;                        (tc/rename-columns [:R :G :B])
+;;                        plot-signal))))
+;;        (cons (kind/md "### 4. Power Spectrum Time Series\n\nEach plot shows how the power spectrum evolves over time for one channel.")))])
 
 
 
