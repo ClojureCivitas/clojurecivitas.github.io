@@ -25,11 +25,21 @@
 ;;
 ;; ### What We'll Explore
 ;;
-;; In this notebook, we'll walk through a [signal processing](https://en.wikipedia.org/wiki/Signal_processing) pipeline for analyzing Camera PPG data:
+;; **Our goal is to extract heart rate from smartphone camera video and validate it against clinical measurements.**
+;;
+;; The MTHS dataset provides both the raw camera data (RGB signals) and ground truth heart rate measurements from medical-grade equipment. This allows us to:
+;;
+;; 1. Develop and test signal processing algorithms
+;; 2. Validate our extracted heart rates against the ground truth
+;; 3. Calibrate parameters (filter cutoffs, window sizes, etc.) for optimal accuracy
+;;
+;; In this notebook, we'll walk through the complete pipeline:
 ;;
 ;; 1. **Loading and visualizing** raw [RGB](https://en.wikipedia.org/wiki/RGB_color_model) signals from multiple subjects
 ;; 2. **Signal preprocessing**: removing [DC offset](https://en.wikipedia.org/wiki/DC_bias), [bandpass filtering](https://en.wikipedia.org/wiki/Band-pass_filter) to isolate heart rate frequencies (0.5-5 Hz, corresponding to 30-300 bpm), and [standardization](https://en.wikipedia.org/wiki/Standard_score)
-;; 3. **Power spectrum analysis**: using windowed [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform) to identify the dominant frequency (heart rate)
+;; 3. **Power spectrum analysis**: using windowed [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform) to identify the dominant frequency
+;; 4. **Heart rate extraction**: finding the peak frequency and converting to bpm
+;; 5. **Validation**: comparing our estimates with ground truth measurements
 ;;
 ;; This exploration demonstrates how Clojure's ecosystem—combining tablecloth for data wrangling, dtype-next for efficient numerical computation, jdsp for signal processing, and tableplot for visualization—provides powerful tools for biomedical signal analysis.
 
@@ -131,10 +141,25 @@
 ;; NumPy arrays can be inspected using dtype-next:
 
 (dtype/shape (raw-data [:signal 23])) ; 30Hz signal → [n-samples, 3] array
-(dtype/shape (raw-data [:label 23])) ; 1Hz labels → [n-samples, 2] array
+(dtype/shape (raw-data [:label 23])) ; 1Hz labels → [n-samples, 2] array (heart rate + SpO2)
 
 ;; The [sampling rate](https://en.wikipedia.org/wiki/Sampling_(signal_processing)) is 30 Hz (30 samples per second)
 (def sampling-rate 30)
+
+;; ## Ground Truth Data
+;;
+;; Before we dive into signal processing, let's look at the ground truth labels.
+;; These provide the reference heart rate values we'll use to validate our algorithms.
+
+(defn labels [i]
+  (some-> [:label i]
+          raw-data
+          ds-tensor/tensor->dataset
+          (tc/rename-columns [:heart-rate :spo2])))
+
+;; For example, subject 23's ground truth measurements:
+
+(labels 23)
 
 ;; Let's create a helper function to convert a subject's raw signal into a tablecloth dataset
 ;; with properly named columns (:R, :G, :B) and a time column (:t in seconds):
@@ -253,11 +278,19 @@
                                    :high-cutoff high-cutoff})
     :standardize stats/standardize}))
 
-;; ## Power Spectrum Analysis
+;; ## Power Spectrum Analysis: Extracting Heart Rate
 ;;
-;; To extract the heart rate from our cleaned PPG signal, we'll use **[frequency domain](https://en.wikipedia.org/wiki/Frequency_domain) analysis**.
+;; Now comes the key step: **extracting heart rate from the camera signal**.
+;;
+;; To do this, we'll use **[frequency domain](https://en.wikipedia.org/wiki/Frequency_domain) analysis**.
 ;; The idea is simple: a heartbeat creates a periodic oscillation in the signal, and we can find
 ;; the dominant frequency of that oscillation using the [Fast Fourier Transform (FFT)](https://en.wikipedia.org/wiki/Fast_Fourier_transform).
+;;
+;; Once we identify the peak frequency, we can:
+;;
+;; 1. Convert it to beats per minute (bpm)
+;; 2. Compare it with the ground truth heart rate
+;; 3. Evaluate our algorithm's accuracy
 ;;
 ;; ### Windowing and Overlap
 ;;
