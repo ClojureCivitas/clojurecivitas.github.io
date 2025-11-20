@@ -12,24 +12,24 @@
 ;;
 ;; ### What is Camera PPG?
 ;;
-;; **Photoplethysmography (PPG)** is a technique for measuring blood volume changes in tissue, typically used to measure heart rate and blood oxygen levels. Traditional PPG sensors (like those in fitness watches) use dedicated infrared LEDs and photodetectors.
+;; **[Photoplethysmography (PPG)](https://en.wikipedia.org/wiki/Photoplethysmogram)** is a technique for measuring blood volume changes in tissue, typically used to measure heart rate and blood oxygen levels. Traditional PPG sensors (like those in fitness watches) use dedicated infrared LEDs and photodetectors.
 ;;
-;; **Camera PPG** (also called remote PPG or rPPG) is a fascinating alternative: it uses an ordinary smartphone camera to detect these same blood volume changes by analyzing subtle color variations in the skin. When you place your fingertip over the camera, each heartbeat causes a tiny change in blood volume that slightly alters the amount of light absorbed by the tissue. By recording video and analyzing the RGB color channels over time, we can extract vital signs like heart rate and SpO2 (blood oxygen saturation).
+;; **Camera PPG** (also called remote PPG or rPPG) is a fascinating alternative: it uses an ordinary smartphone camera to detect these same blood volume changes by analyzing subtle color variations in the skin. When you place your fingertip over the camera, each heartbeat causes a tiny change in blood volume that slightly alters the amount of light absorbed by the tissue. By recording video and analyzing the RGB color channels over time, we can extract vital signs like [heart rate](https://en.wikipedia.org/wiki/Heart_rate) and [SpO2](https://en.wikipedia.org/wiki/Oxygen_saturation_(medicine)) (blood oxygen saturation).
 ;;
 ;; ### The MTHS Dataset
 ;;
 ;; We're using the [MTHS dataset from the MEDVSE repository](https://github.com/MahdiFarvardin/MEDVSE), which contains smartphone camera PPG data from 60 subjects. For each subject, the dataset provides:
 ;;
-;; - **Signal data** (`signal_x.npy`): RGB time series sampled at 30 Hz from fingertip videos
-;; - **Ground truth labels** (`label_x.npy`): Heart rate (bpm) and SpO2 (%) sampled at 1 Hz, measured with clinical-grade equipment
+;; - **Signal data** (`signal_x.npy`): RGB time series sampled at 30 [Hz](https://en.wikipedia.org/wiki/Hertz) from fingertip videos
+;; - **Ground truth labels** (`label_x.npy`): Heart rate ([bpm](https://en.wikipedia.org/wiki/Heart_rate)) and SpO2 (%) sampled at 1 Hz, measured with clinical-grade equipment
 ;;
 ;; ### What We'll Explore
 ;;
-;; In this notebook, we'll walk through a signal processing pipeline for analyzing Camera PPG data:
+;; In this notebook, we'll walk through a [signal processing](https://en.wikipedia.org/wiki/Signal_processing) pipeline for analyzing Camera PPG data:
 ;;
-;; 1. **Loading and visualizing** raw RGB signals from multiple subjects
-;; 2. **Signal preprocessing**: removing DC offset, bandpass filtering to isolate heart rate frequencies (0.5-5 Hz, corresponding to 30-300 bpm), and standardization
-;; 3. **Power spectrum analysis**: using windowed FFT to identify the dominant frequency (heart rate)
+;; 1. **Loading and visualizing** raw [RGB](https://en.wikipedia.org/wiki/RGB_color_model) signals from multiple subjects
+;; 2. **Signal preprocessing**: removing [DC offset](https://en.wikipedia.org/wiki/DC_bias), [bandpass filtering](https://en.wikipedia.org/wiki/Band-pass_filter) to isolate heart rate frequencies (0.5-5 Hz, corresponding to 30-300 bpm), and [standardization](https://en.wikipedia.org/wiki/Standard_score)
+;; 3. **Power spectrum analysis**: using windowed [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform) to identify the dominant frequency (heart rate)
 ;;
 ;; This exploration demonstrates how Clojure's ecosystem—combining tablecloth for data wrangling, dtype-next for efficient numerical computation, jdsp for signal processing, and tableplot for visualization—provides powerful tools for biomedical signal analysis.
 
@@ -92,9 +92,9 @@
 
 ;; ## Reading data
 ;;
-;; The MTHS dataset stores signals and labels as NumPy `.npy` files. Each subject has two files:
+;; The MTHS dataset stores signals and labels as [NumPy](https://en.wikipedia.org/wiki/NumPy) `.npy` files. Each subject has two files:
 ;;
-;; - `signal_X.npy`: RGB time series (3 channels × time samples)
+;; - `signal_X.npy`: RGB [time series](https://en.wikipedia.org/wiki/Time_series) (3 channels × time samples)
 ;; - `label_X.npy`: Ground truth measurements
 ;;
 ;; We'll use libpython-clj to load these files via NumPy, then convert them to dtype-next structures for efficient processing in Clojure.
@@ -133,6 +133,7 @@
 (dtype/shape (raw-data [:signal 23])) ; 30Hz signal → [n-samples, 3] array
 (dtype/shape (raw-data [:label 23])) ; 1Hz labels → [n-samples, 2] array
 
+;; The [sampling rate](https://en.wikipedia.org/wiki/Sampling_(signal_processing)) is 30 Hz (30 samples per second)
 (def sampling-rate 30)
 
 ;; Let's create a helper function to convert a subject's raw signal into a tablecloth dataset
@@ -152,9 +153,9 @@
 ;; ## Plotting
 ;;
 ;; Let's create a plotting function to visualize all three RGB channels over time.
-;; In Camera PPG, different color channels can have different signal-to-noise ratios
+;; In Camera PPG, different color channels can have different [signal-to-noise ratios](https://en.wikipedia.org/wiki/Signal-to-noise_ratio)
 ;; depending on skin tone and lighting conditions. Typically, the green channel is
-;; strongest due to hemoglobin's absorption characteristics.
+;; strongest due to [hemoglobin](https://en.wikipedia.org/wiki/Hemoglobin)'s absorption characteristics.
 
 (defn plot-signal [s]
   (-> s
@@ -176,13 +177,13 @@
 ;; Raw Camera PPG signals are noisy and contain artifacts. Before we can extract heart rate,
 ;; we need to clean them up through a series of transformations:
 ;;
-;; 1. **DC removal (detrending)**: Removes the constant offset, leaving only the AC component
+;; 1. **[DC](https://en.wikipedia.org/wiki/Direct_current) removal ([detrending](https://en.wikipedia.org/wiki/Detrended_fluctuation_analysis))**: Removes the constant offset, leaving only the [AC component](https://en.wikipedia.org/wiki/Alternating_current)
 ;;    (the oscillating part due to heartbeats)
 ;;
-;; 2. **Bandpass filtering**: Keeps only frequencies in the 0.5-5 Hz range, which corresponds
-;;    to heart rates between 30-300 bpm. This removes high-frequency noise and low-frequency drift.
+;; 2. **[Bandpass filtering](https://en.wikipedia.org/wiki/Band-pass_filter)**: Keeps only frequencies in the 0.5-5 Hz range, which corresponds
+;;    to heart rates between 30-300 bpm. This removes high-frequency [noise](https://en.wikipedia.org/wiki/Noise_(signal_processing)) and low-frequency drift.
 ;;
-;; 3. **Standardization**: Scales the signal to zero mean and unit variance, making it easier
+;; 3. **[Standardization](https://en.wikipedia.org/wiki/Standard_score)**: Scales the signal to zero [mean](https://en.wikipedia.org/wiki/Mean) and unit [variance](https://en.wikipedia.org/wiki/Variance), making it easier
 ;;    to compare across subjects and channels.
 ;;
 ;; Let's create a utility function to visualize how each transformation affects all subjects:
@@ -220,7 +221,7 @@
 
 ;; **Bandpass Filter**
 ;;
-;; A 4th-order Butterworth bandpass filter that keeps only the frequencies associated with
+;; A 4th-order [Butterworth](https://en.wikipedia.org/wiki/Butterworth_filter) bandpass filter that keeps only the frequencies associated with
 ;; normal heart rates (0.5-5 Hz = 30-300 bpm). This is a standard technique in PPG signal processing.
 
 (defn bandpass-filter [signal {:keys [fs order low-cutoff high-cutoff]}]
@@ -254,18 +255,18 @@
 
 ;; ## Power Spectrum Analysis
 ;;
-;; To extract the heart rate from our cleaned PPG signal, we'll use **frequency domain analysis**.
+;; To extract the heart rate from our cleaned PPG signal, we'll use **[frequency domain](https://en.wikipedia.org/wiki/Frequency_domain) analysis**.
 ;; The idea is simple: a heartbeat creates a periodic oscillation in the signal, and we can find
-;; the dominant frequency of that oscillation using the Fast Fourier Transform (FFT).
+;; the dominant frequency of that oscillation using the [Fast Fourier Transform (FFT)](https://en.wikipedia.org/wiki/Fast_Fourier_transform).
 ;;
 ;; ### Windowing and Overlap
 ;;
-;; Rather than analyzing the entire signal at once, we'll use **windowed analysis**:
+;; Rather than analyzing the entire signal at once, we'll use **[windowed analysis](https://en.wikipedia.org/wiki/Window_function)**:
 ;;
 ;; - Split the signal into overlapping windows (e.g., 10-second windows with 5% overlap)
-;; - Apply a **Hanning window** to each segment to reduce spectral leakage
+;; - Apply a **[Hanning window](https://en.wikipedia.org/wiki/Hann_function)** to each segment to reduce [spectral leakage](https://en.wikipedia.org/wiki/Spectral_leakage)
 ;; - Compute the FFT for each window
-;; - The resulting power spectrum shows which frequencies are strongest
+;; - The resulting [power spectrum](https://en.wikipedia.org/wiki/Spectral_density) shows which frequencies are strongest
 ;;
 ;; The peak frequency in the power spectrum corresponds to the heart rate!
 ;;
