@@ -92,7 +92,7 @@
 
 ;; ## Reading data
 ;;
-;; The MTHS dataset stores signals and labels as [NumPy](https://en.wikipedia.org/wiki/NumPy) `.npy` files. Each subject has two files:
+;; The MTHS dataset stores signals and labels as [NumPy](https://numpy.org/) `.npy` files. Each subject has two files:
 ;;
 ;; - `signal_X.npy`: RGB [time series](https://en.wikipedia.org/wiki/Time_series) (3 channels × time samples)
 ;; - `label_X.npy`: Ground truth measurements
