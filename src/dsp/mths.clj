@@ -1,11 +1,12 @@
 ^{:kindly/hide-code true
-  :clay {:title "DSP Study Group - Camera PPG data"
+  :clay {:title "Extracting Heart Rate from Smartphone Camera Video"
          :quarto {:author [:daslu]
-                  :description "Analysing the MTHS dataset of Camera PPG data"
+                  :description "Using signal processing to extract and validate heart rate from Camera PPG data against clinical ground truth"
                   :category :clojure
                   :type :post
                   :date "2025-11-21"
-                  :tags [:dsp :math :biometrics]}}}
+                  :tags [:dsp :signal-processing :biometrics :camera-ppg :heart-rate]
+                  :draft true}}}
 (ns dsp.mths)
 
 ;; ## Introduction
