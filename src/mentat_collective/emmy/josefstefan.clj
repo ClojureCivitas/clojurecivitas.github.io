@@ -2,11 +2,11 @@
   :clay             {:title  "How to pronunce greek letters"
                      :quarto {:author      :kloimhardt
                               :type        :post
-                              :description "Josef Stefan's fourth power law is written both in greek and in english."
-                              :date        "2025-11-20"
+                              :description "Josef Stefan's fourth-power law is written both in greek and in english."
+                              :date        "2025-11-21"
                               :image       "josefstefan.png"
                               :category    :libs
-                              :tags        [:emmy :infix :yamlscript]}}}
+                              :tags        [:emmy :physics :notation]}}}
 (ns mentat-collective.emmy.josefstefan
   (:refer-clojure :exclude [+ - * / = abs compare zero? ref partial
                             times numerator denominator infinite?])

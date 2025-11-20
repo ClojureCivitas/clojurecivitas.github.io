@@ -6,7 +6,7 @@
                               :date     "2025-11-19"
                               :image    "fdg_ch01_ys.jpg"
                               :category :libs
-                              :tags     [:emmy :infix :yamlscript]}}}
+                              :tags     [:emmy :infix :yamlscript :notation]}}}
 
 (ns mentat-collective.emmy.fdg-ch01-ys
     (:refer-clojure :exclude [+ - * / zero? compare divide numerator denominator
