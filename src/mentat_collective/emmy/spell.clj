@@ -3,12 +3,6 @@
             [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]))
 
-(defn is-equal! [a b]
-  (when (zero? (simplify (- a b))) a))
-
-(defn solves! [a f]
-  (when (zero? (simplify (f a))) a))
-
 (defn postfix? [ctx ex]
   ((-> ctx :Schlusselworte :postfix)
    (str (last ex))))
@@ -39,14 +33,12 @@
 
 (defn mypow [x n]
   (if (integer? n)
-    (npow x n)
+    ;;(npow x n)
+    (expt x n)
     (expt x n)))
 
 (defn n-transpose [m]
   (apply mapv vector m))
-
-(defn r-transpose [x]
-  (reverse (n-transpose x)))
 
 (defn mround [x] (floor (+ x 0.5)))
 
@@ -73,8 +65,11 @@
 (def power mypow)
 (def null 0)
 (def Ein 1)
+(def one Ein)
 (def Milliard (fn [x] (* x (mypow 10 9))))
+(def billion Milliard)
 (def stel (fn [x y] (/ x y)))
+(def th stel)
 (defn Komma [& lst]
   (let [a (apply str (rest lst))]
     (to-double (+ (first lst) (/ (str-to-int a) (mypow 10 (count a)))))))
@@ -132,9 +127,9 @@
            {:infix
             #{"plus" "minus" "mal" "von" "dot" "durch" "hoch" "Ein" "Milliard"
               "Komma"
-              "times" "power" "comma"}
+              "times" "power" "comma" "billion"}
             :postfix
-            #{"stel"}
+            #{"stel" "th"}
             :infix-function
             #{"mit" "und" "with" "and"}
             :infix-function-map-deconstrucion
@@ -179,4 +174,47 @@
      :calc   (if (seq dbg) (into [] dbg) swe)
      :tex    bxe
      :hiccup hxe}))
+
+;; ## Some small examples of this formula generator
+
+(def html kind/hiccup)
+
+(def bsp0 (calcbox (1 plus 3)))
+(html (:hiccup bsp0))
+
+(:calc bsp0)
+
+;; praktisch zum debuggen: der generierte code
+(:code bsp0)
+
+(def bsp1 (calcbox (2 plus 1) "andere Rechnung" (+ 4 5)))
+(html (:hiccup bsp1))
+
+;; noch praktischer zum debuggen: calculation unterdrücken
+(:calc bsp1)
+
+(def bsp2 (calcbox ((X plus 1) mit [X gleich [(Y plus 2) mit [Y gle=ich 3]]])))
+(html (:hiccup bsp2))
+
+(:calc bsp2)
+
+(def bsp3 (calcbox ( [(X plus Y) mit [X ist-gleich 3]] mit [Y ist 2]) ))
+;; es ist wurst ob glei=ch, ist-gleich, -in-: nur ein Füllwort
+(html (:hiccup bsp3))
+
+(:calc bsp3)
+
+(defn bsp4 [Sekunden Y]
+  (calcbox ((X plus Y) mit [X -in- Sekunden])))
+
+(html (:hiccup (bsp4 0 0)))
+
+(:calc (bsp4 5 6))
+
+(defn bsp5 [{:keys [Schulwissen]}]
+  (calcbox ((e hoch pi) mit [[e pi] aus Schulwissen])))
+(html (:hiccup (bsp5 gctx)))
+
+(def bsp6 (calcbox [(X plus Y) [mit [X gleich (Y plus 7)]] [mit [Y gle=ich 3]]]))
+(html (:hiccup bsp6))
 
