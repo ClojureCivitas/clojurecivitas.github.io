@@ -280,7 +280,9 @@
                                    :high-cutoff high-cutoff})
     :standardize stats/standardize}))
 
-;; ## Power Spectrum Analysis: Extracting Heart Rate
+;; ## Power Spectrum Analysis: Extracting Heart Rate - DRAFT
+;;
+;; 🛠 NOTE: This is stil work-in-progress. In visualizing, we need to scale the frequency domain exist correctly.
 ;;
 ;; Now comes the key step: **extracting heart rate from the camera signal**.
 ;;
@@ -397,7 +399,7 @@
   (kind/fragment
    [(kind/hiccup
      [:div
-      [:h4 "1. Raw Windowed Signal (after preprocessing)"]
+      [:h4 "1. Raw windowed signal (after preprocessing)"]
       [:p "Each row is a time sample, showing how the signal varies across windows (columns) and channels."]])
 
     (-> windows
@@ -406,7 +408,7 @@
 
     (kind/hiccup
      [:div
-      [:h4 "2. After Hanning Window"]
+      [:h4 "2. After Hanning window"]
       [:p "Notice how the edges of each window are tapered to zero. This reduces spectral leakage in the FFT."]])
 
     (-> hanninged-windows
@@ -415,14 +417,14 @@
 
     (kind/hiccup
      [:div
-      [:h4 "3. Power Spectrum"]
+      [:h4 "3. Power spectrum"]
       [:p "Each row is a frequency bin. Bright bands indicate strong frequency components. "
        "The dominant frequency (brightest band in the 0.65-4 Hz range) corresponds to the heart rate."]])
 
     (-> power-spectrum
         plotly/imshow)
 
-    (kind/md "### 4. Power Spectrum Time Series\n\nEach plot shows how the power spectrum evolves over time.")
+    (kind/md "4. Slicing the power spectrum along time\n\nEach plot shows how the power spectrum at one window.")
 
     (-> power-spectrum
         (tensor/slice 1)
@@ -430,7 +432,14 @@
                     (-> s
                         ds-tensor/tensor->dataset
                         (tc/rename-columns [:R :G :B])
-                        plot-signal)))
+                        (plotly/base {:=x :x
+                                      :=mark-opacity 0.7})
+                        (plotly/layer-line {:=y :R
+                                            :=mark-color "red"})
+                        (plotly/layer-line {:=y :G
+                                            :=mark-color "green"})
+                        (plotly/layer-line {:=y :B
+                                            :=mark-color "blue"}))))
              (into [:div {:style {:max-height "600px"
                                   :overflow-y "auto"}}])
              kind/hiccup))]))
