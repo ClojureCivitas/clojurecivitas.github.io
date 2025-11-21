@@ -1,5 +1,6 @@
 ^{:kindly/hide-code true
   :clay {:title "Extracting Heart Rate from Smartphone Camera Video"
+         :external-requirements ["cloning the dataset as a separate repo: https://github.com/MahdiFarvardin/MEDVSE"]
          :quarto {:author [:daslu]
                   :description "Using signal processing to extract and validate heart rate from Camera PPG data against clinical ground truth"
                   :category :clojure
