@@ -1,5 +1,9 @@
 project:
   type: website
+  resources:
+    - "*.cljs"
+    - "*.svg"
+    - "*.png"
 
 website:
   title: "Clojure Civitas"
@@ -27,6 +31,7 @@ format:
       light: [ flatly, brand, styles.scss, styles-light.scss ]
       dark: [ darkly, brand, styles.scss, styles-dark.scss ]
     respect-user-color-scheme: true
+    lightbox: true
     include-in-header:
       - text: |
           <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>

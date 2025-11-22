@@ -1,14 +1,19 @@
 {:author
- [{:id    :chouser
-   :name  "Chris Houser"
-   :image "https://avatars.githubusercontent.com/u/36110?v=4"
-   :url   "https://chouser.us/"
-   :links [{:icon "github" :href "https://github.com/chouser"}]}
-  {:id :ezmiller
-   :name "Ethan Miller"
-   :image "https://avatars.githubusercontent.com/u/772738?v=4"
-   :url "https://github.com/ezmiller"
-   :affiliation [:scicloj]}
+ [{:id          :chouser
+   :name        "Chris Houser"
+   :image       "https://avatars.githubusercontent.com/u/36110?v=4"
+   :url         "https://chouser.us/"
+   :links       [{:icon "github" :href "https://github.com/chouser"}]}
+  {:id          :onbreath
+   :name        "Adrian Bendel"
+   :image       "https://avatars.githubusercontent.com/u/65270097?v=4"
+   :url         "https://github.com/onbreath"
+   :links       [{:icon "github" :href "https://github.com/onbreath"}]}
+  {:id          :eugnes
+   :name        "Eugen Nesbakken"
+   :image       "https://avatars.githubusercontent.com/u/46522650"
+   :affiliation [:bu :endor]
+   :links       [{:icon "github" :href "https://github.com/eugnes03"}]}
   {:id          :kirahowe
    :name        "Kira Howe"
    :image       "https://avatars.githubusercontent.com/u/11531673?v=4"
@@ -19,8 +24,14 @@
    :name        "Daniel Slutsky"
    :image       "https://avatars.githubusercontent.com/u/5673102?v=4"
    :url         "https://scicloj.github.io/contributors/daslu/"
-   :affiliation [:scicloj]
+   :affiliation [:scicloj :endor]
    :links       [{:icon "github" :href "https://github.com/daslu"}]}
+  {:id          :danielsz
+   :name        "Daniel Szmulewicz"
+   :image       "https://avatars.githubusercontent.com/u/859131?v=4"
+   :url         "https://danielsz.github.io/"
+   :affiliation []
+   :links       [{:icon "github" :href "https://github.com/danielsz"}]}
   {:id          :alexmiller
    :name        "Alex Miller"
    :image       "https://avatars.githubusercontent.com/u/171129?v=4"
@@ -43,7 +54,7 @@
                  {:icon "mastodon" :text "Mastodon" :href "https://tech.lgbt/@seancorfield"}]}
   {:id          :timschafer
    :name        "Tim Schafer"
-   :image       "https://media.licdn.com/dms/image/v2/D4E03AQGuYEubu1rpeA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1681232451970?e=1758153600&v=beta&t=b71jKqzrVKoYVqA7SSMvjwGw48w0DMKCanxyx25F2s0"
+   :image       "https://media.licdn.com/dms/image/v2/D4E03AQGuYEubu1rpeA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1681232451970?e=1764201600&v=beta&t=BaGJr3SSrKLFVm2yoZOX-tJgdPUyD3LR6rGTPQqWAvQ"
    :url         "https://github.com/srcerer"
    :affiliation [:clojurecamp]
    :links       [{:icon "github" :href "https://github.com/srcerer"}]}
@@ -116,12 +127,54 @@
    :email       "edwardaw@connect.hku.hk"
    :affiliation [:cim]
    :links       [{:icon "github" :href "https://github.com/W-Edward"}]}
+  {:id    :tombarys
+   :name  "Tomáš Baránek"
+   :image "https://avatars.githubusercontent.com/u/5729352?v=4"
+   :url   "https://barys.me/#english-section"
+   :email "tom@barys.me"
+   :links [{:icon "github" :href "https://github.com/tombarys"}]}
   {:id          :mattb
    :name        "Matthias Buehlmaier"
    :affiliation [:cim]}
   {:id          :tanvi
    :name        "Tanvi Nagar"
-   :affiliation [:cim]}]
+   :email       "tanvi@connect.hku.hk"
+   :affiliation [:cim]}
+  {:id          :luke-zeitlin
+   :name        "Luke Zeitlin"
+   :affiliation []}
+  {:id          :ludgersolbach
+   :name        "Ludger Solbach"
+   :url         "https://github.com/lsolbach"
+   :links       [{:icon "github" :href "https://github.com/lsolbach"}]
+   :affiliation []}
+  {:id    :bsless
+   :name  "Ben Sless"
+   :image "https://avatars.githubusercontent.com/u/21342111?v=4"
+   :url   "https://bsless.github.io/"
+   :links [{:icon "github" :href "https://github.com/bsless"}]}
+  {:id          :generateme
+   :name        "Tomasz Sulej"
+   :image       "https://avatars.githubusercontent.com/u/38646601?v=4"
+   :url         "https://github.com/genmeblog"
+   :affiliation [:scicloj]
+   :links       [{:icon "github" :href "https://github.com/genmeblog"}]}
+  {:id          :com.github/teodorlu
+   :name        "Teodor Heggelund"
+   :url         "https://teod.eu/"
+   :image       "https://play.teod.eu/img/teodor-heggelund-skitur.jpg"
+   :links       [{:icon "github" :href "https://github.com/teodorlu"}]}
+  {:id          :burinc
+   :name        "Burin Choomnuan"
+   :url         "https://choomnuan.com"
+   :image       "https://avatars.githubusercontent.com/burinc"
+   :links       [{:icon "github" :href "https://github.com/burinc"}]
+   :affiliation []}
+  {:id          :proffitt
+   :name        "William Proffitt"
+   :url         "https://github.com/doogiecode"
+   :image       "https://avatars.githubusercontent.com/doogiecode"}
+ ,]
 
  :affiliation
  [{:id   :clojure.core
@@ -142,8 +195,13 @@
    :url "https://techascent.com"}
   {:id   :cim
    :name "cim"
-   :url  "https://cim.hkubs.hku.hk/"
-  }]
+   :url  "https://cim.hkubs.hku.hk/"}
+  {:id   :endor
+   :name "Endor Global"
+   :url  "https://endor.global"}
+  {:id   :bu
+   :name "Boston University"
+   :url  "https://www.bu.edu/"}]
 
  :topic
  [{:id        :core
@@ -250,6 +308,13 @@
    :title  "Luminus Web Framework"
    :url    "https://luminusweb.com/"
    :format :framework
+   :topic  [:web :web/backend]
+   :level  2}
+
+  {:id     "replicant"
+   :title  "Replicant Documentation"
+   :url    "https://replicant.fun/"
+   :format :library-docs
    :topic  [:web :web/backend]
    :level  2}
 
