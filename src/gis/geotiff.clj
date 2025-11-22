@@ -1,6 +1,8 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Working with Cloud Optimized GeoTIFFs"
+                     :external-requirements [] ;; confirm - this is how to take pre-rendered .qmd as per: https://clojurecivitas.github.io/scicloj/clay/skip_if_unchanged_example.html ?
                      :quarto {:author   :luke-zeitlin
+                              :image    "tiff_geotiff_cog.png"
                               :type     :post
                               :date     "2025-11-20"
                               :draft    true
