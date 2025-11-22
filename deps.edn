@@ -13,7 +13,7 @@
   metosin/malli                               {:mvn/version "0.19.1"}
   clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
   clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
-  org.scicloj/clay                            {:mvn/version "2.0.2"}
+  org.scicloj/clay                            {:mvn/version "2.0.3"}
   org.scicloj/kindly                          {:mvn/version "4-beta21"}
   thi.ng/geom                                 {:mvn/version "1.0.1"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
