@@ -170,6 +170,10 @@
    :image       "https://avatars.githubusercontent.com/burinc"
    :links       [{:icon "github" :href "https://github.com/burinc"}]
    :affiliation []}
+  {:id          :proffitt
+   :name        "William Proffitt"
+   :url         "https://github.com/doogiecode"
+   :image       "https://avatars.githubusercontent.com/doogiecode"}
  ,]
 
  :affiliation
