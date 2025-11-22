@@ -4,11 +4,9 @@
           :kindly/options {:kinds-that-hide-code #{:kind/var :kind/hiccup}}
           :quarto         {:author   [:timothypratley]
                            :description "Why we need to share our ideas, and some suggestions on how"
-                           :page-layout :full
-                           :theme    "none"
-                           :navbar   false
                            :type     :post
                            :date     "2025-11-14"
+                           :image    "preview.png"
                            :category :collaboration
                            :tags     [:clojure :writing :workflow :motivation :community]}}}
   (:require [civitas.db :as db]
@@ -30,9 +28,7 @@
     [:style "body {
     margin: 0;
     padding: 0;
-    background: darkgreen;
     font-family: \"Luxurious Roman\", \"Times New Roman\", Times, Georgia, serif;
-    color: #FCFFE0;
   }
   h1,h2,h3,h4,h5 {
     font-family: \"Luxurious Roman\", \"Times New Roman\", Times, Georgia, serif;

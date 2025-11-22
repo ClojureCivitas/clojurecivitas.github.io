@@ -119,7 +119,11 @@
         target-world (nth @computed-steps i)
         id (str "step" i)]
     (when (not= current-world target-world)
-      (-> js/document .-location .-hash (set! (str \# id)))
+      (js/history.replaceState nil nil
+                               (str js/window.location.pathname
+                                    js/window.location.search
+                                    "#" id))
+
       (reset! transition
               (with-meta
                 (new-transition current-world target-world)
