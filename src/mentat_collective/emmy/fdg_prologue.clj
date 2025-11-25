@@ -1,7 +1,6 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Classical Mechanics Prologue"
-                     :quarto {:author   :kloimhardt
-                              :type     :post
+                     :quarto {:type     :draft
                               :sidebar  "emmy-fdg"
                               :date     "2025-11-12"
                               :image    "fdg_prologue.png"
