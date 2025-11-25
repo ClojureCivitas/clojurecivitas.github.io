@@ -2,11 +2,12 @@
   :clay             {:title  "Emmy, the Algebra System: Differential Geometry Chapter One"
                      :quarto {:author   :kloimhardt
                               :type     :post
+                              :sidebar  "emmy-fdg"
                               :description "First chapter of the book \"Functional Differential Geometry\", the code is on-line executable."
                               :date     "2025-11-14"
                               :image    "fdg_ch01.png"
                               :category :libs
-                              :tags     [:emmy :physics]}}}
+                              :tags [:emmy :physics]}}}
 (ns mentat-collective.emmy.fdg-ch01
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
