@@ -7,6 +7,7 @@
   {:id          :onbreath
    :name        "Adrian Bendel"
    :image       "https://avatars.githubusercontent.com/u/65270097?v=4"
+   :url         "https://github.com/onbreath"
    :links       [{:icon "github" :href "https://github.com/onbreath"}]}
   {:id          :eugnes
    :name        "Eugen Nesbakken"
@@ -169,6 +170,10 @@
    :image       "https://avatars.githubusercontent.com/burinc"
    :links       [{:icon "github" :href "https://github.com/burinc"}]
    :affiliation []}
+  {:id          :proffitt
+   :name        "William Proffitt"
+   :url         "https://github.com/doogiecode"
+   :image       "https://avatars.githubusercontent.com/doogiecode"}
  ,]
 
  :affiliation

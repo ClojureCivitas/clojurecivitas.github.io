@@ -2,6 +2,7 @@
   :clay             {:title  "Emmy, the Algebra System: Classical Mechanics Prologue"
                      :quarto {:author   :kloimhardt
                               :type     :post
+                              :sidebar  "emmy-fdg"
                               :date     "2025-11-12"
                               :image    "fdg_prologue.png"
                               :category :libs
@@ -13,7 +14,7 @@
             [emmy.mechanics.lagrange :as lg]
             [civitas.repl :as repl]))
 
-;; Elemetary introduction to Emmy, taken from the first pages of the MIT open-access book
+;; Elementary introduction to Emmy, taken from the first pages of the MIT open-access book
 ;; [Functional Differential Geometry (FDG)](https://mitpress.mit.edu/9780262019347/functional-differential-geometry/).
 ;; The code snippets are executable, copy-paste them to the sidebar of the page.
 
@@ -183,7 +184,7 @@
 
 ;; The functions $\partial_1 L$ and $\partial_2 L$ are partial derivatives of the
 ;; function $L$. Composition with $\Gamma[w]$ evaluates these partials with
-;; coordinates and velocites appropriate for the path $w$, making functions of
+;; coordinates and velocities appropriate for the path $w$, making functions of
 ;; time. Applying $D$ takes the time derivative. The Lagrange equation states that
 ;; the difference of the resulting functions of time must be zero. This statement
 ;; of the Lagrange equation is complete, unambiguous, and functional. It is not

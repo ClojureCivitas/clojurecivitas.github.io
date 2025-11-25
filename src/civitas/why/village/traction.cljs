@@ -38,9 +38,9 @@
          ;; HACK: for some reason some slides bounding box is too tall
          ;;bbh (.-height bbt)
          bbh (/ bbw 1.1547)
-         bbm (-> (.getCTM svg)
+         bbm (-> (.getScreenCTM svg)
                  (.inverse)
-                 (.multiply (.getCTM target)))
+                 (.multiply (.getScreenCTM target)))
          top-left (pt*m bbx bby bbm)
          bottom-right (pt*m (+ bbx bbw) (+ bby bbh) bbm)
          x (.-x top-left)
@@ -119,7 +119,11 @@
         target-world (nth @computed-steps i)
         id (str "step" i)]
     (when (not= current-world target-world)
-      (-> js/document .-location .-hash (set! (str \# id)))
+      (js/history.replaceState nil nil
+                               (str js/window.location.pathname
+                                    js/window.location.search
+                                    "#" id))
+
       (reset! transition
               (with-meta
                 (new-transition current-world target-world)
