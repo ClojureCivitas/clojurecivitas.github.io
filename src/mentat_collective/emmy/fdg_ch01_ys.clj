@@ -2,6 +2,7 @@
   :clay             {:title  "Emmy, the Algebra System: Infix Notation"
                      :quarto {:author   :kloimhardt
                               :type     :post
+                              :sidebar  "emmy-fdg"
                               :description "Emmy can wear a different apparel should the occasion demand it."
                               :date     "2025-11-19"
                               :image    "fdg_ch01_ys.jpg"
