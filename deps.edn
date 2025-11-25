@@ -46,6 +46,8 @@
 
   com.github.psambit9791/jdsp                 {:mvn/version "3.1.0"}
 
+  com.phronemophobic/clj-media {:mvn/version "2.3"}
+
   org.soulspace/qclojure                      {:mvn/version "0.22.0"}
   org.babashka/http-client                    {:mvn/version "0.4.22"}
   com.github.danielsz/bioscoop                {:mvn/version "1.0.5"}
