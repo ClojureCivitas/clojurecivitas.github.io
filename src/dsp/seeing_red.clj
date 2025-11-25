@@ -29,7 +29,11 @@
             [tech.v3.datatype.functional :as dfn]
             [tech.v3.dataset.tensor :as ds-tensor]
             [tablecloth.api :as tc]
-            [scicloj.tableplot.v1.plotly :as plotly]))
+            [scicloj.tableplot.v1.plotly :as plotly]
+            [tech.v3.parallel.for :as pfor]
+            [ham-fisted.reduce]
+            [tech.v3.dataset :as ds]))
+
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -225,5 +229,51 @@ first-tensor
       (plotly/layer-line {:=y :g :=name "g" :=mark-color "green"})
       (plotly/layer-line {:=y :b :=name "b" :=mark-color "blue"})
       (plotly/layer-line {:=y :a :=name "a" :=mark-color "black"})))
+
+;; Now let us collect all tensors of the video, along time
+
+(def all-tensors
+  (into []
+        (map (comp bufimg/as-ubyte-tensor
+                   clj-media.model/image))
+        (clj-media/frames
+         (clj-media/file video-path)
+         :video
+         {:format (clj-media/video-format
+                   {:pixel-format
+                    :pixel-format/rgba})})))
+
+;; Let us compute the average color per channel along time:
+
+(def channels-along-time
+  (-> all-tensors
+      (->> (pmap (fn [t]
+                   (-> t
+                       ;; averge over height
+                       (tensor/reduce-axis dfn/mean 0)
+                       ;; average over width
+                       (tensor/reduce-axis dfn/mean 0)))))
+      tensor/->tensor
+      ds-tensor/tensor->dataset
+      (tc/rename-columns [:a :r :g :b])))
+
+channels-along-time
+
+;; Let us plot this:
+
+(def sampling-rate
+  (/ (count all-tensors)
+     30.0))
+
+(-> channels-along-time
+    (tc/add-column :time (dfn// (range) sampling-rate))
+    (plotly/base {:=x :time
+                  :=mark-opacity 0.8
+                  :=mark-size 5})
+    (plotly/layer-line {:=y :r :=name "r" :=mark-color "red"})
+    (plotly/layer-line {:=y :g :=name "g" :=mark-color "green"})
+    (plotly/layer-line {:=y :b :=name "b" :=mark-color "blue"})
+    (plotly/layer-line {:=y :a :=name "a" :=mark-color "black"}))
+
 
 
