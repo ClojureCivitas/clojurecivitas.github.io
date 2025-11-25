@@ -2,6 +2,7 @@
   :clay             {:title  "Emmy, the Algebra System: Classical Mechanics Chapter One"
                      :quarto {:author   :kloimhardt
                               :type     :post
+                              :sidebar  "emmy-fdg"
                               :date     "2025-09-10"
                               :image    "sicm_ch01.png"
                               :category :libs

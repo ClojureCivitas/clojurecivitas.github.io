@@ -34,9 +34,11 @@ website:
         - section: "Chapters"
           contents:
             - href: mentat_collective/emmy/fdg_ch01.qmd
-              text: "Chapter 1"
+              text: "FDG Chapter 1"
             - href: mentat_collective/emmy/fdg_ch01_ys.qmd
-              text: "Chapter 1 Infix"
+              text: "FDG Chapter 1 Infix"
+            - href: mentat_collective/emmy/sicm_ch01.qmd
+              text: "SICM Chapter 1"
 
 format:
   html:

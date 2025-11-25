@@ -17,7 +17,7 @@
 ;; [Functional Differential Geometry (FDG)](https://mitpress.mit.edu/9780262019347/functional-differential-geometry/).
 ;; The code snippets are executable, copy-paste them to the sidebar of the page.
 
-;; The [Emmy](https://emmy.mentat.org) maintainer, [Sam Ritchie](https://roadtoreality.substack.com/), wrote the source for this page, namely the
+;; [Sam Ritchie](https://roadtoreality.substack.com/), the [Emmy](https://emmy.mentat.org) maintainer along with [Colin Smith](https://github.com/littleredcomputer), wrote the source for this page, namely the
 ;; [LaTex version of FDG](https://github.com/mentat-collective/fdg-book/blob/main/scheme/org/prologue.org).
 
 ;; In adopting MIT-Scheme's `(define ...)`, I trust that Clojure people will bridge that gap quickly
