@@ -15,7 +15,7 @@
             [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]))
 
-;; Already the pronunciation of the latin letters $x$ ("ex"), $y$ ("wye") and $z$ ("zee") is peculiar to the teutonic tongue. In textbooks, the associated greek letters are usually $\xi$ ("xi"), $\eta$ ("eta") and $\zeta$ ("zeta"). This needs practice. All the more so that additionally there are the two greeks $\chi$ ("chi") and $\omega$ ("omega").
+;; The greek letters $\xi$ ("xi"), $\eta$ ("eta") and $\zeta$ ("zeta") are often used in textbooks as counterparts to the latin x,y and z. This needs practice. All the more so that additionally there are the two greeks $\chi$ ("chi") and $\omega$ ("omega").
 
 ;; I'd like to make a table for this:
 
@@ -41,15 +41,15 @@
             [and [[eta zeta] being constants]]]))
 
 ^:kindly/hide-code
-(def constants {:eta 'eta :zeta 'zeta :chi 'chi :omega 'omega})
+(def greek-alphabet {:eta 'eta :zeta 'zeta :chi 'chi :omega 'omega})
 
 ^:kindly/hide-code
-(tex (:calc (dp-formel2 'xi constants )))
+(tex (:calc (dp-formel2 'xi greek-alphabet)))
 
 ;; How on earth do you pronounce that? Here we go
 
 ^:kindly/hide-code
-(kind/hiccup [:blockquote (:hiccup (dp-formel2 0 constants))])
+(kind/hiccup [:blockquote (:hiccup (dp-formel2 0 greek-alphabet))])
 
 ;; You already get a hint that the xi-$\xi$ is a temperature measured in degree Celsius. But what are the constants eta-$\eta$ and zeta-$\zeta$?
 
@@ -91,7 +91,7 @@
   {"°C" temper
    "°C / min" dp-meas})
 
-;; So, when the thermometer was at 100°C, within the first minute it lost 2.3 degrees due to radiation. In that case, their formula was pretty accurate. But a man named Pouillet used the formula to estimate the temperature of the sun, got a value of some 1700 degrees, and that seemed pretty low to a certain Josef Stefan. He re-published the above data and proposed his famous fourth-power law in the "Sitzungsberichte der Kaiserlichen Akademie der Wissenschaften, Mathematisch-Naturwissenschaftliche Classe, Neunundsiebzigster Band, Wien, 1879".
+;; So, when the thermometer was at 100°C, within the first minute it lost 2.3 degrees due to radiation. In that case, their formula was pretty accurate. But a man named Pouillet used the formula to estimate the temperature of the sun, got a value of some 1700 degrees, and that seemed pretty low to a certain Josef Stefan. He re-published the above data and proposed his famous fourth-power law on the relationship between heat-radiation and temperature on pages 391-428 of the "Sitzungsberichte der Kaiserlichen Akademie der Wissenschaften, Mathematisch-Naturwissenschaftliche Classe, Neunundsiebzigster Band, Wien, 1879".
 
 ;; ## The law of Stefan
 
@@ -105,10 +105,10 @@
             [and [[chi omega] being constants]]]))
 
 ^:kindly/hide-code
-(tex (:calc (stefan-law 'xi constants)))
+(tex (:calc (stefan-law 'xi greek-alphabet)))
 
 ^:kindly/hide-code
-(kind/hiccup [:blockquote (:hiccup (stefan-law 0 constants))])
+(kind/hiccup [:blockquote (:hiccup (stefan-law 0 greek-alphabet))])
 
 ;; We need to set omega-$\omega$ to one six billionth. The other constant is given by the absolute zero temperature, chi-$\chi$ = 273.
 
