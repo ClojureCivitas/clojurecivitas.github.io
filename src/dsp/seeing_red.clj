@@ -21,6 +21,7 @@
             [tech.v3.datatype :as dtype]
             [tech.v3.tensor :as tensor]
             [tech.v3.datatype.functional :as dfn]
+            [tech.v3.datatype.argops :as argops]
             [tech.v3.dataset.tensor :as ds-tensor]
             [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as plotly]
@@ -209,19 +210,22 @@ first-tensor
 ;; Since the entire camera is covered by a finger, we expect the values to be
 ;; fairly uniform (mostly showing the pinkish-red color of finger tissue):
 
-(let [[height width] (take 2 (dtype/shape first-tensor))]
-  (-> first-tensor
-      (tensor/slice 1)
-      first
-      ds-tensor/tensor->dataset
-      (tc/rename-columns [:a :r :g :b])
-      (tc/add-column :x (range))
+(let [[height width] (take 2 (dtype/shape first-tensor))
+      row-data (-> first-tensor
+                   (tensor/slice 1)
+                   first
+                   ds-tensor/tensor->dataset
+                   (tc/rename-columns [:a :r :g :b]))]
+  (-> row-data
+      (tc/add-column :x (dtype/make-reader :int64 (tc/row-count row-data) idx))
       (plotly/base {:=mark-opacity 0.8
-                    :=mark-size 5})
+                    :=mark-size 5
+                    :=title "First Row RGBA Values"})
       (plotly/layer-line {:=y :r :=name "r" :=mark-color "red"})
       (plotly/layer-line {:=y :g :=name "g" :=mark-color "green"})
       (plotly/layer-line {:=y :b :=name "b" :=mark-color "blue"})
-      (plotly/layer-line {:=y :a :=name "a" :=mark-color "black"})))
+      (plotly/layer-line {:=y :a :=name "a" :=mark-color "black"})
+      plotly/plot))
 
 ;; Now let us collect all tensors of the video, along time
 
@@ -242,7 +246,7 @@ first-tensor
   (-> all-tensors
       (->> (pmap (fn [t]
                    (-> t
-                       ;; averge over height
+                       ;; average over height
                        (tensor/reduce-axis dfn/mean 0)
                        ;; average over width
                        (tensor/reduce-axis dfn/mean 0)))))
@@ -250,7 +254,13 @@ first-tensor
       ds-tensor/tensor->dataset
       (tc/rename-columns [:a :r :g :b])))
 
+;; Check the shape and sample values:
+;; We expect ~900 rows (30 fps × 30 seconds), with RGBA columns
 channels-along-time
+
+;; Check data types - should be numeric (float64):
+;; All columns should be :float64
+(tc/info channels-along-time :datatypes)
 
 ;; Let us plot this:
 
@@ -259,14 +269,16 @@ channels-along-time
      30.0))
 
 (-> channels-along-time
-    (tc/add-column :time (dfn// (range) sampling-rate))
+    (tc/add-column :time (dfn// (dtype/make-reader :float64 (tc/row-count channels-along-time) idx)
+                                sampling-rate))
     (plotly/base {:=x :time
                   :=mark-opacity 0.8
                   :=mark-size 5})
     (plotly/layer-line {:=y :r :=name "r" :=mark-color "red"})
     (plotly/layer-line {:=y :g :=name "g" :=mark-color "green"})
     (plotly/layer-line {:=y :b :=name "b" :=mark-color "blue"})
-    (plotly/layer-line {:=y :a :=name "a" :=mark-color "black"}))
+    (plotly/layer-line {:=y :a :=name "a" :=mark-color "black"})
+    plotly/plot)
 
 ;; ## Focusing on the Green Channel
 ;;
@@ -274,11 +286,13 @@ channels-along-time
 ;; Let's isolate it and take a closer look:
 
 (-> channels-along-time
-    (tc/add-column :time (dfn// (range) sampling-rate))
+    (tc/add-column :time (dfn// (dtype/make-reader :float64 (tc/row-count channels-along-time) idx)
+                                sampling-rate))
     (plotly/base {:=x :time
                   :=mark-opacity 0.8
                   :=title "Raw Green Channel Signal"})
-    (plotly/layer-line {:=y :g :=name "green channel" :=mark-color "green"}))
+    (plotly/layer-line {:=y :g :=name "green channel" :=mark-color "green"})
+    plotly/plot)
 
 ;; Can you spot the heartbeats? It's pretty noisy! We can see there's definitely
 ;; some periodic variation, but it's buried in other variations.
@@ -304,23 +318,46 @@ channels-along-time
 (def green-signal
   (:g channels-along-time))
 
+;; Check signal properties:
+;; Number of samples (should match video frames, ~900):
+(dtype/ecount green-signal)
+
+;; Data type (should be numeric - :float64):
+(dtype/elemwise-datatype green-signal)
+
+;; Sample values to verify they're in sensible range (0-255):
+;; These are average pixel intensities across the whole frame
+(take 10 green-signal)
+
 ;; Design and apply a 4th-order Butterworth bandpass filter:
 ;; - Low cutoff: 0.75 Hz (45 BPM)
 ;; - High cutoff: 4.0 Hz (240 BPM)
 ;; - Sampling rate: from video frame rate
 
 (def filtered-signal
-  (let [flt (Butterworth. sampling-rate)]
-    (vec (.bandPassFilter flt
-                          (double-array green-signal)
-                          4 ; filter order
-                          0.75 ; low cutoff (Hz)
-                          4.0)))) ; high cutoff (Hz)
+  (let [^Butterworth flt (Butterworth. (double sampling-rate))]
+    (.bandPassFilter flt
+                     (double-array green-signal)
+                     (int 4) ; filter order
+                     (double 0.75) ; low cutoff (Hz)
+                     (double 4.0)))) ; high cutoff (Hz)
+
+;; Check filtered signal properties:
+;; Should be same length as input (~900):
+(dtype/ecount filtered-signal)
+
+;; Data type - JDSP returns primitive double array:
+(type filtered-signal)
+
+;; Sample values - should be centered around 0 after bandpass filtering:
+;; The DC component (average) is removed, so we see oscillations around zero
+(take 10 filtered-signal)
 
 ;; Let's compare the raw and filtered signals:
 
 (def comparison-data
-  (tc/dataset {:time (dfn// (range (count green-signal)) sampling-rate)
+  (tc/dataset {:time (dfn// (dtype/make-reader :float64 (dtype/ecount green-signal) idx)
+                            sampling-rate)
                :raw green-signal
                :filtered filtered-signal}))
 
@@ -333,7 +370,8 @@ channels-along-time
                         :=mark-opacity 0.5})
     (plotly/layer-line {:=y :filtered
                         :=name "filtered (0.75-4 Hz)"
-                        :=mark-color "darkgreen"}))
+                        :=mark-color "darkgreen"})
+    plotly/plot)
 
 ;; Much clearer! Now we can actually see the individual heartbeats as peaks in the signal.
 
@@ -350,7 +388,8 @@ channels-along-time
                   :=title "Zoomed View: 5-10 seconds"})
     (plotly/layer-line {:=y :filtered
                         :=name "filtered signal"
-                        :=mark-color "darkgreen"}))
+                        :=mark-color "darkgreen"})
+    plotly/plot)
 
 ;; Now we can see the characteristic PPG waveform shape more clearly!
 ;; Each heartbeat has:
@@ -374,32 +413,45 @@ channels-along-time
   (FindPeak. (double-array filtered-signal)))
 
 (def peak-indices
-  (.getPeaks (.detectPeaks peak-finder)))
+  (-> peak-finder
+      ^FindPeak (.detectPeaks)
+      (.getPeaks)))
 
 ;; How many heartbeats did we detect?
+;; For a 30-second video at 60-80 BPM, we'd expect 30-40 peaks
 
 (count peak-indices)
 
+;; Let's check the peak indices to ensure they're sensible:
+
+;; First few peaks (should be increasing frame indices):
+(take 5 peak-indices)
+
 ;; Let's visualize the detected peaks on our signal:
 
-(-> comparison-data
-    (tc/select-rows (fn [row] (< 5 (:time row) 10)))
-    (plotly/base {:=x :time
-                  :=title "Detected Heartbeats (5-10 seconds)"})
-    (plotly/layer-line {:=y :filtered
-                        :=name "filtered signal"
-                        :=mark-color "darkgreen"})
-    (plotly/layer-point {:=x (mapv #(nth (:time comparison-data) %)
-                                   (filter #(and (>= (nth (:time comparison-data) %) 5)
-                                                 (< (nth (:time comparison-data) %) 10))
-                                           peak-indices))
-                         :=y (mapv #(nth filtered-signal %)
-                                   (filter #(and (>= (nth (:time comparison-data) %) 5)
-                                                 (< (nth (:time comparison-data) %) 10))
-                                           peak-indices))
-                         :=name "detected peaks"
-                         :=mark-color "red"
-                         :=mark-size 10}))
+(let [time-col (:time comparison-data)
+      ;; Filter peaks in the 5-10 second window
+      ;; Use simple filter - keep indices where time is in range
+      filtered-peak-indices (filterv (fn [idx]
+                                       (let [t (dtype/get-value time-col idx)]
+                                         (and (>= t 5) (< t 10))))
+                                     peak-indices)
+      ;; Get times and values for filtered peaks
+      peak-times-window (mapv #(dtype/get-value time-col %) filtered-peak-indices)
+      peak-values-window (mapv #(dtype/get-value filtered-signal %) filtered-peak-indices)]
+  (-> comparison-data
+      (tc/select-rows (fn [row] (< 5 (:time row) 10)))
+      (plotly/base {:=x :time
+                    :=title "Detected Heartbeats (5-10 seconds)"})
+      (plotly/layer-line {:=y :filtered
+                          :=name "filtered signal"
+                          :=mark-color "darkgreen"})
+      (plotly/layer-point {:=x peak-times-window
+                           :=y peak-values-window
+                           :=name "detected peaks"
+                           :=mark-color "red"
+                           :=mark-size 10})
+      plotly/plot))
 
 ;; Great! We can now identify individual heartbeats in the signal.
 ;;
@@ -409,15 +461,39 @@ channels-along-time
 ;; The time between consecutive peaks is the inter-beat interval (IBI).
 
 (def peak-times
-  (mapv #(nth (:time comparison-data) %) peak-indices))
+  (let [time-col (:time comparison-data)]
+    (dtype/emap (fn [idx] (dtype/get-value time-col idx))
+                :float64
+                peak-indices)))
+
+;; Check peak times - should be monotonically increasing:
+(take 10 peak-times)
 
 (def inter-beat-intervals
-  (mapv - (rest peak-times) (butlast peak-times)))
+  (dfn/- (dtype/sub-buffer peak-times 1)
+         (dtype/sub-buffer peak-times 0 (dec (dtype/ecount peak-times)))))
+
+;; Check inter-beat intervals - should be positive, typically 0.5-2 seconds:
+;; At 60 BPM: 1.0s, at 80 BPM: 0.75s, at 120 BPM: 0.5s
+(take 10 inter-beat-intervals)
+
+;; Statistics on IBIs to check for variability and outliers:
+(def ibi-stats
+  {:min (dfn/reduce-min inter-beat-intervals)
+   :max (dfn/reduce-max inter-beat-intervals)
+   :mean (dfn/mean inter-beat-intervals)
+   :stddev (dfn/standard-deviation inter-beat-intervals)})
+
+ibi-stats
 
 ;; Average heart rate in beats per minute:
 
 (def avg-heart-rate
   (/ 60.0 (dfn/mean inter-beat-intervals)))
+
+;; Check if heart rate is in reasonable range (40-200 BPM):
+;; Typical resting HR is 60-100 BPM
+avg-heart-rate
 
 (kind/hiccup
  [:div
@@ -430,39 +506,238 @@ channels-along-time
 ;; - Use a sliding window for continuous heart rate estimation
 ;; - Account for heart rate variability
 
+;; ## Heart Rate Variability (HRV)
+;;
+;; Heart rate variability - the variation in time between consecutive heartbeats -
+;; is an interesting signal in itself. In fact, HRV patterns might be even more
+;; distinctive than average heart rate for biometric purposes!
+;;
+;; Let's visualize how the heart rate changes over time:
+
+(def instantaneous-hr
+  (dfn// 60.0 inter-beat-intervals))
+
+;; Plot instantaneous heart rate over time:
+
+(-> (tc/dataset {:time (dtype/sub-buffer peak-times 0 (dtype/ecount instantaneous-hr))
+                 :hr instantaneous-hr})
+    (plotly/base {:=x :time
+                  :=title "Instantaneous Heart Rate Over Time"
+                  :=y-title "BPM"})
+    (plotly/layer-line {:=y :hr
+                        :=name "heart rate"
+                        :=mark-color "red"})
+    plotly/plot)
+
+;; HRV metrics - common measures of heart rate variability:
+
+(def hrv-metrics
+  {:sdnn (dfn/standard-deviation inter-beat-intervals) ; Standard deviation of IBIs
+   :rmssd (let [successive-diffs (dfn/- (dtype/sub-buffer inter-beat-intervals 1)
+                                        (dtype/sub-buffer inter-beat-intervals 0
+                                                          (dec (dtype/ecount inter-beat-intervals))))]
+            (dfn/sqrt (dfn/mean (dfn/sq successive-diffs)))) ; Root mean square of successive differences
+   :pnn50 (let [successive-diffs (dfn/abs (dfn/- (dtype/sub-buffer inter-beat-intervals 1)
+                                                 (dtype/sub-buffer inter-beat-intervals 0
+                                                                   (dec (dtype/ecount inter-beat-intervals)))))
+                count-over-50ms (dfn/sum (dtype/emap #(if (> % 0.05) 1.0 0.0) :float64 successive-diffs))]
+            (* 100.0 (/ count-over-50ms (dtype/ecount successive-diffs))))}) ; Percentage of successive differences > 50ms
+
+hrv-metrics
+
+;; Interpretation:
+;; - **SDNN** (Standard Deviation of NN intervals): Overall HRV. Higher = more variable
+;; - **RMSSD** (Root Mean Square of Successive Differences): Short-term variability
+;; - **pNN50**: Percentage of intervals differing by >50ms. Related to parasympathetic activity
+;;
+;; These metrics vary between individuals and could potentially be used as biometric features!
+
+;; ## Heartbeat Segmentation
+;;
+;; Now let's segment individual heartbeats from the signal. This allows us to:
+;; 1. Examine the shape of each heartbeat waveform
+;; 2. Extract morphological features (peak amplitudes, durations, etc.)
+;; 3. Compare heartbeat shapes between individuals (the biometric goal!)
+;;
+;; We'll extract a window around each peak. A typical heartbeat cycle is about 0.8-1.2 seconds,
+;; so we'll use a window from 0.4 seconds before to 0.4 seconds after each peak.
+
+(def window-duration 0.4) ; seconds before and after peak
+
+(def window-samples
+  (int (* window-duration sampling-rate)))
+
+;; Extract heartbeat segments:
+(def heartbeat-segments
+  (mapv (fn [peak-idx]
+          (let [start-idx (max 0 (- peak-idx window-samples))
+                end-idx (min (dtype/ecount filtered-signal)
+                             (+ peak-idx window-samples 1))
+                segment (dtype/sub-buffer filtered-signal start-idx end-idx)
+                ;; Normalize to 0-1 for easier comparison
+                segment-min (dfn/reduce-min segment)
+                segment-max (dfn/reduce-max segment)
+                normalized (if (= segment-min segment-max)
+                             segment
+                             (dfn// (dfn/- segment segment-min)
+                                    (- segment-max segment-min)))]
+            {:peak-idx peak-idx
+             :start-idx start-idx
+             :end-idx end-idx
+             :raw-segment segment
+             :normalized-segment normalized}))
+        (take 10 peak-indices))) ; Just first 10 heartbeats for now
+
+;; Let's visualize the first few normalized heartbeats overlaid:
+
+(let [;; Create dataset with all heartbeat segments
+      segments-data (apply tc/concat
+                           (map-indexed
+                            (fn [beat-num {:keys [normalized-segment]}]
+                              (tc/dataset {:time (dfn// (dtype/make-reader :float64
+                                                                           (dtype/ecount normalized-segment)
+                                                                           idx)
+                                                        sampling-rate)
+                                           :amplitude normalized-segment
+                                           :beat (repeat (dtype/ecount normalized-segment)
+                                                         (str "Beat " beat-num))}))
+                            heartbeat-segments))]
+  (-> segments-data
+      (plotly/base {:=x :time
+                    :=y :amplitude
+                    :=color :beat
+                    :=title "First 10 Heartbeat Waveforms (Normalized)"
+                    :=x-title "Time (relative to segment start, seconds)"
+                    :=y-title "Normalized Amplitude"})
+      (plotly/layer-line {})
+      plotly/plot))
+
+;; Now we can see the shape variations between different heartbeats!
+;; The paper uses these morphological differences for biometric identification.
+
+;; ## Feature Extraction
+;;
+;; For biometric authentication, we need to extract quantitative features from each
+;; heartbeat that capture its unique characteristics. Common PPG features include:
+;;
+;; - **Systolic peak amplitude**: Height of the main peak
+;; - **Pulse width**: Duration of the pulse at different amplitude levels
+;; - **Rise time**: Time from start to peak
+;; - **Fall time**: Time from peak to end
+;; - **Area under curve**: Total energy in the pulse
+;; - **Spectral features**: Frequency content of the waveform
+
+(defn extract-heartbeat-features
+  "Extract morphological features from a single heartbeat segment"
+  [{:keys [normalized-segment raw-segment peak-idx]}]
+  (let [n (dtype/ecount normalized-segment)
+        peak-loc (argops/argmax normalized-segment)
+        peak-amp (dfn/reduce-max normalized-segment)
+
+        ;; Rise time: samples from start to peak
+        rise-time (/ peak-loc sampling-rate)
+
+        ;; Fall time: samples from peak to end
+        fall-time (/ (- n peak-loc) sampling-rate)
+
+        ;; Pulse width at 50% amplitude
+        half-max 0.5
+        above-half (dtype/emap #(if (>= % half-max) 1.0 0.0) :float64 normalized-segment)
+        pulse-width-50 (/ (dfn/sum above-half) sampling-rate)
+
+        ;; Area under curve (using raw segment for actual amplitude)
+        auc (dfn/sum raw-segment)
+
+        ;; Standard deviation (shape complexity)
+        shape-std (dfn/standard-deviation normalized-segment)]
+
+    {:peak-amplitude peak-amp
+     :rise-time rise-time
+     :fall-time fall-time
+     :pulse-width-50 pulse-width-50
+     :area-under-curve auc
+     :shape-std shape-std
+     :asymmetry-ratio (/ rise-time (+ rise-time fall-time))}))
+
+;; Extract features from all heartbeat segments:
+(def heartbeat-features
+  (mapv extract-heartbeat-features heartbeat-segments))
+
+;; View as a table:
+(tc/dataset heartbeat-features)
+
+;; Compute statistics across all heartbeats to see consistency:
+(def feature-stats
+  (let [ds (tc/dataset heartbeat-features)]
+    (tc/aggregate ds {:mean-peak-amp (fn [ds] (dfn/mean (:peak-amplitude ds)))
+                      :std-peak-amp (fn [ds] (dfn/standard-deviation (:peak-amplitude ds)))
+                      :mean-rise-time (fn [ds] (dfn/mean (:rise-time ds)))
+                      :std-rise-time (fn [ds] (dfn/standard-deviation (:rise-time ds)))
+                      :mean-pulse-width (fn [ds] (dfn/mean (:pulse-width-50 ds)))
+                      :std-pulse-width (fn [ds] (dfn/standard-deviation (:pulse-width-50 ds)))})))
+
+feature-stats
+
+;; These features show both:
+;; - **Central tendency** (mean): The typical heartbeat shape for this individual
+;; - **Variability** (std): How consistent the heartbeats are
+;;
+;; For biometric authentication, we'd:
+;; 1. Extract these features from multiple heartbeats in a recording
+;; 2. Train a classifier (SVM, Random Forest) to recognize the pattern
+;; 3. Test if new recordings match the learned pattern
+;;
+;; The paper found that combining multiple feature types works better than any single feature!
+
 ;; ## What We've Learned So Far
 ;;
-;; In this DSP study session, we've successfully reproduced the first few steps
-;; of the "Seeing Red" PPG biometric authentication pipeline:
+;; In this DSP study session, we've successfully reproduced major parts of the
+;; "Seeing Red" PPG biometric authentication pipeline:
 ;;
 ;; 1. ✅ **Signal Extraction**: Extracted average green channel values from video frames
 ;; 2. ✅ **Preprocessing**: Applied Butterworth bandpass filtering (0.75-4 Hz)
 ;; 3. ✅ **Beat Detection**: Located individual heartbeats using peak detection
 ;; 4. ✅ **Heart Rate Estimation**: Calculated average BPM from inter-beat intervals
+;; 5. ✅ **HRV Analysis**: Computed heart rate variability metrics (SDNN, RMSSD, pNN50)
+;; 6. ✅ **Heartbeat Segmentation**: Extracted individual heartbeat waveforms around each peak
+;; 7. ✅ **Feature Extraction**: Computed morphological features from each heartbeat
 ;;
-;; ### Next Steps for Future Sessions
+;; ### What Would Come Next
 ;;
-;; To complete the biometric authentication system, we'd need to:
+;; To complete a full biometric authentication system, we'd need to:
 ;;
-;; - **Heartbeat Segmentation**: Extract individual heartbeat waveforms around each peak
-;; - **Feature Extraction**: Compute morphological features for each heartbeat:
-;;   - Systolic peak amplitude and timing
-;;   - Diastolic phase characteristics  
-;;   - Pulse width and area under curve
-;;   - Frequency domain features (FFT)
-;; - **Classification**: Train a classifier (SVM or Random Forest) to distinguish users
-;; - **Evaluation**: Test on multiple sessions to measure authentication accuracy
+;; - **Multi-Session Data**: Process multiple recordings from the same person
+;; - **Multi-Person Data**: Collect data from different individuals
+;; - **Classification**: Train a classifier (SVM, Random Forest, Neural Network) to:
+;;   - Learn each person's unique PPG signature
+;;   - Distinguish between authorized and unauthorized users
+;; - **Evaluation**: Test on held-out sessions to measure:
+;;   - **FAR** (False Acceptance Rate): How often impostors are accepted
+;;   - **FRR** (False Rejection Rate): How often genuine users are rejected
+;;   - **EER** (Equal Error Rate): The point where FAR = FRR
 ;;
 ;; The paper achieved 8% EER within sessions but 20% across sessions, suggesting
-;; that PPG biometrics are promising but sensitive to physiological state changes.
+;; that PPG biometrics are promising but sensitive to physiological state changes
+;; (stress, exercise, time of day, etc.).
 ;;
 ;; ### Key Takeaways
 ;;
 ;; - The **green channel** really does work best for PPG extraction
-;; - **Bandpass filtering** dramatically improves signal quality
+;; - **Bandpass filtering** dramatically improves signal quality  
 ;; - We can reliably detect heartbeats even from noisy smartphone video
+;; - **Individual heartbeats show measurable shape variations** between different people
+;; - **HRV metrics add another dimension** to the biometric signature
 ;; - Real-world biometric systems need to handle temporal variations
+;;
+;; ### Technical Notes
+;;
+;; Throughout this notebook, we used:
+;; - **dtype-next** for efficient numerical operations (readers, sub-buffers, functional ops)
+;; - **JDSP** for signal processing (Butterworth filters, peak detection)
+;; - **Type hints** to avoid Java reflection warnings
+;; - **Sensibility checks** after each major computation to verify results
 ;;
 ;; Thanks for joining this study session! The code and techniques we explored here
 ;; could be extended to other PPG applications like stress monitoring, fitness tracking,
-;; or medical diagnostics.
+;; or medical diagnostics. The feature extraction approach could also be adapted for
+;; other physiological signals (ECG, respiration, etc.).
