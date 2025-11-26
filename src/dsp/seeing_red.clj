@@ -202,7 +202,7 @@ first-tensor
       (tensor/slice 1)
       (nth 100)
       ds-tensor/tensor->dataset
-      (tc/rename-columns [:a :r :g :b])))
+      (tc/rename-columns [:r :g :b :a])))
 
 ;; Now let's visualize how these RGBA values vary across the first row.
 ;; Since the entire camera is covered by a finger, we expect the values to be
@@ -213,7 +213,7 @@ first-tensor
                    (tensor/slice 1)
                    first
                    ds-tensor/tensor->dataset
-                   (tc/rename-columns [:a :r :g :b]))]
+                   (tc/rename-columns [:r :g :b :a]))]
   (-> row-data
       (tc/add-column :x (dtype/make-reader :int64 (tc/row-count row-data) idx))
       (plotly/base {:=mark-opacity 0.8
@@ -250,7 +250,7 @@ first-tensor
                        (tensor/reduce-axis dfn/mean 0)))))
       tensor/->tensor
       ds-tensor/tensor->dataset
-      (tc/rename-columns [:a :r :g :b])))
+      (tc/rename-columns [:r :g :b :a])))
 
 ;; Check the shape and sample values:
 ;; We expect ~900 rows (30 fps × 30 seconds), with RGBA columns
@@ -262,9 +262,16 @@ channels-along-time
 
 ;; Let us plot this:
 
+;; Calculate the correct sampling rate (frames per second) from video metadata
 (def sampling-rate
-  (/ (count all-tensors)
-     30.0))
+  (let [probe-info (clj-media/probe video-path)
+        video-stream (first (:streams probe-info))
+        num-frames (:num-frames video-stream)
+        [numerator denominator] (:time-base video-stream)
+        estimated-duration (:estimated-duration video-stream)
+        ;; Duration in seconds = time-units * time-base
+        duration-seconds (* estimated-duration (/ numerator (double denominator)))]
+    (/ num-frames duration-seconds)))
 
 (-> channels-along-time
     (tc/add-column :time (dfn// (dtype/make-reader :float64 (tc/row-count channels-along-time) idx)
@@ -278,10 +285,10 @@ channels-along-time
     (plotly/layer-line {:=y :a :=name "a" :=mark-color "black"})
     plotly/plot)
 
-;; ## Focusing on the Green Channel
+;; ## Selecting the Best Channel for PPG
 ;;
 ;; As we mentioned earlier, the paper found that the green channel works best for PPG.
-;; Let's isolate it and take a closer look:
+;; Let's check the green channel first:
 
 (-> channels-along-time
     (tc/add-column :time (dfn// (dtype/make-reader :float64 (tc/row-count channels-along-time) idx)
@@ -292,10 +299,50 @@ channels-along-time
     (plotly/layer-line {:=y :g :=name "green channel" :=mark-color "green"})
     plotly/plot)
 
-;; Can you spot the heartbeats? It's pretty noisy! We can see there's definitely
-;; some periodic variation, but it's buried in other variations.
+;; ### A Discovery: Channel Selection Matters!
 ;;
-;; The raw signal contains:
+;; Looking at the green channel plot above, we notice it's almost completely flat - barely any variation at all!
+;; Let's check the signal statistics to understand what's happening:
+
+(tc/aggregate channels-along-time
+              {:r-mean #(dfn/mean (:r %))
+               :r-std #(dfn/standard-deviation (:r %))
+               :g-mean #(dfn/mean (:g %))
+               :g-std #(dfn/standard-deviation (:g %))
+               :b-mean #(dfn/mean (:b %))
+               :b-std #(dfn/standard-deviation (:b %))})
+
+;; **What we observe:**
+;; - **Red channel**: Saturated at 255 (completely maxed out - no information)
+;; - **Green channel**: Mean ~0, extremely low values (severely underexposed)
+;; - **Blue channel**: Mean ~23 with variation (std ~1.4) - best signal quality!
+;;
+;; **Why is this happening?**
+;;
+;; The paper recommends green for PPG because green light typically penetrates skin at the right depth.
+;; However, in *this specific recording*:
+;; - The camera exposure might have been set for a different color temperature
+;; - The flashlight LED might not have strong green components
+;; - The finger placement may have blocked green wavelengths differently
+;;
+;; This is a great learning moment: **theory meets practice!** While green is often best,
+;; we should adaptively select the channel with the best signal quality for each recording.
+;;
+;; For this video, we'll use the **blue channel** instead, which shows clear variation
+;; where we'd expect heartbeat patterns. Let's visualize it:
+
+(-> channels-along-time
+    (tc/add-column :time (dfn// (dtype/make-reader :float64 (tc/row-count channels-along-time) idx)
+                                sampling-rate))
+    (plotly/base {:=x :time
+                  :=mark-opacity 0.8
+                  :=title "Raw Blue Channel Signal (Better Quality for This Video)"})
+    (plotly/layer-line {:=y :b :=name "blue channel" :=mark-color "blue"})
+    plotly/plot)
+
+;; Much better! We can see periodic variations that look like heartbeat patterns.
+;;
+;; The raw signal still contains:
 ;; - **Low-frequency drift**: Slow changes from finger movement, pressure variations
 ;; - **Heart rate signal**: The PPG we want (around 1-2 Hz, or 60-120 BPM)
 ;; - **High-frequency noise**: Camera sensor noise, electrical interference
@@ -311,10 +358,10 @@ channels-along-time
 
 (import '[com.github.psambit9791.jdsp.filter Butterworth])
 
-;; Extract just the green channel values:
+;; Extract the best channel for PPG signal (blue for this video):
 
 (def green-signal
-  (:g channels-along-time))
+  (:b channels-along-time))
 
 ;; Check signal properties:
 ;; Number of samples (should match video frames, ~900):
@@ -361,7 +408,7 @@ channels-along-time
 
 (-> comparison-data
     (plotly/base {:=x :time
-                  :=title "Raw vs Filtered Green Channel"})
+                  :=title "Raw vs Filtered PPG Signal (Blue Channel)"})
     (plotly/layer-line {:=y :raw
                         :=name "raw"
                         :=mark-color "lightgreen"
@@ -411,12 +458,26 @@ channels-along-time
   (FindPeak. (double-array filtered-signal)))
 
 (def peak-indices
-  (-> peak-finder
-      ^FindPeak (.detectPeaks)
-      (.getPeaks)))
+  (let [raw-peaks (-> peak-finder
+                      ^FindPeak (.detectPeaks)
+                      (.getPeaks))
+        ;; Filter 1: Keep only positive peaks (remove valleys/minima)
+        positive-peaks (filterv (fn [idx]
+                                  (pos? (dtype/get-value filtered-signal idx)))
+                                raw-peaks)
+        ;; Filter 2: Enforce minimum distance between peaks (0.25s = ~240 BPM max)
+        min-distance-samples (int (* 0.25 sampling-rate))
+        filtered-peaks (reduce (fn [acc idx]
+                                 (if (or (empty? acc)
+                                         (>= (- idx (peek acc)) min-distance-samples))
+                                   (conj acc idx)
+                                   acc))
+                               []
+                               positive-peaks)]
+    (int-array filtered-peaks)))
 
 ;; How many heartbeats did we detect?
-;; For a 30-second video at 60-80 BPM, we'd expect 30-40 peaks
+;; For a ~29-second video at 60-100 BPM, we'd expect 29-48 peaks
 
 (count peak-indices)
 
