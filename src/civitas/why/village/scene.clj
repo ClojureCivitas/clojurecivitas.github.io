@@ -9,7 +9,7 @@
                            :image       "preview.png"
                            :category    :collaboration
                            :tags        [:clojure :writing :workflow :motivation :community]}}}
-  (:require [civitas.db :as db]
+  (:require [civitas.authors :as authors]
             [civitas.explorer.geometry :as geom]
             [civitas.explorer.svg :as svg]
             [civitas.why.village.color :as color]
@@ -405,30 +405,6 @@
    (t (oblong-mesh 0 0 -1 3 3 1 (:sstone col) "slate"))
    (t (cylinder 1 10 6 (:sstone col)))
    (t (oblong-mesh 0 0 10 3 3 1 (:sstone col) "slate"))])
-
-(defn authors []
-  (let [authors (->> (:author @db/db)
-                     (sort-by :name))
-        n (count authors)
-        colors (cycle (take 11 color/palette))
-        r 6]
-    [:g
-     [:g {:transform "translate(0,-8)"}
-      (mu/mo (str n " authors"))]
-     [:g {:transform "scale(0.8)"}
-      (for [[{:keys [image]} [x y] color] (map vector authors (geom/spiral 100) colors)]
-        [:g {:transform (str "translate(" (* r x) "," (* r y) ")")}
-         (svg/polygon {:fill         color
-                       :stroke       (:dblue col)
-                       :stroke-width 1}
-                      (geom/hex r))
-         [:image {:x                   -5
-                  :y                   -5
-                  :width               10
-                  :height              10
-                  :href                image
-                  :clip-path           "url(#hex)"
-                  :preserveAspectRatio "xMidYMid slice"}]])]]))
 
 (defn posts []
   (let [r 3
@@ -1278,7 +1254,9 @@ where you can view the code, or clone the repo to experiment locally."]
 
    [{:fill (:lblue col)}
     [:g {}
-     (authors)]
+     (authors/authors-hexagon)
+     [:g {:transform "translate(0,-8)"}
+      (mu/mo (str (count authors/authors) " authors"))]]
     "Thank you so much to the many authors for sharing your ideas!
 30 authors have contributed blog posts.
 I hope that you will join us, and write your own post."]
