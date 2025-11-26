@@ -25,9 +25,7 @@
             [tech.v3.dataset.tensor :as ds-tensor]
             [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as plotly]
-            [tech.v3.parallel.for :as pfor]
-            [ham-fisted.reduce]
-            [tech.v3.dataset :as ds]))
+            [tech.v3.parallel.for :as pfor]))
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -431,23 +429,24 @@ channels-along-time
 
 (let [time-col (:time comparison-data)
       ;; Filter peaks in the 5-10 second window
-      ;; Use simple filter - keep indices where time is in range
       filtered-peak-indices (filterv (fn [idx]
                                        (let [t (dtype/get-value time-col idx)]
                                          (and (>= t 5) (< t 10))))
                                      peak-indices)
       ;; Get times and values for filtered peaks
       peak-times-window (mapv #(dtype/get-value time-col %) filtered-peak-indices)
-      peak-values-window (mapv #(dtype/get-value filtered-signal %) filtered-peak-indices)]
+      peak-values-window (mapv #(dtype/get-value filtered-signal %) filtered-peak-indices)
+      ;; Create a dataset with the peak points
+      peaks-ds (tc/dataset {:time peak-times-window
+                            :filtered peak-values-window})]
   (-> comparison-data
       (tc/select-rows (fn [row] (< 5 (:time row) 10)))
       (plotly/base {:=x :time
+                    :=y :filtered
                     :=title "Detected Heartbeats (5-10 seconds)"})
-      (plotly/layer-line {:=y :filtered
-                          :=name "filtered signal"
+      (plotly/layer-line {:=name "filtered signal"
                           :=mark-color "darkgreen"})
-      (plotly/layer-point {:=x peak-times-window
-                           :=y peak-values-window
+      (plotly/layer-point {:=dataset peaks-ds
                            :=name "detected peaks"
                            :=mark-color "red"
                            :=mark-size 10})
