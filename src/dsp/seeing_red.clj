@@ -1,10 +1,4 @@
 ^{:kindly/hide-code true
-  :clay {:title "Seeing Red: PPG Biometric Authentication"
-         :quarto {:author [:daslu]
-                  :date "2025-11-26"
-                  :category :data
-                  :tags [:dsp :biometrics :signal-processing :computer-vision]}}}
-^{:kindly/hide-code true
   :clay {:title "DSP Study Group: Exploring PPG Biometrics"
          :quarto {:author [:daslu]
                   :date "2025-11-26"
@@ -33,7 +27,6 @@
             [tech.v3.parallel.for :as pfor]
             [ham-fisted.reduce]
             [tech.v3.dataset :as ds]))
-
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -275,5 +268,201 @@ channels-along-time
     (plotly/layer-line {:=y :b :=name "b" :=mark-color "blue"})
     (plotly/layer-line {:=y :a :=name "a" :=mark-color "black"}))
 
+;; ## Focusing on the Green Channel
+;;
+;; As we mentioned earlier, the paper found that the green channel works best for PPG.
+;; Let's isolate it and take a closer look:
 
+(-> channels-along-time
+    (tc/add-column :time (dfn// (range) sampling-rate))
+    (plotly/base {:=x :time
+                  :=mark-opacity 0.8
+                  :=title "Raw Green Channel Signal"})
+    (plotly/layer-line {:=y :g :=name "green channel" :=mark-color "green"}))
 
+;; Can you spot the heartbeats? It's pretty noisy! We can see there's definitely
+;; some periodic variation, but it's buried in other variations.
+;;
+;; The raw signal contains:
+;; - **Low-frequency drift**: Slow changes from finger movement, pressure variations
+;; - **Heart rate signal**: The PPG we want (around 1-2 Hz, or 60-120 BPM)
+;; - **High-frequency noise**: Camera sensor noise, electrical interference
+
+;; ## Signal Preprocessing: Bandpass Filtering
+;;
+;; To isolate the heartbeat signal, we need to apply a **bandpass filter** that:
+;; - Removes low frequencies (< 0.75 Hz) - baseline drift
+;; - Removes high frequencies (> 4 Hz) - noise
+;; - Keeps heart rate frequencies (0.75-4 Hz, or 45-240 BPM)
+;;
+;; We'll use the JDSP library to design and apply a Butterworth bandpass filter.
+
+(import '[com.github.psambit9791.jdsp.filter Butterworth])
+
+;; Extract just the green channel values:
+
+(def green-signal
+  (:g channels-along-time))
+
+;; Design and apply a 4th-order Butterworth bandpass filter:
+;; - Low cutoff: 0.75 Hz (45 BPM)
+;; - High cutoff: 4.0 Hz (240 BPM)
+;; - Sampling rate: from video frame rate
+
+(def filtered-signal
+  (let [flt (Butterworth. sampling-rate)]
+    (vec (.bandPassFilter flt
+                          (double-array green-signal)
+                          4 ; filter order
+                          0.75 ; low cutoff (Hz)
+                          4.0)))) ; high cutoff (Hz)
+
+;; Let's compare the raw and filtered signals:
+
+(def comparison-data
+  (tc/dataset {:time (dfn// (range (count green-signal)) sampling-rate)
+               :raw green-signal
+               :filtered filtered-signal}))
+
+(-> comparison-data
+    (plotly/base {:=x :time
+                  :=title "Raw vs Filtered Green Channel"})
+    (plotly/layer-line {:=y :raw
+                        :=name "raw"
+                        :=mark-color "lightgreen"
+                        :=mark-opacity 0.5})
+    (plotly/layer-line {:=y :filtered
+                        :=name "filtered (0.75-4 Hz)"
+                        :=mark-color "darkgreen"}))
+
+;; Much clearer! Now we can actually see the individual heartbeats as peaks in the signal.
+
+;; ## What Do We See?
+;;
+;; After filtering, the periodic nature of the heartbeat becomes much more obvious.
+;; Each peak corresponds to a heartbeat (systole - when blood rushes into the fingertip).
+;;
+;; Let's zoom into a 5-second window to see the waveform shape more clearly:
+
+(-> comparison-data
+    (tc/select-rows (fn [row] (< 5 (:time row) 10)))
+    (plotly/base {:=x :time
+                  :=title "Zoomed View: 5-10 seconds"})
+    (plotly/layer-line {:=y :filtered
+                        :=name "filtered signal"
+                        :=mark-color "darkgreen"}))
+
+;; Now we can see the characteristic PPG waveform shape more clearly!
+;; Each heartbeat has:
+;; - **Systolic peak**: The main upward spike (heart contracts)
+;; - **Dicrotic notch**: A small dip after the peak (aortic valve closes)
+;; - **Diastolic phase**: Return to baseline (heart relaxes)
+;;
+;; The shape and timing of these features vary between individuals - that's what
+;; makes PPG potentially useful for biometrics!
+
+;; ## Detecting Individual Heartbeats
+;;
+;; Now that we have a clean signal, let's try to detect the individual heartbeats
+;; by finding the systolic peaks. We'll use JDSP's peak detection.
+
+(import '[com.github.psambit9791.jdsp.signal.peaks FindPeak])
+
+;; Find peaks in the filtered signal:
+
+(def peak-finder
+  (FindPeak. (double-array filtered-signal)))
+
+(def peak-indices
+  (.getPeaks (.detectPeaks peak-finder)))
+
+;; How many heartbeats did we detect?
+
+(count peak-indices)
+
+;; Let's visualize the detected peaks on our signal:
+
+(-> comparison-data
+    (tc/select-rows (fn [row] (< 5 (:time row) 10)))
+    (plotly/base {:=x :time
+                  :=title "Detected Heartbeats (5-10 seconds)"})
+    (plotly/layer-line {:=y :filtered
+                        :=name "filtered signal"
+                        :=mark-color "darkgreen"})
+    (plotly/layer-point {:=x (mapv #(nth (:time comparison-data) %)
+                                   (filter #(and (>= (nth (:time comparison-data) %) 5)
+                                                 (< (nth (:time comparison-data) %) 10))
+                                           peak-indices))
+                         :=y (mapv #(nth filtered-signal %)
+                                   (filter #(and (>= (nth (:time comparison-data) %) 5)
+                                                 (< (nth (:time comparison-data) %) 10))
+                                           peak-indices))
+                         :=name "detected peaks"
+                         :=mark-color "red"
+                         :=mark-size 10}))
+
+;; Great! We can now identify individual heartbeats in the signal.
+;;
+;; ## Calculating Heart Rate
+;;
+;; With the detected peaks, we can estimate the heart rate.
+;; The time between consecutive peaks is the inter-beat interval (IBI).
+
+(def peak-times
+  (mapv #(nth (:time comparison-data) %) peak-indices))
+
+(def inter-beat-intervals
+  (mapv - (rest peak-times) (butlast peak-times)))
+
+;; Average heart rate in beats per minute:
+
+(def avg-heart-rate
+  (/ 60.0 (dfn/mean inter-beat-intervals)))
+
+(kind/hiccup
+ [:div
+  [:h3 "Estimated Heart Rate"]
+  [:p {:style {:font-size "24px" :font-weight "bold"}}
+   (format "%.1f BPM" avg-heart-rate)]])
+
+;; This is just a rough estimate - a more robust implementation would:
+;; - Remove outliers (missed or false detections)
+;; - Use a sliding window for continuous heart rate estimation
+;; - Account for heart rate variability
+
+;; ## What We've Learned So Far
+;;
+;; In this DSP study session, we've successfully reproduced the first few steps
+;; of the "Seeing Red" PPG biometric authentication pipeline:
+;;
+;; 1. ✅ **Signal Extraction**: Extracted average green channel values from video frames
+;; 2. ✅ **Preprocessing**: Applied Butterworth bandpass filtering (0.75-4 Hz)
+;; 3. ✅ **Beat Detection**: Located individual heartbeats using peak detection
+;; 4. ✅ **Heart Rate Estimation**: Calculated average BPM from inter-beat intervals
+;;
+;; ### Next Steps for Future Sessions
+;;
+;; To complete the biometric authentication system, we'd need to:
+;;
+;; - **Heartbeat Segmentation**: Extract individual heartbeat waveforms around each peak
+;; - **Feature Extraction**: Compute morphological features for each heartbeat:
+;;   - Systolic peak amplitude and timing
+;;   - Diastolic phase characteristics  
+;;   - Pulse width and area under curve
+;;   - Frequency domain features (FFT)
+;; - **Classification**: Train a classifier (SVM or Random Forest) to distinguish users
+;; - **Evaluation**: Test on multiple sessions to measure authentication accuracy
+;;
+;; The paper achieved 8% EER within sessions but 20% across sessions, suggesting
+;; that PPG biometrics are promising but sensitive to physiological state changes.
+;;
+;; ### Key Takeaways
+;;
+;; - The **green channel** really does work best for PPG extraction
+;; - **Bandpass filtering** dramatically improves signal quality
+;; - We can reliably detect heartbeats even from noisy smartphone video
+;; - Real-world biometric systems need to handle temporal variations
+;;
+;; Thanks for joining this study session! The code and techniques we explored here
+;; could be extended to other PPG applications like stress monitoring, fitness tracking,
+;; or medical diagnostics.
