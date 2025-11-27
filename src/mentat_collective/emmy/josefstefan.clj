@@ -1,9 +1,9 @@
 ^{:kindly/hide-code true
-  :clay             {:title  "How to pronunce greek letters"
+  :clay             {:title  "How to pronounce greek letters"
                      :quarto {:author      :kloimhardt
                               :type        :post
-                              :description "Josef Stefan's fourth-power law is written both in greek and in english."
-                              :date        "2025-11-21"
+                              :description "Josef Stefan's fourth-power law, written in both greek and english."
+                              :date        "2025-11-27"
                               :image       "josefstefan.png"
                               :category    :libs
                               :tags        [:emmy :physics :notation]}}}
@@ -15,7 +15,7 @@
             [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]))
 
-;; The greek letters $\xi$ ("xi"), $\eta$ ("eta") and $\zeta$ ("zeta") are often used in textbooks as counterparts to the latin x,y and z. This needs practice. All the more so that additionally there are the two greeks $\chi$ ("chi") and $\omega$ ("omega").
+;; The greek letters $\xi$ ("xi"), $\eta$ ("eta") and $\zeta$ ("zeta") are often used in textbooks as counterparts to the latin x,y and z. This needs practice. All the more so that there also are the two greeks $\chi$ ("chi") and $\omega$ ("omega").
 
 ;; I'd like to make a table for this:
 
@@ -51,7 +51,7 @@
 ^:kindly/hide-code
 (kind/hiccup [:blockquote (:hiccup (dp-formel2 0 greek-alphabet))])
 
-;; You already get a hint that the xi-$\xi$ is a temperature measured in degree Celsius. But what are the constants eta-$\eta$ and zeta-$\zeta$?
+;; Included is the hint that the xi-$\xi$ is a temperature measured in degree Celsius. But what are the constants eta-$\eta$ and zeta-$\zeta$?
 
 ;; ## The formula of Dulong&Petit
 
@@ -88,7 +88,7 @@
 
 ^:kindly/hide-code
 (kind/table
-  {"°C" temper
+  {"°C"       temper
    "°C / min" dp-meas})
 
 ;; So, when the thermometer was at 100°C, within the first minute it lost 2.3 degrees due to radiation. In that case, their formula was pretty accurate. But a man named Pouillet used the formula to estimate the temperature of the sun, got a value of some 1700 degrees, and that seemed pretty low to a certain Josef Stefan. He re-published the above data and proposed his famous fourth-power law on the relationship between heat-radiation and temperature on pages 391-428 of the "Sitzungsberichte der Kaiserlichen Akademie der Wissenschaften, Mathematisch-Naturwissenschaftliche Classe, Neunundsiebzigster Band, Wien, 1879".
@@ -112,8 +112,8 @@
 
 ;; We need to set omega-$\omega$ to one six billionth. The other constant is given by the absolute zero temperature, chi-$\chi$ = 273.
 
-;; If we calculate the fourth-power of 273,
-;; the result is a pretty big number.
+;; As an exposition, we calculate the fourth-power of 273.
+;; The result is a pretty big number.
 
 ^:kindly/hide-code
 (def pow_273_4 (calcbox [(((chi times chi) times chi) times chi) [with [chi equals 273]]]))
