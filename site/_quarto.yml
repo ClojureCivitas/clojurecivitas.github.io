@@ -4,6 +4,7 @@ project:
     - "*.cljs"
     - "*.svg"
     - "*.png"
+    - "*.tif"
 
 website:
   title: "Clojure Civitas"
