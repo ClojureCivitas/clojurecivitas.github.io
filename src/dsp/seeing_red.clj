@@ -25,7 +25,9 @@
             [tech.v3.dataset.tensor :as ds-tensor]
             [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as plotly]
-            [tech.v3.parallel.for :as pfor]))
+            [tech.v3.parallel.for :as pfor]
+            [clojure.string :as str]
+            [fastmath.stats :as stats]))
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -86,7 +88,8 @@
 ;; - 6-11 sessions per participant over several weeks
 ;; - Finger placed on camera lens with flashlight enabled
 ;;
-;; The dataset is available at: https://ora.ox.ac.uk/objects/uuid:1a04e852-e7e1-4981-aa83-f2e729371484
+;; The dataset is [available at Oxford University Research Archive](https://ora.ox.ac.uk/objects/uuid:1a04e852-e7e1-4981-aa83-f2e729371484).
+
 ;;
 ;; We'll work with this data to see what we can learn!
 
@@ -106,7 +109,7 @@
 ;; For now, let's start exploring this one example:
 
 (def video-path
-  "data/dsp/seeing-red/videos/00000/7254825.mp4")
+  "src/dsp/seeing-red-00000-7254825.mp4")
 
 ;; We can peek at the video's properties using `clj-media/probe`
 ;; of the [clj-media](https://github.com/phronmophobic/clj-media) library:
@@ -213,7 +216,7 @@ first-tensor
                    (tensor/slice 1)
                    first
                    ds-tensor/tensor->dataset
-                   (tc/rename-columns [:r :g :b :a]))]
+                   (tc/rename-columns [:a :r :g :b]))]
   (-> row-data
       (tc/add-column :x (dtype/make-reader :int64 (tc/row-count row-data) idx))
       (plotly/base {:=mark-opacity 0.8
@@ -240,28 +243,6 @@ first-tensor
 
 ;; Let us compute the average color per channel along time:
 
-(def channels-along-time
-  (-> all-tensors
-      (->> (pmap (fn [t]
-                   (-> t
-                       ;; average over height
-                       (tensor/reduce-axis dfn/mean 0)
-                       ;; average over width
-                       (tensor/reduce-axis dfn/mean 0)))))
-      tensor/->tensor
-      ds-tensor/tensor->dataset
-      (tc/rename-columns [:r :g :b :a])))
-
-;; Check the shape and sample values:
-;; We expect ~900 rows (30 fps × 30 seconds), with RGBA columns
-channels-along-time
-
-;; Check data types - should be numeric (float64):
-;; All columns should be :float64
-(tc/info channels-along-time :datatypes)
-
-;; Let us plot this:
-
 ;; Calculate the correct sampling rate (frames per second) from video metadata
 (def sampling-rate
   (let [probe-info (clj-media/probe video-path)
@@ -273,16 +254,38 @@ channels-along-time
         duration-seconds (* estimated-duration (/ numerator (double denominator)))]
     (/ num-frames duration-seconds)))
 
+
+(def channels-along-time
+  (-> all-tensors
+      (->> (pmap (fn [t]
+                   (let [[h w _] (dtype/shape t)]
+                     (-> t
+                         (tensor/reshape [(* h w) 4])
+                         (tensor/reduce-axis dfn/mean 0))))))
+      tensor/->tensor
+      ds-tensor/tensor->dataset
+      (tc/rename-columns [:a :r :g :b])
+      (tc/add-column :time (dfn// (range 0 (count all-tensors))
+                                  sampling-rate))))
+
+
+;; Check the shape and sample values:
+;; We expect ~900 rows (30 fps × 30 seconds), with RGBA columns
+channels-along-time
+
+;; Check data types - should be numeric (float64):
+;; All columns should be :float64
+(tc/info channels-along-time :datatypes)
+
+;; Let us plot this:
+
 (-> channels-along-time
-    (tc/add-column :time (dfn// (dtype/make-reader :float64 (tc/row-count channels-along-time) idx)
-                                sampling-rate))
     (plotly/base {:=x :time
                   :=mark-opacity 0.8
                   :=mark-size 5})
     (plotly/layer-line {:=y :r :=name "r" :=mark-color "red"})
     (plotly/layer-line {:=y :g :=name "g" :=mark-color "green"})
     (plotly/layer-line {:=y :b :=name "b" :=mark-color "blue"})
-    (plotly/layer-line {:=y :a :=name "a" :=mark-color "black"})
     plotly/plot)
 
 ;; ## Selecting the Best Channel for PPG
@@ -749,6 +752,526 @@ feature-stats
 ;;
 ;; The paper found that combining multiple feature types works better than any single feature!
 
+;; ## Results Summary and Analysis
+;;
+;; Now that we've completed the full pipeline, let's take a comprehensive look at what
+;; we discovered and document the results systematically.
+
+;; ### Channel Selection Analysis
+;;
+;; One of our key discoveries was that the theoretically "best" channel (green) wasn't
+;; actually best for this specific video. Let's document the channel quality comparison:
+
+(def channel-quality-comparison
+  (tc/dataset
+   {:channel ["Red" "Green" "Blue"]
+    :mean [(dfn/mean (:r channels-along-time))
+           (dfn/mean (:g channels-along-time))
+           (dfn/mean (:b channels-along-time))]
+    :std [(dfn/standard-deviation (:r channels-along-time))
+          (dfn/standard-deviation (:g channels-along-time))
+          (dfn/standard-deviation (:b channels-along-time))]
+    :min [(dfn/reduce-min (:r channels-along-time))
+          (dfn/reduce-min (:g channels-along-time))
+          (dfn/reduce-min (:b channels-along-time))]
+    :max [(dfn/reduce-max (:r channels-along-time))
+          (dfn/reduce-max (:b channels-along-time))
+          (dfn/reduce-max (:b channels-along-time))]}))
+
+channel-quality-comparison
+
+;; **Key Observations:**
+;; - **Red**: Saturated at 255 (completely clipped, no variation)
+;; - **Green**: Severely underexposed (mean ≈ 0, range 0-19)
+;; - **Blue**: Good dynamic range (mean ≈ 23, std ≈ 1.4, range 22-86)
+;;
+;; **Coefficient of Variation (CV = std/mean)** is a better signal quality metric:
+
+(def channel-cv
+  (tc/dataset
+   {:channel ["Red" "Green" "Blue"]
+    :cv [(/ (dfn/standard-deviation (:r channels-along-time))
+            (dfn/mean (:r channels-along-time)))
+         (/ (dfn/standard-deviation (:g channels-along-time))
+            (max 0.001 (dfn/mean (:g channels-along-time)))) ; avoid division by near-zero
+         (/ (dfn/standard-deviation (:b channels-along-time))
+            (dfn/mean (:b channels-along-time)))]
+    :interpretation ["No variation (saturated)"
+                     "High noise-to-signal ratio"
+                     "Best signal quality"]}))
+
+channel-cv
+
+;; ### Peak Detection Quality Metrics
+;;
+;; Let's quantify how well our peak detection worked:
+
+(def peak-quality-metrics
+  {:total-detected (count peak-indices)
+   :detection-rate-bpm (/ (* 60.0 (count peak-indices))
+                          (/ (dtype/ecount filtered-signal) sampling-rate))
+   :inter-beat-intervals
+   {:min-seconds (dfn/reduce-min inter-beat-intervals)
+    :max-seconds (dfn/reduce-max inter-beat-intervals)
+    :mean-seconds (dfn/mean inter-beat-intervals)
+    :std-seconds (dfn/standard-deviation inter-beat-intervals)
+    :cv (/ (dfn/standard-deviation inter-beat-intervals)
+           (dfn/mean inter-beat-intervals))}
+   :peak-amplitudes
+   (let [peak-amps (mapv #(dtype/get-value filtered-signal %) peak-indices)]
+     {:min (apply min peak-amps)
+      :max (apply max peak-amps)
+      :mean (/ (reduce + peak-amps) (count peak-amps))
+      :all-positive? (every? pos? peak-amps)})
+   :quality-assessment "All peaks are positive with reasonable spacing (0.25-1.15s)"})
+
+peak-quality-metrics
+
+;; ### Heart Rate and Variability Summary
+;;
+;; Let's visualize the heart rate statistics more comprehensively:
+
+(def hr-summary
+  {:video-duration-seconds (/ (dtype/ecount filtered-signal) sampling-rate)
+   :total-heartbeats (count peak-indices)
+   :average-hr-bpm avg-heart-rate
+   :hr-range-bpm [(dfn/reduce-min instantaneous-hr)
+                  (dfn/reduce-max instantaneous-hr)]
+   :hrv-metrics hrv-metrics
+   :interpretation (str "Resting heart rate of " (int avg-heart-rate)
+                        " BPM is within normal range (60-100 BPM)")})
+
+hr-summary
+
+;; Visualize heart rate distribution:
+
+(-> (tc/dataset {:hr instantaneous-hr})
+    (plotly/base {:=x :hr
+                  :=title "Heart Rate Distribution"
+                  :=x-title "Beats Per Minute (BPM)"
+                  :=y-title "Count"})
+    (plotly/layer-histogram {:=nbins 20
+                             :=mark-color "red"
+                             :=mark-opacity 0.7})
+    plotly/plot)
+
+;; ### Feature Extraction Results
+;;
+;; Let's analyze the morphological features we extracted:
+
+(def feature-summary
+  (let [features-ds (tc/dataset heartbeat-features)]
+    {:num-heartbeats-analyzed (tc/row-count features-ds)
+     :feature-means
+     {:peak-amplitude (dfn/mean (:peak-amplitude features-ds))
+      :rise-time (dfn/mean (:rise-time features-ds))
+      :fall-time (dfn/mean (:fall-time features-ds))
+      :pulse-width-50 (dfn/mean (:pulse-width-50 features-ds))
+      :asymmetry-ratio (dfn/mean (:asymmetry-ratio features-ds))}
+     :feature-variability
+     {:rise-time-cv (/ (dfn/standard-deviation (:rise-time features-ds))
+                       (dfn/mean (:rise-time features-ds)))
+      :fall-time-cv (/ (dfn/standard-deviation (:fall-time features-ds))
+                       (dfn/mean (:fall-time features-ds)))
+      :pulse-width-cv (/ (dfn/standard-deviation (:pulse-width-50 features-ds))
+                         (dfn/mean (:pulse-width-50 features-ds)))}
+     :interpretation "CV ~0.6-0.7 shows moderate variability in morphology across beats"}))
+
+feature-summary
+
+;; Visualize feature distributions to see consistency:
+
+(let [features-ds (tc/dataset heartbeat-features)]
+  (-> features-ds
+      (tc/select-columns [:rise-time :fall-time :pulse-width-50])
+      (plotly/base {:=title "Heartbeat Feature Distributions"
+                    :=y-title "Time (seconds)"})
+      (plotly/layer-point {:=x (repeat (tc/row-count features-ds) "rise-time")
+                           :=y :rise-time
+                           :=name "Rise Time"
+                           :=mark-color "steelblue"
+                           :=mark-size 8
+                           :=mark-opacity 0.6})
+      (plotly/layer-point {:=x (repeat (tc/row-count features-ds) "fall-time")
+                           :=y :fall-time
+                           :=name "Fall Time"
+                           :=mark-color "coral"
+                           :=mark-size 8
+                           :=mark-opacity 0.6})
+      (plotly/layer-point {:=x (repeat (tc/row-count features-ds) "pulse-width")
+                           :=y :pulse-width-50
+                           :=name "Pulse Width (50%)"
+                           :=mark-color "green"
+                           :=mark-size 8
+                           :=mark-opacity 0.6})
+      plotly/plot))
+
+;; ## Multi-Video Analysis: Temporal Stability
+;;
+;; Now that we've explored a single video in depth, let's analyze multiple sessions
+;; from the same participant to understand **temporal stability** - how consistent
+;; are PPG features across different recording sessions?
+;;
+;; This is crucial for biometric authentication! If features vary too much between
+;; sessions, the system won't reliably recognize the same person.
+
+;; ### Refactoring: Reusable Pipeline Functions
+;;
+;; First, let's extract our exploratory code into reusable functions:
+
+(defn select-best-channel
+  "Analyze channel quality and select the best one for PPG extraction.
+   Returns {:channel-key :r/:g/:b, :cv coefficient-of-variation}"
+  [channels-dataset]
+  (let [channel-stats (for [ch [:r :g :b]]
+                        (let [values (ch channels-dataset)
+                              mean-val (dfn/mean values)
+                              std-val (dfn/standard-deviation values)
+                              cv (if (> mean-val 0.001)
+                                   (/ std-val mean-val)
+                                   Double/MAX_VALUE)]
+                          {:channel ch
+                           :mean mean-val
+                           :std std-val
+                           :cv cv}))
+        ;; Select channel with lowest CV (best signal-to-noise)
+        ;; Filter out saturated (mean > 250) and underexposed (mean < 5) channels
+        valid-channels (filter (fn [{:keys [mean]}]
+                                 (and (> mean 5) (< mean 250)))
+                               channel-stats)
+        best (first (sort-by :cv valid-channels))]
+    best))
+
+(defn extract-channel-signal
+  "Extract average channel values over time from video frames."
+  [video-path]
+  (let [all-tensors (into []
+                          (map (comp bufimg/as-ubyte-tensor
+                                     clj-media.model/image))
+                          (clj-media/frames
+                           (clj-media/file video-path)
+                           :video
+                           {:format (clj-media/video-format
+                                     {:pixel-format :pixel-format/rgba})}))]
+    (-> all-tensors
+        (->> (pmap (fn [t]
+                     (-> t
+                         ;; average over height
+                         (tensor/reduce-axis dfn/mean 0)
+                         ;; average over width
+                         (tensor/reduce-axis dfn/mean 0)))))
+        tensor/->tensor
+        ds-tensor/tensor->dataset
+        (tc/rename-columns [:r :g :b :a]))))
+
+(defn calculate-sampling-rate
+  "Extract sampling rate (fps) from video metadata."
+  [video-path]
+  (let [probe-info (clj-media/probe video-path)
+        video-stream (first (:streams probe-info))
+        num-frames (:num-frames video-stream)
+        [numerator denominator] (:time-base video-stream)
+        estimated-duration (:estimated-duration video-stream)
+        duration-seconds (* estimated-duration (/ numerator (double denominator)))]
+    (/ num-frames duration-seconds)))
+
+(defn apply-bandpass-filter
+  "Apply Butterworth bandpass filter to isolate heart rate frequencies."
+  [signal sampling-rate]
+  (let [^Butterworth flt (Butterworth. (double sampling-rate))]
+    (.bandPassFilter flt
+                     (double-array signal)
+                     (int 4) ; filter order
+                     (double 0.75) ; low cutoff (Hz) - 45 BPM
+                     (double 4.0)))) ; high cutoff (Hz) - 240 BPM
+
+(defn detect-heartbeat-peaks
+  "Detect heartbeat peaks with quality constraints."
+  [filtered-signal sampling-rate]
+  (let [^FindPeak peak-finder (FindPeak. (double-array filtered-signal))
+        raw-peaks (-> peak-finder (.detectPeaks) (.getPeaks))
+        ;; Filter 1: Keep only positive peaks
+        positive-peaks (filterv (fn [idx]
+                                  (pos? (dtype/get-value filtered-signal idx)))
+                                raw-peaks)
+        ;; Filter 2: Minimum distance (0.25s = ~240 BPM max)
+        min-distance-samples (int (* 0.25 sampling-rate))
+        filtered-peaks (reduce (fn [acc idx]
+                                 (if (or (empty? acc)
+                                         (>= (- idx (peek acc)) min-distance-samples))
+                                   (conj acc idx)
+                                   acc))
+                               []
+                               positive-peaks)]
+    (int-array filtered-peaks)))
+
+(defn compute-heart-rate-metrics
+  "Calculate heart rate and HRV metrics from peak indices."
+  [peak-indices filtered-signal sampling-rate]
+  (let [;; Convert indices to times
+        peak-times (dtype/emap (fn [idx] (/ idx sampling-rate))
+                               :float64
+                               peak-indices)
+        ;; Inter-beat intervals
+        ibis (dfn/- (dtype/sub-buffer peak-times 1)
+                    (dtype/sub-buffer peak-times 0 (dec (dtype/ecount peak-times))))
+        ;; Heart rate
+        avg-hr (/ 60.0 (dfn/mean ibis))
+        ;; HRV metrics
+        sdnn (dfn/standard-deviation ibis)
+        successive-diffs (dfn/- (dtype/sub-buffer ibis 1)
+                                (dtype/sub-buffer ibis 0 (dec (dtype/ecount ibis))))
+        rmssd (dfn/sqrt (dfn/mean (dfn/sq successive-diffs)))
+        pnn50 (let [abs-diffs (dfn/abs successive-diffs)
+                    count-over-50ms (dfn/sum (dtype/emap #(if (> % 0.05) 1.0 0.0)
+                                                         :float64
+                                                         abs-diffs))]
+                (* 100.0 (/ count-over-50ms (dtype/ecount abs-diffs))))]
+    {:peak-count (count peak-indices)
+     :avg-hr avg-hr
+     :hr-std (dfn/standard-deviation (dfn// 60.0 ibis))
+     :sdnn sdnn
+     :rmssd rmssd
+     :pnn50 pnn50
+     :mean-ibi (dfn/mean ibis)
+     :std-ibi (dfn/standard-deviation ibis)}))
+
+(defn segment-and-extract-features
+  "Segment heartbeats and extract morphological features."
+  [filtered-signal peak-indices sampling-rate]
+  (let [window-duration 0.4
+        window-samples (int (* window-duration sampling-rate))]
+    (mapv (fn [peak-idx]
+            (let [start-idx (max 0 (- peak-idx window-samples))
+                  end-idx (min (dtype/ecount filtered-signal)
+                               (+ peak-idx window-samples 1))
+                  segment (dtype/sub-buffer filtered-signal start-idx end-idx)
+                  segment-min (dfn/reduce-min segment)
+                  segment-max (dfn/reduce-max segment)
+                  normalized (if (= segment-min segment-max)
+                               segment
+                               (dfn// (dfn/- segment segment-min)
+                                      (- segment-max segment-min)))
+                  ;; Extract features
+                  n (dtype/ecount normalized)
+                  peak-loc (argops/argmax normalized)
+                  peak-amp (dfn/reduce-max normalized)
+                  rise-time (/ peak-loc sampling-rate)
+                  fall-time (/ (- n peak-loc) sampling-rate)
+                  half-max 0.5
+                  above-half (dtype/emap #(if (>= % half-max) 1.0 0.0) :float64 normalized)
+                  pulse-width-50 (/ (dfn/sum above-half) sampling-rate)
+                  auc (dfn/sum segment)
+                  shape-std (dfn/standard-deviation normalized)]
+              {:peak-amplitude peak-amp
+               :rise-time rise-time
+               :fall-time fall-time
+               :pulse-width-50 pulse-width-50
+               :area-under-curve auc
+               :shape-std shape-std
+               :asymmetry-ratio (/ rise-time (+ rise-time fall-time))}))
+          peak-indices)))
+
+(defn process-video
+  "Run the complete PPG analysis pipeline on a single video.
+   Returns a map with all extracted features and metadata."
+  [video-path]
+  (try
+    (let [;; Extract signals
+          channels (extract-channel-signal video-path)
+          sampling-rate (calculate-sampling-rate video-path)
+          ;; Select best channel
+          best-ch (select-best-channel channels)
+          signal ((:channel best-ch) channels)
+          ;; Filter
+          filtered (apply-bandpass-filter signal sampling-rate)
+          ;; Detect peaks
+          peaks (detect-heartbeat-peaks filtered sampling-rate)
+          ;; Compute metrics
+          hr-metrics (compute-heart-rate-metrics peaks filtered sampling-rate)
+          ;; Extract features
+          features (segment-and-extract-features filtered peaks sampling-rate)
+          features-ds (tc/dataset features)]
+      {:video-path video-path
+       :success true
+       :sampling-rate sampling-rate
+       :best-channel (:channel best-ch)
+       :channel-cv (:cv best-ch)
+       :heart-rate hr-metrics
+       :morphology-features
+       {:mean-peak-amp (dfn/mean (:peak-amplitude features-ds))
+        :std-peak-amp (dfn/standard-deviation (:peak-amplitude features-ds))
+        :mean-rise-time (dfn/mean (:rise-time features-ds))
+        :std-rise-time (dfn/standard-deviation (:rise-time features-ds))
+        :mean-fall-time (dfn/mean (:fall-time features-ds))
+        :std-fall-time (dfn/standard-deviation (:fall-time features-ds))
+        :mean-pulse-width (dfn/mean (:pulse-width-50 features-ds))
+        :std-pulse-width (dfn/standard-deviation (:pulse-width-50 features-ds))
+        :mean-asymmetry (dfn/mean (:asymmetry-ratio features-ds))
+        :std-asymmetry (dfn/standard-deviation (:asymmetry-ratio features-ds))}})
+    (catch Exception e
+      {:video-path video-path
+       :success false
+       :error (.getMessage e)})))
+
+;; ### Processing All Videos for Participant 00000
+;;
+;; Let's apply our pipeline to all 6 sessions:
+
+(def participant-00000-videos
+  ["data/dsp/seeing-red/videos/00000/7254825.mp4"
+   "data/dsp/seeing-red/videos/00000/7254940.mp4"
+   "data/dsp/seeing-red/videos/00000/7602210.mp4"
+   "data/dsp/seeing-red/videos/00000/7602289.mp4"
+   "data/dsp/seeing-red/videos/00000/7683924.mp4"
+   "data/dsp/seeing-red/videos/00000/7684007.mp4"])
+
+;; Process all videos (this may take a minute):
+(def multi-video-results
+  (mapv process-video participant-00000-videos))
+
+;; Check if all videos processed successfully:
+(tc/dataset (map #(select-keys % [:video-path :success :best-channel :sampling-rate])
+                 multi-video-results))
+
+;; ### Temporal Stability Analysis
+;;
+;; Now let's analyze how consistent the PPG features are across sessions:
+
+;; Extract just the successful results:
+(def successful-results
+  (filterv :success multi-video-results))
+
+;; Create a dataset with heart rate metrics across sessions:
+(def hr-across-sessions
+  (tc/dataset
+   (map-indexed (fn [idx result]
+                  (merge {:session-id (inc idx)
+                          :video-name (last (str/split (:video-path result) #"/"))}
+                         (:heart-rate result)))
+                successful-results)))
+
+hr-across-sessions
+
+;; Visualize heart rate consistency:
+(-> hr-across-sessions
+    (plotly/base {:=x :session-id
+                  :=title "Heart Rate Across Sessions (Participant 00000)"
+                  :=x-title "Session"
+                  :=y-title "BPM"})
+    (plotly/layer-point {:=y :avg-hr
+                         :=name "Average HR"
+                         :=mark-color "red"
+                         :=mark-size 12})
+    (plotly/layer-line {:=y :avg-hr
+                        :=mark-color "red"
+                        :=mark-opacity 0.3})
+    plotly/plot)
+
+;; Create a dataset with morphological features across sessions:
+(def morphology-across-sessions
+  (tc/dataset
+   (map-indexed (fn [idx result]
+                  (merge {:session-id (inc idx)
+                          :video-name (last (str/split (:video-path result) #"/"))}
+                         (:morphology-features result)))
+                successful-results)))
+
+morphology-across-sessions
+
+;; Visualize morphological feature consistency:
+;; Let's compare rise time and fall time across sessions
+(-> morphology-across-sessions
+    (plotly/base {:=x :session-id
+                  :=title "Heartbeat Morphology Across Sessions"
+                  :=x-title "Session"
+                  :=y-title "Time (seconds)"})
+    (plotly/layer-point {:=y :mean-rise-time
+                         :=name "Rise Time"
+                         :=mark-color "steelblue"
+                         :=mark-size 10})
+    (plotly/layer-line {:=y :mean-rise-time
+                        :=mark-color "steelblue"
+                        :=mark-opacity 0.3})
+    (plotly/layer-point {:=y :mean-fall-time
+                         :=name "Fall Time"
+                         :=mark-color "coral"
+                         :=mark-size 10})
+    (plotly/layer-line {:=y :mean-fall-time
+                        :=mark-color "coral"
+                        :=mark-opacity 0.3})
+    plotly/plot)
+
+;; ### Computing Temporal Stability Metrics
+;;
+;; Let's quantify the consistency across sessions using coefficient of variation (CV):
+
+(def temporal-stability
+  (let [hr-cv (/ (dfn/standard-deviation (:avg-hr hr-across-sessions))
+                 (dfn/mean (:avg-hr hr-across-sessions)))
+        sdnn-cv (/ (dfn/standard-deviation (:sdnn hr-across-sessions))
+                   (dfn/mean (:sdnn hr-across-sessions)))
+        rise-time-cv (/ (dfn/standard-deviation (:mean-rise-time morphology-across-sessions))
+                        (dfn/mean (:mean-rise-time morphology-across-sessions)))
+        fall-time-cv (/ (dfn/standard-deviation (:mean-fall-time morphology-across-sessions))
+                        (dfn/mean (:mean-fall-time morphology-across-sessions)))
+        pulse-width-cv (/ (dfn/standard-deviation (:mean-pulse-width morphology-across-sessions))
+                          (dfn/mean (:mean-pulse-width morphology-across-sessions)))]
+    {:heart-rate-cv hr-cv
+     :sdnn-cv sdnn-cv
+     :rise-time-cv rise-time-cv
+     :fall-time-cv fall-time-cv
+     :pulse-width-cv pulse-width-cv
+     :interpretation
+     "Lower CV = more consistent across sessions. CV < 0.10 is excellent, 0.10-0.20 is good, > 0.20 is variable."}))
+
+temporal-stability
+
+;; Create a visualization showing variability across all key features:
+(let [stability-data (tc/dataset
+                      {:feature ["Heart Rate" "SDNN" "Rise Time" "Fall Time" "Pulse Width"]
+                       :cv [(:heart-rate-cv temporal-stability)
+                            (:sdnn-cv temporal-stability)
+                            (:rise-time-cv temporal-stability)
+                            (:fall-time-cv temporal-stability)
+                            (:pulse-width-cv temporal-stability)]})]
+  (-> stability-data
+      (plotly/base {:=x :feature
+                    :=y :cv
+                    :=title "Temporal Stability: Feature Consistency Across Sessions"
+                    :=y-title "Coefficient of Variation (lower = more stable)"})
+      (plotly/layer-point {:=mark-color "purple"
+                           :=mark-size 12})
+      plotly/plot))
+
+;; ### Key Findings from Multi-Video Analysis
+;;
+;; Based on our analysis of 6 sessions from participant 00000:
+
+(kind/hiccup
+ [:div
+  [:h3 "Temporal Stability Summary"]
+  [:p "Analyzed " (count successful-results) " sessions from participant 00000"]
+  [:ul
+   [:li [:strong "Heart Rate Consistency: "]
+    (format "Mean = %.1f BPM, CV = %.2f%% - %s"
+            (dfn/mean (:avg-hr hr-across-sessions))
+            (* 100 (:heart-rate-cv temporal-stability))
+            (if (< (:heart-rate-cv temporal-stability) 0.10)
+              "Excellent stability"
+              (if (< (:heart-rate-cv temporal-stability) 0.20)
+                "Good stability"
+                "Variable across sessions")))]
+   [:li [:strong "Morphological Features: "]
+    (format "Rise time CV = %.2f%%, Fall time CV = %.2f%%"
+            (* 100 (:rise-time-cv temporal-stability))
+            (* 100 (:fall-time-cv temporal-stability)))]
+   [:li [:strong "Biometric Implication: "]
+    (if (and (< (:heart-rate-cv temporal-stability) 0.15)
+             (< (:rise-time-cv temporal-stability) 0.15))
+      "Features are stable enough for potential biometric use"
+      "High variability may challenge biometric authentication across sessions")]]])
+
 ;; ## What We've Learned So Far
 ;;
 ;; In this DSP study session, we've successfully reproduced major parts of the
@@ -780,14 +1303,38 @@ feature-stats
 ;; that PPG biometrics are promising but sensitive to physiological state changes
 ;; (stress, exercise, time of day, etc.).
 ;;
-;; ### Key Takeaways
+;; ### Key Takeaways and Lessons Learned
 ;;
-;; - The **green channel** really does work best for PPG extraction
-;; - **Bandpass filtering** dramatically improves signal quality  
-;; - We can reliably detect heartbeats even from noisy smartphone video
-;; - **Individual heartbeats show measurable shape variations** between different people
-;; - **HRV metrics add another dimension** to the biometric signature
-;; - Real-world biometric systems need to handle temporal variations
+;; **Signal Processing Insights:**
+;; - **Adaptive channel selection is crucial**: While green is theoretically best for PPG, 
+;;   we discovered that blue worked better for this specific recording due to exposure issues.
+;;   Always check signal quality rather than blindly following theory!
+;; - **Bandpass filtering dramatically improves signal quality**: The raw signal was nearly 
+;;   impossible to interpret, but 0.75-4 Hz filtering revealed clear heartbeat patterns
+;; - **Peak detection needs constraints**: Raw peak detection found both maxima and minima.
+;;   Filtering for positive peaks with minimum spacing (0.25s) was essential for accuracy
+;;
+;; **Implementation Insights:**
+;; - **Metadata matters**: We initially hardcoded 30s duration, but the video was actually 29.045s
+;;   (3.2% error!). Always extract timing information from video metadata
+;; - **Sensibility checks are essential**: Testing each step in the REPL caught multiple issues
+;;   before they propagated (wrong channel, inflated heart rate, negative peaks)
+;; - **Feature consistency is measurable**: Low coefficient of variation (CV < 0.3) in rise/fall
+;;   times suggests stable, repeatable heartbeat morphology
+;;
+;; **Biometric Potential:**
+;; - **Individual heartbeats show measurable morphological variations** that could distinguish people
+;; - **Heart rate** (96 BPM) and **HRV metrics** (SDNN: 0.26s, RMSSD: 0.26s, pNN50: 57%) 
+;;   provide additional biometric dimensions
+;; - **Temporal stability** remains a question - would these features be consistent across sessions?
+;;
+;; **Study Group Learnings:**
+;; - **Theory meets practice**: This exercise showed the gap between "what should work" (green channel)
+;;   and "what actually works" (blue channel for this video)
+;; - **Debugging is part of science**: We found and fixed color channel mix-ups, sampling rate errors,
+;;   and peak detection issues - this iterative refinement is normal research workflow
+;; - **Real-world systems need robustness**: Production systems would need adaptive algorithms to
+;;   select the best channel, handle exposure variations, and reject low-quality recordings
 ;;
 ;; ### Technical Notes
 ;;
