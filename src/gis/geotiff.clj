@@ -10,7 +10,13 @@
 
 (ns gis.geotiff
   (:require
-   [scicloj.kindly.v4.kind :as kind]))
+   [scicloj.kindly.v4.kind :as kind]
+   [tech.v3.datatype :as dtype]
+   [tech.v3.tensor :as tensor]
+   [tech.v3.tensor.dimensions :as dims]
+   [tech.v3.libs.buffered-image :as bufimg]
+   [tablecloth.api :as tc]
+   [clojure.java.io :as io]))
 ;; # Cloud Optimized GeoTIFFs in JVM Clojure 
 ;; ## Motivation
 ;; This document shows several different methods for handling COGs in JVM Clojure without
@@ -32,6 +38,8 @@
 (kind/hiccup
  [:img {:src "resources/tiff_geotiff_cog.png"
         :style {:width "60%"}}])
+
+
 
 ;; More about the internal structure of COGs can be learned [in the Cloud Native Geo Guide](https://guide.cloudnativegeo.org/cloud-optimized-geotiffs/intro.html) and at [COGeo](https://cogeo.org/).
 
@@ -79,7 +87,8 @@
         num-bands (.getNumBands raster)
         pixel (double-array num-bands)]
     (.getPixel raster x y pixel)
-    (vec pixel)))
+    ;; A dtype-next read-only buffer as a view of the Java array:
+    (dtype/as-reader pixel)))
 
 ;; Now we use the above helper functions to handle our locally held TIFF.
 
@@ -128,29 +137,38 @@
 
 (require '[tablecloth.api :as tc])
 
+(repeatedly 5 #(double-array 2 3))
+
+
+
 (defn buffered-image->dataset [^BufferedImage img]
   (let [width (.getWidth img)
         height (.getHeight img)
-        raster (.getRaster img)
-        num-bands (.getNumBands raster)
-
-        ;; Pre-allocate arrays for each band's pixel data
-        band-arrays (vec (repeatedly num-bands #(double-array (* width height))))
-
-        ;; Read each band's data
-        _ (doseq [band (range num-bands)]
-            (.getSamples raster 0 0 width height band (nth band-arrays band)))
-
-        ;; Create coordinate arrays
-        xs (vec (for [_y (range height) x (range width)] x))
-        ys (vec (for [y (range height) _x (range width)] y))
+        num-bands (.getNumBands (.getRaster img))
+        
+        tensor (-> img
+                   dtype/->array-buffer
+                   ;; height x width x bands
+                   (tensor/construct-tensor (dims/dimensions
+                                             [width height num-bands]))
+                   ;; bands x height x width
+                   (tensor/transpose [2 0 1]))
+        
+        xs (dtype/as-reader
+            (tensor/compute-tensor [height width]
+                                   (fn [y x] x)))
+        ys (dtype/as-reader
+            (tensor/compute-tensor [height width]
+                                   (fn [y x] y)))
 
         ;; Build dataset
         ds-map (into {:x xs :y ys}
-                     (map-indexed
-                      (fn [i arr] [(keyword (str "band-" i)) (vec arr)])
-                      band-arrays))]
+                     (for [i (range num-bands)]
+                       [(keyword (str "band-" i))
+                        (dtype/as-reader
+                         (tensor i))]))]
     (tc/dataset ds-map)))
+
 
 (defonce ds (-> example-geotiff-medium
                 :images
@@ -408,7 +426,7 @@
 (defonce medium-geotiff
   (geotools-read-geotiff "src/gis/resources/example_geotiff_medium.tif"))
 
- 
+
 
 (->> medium-geotiff
      :coverage
