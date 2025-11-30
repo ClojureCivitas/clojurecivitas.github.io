@@ -1,5 +1,5 @@
 /temp
-/site/*/
+/site
 .clj-kondo/
 .quarto/
 _site/

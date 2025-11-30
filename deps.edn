@@ -39,6 +39,17 @@
   org.lwjgl/lwjgl-stb$natives-linux           {:mvn/version "3.3.6"}
   org.lwjgl/lwjgl-stb$natives-windows         {:mvn/version "3.3.6"}
   org.lwjgl/lwjgl-stb$natives-macos           {:mvn/version "3.3.6"}
+ 
+  
+  ;; libraries for GIS work
+  org.apache.sis.storage/sis-geotiff          {:mvn/version "1.5"}
+  org.apache.sis.core/sis-referencing         {:mvn/version "1.5"}
+  org.geotools/gt-geotiff                     {:mvn/version "31.2"}
+  org.geotools/gt-main                        {:mvn/version "31.2"}
+  org.geotools/gt-epsg-hsql                   {:mvn/version "31.2"}
+  org.geotools/gt-geojson                     {:mvn/version "31.2"}
+
+ 
   clj-http/clj-http                           {:mvn/version "3.13.1"}
 
   generateme/fastmath                         {:mvn/version "3.0.0-alpha4"}
@@ -55,6 +66,8 @@
                                                :git/sha "ed7adfbf90a39f379d5a7193bb2e4bdd7f0eecf8"
                                                :deps/root "core"}
   }
+ 
+ :mvn/repos {"osgeo" {:url "https://repo.osgeo.org/repository/release/"}} 
 
  :aliases
  {;; Build the site with `clojure -M:clay -A:markdown`
