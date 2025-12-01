@@ -244,15 +244,77 @@ wav-format
                  ;; Get magnitude spectrum (power)
                  (.getMagnitude fft true))))))
 
-(->> spectra
-     (map (fn [s]
-            (-> {:freq (range)
-                 :power s}
-                tc/dataset
+(def spectra-ds
+  (->> spectra
+       (map (fn [s]
+              (tc/dataset
+               {:freq (range)
+                :power s})))))
+
+(->> spectra-ds
+     (map (fn [ds]
+            (-> ds
                 (plotly/base {:=height 300
                               :=width 900})
                 (plotly/layer-line {:=x :freq
                                     :=y :power})
                 plotly/plot
                 (assoc-in [:layout :xaxis :range] [0 1000])))))
+
+;; ## Peaks by part
+
+(def all-peaks-ds
+  (->> spectra
+       (map (fn [spectrum]
+              (let [peaks (-> spectrum
+                              FindPeak.
+                              .detectPeaks)]
+                (-> (tc/dataset {:freq (.getPeaks peaks)
+                                 :power (.getHeights peaks)
+                                 :prominence (.getProminence peaks)})
+                    (tc/order-by [:prominence] :desc)
+                    (tc/head n-peaks)))))))
+
+(map (fn [spectrum-ds peaks-ds]
+       (-> spectrum-ds
+           (plotly/base {:=x :freq
+                         :=y :power})
+           plotly/layer-line 
+           (plotly/layer-point {:=dataset peaks-ds})))
+     spectra-ds
+     all-peaks-ds)
+
+;; ## Synthesizing from the peaks
+
+(def combined-violin-ds
+  (->> all-peaks-ds
+       (map (fn [peaks-ds]
+              (let [duration (/ 3.0 25)
+                    num-samples (* duration sample-rate)
+                    time (dtype/make-reader :float32
+                                            num-samples
+                                            (/ idx sample-rate))]
+                (-> (->> (tc/rows peaks-ds :as-maps)
+                         ;; For each peak, generate a sine wave
+                         (map-indexed (fn [i {:keys [freq power]}]
+                                        [(str "wave" i)
+                                         (-> time
+                                             (dfn/* (* 2 math/PI freq))
+                                             dfn/sin
+                                             (dfn/* power))]))
+                         (into {:time time})
+                         tc/dataset)
+                    (tc/add-column :violin
+                                   (fn [ds]
+                                     (-> ds
+                                         (tc/drop-columns [:time])
+                                         vals
+                                         (->> (apply tcc/+)))))
+                    (tc/select-columns [:violin])))))
+       (apply tc/concat)))
+
+(-> combined-violin-ds
+    :violin
+    normalize
+    audio)
 
