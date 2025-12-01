@@ -5,7 +5,9 @@
             [tech.v3.datatype.functional :as dfn]
             [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as plotly]
-            [tech.v3.tensor :as tensor]))
+            [tech.v3.tensor :as tensor]
+            [tablecloth.column.api :as tcc]
+            [fastmath.stats :as stats]))
 
 
 ;; ## Data source
@@ -62,6 +64,9 @@
 
 wav-format
 
+(def sample-rate
+  (:sample-rate wav-format))
+
 (defn audio-data [^InputStream is]
   (let [{:keys [frame-length
                 channels]} (audio-format is)
@@ -95,9 +100,11 @@ wav-format
 
 ;; ## Listening to the data back as audio
 
+
+
 ^kind/audio
 {:samples wav-samples
- :sample-rate (:sample-rate wav-format)}
+ :sample-rate sample-rate}
 
 ;; ## Computing the power spectrum of the data
 
@@ -106,7 +113,7 @@ wav-format
 (count wav-samples)
 
 (def first-part
-  (take (:sample-rate wav-format) ; just a second
+  (take sample-rate ; just a second
         wav-samples))
 
 (def power-spectrum
@@ -132,20 +139,87 @@ wav-format
 
 (import 'com.github.psambit9791.jdsp.signal.peaks.FindPeak)
 
+(def n-peaks 10)
 
 (def peaks-ds
   (let [peaks (-> power-spectrum
                   FindPeak.
                   .detectPeaks)]
-    (tc/dataset {:freq (-> (.getPeaks peaks)
-                           (dfn/* (* 0.5 (:sample-rate wav-format))))
-                 :power (.getHeights peaks)})))
+    (-> (tc/dataset {:freq (.getPeaks peaks)
+                     :power (.getHeights peaks)
+                     :prominence (.getProminence peaks)})
+        (tc/order-by [:prominence] :desc)
+        (tc/head n-peaks))))
 
 (-> power-spectrum-ds
     (plotly/base {:=x :freq
                   :=y :power})
     plotly/layer-line 
     (plotly/layer-point {:=dataset peaks-ds}))
+
+
+;; ## Synthesizing from the peaks
+
+(require '[clojure.math :as math])
+
+(def components-dataset
+  (let [duration 1
+        num-samples (* duration sample-rate)
+        time (dtype/make-reader :float32
+                                num-samples
+                                (/ idx sample-rate))]
+    (->> (tc/rows peaks-ds :as-maps)
+         ;; For each peak, generate a sine wave
+         (map-indexed (fn [i {:keys [freq power]}]
+                        [(str "wave" i)
+                         (-> time
+                             (dfn/* (* 2 math/PI freq))
+                             dfn/sin
+                             (dfn/* power))]))
+         (into {:time time})
+         tc/dataset)))
+
+(-> components-dataset
+    (tc/head 200)
+    (tc/pivot->longer (complement #{:time})))
+
+(-> components-dataset
+    (tc/head 200)
+    (tc/pivot->longer (complement #{:time}))
+    (tc/rename-columns {:$value :value})
+    (plotly/layer-line {:=x :time
+                        :=y :value
+                        :=color :$column}))
+
+
+(def violin-dataset
+  (-> components-dataset
+      (tc/add-column :violin
+                     (fn [ds]
+                       (-> ds
+                           (tc/drop-columns [:time])
+                           vals
+                           (->> (apply tcc/+)))))))
+
+(-> violin-dataset
+    (tc/head 200)
+    (plotly/layer-line {:=x :time
+                        :=y :violin}))
+
+(defn audio [samples]
+  (with-meta
+    {:samples samples
+     :sample-rate sample-rate}
+    {:kind/audio true}))
+
+(defn normalize [values]
+  (tcc// values
+         (tcc/reduce-max (tcc/abs values))))
+
+(-> violin-dataset
+    :violin
+    normalize
+    audio)
 
 ;; ## Power spectrum by part
 
@@ -181,3 +255,4 @@ wav-format
                                     :=y :power})
                 plotly/plot
                 (assoc-in [:layout :xaxis :range] [0 1000])))))
+
