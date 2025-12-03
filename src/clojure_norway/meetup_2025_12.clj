@@ -1,3 +1,12 @@
+^{:kindly/hide-code true
+  :clay {:title "# Noway Clojure Meetup Dec. 2025: Data analysis"
+         :quarto {:author [:com.github/teodorlu :daslu]
+                  :description "Meetup notes"
+                  :category :clojure
+                  :type :post
+                  :date "2025-12-03"
+                  :tags [:dsp :math :gapminder]
+                  :draft true}}}
 (ns clojure-norway.meetup-2025-12
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
