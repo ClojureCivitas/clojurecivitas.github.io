@@ -36,6 +36,9 @@
 (kind/audio
  {:src violin-file-name})
 
+(kind/audio
+ {:src (str "clojure_norway/meetup_2025_12/" violin-file-name)})
+
 ;; ## Reading the Wav file as data
 
 ;; [Reading WAV files](https://clojurecivitas.github.io/dsp/wav_files.html).
@@ -91,6 +94,8 @@ wav-format
   (with-open [wav-stream (io/input-stream violin-file-path)]
     (audio-data wav-stream)))
 
+(require '[tech.v3.datatype :as dtype])
+
 (def wav-samples
   ;; one of the two stereo channels
   (dfn// (->> wav-shorts
@@ -131,92 +136,96 @@ wav-ds
                (apply concat))
  :sample-rate sample-rate}
 
-;; ## Computing the power spectrum of the data
+;; ## Computing the Discrete Fouried Transform the data
 
 (import 'com.github.psambit9791.jdsp.transform.DiscreteFourier)
 
 (count wav-samples)
 
-(def some-part
-  (->> wav-samples
-       (drop sample-rate) ; drop a second
-       (take (* sample-rate 0.06)) ; take 6% of a second
-       ))
-
-(def power-spectrum
-  (let [fft (-> some-part
-                double-array
-                DiscreteFourier.)]
-    (.transform fft)
-    ;; Get magnitude spectrum (power)
-    (.getMagnitude fft true)))
-
-(count power-spectrum)
+(defn some-part [t0 t1]
+  (dtype/sub-buffer 
+   wav-samples
+   (int (* sample-rate t0))
+   (int (* sample-rate (- t1 t0)))))
 
 (def Nyquist-freq (* 0.5 sample-rate))
 
-(def power-spectrum-ds
-  (tc/dataset
-   {:freq (dfn// (range)
-                 (/ (count power-spectrum) Nyquist-freq))
-    :power power-spectrum}))
+(defn data->dft-ds [data]
+  (let [dft (-> data
+                double-array
+                DiscreteFourier.)]
+    (.transform dft)
+    (let [amp (.getMagnitude dft true)
+          phase (.getPhaseRad dft true)]
+      (-> (tc/dataset {:freq (dfn// (range)
+                                    (/ (count amp) Nyquist-freq))
+                       :amplitude amp
+                       :phase phase})
+          (tc/add-column :power #(tcc/sq (:amplitude %)))))))
 
-(-> power-spectrum-ds
+(def some-dft-ds
+  (data->dft-ds
+   (some-part 1 1.05)))
+
+(-> some-dft-ds
     (plotly/layer-line {:=x :freq
                         :=y :power}))
 
-;; ## Finding peaks (WIP)
+;; ## Finding peaks
 
 (import 'com.github.psambit9791.jdsp.signal.peaks.FindPeak)
 
-(def n-peaks 10)
-
-(def peaks-ds
-  (let [peaks (-> power-spectrum
+(defn dft-ds->peaks-ds [dft-ds {:keys [n-peaks]}]
+  (let [peaks (-> dft-ds
+                  :power
+                  double-array
                   FindPeak.
                   .detectPeaks)]
-    (-> (tc/dataset {:freq (dfn// (.getPeaks peaks)
-                                  (/ (count power-spectrum) Nyquist-freq ))
-                     :power (.getHeights peaks)
-                     :prominence (.getProminence peaks)})
+    (.getPeaks peaks)
+    (-> dft-ds
+        (tc/select-rows (dtype/as-reader
+                         (.getPeaks peaks)))
+        (tc/add-column :prominence (.getProminence peaks))
         (tc/order-by [:prominence] :desc)
         (tc/head n-peaks))))
 
-(-> power-spectrum-ds
+(-> some-dft-ds
     (plotly/base {:=x :freq
                   :=y :power})
     plotly/layer-line 
-    (plotly/layer-point {:=dataset peaks-ds}))
-
+    (plotly/layer-point {:=dataset (dft-ds->peaks-ds some-dft-ds
+                                                     {:n-peaks 10})}))
 
 ;; ## Synthesizing from the peaks
 
 (require '[clojure.math :as math])
-(require '[tech.v3.datatype :as dtype])
 
-(def components-dataset
-  (let [duration 1
-        num-samples (* duration sample-rate)
+(defn peaks-ds->components-ds [peaks-ds {:keys [duration]}]
+  (let [num-samples (* duration sample-rate)
         time (dtype/make-reader :float32
                                 num-samples
                                 (/ idx sample-rate))]
     (->> (tc/rows peaks-ds :as-maps)
          ;; For each peak, generate a sine wave
-         (map-indexed (fn [i {:keys [freq power]}]
+         (map-indexed (fn [i {:keys [freq power phase]}]
                         [(str "wave" i)
                          (-> time
                              (dfn/* (* 2 math/PI freq))
-                             dfn/sin
+                             ;; (dfn/+ phase)
+                             dfn/cos
                              (dfn/* power))]))
          (into {:time time})
          tc/dataset)))
 
-(-> components-dataset
-    (tc/head 200)
-    (tc/pivot->longer (complement #{:time})))
+(-> some-dft-ds
+    (dft-ds->peaks-ds {:n-peaks 10})
+    (peaks-ds->components-ds {:duration 1})
+    (tc/head 500))
 
-(-> components-dataset
-    (tc/head 200)
+(-> some-dft-ds
+    (dft-ds->peaks-ds {:n-peaks 10})
+    (peaks-ds->components-ds {:duration 1})
+    (tc/head 500)
     (tc/pivot->longer (complement #{:time}))
     (tc/rename-columns {:$value :value})
     (plotly/layer-line {:=x :time
@@ -227,8 +236,8 @@ wav-ds
   (dfn// values
          (double (dfn/reduce-max (dfn/abs values)))))
 
-(def combined-dataset
-  (-> components-dataset
+(defn components-ds->combined-ds [components-ds]
+  (-> components-ds
       (tc/add-column :combined
                      (fn [ds]
                        (-> ds
@@ -237,8 +246,11 @@ wav-ds
                            (->> (apply tcc/+))
                            normalize)))))
 
-(-> combined-dataset
-    (tc/head 200)
+(-> some-dft-ds
+    (dft-ds->peaks-ds {:n-peaks 10})
+    (peaks-ds->components-ds {:duration 1})
+    components-ds->combined-ds
+    (tc/head 500)
     (plotly/layer-line {:=x :time
                         :=y :combined}))
 
@@ -248,22 +260,24 @@ wav-ds
      :sample-rate sample-rate}
     {:kind/audio true}))
 
-(-> some-part
+(-> (some-part 1 1.05)
     audio)
 
-(-> combined-dataset
+(-> some-dft-ds
+    (dft-ds->peaks-ds {:n-peaks 10})
+    (peaks-ds->components-ds {:duration 1})
+    components-ds->combined-ds
     :combined
     audio)
 
 ;; ## Spectogram (WIP)
 
 (import 'com.github.psambit9791.jdsp.windows.Hanning)
-(require '[tech.v3.dataset.tensor :as ds-tensor]
-         '[tech.v3.libs.buffered-image :as bufimg])
 
 
-(def spectrogram
-  (let [window-size 0.1 ; seconds
+
+(def stft
+  (let [window-size 0.05 ; seconds
         window-samples (* sample-rate window-size)
 
         ;; Create Hanning window to reduce spectral leakage
@@ -298,36 +312,43 @@ wav-ds
                            (fn [i j]
                              (* (windows i j)
                                 (hanning i)))
-                           :float32)
+                           :float32)]
 
-        ;; ;; Compute power spectrum for each window
-        spectrogram (-> hanninged-windows
-                        ;; Rearrange to [windows × time]
-                        (tensor/transpose [1 0])
-                        (tensor/slice 1)
-                        ;; Apply FFT to each window
-                        (->> (pmap (fn [window]
-                                     (let [fft (-> window
-                                                   dtype/as-reader
-                                                   double-array
-                                                   DiscreteFourier.)]
-                                       (.transform fft)
-                                       ;; Get magnitude spectrum (power)
-                                       (-> fft
-                                           (.getMagnitude true)
-                                           (dtype/as-reader)
-                                           (dtype/sub-buffer 0 2000))))))
-                        tensor/->tensor
-                        ;; Reshape to [windows × frequencies]
-                        (#(tensor/reshape %
-                                          [n-windows
-                                           (-> % first count)]))
-                        ;; Transpose to [frequencies × windows] for plotting
-                        (tensor/transpose [1 0]))]
+    (-> hanninged-windows
+        ;; Rearrange to [windows × time]
+        (tensor/transpose [1 0])
+        (tensor/slice 1)
+        ;; Apply FFT to each window
+        (->> (pmap (fn [window]
+                     (let [dft (-> window
+                                   dtype/as-reader
+                                   double-array
+                                   DiscreteFourier.)]
+                       (.transform dft)
+                       (let [amp (.getMagnitude dft true)
+                             phase (.getPhaseRad dft true)]
+                         (-> (tc/dataset {:freq (dfn// (range)
+                                                       (/ (count amp) Nyquist-freq))
+                                          :amplitude amp
+                                          :phase phase})
+                             (tc/add-column :power #(tcc/sq (:amplitude %))))))))))))
 
-    spectrogram))
 
-(require '[clojure2d.color])
+(require '[tech.v3.dataset.tensor :as ds-tensor])
+
+(def spectrogram
+  (-> stft
+      (->> (map :power))
+      tensor/->tensor
+      ;; Reshape to [windows × frequencies]
+      (#(tensor/reshape %
+                        [(count %)
+                         (-> % first count)]))
+      ;; Transpose to [frequencies × windows] for plotting
+      (tensor/transpose [1 0])))
+
+
+(require '[clojure2d.color :as color])
 
 (def palette
   (let [p (color/palette :viridis)]
@@ -338,6 +359,8 @@ wav-ds
 (def normalized-spectrogram
   (normalize spectrogram))
 
+(require '[tech.v3.libs.buffered-image :as bufimg])
+
 (-> (tensor/compute-tensor
      (conj (dtype/shape spectrogram) 3)
      (fn [y x c]
@@ -346,4 +369,18 @@ wav-ds
     bufimg/tensor->image)
 
 
+;; ## Playing the spectrogram
+
+
+
+(-> stft
+    (->> (map (fn [dft]
+                (-> dft
+                    (dft-ds->peaks-ds {:n-peaks 5})
+                    (peaks-ds->components-ds {:duration 0.005})
+                    components-ds->combined-ds
+                    (tc/select-columns [:combined]))))
+         (apply tc/concat))
+    :combined
+    audio)
 
