@@ -470,32 +470,31 @@ wav-format
     bufimg/tensor->image)
 
 (defn animated-echarts [specs]
-  (kind/reagent
-   ['(fn [specs]
-       (let [*i (reagent.core/atom 0)]
-         (fn []
-           ^{:key @*i}
-           [:div
-            [:div {:style {:height "400px"}
-                   :ref (fn [el]
-                          (when el
-                            (let [chart (.init js/echarts el)]
-                              (.setOption chart
-                                          (clj->js
-                                           (specs (rem @*i (count specs))))))))}]
-            (js/setInterval #(swap! *i inc) 1000)
-            ;; Include this to force component update:
-            [:p {:style {:display :none}}
-             (hash @*i)]])))
-    specs]
-   {:html/deps [:echarts]}))
+  [(kind/reagent
+    ['(fn [specs]
+        (let [*i (reagent.core/atom 0)]
+          (fn []
+            ^{:key @*i}
+            [:di
+             [:div {:style {:height "400px"}
+                    :ref (fn [el]
+                           (when el
+                             (let [chart (.init js/echarts el)]
+                               (.setOption chart
+                                           (clj->js
+                                            (specs (rem @*i (count specs))))))))}]
+             (js/setInterval #(swap! *i inc) 1000)
+             ;; Include this to force component update:
+             [:p {:style {:display :none}}
+              (hash @*i)]])))
+     specs]
+    {:html/deps [:echarts]})])
 
 (let [n 100]
   (-> normalized-spectrogram
       (tensor/transpose [1 0])
       (tensor/slice 1)
-      (->> (take 20)
-           (mapv (fn [spectrum]
+      (->> (mapv (fn [spectrum]
                    {:xAxis {:show false
                             :data (vec (range 100))}
                     :yAxis {:show false}
