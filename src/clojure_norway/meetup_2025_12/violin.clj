@@ -150,7 +150,7 @@ wav-ds
 
 (def Nyquist-freq (* 0.5 sample-rate))
 
-(defn data->dft-ds [data]
+(defn values->dft-ds [data]
   (let [dft (-> data
                 double-array
                 DiscreteFourier.)]
@@ -163,8 +163,40 @@ wav-ds
                        :phase phase})
           (tc/add-column :power #(tcc/sq (:amplitude %)))))))
 
+
+
+(def cosine-wave
+  (-> {:time (-> (range 0
+                        0.1
+                        (/ 1.0 sample-rate)))}
+      tc/dataset
+      (tc/add-column :value #(-> %
+                                 :time
+                                 (dfn/* (* 2 math/PI 50))
+                                 (dfn/+ (* 0.25 math/PI))
+                                 dfn/cos))))
+
+(-> cosine-wave
+    (plotly/layer-line {:=x :time
+                        :=y :value}))
+
+(def cosine-wave-dft-ds
+  (-> cosine-wave
+      :value
+      values->dft-ds))
+
+(-> cosine-wave-dft-ds
+    (tc/head 20)
+    (plotly/layer-line {:=x :freq
+                        :=y :power}))
+
+(-> cosine-wave-dft-ds
+    (tc/head 20))
+
+
+
 (def some-dft-ds
-  (data->dft-ds
+  (values->dft-ds
    (some-part 1 1.05)))
 
 (-> some-dft-ds
@@ -270,7 +302,16 @@ wav-ds
     :combined
     audio)
 
-;; ## Spectogram (WIP)
+(-> (some-part 1 2)
+    values->dft-ds
+    (dft-ds->peaks-ds {:n-peaks 30})
+    (peaks-ds->components-ds {:duration 1})
+    components-ds->combined-ds
+    :combined
+    audio)
+
+
+;; ## Short Time Fourier Transform
 
 (import 'com.github.psambit9791.jdsp.windows.Hanning)
 
@@ -372,11 +413,10 @@ wav-ds
 ;; ## Playing the spectrogram
 
 
-
 (-> stft
     (->> (map (fn [dft]
                 (-> dft
-                    (dft-ds->peaks-ds {:n-peaks 5})
+                    (dft-ds->peaks-ds {:n-peaks 10})
                     (peaks-ds->components-ds {:duration 0.005})
                     components-ds->combined-ds
                     (tc/select-columns [:combined]))))
