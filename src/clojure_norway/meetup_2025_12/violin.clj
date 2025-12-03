@@ -8,7 +8,8 @@
             [tech.v3.tensor :as tensor]
             [tablecloth.column.api :as tcc]
             [fastmath.stats :as stats]
-            [tech.v3.datatype :as dtype]))
+            [tech.v3.datatype :as dtype]
+            [clojure.math :as math]))
 
 ;; ## Data source
 ;;
@@ -223,8 +224,8 @@ wav-ds
                         :=color :$column}))
 
 (defn normalize [values]
-  (tcc// values
-         (tcc/reduce-max (tcc/abs values))))
+  (dfn// values
+         (double (dfn/reduce-max (dfn/abs values)))))
 
 (def combined-dataset
   (-> components-dataset
@@ -257,83 +258,92 @@ wav-ds
 ;; ## Spectogram (WIP)
 
 (import 'com.github.psambit9791.jdsp.windows.Hanning)
-(require '[tech.v3.dataset.tensor :as ds-tensor])
-
-(let [window-size 0.03 ; seconds
-      window-samples (* sample-rate window-size)
-
-      ;; Create Hanning window to reduce spectral leakage
-      hanning (-> window-samples
-                  Hanning.
-                  .getWindow
-                  dtype/as-reader)
-
-      ;; Overlap parameters
-      overlap-fraction 0.05
-      hop (int (* overlap-fraction window-samples))
-
-      n-samples (count wav-samples)
-
-      ;; Calculate how many windows we can extract
-      n-windows (-> n-samples
-                    (- window-samples)
-                    (quot hop))
-
-      ;; Create sliding windows: [time × windows × channels]
-      windows-shape [window-samples n-windows]
-      windows (tensor/compute-tensor
-               windows-shape
-               (fn [i j]
-                 ;; Extract sample at time i, window j, channel k
-                 (wav-samples (+ (* j hop) i)))
-               :float32)
-
-      ;; Apply Hanning window to each segment
-      hanninged-windows (tensor/compute-tensor
-                         windows-shape
-                         (fn [i j]
-                           (* (windows i j)
-                              (hanning i)))
-                         :float32)
-
-      ;; ;; Compute power spectrum for each window
-      spectogram (-> hanninged-windows
-                     ;; Rearrange to [windows × time]
-                     (tensor/transpose [1 0])
-                     (tensor/slice 1)
-                     ;; Apply FFT to each window
-                     (->> (pmap (fn [window]
-                                  (let [fft (-> window
-                                                dtype/as-reader
-                                                double-array
-                                                DiscreteFourier.)]
-                                    (.transform fft)
-                                    ;; Get magnitude spectrum (power)
-                                    (.getMagnitude fft true)))))
-                     tensor/->tensor
-                     ;; Reshape to [windows × frequencies]
-                     (#(tensor/reshape %
-                                       [n-windows
-                                        (-> % first count)]))
-                     ;; Transpose to [frequencies × windows] for plotting
-                     (tensor/transpose [1 0]))]
-  ;; (-> windows
-  ;;     (dfn/* 100)
-  ;;     plotly/imshow)
-
-  ;; (-> hanninged-windows
-  ;;     (dfn/* 100)
-  ;;     plotly/imshow)
-
-  (-> spectogram
-      (#(tensor/broadcast % (cons 3 (dtype/shape %))))
-      (dfn/* 50)
-      (tensor/transpose [1 2 0])
-      plotly/imshow))
+(require '[tech.v3.dataset.tensor :as ds-tensor]
+         '[tech.v3.libs.buffered-image :as bufimg])
 
 
+(def spectrogram
+  (let [window-size 0.1 ; seconds
+        window-samples (* sample-rate window-size)
 
+        ;; Create Hanning window to reduce spectral leakage
+        hanning (-> window-samples
+                    Hanning.
+                    .getWindow
+                    dtype/as-reader)
 
+        ;; Overlap parameters
+        overlap-fraction 0.1
+        hop (int (* overlap-fraction window-samples))
+
+        n-samples (count wav-samples)
+
+        ;; Calculate how many windows we can extract
+        n-windows (-> n-samples
+                      (- window-samples)
+                      (quot hop))
+
+        ;; Create sliding windows: [time × windows × channels]
+        windows-shape [window-samples n-windows]
+        windows (tensor/compute-tensor
+                 windows-shape
+                 (fn [i j]
+                   ;; Extract sample at time i, window j, channel k
+                   (wav-samples (+ (* j hop) i)))
+                 :float32)
+
+        ;; Apply Hanning window to each segment
+        hanninged-windows (tensor/compute-tensor
+                           windows-shape
+                           (fn [i j]
+                             (* (windows i j)
+                                (hanning i)))
+                           :float32)
+
+        ;; ;; Compute power spectrum for each window
+        spectrogram (-> hanninged-windows
+                        ;; Rearrange to [windows × time]
+                        (tensor/transpose [1 0])
+                        (tensor/slice 1)
+                        ;; Apply FFT to each window
+                        (->> (pmap (fn [window]
+                                     (let [fft (-> window
+                                                   dtype/as-reader
+                                                   double-array
+                                                   DiscreteFourier.)]
+                                       (.transform fft)
+                                       ;; Get magnitude spectrum (power)
+                                       (-> fft
+                                           (.getMagnitude true)
+                                           (dtype/as-reader)
+                                           (dtype/sub-buffer 0 2000))))))
+                        tensor/->tensor
+                        ;; Reshape to [windows × frequencies]
+                        (#(tensor/reshape %
+                                          [n-windows
+                                           (-> % first count)]))
+                        ;; Transpose to [frequencies × windows] for plotting
+                        (tensor/transpose [1 0]))]
+
+    spectrogram))
+
+(require '[clojure2d.color])
+
+(def palette
+  (let [p (color/palette :viridis)]
+    (memoize
+     (fn [ratio]
+       (p (int (math/round (* ratio (dec (count p))))))))))
+
+(def normalized-spectrogram
+  (normalize spectrogram))
+
+(-> (tensor/compute-tensor
+     (conj (dtype/shape spectrogram) 3)
+     (fn [y x c]
+       ((palette (normalized-spectrogram y x))
+        c)))
+    bufimg/tensor->image)
 
 
 
