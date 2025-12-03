@@ -223,22 +223,13 @@ wav-format
 (-> cosine-wave-dft-ds
     (tc/head 20))
 
+;; ## Actual data
 
-;; ## Variation in time
+;; > To enjoy bodily warmth, some small part of you must be cold,
+;; > for there is no quality in this world that is not what it is merely by contrast.
+;; > Nothing exists in itself.
 
-;; > After a few minutes in a restaurant we cease to notice the annoying
-;; > hubbub of surrounding conversations but a sudden silence reminds
-;; > us of the presence of neighbors Our attention is clearly attracted by
-;; > transients and movements as opposed to stationary stimuli which we
-;; > soon ignore Concentrating on transients is probably a strategy for
-;; > selecting important information from the overwhelming amount of data
-;; > recorded by our senses Yet classical signal processing has devoted
-;; > most of its e orts to the design of time invariant and space invariant
-;; > operators that modify stationary signal properties This has led to the
-;; > indisputable hegemony of the Fourier transform but leaves aside many
-;; > information processing applications
-
-;; St´ephane Mallat, [A Wavelet Tour of Signal Processing](https://coehuman.uodiyala.edu.iq/uploads/Coehuman%20library%20pdf/%D9%83%D8%AA%D8%A8%20%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6%D9%8A%D8%A7%D8%AA%20Mathematics%20books/Wavelets/Mallat_Wavelet-Tour-of-Signal-Processing.pdf)
+[Herman Melville](https://www.goodreads.com/quotes/533392-to-enjoy-bodily-warmth-some-small-part-of-you-must), Moby-Dick
 
 ;; ## DFT of a piece of data
 
@@ -344,6 +335,22 @@ wav-format
       components-ds->combined-ds
       :combined
       audio))
+
+;; ## Variation in time
+
+;; > After a few minutes in a restaurant we cease to notice the annoying
+;; > hubbub of surrounding conversations but a sudden silence reminds
+;; > us of the presence of neighbors Our attention is clearly attracted by
+;; > transients and movements as opposed to stationary stimuli which we
+;; > soon ignore Concentrating on transients is probably a strategy for
+;; > selecting important information from the overwhelming amount of data
+;; > recorded by our senses Yet classical signal processing has devoted
+;; > most of its e orts to the design of time invariant and space invariant
+;; > operators that modify stationary signal properties This has led to the
+;; > indisputable hegemony of the Fourier transform but leaves aside many
+;; > information processing applications
+
+;; St´ephane Mallat, [A Wavelet Tour of Signal Processing](https://coehuman.uodiyala.edu.iq/uploads/Coehuman%20library%20pdf/%D9%83%D8%AA%D8%A8%20%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6%D9%8A%D8%A7%D8%AA%20Mathematics%20books/Wavelets/Mallat_Wavelet-Tour-of-Signal-Processing.pdf)
 
 ;; ## Short Time Fourier Transform
 
@@ -462,3 +469,10 @@ wav-format
          (apply tc/concat))
     :combined
     audio)
+
+;; ## Now What
+
+;; > To be fully alive, fully human, and completely awake is to be continually thrown out of the nest.
+
+;; [Pema Chodron](https://www.awakin.org/v2/read/view.php?tid=2436), When Things Fall Apart
+
