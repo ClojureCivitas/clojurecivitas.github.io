@@ -475,7 +475,7 @@ wav-format
         (let [*i (reagent.core/atom 0)]
           (fn []
             ^{:key @*i}
-            [:di
+            [:div
              [:div {:style {:height "400px"}
                     :ref (fn [el]
                            (when el
