@@ -58,27 +58,30 @@
   '(require emmy-require))
 
 ^:kindly/hide-code
-(def show-expression-clj (comp str simplify))
+(define show-exp (comp str simplify))
 
 ^:kindly/hide-code
 (kind/scittle
-  '(def show-expression (comp str simplify)))
+  '(def show-expression show-exp))
 
 ^:kindly/hide-code
-(defmacro show-expression-sci [b]
-  (list 'kind/reagent [:tt (list 'quote (list 'show-expression b))]))
-
-^:kindly/hide-code
-(defmacro show-expression [b]
-  (let [serg (show-expression-clj (eval b))]
+(defmacro show-expression [b & c]
+  (case b
+    :calc-on-server
+    (list 'simplify (first c))
+    :browser
     (list 'kind/reagent
-          [:div (list 'quote
-                     (list 'let ['a (list 'show-expression b)]
-                           (list 'if (list '= serg 'a)
-                                 [:tt 'a]
-                                 [:div
-                                  ;; [:tt 'a] ;; comment this in prod
-                                  [:tt serg]])))])))
+          [:tt (list 'quote
+                     (list 'show-exp (first c)))])
+    (let [serg (show-exp (eval b))]
+      (list 'kind/reagent
+            [:div (list 'quote
+                        (list 'let ['a (list 'show-exp b)]
+                              (list 'if (list '= serg 'a)
+                                    [:tt 'a]
+                                    [:div
+                                     ;; [:tt 'a] ;; comment this in prod
+                                     [:tt serg]])))]))))
 
 ^:kindly/hide-code
 (define velocities velocity)
@@ -467,7 +470,7 @@
    the-metric
    (coordinate-system->basis R2-rect)))
 
-(simplify
+(show-expression :calc-on-server
   (- Lagrange-residuals
      (* (* 'm (metric-components (gamma ((point R1-rect) 't))))
         geodesic-equation-residuals)))

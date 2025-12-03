@@ -3,7 +3,7 @@
                      :quarto {:type     :draft
                               ;; :sidebar  "emmy-fdg"
                               :date     "2025-11-12"
-                              :image    "fdg_prologue.png"
+                              :image    nil
                               :category :libs
                               :tags     [:emmy :physics]}}}
 (ns mentat-collective.emmy.appendix-scittlerepl
@@ -11,88 +11,26 @@
                             denominator
                             time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
-            [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define-1 let-scheme]]
-            [civitas.repl :as repl]))
+            [scicloj.kindly.v4.kind :as kind]))
 
 ^:kindly/hide-code
 (kind/hiccup
   [:div
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.emmy.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.cljs-ajax.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.reagent.js"}]
-   [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
+   [:script "var SCITTLE_NREPL_WEBSOCKET_PORT = 1340"]
+   ;;[:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.js"}]
+   ;;[:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.nrepl.js"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.6.22/dist/scittle.js"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.6.22/dist/scittle.nrepl.js"}]
+   ])
 
+;; make sure that, in your local directory, there exists the file [browser_server](https://clojurecivitas.github.io/mentat_collective/emmy/browser_server.html)
+
+;; Then in the terminal start babashka in the following way
 ^:kindly/hide-code
-(defmacro define [& b]
-  (list 'do
-        (cons 'mentat-collective.emmy.scheme/define b)
-        (list 'kind/scittle (list 'quote (cons 'define b)))))
+(kind/code
+  "bb -cp . -e \"(require '[browser-server :as nrepl]) (nrepl/start! {:nrepl-port 1339 :websocket-port 1340}) (deref (promise))\"")
 
-^:kindly/hide-code
-(define emmy-require
-  '[emmy.env :refer :all :exclude [Lagrange-equations Gamma]])
 
-^:kindly/hide-code
-(require emmy-require)
+;; then open a (not .clj but) .cljs file in your editor
 
-^:kindly/hide-code
-(kind/scittle
-  '(require emmy-require))
-
-^:kindly/hide-code
-(def show-expression-clj (comp ->infix simplify))
-
-^:kindly/hide-code
-(kind/scittle
-  '(def show-expression (comp ->infix simplify)))
-
-^:kindly/hide-code
-(defmacro show-expression-sci [b]
-  (list 'kind/reagent [:tt (list 'quote (list 'show-expression b))]))
-
-^:kindly/hide-code
-(defmacro show-expression [b]
-  (let [serg (show-expression-clj (eval b))]
-    (list 'kind/reagent
-          [:div (list 'quote
-                      (list 'let ['a (list 'show-expression b)]
-                            (list 'if (list '= serg 'a)
-                                  [:tt 'a]
-                                  [:div
-                                   [:tt 'a] ;; comment this in prod
-                                   [:tt serg]])))])))
-
-^:kindly/hide-code
-(define _ (declare Gamma))
-
-(define ((Lagrange-equations Lagrangian) w)
-  (- (D (compose ((partial 2) Lagrangian) (Gamma w)))
-     (compose ((partial 1) Lagrangian) (Gamma w))))
-
-(define ((Gamma w) t)
-  (up t (w t) ((D w) t)))
-
-(define ((L-harmonic m k) local)
-  (let ((q (coordinate local))
-        (v (velocity local)))
-    (- (* 1/2 m (square v))
-       (* 1/2 k (square q)))))
-
-(define (proposed-solution t)
-  (* 'a (cos (+ (* 'omega t) 'phi))))
-
-(show-expression
-  (((Lagrange-equations (L-harmonic 'm 'k))
-    proposed-solution)
-   't))
-
-(show-expression-clj
-  (((Lagrange-equations (L-harmonic 'm 'k))
-    (literal-function 'x))
-   't))
-
-(repl/scittle-sidebar)
+;; In Cider, choose cider-connect-cljs, select localhost, port 1339, followed by the REPL type nbb .

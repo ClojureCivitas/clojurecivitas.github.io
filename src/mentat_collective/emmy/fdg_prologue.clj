@@ -54,27 +54,30 @@
   '(require emmy-require))
 
 ^:kindly/hide-code
-(def show-expression-clj (comp ->infix simplify))
+(define show-exp (comp ->infix simplify))
 
 ^:kindly/hide-code
 (kind/scittle
-  '(def show-expression (comp ->infix simplify)))
+  '(def show-expression show-exp))
 
 ^:kindly/hide-code
-(defmacro show-expression-sci [b]
-  (list 'kind/reagent [:tt (list 'quote (list 'show-expression b))]))
-
-^:kindly/hide-code
-(defmacro show-expression [b]
-  (let [serg (show-expression-clj (eval b))]
+(defmacro show-expression [b & c]
+  (case b
+    :calc-on-server
+    (list 'show-exp (first c))
+    :browser
     (list 'kind/reagent
-          [:div (list 'quote
-                      (list 'let ['a (list 'show-expression b)]
-                            (list 'if (list '= serg 'a)
-                                  [:tt serg]
-                                  [:div
-                                   [:tt 'a] ;; comment this in prod
-                                   [:tt serg]])))])))
+          [:tt (list 'quote
+                     (list 'show-exp (first c)))])
+    (let [serg (show-exp (eval b))]
+      (list 'kind/reagent
+            [:div (list 'quote
+                        (list 'let ['a (list 'show-exp b)]
+                              (list 'if (list '= serg 'a)
+                                    [:tt 'a]
+                                    [:div
+                                     [:tt 'a] ;; comment this in prod
+                                     [:tt serg]])))]))))
 
 ;; ## Programming and Understanding
 
@@ -280,7 +283,7 @@
 ;; `literal-function` to work.
 ;; As a remedy, I have an [alternative execution environment](https://kloimhardt.github.io/blog/html/sicmutils-as-js-book-part1.html) ]
 
-(show-expression-clj
+(show-expression :calc-on-server
   (((Lagrange-equations (L-harmonic 'm 'k))
     (literal-function 'x))
    't))
