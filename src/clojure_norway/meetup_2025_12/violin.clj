@@ -490,17 +490,18 @@ wav-format
      specs]
     {:html/deps [:echarts]})])
 
-(let [n 100]
-  (-> normalized-spectrogram
-      (tensor/transpose [1 0])
-      (tensor/slice 1)
-      (->> (mapv (fn [spectrum]
-                   {:xAxis {:show false
-                            :data (vec (range 100))}
-                    :yAxis {:show false}
-                    :series [{:type "line"
-                              :data (vec (take 100 spectrum))}]}))
-           animated-echarts)))
+(comment
+  (let [n 100]
+    (-> normalized-spectrogram
+        (tensor/transpose [1 0])
+        (tensor/slice 1)
+        (->> (mapv (fn [spectrum]
+                     {:xAxis {:show false
+                              :data (vec (range 100))}
+                      :yAxis {:show false}
+                      :series [{:type "line"
+                                :data (vec (take 100 spectrum))}]}))
+             animated-echarts))))
 
 
 
