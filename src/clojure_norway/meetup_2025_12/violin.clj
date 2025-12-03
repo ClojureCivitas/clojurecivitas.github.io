@@ -478,7 +478,7 @@ wav-format
                                            (specs (rem @*i (count specs))))))))}]
             (js/setInterval #(swap! *i inc) 1000)
             ;; Include this to force component update:
-            [:p {:display :none}
+            [:p {:style {:display :none}}
              (hash @*i)]])))
     specs]
    {:html/deps [:echarts]}))
