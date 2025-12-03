@@ -1,4 +1,4 @@
-;; # Nowway Clojure Meetup Dec 2025: Modeling a Violin Tremolo
+;; # Noway Clojure Meetup Dec 2025: Modeling a Violin Tremolo
 
 (ns clojure-norway.meetup-2025-12.violin
   (:require [scicloj.kindly.v4.kind :as kind]
@@ -167,11 +167,11 @@ wav-format
                (apply concat))
  :sample-rate sample-rate}
 
-;; ## Modelling a simple wave
+;; ## A simple wave
 
 (def cosine-wave
   (-> {:time (-> (range 0
-                        0.1
+                        10
                         (/ 1.0 sample-rate)))}
       tc/dataset
       (tc/add-column :value #(-> %
@@ -181,9 +181,11 @@ wav-format
                                  dfn/cos))))
 
 (-> cosine-wave
+    (tc/select-rows #(<= (:time %) 0.1))
     (plotly/layer-line {:=x :time
                         :=y :value}))
 
+;; ## Discrete Fourier Transform
 
 (import 'com.github.psambit9791.jdsp.transform.DiscreteFourier)
 
@@ -220,16 +222,13 @@ wav-format
     (plotly/layer-line {:=x :freq
                         :=y :power}))
 
-(-> cosine-wave-dft-ds
-    (tc/head 20))
-
-;; ## Actual data
+;; ## Modelling actual data
 
 ;; > To enjoy bodily warmth, some small part of you must be cold,
 ;; > for there is no quality in this world that is not what it is merely by contrast.
 ;; > Nothing exists in itself.
 
-[Herman Melville](https://www.goodreads.com/quotes/533392-to-enjoy-bodily-warmth-some-small-part-of-you-must), Moby-Dick
+;; [Herman Melville](https://www.goodreads.com/quotes/533392-to-enjoy-bodily-warmth-some-small-part-of-you-must), Moby-Dick
 
 ;; ## DFT of a piece of data
 
@@ -319,11 +318,7 @@ wav-format
     (plotly/layer-line {:=x :time
                         :=y :combined}))
 
-(defn audio [samples]
-  (with-meta
-    {:samples samples
-     :sample-rate sample-rate}
-    {:kind/audio true}))
+
 
 (-> (some-part 1 1.05)
     audio)
@@ -475,4 +470,9 @@ wav-format
 ;; > To be fully alive, fully human, and completely awake is to be continually thrown out of the nest.
 
 ;; [Pema Chodron](https://www.awakin.org/v2/read/view.php?tid=2436), When Things Fall Apart
+
+^kind/audio
+{:samples wav-samples
+ :sample-rate sample-rate}
+
 
