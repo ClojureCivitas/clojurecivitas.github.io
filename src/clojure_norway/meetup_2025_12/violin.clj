@@ -226,6 +226,9 @@ wav-format
     (plotly/layer-line {:=x :freq
                         :=y :power}))
 
+(-> cosine-wave-dft-ds
+    (tc/head 20))
+
 ;; ## Modelling actual data
 
 ;; > To enjoy bodily warmth, some small part of you must be cold,
@@ -322,7 +325,11 @@ wav-format
     (plotly/layer-line {:=x :time
                         :=y :combined}))
 
-
+(defn audio [samples]
+  (with-meta
+    {:samples samples
+     :sample-rate sample-rate}
+    {:kind/audio true}))
 
 (-> (some-part 1 1.05)
     audio)
@@ -455,22 +462,13 @@ wav-format
         c)))
     bufimg/tensor->image)
 
-
-
-
-
-
-
-(defn animated-echarts [{:as details
-                         :keys [specs time-for-transition]}]
+(defn animated-echarts [specs]
   (kind/reagent
-   ['(fn [{:keys [specs
-                  time-for-transition]}]
+   ['(fn [specs]
        (let [*i (reagent.core/atom 0)]
          (fn []
            ^{:key @*i}
            [:div
-            [:p (pr-str (rem @*i (count specs)))]
             [:div {:style {:height "400px"}
                    :ref (fn [el]
                           (when el
@@ -478,15 +476,25 @@ wav-format
                               (.setOption chart
                                           (clj->js
                                            (specs (rem @*i (count specs))))))))}]
-            (js/setInterval #(swap! *i inc) time-for-transition)
+            (js/setInterval #(swap! *i inc) 1000)
             ;; Include this to force component update:
-            [:p {:style {:display :none}}
-             (hash @*i)]
-            ])))
-    details]
+            [:p {:display :none}
+             (hash @*i)]])))
+    specs]
    {:html/deps [:echarts]}))
 
-
+(let [n 100]
+  (-> normalized-spectrogram
+      (tensor/transpose [1 0])
+      (tensor/slice 1)
+      (->> (take 20)
+           (mapv (fn [spectrum]
+                   {:xAxis {:show false
+                            :data (vec (range 100))}
+                    :yAxis {:show false}
+                    :series [{:type "line"
+                              :data (vec (take 100 spectrum))}]}))
+           animated-echarts)))
 
 
 
