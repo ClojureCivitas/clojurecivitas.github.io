@@ -11,6 +11,16 @@
             [tech.v3.datatype :as dtype]
             [clojure.math :as math]))
 
+;; ## Exploring a violin Tremolo
+
+;; ## Relevant community projects
+
+;; ![](https://scicloj.github.io/sci-cloj-logo-transparent.png){width=100}
+
+;; [DSP Study group](https://scicloj.github.io/docs/community/groups/dsp-study/)
+
+;; [Clojure Jam 2026](https://scicloj.github.io/clojure-jam-2026/)
+
 ;; ## Data source
 ;;
 ;; [violin tremolo G#2.aif](https://freesound.org/people/ldk1609/sounds/56085/)
@@ -28,16 +38,13 @@
 (require '[babashka.fs :as fs])
 
 (def violin-file-path
-  (fs/file (fs/parent *file*)
+  (fs/file "src/clojure_norway/meetup_2025_12/"
            violin-file-name))
 
 ;; ## Listening to the file
 
 (kind/audio
  {:src violin-file-name})
-
-(kind/audio
- {:src (str "clojure_norway/meetup_2025_12/" violin-file-name)})
 
 ;; ## Reading the Wav file as data
 
@@ -136,7 +143,7 @@ wav-ds
                (apply concat))
  :sample-rate sample-rate}
 
-;; ## Computing the Discrete Fouried Transform the data
+;; ## Computing the Discrete Fouriee Transform the data
 
 (import 'com.github.psambit9791.jdsp.transform.DiscreteFourier)
 
@@ -194,6 +201,23 @@ wav-ds
     (tc/head 20))
 
 
+;; ## Variation in time
+
+;; > After a few minutes in a restaurant we cease to notice the annoying
+;; > hubbub of surrounding conversations but a sudden silence reminds
+;; > us of the presence of neighbors Our attention is clearly attracted by
+;; > transients and movements as opposed to stationary stimuli which we
+;; > soon ignore Concentrating on transients is probably a strategy for
+;; > selecting important information from the overwhelming amount of data
+;; > recorded by our senses Yet classical signal processing has devoted
+;; > most of its e orts to the design of time invariant and space invariant
+;; > operators that modify stationary signal properties This has led to the
+;; > indisputable hegemony of the Fourier transform but leaves aside many
+;; > information processing applications
+
+;; St´ephane Mallat, [A Wavelet Tour of Signal Processing](https://coehuman.uodiyala.edu.iq/uploads/Coehuman%20library%20pdf/%D9%83%D8%AA%D8%A8%20%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6%D9%8A%D8%A7%D8%AA%20Mathematics%20books/Wavelets/Mallat_Wavelet-Tour-of-Signal-Processing.pdf)
+
+;; ## DFT of a piece of data
 
 (def some-dft-ds
   (values->dft-ds
@@ -248,11 +272,6 @@ wav-ds
                              (dfn/* power))]))
          (into {:time time})
          tc/dataset)))
-
-(-> some-dft-ds
-    (dft-ds->peaks-ds {:n-peaks 10})
-    (peaks-ds->components-ds {:duration 1})
-    (tc/head 500))
 
 (-> some-dft-ds
     (dft-ds->peaks-ds {:n-peaks 10})
@@ -423,4 +442,3 @@ wav-ds
          (apply tc/concat))
     :combined
     audio)
-
