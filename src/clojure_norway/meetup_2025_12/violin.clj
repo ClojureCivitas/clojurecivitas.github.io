@@ -29,6 +29,10 @@
 
 ;; ## Relevant community projects
 
+;; ![](https://clojurecivitas.github.io/images/civitas-icon.svg){width=100}
+
+;; [Clojure Civitas](https://clojurecivitas.github.io/)
+
 ;; ![](https://scicloj.github.io/sci-cloj-logo-transparent.png){width=100}
 
 ;; [DSP Study group](https://scicloj.github.io/docs/community/groups/dsp-study/)
@@ -171,7 +175,7 @@ wav-format
 
 (def cosine-wave
   (-> {:time (-> (range 0
-                        10
+                        0.1
                         (/ 1.0 sample-rate)))}
       tc/dataset
       (tc/add-column :value #(-> %
@@ -450,6 +454,40 @@ wav-format
        ((palette (normalized-spectrogram y x))
         c)))
     bufimg/tensor->image)
+
+
+
+
+
+
+
+(defn animated-echarts [{:as details
+                         :keys [specs time-for-transition]}]
+  (kind/reagent
+   ['(fn [{:keys [specs
+                  time-for-transition]}]
+       (let [*i (reagent.core/atom 0)]
+         (fn []
+           ^{:key @*i}
+           [:div
+            [:p (pr-str (rem @*i (count specs)))]
+            [:div {:style {:height "400px"}
+                   :ref (fn [el]
+                          (when el
+                            (let [chart (.init js/echarts el)]
+                              (.setOption chart
+                                          (clj->js
+                                           (specs (rem @*i (count specs))))))))}]
+            (js/setInterval #(swap! *i inc) time-for-transition)
+            ;; Include this to force component update:
+            [:p {:style {:display :none}}
+             (hash @*i)]
+            ])))
+    details]
+   {:html/deps [:echarts]}))
+
+
+
 
 
 ;; ## Playing the STFT
