@@ -1,3 +1,5 @@
+;; # Nowway Clojure Meetup Dec 2025: Modeling a Violin Tremolo
+
 (ns clojure-norway.meetup-2025-12.violin
   (:require [scicloj.kindly.v4.kind :as kind]
             [clojure.java.io :as io]
@@ -11,7 +13,19 @@
             [tech.v3.datatype :as dtype]
             [clojure.math :as math]))
 
-;; ## Exploring a violin Tremolo
+
+^:kindly/hide-code
+(kind/hiccup
+ [:style
+  ".clay-dataset {
+  max-height:400px; 
+  overflow-y: auto;
+}
+.clay-table {
+  max-height:400px; 
+  overflow-y: auto;
+}
+"])
 
 ;; ## Relevant community projects
 
@@ -21,7 +35,13 @@
 
 ;; [Clojure Jam 2026](https://scicloj.github.io/clojure-jam-2026/)
 
-;; ## Data source
+;; ## Libraries
+
+;; - [Noj](https://scicloj.github.io/noj/) - data science toolkig
+;;   - [Underlying libraries](https://scicloj.github.io/noj/noj_book.underlying_libraries.html)
+;; - [JDSP](https://jdsp.dev/) - signal processing in the JVM
+
+;; ## Our data: a violin tremolo
 ;;
 ;; [violin tremolo G#2.aif](https://freesound.org/people/ldk1609/sounds/56085/)
 ;; by [ldk1609](https://freesound.org/people/ldk1609/)
@@ -117,7 +137,9 @@ wav-format
                  (double sample-rate))
     :sample wav-samples}))
 
-wav-ds
+(tc/head wav-ds)
+
+;; ## Visualizing the vibrations along time
 
 (-> wav-ds
     (tc/select-rows #(<= 0 (:time %) 1))
@@ -135,6 +157,8 @@ wav-ds
 {:samples wav-samples
  :sample-rate sample-rate}
 
+;; ## Oversimplifying by repeatition
+
 ^kind/audio
 {:samples (->> (-> wav-ds
                    (tc/select-rows #(<= 1 (:time %) 1.06))
@@ -143,7 +167,23 @@ wav-ds
                (apply concat))
  :sample-rate sample-rate}
 
-;; ## Computing the Discrete Fouriee Transform the data
+;; ## Modelling a simple wave
+
+(def cosine-wave
+  (-> {:time (-> (range 0
+                        0.1
+                        (/ 1.0 sample-rate)))}
+      tc/dataset
+      (tc/add-column :value #(-> %
+                                 :time
+                                 (dfn/* (* 2 math/PI 50))
+                                 (dfn/+ (* 0.25 math/PI))
+                                 dfn/cos))))
+
+(-> cosine-wave
+    (plotly/layer-line {:=x :time
+                        :=y :value}))
+
 
 (import 'com.github.psambit9791.jdsp.transform.DiscreteFourier)
 
@@ -169,23 +209,6 @@ wav-ds
                        :amplitude amp
                        :phase phase})
           (tc/add-column :power #(tcc/sq (:amplitude %)))))))
-
-
-
-(def cosine-wave
-  (-> {:time (-> (range 0
-                        0.1
-                        (/ 1.0 sample-rate)))}
-      tc/dataset
-      (tc/add-column :value #(-> %
-                                 :time
-                                 (dfn/* (* 2 math/PI 50))
-                                 (dfn/+ (* 0.25 math/PI))
-                                 dfn/cos))))
-
-(-> cosine-wave
-    (plotly/layer-line {:=x :time
-                        :=y :value}))
 
 (def cosine-wave-dft-ds
   (-> cosine-wave
@@ -314,26 +337,17 @@ wav-ds
 (-> (some-part 1 1.05)
     audio)
 
-(-> some-dft-ds
-    (dft-ds->peaks-ds {:n-peaks 10})
-    (peaks-ds->components-ds {:duration 1})
-    components-ds->combined-ds
-    :combined
-    audio)
-
-(-> (some-part 1 2)
-    values->dft-ds
-    (dft-ds->peaks-ds {:n-peaks 30})
-    (peaks-ds->components-ds {:duration 1})
-    components-ds->combined-ds
-    :combined
-    audio)
-
+(for [n-peaks (range 1 7)]
+  (-> some-dft-ds
+      (dft-ds->peaks-ds {:n-peaks n-peaks})
+      (peaks-ds->components-ds {:duration 0.2})
+      components-ds->combined-ds
+      :combined
+      audio))
 
 ;; ## Short Time Fourier Transform
 
 (import 'com.github.psambit9791.jdsp.windows.Hanning)
-
 
 
 (def stft
@@ -394,6 +408,13 @@ wav-ds
                              (tc/add-column :power #(tcc/sq (:amplitude %))))))))))))
 
 
+(kind/hiccup
+ [:div {:style {:max-height "400px"
+                :overflow-y "auto"}}
+  stft])
+
+;; ### Spectrogram
+
 (require '[tech.v3.dataset.tensor :as ds-tensor])
 
 (def spectrogram
@@ -429,8 +450,7 @@ wav-ds
     bufimg/tensor->image)
 
 
-;; ## Playing the spectrogram
-
+;; ## Playing the STFT
 
 (-> stft
     (->> (map (fn [dft]
