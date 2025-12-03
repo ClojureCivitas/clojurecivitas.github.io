@@ -1,5 +1,12 @@
-;; # Noway Clojure Meetup Dec 2025: Modeling a Violin Tremolo
-
+^{:kindly/hide-code true
+  :clay {:title "# Noway Clojure Meetup Dec. 2025: Modeling a Violin Tremolo"
+         :quarto {:author [:com.github/teodorlu :daslu]
+                  :description "Meetup notes"
+                  :category :clojure
+                  :type :post
+                  :date "2025-12-03"
+                  :tags [:dsp :math :music]
+                  :draft true}}}
 (ns clojure-norway.meetup-2025-12.violin
   (:require [scicloj.kindly.v4.kind :as kind]
             [clojure.java.io :as io]
