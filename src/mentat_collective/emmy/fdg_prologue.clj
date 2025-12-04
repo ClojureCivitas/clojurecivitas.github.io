@@ -219,7 +219,7 @@
 ;; This expression is equivalent to a computer program:[fn:6]
 
 ^:kindly/hide-code
-(kind/scittle '(declare Gamma))
+(define _ (declare Gamma))
 
 (define ((Lagrange-equations Lagrangian) w)
   (- (D (compose ((partial 2) Lagrangian) (Gamma w)))
