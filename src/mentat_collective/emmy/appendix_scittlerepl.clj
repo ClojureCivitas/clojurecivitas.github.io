@@ -2,8 +2,7 @@
   :clay             {:title  "scittle repl"
                      :quarto {:type     :draft
                               ;; :sidebar  "emmy-fdg"
-                              :date     "2025-11-12"
-                              :image    nil
+                              :date     "2025-12-04"
                               :category :libs
                               :tags     [:emmy :physics]}}}
 (ns mentat-collective.emmy.appendix-scittlerepl
