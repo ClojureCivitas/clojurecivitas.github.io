@@ -2,7 +2,7 @@
   :clay             {:title  "The Scittle Repl"
                      :quarto {:type     :post
                               :date     "2025-12-04"
-                              :image    "GClef.svg"
+                              :image    "appendix_scittlerepl.png"
                               :category :libs
                               :tags     [:scittle :repl]}}}
 (ns mentat-collective.emmy.appendix-scittlerepl
@@ -10,6 +10,8 @@
    [sci.nrepl.browser-server :as nrepl]
    [scicloj.kindly.v4.api :as kindly]
    [scicloj.kindly.v4.kind :as kind]))
+
+;; This Clay notebook has its Scittle nrepl built in, so you can connect your editor to its ClojureScript side.
 
 ;; ## Starting the Scittle Repl of this Clay Notebook
 
