@@ -1,6 +1,7 @@
 ^{:kindly/hide-code true
   :clay             {:title  "The Scittle Repl"
-                     :quarto {:type     :post
+                     :quarto {:author   :kloimhardt
+                              :type     :post
                               :date     "2025-12-04"
                               :image    "appendix_scittlerepl.png"
                               :category :libs
@@ -25,7 +26,7 @@
 
 ;; In your editor, open a repl connection. For example in Emacs/Cider, this means the following 5 steps: (I) *(sesman-start)* (II) choose cider-connect-cljs (III) select localhost (IV) port 1339, followed by (V) the REPL type nbb.
 
-;; Remark: in my setup, to make this work, there must not be another Clojure Repl connection. Because several connections seem to confuse each other, instead of using a Clojure/JVM-Repl, to reload the notebook I start Clay with the file-watcher. With the file-watcher, I make sure that I save any .cljs file before changing this very .clj file of this notebook. An unsaved .cljs file keeps this .clj file from reloading on change. If you keep things tidy, then ...
+;; Remark: in my setup, to make this work, there must not be any other Clojure Repl connection. Because several connections seem to confuse each other, instead of using a Clojure/JVM-Repl, to reload the notebook I start Clay with the file-watcher. With the file-watcher, I make sure that I save any .cljs file before changing this very .clj file of this notebook. An unsaved .cljs file keeps this .clj file from reloading on change. If you keep things tidy, then ...
 
 ;; Voila, you have a nice Scittle Repl.
 
