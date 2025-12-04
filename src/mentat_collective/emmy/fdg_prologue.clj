@@ -7,10 +7,12 @@
                               :category :libs
                               :tags     [:emmy :physics]}}}
 (ns mentat-collective.emmy.fdg-prologue
+  (:refer-clojure :exclude [+ - * / zero? compare divide numerator
+                            denominator
+                            time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [emmy.env :as e :refer [->infix simplify Lagrange-equations literal-function]]
-            [emmy.mechanics.lagrange :as lg]
+            [mentat-collective.emmy.scheme :refer [define-1 let-scheme]]
             [civitas.repl :as repl]))
 
 ;; Elementary introduction to Emmy, taken from the first pages of the MIT open-access book
@@ -35,24 +37,47 @@
    [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
 
 ^:kindly/hide-code
-(kind/scittle
-  '(require '[emmy.env :refer :all :exclude [Lagrange-equations Gamma]]))
-
-^:kindly/hide-code
-(kind/scittle
-  '(def show-expression (comp ->infix simplify)))
-
-^:kindly/hide-code
 (defmacro define [& b]
-  (list 'kind/scittle (list 'quote (cons 'define b))))
+  (list 'do
+        (cons 'mentat-collective.emmy.scheme/define b)
+        (list 'kind/scittle (list 'quote (cons 'define b)))))
 
 ^:kindly/hide-code
-(defmacro show-expression [& b]
-  (list 'kind/reagent [:tt (list 'quote (cons 'show-expression b))]))
+(define emmy-require
+  '[emmy.env :refer :all :exclude [Lagrange-equations Gamma]])
 
 ^:kindly/hide-code
-(def md
-  (comp kindly/hide-code kind/md))
+(require emmy-require)
+
+^:kindly/hide-code
+(kind/scittle
+  '(require emmy-require))
+
+^:kindly/hide-code
+(define show-exp (comp ->infix simplify))
+
+^:kindly/hide-code
+(kind/scittle
+  '(def show-expression show-exp))
+
+^:kindly/hide-code
+(defmacro show-expression [b & c]
+  (case b
+    :calc-on-server
+    (list 'show-exp (first c))
+    :browser
+    (list 'kind/reagent
+          [:tt (list 'quote
+                     (list 'show-exp (first c)))])
+    (let [serg (show-exp (eval b))]
+      (list 'kind/reagent
+            [:div (list 'quote
+                        (list 'let ['a (list 'show-exp b)]
+                              (list 'if (list '= serg 'a)
+                                    [:tt 'a]
+                                    [:div
+                                     [:tt 'a] ;; comment this in prod
+                                     [:tt serg]])))]))))
 
 ;; ## Programming and Understanding
 
@@ -194,7 +219,7 @@
 ;; This expression is equivalent to a computer program:[fn:6]
 
 ^:kindly/hide-code
-(kind/scittle '(declare Gamma))
+(define _ (declare Gamma))
 
 (define ((Lagrange-equations Lagrangian) w)
   (- (D (compose ((partial 2) Lagrangian) (Gamma w)))
@@ -258,11 +283,10 @@
 ;; `literal-function` to work.
 ;; As a remedy, I have an [alternative execution environment](https://kloimhardt.github.io/blog/html/sicmutils-as-js-book-part1.html) ]
 
-(->infix
-  (simplify
-    (((Lagrange-equations (lg/L-harmonic 'm 'k))
-      (literal-function 'x))
-     't)))
+(show-expression :calc-on-server
+  (((Lagrange-equations (L-harmonic 'm 'k))
+    (literal-function 'x))
+   't))
 
 ;; If this residual is zero we have the Lagrange equation for the harmonic
 ;; oscillator.
