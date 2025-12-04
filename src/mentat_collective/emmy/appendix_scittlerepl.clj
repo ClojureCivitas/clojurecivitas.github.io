@@ -11,11 +11,9 @@
    [scicloj.kindly.v4.api :as kindly]
    [scicloj.kindly.v4.kind :as kind]))
 
-(comment 1)
+;; ## Starting the Scittle Repl of this Clay Notebook
 
-;; ## Starting a ClojureScript Repl in Clay
-
-;; With this notebook running locally, uncomment the following line ...
+;; With this notebook running locally, and seeing this text in the browser window (i.e. notebook is loaded once), uncomment the following line ...
 
 ;; (reset! start-scittle-nrepl-server? true)
 
@@ -25,9 +23,9 @@
 
 ;; In your editor, open a repl connection. For example in Emacs/Cider, this means the following 5 steps: (I) *(sesman-start)* (II) choose cider-connect-cljs (III) select localhost (IV) port 1339, followed by (V) the REPL type nbb.
 
-;; Remark: in my setup, all this does not work when I connect my editor to a normal Clojure Repl as well. Instead of using a Clojure-Repl, to reload the notebook I start Clay with the file-watcher. And then ...
+;; Remark: in my setup, to make this work, there must not be another Clojure Repl connection. Because several connections seem to confuse each other, instead of using a Clojure/JVM-Repl, to reload the notebook I start Clay with the file-watcher. With the file-watcher, I make sure that I save any .cljs file before changing this very .clj file of this notebook. An unsaved .cljs file keeps this .clj file from reloading on change. If you keep things tidy, then ...
 
-;; Voila, you have a nice ClojureScript Repl.
+;; Voila, you have a nice Scittle Repl.
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -36,6 +34,8 @@
 ;; ## The inner workings of Scittle and sci.nrepl
 
 ;; The following code is just to reveal the inner workings, you should already be happily repling in your .cljs file.
+
+;; While this Scittle Repl works perfect with the standard Scittle distribution, scittle-kitchen poses problems with my setup.
 
 (kind/hiccup
   [:div
@@ -50,8 +50,8 @@
 
 (defonce active-scittle-nrepl-server? (atom false))
 
-(when (and start-scittle-nrepl-server?
-           (not active-scittle-nrepl-server?))
+(when (and @start-scittle-nrepl-server?
+           (not @active-scittle-nrepl-server?))
   (reset! active-scittle-nrepl-server? true)
   (nrepl/start! {:nrepl-port 1339 :websocket-port 1340})
   :end_when)
