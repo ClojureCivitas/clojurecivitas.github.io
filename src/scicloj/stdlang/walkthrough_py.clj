@@ -1,12 +1,12 @@
 ^{:kindly/hide-code true
-  :clay             {:title  "test stdlang"
-                     :quarto {:author   :kloimhardt
+  :clay             {:title  "Stdlang: Python Walkthrough"
+                     :quarto {;;:author   :to-be-determined
                               :type     :draft
                               :date     "2025-12-06"
-                              ;;:image    "appendix_scittlerepl.png"
+                              ;;:image    ""
                               :category :libs
                               :tags     [:stdlang]}}}
-(ns mentat-collective.emmy.teststlang
+(ns scicloj.stdlang.walkthrough-py
   (:require
    [std.lang :as l]
    [scicloj.kindly.v4.kind :as kind]
