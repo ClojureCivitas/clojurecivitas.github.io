@@ -3,7 +3,7 @@
                      :quarto {:author   :luke-zeitlin
                               :image    ""
                               :type     :post
-                              :date     "2025-11-26"
+                              :date     "2025-12-06"
                               :category :physics
                               :tags     [:simulation :math :physics]}}}
 (ns physics.numerical-methods
