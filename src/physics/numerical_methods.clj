@@ -1,7 +1,7 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Linear 1D Advection"
                      :quarto {:author   :luke-zeitlin
-                              :image    ""
+                              :image    "osc.png"
                               :type     :post
                               :date     "2025-12-06"
                               :category :physics
