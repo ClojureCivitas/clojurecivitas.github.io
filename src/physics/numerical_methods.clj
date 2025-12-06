@@ -6,7 +6,7 @@
                               :date     "2025-11-26"
                               :category :physics
                               :tags     [:simulation :math :physics]}}}
-(ns physics.wave-equation
+(ns physics.numerical-methods
   (:require
    [scicloj.kindly.v4.kind :as kind]))
 
@@ -429,5 +429,5 @@
   ,
   (require '[scicloj.clay.v2.api :as clay])
 
-  (clay/make! {:source-path "physics/wave_equation.clj"
+  (clay/make! {:source-path "physics/numerical_methods.clj"
                :live-reload :toggle}))
