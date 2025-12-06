@@ -462,33 +462,38 @@ wav-format
 
 (require '[tech.v3.libs.buffered-image :as bufimg])
 
-(-> (tensor/compute-tensor
-     (conj (dtype/shape spectrogram) 3)
-     (fn [y x c]
-       ((palette (normalized-spectrogram y x))
-        c)))
-    bufimg/tensor->image)
+spectrogram
+
+(let [[height width] (dtype/shape spectrogram)]
+  (-> (tensor/compute-tensor
+       [height width 3]
+       (fn [y x c]
+         ((palette (normalized-spectrogram
+                    (- height y)
+                    x))
+          c)))
+      bufimg/tensor->image))
 
 (defn animated-echarts [specs]
-  [(kind/reagent
-    ['(fn [specs]
-        (let [*i (reagent.core/atom 0)]
-          (fn []
-            ^{:key @*i}
-            [:div
-             [:div {:style {:height "400px"}
-                    :ref (fn [el]
-                           (when el
-                             (let [chart (.init js/echarts el)]
-                               (.setOption chart
-                                           (clj->js
-                                            (specs (rem @*i (count specs))))))))}]
-             (js/setInterval #(swap! *i inc) 1000)
-             ;; Include this to force component update:
-             [:p {:style {:display :none}}
-              (hash @*i)]])))
-     specs]
-    {:html/deps [:echarts]})])
+  (kind/reagent
+   ['(fn [specs]
+       (let [*i (reagent.core/atom 0)]
+         (fn []
+           ^{:key @*i}
+           [:div
+            [:div {:style {:height "400px"}
+                   :ref (fn [el]
+                          (when el
+                            (let [chart (.init js/echarts el)]
+                              (.setOption chart
+                                          (clj->js
+                                           (specs (rem @*i (count specs))))))))}]
+            (js/setInterval #(swap! *i inc) 1000)
+            ;; Include this to force component update:
+            [:p {:style {:display :none}}
+             (hash @*i)]])))
+    specs]
+   {:html/deps [:echarts]}))
 
 (comment
   (let [n 100]
