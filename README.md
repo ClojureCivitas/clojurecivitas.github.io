@@ -181,6 +181,8 @@ If you `git add -f site/my-ns/my-post.qmd`,
 it will prevent the source `src/my-ns/my-post.clj` file from executing in the publish process.
 Only you will run the code locally (where you have secrets and large files available).
 
+If your notebook displays locally stored images, you will also need to commit these. Quarto puts them under `site/my-ns/my-post_files`.
+
 See [Some notebooks should only be run locally](https://clojurecivitas.github.io/scicloj/clay/skip_if_unchanged_example.html) for more detail.
 
 ### Styling and other features
