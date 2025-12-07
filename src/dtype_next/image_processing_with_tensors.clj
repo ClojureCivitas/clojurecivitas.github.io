@@ -77,6 +77,15 @@
 
 ;; Let's load our sample image and understand the tensor structure.
 
+;; ## The bufimg Namespace
+
+;; The `tech.v3.libs.buffered-image` namespace (aliased as `bufimg`) provides
+;; interop between Java's BufferedImage and dtype-next tensors:
+;;
+;; - `bufimg/load` — load image file → BufferedImage
+;; - `bufimg/as-ubyte-tensor` — BufferedImage → uint8 tensor [H W C]
+;; - `bufimg/tensor->image` — tensor → BufferedImage (for display)
+
 (def original-img
   (bufimg/load "src/dtype_next/nap.jpg"))
 
@@ -93,7 +102,15 @@ original-tensor
 
 (dtype/shape original-tensor)
 
-;; This is `[height width channels]` — our image has 3 channels (RGB).
+;; This is `[height width channels]` — our image has 3 channels.
+
+;; **How do we know it's RGB format?** Check the image type:
+
+(bufimg/image-type original-img)
+
+;; `:type-3byte-bgr` indicates BGR byte order (Blue-Green-Red), which is Java's
+;; internal format. However, `bufimg/as-ubyte-tensor` automatically converts to
+;; RGB order for us, so we can treat it as RGB in our code.
 
 (def height
   (first (dtype/shape original-tensor)))
@@ -141,14 +158,19 @@ original-tensor
 ;; ## Tensors as Datasets
 
 ;; Two-dimensional tensors convert naturally to tablecloth datasets, enabling
-;; tabular operations and plotting:
+;; tabular operations and plotting.
+
+;; **Converting tensors ↔ datasets:**
+;; - `ds-tensor/tensor->dataset` — explicit conversion (tech.v3.dataset.tensor)
+;; - `tc/dataset` — tablecloth auto-converts 2D tensors
+;; - `ds-tensor/dataset->tensor` — convert back to tensor
 
 (-> original-tensor
     (tensor/reshape [(* height width) 3])
     ds-tensor/tensor->dataset
     (tc/rename-columns [:red :green :blue]))
 
-;; Or more concisely:
+;; Or more concisely (tablecloth auto-converts):
 
 (-> original-tensor
     (tensor/reshape [(* height width) 3])
@@ -169,6 +191,154 @@ original-tensor
 
 ;; ---
 
+;; # Tensor Operations Primer
+
+;; Before working with real images, let's explore the core operations we'll use
+;; throughout this tutorial. We'll use tiny toy tensors to demonstrate each concept.
+
+;; ## Creating Tensors: tensor/compute-tensor
+
+;; `tensor/compute-tensor` creates a tensor by calling a function for each position.
+;; The function receives indices and returns the value for that position.
+
+;; Create a simple 3×4 tensor with sequential values:
+
+(def toy-tensor
+  (tensor/compute-tensor
+   [3 4] ; shape: 3 rows, 4 columns
+   (fn [row col] ; function receives [row col] indices
+     (+ (* row 10) col)) ; compute value: row*10 + col
+   :int32)) ; element type
+
+toy-tensor
+
+;; Verify the shape:
+
+(dtype/shape toy-tensor)
+
+;; ## Slicing with tensor/select
+
+;; `tensor/select` extracts portions of a tensor without copying data.
+;; It takes one selector per dimension.
+
+;; **Selector options:**
+;; - `:all` — keep entire dimension
+;; - `n` (integer) — select single index
+;; - `(range start end)` — select slice from start (inclusive) to end (exclusive)
+;; - `(range start end step)` — select with stride
+
+;; Example: Select row 1 (second row):
+
+(tensor/select toy-tensor 1 :all)
+
+;; Select column 2 (third column):
+
+(tensor/select toy-tensor :all 2)
+
+;; Select first two rows:
+
+(tensor/select toy-tensor (range 0 2) :all)
+
+;; Select every other column:
+
+(tensor/select toy-tensor :all (range 0 4 2))
+
+;; Select a sub-rectangle (rows 1-2, columns 1-3):
+
+(tensor/select toy-tensor (range 1 3) (range 1 4))
+
+;; **Key insight**: All these are zero-copy views—no data is copied.
+
+;; ## Element Access: tensor/mget
+
+;; `tensor/mget` reads a single element at given indices:
+
+(tensor/mget toy-tensor 1 2) ; row 1, column 2 → 12
+
+;; ## The dfn Namespace: Functional Operations with Broadcasting
+
+;; The `tech.v3.datatype.functional` (aliased as `dfn`) namespace provides
+;; mathematical operations that work **element-wise** across entire tensors
+;; and automatically **broadcast** when combining tensors of different shapes.
+
+;; **Element-wise operations:**
+
+(def small-tensor (tensor/compute-tensor [2 3] (fn [r c] (+ (* r 3) c)) :int32))
+
+small-tensor
+
+;; Add scalar to every element (broadcasting):
+
+(dfn/+ small-tensor 10)
+
+;; Multiply every element:
+
+(dfn/* small-tensor 2)
+
+;; Combine two tensors element-wise:
+
+(dfn/+ small-tensor small-tensor)
+
+;; **Reduction operations** (collapse dimensions):
+
+(dfn/mean small-tensor) ; mean of all elements
+
+(dfn/reduce-max small-tensor) ; maximum value
+
+(dfn/reduce-min small-tensor) ; minimum value
+
+(dfn/sum small-tensor) ; sum of all elements
+
+;; **Why dfn instead of regular Clojure functions?**
+;; - Work on entire tensors efficiently (no boxing)
+;; - Broadcast automatically
+;; - Type-aware (preserve numeric precision)
+;; - SIMD-optimized
+
+;; ## Type Handling: dtype/elemwise-cast
+
+;; Convert between numeric types. Common pattern: upcast → compute → clamp → downcast.
+
+;; Create uint8 tensor:
+
+(def tiny-uint8 (tensor/compute-tensor [2 2] (fn [_ _] 100) :uint8))
+
+tiny-uint8
+
+;; Element type:
+
+(dtype/elemwise-datatype tiny-uint8)
+
+;; Multiply would overflow uint8 (max 255), so upcast first:
+
+(-> tiny-uint8
+    (dtype/elemwise-cast :float32) ; upcast to float
+    (dfn/* 2.5) ; compute
+    (dfn/min 255) ; clamp to valid range
+    (dfn/max 0)
+    (dtype/elemwise-cast :uint8)) ; downcast back
+
+;; ## Shape Operations: dtype/shape and tensor/reshape
+
+;; We've seen `dtype/shape` already. `tensor/reshape` reinterprets data
+;; with a different shape (zero-copy):
+
+(def flat-tensor (tensor/compute-tensor [12] (fn [i] i) :int32))
+
+flat-tensor
+
+;; Reshape 1D → 2D:
+
+(tensor/reshape flat-tensor [3 4])
+
+;; Reshape 2D → 1D:
+
+(tensor/reshape (tensor/reshape flat-tensor [3 4]) [12])
+
+;; **Important**: Total elements must match (3×4 = 12).
+
+;; ---
+
 ;; # Image Statistics
 
 ;; Now that we understand tensor fundamentals, let's analyze image properties
@@ -180,7 +350,8 @@ original-tensor
 
 (defn extract-channels
   "Extract R, G, B channels from RGB tensor.
-  Returns map with :red, :green, :blue tensors (each [H W])."
+  Takes: [H W 3] tensor
+  Returns: map with :red, :green, :blue tensors (each [H W])"
   [img-tensor]
   {:red (tensor/select img-tensor :all :all 0)
    :green (tensor/select img-tensor :all :all 1)
@@ -199,7 +370,9 @@ original-tensor
 ;; Compute mean, standard deviation, min, max for each channel:
 
 (defn channel-stats
-  "Compute statistics for a single channel tensor."
+  "Compute statistics for a single channel tensor.
+  Takes: [H W] tensor
+  Returns: map with :mean, :std, :min, :max scalars"
   [channel]
   {:mean (dfn/mean channel)
    :std (dfn/standard-deviation channel)
@@ -224,8 +397,9 @@ original-tensor
 ;; perceived brightness rather than simple RGB averages.
 
 (defn to-grayscale
-  "Convert RGB to grayscale using perceptual weights.
-  Standard formula: 0.299*R + 0.587*G + 0.114*B"
+  "Convert RGB [H W 3] to grayscale [H W].
+  Standard formula: 0.299*R + 0.587*G + 0.114*B
+  Returns float32 tensor (use dtype/elemwise-cast for uint8)."
   [img-tensor]
   (let [r (tensor/select img-tensor :all :all 0)
         g (tensor/select img-tensor :all :all 1)
@@ -236,11 +410,15 @@ original-tensor
 
 (def grayscale (to-grayscale original-tensor))
 
+;; **Note on types**: `to-grayscale` returns float32 because `dfn/*` operates on
+;; floats for precision. When visualizing, `bufimg/tensor->image` automatically
+;; handles the float→uint8 conversion.
+
 ;; **Grayscale statistics**:
 
 (tc/dataset (channel-stats grayscale))
 
-;; Visualize grayscale:
+;; Visualize grayscale (automatic float→uint8 conversion):
 
 (bufimg/tensor->image grayscale)
 
@@ -296,7 +474,8 @@ original-tensor
 
 (defn gradient-x
   "Compute horizontal gradient (difference between adjacent columns).
-  Result shape: [H, W-1]"
+  Takes: [H W] tensor
+  Returns: [H W-1] tensor"
   [tensor-2d]
   (let [[h w] (dtype/shape tensor-2d)]
     (dfn/- (tensor/select tensor-2d :all (range 1 w))
@@ -304,7 +483,8 @@ original-tensor
 
 (defn gradient-y
   "Compute vertical gradient (difference between adjacent rows).
-  Result shape: [H-1, W]"
+  Takes: [H W] tensor
+  Returns: [H-1 W] tensor"
   [tensor-2d]
   (let [[h w] (dtype/shape tensor-2d)]
     (dfn/- (tensor/select tensor-2d (range 1 h) :all)
@@ -320,14 +500,18 @@ gy
 ;; Notice: `gx` is one column narrower, `gy` is one row shorter.
 
 ;; Combine gradients to get edge strength: `sqrt(gx² + gy²)`
+;;
+;; **Why trim?** gradient-x produces [H W-1] and gradient-y produces [H-1 W].
+;; To combine them element-wise, we need matching shapes, so we trim both to [H-1 W-1].
 
 (defn edge-magnitude
   "Compute gradient magnitude from gx and gy.
-  Trims to common size before combining."
+  Takes: gx [H W-1], gy [H-1 W]
+  Returns: [H-1 W-1] (trimmed to common size)"
   [gx gy]
   (let [[h-gx w-gx] (dtype/shape gx)
         [h-gy w-gy] (dtype/shape gy)
-        ;; Trim to common dimensions
+        ;; Trim to common dimensions: gx loses 1 row, gy loses 1 column
         gx-trimmed (tensor/select gx (range 0 h-gy) :all)
         gy-trimmed (tensor/select gy :all (range 0 w-gx))]
     (dfn/sqrt (dfn/+ (dfn/sq gx-trimmed)
@@ -350,7 +534,8 @@ edges
 
 (defn sharpness-score
   "Compute sharpness as mean edge magnitude.
-  Higher values indicate sharper images."
+  Takes: [H W 3] RGB or [H W] grayscale tensor
+  Returns: scalar (higher = sharper)"
   [img-tensor]
   (let [gray (to-grayscale img-tensor)
         gx (gradient-x gray)
@@ -378,13 +563,15 @@ edges
 
 (defn auto-white-balance
   "Scale RGB channels to have equal means.
-  This removes color casts and balances the image."
+  Takes: [H W 3] uint8 tensor
+  Returns: [H W 3] uint8 tensor"
   [img-tensor]
   (let [;; Compute channel means using reduce-axis
-        ;; Reduce over height (axis 0), then width (axis 0 again)
+        ;; First reduce: [H W 3] → [W 3] (collapse height, axis 0)
+        ;; Second reduce: [W 3] → [3] (collapse width, now axis 0 after shape change)
         channel-means (-> img-tensor
-                          (tensor/reduce-axis dfn/mean 0)
-                          (tensor/reduce-axis dfn/mean 0))
+                          (tensor/reduce-axis dfn/mean 0) ; [H W 3] → [W 3]
+                          (tensor/reduce-axis dfn/mean 0)) ; [W 3] → [3]
 
         ;; Target: maximum of the three means
         target-mean (dfn/reduce-max channel-means)
@@ -426,7 +613,8 @@ edges
 
 (defn enhance-contrast
   "Increase image contrast by amplifying deviation from mean.
-  Factor > 1 increases contrast, < 1 decreases it."
+  Takes: [H W 3] uint8 tensor, factor (> 1 increases, < 1 decreases)
+  Returns: [H W 3] uint8 tensor"
   [img-tensor factor]
   (let [r (tensor/select img-tensor :all :all 0)
         g (tensor/select img-tensor :all :all 1)
@@ -510,8 +698,9 @@ edges
 
 (defn apply-color-matrix
   "Apply 3×3 transformation matrix to RGB channels.
-  Matrix format: [[r0 g0 b0] [r1 g1 b1] [r2 g2 b2]]
-  new_r = r0*R + g0*G + b0*B, etc."
+  Takes: [H W 3] tensor, 3×3 matrix [[r0 g0 b0] [r1 g1 b1] [r2 g2 b2]]
+  Returns: [H W 3] uint8 tensor
+  Formula: new_r = r0*R + g0*G + b0*B, etc."
   [img-tensor matrix]
   (let [r (tensor/select img-tensor :all :all 0)
         g (tensor/select img-tensor :all :all 1)
@@ -548,7 +737,8 @@ edges
 
 (defn simulate-color-blindness
   "Simulate color vision deficiency.
-  Type: :protanopia, :deuteranopia, or :tritanopia"
+  Takes: [H W 3] tensor, blindness-type (:protanopia | :deuteranopia | :tritanopia)
+  Returns: [H W 3] uint8 tensor"
   [img-tensor blindness-type]
   (apply-color-matrix img-tensor
                       (get color-blindness-matrices blindness-type)))
@@ -592,7 +782,9 @@ edges
 ;; Create a simple averaging kernel:
 
 (defn box-blur-kernel
-  "Create NxN box blur kernel (uniform averaging)."
+  "Create NxN box blur kernel (uniform averaging).
+  Takes: n (kernel size)
+  Returns: [n n] float32 tensor"
   [n]
   (let [weight (/ 1.0 (* n n))]
     (tensor/compute-tensor
@@ -609,9 +801,9 @@ kernel-3x3
 ;; Slide the kernel over the image, computing weighted sums:
 
 (defn convolve-2d
-  "Apply 2D convolution to a grayscale image.
+  "Apply 2D convolution to grayscale image [H W].
   kernel: [kh kw] float tensor
-  Returns result with same size as input (zero-padded)."
+  Returns [H W] float32 tensor (zero-padded edges)."
   [img-2d kernel]
   (let [[h w] (dtype/shape img-2d)
         [kh kw] (dtype/shape kernel)
@@ -620,6 +812,10 @@ kernel-3x3
     (tensor/compute-tensor
      [h w]
      (fn [y x]
+       ;; Note: Using atom here for accumulation within tensor/compute-tensor's
+       ;; position function. While not idiomatic Clojure, it's the clearest way
+       ;; to accumulate over a 2D neighborhood. The mutation is local to this
+       ;; function call and doesn't escape.
        (let [sum (atom 0.0)]
          (doseq [ky (range kh)
                  kx (range kw)]
@@ -648,7 +844,9 @@ kernel-3x3
 ;; edge pixels, producing a smooth, natural-looking blur without artifacts.
 
 (defn gaussian-kernel
-  "Create NxN Gaussian kernel with given sigma."
+  "Create NxN Gaussian kernel with given sigma.
+  Takes: n (kernel size), sigma (standard deviation)
+  Returns: [n n] float32 tensor (normalized to sum=1)"
   [n sigma]
   (let [center (quot n 2)]
     (-> (tensor/compute-tensor
@@ -681,7 +879,8 @@ gaussian-5x5
 
 (defn sharpen
   "Sharpen image using unsharp mask.
-  strength: how much detail to add (typical: 0.5-2.0)"
+  Takes: [H W] grayscale tensor, strength (0.5-2.0 typical)
+  Returns: [H W] float32 tensor"
   [img-2d strength]
   (let [blurred (convolve-2d img-2d (box-blur-kernel 3))
         detail (dfn/- img-2d blurred)]
@@ -699,6 +898,10 @@ gaussian-5x5
    (bufimg/tensor->image (dtype/elemwise-cast sharpened-gray :uint8))]])
 
 ;; ## Sharpness comparison
+
+;; We can quantify the sharpness of each filter using our `sharpness-score` function.
+;; However, note that `sharpness-score` expects RGB input, so we need to adapt it for
+;; grayscale tensors. For simplicity, we'll compute sharpness inline here:
 
 (-> {:original grayscale
      :box (convolve-2d grayscale kernel-3x3)
@@ -775,29 +978,17 @@ gaussian-5x5
 ;; We'll compare downsampling strategies and build image pyramids, demonstrating
 ;; `tensor/select` with stride patterns and aggregation techniques.
 
-;; ## Understanding Reshape
-
-;; `tensor/reshape` changes how we *view* data without copying it.
-;; Unlike `tensor/select`, which extracts slices, `reshape` reinterprets
-;; the entire buffer as a different shape.
-
-;; Example: Flatten a 2D tensor to 1D
-
-(let [small-2d (tensor/compute-tensor [3 4] (fn [y x] (+ (* y 4) x)) :int32)]
-  {:original-shape (dtype/shape small-2d)
-   :original small-2d
-   :flattened (tensor/reshape small-2d [12])
-   :flattened-shape (dtype/shape (tensor/reshape small-2d [12]))})
-
-;; **Key insight**: Reshape is a zero-copy view operation.
-
 ;; ## Downsampling by 2×
 
 ;; [Downsampling](https://en.wikipedia.org/wiki/Downsampling_(signal_processing))
 ;; (decimation) reduces image resolution by discarding pixels. We select every other
 ;; pixel in each dimension, creating a half-size image.
 
-(defn downsample-2x [img-2d]
+(defn downsample-2x
+  "Downsample by selecting every other pixel.
+  Takes: [H W] tensor
+  Returns: [H/2 W/2] tensor"
+  [img-2d]
   (let [[h w] (dtype/shape img-2d)]
     (tensor/select img-2d (range 0 h 2) (range 0 w 2))))
 
@@ -824,7 +1015,11 @@ gaussian-5x5
 ;; the same image at multiple scales. This is essential for multi-scale analysis, feature
 ;; detection at different sizes, and efficient image processing algorithms.
 
-(defn build-pyramid [img-2d levels]
+(defn build-pyramid
+  "Build image pyramid with multiple scales.
+  Takes: [H W] tensor, levels (number of scales)
+  Returns: vector of tensors [[H W] [H/2 W/2] [H/4 W/4] ...]"
+  [img-2d levels]
   (loop [pyramid [img-2d]
          current img-2d
          level 1]
@@ -853,7 +1048,11 @@ gaussian-5x5
 
 ;; Instead of selecting pixels, we can average blocks for smoother downsampling:
 
-(defn downsample-avg [img-2d factor]
+(defn downsample-avg
+  "Downsample by averaging blocks.
+  Takes: [H W] tensor, factor (downsampling factor)
+  Returns: [H/factor W/factor] float32 tensor"
+  [img-2d factor]
   (let [[h w] (dtype/shape img-2d)
         new-h (quot h factor)
         new-w (quot w factor)]
