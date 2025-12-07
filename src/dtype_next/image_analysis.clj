@@ -1,5 +1,5 @@
 ^{:kindly/hide-code true
-  :clay {:title "Functional Image Analysis with dtype-next"
+  :clay {:title "Image Processing with dtype-next"
          :quarto {:author :daslu
                   :draft true
                   :type :post
@@ -7,7 +7,7 @@
                   :category :data
                   :tags [:dtype-next :tensors :image-processing :computer-vision :tutorial]}}}
 (ns dtype-next.image-analysis
-  "Learn dtype-next by building practical image analysis tools.
+  "Learn dtype-next by building practical image processing tools.
   
   We'll explore quality metrics, enhancement pipelines, accessibility features,
   and edge detection—all with functional idioms and zero-copy operations."
@@ -34,13 +34,12 @@
 
 ;; ## What We'll Build
 
-;; 1. **Image Statistics** — channel means, ranges, distributions, histograms
-;; 2. **Spatial Analysis** — gradients, edge detection, sharpness metrics  
-;; 3. **Enhancement Pipeline** — white balance, contrast adjustment
-;; 4. **Accessibility** — color blindness simulation
-;; 6. **Convolution & Filtering** — blur, sharpen, Sobel edge detection
-;; 7. **Reshape & Downsampling** — pyramids, multi-scale processing
-;; 8. **Batch Processing** — stacking and workflows
+;; - **Image Statistics** — channel means, ranges, distributions, histograms
+;; - **Spatial Analysis** — gradients, edge detection, sharpness metrics  
+;; - **Enhancement Pipeline** — white balance, contrast adjustment
+;; - **Accessibility** — color blindness simulation
+;; - **Convolution & Filtering** — blur, sharpen, Sobel edge detection
+;; - **Reshape & Downsampling** — pyramids, multi-scale processing
 
 ;; Each section demonstrates core dtype-next concepts with immediate practical value.
 
@@ -88,7 +87,7 @@ original-tensor
 
 ;; ---
 
-;; # Part 1: Image Statistics
+;; # Image Statistics
 
 ;; Let's analyze image properties using **reduction operations**.
 
@@ -97,8 +96,8 @@ original-tensor
 ;; Use `tensor/select` to slice out individual channels (zero-copy views):
 
 (defn extract-channels
-  "Extract R, G, B, A channels from RGBA tensor.
-  Returns map with :r, :g, :b, :a tensors (each [H W])."
+  "Extract R, G, B channels from RGB tensor.
+  Returns map with :red, :green, :blue tensors (each [H W])."
   [img-tensor]
   {:red (tensor/select img-tensor :all :all 0)
    :green (tensor/select img-tensor :all :all 1)
@@ -196,7 +195,11 @@ original-tensor
     (tensor/reshape [height width 3])
     bufimg/tensor->image)
 
-;; ## Simple Histograms
+;; ## Histograms
+
+;; A [histogram](https://en.wikipedia.org/wiki/Image_histogram) shows the distribution
+;; of pixel values. It's essential for understanding image brightness, contrast, and
+;; exposure. Peaks indicate common values; spread indicates dynamic range.
 
 ;; To draw the histograms, we can use a pivot transformation:
 
@@ -225,9 +228,11 @@ original-tensor
 
 ;; ---
 
-;; # Part 2: Spatial Analysis — Edges and Gradients
+;; # Spatial Analysis — Edges and Gradients
 
-;; Now we'll analyze spatial structure using **gradient operations**.
+;; Analyze spatial structure using [gradient](https://en.wikipedia.org/wiki/Image_gradient)
+;; operations. Gradients are fundamental to [edge detection](https://en.wikipedia.org/wiki/Edge_detection),
+;; which identifies boundaries between regions in an image.
 
 ;; ## Computing Gradients
 
@@ -304,14 +309,16 @@ edges
 
 ;; ---
 
-;; # Part 3: Enhancement Pipeline
+;; # Enhancement Pipeline
 
 ;; Build composable image enhancement functions. Each transformation is
 ;; verifiable through numeric properties we can check in the REPL.
 
 ;; ## Auto White Balance
 
-;; Adjust channels so their means are equal (removes color casts).
+;; [White balance](https://en.wikipedia.org/wiki/Color_balance) adjusts colors to
+;; appear neutral under different lighting conditions. We scale RGB channels to have
+;; equal means, removing color casts.
 
 (defn auto-white-balance
   "Scale RGB channels to have equal means.
@@ -357,7 +364,9 @@ edges
 
 ;; ## Contrast Enhancement
 
-;; Amplify deviation from the mean to increase contrast.
+;; [Contrast](https://en.wikipedia.org/wiki/Contrast_(vision)) enhancement amplifies
+;; the difference between light and dark regions. We amplify each pixel's deviation
+;; from the mean, making bright pixels brighter and dark pixels darker.
 
 (defn enhance-contrast
   "Increase image contrast by amplifying deviation from mean.
@@ -411,7 +420,7 @@ edges
 
 ;; ---
 
-;; # Part 4: Accessibility — Color Blindness Simulation
+;; # Accessibility — Color Blindness Simulation
 
 ;; Use matrix transformations to simulate how images appear to people with
 ;; different types of color vision deficiency. This demonstrates dtype-next's
@@ -421,7 +430,8 @@ edges
 
 ;; ## Color Blindness Matrices
 
-;; These matrices are from established research on color vision deficiency:
+;; These matrices simulate [color blindness](https://en.wikipedia.org/wiki/Color_blindness)
+;; (color vision deficiency). Different types affect perception of red, green, or blue:
 
 (def color-blindness-matrices
   {:protanopia [[0.567 0.433 0.000] ; Red-blind
@@ -496,7 +506,7 @@ edges
 
 ;; ---
 
-;; # Part 6: Advanced — Convolution & Filtering
+;; # Advanced — Convolution & Filtering
 
 ;; Convolution is the fundamental operation behind image filters, from blur to edge
 ;; detection. We'll build a reusable convolution engine and apply various kernels,
@@ -504,8 +514,10 @@ edges
 
 ;; ## Understanding Convolution
 
-;; A **kernel** (or filter) is a small matrix that slides over the image. At each
-;; position, we multiply kernel values by corresponding pixel values and sum the result.
+;; [Convolution](https://en.wikipedia.org/wiki/Kernel_(image_processing)) is a
+;; fundamental operation in image processing. A **kernel** (or filter) is a small
+;; matrix that slides over the image. At each position, we multiply kernel values
+;; by corresponding pixel values and sum the result.
 
 ;; Example: 3×3 box blur kernel (all pixels weighted equally):
 ;; ```
@@ -570,7 +582,9 @@ kernel-3x3
 
 ;; ## Gaussian Blur
 
-;; Gaussian kernels weight center pixels more heavily than edge pixels:
+;; [Gaussian blur](https://en.wikipedia.org/wiki/Gaussian_blur) uses a kernel based
+;; on the Gaussian (normal) distribution. It weights center pixels more heavily than
+;; edge pixels, producing a smooth, natural-looking blur without artifacts.
 
 (defn gaussian-kernel
   "Create NxN Gaussian kernel with given sigma."
@@ -599,7 +613,9 @@ gaussian-5x5
 
 ;; ## Sharpen Filter
 
-;; Sharpen enhances edges by amplifying high-frequency details.
+;; [Unsharp masking](https://en.wikipedia.org/wiki/Unsharp_masking) sharpens images
+;; by enhancing edges. We subtract a blurred version from the original to extract
+;; high-frequency details, then add them back amplified.
 ;; Method: original + strength × (original - blur)
 
 (defn sharpen
@@ -626,7 +642,7 @@ gaussian-5x5
 (-> {:original grayscale
      :box (convolve-2d grayscale kernel-3x3)
      :gaussian (convolve-2d grayscale gaussian-5x5)
-     :sharpented (sharpen grayscale 1.5)}
+     :sharpened (sharpen grayscale 1.5)}
     (update-vals
      (fn [t]
        (dfn/mean (edge-magnitude
@@ -635,6 +651,10 @@ gaussian-5x5
     tc/dataset)
 
 ;; ## Sobel Edge Detection
+
+;; The [Sobel operator](https://en.wikipedia.org/wiki/Sobel_operator) is a classic
+;; edge detection method that uses specialized kernels to compute gradients in X and Y
+;; directions. It's more robust to noise than simple finite differences.
 
 ;; Sobel kernels detect edges in X and Y directions:
 
@@ -685,7 +705,7 @@ gaussian-5x5
 
 ;; ---
 
-;; # Part 7: Reshape & Downsampling
+;; # Reshape & Downsampling
 
 ;; Explore multi-scale image processing through downsampling and pyramids.
 ;; We'll demonstrate `tensor/reshape` for zero-copy view transformations and
@@ -709,7 +729,9 @@ gaussian-5x5
 
 ;; ## Downsampling by 2×
 
-;; We can downsample by selecting every other pixel:
+;; [Downsampling](https://en.wikipedia.org/wiki/Downsampling_(signal_processing))
+;; (decimation) reduces image resolution by discarding pixels. We select every other
+;; pixel in each dimension, creating a half-size image.
 
 (defn downsample-2x [img-2d]
   (let [[h w] (dtype/shape img-2d)]
@@ -734,8 +756,9 @@ gaussian-5x5
 
 ;; ## Image Pyramid
 
-;; An image pyramid contains multiple scales of the same image,
-;; useful for multi-scale analysis:
+;; An [image pyramid](https://en.wikipedia.org/wiki/Pyramid_(image_processing)) contains
+;; the same image at multiple scales. This is essential for multi-scale analysis, feature
+;; detection at different sizes, and efficient image processing algorithms.
 
 (defn build-pyramid [img-2d levels]
   (loop [pyramid [img-2d]
@@ -796,32 +819,6 @@ gaussian-5x5
              :height (mapv #(first (dtype/shape %)) [downsampled-gray avg-downsampled])
              :width (mapv #(second (dtype/shape %)) [downsampled-gray avg-downsampled])
              :mean (mapv dfn/mean [downsampled-gray avg-downsampled])})
-
-;; ---
-
-;; # Part 8: Batch Processing & Workflows
-
-;; Process multiple images efficiently by stacking them into higher-dimensional
-;; tensors. This demonstrates dtype-next's support for 4D tensors and batch operations.
-
-;; ## Image Stacking
-
-;; Stack multiple images along a new dimension for parallel processing:
-
-(defn stack-images
-  "Stack images into a single 4D tensor [N H W C].
-  All images must have same dimensions."
-  [images]
-  (let [[h w c] (dtype/shape (first images))
-        n (count images)]
-    ;; Verify all images have same shape
-    (assert (every? #(= [h w c] (vec (dtype/shape %))) images)
-            "All images must have same dimensions")
-    (tensor/compute-tensor
-     [n h w c]
-     (fn [i y x ch]
-       (tensor/mget (nth images i) y x ch))
-     :uint8)))
 
 ;; ---
 
