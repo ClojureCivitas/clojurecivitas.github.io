@@ -10,7 +10,14 @@
 
 (ns gis.geotiff
   (:require
-   [scicloj.kindly.v4.kind :as kind]))
+   [scicloj.kindly.v4.kind :as kind]
+   [tech.v3.datatype :as dtype]
+   [tech.v3.tensor :as tensor]
+   [tech.v3.tensor.dimensions :as dims]
+   [tech.v3.libs.buffered-image :as bufimg]
+   [tablecloth.api :as tc]
+   [clojure.java.io :as io]
+   [tech.v3.dataset.tensor :as ds-tensor]))
 ;; # Cloud Optimized GeoTIFFs in JVM Clojure 
 ;; ## Motivation
 ;; This document shows several different methods for handling COGs in JVM Clojure without
@@ -32,6 +39,8 @@
 (kind/hiccup
  [:img {:src "resources/tiff_geotiff_cog.png"
         :style {:width "60%"}}])
+
+
 
 ;; More about the internal structure of COGs can be learned [in the Cloud Native Geo Guide](https://guide.cloudnativegeo.org/cloud-optimized-geotiffs/intro.html) and at [COGeo](https://cogeo.org/).
 
@@ -72,6 +81,8 @@
         {:images images
          :reader-format (.getFormatName reader)}))))
 
+(require '[tech.v3.datatype :as dtype])
+
 (defn get-pixel [^BufferedImage image x y]
   (let [raster (.getRaster image)
         ;; Handle images with an arbitrary number of bands.
@@ -79,7 +90,8 @@
         num-bands (.getNumBands raster)
         pixel (double-array num-bands)]
     (.getPixel raster x y pixel)
-    (vec pixel)))
+    ;; A dtype-next read-only buffer as a view of the Java array:
+    (dtype/as-reader pixel)))
 
 ;; Now we use the above helper functions to handle our locally held TIFF.
 
@@ -126,31 +138,51 @@
 ;; For our purposes we can just add the tablecloth dependency and that will transitively
 ;; bring along the rest of the stack.
 
-(require '[tablecloth.api :as tc])
+(require '[tablecloth.api :as tc]
+         '[tech.v3.tensor :as tensor]
+         '[tech.v3.dataset.tensor :as ds-tensor])
+
 
 (defn buffered-image->dataset [^BufferedImage img]
   (let [width (.getWidth img)
         height (.getHeight img)
-        raster (.getRaster img)
-        num-bands (.getNumBands raster)
+        num-bands (.getNumBands (.getRaster img))
 
-        ;; Pre-allocate arrays for each band's pixel data
-        band-arrays (vec (repeatedly num-bands #(double-array (* width height))))
-
-        ;; Read each band's data
-        _ (doseq [band (range num-bands)]
-            (.getSamples raster 0 0 width height band (nth band-arrays band)))
-
-        ;; Create coordinate arrays
-        xs (vec (for [_y (range height) x (range width)] x))
-        ys (vec (for [y (range height) _x (range width)] y))
+        ;; The following will be easier after dtype-next's
+        ;; [#133](https://github.com/cnuernber/dtype-next/issues/133)
+        ;; is resolved.
+        tensor (-> img
+                   dtype/->array-buffer
+                   ;; height x width x bands
+                   (tensor/construct-tensor (dims/dimensions
+                                             [width height num-bands]))
+                   ;; bands x height x width
+                   (tensor/transpose [2 0 1]))
+        
+        xs (dtype/as-reader
+            (tensor/compute-tensor [height width]
+                                   (fn [y x] x)))
+        ys (dtype/as-reader
+            (tensor/compute-tensor [height width]
+                                   (fn [y x] y)))
 
         ;; Build dataset
-        ds-map (into {:x xs :y ys}
-                     (map-indexed
-                      (fn [i arr] [(keyword (str "band-" i)) (vec arr)])
-                      band-arrays))]
-    (tc/dataset ds-map)))
+        ds-map   (into {:x xs :y ys}
+                       (for [i (range num-bands)]
+                         [(keyword (str "band-" i))
+                          (dtype/as-reader
+                           (tensor i))]))]
+    (-> tensor
+        (tensor/reshape [(* height width)
+                         num-bands])
+        ds-tensor/tensor->dataset
+        (tc/add-columns {:x xs
+                         :y ys})
+        (tc/select-columns (concat [:x :y]
+                                   (range num-bands)))
+        (tc/rename-columns (into {} 
+                                 (for [i (range num-bands)]
+                                   [i (keyword (str "band-" i))]))))))
 
 (defonce ds (-> example-geotiff-medium
                 :images
@@ -182,7 +214,6 @@
 (defonce ds-with-approx-dvi (add-dvi ds))
 
 (require '[tech.v3.dataset :as ds]
-         '[tech.v3.datatype :as dtype]
          '[tech.v3.datatype.statistics :as dstats])
 (import '[java.awt Color])
 
@@ -205,35 +236,22 @@
   (add-approx-dvi-display ds-with-approx-dvi))
 
 (defn dataset->image
-  [dataset {:keys [r g b]}]
-  (let [xs (ds/column dataset :x)
-        ys (ds/column dataset :y)
-        rs (ds/column dataset r)
-        gs (ds/column dataset g)
-        bs (ds/column dataset b)
-
-        max-x (-> xs last int)
-        min-x (-> xs first int)
-        max-y (-> ys last int)
-        min-y (-> ys first int)
-
-        width (inc (- max-x min-x))
-        height (inc (- max-y min-y))
-
-        ;; Create the image
-        img (BufferedImage. width height BufferedImage/TYPE_INT_RGB)]
-
-    ;; Set pixels
-    (dotimes [i (ds/row-count dataset)]
-      (let [x (- (int (dtype/get-value xs i)) min-x)
-            y (- (int (dtype/get-value ys i)) min-y)
-            r (int (dtype/get-value rs i))
-            g (int (dtype/get-value gs i))
-            b (int (dtype/get-value bs i))
-            color (Color. r g b)]
-        (.setRGB img x y (.getRGB color))))
-
-    img))
+  [dataset {:as columns-mapping
+            :keys [r g b]}]
+  (let [height (->> dataset
+                    :y
+                    ((juxt dstats/max dstats/min))
+                    (apply -))
+        width (->> dataset
+                   :x
+                   ((juxt dstats/max dstats/min))
+                   (apply -))]
+    (-> columns-mapping
+        (update-vals dataset)
+        tc/dataset
+        ds-tensor/dataset->tensor
+        (tensor/reshape [height width 3])
+        bufimg/tensor->image)))
 
 (dataset->image ds-with-dvi-display
                 {:r :dvi-display
@@ -408,7 +426,7 @@
 (defonce medium-geotiff
   (geotools-read-geotiff "src/gis/resources/example_geotiff_medium.tif"))
 
- 
+
 
 (->> medium-geotiff
      :coverage
