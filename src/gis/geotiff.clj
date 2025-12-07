@@ -4,7 +4,7 @@
                      :quarto {:author   :luke-zeitlin
                               :image    "tiff_geotiff_cog.png"
                               :type     :post
-                              :date     "2025-11-26"
+                              :date     "2025-12-07"
                               :category :gis
                               :tags     [:gis]}}}
 
