@@ -854,29 +854,36 @@ kernel-3x3
     (tensor/compute-tensor
      [h w]
      (fn [y x]
-       ;; Accumulate weighted sum over kernel neighborhood.
-       ;; We use an atom for local accumulation since tensor/compute-tensor
-       ;; expects a function that returns a single value per position.
-       (let [sum (atom 0.0)]
-         (doseq [ky (range kh)
-                 kx (range kw)]
+       ;; Sum weighted pixel values in kernel neighborhood
+       (loop [ky 0
+              kx 0
+              sum 0.0]
+         (if (>= ky kh)
+           sum
            (let [img-y (+ y ky (- pad-h))
-                 img-x (+ x kx (- pad-w))]
-             (when (and (>= img-y 0) (< img-y h)
-                        (>= img-x 0) (< img-x w))
-               (swap! sum +
-                      (* (tensor/mget kernel ky kx)
-                         (tensor/mget img-2d img-y img-x))))))
-         @sum))
+                 img-x (+ x kx (- pad-w))
+                 in-bounds? (and (>= img-y 0) (< img-y h)
+                                 (>= img-x 0) (< img-x w))
+                 new-sum (if in-bounds?
+                           (+ sum (* (tensor/mget kernel ky kx)
+                                     (tensor/mget img-2d img-y img-x)))
+                           sum)
+                 [next-ky next-kx] (if (>= (inc kx) kw)
+                                     [(inc ky) 0]
+                                     [ky (inc kx)])]
+             (recur next-ky next-kx new-sum)))))
      :float32)))
 
 ;; **Apply box blur to grayscale**:
 
 (def blurred-gray (convolve-2d grayscale kernel-3x3))
 
-;; Visualize blurred result:
+;; Compare original vs box blur:
 
-(bufimg/tensor->image (dtype/elemwise-cast blurred-gray :uint8))
+(kind/table
+ [[:original :box-blur-3x3]
+  [(bufimg/tensor->image grayscale)
+   (bufimg/tensor->image (dtype/elemwise-cast blurred-gray :uint8))]])
 
 ;; ## Gaussian Blur
 
@@ -909,7 +916,20 @@ gaussian-5x5
 
 (def gaussian-blurred (convolve-2d grayscale gaussian-5x5))
 
-(bufimg/tensor->image (dtype/elemwise-cast gaussian-blurred :uint8))
+;; Larger Gaussian blur for stronger effect:
+
+(def gaussian-15x15 (gaussian-kernel 15 3.0))
+
+(def gaussian-blurred-large (convolve-2d grayscale gaussian-15x15))
+
+;; Compare different blur kernels:
+
+(kind/table
+ [[:original :box-blur-3x3 :gaussian-5x5 :gaussian-15x15]
+  [(bufimg/tensor->image grayscale)
+   (bufimg/tensor->image (dtype/elemwise-cast blurred-gray :uint8))
+   (bufimg/tensor->image (dtype/elemwise-cast gaussian-blurred :uint8))
+   (bufimg/tensor->image (dtype/elemwise-cast gaussian-blurred-large :uint8))]])
 
 ;; ## Sharpen Filter
 
@@ -945,9 +965,10 @@ gaussian-5x5
 ;; grayscale tensors. For simplicity, we'll compute sharpness inline here:
 
 (-> {:original grayscale
-     :box (convolve-2d grayscale kernel-3x3)
-     :gaussian (convolve-2d grayscale gaussian-5x5)
-     :sharpened (sharpen grayscale 1.5)}
+     :box-3x3 blurred-gray
+     :gaussian-5x5 gaussian-blurred
+     :gaussian-15x15 gaussian-blurred-large
+     :sharpened sharpened-gray}
     (update-vals
      (fn [t]
        (dfn/mean (edge-magnitude
