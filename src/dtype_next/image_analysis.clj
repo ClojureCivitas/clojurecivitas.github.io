@@ -32,6 +32,18 @@
 ;; - **Type discipline**: Explicit control over precision and overflow
 ;;
 
+;; ## About This Tutorial
+
+;; [dtype-next](https://github.com/cnuernber/dtype-next) is a comprehensive library
+;; for working with typed arrays, including buffers, functional operations, tensors,
+;; and dataset integration. This tutorial focuses on **the tensor API**—multi-dimensional
+;; views over typed buffers—because images provide clear visual feedback and natural
+;; multi-dimensional structure.
+;;
+;; The patterns you'll learn (zero-copy views, type discipline, functional composition)
+;; transfer directly to other dtype-next use cases: time series analysis, scientific
+;; computing, ML data preparation, and any domain requiring efficient numerical arrays.
+
 ;; ## What We'll Build
 
 ;; - **Image Statistics** — channel means, ranges, distributions, histograms
@@ -87,9 +99,64 @@ original-tensor
 
 ;; ---
 
+;; # Working with Tensors
+
+;; Before diving into image analysis, let's understand what tensors are in dtype-next.
+;;
+;; **Tensors are multi-dimensional views over typed buffers.** The underlying buffer
+;; is a contiguous block of typed data (like our uint8 pixels), and the tensor provides
+;; convenient multi-dimensional indexing with shape information. This architecture enables
+;; zero-copy operations—when we slice or reshape, we create new views without copying data.
+;;
+;; Let's explore essential tensor operations for transforming and converting data.
+
+;; ## Reshaping
+
+;; Sometimes it's convenient to flatten spatial dimensions into a single axis.
+;; For example, reshaping `[H W 3]` → `[H×W 3]` gives us one row per pixel:
+
+(-> original-tensor
+    (tensor/reshape [(* height width) 3])
+    dtype/shape)
+
+;; **Key insight**: `tensor/reshape` is a zero-copy view operation—it reinterprets
+;; the buffer without copying data.
+
+;; ## Tensors as Datasets
+
+;; Two-dimensional tensors convert naturally to tablecloth datasets, enabling
+;; tabular operations and plotting:
+
+(-> original-tensor
+    (tensor/reshape [(* height width) 3])
+    ds-tensor/tensor->dataset
+    (tc/rename-columns [:red :green :blue]))
+
+;; Or more concisely:
+
+(-> original-tensor
+    (tensor/reshape [(* height width) 3])
+    tc/dataset
+    (tc/rename-columns [:red :green :blue]))
+
+;; We can convert back, restoring the original image structure:
+
+(-> original-tensor
+    (tensor/reshape [(* height width) 3])
+    tc/dataset
+    ds-tensor/dataset->tensor
+    (tensor/reshape [height width 3])
+    bufimg/tensor->image)
+
+;; This round-trip demonstrates the seamless interop between tensors and datasets,
+;; useful for combining spatial operations (tensors) with statistical analysis (datasets).
+
+;; ---
+
 ;; # Image Statistics
 
-;; Let's analyze image properties using **reduction operations**.
+;; Now that we understand tensor fundamentals, let's analyze image properties
+;; using **reduction operations** and **channel slicing**.
 
 ;; ## Extracting Color Channels
 
@@ -161,47 +228,13 @@ original-tensor
 
 (bufimg/tensor->image grayscale)
 
-;; ## Reshaping
-
-;; Sometimes it is convenient to have one flat buffer
-;; per colour channel.
-
-(-> original-tensor
-    (tensor/reshape [(* height width) 3])
-    dtype/shape)
-
-;; ## Tensors as datasets
-
-;; Tensors with two dimensions can be turned into datasets:
-
-(-> original-tensor
-    (tensor/reshape [(* height width) 3])
-    ds-tensor/tensor->dataset
-    (tc/rename-columns [:red :green :blue]))
-
-;; Or simply: 
-
-(-> original-tensor
-    (tensor/reshape [(* height width) 3])
-    tc/dataset
-    (tc/rename-columns [:red :green :blue]))
-
-;; We can also go back the opposite direction:
-
-(-> original-tensor
-    (tensor/reshape [(* height width) 3])
-    tc/dataset
-    ds-tensor/dataset->tensor
-    (tensor/reshape [height width 3])
-    bufimg/tensor->image)
-
 ;; ## Histograms
 
 ;; A [histogram](https://en.wikipedia.org/wiki/Image_histogram) shows the distribution
 ;; of pixel values. It's essential for understanding image brightness, contrast, and
 ;; exposure. Peaks indicate common values; spread indicates dynamic range.
 
-;; To draw the histograms, we can use a pivot transformation:
+;; **Approach 1**: Overlaid RGB channels using the reshape→dataset pattern we just learned:
 
 (-> original-tensor
     (tensor/reshape [(* height width) 3])
@@ -215,6 +248,8 @@ original-tensor
                              :=mark-color "blue"})
     (plotly/layer-histogram {:=x :green
                              :=mark-color "green"}))
+
+;; **Approach 2**: Separate histograms using `dtype/as-reader` for direct tensor access:
 
 (->> (assoc channels :gray grayscale)
      (map (fn [[k v]]
@@ -230,9 +265,13 @@ original-tensor
 
 ;; # Spatial Analysis — Edges and Gradients
 
-;; Analyze spatial structure using [gradient](https://en.wikipedia.org/wiki/Image_gradient)
-;; operations. Gradients are fundamental to [edge detection](https://en.wikipedia.org/wiki/Edge_detection),
-;; which identifies boundaries between regions in an image.
+;; We've explored *global* properties like channel means and histograms. Now let's
+;; analyze *local* spatial structure by comparing neighboring pixels.
+;;
+;; We'll use [gradient](https://en.wikipedia.org/wiki/Image_gradient) operations
+;; to measure how quickly values change across space. Gradients are fundamental to
+;; [edge detection](https://en.wikipedia.org/wiki/Edge_detection), which identifies
+;; boundaries between regions in an image.
 
 ;; ## Computing Gradients
 
@@ -311,8 +350,9 @@ edges
 
 ;; # Enhancement Pipeline
 
-;; Build composable image enhancement functions. Each transformation is
-;; verifiable through numeric properties we can check in the REPL.
+;; With analysis tools in place, let's build functions that *improve* images.
+;; We'll create composable transformations for white balance and contrast,
+;; each verifiable through numeric properties we can check in the REPL.
 
 ;; ## Auto White Balance
 
@@ -422,9 +462,11 @@ edges
 
 ;; # Accessibility — Color Blindness Simulation
 
-;; Use matrix transformations to simulate how images appear to people with
-;; different types of color vision deficiency. This demonstrates dtype-next's
-;; linear algebra capabilities with practical accessibility applications.
+;; Beyond enhancement, images need to be *accessible*. Let's simulate how images
+;; appear to people with different types of color vision deficiency.
+;;
+;; This demonstrates dtype-next's linear algebra capabilities (applying 3×3 matrices
+;; to RGB channels) with practical real-world applications.
 
 ;; Apply 3×3 transformation matrices to simulate different types of color vision deficiency.
 
@@ -506,11 +548,14 @@ edges
 
 ;; ---
 
-;; # Advanced — Convolution & Filtering
+;; # Convolution & Filtering
 
-;; Convolution is the fundamental operation behind image filters, from blur to edge
-;; detection. We'll build a reusable convolution engine and apply various kernels,
-;; demonstrating `tensor/compute-tensor` for windowed operations and nested iterations.
+;; So far we've used simple element-wise operations and direct pixel comparisons.
+;; Now let's explore **convolution**, the fundamental operation behind blur, sharpen,
+;; and sophisticated edge detection.
+;;
+;; We'll build a reusable convolution engine using `tensor/compute-tensor` for
+;; windowed operations, then apply various kernels to see the dramatic effects.
 
 ;; ## Understanding Convolution
 
@@ -705,11 +750,14 @@ gaussian-5x5
 
 ;; ---
 
-;; # Reshape & Downsampling
+;; # Downsampling & Multi-Scale Processing
 
-;; Explore multi-scale image processing through downsampling and pyramids.
-;; We'll demonstrate `tensor/reshape` for zero-copy view transformations and
-;; compare different downsampling strategies.
+;; Finally, let's explore working with images at multiple scales. Downsampling
+;; reduces resolution for faster processing or multi-scale analysis (like detecting
+;; features at different sizes).
+;;
+;; We'll compare downsampling strategies and build image pyramids, demonstrating
+;; `tensor/select` with stride patterns and aggregation techniques.
 
 ;; ## Understanding Reshape
 
@@ -861,13 +909,27 @@ gaussian-5x5
 ;; - **Lazy evaluation** — computations deferred until needed
 ;; - **No mutation** — even `tensor/compute-tensor` builds new structures
 
-;; ## Next Steps
+;; ## Beyond Images: dtype-next in Other Domains
 
-;; - **Batch processing**: Apply analysis to multiple images
-;; - **More transformations**: Blur, sharpen, rotation
-;; - **Dataset integration**: Use `tech.ml.dataset` for tabular results
-;; - **Performance**: Profile and optimize hot paths
-;; - **Native interop**: Interface with OpenCV, TensorFlow
+;; The tensor patterns we've explored transfer directly to other use cases:
+
+;; **Time series analysis**: 1D or 2D tensors for signals, windowing operations
+;; for feature extraction, functional ops for filtering and aggregation.
+
+;; **Scientific computing**: Multi-dimensional numerical arrays, zero-copy slicing
+;; for memory efficiency, type discipline for numerical precision.
+
+;; **Machine learning prep**: Batch processing, normalization pipelines, data
+;; augmentation—all using the same functional patterns.
+
+;; **Signal processing**: Audio (1D), video (4D: time×height×width×channels),
+;; sensor arrays—dtype-next handles arbitrary dimensionality.
+
+;; dtype-next also provides:
+;; - **Native interop**: Zero-copy integration with native libraries (OpenCV, TensorFlow)
+;; - **Dataset tools**: Rich `tech.ml.dataset` integration for tabular workflows
+;; - **Performance**: SIMD-optimized operations, parallel processing support
+;; - **Flexibility**: Custom buffer implementations, extensible type system
 
 ;; ## Resources
 
