@@ -1,12 +1,12 @@
 ^{:kindly/hide-code true
-  :clay {:title "Image Processing with dtype-next"
+  :clay {:title "Image Processing with dtype-next Tensors"
          :quarto {:author :daslu
                   :draft true
                   :type :post
                   :date "2025-12-07"
                   :category :data
                   :tags [:dtype-next :tensors :image-processing :computer-vision :tutorial]}}}
-(ns dtype-next.image-analysis
+(ns dtype-next.image-processing-with-tensors
   "Learn dtype-next by building practical image processing tools.
   
   We'll explore quality metrics, enhancement pipelines, accessibility features,
