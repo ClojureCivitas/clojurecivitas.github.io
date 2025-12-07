@@ -32,6 +32,22 @@
 ;; - **Type discipline**: Explicit control over precision and overflow
 ;;
 
+;; ## What Are Tensors?
+
+;; A [tensor](https://en.wikipedia.org/wiki/Tensor_(machine_learning)) is a multi-dimensional
+;; array of numbers with a defined shape and type. While the term comes from mathematics and
+;; physics, in programming it simply means: **structured numerical data with multiple axes**.
+;;
+;; - A scalar is a 0D tensor (single number)
+;; - A vector is a 1D tensor `[5]` → 5 elements
+;; - A matrix is a 2D tensor `[3 4]` → 3 rows × 4 columns
+;; - An RGB image is a 3D tensor `[height width 3]` → spatial dimensions + color channels
+;; - A video is a 4D tensor `[time height width 3]` → adding a time axis
+;;
+;; Tensors provide efficient storage (typed, contiguous memory) and convenient multi-dimensional
+;; indexing. Operations on tensors (slicing, element-wise math, reductions) form the foundation
+;; of numerical computing, from image processing to machine learning.
+
 ;; ## About This Tutorial
 
 ;; [dtype-next](https://github.com/cnuernber/dtype-next) is a comprehensive library
