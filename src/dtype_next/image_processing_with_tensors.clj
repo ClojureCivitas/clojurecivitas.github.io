@@ -20,6 +20,19 @@
             [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as plotly]))
 
+^:kindly/hide-code
+(kind/hiccup
+ [:style
+  ".clay-dataset {
+  max-height:400px; 
+  overflow-y: auto;
+}
+.printed-clojure {
+  max-height:400px; 
+  overflow-y: auto;
+}
+"])
+
 ;; # Introduction: Why dtype-next for Image Processing?
 
 ;; Images are perfect for learning [dtype-next](https://github.com/cnuernber/dtype-next)
@@ -61,12 +74,14 @@
 
 ;; ## What We'll Build
 
+;; - **Working with Tensors** — reshaping, dataset conversion, core operations
+;; - **Tensor Operations Primer** — slicing, element-wise ops, type handling
 ;; - **Image Statistics** — channel means, ranges, distributions, histograms
 ;; - **Spatial Analysis** — gradients, edge detection, sharpness metrics  
 ;; - **Enhancement Pipeline** — white balance, contrast adjustment
 ;; - **Accessibility** — color blindness simulation
 ;; - **Convolution & Filtering** — blur, sharpen, Sobel edge detection
-;; - **Reshape & Downsampling** — pyramids, multi-scale processing
+;; - **Downsampling & Multi-Scale Processing** — pyramids, multi-resolution analysis
 
 ;; Each section demonstrates core dtype-next concepts with immediate practical value.
 
@@ -168,7 +183,8 @@ original-tensor
 
 ;; The [`tech.v3.dataset.tensor`](https://cnuernber.github.io/dtype-next/tech.v3.dataset.tensor.html)
 ;; namespace provides conversions between tensors and datasets. The `tablecloth.api`
-;; namespace also auto-converts 2D tensors.
+;; namespace of [Tablecloth](https://scicloj.github.io/tablecloth/)
+;; also auto-converts 2D tensors.
 
 ;; Two-dimensional tensors convert naturally to tablecloth datasets, enabling
 ;; tabular operations and plotting.
@@ -1066,7 +1082,8 @@ gaussian-5x5
 
 ;; Visualize each level:
 
-(mapv bufimg/tensor->image gray-pyramid)
+(kind/fragment
+ (mapv bufimg/tensor->image gray-pyramid))
 
 ;; **Use case**: Multi-scale edge detection for finding features at different sizes.
 
@@ -1126,21 +1143,36 @@ gaussian-5x5
 
 ;; ## API Coverage
 
-;; | Function | Use Case |
-;; |----------|----------|
-;; | `dtype/shape` | Inspect tensor dimensions |
-;; | `dtype/elemwise-datatype` | Check element type |
-;; | `dtype/elemwise-cast` | Convert between types |
-;; | `dtype/ecount` | Total element count |
-;; | `tensor/select` | Extract slices, channels |
-;; | `tensor/compute-tensor` | Functionally construct tensors |
-;; | `tensor/mget` | Read single elements |
-;; | `dfn/mean`, `dfn/standard-deviation` | Statistics |
-;; | `dfn/reduce-min`, `dfn/reduce-max` | Range finding |
-;; | `dfn/+`, `dfn/-`, `dfn/*`, `dfn//` | Element-wise arithmetic |
-;; | `dfn/sqrt`, `dfn/sq` | Mathematical operations |
-;; | `dfn/min`, `dfn/max` | Clamping |
-;; | `dfn/sum` | Counting (boolean buffers) |
+;; Here are the key dtype-next functions we used throughout this tutorial:
+
+;; **dtype namespace (tech.v3.datatype):**
+;; - `dtype/shape` — Inspect tensor dimensions
+;; - `dtype/elemwise-datatype` — Check element type
+;; - `dtype/elemwise-cast` — Convert between types
+;; - `dtype/ecount` — Total element count
+;; - `dtype/as-reader` — Convert to readable sequence
+;; - `dtype/get-value` — Extract scalar value
+
+;; **tensor namespace (tech.v3.tensor):**
+;; - `tensor/compute-tensor` — Functionally construct tensors
+;; - `tensor/select` — Extract slices, channels (zero-copy)
+;; - `tensor/mget` — Read single elements
+;; - `tensor/reshape` — Reinterpret tensor shape (zero-copy)
+;; - `tensor/reduce-axis` — Reduce along specific dimension
+
+;; **dfn namespace (tech.v3.datatype.functional):**
+;; - `dfn/+`, `dfn/-`, `dfn/*`, `dfn//` — Element-wise arithmetic
+;; - `dfn/mean`, `dfn/standard-deviation` — Statistics
+;; - `dfn/reduce-min`, `dfn/reduce-max` — Range finding
+;; - `dfn/sqrt`, `dfn/sq` — Mathematical operations
+;; - `dfn/min`, `dfn/max` — Clamping
+;; - `dfn/sum` — Summation
+
+;; **bufimg namespace (tech.v3.libs.buffered-image):**
+;; - `bufimg/load` — Load image file
+;; - `bufimg/as-ubyte-tensor` — BufferedImage → tensor
+;; - `bufimg/tensor->image` — tensor → BufferedImage
+;; - `bufimg/image-type` — Check image format
 
 ;; ## What Makes This Functional?
 
