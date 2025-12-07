@@ -123,19 +123,20 @@ original-tensor
 
 (dtype/shape original-tensor)
 
-;; This is `[height width channels]` — our image has 3 channels.
+;; This is `[height width channels]` — our image has 3 color channels.
 
-;; **How do we know it's RGB format?** Check the image type:
+;; **Channel ordering**: Java's BufferedImage uses BGR order internally:
 
 (bufimg/image-type original-img)
 
-;; `:type-3byte-bgr` indicates BGR byte order (Blue-Green-Red), which is Java's
-;; internal BufferedImage format. The question is: does `bufimg/as-ubyte-tensor`
-;; preserve BGR order or convert to RGB?
+;; `:byte-bgr` confirms BGR byte order. The `bufimg/as-ubyte-tensor` function
+;; preserves this ordering, so our tensor channels are:
+;; - **Channel 0 = Blue**
+;; - **Channel 1 = Green**  
+;; - **Channel 2 = Red**
 ;;
-;; We'll assume RGB order in this tutorial (which is the common convention), but
-;; if colors appear incorrect, you may need to swap channels. You can verify by
-;; checking if the red channel actually contains red values in your specific image.
+;; This is the opposite of the more common RGB convention. Throughout this tutorial,
+;; we'll work with BGR order and be explicit about it in our code.
 
 (def height
   (first (dtype/shape original-tensor)))
@@ -201,14 +202,14 @@ original-tensor
 (-> original-tensor
     (tensor/reshape [(* height width) 3])
     ds-tensor/tensor->dataset
-    (tc/rename-columns [:red :green :blue]))
+    (tc/rename-columns [:blue :green :red]))
 
 ;; Or more concisely (tablecloth auto-converts):
 
 (-> original-tensor
     (tensor/reshape [(* height width) 3])
     tc/dataset
-    (tc/rename-columns [:red :green :blue]))
+    (tc/rename-columns [:blue :green :red]))
 
 ;; We can convert back, restoring the original image structure:
 
@@ -246,9 +247,12 @@ original-tensor
    [3 4] ; shape: 3 rows, 4 columns
    (fn [row col] ; function receives [row col] indices
      (+ (* row 10) col)) ; compute value: row*10 + col
-   :int32)) ; element type
+   :int32 ; element type
+   ))
 
-toy-tensor
+;; Check an element:
+
+(toy-tensor 2 1)
 
 ;; Verify the shape:
 
@@ -305,8 +309,6 @@ toy-tensor
 
 (def small-tensor (tensor/compute-tensor [2 3] (fn [r c] (+ (* r 3) c)) :int32))
 
-small-tensor
-
 ;; Add scalar to every element (broadcasting):
 
 (dfn/+ small-tensor 10)
@@ -342,8 +344,6 @@ small-tensor
 ;; Create uint8 tensor:
 
 (def tiny-uint8 (tensor/compute-tensor [2 2] (fn [_ _] 100) :uint8))
-
-tiny-uint8
 
 ;; Element type:
 
@@ -389,13 +389,13 @@ flat-tensor
 ;; Use `tensor/select` to slice out individual channels (zero-copy views):
 
 (defn extract-channels
-  "Extract R, G, B channels from RGB tensor.
-  Takes: [H W 3] tensor
-  Returns: map with :red, :green, :blue tensors (each [H W])"
+  "Extract B, G, R channels from BGR tensor.
+  Takes: [H W 3] tensor (BGR order)
+  Returns: map with :blue, :green, :red tensors (each [H W])"
   [img-tensor]
-  {:red (tensor/select img-tensor :all :all 0)
+  {:blue (tensor/select img-tensor :all :all 0)
    :green (tensor/select img-tensor :all :all 1)
-   :blue (tensor/select img-tensor :all :all 2)})
+   :red (tensor/select img-tensor :all :all 2)})
 
 (def channels (extract-channels original-tensor))
 
@@ -433,17 +433,18 @@ flat-tensor
 ;; moderately sensitive to red, and least sensitive to blue. The coefficients
 ;; (0.299, 0.587, 0.114) approximate the [relative luminance](https://en.wikipedia.org/wiki/Relative_luminance)
 ;; formula from the [ITU-R BT.601](https://en.wikipedia.org/wiki/Rec._601) standard,
-;; ensuring grayscale images preserve
-;; perceived brightness rather than simple RGB averages.
+;; ensuring grayscale images preserve perceived brightness rather than simple
+;; equal weighting of color channels.
 
 (defn to-grayscale
-  "Convert RGB [H W 3] to grayscale [H W].
+  "Convert BGR [H W 3] to grayscale [H W].
   Standard formula: 0.299*R + 0.587*G + 0.114*B
+  Takes BGR tensor, extracts channels correctly.
   Returns float32 tensor (use dtype/elemwise-cast for uint8)."
   [img-tensor]
-  (let [r (tensor/select img-tensor :all :all 0)
-        g (tensor/select img-tensor :all :all 1)
-        b (tensor/select img-tensor :all :all 2)]
+  (let [b (tensor/select img-tensor :all :all 0) ; Blue is channel 0
+        g (tensor/select img-tensor :all :all 1) ; Green is channel 1
+        r (tensor/select img-tensor :all :all 2)] ; Red is channel 2
     (dfn/+ (dfn/* r 0.299)
            (dfn/* g 0.587)
            (dfn/* b 0.114))))
@@ -468,12 +469,12 @@ flat-tensor
 ;; of pixel values. It's essential for understanding image brightness, contrast, and
 ;; exposure. Peaks indicate common values; spread indicates dynamic range.
 
-;; **Approach 1**: Overlaid RGB channels using the reshape→dataset pattern we just learned:
+;; **Approach 1**: Overlaid BGR channels using the reshape→dataset pattern we just learned:
 
 (-> original-tensor
     (tensor/reshape [(* height width) 3])
     tc/dataset
-    (tc/rename-columns [:red :green :blue])
+    (tc/rename-columns [:blue :green :red])
     (plotly/base {:=histogram-nbins 30
                   :=mark-opacity 0.5})
     (plotly/layer-histogram {:=x :red
@@ -580,7 +581,7 @@ edges
 
 (defn sharpness-score
   "Compute sharpness as mean edge magnitude.
-  Takes: [H W 3] RGB or [H W] grayscale tensor
+  Takes: [H W 3] BGR or [H W] grayscale tensor
   Returns: scalar (higher = sharper)"
   [img-tensor]
   (let [gray (to-grayscale img-tensor)
@@ -604,13 +605,13 @@ edges
 ;; ## Auto White Balance
 
 ;; [White balance](https://en.wikipedia.org/wiki/Color_balance) adjusts colors to
-;; appear neutral under different lighting conditions. We scale RGB channels to have
+;; appear neutral under different lighting conditions. We scale BGR channels to have
 ;; equal means, removing color casts.
 
 (defn auto-white-balance
-  "Scale RGB channels to have equal means.
-  Takes: [H W 3] uint8 tensor
-  Returns: [H W 3] uint8 tensor"
+  "Scale BGR channels to have equal means.
+  Takes: [H W 3] uint8 BGR tensor
+  Returns: [H W 3] uint8 BGR tensor"
   [img-tensor]
   (let [;; Compute channel means using reduce-axis
         ;; First reduce: [H W 3] → [W 3] (collapse height, axis 0)
@@ -659,39 +660,29 @@ edges
 
 (defn enhance-contrast
   "Increase image contrast by amplifying deviation from mean.
-  Takes: [H W 3] uint8 tensor, factor (> 1 increases, < 1 decreases)
-  Returns: [H W 3] uint8 tensor"
+  Takes: [H W 3] uint8 BGR tensor, factor (> 1 increases, < 1 decreases)
+  Returns: [H W 3] uint8 BGR tensor"
   [img-tensor factor]
-  (let [r (tensor/select img-tensor :all :all 0)
-        g (tensor/select img-tensor :all :all 1)
-        b (tensor/select img-tensor :all :all 2)
+  (let [[h w c] (dtype/shape img-tensor)
 
-        ;; Compute mean for each channel
-        r-mean (dfn/mean r)
-        g-mean (dfn/mean g)
-        b-mean (dfn/mean b)
+        ;; Process each channel independently
+        enhanced-channels (mapv (fn [ch]
+                                  (let [channel (tensor/select img-tensor :all :all ch)
+                                        ch-mean (dfn/mean channel)]
+                                    ;; Apply contrast: mean + factor * (value - mean)
+                                    (dtype/elemwise-cast
+                                     (dfn/min 255
+                                              (dfn/max 0
+                                                       (dfn/+ ch-mean
+                                                              (dfn/* (dfn/- channel ch-mean) factor))))
+                                     :uint8)))
+                                (range c))]
 
-        ;; Apply contrast: mean + factor * (value - mean)
-        enhance-channel (fn [ch ch-mean]
-                          (dtype/elemwise-cast
-                           (dfn/min 255
-                                    (dfn/max 0
-                                             (dfn/+ ch-mean
-                                                    (dfn/* (dfn/- ch ch-mean) factor))))
-                           :uint8))
-
-        r-enhanced (enhance-channel r r-mean)
-        g-enhanced (enhance-channel g g-mean)
-        b-enhanced (enhance-channel b b-mean)
-
-        [h w _] (dtype/shape img-tensor)]
+    ;; Reassemble channels
     (tensor/compute-tensor
-     [h w 3]
-     (fn [y x c]
-       (case c
-         0 (tensor/mget r-enhanced y x)
-         1 (tensor/mget g-enhanced y x)
-         2 (tensor/mget b-enhanced y x)))
+     [h w c]
+     (fn [y x ch]
+       (tensor/mget (nth enhanced-channels ch) y x))
      :uint8)))
 
 (def contrasted (enhance-contrast original-tensor 1.5))
@@ -716,7 +707,7 @@ edges
 ;; appear to people with different types of color vision deficiency.
 ;;
 ;; This demonstrates dtype-next's linear algebra capabilities (applying 3×3 matrices
-;; to RGB channels) with practical real-world applications.
+;; to BGR channels) with practical real-world applications.
 
 ;; Apply 3×3 transformation matrices to simulate different types of color vision deficiency.
 
@@ -726,40 +717,45 @@ edges
 ;; (color vision deficiency). Different types affect perception of red, green, or blue:
 
 (def color-blindness-matrices
-  {:protanopia [[0.567 0.433 0.000] ; Red-blind
-                [0.558 0.442 0.000]
-                [0.000 0.242 0.758]]
+  "Color blindness simulation matrices.
+  Each matrix is 3×3 with columns in BGR order: [B G R]
+  Matrices adapted from standard RGB formulas, reordered for BGR."
+  {:protanopia [[0.000 0.433 0.567] ; Red-blind (BGR columns)
+                [0.000 0.442 0.558]
+                [0.758 0.242 0.000]]
 
-   :deuteranopia [[0.625 0.375 0.000] ; Green-blind
-                  [0.700 0.300 0.000]
-                  [0.000 0.300 0.700]]
+   :deuteranopia [[0.000 0.375 0.625] ; Green-blind (BGR columns)
+                  [0.000 0.300 0.700]
+                  [0.700 0.300 0.000]]
 
-   :tritanopia [[0.950 0.050 0.000] ; Blue-blind
-                [0.000 0.433 0.567]
-                [0.000 0.475 0.525]]})
+   :tritanopia [[0.000 0.050 0.950] ; Blue-blind (BGR columns)
+                [0.567 0.433 0.000]
+                [0.525 0.475 0.000]]})
 
 ;; ## Applying Matrix Transformations
 
-;; Extract RGB channels, apply linear combinations, reassemble:
+;; Extract BGR channels, apply linear combinations, reassemble:
 
 (defn apply-color-matrix
-  "Apply 3×3 transformation matrix to RGB channels.
-  Takes: [H W 3] tensor, 3×3 matrix [[r0 g0 b0] [r1 g1 b1] [r2 g2 b2]]
-  Returns: [H W 3] uint8 tensor
-  Formula: new_r = r0*R + g0*G + b0*B, etc."
+  "Apply 3×3 transformation matrix to BGR channels.
+  Takes: [H W 3] BGR tensor, 3×3 matrix [[b0 g0 r0] [b1 g1 r1] [b2 g2 r2]]
+  Returns: [H W 3] uint8 BGR tensor
+  Formula: new_b = b0*B + g0*G + r0*R, etc.
+  
+  Note: Matrix coefficients correspond to BGR order (channel 0=B, 1=G, 2=R)"
   [img-tensor matrix]
-  (let [r (tensor/select img-tensor :all :all 0)
-        g (tensor/select img-tensor :all :all 1)
-        b (tensor/select img-tensor :all :all 2)
+  (let [b (tensor/select img-tensor :all :all 0) ; Blue channel
+        g (tensor/select img-tensor :all :all 1) ; Green channel
+        r (tensor/select img-tensor :all :all 2) ; Red channel
 
-        [[r0 g0 b0]
-         [r1 g1 b1]
-         [r2 g2 b2]] matrix
+        [[b0 g0 r0]
+         [b1 g1 r1]
+         [b2 g2 r2]] matrix
 
-        ;; Apply transformation
-        new-r (dfn/+ (dfn/+ (dfn/* r r0) (dfn/* g g0)) (dfn/* b b0))
-        new-g (dfn/+ (dfn/+ (dfn/* r r1) (dfn/* g g1)) (dfn/* b b1))
-        new-b (dfn/+ (dfn/+ (dfn/* r r2) (dfn/* g g2)) (dfn/* b b2))
+        ;; Apply transformation (BGR order)
+        new-b (dfn/+ (dfn/+ (dfn/* b b0) (dfn/* g g0)) (dfn/* r r0))
+        new-g (dfn/+ (dfn/+ (dfn/* b b1) (dfn/* g g1)) (dfn/* r r1))
+        new-r (dfn/+ (dfn/+ (dfn/* b b2) (dfn/* g g2)) (dfn/* r r2))
 
         ;; Clamp and cast
         clamp-cast (fn [ch]
@@ -767,18 +763,18 @@ edges
                       (dfn/min 255 (dfn/max 0 ch))
                       :uint8))
 
-        new-r-clamped (clamp-cast new-r)
-        new-g-clamped (clamp-cast new-g)
         new-b-clamped (clamp-cast new-b)
+        new-g-clamped (clamp-cast new-g)
+        new-r-clamped (clamp-cast new-r)
 
         [h w _] (dtype/shape img-tensor)]
     (tensor/compute-tensor
      [h w 3]
      (fn [y x c]
        (case c
-         0 (tensor/mget new-r-clamped y x)
-         1 (tensor/mget new-g-clamped y x)
-         2 (tensor/mget new-b-clamped y x)))
+         0 (tensor/mget new-b-clamped y x) ; Blue channel 0
+         1 (tensor/mget new-g-clamped y x) ; Green channel 1
+         2 (tensor/mget new-r-clamped y x))) ; Red channel 2
      :uint8)))
 
 (defn simulate-color-blindness
@@ -858,10 +854,9 @@ kernel-3x3
     (tensor/compute-tensor
      [h w]
      (fn [y x]
-       ;; Note: Using atom here for accumulation within tensor/compute-tensor's
-       ;; position function. While not idiomatic Clojure, it's the clearest way
-       ;; to accumulate over a 2D neighborhood. The mutation is local to this
-       ;; function call and doesn't escape.
+       ;; Accumulate weighted sum over kernel neighborhood.
+       ;; We use an atom for local accumulation since tensor/compute-tensor
+       ;; expects a function that returns a single value per position.
        (let [sum (atom 0.0)]
          (doseq [ky (range kh)
                  kx (range kw)]
@@ -946,7 +941,7 @@ gaussian-5x5
 ;; ## Sharpness comparison
 
 ;; We can quantify the sharpness of each filter using our `sharpness-score` function.
-;; However, note that `sharpness-score` expects RGB input, so we need to adapt it for
+;; However, note that `sharpness-score` expects BGR input, so we need to adapt it for
 ;; grayscale tensors. For simplicity, we'll compute sharpness inline here:
 
 (-> {:original grayscale
