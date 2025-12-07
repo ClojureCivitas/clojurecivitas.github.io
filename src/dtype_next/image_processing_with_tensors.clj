@@ -22,9 +22,9 @@
 
 ;; # Introduction: Why dtype-next for Image Processing?
 
-;; Images are perfect for learning dtype-next because they're **typed numerical
-;; arrays with clear visual feedback**. Unlike generic sequences where numbers
-;; are boxed, dtype-next gives us:
+;; Images are perfect for learning [dtype-next](https://github.com/cnuernber/dtype-next)
+;; because they're **typed numerical arrays with clear visual feedback**. Unlike generic
+;; sequences where numbers are boxed, dtype-next gives us:
 ;;
 ;; - **Efficient storage**: A 1000×1000 RGB image is 3MB of uint8 values, not 12MB+ of boxed objects
 ;; - **Zero-copy views**: Slice channels, regions, or transforms without copying data
@@ -50,11 +50,10 @@
 
 ;; ## About This Tutorial
 
-;; [dtype-next](https://github.com/cnuernber/dtype-next) is a comprehensive library
-;; for working with typed arrays, including buffers, functional operations, tensors,
-;; and dataset integration. This tutorial focuses on **the tensor API**—multi-dimensional
-;; views over typed buffers—because images provide clear visual feedback and natural
-;; multi-dimensional structure.
+;; dtype-next is a comprehensive library for working with typed arrays, including buffers,
+;; functional operations, tensors, and dataset integration. This tutorial focuses on
+;; **the tensor API**—multi-dimensional views over typed buffers—because images provide
+;; clear visual feedback and natural multi-dimensional structure.
 ;;
 ;; The patterns you'll learn (zero-copy views, type discipline, functional composition)
 ;; transfer directly to other dtype-next use cases: time series analysis, scientific
@@ -79,8 +78,10 @@
 
 ;; ## The bufimg Namespace
 
-;; The `tech.v3.libs.buffered-image` namespace (aliased as `bufimg`) provides
-;; interop between Java's BufferedImage and dtype-next tensors:
+(require '[tech.v3.libs.buffered-image :as bufimg])
+
+;; The [`tech.v3.libs.buffered-image`](https://cnuernber.github.io/dtype-next/tech.v3.libs.buffered-image.html)
+;; namespace (aliased as `bufimg`) provides interop between Java's BufferedImage and dtype-next tensors:
 ;;
 ;; - `bufimg/load` — load image file → BufferedImage
 ;; - `bufimg/as-ubyte-tensor` — BufferedImage → uint8 tensor [H W C]
@@ -97,6 +98,11 @@ original-img
 original-tensor
 
 ;; ## Understanding Tensor Shape
+
+(require '[tech.v3.datatype :as dtype])
+
+;; The [`tech.v3.datatype`](https://cnuernber.github.io/dtype-next/tech.v3.datatype.html)
+;; namespace provides core functions for inspecting and manipulating typed data.
 
 ;; **Shape** tells us dimensions:
 
@@ -157,11 +163,18 @@ original-tensor
 
 ;; ## Tensors as Datasets
 
+(require '[tech.v3.dataset.tensor :as ds-tensor])
+(require '[tablecloth.api :as tc])
+
+;; The [`tech.v3.dataset.tensor`](https://cnuernber.github.io/dtype-next/tech.v3.dataset.tensor.html)
+;; namespace provides conversions between tensors and datasets. The `tablecloth.api`
+;; namespace also auto-converts 2D tensors.
+
 ;; Two-dimensional tensors convert naturally to tablecloth datasets, enabling
 ;; tabular operations and plotting.
 
 ;; **Converting tensors ↔ datasets:**
-;; - `ds-tensor/tensor->dataset` — explicit conversion (tech.v3.dataset.tensor)
+;; - `ds-tensor/tensor->dataset` — explicit conversion
 ;; - `tc/dataset` — tablecloth auto-converts 2D tensors
 ;; - `ds-tensor/dataset->tensor` — convert back to tensor
 
@@ -197,6 +210,11 @@ original-tensor
 ;; throughout this tutorial. We'll use tiny toy tensors to demonstrate each concept.
 
 ;; ## Creating Tensors: tensor/compute-tensor
+
+(require '[tech.v3.tensor :as tensor])
+
+;; The [`tech.v3.tensor`](https://cnuernber.github.io/dtype-next/tech.v3.tensor.html)
+;; namespace provides multi-dimensional array operations.
 
 ;; `tensor/compute-tensor` creates a tensor by calling a function for each position.
 ;; The function receives indices and returns the value for that position.
@@ -257,9 +275,11 @@ toy-tensor
 
 ;; ## The dfn Namespace: Functional Operations with Broadcasting
 
-;; The `tech.v3.datatype.functional` (aliased as `dfn`) namespace provides
-;; mathematical operations that work **element-wise** across entire tensors
-;; and automatically **broadcast** when combining tensors of different shapes.
+(require '[tech.v3.datatype.functional :as dfn])
+
+;; The [`tech.v3.datatype.functional`](https://cnuernber.github.io/dtype-next/tech.v3.datatype.functional.html)
+;; namespace (aliased as `dfn`) provides mathematical operations that work **element-wise**
+;; across entire tensors and automatically **broadcast** when combining tensors of different shapes.
 
 ;; **Element-wise operations:**
 
@@ -444,6 +464,12 @@ flat-tensor
                              :=mark-color "green"}))
 
 ;; **Approach 2**: Separate histograms using `dtype/as-reader` for direct tensor access:
+
+(require '[scicloj.kindly.v4.kind :as kind])
+(require '[scicloj.tableplot.v1.plotly :as plotly])
+
+;; The `scicloj.kindly.v4.kind` namespace provides visualization directives for Clay.
+;; The `scicloj.tableplot.v1.plotly` namespace enables Plotly-based charting.
 
 (->> (assoc channels :gray grayscale)
      (map (fn [[k v]]
