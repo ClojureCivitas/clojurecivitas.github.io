@@ -27,7 +27,7 @@
   max-height:400px; 
   overflow-y: auto;
 }
-.printed-clojure {
+.printedClojure {
   max-height:400px; 
   overflow-y: auto;
 }
@@ -130,8 +130,12 @@ original-tensor
 (bufimg/image-type original-img)
 
 ;; `:type-3byte-bgr` indicates BGR byte order (Blue-Green-Red), which is Java's
-;; internal format. However, `bufimg/as-ubyte-tensor` automatically converts to
-;; RGB order for us, so we can treat it as RGB in our code.
+;; internal BufferedImage format. The question is: does `bufimg/as-ubyte-tensor`
+;; preserve BGR order or convert to RGB?
+;;
+;; We'll assume RGB order in this tutorial (which is the common convention), but
+;; if colors appear incorrect, you may need to swap channels. You can verify by
+;; checking if the red channel actually contains red values in your specific image.
 
 (def height
   (first (dtype/shape original-tensor)))
@@ -1213,3 +1217,5 @@ gaussian-5x5
 ;; ---
 
 ;; *Questions, corrections, or ideas? Open an issue on the Clojure Civitas repository.*
+
+
