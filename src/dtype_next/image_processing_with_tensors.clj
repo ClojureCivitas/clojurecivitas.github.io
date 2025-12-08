@@ -282,9 +282,11 @@ sample-buffer
 (def sample-reader
   (dtype/->reader sample-buffer))
 
-;; Access elements by index:
+;; **Important**: Readers act as functions of their index. You can call them directly
+;; instead of using `dtype/get-value`. This pattern extends to tensors as well—both
+;; readers and tensors are callable:
 
-(dtype/get-value sample-reader 0)
+(sample-reader 0)
 
 ;; Map over readers like sequences:
 
@@ -378,11 +380,15 @@ writable-buffer
 
 ;; **Key insight**: All these are zero-copy views—no data is copied.
 
-;; ## Element Access: tensor/mget
+;; ## Element Access: Tensors as Functions
 
-;; `tensor/mget` reads a single element at given indices:
+;; Like readers, tensors act as functions of their indices. You can call them directly
+;; with coordinate arguments:
 
-(tensor/mget toy-tensor 1 2)
+(toy-tensor 1 2)
+
+;; This is equivalent to `(tensor/mget toy-tensor 1 2)` but more idiomatic. Both readers
+;; and tensors follow this pattern—they're callable values, not just data structures.
 
 ;; ## Slicing Dimensions: tensor/slice and tensor/slice-right
 
@@ -544,12 +550,7 @@ flat-tensor
 
 ;; ## Extracting Color Channels
 
-;; There are two main approaches for extracting channels:
-;;
-;; 1. **tensor/select** — Extract specific channels by index
-;; 2. **tensor/slice-right** — Iterate over all channels cleanly
-;;
-;; We'll use `tensor/select` for explicit channel extraction:
+;; Use `tensor/slice-right` to extract all channels cleanly:
 
 (def channels
   (let [[blue green red] (tensor/slice-right original-tensor 1)]
@@ -557,57 +558,40 @@ flat-tensor
 
 ;; Each channel is now `[H W]` instead of `[H W C]`:
 
-(:red channels)
+(dtype/shape (:red channels))
 
 ;; **Key insight**: These are **zero-copy views** into the original tensor—no data is copied.
 ;; 
-;; **Alternative with tensor/select**:
-;; Blue channel:
-(tensor/select original-tensor :all :all 2)
+;; **Alternative with tensor/select** (when you need one specific channel):
+(def blue-only (tensor/select original-tensor :all :all 0)) ; Channel 0 = Blue
+
+(dtype/shape blue-only)
 
 ;; ## Channel Statistics
 
-;; Compute mean, standard deviation, min, max for each channel:
+;; Compute mean, standard deviation, min, max, and percentiles for each channel:
 
 (defn channel-stats
   "Compute statistics for a single channel tensor.
   Takes: [H W] tensor
-  Returns: map with :mean, :std, :min, :max scalars"
+  Returns: map with :mean, :std, :min, :max, percentiles"
   [channel]
-  {:mean (dfn/mean channel)
-   :std (dfn/standard-deviation channel)
-   :min (dfn/reduce-min channel)
-   :max (dfn/reduce-max channel)})
+  (let [percentiles (dfn/percentiles channel [25 50 75])]
+    {:mean (dfn/mean channel)
+     :std (dfn/standard-deviation channel)
+     :min (dfn/reduce-min channel)
+     :max (dfn/reduce-max channel)
+     :q25 (percentiles 0)
+     :median (percentiles 1)
+     :q75 (percentiles 2)}))
+
+;; Apply to our extracted channels:
 
 (->> channels
      (map (fn [[k v]]
             (merge {:channel k}
                    (channel-stats v))))
      tc/dataset)
-
-;; ## Enhanced Channel Statistics with slice-right
-
-;; Now let's see a cleaner approach using `tensor/slice-right` with more comprehensive
-;; statistics including percentiles:
-
-(tc/dataset
- (map (fn [color channel]
-        (let [percentiles (dfn/percentiles channel [25 50 75])]
-          {:channel color
-           :mean (dfn/mean channel)
-           :std (dfn/standard-deviation channel)
-           :min (dfn/reduce-min channel)
-           :max (dfn/reduce-max channel)
-           :q25 (dtype/get-value percentiles 0)
-           :median (dtype/get-value percentiles 1)
-           :q75 (dtype/get-value percentiles 2)}))
-      ["blue" "green" "red"]
-      (tensor/slice-right original-tensor 1)))
-
-;; **Key advantages of slice-right**:
-;; - Cleaner iteration over all channels
-;; - No need to manually specify indices
-;; - Natural destructuring: `(let [[b g r] (tensor/slice-right img 1)] ...)`
 
 ;; ## Brightness Analysis
 
@@ -705,6 +689,14 @@ flat-tensor
 ;; Extract channels and compute pairwise correlations:
 
 (let [[blue green red] (tensor/slice-right original-tensor 1)]
+  (tc/dataset
+   [{:pair "Blue-Green" :correlation (correlation blue green)}
+    {:pair "Blue-Red" :correlation (correlation blue red)}
+    {:pair "Green-Red" :correlation (correlation green red)}]))
+
+(let [[blue green red] (tensor/slice-right (auto-white-balance
+                                            original-tensor)
+                                           1)]
   (tc/dataset
    [{:pair "Blue-Green" :correlation (correlation blue green)}
     {:pair "Blue-Red" :correlation (correlation blue red)}
@@ -955,14 +947,14 @@ edges
   [tensor-2d]
   (let [flat (dtype/as-reader (tensor/reshape tensor-2d [(dtype/ecount tensor-2d)]))
         [h w] (dtype/shape tensor-2d)
-        max-idx (apply max-key #(dtype/get-value flat %) (range (dtype/ecount flat)))
-        min-idx (apply min-key #(dtype/get-value flat %) (range (dtype/ecount flat)))]
+        max-idx (apply max-key #(flat %) (range (dtype/ecount flat)))
+        min-idx (apply min-key #(flat %) (range (dtype/ecount flat)))]
     {:brightest {:block-y (quot max-idx w)
                  :block-x (rem max-idx w)
-                 :value (dtype/get-value flat max-idx)}
+                 :value (flat max-idx)}
      :darkest {:block-y (quot min-idx w)
                :block-x (rem min-idx w)
-               :value (dtype/get-value flat min-idx)}}))
+               :value (flat min-idx)}}))
 
 (find-block-extremes brightness-map)
 
@@ -1006,7 +998,7 @@ edges
         ;; Scale each channel (vectorized operations per channel)
         scaled-channels (mapv (fn [ch]
                                 (let [channel (tensor/select img-tensor :all :all ch)
-                                      scale (dtype/get-value scale-factors ch)]
+                                      scale (scale-factors ch)]
                                   (dtype/elemwise-cast
                                    (dfn/min 255 (dfn/* channel scale))
                                    :uint8)))
@@ -1016,7 +1008,7 @@ edges
     (tensor/compute-tensor
      [h w c]
      (fn [y x ch]
-       (tensor/mget (nth scaled-channels ch) y x))
+       ((nth scaled-channels ch) y x))
      :uint8)))
 
 (kind/table
@@ -1059,7 +1051,7 @@ edges
     (tensor/compute-tensor
      [h w c]
      (fn [y x ch]
-       (tensor/mget (nth enhanced-channels ch) y x))
+       ((nth enhanced-channels ch) y x))
      :uint8)))
 
 (def contrasted (enhance-contrast original-tensor 1.5))
@@ -1149,9 +1141,9 @@ edges
      [h w 3]
      (fn [y x c]
        (case c
-         0 (tensor/mget new-b-clamped y x) ; Blue channel 0
-         1 (tensor/mget new-g-clamped y x) ; Green channel 1
-         2 (tensor/mget new-r-clamped y x))) ; Red channel 2
+         0 (new-b-clamped y x) ; Blue channel 0
+         1 (new-g-clamped y x) ; Green channel 1
+         2 (new-r-clamped y x))) ; Red channel 2
      :uint8)))
 
 (defn simulate-color-blindness
@@ -1248,8 +1240,8 @@ kernel-3x3
                  in-bounds? (and (>= img-y 0) (< img-y h)
                                  (>= img-x 0) (< img-x w))
                  new-sum (if in-bounds?
-                           (+ sum (* (tensor/mget kernel ky kx)
-                                     (tensor/mget img-2d img-y img-x)))
+                           (+ sum (* (kernel ky kx)
+                                     (img-2d img-y img-x)))
                            sum)
                  [next-ky next-kx] (if (>= (inc kx) kw)
                                      [(inc ky) 0]
@@ -1573,12 +1565,12 @@ gaussian-5x5
 ;; - `dtype/elemwise-cast` — Convert between types
 ;; - `dtype/ecount` — Total element count
 ;; - `dtype/as-reader` — Convert to readable sequence
-;; - `dtype/get-value` — Extract scalar value
+;; - Readers act as functions: `(reader idx)` instead of `(dtype/get-value reader idx)`
 
 ;; **tensor namespace (tech.v3.tensor):**
 ;; - `tensor/compute-tensor` — Functionally construct tensors
 ;; - `tensor/select` — Extract slices, channels (zero-copy)
-;; - `tensor/mget` — Read single elements
+;; - Tensors act as functions: `(tensor y x)` instead of `(tensor/mget tensor y x)`
 ;; - `tensor/reshape` — Reinterpret tensor shape (zero-copy)
 ;; - `tensor/reduce-axis` — Reduce along specific dimension
 
