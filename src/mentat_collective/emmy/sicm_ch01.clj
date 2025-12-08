@@ -11,12 +11,10 @@
 (ns mentat-collective.emmy.sicm-ch01
     (:refer-clojure :exclude [+ - * / zero? compare divide numerator denominator
                               time infinite? abs ref partial =])
-    (:require [emmy.env :refer :all :exclude [r->p]]
-              [emmy.mechanics.lagrange :as lg]
-              [emmy.numerical.minimize :as mn]
-              [mentat-collective.emmy.scheme :refer :all]
-              [scicloj.kindly.v4.api :as kindly]
-              [scicloj.kindly.v4.kind :as kind]))
+    (:require [scicloj.kindly.v4.api :as kindly]
+              [scicloj.kindly.v4.kind :as kind]
+              [mentat-collective.emmy.scheme :refer [define define-1 let-scheme lambda]]
+              [civitas.repl :as repl]))
 
 ^:kindly/hide-code
 (def md
@@ -33,6 +31,74 @@
 ;; while being sure of the gratitude of all readers of the immutable, dense book.
 
 ^:kindly/hide-code
+(kind/hiccup
+  [:div
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.js"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.emmy.js"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.cljs-ajax.js"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js", :crossorigin ""}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js", :crossorigin ""}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.reagent.js"}]
+   [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
+
+^:kindly/hide-code
+(defmacro defines [& b]
+  (list 'do
+        (cons 'mentat-collective.emmy.scheme/define b)
+        (list 'kind/scittle (list 'quote (cons 'define b)))))
+
+^:kindly/hide-code
+(defines emmy-env
+          '[emmy.env :refer :all :exclude [r->p]])
+
+^:kindly/hide-code
+(defines emmy-lg
+          '[emmy.mechanics.lagrange :as lg])
+
+^:kindly/hide-code
+(defines emmy-mn
+          '[emmy.numerical.minimize :as mn])
+
+^:kindly/hide-code
+(do
+  (require emmy-env)
+  (require emmy-lg)
+  (require emmy-mn))
+
+^:kindly/hide-code
+(kind/scittle
+  '(do
+     (require emmy-env)
+     #_(require emmy-lg)
+     #_(require emmy-mn)))
+
+^:kindly/hide-code
+(defines show-exp (comp str simplify))
+
+^:kindly/hide-code
+(kind/scittle
+  '(def show-expression show-exp))
+
+^:kindly/hide-code
+(defmacro show-expression [b & c]
+  (case b
+    :calc-on-server
+    (list 'simplify (first c))
+    :browser
+    (list 'kind/reagent
+          [:tt (list 'quote
+                     (list 'show-exp (first c)))])
+    (let [serg (show-exp (eval b))]
+      (list 'kind/reagent
+            [:div (list 'quote
+                        (list 'let ['a (list 'show-exp b)]
+                              (list 'if (list '= serg 'a)
+                                    [:tt 'a]
+                                    [:div
+                                     ;; [:tt 'a] ;; comment this in prod
+                                     [:tt serg]])))]))))
+
+^:kindly/hide-code
 (def velocities velocity)
 
 ^:kindly/hide-code
@@ -42,7 +108,7 @@
 (def vector-length count)
 
 ^:kindly/hide-code
-(defn time [state] (first state))
+(def time first)
 
 ^:kindly/hide-code
 (def tex (comp kind/tex emmy.expression.render/->TeX simplify))
@@ -55,7 +121,21 @@
       (+ (* 3 t) 5)
       (+ (* 2 t) 1)))
 
-(Lagrangian-action (lg/L-free-particle 3.0) test-path 0.0 10.0)
+^:kindly/hide-code
+(defines (test-path t)
+  (up (+ (* 4 t) 7)
+      (+ (* 3 t) 5)
+      (+ (* 2 t) 1)))
+
+^:kindly/hide-code
+(defines ((L-free-particle mass) local)
+  (let ((v (velocity local)))
+    (* 1/2 mass (square v))))
+
+(show-expression
+  (Lagrangian-action (L-free-particle 3.0) test-path 0.0 10.0))
+
+;; [hint MAK: the above expression also works in the sidebar, all of the below needs manual copy paste of every expression]
 
 (md "#### Paths of minimum Action")
 (md "Show that the action is smaller along a straight-line test path than along nearby paths")
@@ -65,7 +145,7 @@
 
 (define ((varied-free-particle-action mass q ν t1 t2) ε)
   (let ((η (make-η ν t1 t2)))
-    (Lagrangian-action (lg/L-free-particle mass)
+    (Lagrangian-action (L-free-particle mass)
                        (+ q (* ε η)) t1 t2)))
 
 ((varied-free-particle-action 3.0 test-path (up sin cos square) 0.0 10.0) 0.01)
@@ -143,9 +223,9 @@
 (define small-varied-path (make-varied-path 0.01 0 10))
 (define large-varied-path (make-varied-path 0.02 0 10))
 
-[(Lagrangian-action (lg/L-free-particle 3.0) path-along-x 0.0 10.0)
- (Lagrangian-action (lg/L-free-particle 3.0) small-varied-path 0.0 10.0)
- (Lagrangian-action (lg/L-free-particle 3.0) large-varied-path 0.0 10.0)]
+[(Lagrangian-action (L-free-particle 3.0) path-along-x 0.0 10.0)
+ (Lagrangian-action (L-free-particle 3.0) small-varied-path 0.0 10.0)
+ (Lagrangian-action (L-free-particle 3.0) large-varied-path 0.0 10.0)]
 
 (md "Create data to plot the three paths in the xz plane along with their actions.")
 
@@ -180,10 +260,16 @@
     (lg/make-path t0 q0 t1 q1 minimizing-qs)))
 
 (define free-path
-  (fnd-path (lg/L-free-particle 3.0) 0.0 1.0 pi-half 0.0 initial-qs))
+  (fnd-path (L-free-particle 3.0) 0.0 1.0 pi-half 0.0 initial-qs))
+
+(define ((L-harmonic m k) local)
+  (let ((q (coordinate local))
+        (v (velocity local)))
+    (- (* 1/2 m (square v))
+       (* 1/2 k (square q)))))
 
 (define harmonic-path
-  (fnd-path (lg/L-harmonic 1.0 1.0) 0.0 1.0 pi-half 0.0 initial-qs))
+  (fnd-path (L-harmonic 1.0 1.0) 0.0 1.0 pi-half 0.0 initial-qs))
 
 (md "Make a plot of these one dimensional paths, this time not in the x-z plane but in the t-z plane. This shows that, upon optimization, the initial-path turns into a streight line and a sinusoidal curve respectively.")
 
@@ -210,14 +296,14 @@
 
 (md "Calculate the Lagrange equation of the harmonic oszillator.")
 
-(tex (((Lagrange-equations (lg/L-harmonic 'm 'k)) (literal-function 'q)) 't))
+(tex (((Lagrange-equations (L-harmonic 'm 'k)) (literal-function 'q)) 't))
 
 (md "## 1.5 The Euler-Lagrange Equations")
 (md "### 1.5.2 Computing Lagrange's Equations")
 (md "#### The free particle")
 (md "State the dynamic equation of motion (i.e. the Lagrange equation a.k.a Newton's second law) of the free particle.")
 
-(tex (((Lagrange-equations (lg/L-free-particle 'm)) (literal-function 'q)) 't))
+(tex (((Lagrange-equations (L-free-particle 'm)) (literal-function 'q)) 't))
 
 (md "Check that an arbitrary straight-line path satisfies this equation, i.e. that inserting a straight line for q(t)
  gives identically zero (strictly speaking the zero covector of three dimensions).")
@@ -228,12 +314,12 @@
         (+ (* 'b t) 'b0)
         (+ (* 'c t) 'c0)))
 
-  (tex (((Lagrange-equations (lg/L-free-particle 'm)) straight-line) 't)))
+  (tex (((Lagrange-equations (L-free-particle 'm)) straight-line) 't)))
 
 (md "#### The harmonic oscillator")
 (md "State the dynamic equation of motion for the harmonic oszillator with arbitrary mass and spring constant.")
 
-(tex (((Lagrange-equations (lg/L-harmonic 'm 'k)) (literal-function 'q)) 't))
+(tex (((Lagrange-equations (L-harmonic 'm 'k)) (literal-function 'q)) 't))
 
 (md "Plug in a sinusoid with arbitrary amplitude $A$, frequency $\\omega$ and phase $\\phi$ and show that the only solutions allowed are ones where $\\omega = \\sqrt{k/m}$ ")
 
@@ -241,7 +327,7 @@
   (define (proposed-solution t)
     (* 'A (cos (+ (* 'omega t) 'φ))))
 
-  (tex (((Lagrange-equations (lg/L-harmonic 'm 'k)) proposed-solution) 't)))
+  (tex (((Lagrange-equations (L-harmonic 'm 'k)) proposed-solution) 't)))
 
 (md "#### Exercise 1.11: Kepler's third law")
 (md "Show that a planet in circular orbit satisfies Kepler's third law $n^2a^3=G(M_1+m_2)$, where $n$ is the angular frequency of the orbit and $a$ is the distance between sun and planet. (Hint: use the reduced mass to construct the Lagrangian)")
@@ -300,7 +386,7 @@
 (md "#### Coriolis and centrifugal forces")
 (md "State, in cartesian coordinates, the Lagrangian for the two dimensional free particle in a rotating coordinate system.")
 
-(define L-free-rectangular lg/L-free-particle)
+(define L-free-rectangular L-free-particle)
 
 (define (L-free-polar m)
  (compose (L-free-rectangular m) (F->C p->r)))
@@ -503,3 +589,5 @@
   (up
     ((T3-spherical 'm) (->local 't (up 'r 'θ 'φ) (up 'rdot 'θdot 'φdot)))
     ((Lagrangian->energy (L3-central 'm V)) spherical-state)))
+
+(repl/scittle-sidebar)
