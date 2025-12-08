@@ -5,7 +5,8 @@
                   :type :post
                   :date "2025-12-07"
                   :category :data
-                  :tags [:dtype-next :tensors :image-processing :computer-vision :tutorial]}}}
+                  :tags [:dtype-next :tensors :image-processing :computer-vision :tutorial]
+                  :image "nap_edges.png"}}}
 (ns dtype-next.image-processing-with-tensors
   "Learn dtype-next by building practical image processing tools.
   
