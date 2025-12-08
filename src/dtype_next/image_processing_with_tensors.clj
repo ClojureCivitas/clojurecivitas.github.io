@@ -372,7 +372,7 @@ writable-buffer
 
 ;; `tensor/mget` reads a single element at given indices:
 
-(tensor/mget toy-tensor 1 2) ; row 1, column 2 → 12
+(tensor/mget toy-tensor 1 2)
 
 ;; ## Slicing Dimensions: tensor/slice and tensor/slice-right
 
@@ -470,13 +470,13 @@ toy-cols
 
 ;; **Reduction operations** (collapse dimensions):
 
-(dfn/mean small-tensor) ; mean of all elements
+(dfn/mean small-tensor)
 
-(dfn/reduce-max small-tensor) ; maximum value
+(dfn/reduce-max small-tensor)
 
-(dfn/reduce-min small-tensor) ; minimum value
+(dfn/reduce-min small-tensor)
 
-(dfn/sum small-tensor) ; sum of all elements
+(dfn/sum small-tensor)
 
 ;; **Why dfn instead of regular Clojure functions?**
 ;; - Work on entire tensors efficiently (no boxing)
@@ -503,7 +503,8 @@ toy-cols
     (dfn/* 2.5) ; compute
     (dfn/min 255) ; clamp to valid range
     (dfn/max 0)
-    (dtype/elemwise-cast :uint8)) ; downcast back
+    (dtype/elemwise-cast :uint8) ; downcast back
+    )
 
 ;; ## Shape Operations: dtype/shape and tensor/reshape
 
@@ -870,13 +871,13 @@ edges
 
 ;; Shape changed from [H W C] to [W H C]:
 
-(dtype/shape img-transposed) ; [1280 960 3]
+(dtype/shape img-transposed)
 
 ;; Now we can slice columns:
 
 (def img-columns (tensor/slice img-transposed 1))
 
-(dtype/ecount img-columns) ; 1280 columns
+(dtype/ecount img-columns)
 
 ;; Compute column brightness (horizontal profile):
 
@@ -915,7 +916,8 @@ edges
 (def row-means-fast
   (-> original-tensor
       (tensor/reduce-axis dfn/mean 1 :float64) ; [H W C] → [H C]
-      (tensor/reduce-axis dfn/mean 1 :float64))) ; [H C] → [H]
+      (tensor/reduce-axis dfn/mean 1 :float64)) ; [H C] → [H]
+  )
 
 ;; First 10 values (compare with earlier slice-based approach):
 
@@ -950,7 +952,8 @@ edges
 
 ;; Brightness map shape:
 
-(dtype/shape brightness-map) ; [48 64] for 960/20 × 1280/20
+(dtype/shape brightness-map)
+;; [48 64] for 960/20 × 1280/20
 
 ;; Find brightest and darkest blocks:
 
