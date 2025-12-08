@@ -241,7 +241,83 @@ original-tensor
 ;; `tensor/compute-tensor` creates a tensor by calling a function for each position.
 ;; The function receives indices and returns the value for that position.
 
-;; Create a simple 3×4 tensor with sequential values:
+;; ## Buffers, Readers, and Writers
+
+;; Before working with tensors, let's understand dtype-next's foundational abstractions.
+;; These concepts will help us understand what happens when we slice, transform, and
+;; process data.
+
+;; ### Buffers: Mutable Typed Storage
+
+;; A **buffer** is a contiguous block of typed data in memory. It's the fundamental
+;; storage layer—mutable and efficient.
+
+(def sample-buffer
+  (dtype/make-container :int32 [10 20 30 40 50]))
+
+sample-buffer
+
+;; Buffers have a data type and element count:
+
+(dtype/elemwise-datatype sample-buffer)
+
+(dtype/ecount sample-buffer)
+
+;; ### Readers: Read-Only Views
+
+;; A **reader** provides read-only access to data. Readers can wrap buffers, transform
+;; values on-the-fly, or generate values lazily. They're how dtype-next creates zero-copy
+;; views and efficient data pipelines.
+
+(def sample-reader
+  (dtype/->reader sample-buffer))
+
+;; Access elements by index:
+
+(dtype/get-value sample-reader 0)
+
+;; Map over readers like sequences:
+
+(mapv #(* 2 %) sample-reader)
+
+;; **Lazy transformation readers** compute values on access without copying:
+
+(def doubled-reader
+  (dtype/emap (fn [x] (* x 10)) :int32 sample-buffer))
+
+;; The reader transforms values on-the-fly:
+
+(vec doubled-reader)
+
+;; But the original buffer is unchanged:
+
+(vec sample-buffer)
+
+;; ### Writers: Mutable Access
+
+;; A **writer** allows modification of the underlying data:
+
+(def writable-buffer
+  (dtype/make-container :float64 [1.0 2.0 3.0 4.0 5.0]))
+
+(let [writer (dtype/->writer writable-buffer)]
+  (dtype/set-value! writer 2 99.0)
+  (dtype/set-value! writer 4 77.0))
+
+writable-buffer
+
+;; ### Why This Matters for Tensors
+
+;; Tensors are **multi-dimensional views** over buffers. When we slice or reshape tensors,
+;; we often get readers that reference the original data without copying. When we use
+;; `tensor/slice`, we get a **reader of sub-tensors**—each sub-tensor is itself a view
+;; (often a reader) over portions of the underlying buffer.
+;;
+;; This architecture enables efficient, composable operations: slice an image into channels,
+;; map a transformation over each channel, and the data flows through without intermediate
+;; copies.
+
+;; ## Creating Tensors: tensor/compute-tensor
 
 (def toy-tensor
   (tensor/compute-tensor
@@ -259,7 +335,7 @@ original-tensor
 
 (dtype/shape toy-tensor)
 
-;; ## Slicing with tensor/select
+;; ## Selecting Regions with tensor/select
 
 ;; `tensor/select` extracts portions of a tensor without copying data.
 ;; It takes one selector per dimension.
@@ -297,6 +373,76 @@ original-tensor
 ;; `tensor/mget` reads a single element at given indices:
 
 (tensor/mget toy-tensor 1 2) ; row 1, column 2 → 12
+
+;; ## Slicing Dimensions: tensor/slice and tensor/slice-right
+
+;; While `tensor/select` extracts specific regions, **slicing** operations turn a tensor
+;; into a **reader of sub-tensors** that we can process one by one. This is essential for
+;; efficiently iterating through rows, columns, or channels.
+
+;; ### tensor/slice (leftmost dimensions)
+
+;; `tensor/slice` slices off N leftmost dimensions, returning a reader that contains
+;; sub-tensors. You access and process each sub-tensor individually (via `nth`, `map`, etc.).
+
+;; For a `[3 4]` tensor, slicing off 1 dimension gives us a reader of 3 rows:
+
+(def toy-rows (tensor/slice toy-tensor 1))
+
+toy-rows
+
+;; How many rows?
+
+(dtype/ecount toy-rows)
+
+;; Get the first row (a `[4]` tensor):
+
+(nth toy-rows 0)
+
+;; **Use case**: Process sub-tensors one by one efficiently (much faster than manual loops with `select`)
+
+;; ### tensor/slice-right (rightmost dimensions)
+
+;; `tensor/slice-right` slices off N rightmost dimensions, returning a reader of sub-tensors.
+;; Perfect for extracting channels from `[H W C]` image tensors.
+
+;; For our `[3 4]` toy tensor, slicing 1 rightmost dimension gives us 4 columns:
+
+(def toy-cols (tensor/slice-right toy-tensor 1))
+
+toy-cols
+
+(dtype/ecount toy-cols)
+
+;; Get the first column:
+
+(nth toy-cols 0)
+
+;; **Key insight**: Both return readers of sub-tensors that you process one by one.
+;; - `tensor/slice` slices leftmost dimensions → iterate through slices (e.g., rows)
+;; - `tensor/slice-right` slices rightmost dimensions → iterate through slices (e.g., channels)
+
+;; ### Practical Example: Channel Extraction
+
+;; For our BGR image `[H W C]`, we can cleanly extract channels using `slice-right`:
+
+(def channels-sliced (tensor/slice-right original-tensor 1))
+
+;; Extract individual channels:
+
+(def blue-ch (nth channels-sliced 0))
+(def green-ch (nth channels-sliced 1))
+(def red-ch (nth channels-sliced 2))
+
+;; Each channel is now `[H W]`:
+
+(dtype/shape blue-ch)
+
+;; Compare with the manual approach using `tensor/select`:
+
+(def blue-manual (tensor/select original-tensor :all :all 0))
+
+;; Both are zero-copy views, but `slice-right` is cleaner when you need all channels.
 
 ;; ## The dfn Namespace: Functional Operations with Broadcasting
 
@@ -390,9 +536,12 @@ flat-tensor
 ;; Use `tensor/select` to slice out individual channels (zero-copy views):
 
 (defn extract-channels
-  "Extract B, G, R channels from BGR tensor.
+  "Extract B, G, R channels from BGR tensor using tensor/select.
   Takes: [H W 3] tensor (BGR order)
-  Returns: map with :blue, :green, :red tensors (each [H W])"
+  Returns: map with :blue, :green, :red tensors (each [H W])
+  
+  Note: For simply extracting all channels, tensor/slice-right is cleaner:
+    (let [[b g r] (tensor/slice-right img 1)] {:blue b :green g :red r})"
   [img-tensor]
   {:blue (tensor/select img-tensor :all :all 0)
    :green (tensor/select img-tensor :all :all 1)
@@ -425,6 +574,30 @@ flat-tensor
             (merge {:channel k}
                    (channel-stats v))))
      tc/dataset)
+
+;; ## Enhanced Channel Statistics with slice-right
+
+;; Now let's see a cleaner approach using `tensor/slice-right` with more comprehensive
+;; statistics including percentiles:
+
+(tc/dataset
+ (map (fn [color channel]
+        (let [percentiles (dfn/percentiles channel [25 50 75])]
+          {:channel color
+           :mean (dfn/mean channel)
+           :std (dfn/standard-deviation channel)
+           :min (dfn/reduce-min channel)
+           :max (dfn/reduce-max channel)
+           :q25 (dtype/get-value percentiles 0)
+           :median (dtype/get-value percentiles 1)
+           :q75 (dtype/get-value percentiles 2)}))
+      ["blue" "green" "red"]
+      (tensor/slice-right original-tensor 1)))
+
+;; **Key advantages of slice-right**:
+;; - Cleaner iteration over all channels
+;; - No need to manually specify indices
+;; - Natural destructuring: `(let [[b g r] (tensor/slice-right img 1)] ...)`
 
 ;; ## Brightness Analysis
 
@@ -502,6 +675,53 @@ flat-tensor
                 (plotly/layer-histogram {:=histogram-nbins 30
                                          :=mark-color k}))))
      kind/fragment)
+
+;; **Approach 3**: Using `slice-right` for cleaner per-channel histograms:
+
+(kind/fragment
+ (mapv (fn [color channel]
+         (-> (tc/dataset {:x (dtype/as-reader channel)})
+             (plotly/base {:=title color
+                           :=height 200
+                           :=width 600})
+             (plotly/layer-histogram {:=histogram-nbins 30
+                                      :=mark-color color})))
+       ["blue" "green" "red"]
+       (tensor/slice-right original-tensor 1)))
+
+;; This approach directly iterates over sliced channels without extracting them first,
+;; combining channel names and data in a single pass.
+
+;; ## Channel Correlation
+
+;; How related are the color channels? High correlation suggests color casts or
+;; consistent lighting. Let's compute Pearson correlation between channels:
+
+(defn correlation
+  "Compute Pearson correlation coefficient between two tensors.
+  Returns value between -1 (inverse) and 1 (perfect correlation)."
+  [v1 v2]
+  (let [mean1 (dfn/mean v1)
+        mean2 (dfn/mean v2)
+        centered1 (dfn/- v1 mean1)
+        centered2 (dfn/- v2 mean2)
+        numerator (dfn/sum (dfn/* centered1 centered2))
+        denom1 (dfn/sqrt (dfn/sum (dfn/sq centered1)))
+        denom2 (dfn/sqrt (dfn/sum (dfn/sq centered2)))]
+    (/ numerator (* denom1 denom2))))
+
+;; Extract channels and compute pairwise correlations:
+
+(let [[blue green red] (tensor/slice-right original-tensor 1)]
+  (tc/dataset
+   [{:pair "Blue-Green" :correlation (correlation blue green)}
+    {:pair "Blue-Red" :correlation (correlation blue red)}
+    {:pair "Green-Red" :correlation (correlation green red)}]))
+
+;; **Interpretation**:
+;; - Correlation near 1.0: Channels move together (consistent lighting, color cast)
+;; - Correlation near 0.0: Channels independent (varied colors, good white balance)
+;; - High correlations (>0.95) often indicate opportunity for white balance adjustment
 
 ;; ---
 
@@ -594,6 +814,163 @@ edges
 (sharpness-score original-tensor)
 
 ;; **Use case**: Compare sharpness before/after blur, or rank photos by clarity.
+
+;; ---
+
+;; # Advanced Tensor Operations — Rows, Columns, and Regions
+
+;; We've seen how to extract channels and compute global statistics. Now let's
+;; explore **row-wise and column-wise analysis** using `tensor/slice`, `tensor/transpose`,
+;; and `tensor/reduce-axis` for spatial profiling and region detection.
+
+;; ## Row Brightness Profile with tensor/slice
+
+;; `tensor/slice` enables efficient iteration through rows. Let's compute mean
+;; brightness per row to create a vertical brightness profile:
+
+(def img-rows (tensor/slice original-tensor 1))
+
+;; How many rows?
+
+(dtype/ecount img-rows)
+
+;; Compute brightness for each row:
+
+(def row-brightness
+  (mapv dfn/mean img-rows))
+
+;; First 10 row brightness values:
+
+(take 10 row-brightness)
+
+;; **Performance note**: Using `tensor/slice` is more efficient than manually selecting
+;; each row with `(tensor/select img row-idx :all :all)` in a loop, as it creates the
+;; reader once rather than performing individual selections.
+
+;; Find brightest and darkest rows:
+
+(let [brightest-idx (apply max-key #(nth row-brightness %) (range (count row-brightness)))
+      darkest-idx (apply min-key #(nth row-brightness %) (range (count row-brightness)))]
+  (tc/dataset
+   [{:type "Brightest"
+     :row-index brightest-idx
+     :brightness (nth row-brightness brightest-idx)}
+    {:type "Darkest"
+     :row-index darkest-idx
+     :brightness (nth row-brightness darkest-idx)}]))
+
+;; **Use case**: Identify horizon lines, sky regions, or exposure gradients.
+
+;; ## Column Operations with transpose
+
+;; `tensor/slice` only works on leftmost dimensions. For columns, we use
+;; `tensor/transpose` to swap dimensions:
+
+(def img-transposed (tensor/transpose original-tensor [1 0 2]))
+
+;; Shape changed from [H W C] to [W H C]:
+
+(dtype/shape img-transposed) ; [1280 960 3]
+
+;; Now we can slice columns:
+
+(def img-columns (tensor/slice img-transposed 1))
+
+(dtype/ecount img-columns) ; 1280 columns
+
+;; Compute column brightness (horizontal profile):
+
+(def col-brightness
+  (mapv dfn/mean (take 1280 img-columns)))
+
+;; Visualize row vs column brightness profiles:
+
+(-> (tc/dataset {:vertical-position (range (min 500 (count row-brightness)))
+                 :row-brightness (take 500 row-brightness)})
+    (plotly/base {:=title "Vertical Brightness Profile (Top 500 rows)"
+                  :=x-title "Row Index"
+                  :=y-title "Mean Brightness"})
+    (plotly/layer-line {:=x :vertical-position
+                        :=y :row-brightness
+                        :=mark-color "steelblue"}))
+
+(-> (tc/dataset {:horizontal-position (range (min 500 (count col-brightness)))
+                 :col-brightness (take 500 col-brightness)})
+    (plotly/base {:=title "Horizontal Brightness Profile (Left 500 columns)"
+                  :=x-title "Column Index"
+                  :=y-title "Mean Brightness"})
+    (plotly/layer-line {:=x :horizontal-position
+                        :=y :col-brightness
+                        :=mark-color "coral"}))
+
+;; **Use case**: Detect vignetting, find composition center, identify vertical features.
+
+;; ## Efficient Aggregation with reduce-axis
+
+;; For statistics without explicit iteration, use `tensor/reduce-axis`.
+;; **Important**: Specify result dtype to avoid truncation!
+
+;; Compute row brightness using reduce-axis:
+
+(def row-means-fast
+  (-> original-tensor
+      (tensor/reduce-axis dfn/mean 1 :float64) ; [H W C] → [H C]
+      (tensor/reduce-axis dfn/mean 1 :float64))) ; [H C] → [H]
+
+;; First 10 values (compare with earlier slice-based approach):
+
+(take 10 (dtype/as-reader row-means-fast))
+
+;; **Note**: Specifying `:float64` explicitly ensures the result type. In some cases,
+;; omitting the dtype can lead to unexpected type coercion, so it's good practice to
+;; specify the desired output type when precision matters.
+
+;; ## Block-Based Region Analysis
+
+;; For coarse spatial analysis, downsample into blocks and find regions of interest:
+
+(defn downsample-blocks
+  "Downsample image by averaging NxN blocks.
+  Returns: [H/N W/N] tensor of block mean brightness"
+  [img-tensor block-size]
+  (let [[h w _] (dtype/shape img-tensor)
+        new-h (quot h block-size)
+        new-w (quot w block-size)]
+    (tensor/compute-tensor
+     [new-h new-w]
+     (fn [by bx]
+       (let [block (tensor/select img-tensor
+                                  (range (* by block-size) (min h (* (inc by) block-size)))
+                                  (range (* bx block-size) (min w (* (inc bx) block-size)))
+                                  :all)]
+         (dfn/mean block)))
+     :float32)))
+
+(def brightness-map (downsample-blocks original-tensor 20))
+
+;; Brightness map shape:
+
+(dtype/shape brightness-map) ; [48 64] for 960/20 × 1280/20
+
+;; Find brightest and darkest blocks:
+
+(defn find-block-extremes
+  "Find coordinates of brightest and darkest blocks in a 2D tensor."
+  [tensor-2d]
+  (let [flat (dtype/as-reader (tensor/reshape tensor-2d [(dtype/ecount tensor-2d)]))
+        [h w] (dtype/shape tensor-2d)
+        max-idx (apply max-key #(dtype/get-value flat %) (range (dtype/ecount flat)))
+        min-idx (apply min-key #(dtype/get-value flat %) (range (dtype/ecount flat)))]
+    {:brightest {:block-y (quot max-idx w)
+                 :block-x (rem max-idx w)
+                 :value (dtype/get-value flat max-idx)}
+     :darkest {:block-y (quot min-idx w)
+               :block-x (rem min-idx w)
+               :value (dtype/get-value flat min-idx)}}))
+
+(find-block-extremes brightness-map)
+
+;; **Use case**: Quick region-of-interest detection, composition analysis, exposure mapping.
 
 ;; ---
 
