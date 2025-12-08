@@ -111,6 +111,29 @@ original-img
 (def original-tensor
   (bufimg/as-ubyte-tensor original-img))
 
+;; ## ⚠️ Important: Understanding Channel Order
+;;
+;; BufferedImage can use different pixel formats (RGB, BGR, ARGB, etc.). The specific
+;; format depends on the image type and how it was loaded. Our image uses **BGR** order:
+
+(bufimg/image-type original-img)
+
+;; `:byte-bgr` means this image stores colors in BGR (Blue-Green-Red) order, not RGB.
+;; The `bufimg/as-ubyte-tensor` function preserves whatever order BufferedImage uses.
+;;
+;; For this tutorial's BGR images, the channels are:
+;; - **Channel 0 = Blue**
+;; - **Channel 1 = Green**
+;; - **Channel 2 = Red**
+;;
+;; Always check `bufimg/image-type` to confirm your image's channel order before
+;; processing. We'll be explicit about BGR ordering throughout this tutorial.
+;;
+;; **Why the round-trip works:** `bufimg/tensor->image` defaults to creating BGR
+;; BufferedImages. So our workflow maintains BGR throughout: load BGR → process as
+;; BGR tensor → create BGR image. If you had an RGB tensor, you'd need to either
+;; swap channels or use `(bufimg/tensor->image rgb-tensor {:img-type :int-rgb})`.
+
 original-tensor
 
 ;; ## Understanding Tensor Shape
@@ -125,19 +148,6 @@ original-tensor
 (dtype/shape original-tensor)
 
 ;; This is `[height width channels]` — our image has 3 color channels.
-
-;; **Channel ordering**: Java's BufferedImage uses BGR order internally:
-
-(bufimg/image-type original-img)
-
-;; `:byte-bgr` confirms BGR byte order. The `bufimg/as-ubyte-tensor` function
-;; preserves this ordering, so our tensor channels are:
-;; - **Channel 0 = Blue**
-;; - **Channel 1 = Green**  
-;; - **Channel 2 = Red**
-;;
-;; This is the opposite of the more common RGB convention. Throughout this tutorial,
-;; we'll work with BGR order and be explicit about it in our code.
 
 (def height
   (first (dtype/shape original-tensor)))
@@ -219,7 +229,7 @@ original-tensor
     tc/dataset
     ds-tensor/dataset->tensor
     (tensor/reshape [height width 3])
-    bufimg/tensor->image)
+    bufimg/tensor->image) ; Creates BGR BufferedImage by default
 
 ;; This round-trip demonstrates the seamless interop between tensors and datasets,
 ;; useful for combining spatial operations (tensors) with statistical analysis (datasets).
@@ -534,27 +544,26 @@ flat-tensor
 
 ;; ## Extracting Color Channels
 
-;; Use `tensor/select` to slice out individual channels (zero-copy views):
+;; There are two main approaches for extracting channels:
+;;
+;; 1. **tensor/select** — Extract specific channels by index
+;; 2. **tensor/slice-right** — Iterate over all channels cleanly
+;;
+;; We'll use `tensor/select` for explicit channel extraction:
 
-(defn extract-channels
-  "Extract B, G, R channels from BGR tensor using tensor/select.
-  Takes: [H W 3] tensor (BGR order)
-  Returns: map with :blue, :green, :red tensors (each [H W])
-  
-  Note: For simply extracting all channels, tensor/slice-right is cleaner:
-    (let [[b g r] (tensor/slice-right img 1)] {:blue b :green g :red r})"
-  [img-tensor]
-  {:blue (tensor/select img-tensor :all :all 0)
-   :green (tensor/select img-tensor :all :all 1)
-   :red (tensor/select img-tensor :all :all 2)})
-
-(def channels (extract-channels original-tensor))
+(def channels
+  (let [[blue green red] (tensor/slice-right original-tensor 1)]
+    {:blue blue :green green :red red}))
 
 ;; Each channel is now `[H W]` instead of `[H W C]`:
 
-(dtype/shape (:red channels))
+(:red channels)
 
-;; **Key insight**: These are **views** into the original tensor—no copying.
+;; **Key insight**: These are **zero-copy views** into the original tensor—no data is copied.
+;; 
+;; **Alternative with tensor/select**:
+;; Blue channel:
+(tensor/select original-tensor :all :all 2)
 
 ;; ## Channel Statistics
 
@@ -615,7 +624,8 @@ flat-tensor
   "Convert BGR [H W 3] to grayscale [H W].
   Standard formula: 0.299*R + 0.587*G + 0.114*B
   Takes BGR tensor, extracts channels correctly.
-  Returns float32 tensor (use dtype/elemwise-cast for uint8)."
+  Returns float64 tensor (dfn/* operates on floats for precision).
+  Use dtype/elemwise-cast :uint8 when you need integer values for display."
   [img-tensor]
   (let [b (tensor/select img-tensor :all :all 0) ; Blue is channel 0
         g (tensor/select img-tensor :all :all 1) ; Green is channel 1
@@ -626,17 +636,16 @@ flat-tensor
 
 (def grayscale (to-grayscale original-tensor))
 
-;; **Note on types**: `to-grayscale` returns float32 because `dfn/*` operates on
-;; floats for precision. When visualizing, `bufimg/tensor->image` automatically
-;; handles the float→uint8 conversion.
-
 ;; **Grayscale statistics**:
 
 (tc/dataset (channel-stats grayscale))
 
-;; Visualize grayscale (automatic float→uint8 conversion):
+;; Visualize grayscale:
 
 (bufimg/tensor->image grayscale)
+
+;; **Note**: `bufimg/tensor->image` automatically handles float64→uint8 conversion
+;; and interprets single-channel tensors as grayscale images.
 
 ;; ## Histograms
 
@@ -659,25 +668,7 @@ flat-tensor
     (plotly/layer-histogram {:=x :green
                              :=mark-color "green"}))
 
-;; **Approach 2**: Separate histograms using `dtype/as-reader` for direct tensor access:
-
-(require '[scicloj.kindly.v4.kind :as kind])
-(require '[scicloj.tableplot.v1.plotly :as plotly])
-
-;; The `scicloj.kindly.v4.kind` namespace provides visualization directives for Clay.
-;; The `scicloj.tableplot.v1.plotly` namespace enables Plotly-based charting.
-
-(->> (assoc channels :gray grayscale)
-     (map (fn [[k v]]
-            (-> (tc/dataset {:x (dtype/as-reader v)})
-                (plotly/base {:=title k
-                              :=height 200
-                              :=width 600})
-                (plotly/layer-histogram {:=histogram-nbins 30
-                                         :=mark-color k}))))
-     kind/fragment)
-
-;; **Approach 3**: Using `slice-right` for cleaner per-channel histograms:
+;; **Per-channel histograms** using `slice-right` for clean iteration:
 
 (kind/fragment
  (mapv (fn [color channel]
@@ -746,7 +737,7 @@ flat-tensor
   Takes: [H W] tensor
   Returns: [H W-1] tensor"
   [tensor-2d]
-  (let [[h w] (dtype/shape tensor-2d)]
+  (let [[_ w] (dtype/shape tensor-2d)]
     (dfn/- (tensor/select tensor-2d :all (range 1 w))
            (tensor/select tensor-2d :all (range 0 (dec w))))))
 
@@ -755,7 +746,7 @@ flat-tensor
   Takes: [H W] tensor
   Returns: [H-1 W] tensor"
   [tensor-2d]
-  (let [[h w] (dtype/shape tensor-2d)]
+  (let [[h _] (dtype/shape tensor-2d)]
     (dfn/- (tensor/select tensor-2d (range 1 h) :all)
            (tensor/select tensor-2d (range 0 (dec h)) :all))))
 
@@ -778,8 +769,8 @@ gy
   Takes: gx [H W-1], gy [H-1 W]
   Returns: [H-1 W-1] (trimmed to common size)"
   [gx gy]
-  (let [[h-gx w-gx] (dtype/shape gx)
-        [h-gy w-gy] (dtype/shape gy)
+  (let [[_ w-gx] (dtype/shape gx)
+        [h-gy _] (dtype/shape gy)
         ;; Trim to common dimensions: gx loses 1 row, gy loses 1 column
         gx-trimmed (tensor/select gx (range 0 h-gy) :all)
         gy-trimmed (tensor/select gy :all (range 0 w-gx))]
@@ -796,6 +787,8 @@ edges
  (-> edges
      (dfn/* (/ 255.0 (max 1.0 (dfn/reduce-max edges))))
      (dtype/elemwise-cast :uint8)))
+
+;; **Note**: Grayscale (single-channel) tensors are rendered as grayscale images.
 
 ;; ## Sharpness Metric
 
@@ -818,7 +811,7 @@ edges
 
 ;; ---
 
-;; # Advanced Tensor Operations — Rows, Columns, and Regions
+;; # Spatial Profiling — Row and Column Analysis
 
 ;; We've seen how to extract channels and compute global statistics. Now let's
 ;; explore **row-wise and column-wise analysis** using `tensor/slice`, `tensor/transpose`,
@@ -909,7 +902,6 @@ edges
 ;; ## Efficient Aggregation with reduce-axis
 
 ;; For statistics without explicit iteration, use `tensor/reduce-axis`.
-;; **Important**: Specify result dtype to avoid truncation!
 
 ;; Compute row brightness using reduce-axis:
 
@@ -923,9 +915,10 @@ edges
 
 (take 10 (dtype/as-reader row-means-fast))
 
-;; **Note**: Specifying `:float64` explicitly ensures the result type. In some cases,
-;; omitting the dtype can lead to unexpected type coercion, so it's good practice to
-;; specify the desired output type when precision matters.
+;; **Why specify `:float64`?** Without it, dtype-next might infer the output type from
+;; the input (`:uint8`), which would truncate decimal values from the mean operation.
+;; For example, a mean of 127.8 would become 127. Always specify the output datatype
+;; when reducing to ensure you get the precision you need.
 
 ;; ## Block-Based Region Analysis
 
@@ -979,9 +972,10 @@ edges
 
 ;; # Enhancement Pipeline
 
-;; With analysis tools in place, let's build functions that *improve* images.
-;; We'll create composable transformations for white balance and contrast,
-;; each verifiable through numeric properties we can check in the REPL.
+;; We've explored analyzing image properties—now let's actively *transform* them.
+;; With analysis tools in place, we'll build functions that improve images through
+;; white balance and contrast adjustment. Each transformation is composable and
+;; verifiable through numeric properties we can check in the REPL.
 
 ;; ## Auto White Balance
 
@@ -1031,7 +1025,9 @@ edges
   [original-img
    (-> original-tensor
        auto-white-balance
-       bufimg/tensor->image)]])
+       bufimg/tensor->image)]]) ; BGR tensor → BGR image
+
+;; **Note**: Our BGR tensor flows seamlessly to BGR BufferedImage.
 
 ;; ## Contrast Enhancement
 
@@ -1075,7 +1071,7 @@ edges
   [original-img
    (-> original-tensor
        (enhance-contrast 1.5)
-       bufimg/tensor->image)
+       bufimg/tensor->image) ; BGR → BGR
    (-> original-tensor
        (enhance-contrast 3)
        bufimg/tensor->image)]])
@@ -1175,6 +1171,8 @@ edges
    (bufimg/tensor->image (simulate-color-blindness original-tensor :deuteranopia))
    (bufimg/tensor->image (simulate-color-blindness original-tensor :tritanopia))]])
 
+;; All color blindness transformations maintain BGR order throughout.
+
 ;; ---
 
 ;; # Convolution & Filtering
@@ -1226,7 +1224,11 @@ kernel-3x3
 (defn convolve-2d
   "Apply 2D convolution to grayscale image [H W].
   kernel: [kh kw] float tensor
-  Returns [H W] float32 tensor (zero-padded edges)."
+  Returns [H W] float32 tensor (zero-padded edges).
+  
+  Note: This implementation prioritizes clarity over performance.
+  For production use, consider tech.v3.libs.opencv or specialized
+  convolution libraries for better performance on large images."
   [img-2d kernel]
   (let [[h w] (dtype/shape img-2d)
         [kh kw] (dtype/shape kernel)
@@ -1265,6 +1267,8 @@ kernel-3x3
  [[:original :box-blur-3x3]
   [(bufimg/tensor->image grayscale)
    (bufimg/tensor->image (dtype/elemwise-cast blurred-gray :uint8))]])
+
+;; Grayscale tensors (2D) are automatically rendered as grayscale images.
 
 ;; ## Gaussian Blur
 
@@ -1401,12 +1405,13 @@ gaussian-5x5
      (dfn/* (/ 255.0 (max 1.0 (dfn/reduce-max sobel-edges))))
      (dtype/elemwise-cast :uint8)))
 
-;; **Comparison**: Simple gradient vs Sobel
+;; Single-channel tensors display as grayscale images.
 
-(let [simple-edges (edge-magnitude (gradient-x grayscale) (gradient-y grayscale))]
-  {:simple-mean (dfn/mean simple-edges)
-   :sobel-mean (dfn/mean sobel-edges)
-   :sobel-smoother? true})
+;; **Comparison**: Simple gradient (from Spatial Analysis section) vs Sobel
+
+{:simple-mean (dfn/mean edges) ; reuse edges computed earlier
+ :sobel-mean (dfn/mean sobel-edges)
+ :sobel-smoother? true}
 
 ;; Sobel produces smoother, more robust edge detection.
 
@@ -1450,7 +1455,7 @@ gaussian-5x5
   [(bufimg/tensor->image grayscale)
    (bufimg/tensor->image downsampled-gray)]])
 
-;; **Verification**: Downsampled image is exactly half the size in each dimension.
+;; Both grayscale tensors render as grayscale images.
 
 ;; ## Image Pyramid
 
@@ -1486,6 +1491,8 @@ gaussian-5x5
 (kind/fragment
  (mapv bufimg/tensor->image gray-pyramid))
 
+;; Each grayscale tensor at different scales renders as a grayscale image.
+
 ;; **Use case**: Multi-scale edge detection for finding features at different sizes.
 
 ;; ## Block Average Downsampling
@@ -1518,6 +1525,8 @@ gaussian-5x5
   [(bufimg/tensor->image downsampled-gray)
    (bufimg/tensor->image avg-downsampled)]])
 
+;; Both are grayscale. `tensor->image` handles float32 → uint8 conversion automatically.
+
 ;; Average downsampling produces smoother results with less aliasing.
 
 ;; **Verification**: Both produce same shape, but averaging reduces noise
@@ -1531,7 +1540,19 @@ gaussian-5x5
 
 ;; # Conclusion: The dtype-next Pattern
 
-;; We've built a complete image analysis toolkit demonstrating core dtype-next concepts:
+;; We started with a simple question: **Why use dtype-next for image processing?**
+;;
+;; Through building a complete analysis toolkit—from channel statistics to edge detection
+;; to convolution—we've seen the answer in action:
+;;
+;; - **Efficient typed arrays** replace boxed sequences, saving memory and enabling SIMD
+;; - **Zero-copy views** let us slice and transform without allocation overhead
+;; - **Functional composition** keeps operations pure and composable
+;; - **Immediate visual feedback** makes abstract tensor operations concrete and verifiable
+;;
+;; Images provided the perfect learning vehicle: every transformation has visible results
+;; we can inspect in the REPL. The patterns we've practiced transfer directly to any
+;; domain requiring efficient numerical computing.
 
 ;; ## Key Patterns
 
