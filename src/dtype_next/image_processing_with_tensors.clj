@@ -1219,7 +1219,7 @@ gaussian-5x5
 ;; sensor arrays—dtype-next handles arbitrary dimensionality.
 
 ;; dtype-next also provides:
-;; - **Native interop**: Zero-copy integration with native libraries (OpenCV, TensorFlow)
+;; - **Native interop**: Zero-copy integration with native libraries (OpenCV, Numpy, etc.)
 ;; - **Dataset tools**: Rich `tech.ml.dataset` integration for tabular workflows
 ;; - **Performance**: SIMD-optimized operations, parallel processing support
 ;; - **Flexibility**: Custom buffer implementations, extensible type system
