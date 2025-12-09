@@ -15,6 +15,7 @@
   (:require [scicloj.kindly.v4.kind :as kind]
             [tech.v3.datatype :as dtype]
             [tech.v3.datatype.functional :as dfn]
+            [tech.v3.datatype.statistics :as stats]
             [tech.v3.tensor :as tensor]
             [tech.v3.libs.buffered-image :as bufimg]
             [tech.v3.dataset.tensor :as ds-tensor]
@@ -567,31 +568,47 @@ flat-tensor
 
 (dtype/shape blue-only)
 
-;; ## Channel Statistics
+;; ## Statistical Operations
 
-;; Compute mean, standard deviation, min, max, and percentiles for each channel:
+(require '[tech.v3.datatype.statistics :as stats])
+
+;; The [`tech.v3.datatype.statistics`](https://cnuernber.github.io/dtype-next/tech.v3.datatype.statistics.html)
+;; namespace provides statistical functions optimized for typed arrays.
+;;
+;; Key function:
+;; - `stats/descriptive-statistics` — returns `:n-elems`, `:min`, `:max`, `:mean`, and `:standard-deviation`
+;;
+;; This is more efficient than calling individual functions like `dfn/mean`, `dfn/standard-deviation`, etc.,
+;; when you need multiple statistics, as it computes them in a single pass over the data.
+
+;; ## Channel Statistics
 
 (defn channel-stats
   "Compute statistics for a single channel tensor.
   Takes: [H W] tensor
-  Returns: map with :mean, :std, :min, :max, percentiles"
+  Returns: map with :mean, :standard-deviation, :min, :max, :n-elems"
   [channel]
-  (let [percentiles (dfn/percentiles channel [25 50 75])]
-    {:mean (dfn/mean channel)
-     :std (dfn/standard-deviation channel)
-     :min (dfn/reduce-min channel)
-     :max (dfn/reduce-max channel)
-     :q25 (percentiles 0)
-     :median (percentiles 1)
-     :q75 (percentiles 2)}))
+  (stats/descriptive-statistics channel))
+
+(defn channel-percentiles
+  "Compute percentiles for a single channel tensor.
+  Takes: [H W] tensor
+  Returns: map with percentiles"
+  [channel]
+  (zipmap [:q25 :median :q75]
+          (dfn/percentiles channel [25 50 75])))
 
 ;; Apply to our extracted channels:
 
-(->> channels
-     (map (fn [[k v]]
-            (merge {:channel k}
-                   (channel-stats v))))
-     tc/dataset)
+(-> (tc/dataset {:channel (keys channels)})
+    (tc/add-columns (->> channels
+                         vals
+                         (map channel-stats)
+                         tc/dataset))
+    (tc/add-columns (->> channels
+                         vals
+                         (map channel-percentiles)
+                         tc/dataset)))
 
 ;; ## Brightness Analysis
 
