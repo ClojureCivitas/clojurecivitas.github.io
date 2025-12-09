@@ -1303,7 +1303,7 @@ gaussian-5x5
 (-> {:original grayscale
      :box-3x3 blurred-gray
      :gaussian-5x5 gaussian-blurred
-     ;; :gaussian-9x9 gaussian-blurred-large
+     :gaussian-9x9 gaussian-blurred-large
      :sharpened sharpened-gray}
     (update-vals
      (fn [t]
