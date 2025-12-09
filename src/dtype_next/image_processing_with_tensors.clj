@@ -668,47 +668,6 @@ flat-tensor
 ;; This approach directly iterates over sliced channels without extracting them first,
 ;; combining channel names and data in a single pass.
 
-;; ## Channel Correlation
-
-;; How related are the color channels? High correlation suggests color casts or
-;; consistent lighting. Let's compute Pearson correlation between channels:
-
-(defn correlation
-  "Compute Pearson correlation coefficient between two tensors.
-  Returns value between -1 (inverse) and 1 (perfect correlation)."
-  [v1 v2]
-  (let [mean1 (dfn/mean v1)
-        mean2 (dfn/mean v2)
-        centered1 (dfn/- v1 mean1)
-        centered2 (dfn/- v2 mean2)
-        numerator (dfn/sum (dfn/* centered1 centered2))
-        denom1 (dfn/sqrt (dfn/sum (dfn/sq centered1)))
-        denom2 (dfn/sqrt (dfn/sum (dfn/sq centered2)))]
-    (/ numerator (* denom1 denom2))))
-
-;; Extract channels and compute pairwise correlations:
-
-(let [[blue green red] (tensor/slice-right original-tensor 1)]
-  (tc/dataset
-   [{:pair "Blue-Green" :correlation (correlation blue green)}
-    {:pair "Blue-Red" :correlation (correlation blue red)}
-    {:pair "Green-Red" :correlation (correlation green red)}]))
-
-(let [[blue green red] (tensor/slice-right (auto-white-balance
-                                            original-tensor)
-                                           1)]
-  (tc/dataset
-   [{:pair "Blue-Green" :correlation (correlation blue green)}
-    {:pair "Blue-Red" :correlation (correlation blue red)}
-    {:pair "Green-Red" :correlation (correlation green red)}]))
-
-;; **Interpretation**:
-;; - Correlation near 1.0: Channels move together (consistent lighting, color cast)
-;; - Correlation near 0.0: Channels independent (varied colors, good white balance)
-;; - High correlations (>0.95) often indicate opportunity for white balance adjustment
-
-;; ---
-
 ;; # Spatial Analysis — Edges and Gradients
 
 ;; We've explored *global* properties like channel means and histograms. Now let's
@@ -1295,14 +1254,14 @@ gaussian-5x5
 
 ;; Larger Gaussian blur for stronger effect:
 
-(def gaussian-15x15 (gaussian-kernel 15 3.0))
+(def gaussian-9x9 (gaussian-kernel 15 3.0))
 
-(def gaussian-blurred-large (convolve-2d grayscale gaussian-15x15))
+(def gaussian-blurred-large (convolve-2d grayscale gaussian-9x9))
 
 ;; Compare different blur kernels:
 
 (kind/table
- [[:original :box-blur-3x3 :gaussian-5x5 :gaussian-15x15]
+ [[:original :box-blur-3x3 :gaussian-5x5 :gaussian-9x9]
   [(bufimg/tensor->image grayscale)
    (bufimg/tensor->image (dtype/elemwise-cast blurred-gray :uint8))
    (bufimg/tensor->image (dtype/elemwise-cast gaussian-blurred :uint8))
@@ -1344,7 +1303,7 @@ gaussian-5x5
 (-> {:original grayscale
      :box-3x3 blurred-gray
      :gaussian-5x5 gaussian-blurred
-     :gaussian-15x15 gaussian-blurred-large
+     ;; :gaussian-9x9 gaussian-blurred-large
      :sharpened sharpened-gray}
     (update-vals
      (fn [t]
