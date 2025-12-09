@@ -644,7 +644,8 @@ flat-tensor
     tc/dataset
     (tc/rename-columns [:blue :green :red])
     (plotly/base {:=histogram-nbins 30
-                  :=mark-opacity 0.5})
+                  :=mark-opacity 0.5
+                  :=width 800})
     (plotly/layer-histogram {:=x :red
                              :=mark-color "red"})
     (plotly/layer-histogram {:=x :blue
@@ -659,7 +660,7 @@ flat-tensor
          (-> (tc/dataset {:x (dtype/as-reader channel)})
              (plotly/base {:=title color
                            :=height 200
-                           :=width 600})
+                           :=width 800})
              (plotly/layer-histogram {:=histogram-nbins 30
                                       :=mark-color color})))
        ["blue" "green" "red"]
@@ -834,7 +835,8 @@ edges
                  :row-brightness (take 500 row-brightness)})
     (plotly/base {:=title "Vertical Brightness Profile (Top 500 rows)"
                   :=x-title "Row Index"
-                  :=y-title "Mean Brightness"})
+                  :=y-title "Mean Brightness"
+                  :=width 800})
     (plotly/layer-line {:=x :vertical-position
                         :=y :row-brightness
                         :=mark-color "steelblue"}))
@@ -843,7 +845,8 @@ edges
                  :col-brightness (take 500 col-brightness)})
     (plotly/base {:=title "Horizontal Brightness Profile (Left 500 columns)"
                   :=x-title "Column Index"
-                  :=y-title "Mean Brightness"})
+                  :=y-title "Mean Brightness"
+                  :=width 800})
     (plotly/layer-line {:=x :horizontal-position
                         :=y :col-brightness
                         :=mark-color "coral"}))
