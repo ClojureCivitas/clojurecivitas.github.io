@@ -64,9 +64,6 @@
   yamlscript/core                             {:git/url "https://github.com/yaml/yamlscript"
                                                :git/sha "ed7adfbf90a39f379d5a7193bb2e4bdd7f0eecf8"
                                                :deps/root "core"}
-
-  xyz.zcaudate/std.lang                       {:mvn/version "4.0.9"}
-  xyz.zcaudate/rt.basic                       {:mvn/version "4.0.9"}
   }
  
  :mvn/repos {"osgeo" {:url "https://repo.osgeo.org/repository/release/"}} 
