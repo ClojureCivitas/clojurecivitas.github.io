@@ -42,7 +42,7 @@
 ;; because they're **typed numerical arrays with clear visual feedback**. Unlike generic
 ;; sequences where numbers are boxed, dtype-next gives us:
 ;;
-;; - **Efficient storage**: A 1000×1000 RGB image is 3MB of uint8 values, not 12MB+ of boxed objects
+;; - **Efficient storage**: A 1000×1000 [RGB](https://en.wikipedia.org/wiki/RGB_color_model) image is 3MB of [uint8](https://en.wikipedia.org/wiki/Integer_(computer_science)#Value_and_representation) values, not 12MB+ of [boxed](https://en.wikipedia.org/wiki/Object_type_(object-oriented_programming)#Boxing) objects
 ;; - **Zero-copy views**: Slice channels, regions, or transforms without copying data
 ;; - **Functional operations**: Element-wise transformations that compose naturally
 ;; - **Type discipline**: Explicit control over precision and overflow
@@ -115,7 +115,7 @@ original-img
 
 ;; ## ⚠️ Important: Understanding Channel Order
 ;;
-;; BufferedImage can use different pixel formats (RGB, BGR, ARGB, etc.). The specific
+;; BufferedImage can use different [pixel](https://en.wikipedia.org/wiki/Pixel) formats (RGB, BGR, ARGB, etc.). The specific
 ;; format depends on the image type and how it was loaded. Our image uses **BGR** order:
 
 (bufimg/image-type original-img)
@@ -468,7 +468,7 @@ toy-cols
 
 ;; The [`tech.v3.datatype.functional`](https://cnuernber.github.io/dtype-next/tech.v3.datatype.functional.html)
 ;; namespace (aliased as `dfn`) provides mathematical operations that work **element-wise**
-;; across entire tensors and automatically **broadcast** when combining tensors of different shapes.
+;; across entire tensors and automatically **[broadcast](https://en.wikipedia.org/wiki/Broadcasting_(parallel_pattern))** when combining tensors of different shapes.
 
 ;; **Element-wise operations:**
 
@@ -498,9 +498,9 @@ toy-cols
 
 ;; **Why dfn instead of regular Clojure functions?**
 ;; - Work on entire tensors efficiently (no boxing)
-;; - Broadcast automatically
+;; - [Broadcast](https://en.wikipedia.org/wiki/Broadcasting_(parallel_pattern)) automatically
 ;; - Type-aware (preserve numeric precision)
-;; - SIMD-optimized
+;; - [SIMD](https://en.wikipedia.org/wiki/Single_instruction,_multiple_data)-optimized
 
 ;; ## Type Handling: dtype/elemwise-cast
 
@@ -577,7 +577,7 @@ flat-tensor
 ;; namespace provides statistical functions optimized for typed arrays.
 ;;
 ;; Key function:
-;; - `stats/descriptive-statistics` — returns `:n-elems`, `:min`, `:max`, `:mean`, and `:standard-deviation`
+;; - `stats/descriptive-statistics` — returns `:n-elems`, `:min`, `:max`, `:mean`, and `:standard-deviation` ([standard deviation](https://en.wikipedia.org/wiki/Standard_deviation))
 ;;
 ;; This is more efficient than calling individual functions like `dfn/mean`, `dfn/standard-deviation`, etc.,
 ;; when you need multiple statistics, as it computes them in a single pass over the data.
@@ -594,7 +594,7 @@ flat-tensor
 (defn channel-percentiles
   "Compute percentiles for a single channel tensor.
   Takes: [H W] tensor
-  Returns: map with percentiles"
+  Returns: map with percentiles ([percentile](https://en.wikipedia.org/wiki/Percentile))"
   [channel]
   (zipmap [:q25 :median :q75]
           (dfn/percentiles channel [25 50 75])))
@@ -616,7 +616,7 @@ flat-tensor
 ;; Convert to grayscale using perceptual luminance formula.
 ;;
 ;; **Why these specific weights?** Human vision is most sensitive to green light,
-;; moderately sensitive to red, and least sensitive to blue. The coefficients
+;; moderately sensitive to red, and least sensitive to blue. The [coefficients](https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale)
 ;; (0.299, 0.587, 0.114) approximate the [relative luminance](https://en.wikipedia.org/wiki/Relative_luminance)
 ;; formula from the [ITU-R BT.601](https://en.wikipedia.org/wiki/Rec._601) standard,
 ;; ensuring grayscale images preserve perceived brightness rather than simple
@@ -652,8 +652,8 @@ flat-tensor
 ;; ## Histograms
 
 ;; A [histogram](https://en.wikipedia.org/wiki/Image_histogram) shows the distribution
-;; of pixel values. It's essential for understanding image brightness, contrast, and
-;; exposure. Peaks indicate common values; spread indicates dynamic range.
+;; of pixel values. It's essential for understanding image [brightness](https://en.wikipedia.org/wiki/Brightness), [contrast](https://en.wikipedia.org/wiki/Contrast_(vision)), and
+;; [exposure](https://en.wikipedia.org/wiki/Exposure_(photography)). Peaks indicate common values; spread indicates [dynamic range](https://en.wikipedia.org/wiki/Dynamic_range).
 
 ;; **Approach 1**: Overlaid BGR channels using the reshape→dataset pattern we just learned:
 
@@ -699,7 +699,7 @@ flat-tensor
 
 ;; ## Computing Gradients
 
-;; Gradients measure how quickly pixel values change. We compute them by
+;; [Gradients](https://en.wikipedia.org/wiki/Image_gradient) measure how quickly pixel values change. We compute them by
 ;; comparing neighboring pixels using **slice offsets**.
 
 (defn gradient-x
@@ -762,7 +762,7 @@ edges
 
 ;; ## Sharpness Metric
 
-;; Measure image sharpness by averaging edge magnitude—higher = sharper:
+;; Measure image [sharpness](https://en.wikipedia.org/wiki/Acutance) by averaging edge magnitude—higher = sharper:
 
 (defn sharpness-score
   "Compute sharpness as mean edge magnitude.
@@ -869,7 +869,7 @@ edges
                         :=y :col-brightness
                         :=mark-color "coral"}))
 
-;; **Use case**: Detect vignetting, find composition center, identify vertical features.
+;; **Use case**: Detect [vignetting](https://en.wikipedia.org/wiki/Vignetting), find composition center, identify vertical features.
 
 ;; ## Efficient Aggregation with reduce-axis
 
@@ -1055,7 +1055,7 @@ edges
 ;; Beyond enhancement, images need to be *accessible*. Let's simulate how images
 ;; appear to people with different types of color vision deficiency.
 ;;
-;; This demonstrates dtype-next's linear algebra capabilities (applying 3×3 matrices
+;; This demonstrates dtype-next's [linear algebra](https://en.wikipedia.org/wiki/Linear_algebra) capabilities (applying 3×3 matrices
 ;; to BGR channels) with practical real-world applications.
 
 ;; Apply 3×3 transformation matrices to simulate different types of color vision deficiency.
@@ -1170,7 +1170,7 @@ edges
 
 ;; ### Box Blur Example
 
-;; Box blur averages all pixels in a neighborhood. A 3×3 box blur kernel weights
+;; [Box blur](https://en.wikipedia.org/wiki/Box_blur) averages all pixels in a neighborhood. A 3×3 box blur kernel weights
 ;; all 9 pixels equally:
 
 (defn box-blur-kernel
@@ -1277,7 +1277,7 @@ kernel-3x3
 ;; - N×M = image dimensions (height × width)
 ;; - Total work for image: O(N×M×k²) vs O(N×M×k)
 ;;
-;; **Additional optimizations**: Library functions like `convolve/gaussian1d` may use FFT
+;; **Additional optimizations**: Library functions like `convolve/gaussian1d` may use [FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform)
 ;; (Fast Fourier Transform) for very large kernels or data, which can be even faster:
 ;; O(N×M×log(N×M)) regardless of kernel size. This happens automatically based on data size.
 
@@ -1443,7 +1443,7 @@ kernel-3x3
 
 ;; The [Sobel operator](https://en.wikipedia.org/wiki/Sobel_operator) is a classic
 ;; edge detection method that uses specialized kernels to compute gradients in X and Y
-;; directions. It's more robust to noise than simple finite differences.
+;; directions. It's more robust to noise than simple [finite differences](https://en.wikipedia.org/wiki/Finite_difference).
 
 ;; Sobel kernels detect edges in X and Y directions:
 
@@ -1497,7 +1497,7 @@ kernel-3x3
 
 ;; # Downsampling & Multi-Scale Processing
 
-;; Finally, let's explore working with images at multiple scales. Downsampling
+;; Finally, let's explore working with images at multiple scales. [Downsampling](https://en.wikipedia.org/wiki/Downsampling_(signal_processing))
 ;; reduces resolution for faster processing or multi-scale analysis (like detecting
 ;; features at different sizes).
 ;;
@@ -1507,7 +1507,7 @@ kernel-3x3
 ;; ## Downsampling by 2×
 
 ;; [Downsampling](https://en.wikipedia.org/wiki/Downsampling_(signal_processing))
-;; (decimation) reduces image resolution by discarding pixels. We select every other
+;; ([decimation](https://en.wikipedia.org/wiki/Decimation_(signal_processing))) reduces image resolution by discarding pixels. We select every other
 ;; pixel in each dimension, creating a half-size image.
 
 (defn downsample-2x
@@ -1605,7 +1605,7 @@ kernel-3x3
 
 ;; Both are grayscale. `tensor->image` handles float32 → uint8 conversion automatically.
 
-;; Average downsampling produces smoother results with less aliasing.
+;; Average downsampling produces smoother results with less [aliasing](https://en.wikipedia.org/wiki/Aliasing).
 
 ;; **Verification**: Both produce same shape, but averaging reduces noise
 
