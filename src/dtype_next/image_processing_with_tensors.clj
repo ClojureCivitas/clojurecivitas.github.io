@@ -16,6 +16,7 @@
             [tech.v3.datatype :as dtype]
             [tech.v3.datatype.functional :as dfn]
             [tech.v3.datatype.statistics :as stats]
+            [tech.v3.datatype.convolve :as convolve]
             [tech.v3.tensor :as tensor]
             [tech.v3.libs.buffered-image :as bufimg]
             [tech.v3.dataset.tensor :as ds-tensor]
@@ -1150,10 +1151,13 @@ edges
 
 ;; So far we've used simple element-wise operations and direct pixel comparisons.
 ;; Now let's explore **convolution**, the fundamental operation behind blur, sharpen,
-;; and sophisticated edge detection.
+;; and edge detection.
 ;;
-;; We'll build a reusable convolution engine using `tensor/compute-tensor` for
-;; windowed operations, then apply various kernels to see the dramatic effects.
+;; **What we'll learn:**
+;; - How convolution works (sliding kernels over images)
+;; - Building a 2D convolution function for learning and non-separable filters
+;; - Separable filters—the standard approach for Gaussian blur
+;; - Practical applications: box blur, Gaussian blur, sharpening, edge detection
 
 ;; ## Understanding Convolution
 
@@ -1161,17 +1165,13 @@ edges
 ;; fundamental operation in image processing. A **kernel** (or filter) is a small
 ;; matrix that slides over the image. At each position, we multiply kernel values
 ;; by corresponding pixel values and sum the result.
+;;
+;; Let's see this with a simple example: box blur.
 
-;; Example: 3×3 box blur kernel (all pixels weighted equally):
-;; ```
-;; [1/9 1/9 1/9]
-;; [1/9 1/9 1/9]
-;; [1/9 1/9 1/9]
-;; ```
+;; ### Box Blur Example
 
-;; ## Box Blur Kernel
-
-;; Create a simple averaging kernel:
+;; Box blur averages all pixels in a neighborhood. A 3×3 box blur kernel weights
+;; all 9 pixels equally:
 
 (defn box-blur-kernel
   "Create NxN box blur kernel (uniform averaging).
@@ -1188,111 +1188,217 @@ edges
 
 kernel-3x3
 
-;; ## Applying Convolution
+;; This kernel says: "Replace each pixel with the average of itself and its 8 neighbors."
+;; To apply this kernel across the entire image, we need a convolution function.
 
-;; Slide the kernel over the image, computing weighted sums:
+;; ## Building a 2D Convolution Function
+
+;; We'll implement `convolve-2d` to understand the mechanics. This function is useful for:
+;; - **Learning**: See exactly how convolution works
+;; - **Non-separable filters**: Some kernels (like Sobel) can't be separated into 1D operations
+;;
+;; For separable filters like Gaussian blur, we'll use a more efficient approach (shown next).
 
 (defn convolve-2d
   "Apply 2D convolution to grayscale image [H W].
   kernel: [kh kw] float tensor
-  Returns [H W] float32 tensor (zero-padded edges).
+  edge-mode: :zero (default) or :reflect
+  Returns [H W] float32 tensor.
   
-  Note: This implementation prioritizes clarity over performance.
-  For production use, consider tech.v3.libs.opencv or specialized
-  convolution libraries for better performance on large images."
-  [img-2d kernel]
+  This implementation prioritizes clarity over performance to demonstrate
+  tensor operations and convolution mechanics. It explicitly shows:
+  - Sliding window iteration with loop/recur
+  - Bounds checking and edge handling
+  - Element-wise kernel multiplication
+  
+  This function is useful for learning and for non-separable kernels.
+  For separable filters like Gaussian blur, see gaussian-blur-separable below."
+  ([img-2d kernel] (convolve-2d img-2d kernel :zero))
+  ([img-2d kernel edge-mode]
+   (let [[h w] (dtype/shape img-2d)
+         [kh kw] (dtype/shape kernel)
+         pad-h (quot kh 2)
+         pad-w (quot kw 2)
+
+         ;; Helper to get pixel value with edge handling
+         get-pixel (case edge-mode
+                     :zero (fn [y x]
+                             (if (and (>= y 0) (< y h)
+                                      (>= x 0) (< x w))
+                               (img-2d y x)
+                               0.0))
+                     :reflect (fn [y x]
+                                (let [ry (cond
+                                           (< y 0) (- y)
+                                           (>= y h) (- h (- y h) 2)
+                                           :else y)
+                                      rx (cond
+                                           (< x 0) (- x)
+                                           (>= x w) (- w (- x w) 2)
+                                           :else x)]
+                                  (img-2d (max 0 (min (dec h) ry))
+                                          (max 0 (min (dec w) rx))))))]
+     (tensor/compute-tensor
+      [h w]
+      (fn [y x]
+        ;; Sum weighted pixel values in kernel neighborhood
+        (loop [ky 0
+               kx 0
+               sum 0.0]
+          (if (>= ky kh)
+            sum
+            (let [img-y (+ y ky (- pad-h))
+                  img-x (+ x kx (- pad-w))
+                  pixel-val (get-pixel img-y img-x)
+                  new-sum (+ sum (* (kernel ky kx) pixel-val))
+                  [next-ky next-kx] (if (>= (inc kx) kw)
+                                      [(inc ky) 0]
+                                      [ky (inc kx)])]
+              (recur next-ky next-kx new-sum)))))
+      :float32))))
+
+;; ## Separable Filters: The Recommended Approach
+
+;; Many important filters are [separable](https://en.wikipedia.org/wiki/Separable_filter)—they
+;; can be decomposed into two 1D operations instead of one 2D operation. This is the
+;; **standard approach** for filters like Gaussian blur, not an optimization.
+;;
+;; **How it works**: Instead of applying a k×k kernel to each pixel, we:
+;; 1. Apply a 1D kernel horizontally (blur each row)
+;; 2. Apply a 1D kernel vertically (blur each column)
+;;
+;; **Computational advantage**:
+;; - 2D convolution with k×k kernel: O(k²) operations per pixel
+;; - Separable approach: O(k) operations per pixel (k/2 horizontal + k/2 vertical)
+;; - For a 7×7 kernel: 49 vs 7 operations per pixel (~7× reduction)
+;;
+;; Where:
+;; - k = kernel size (e.g., 7 for a 7×7 kernel)
+;; - N×M = image dimensions (height × width)
+;; - Total work for image: O(N×M×k²) vs O(N×M×k)
+;;
+;; **Additional optimizations**: Library functions like `convolve/gaussian1d` may use FFT
+;; (Fast Fourier Transform) for very large kernels or data, which can be even faster:
+;; O(N×M×log(N×M)) regardless of kernel size. This happens automatically based on data size.
+
+;; ### The convolve Namespace
+
+(require '[tech.v3.datatype.convolve :as convolve])
+
+;; The [`tech.v3.datatype.convolve`](https://cnuernber.github.io/dtype-next/tech.v3.datatype.convolve.html)
+;; namespace provides optimized 1D convolution operations:
+;;
+;; - `convolve/gaussian1d` — 1D Gaussian filter with automatic kernel generation
+;; - `convolve/convolve1d` — General 1D convolution
+;; - `convolve/gauss-kernel-1d` — Create 1D Gaussian kernels
+;;
+;; These functions support edge-handling strategies (`:zero`, `:clamp`, `:reflect`, `:wrap`)
+;; and may use FFT optimization automatically for large data.
+
+(defn gaussian-blur-separable
+  "Apply Gaussian blur using separable 1D convolutions.
+  Takes: [H W] grayscale tensor, sigma (standard deviation)
+  Returns: [H W] float64 tensor
+  
+  This is the recommended approach for Gaussian blur.
+  Applies horizontal blur to each row, then vertical blur to each column."
+  [img-2d sigma]
   (let [[h w] (dtype/shape img-2d)
-        [kh kw] (dtype/shape kernel)
-        pad-h (quot kh 2)
-        pad-w (quot kw 2)]
+
+        ;; Step 1: Blur each row horizontally
+        ;; tensor/slice gives us a reader of rows (zero-copy)
+        rows (tensor/slice img-2d 1)
+
+        ;; dtype/emap applies gaussian1d to each row (lazy)
+        rows-blurred (dtype/emap
+                      (fn [row]
+                        (convolve/gaussian1d row sigma {:mode :same :edge-mode :reflect}))
+                      :object
+                      rows)
+
+        ;; Concatenate blurred rows into single buffer, then reshape to [h w]
+        horizontal-blurred (tensor/reshape
+                            (dtype/concat-buffers :float64 rows-blurred)
+                            [h w])
+
+        ;; Step 2: Blur each column vertically
+        ;; tensor/slice-right gives us a reader of columns (zero-copy)
+        cols (tensor/slice-right horizontal-blurred 1)
+
+        cols-blurred (dtype/emap
+                      (fn [col]
+                        (convolve/gaussian1d col sigma {:mode :same :edge-mode :reflect}))
+                      :object
+                      cols)]
+
+    ;; Reassemble columns (requires transposition, so use compute-tensor)
     (tensor/compute-tensor
      [h w]
      (fn [y x]
-       ;; Sum weighted pixel values in kernel neighborhood
-       (loop [ky 0
-              kx 0
-              sum 0.0]
-         (if (>= ky kh)
-           sum
-           (let [img-y (+ y ky (- pad-h))
-                 img-x (+ x kx (- pad-w))
-                 in-bounds? (and (>= img-y 0) (< img-y h)
-                                 (>= img-x 0) (< img-x w))
-                 new-sum (if in-bounds?
-                           (+ sum (* (kernel ky kx)
-                                     (img-2d img-y img-x)))
-                           sum)
-                 [next-ky next-kx] (if (>= (inc kx) kw)
-                                     [(inc ky) 0]
-                                     [ky (inc kx)])]
-             (recur next-ky next-kx new-sum)))))
-     :float32)))
+       ((nth cols-blurred x) y))
+     :float64)))
 
-;; **Apply box blur to grayscale**:
+;; **Key dtype-next patterns in this implementation:**
+;;
+;; - `tensor/slice` and `tensor/slice-right` — Zero-copy readers of rows/columns
+;; - `dtype/emap` — Lazy transformation over readers (more efficient than `mapv`)
+;; - `dtype/concat-buffers` — Efficiently concatenate buffers for reassembly
+;; - `tensor/reshape` — Zero-copy view with different shape
+;; - `tensor/compute-tensor` — Used when data needs reordering (columns → rows)
+;;
+;; The horizontal pass uses `concat-buffers` + `reshape` (fast, sequential data).
+;; The vertical pass uses `compute-tensor` (necessary for transposition).
+
+;; The `convolve/gaussian1d` function handles kernel generation, edge modes (`:reflect`,
+;; `:wrap`, `:zero`), and may use FFT optimization automatically for large data.
+
+;; ---
+
+;; With separable filters understood, let's apply convolution to practical filtering tasks.
+
+;; ## Applying Box Blur
+
+;; Now we can apply our 3×3 box blur kernel using `convolve-2d`:
 
 (def blurred-gray (convolve-2d grayscale kernel-3x3))
 
-;; Compare original vs box blur:
+;; Compare original vs blurred:
 
 (kind/table
  [[:original :box-blur-3x3]
   [(bufimg/tensor->image grayscale)
    (bufimg/tensor->image (dtype/elemwise-cast blurred-gray :uint8))]])
 
-;; Grayscale tensors (2D) are automatically rendered as grayscale images.
+;; Box blur creates a simple averaging effect. Grayscale tensors (2D) are automatically
+;; rendered as grayscale images.
 
-;; ## Gaussian Blur
+;; ## Gaussian Blur (Separable)
 
-;; [Gaussian blur](https://en.wikipedia.org/wiki/Gaussian_blur) uses a kernel based
-;; on the Gaussian (normal) distribution. It weights center pixels more heavily than
-;; edge pixels, producing a smooth, natural-looking blur without artifacts.
+;; [Gaussian blur](https://en.wikipedia.org/wiki/Gaussian_blur) weights center pixels
+;; more heavily than edge pixels based on the Gaussian (normal) distribution, producing
+;; smooth, natural-looking blur without artifacts.
+;;
+;; We use `gaussian-blur-separable` (the recommended approach):
 
-(defn gaussian-kernel
-  "Create NxN Gaussian kernel with given sigma.
-  Takes: n (kernel size), sigma (standard deviation)
-  Returns: [n n] float32 tensor (normalized to sum=1)"
-  [n sigma]
-  (let [center (quot n 2)]
-    (-> (tensor/compute-tensor
-         [n n]
-         (fn [y x]
-           (let [dy (- y center)
-                 dx (- x center)
-                 dist-sq (+ (* dy dy) (* dx dx))]
-             (Math/exp (/ (- dist-sq) (* 2 sigma sigma)))))
-         :float32)
-        ;; Normalize so weights sum to 1
-        (as-> t (dfn// t (dfn/sum t))))))
+(def gaussian-blurred-1 (gaussian-blur-separable grayscale 1.0))
+(def gaussian-blurred-1-5 (gaussian-blur-separable grayscale 1.5))
 
-(def gaussian-5x5 (gaussian-kernel 5 1.0))
-
-gaussian-5x5
-
-;; Apply Gaussian blur:
-
-(def gaussian-blurred (convolve-2d grayscale gaussian-5x5))
-
-;; Larger Gaussian blur for stronger effect:
-
-(def gaussian-9x9 (gaussian-kernel 15 3.0))
-
-(def gaussian-blurred-large (convolve-2d grayscale gaussian-9x9))
-
-;; Compare different blur kernels:
+;; Compare blur strengths—notice how Gaussian blur is smoother than box blur:
 
 (kind/table
- [[:original :box-blur-3x3 :gaussian-5x5 :gaussian-9x9]
+ [[:original :box-blur-3x3 :gaussian-sigma-1.0 :gaussian-sigma-1.5]
   [(bufimg/tensor->image grayscale)
    (bufimg/tensor->image (dtype/elemwise-cast blurred-gray :uint8))
-   (bufimg/tensor->image (dtype/elemwise-cast gaussian-blurred :uint8))
-   (bufimg/tensor->image (dtype/elemwise-cast gaussian-blurred-large :uint8))]])
+   (bufimg/tensor->image gaussian-blurred-1)
+   (bufimg/tensor->image gaussian-blurred-1-5)]])
 
-;; ## Sharpen Filter
+;; ## Sharpening (Unsharp Masking)
 
 ;; [Unsharp masking](https://en.wikipedia.org/wiki/Unsharp_masking) sharpens images
 ;; by enhancing edges. We subtract a blurred version from the original to extract
-;; high-frequency details, then add them back amplified.
-;; Method: original + strength × (original - blur)
+;; high-frequency details, then add them back amplified:
+;;
+;; **Formula**: `sharpened = original + strength × (original - blur)`
 
 (defn sharpen
   "Sharpen image using unsharp mask.
@@ -1314,16 +1420,15 @@ gaussian-5x5
   [(bufimg/tensor->image grayscale)
    (bufimg/tensor->image (dtype/elemwise-cast sharpened-gray :uint8))]])
 
-;; ## Sharpness comparison
+;; ### Quantifying Sharpness
 
-;; We can quantify the sharpness of each filter using our `sharpness-score` function.
-;; However, note that `sharpness-score` expects BGR input, so we need to adapt it for
-;; grayscale tensors. For simplicity, we'll compute sharpness inline here:
+;; We can measure the effect of each filter by computing mean edge magnitude.
+;; Higher values = sharper images, lower values = blurrier:
 
 (-> {:original grayscale
-     :box-3x3 blurred-gray
-     :gaussian-5x5 gaussian-blurred
-     :gaussian-9x9 gaussian-blurred-large
+     :box-blur-3x3 blurred-gray
+     :gaussian-sigma-1.0 gaussian-blurred-1
+     :gaussian-sigma-1.5 gaussian-blurred-1-5
      :sharpened sharpened-gray}
     (update-vals
      (fn [t]
@@ -1331,6 +1436,8 @@ gaussian-5x5
                   (gradient-x t)
                   (gradient-y t)))))
     tc/dataset)
+
+;; As expected: sharpening increases edge magnitude, blurring decreases it.
 
 ;; ## Sobel Edge Detection
 
