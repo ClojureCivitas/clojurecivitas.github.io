@@ -59,10 +59,6 @@
 (kind/scittle
   '(def time first))
 
-^:kindly/hide-code
-(kind/scittle
-  '(def D partial))
-
 ;; The Clojure code below is taken from a [previous Civitas entry](https://clojurecivitas.github.io/mentat_collective/emmy/fdg_ch01.html) (the picture from [Emily's parser game](https://ifdb.org/viewgame?id=urxrv27t7qtu52lb)).
 
 ;; It is not necessary to understand what the Clojure code does. As this semantics does not matter here, it is rather the syntax, the notation, that should be compared and given attention to.
@@ -110,7 +106,6 @@ defn sphere-to-R3(R):
   (def of call)
   (def at call))
 
-(def D partial)
 
 (ys "
 defn F-to-C(F):
@@ -118,20 +113,20 @@ defn F-to-C(F):
     up:
      time: state
      F: state
-     D(0).of(F).at(state) +:
-       D(1).of(F).at(state) *
+     partial(0).of(F).at(state) +:
+       partial(1).of(F).at(state) *
        velocity(state)
 ")
 
-;; Again, the above `+:` is normal addition. With `of` and `at` like that, the above `D(0).of(F).at(state)` (which means "take the zeroth derivative of the function F at point state") translates into what are higher order functions in the Clojure version.
+;; Again, the above `+:` is normal addition. With `of` and `at` like that, the above `partial(0).of(F).at(state)` (which means "take the partial derivative with respect to the first variable of the function F at point state") translates into what are higher order functions in the Clojure version.
 
 (kind/scittle
   '(defn F->C [F]
      (fn [state]
        (up (time state)
            (F state)
-           (+ (((D 0) F) state)
-              (* (((D 1) F) state)
+           (+ (((partial 0) F) state)
+              (* (((partial 1) F) state)
                  (velocity state)))))))
 
 ;; ## Another one
@@ -150,7 +145,7 @@ defn Lsphere(m R):
 
 ;; ## The proof is in the pudding
 
-;; Emmy is a symbolic algebra system, `m:q` produces a symbol named `m`.
+;; Emmy is a symbolic algebra system, `s:q` as well as `q: s` produce the symbol named `s`. Below we have `m:q` and `q: t` to produce the symbols `m` and `t`.
 
 ^:kindly/hide-code
 (defmacro q [s] (list 'quote s))
@@ -159,7 +154,7 @@ defn Lsphere(m R):
 simplify:
   Lsphere(m:q R:q):
     up:
-     =>: t:q
+     q: t
      up: theta:q phi:q
      up: thetadot:q phidot:q
 ")
@@ -255,7 +250,7 @@ L =: Lc(m:q the-metric R2-rect)
 simplify:
   L:
     up:
-      =>: t:q
+      q: t
       up: x:q y:q
       up: vx:q vy:q
 ")
