@@ -2,7 +2,7 @@
   :clay {:title "Image Processing with dtype-next Tensors"
          :quarto {:author :daslu
                   :type :post
-                  :date "2025-12-07"
+                  :date "2025-12-10"
                   :category :data
                   :tags [:dtype-next :tensors :image-processing :computer-vision :tutorial]
                   :image "nap_edges.png"}}}
