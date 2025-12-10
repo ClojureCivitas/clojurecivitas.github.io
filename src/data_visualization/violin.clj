@@ -144,11 +144,28 @@
 
 ;;; # Here's a more scientific example
 
-(def iris 
-  (json/read-str (slurp "https://storage.googleapis.com/kagglesdsdata/datasets/20079/26025/iris.json?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=gcp-kaggle-com%40kaggle-161607.iam.gserviceaccount.com%2F20251129%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20251129T050349Z&X-Goog-Expires=259200&X-Goog-SignedHeaders=host&X-Goog-Signature=a076da9c0375641bed362393229356cd341ab694a356bbbadb6678f654ef58880b12de60a307cff229fc845e66a05acc14621bc4a6a022fc6419e0431327bc9b8105ca66e8289bd4b030825dfb5e0aaa7b0824bb9ebe9ed087c23329fb8a9259c86d0bccfdfe4da1f4d7ae84a91e14dc0df16aa011afecaa2daa1a96d83efc170e2d50758690b22e9b1fb289a476786d15f756e84724706c5581389462938de2a7d6d7ec38e20a7d7edc9b143ddef286e462f07c7827900a9e2130ca41cf21ce7da1e540d599d6bec333a0eae26af1532bf2ba745fd07e197226fb75795b1655aab3f62d097fa9be56a907e8c98601deb5c6c880e5ccc00617752ea92518f945")))
+(def iris-url "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/0e7a9b0a5d22642a06d3d5b9bcbad9890c8ee534/iris.csv")
 
 ^:kind/vega-lite
-(violin-plot {:values iris} "petalWidth" "species" 0 4)
+(violin-plot {:url iris-url
+              :format "csv"}
+             "petal_width" "species"
+             0 4)
+
+^:kind/vega-lite
+ {:mark {:type "boxplot"}
+  :data {:url iris-url
+         :format "csv"}
+  :encoding
+  {"x" {:field "petal_width"
+        :type "quantitative"}
+   "y" {:field "species"
+        :type "nominal"}
+   "color" {:field "species" :type "nominal" :legend false}
+   }
+  :width 800
+  }
+
 
 ^:kind/vega-lite
 (violin-plot {:url penguin-data-url
@@ -208,13 +225,16 @@
   {
    ;; Data is in common
    :data data
-
+   :config {:facet {:spacing 0}
+            :view {:stroke nil}}
    :facet
    {:row {:field group-field
           :type "nominal"
-          :spacing 0                    ;??? not working
-          :header {:labelAngle 0 :labelAlign "left"}
-          }}
+          :header {:labelAngle 0
+                   :labelAlign "left"
+                   }
+          }
+    }
 
    :spec
    {
@@ -238,22 +258,26 @@
        }}
 
      ;; box layer
-     ;; TODO turn off outliers, widen box
-     {:mark {:type "boxplot" :outliers false}
+     ;; TODO  widen box
+     {:mark {:type "boxplot"
+             :outliers false}           ;turn off outlier points since we draw all points
       :encoding
       {:color {:field group-field :type "nominal" :legend false}
        }}]
-   :width 800
+    :width 800
     }
 
    })
 
-
-
 ^:kind/vega-lite
 (box-dot-plot {:url penguin-data-url
-           :format {:type "tsv"}
-           }
-          "flipper_length_mm" "species island"
-          150 250
-          )
+               :format {:type "tsv"}}
+              "flipper_length_mm" "species island"
+              150 250)
+
+;;; Let's try that for the movies
+
+^:kind/vega-lite
+(box-dot-plot {:values movie-data}
+              "US Gross" "Major Genre"
+              0 500000000)
