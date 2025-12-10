@@ -1,7 +1,6 @@
 ^{:kindly/hide-code true
   :clay {:title "Image Processing with dtype-next Tensors"
          :quarto {:author :daslu
-                  :draft true
                   :type :post
                   :date "2025-12-07"
                   :category :data
