@@ -181,6 +181,22 @@ original-tensor
 ;;
 ;; Let's explore essential tensor operations for transforming and converting data.
 
+;; ## The tensor Namespace
+
+(require '[tech.v3.tensor :as tensor])
+
+;; The [`tech.v3.tensor`](https://cnuernber.github.io/dtype-next/tech.v3.tensor.html)
+;; namespace provides multi-dimensional array operations—the core of working with
+;; tensors in dtype-next.
+;;
+;; **Key functions we'll use:**
+;; - `tensor/compute-tensor` — create tensors by applying a function to each position
+;; - `tensor/select` — extract regions (zero-copy slicing)
+;; - `tensor/slice` / `tensor/slice-right` — iterate through dimensions
+;; - `tensor/reshape` — reinterpret shape without copying
+;; - `tensor/transpose` — reorder dimensions
+;; - `tensor/reduce-axis` — collapse dimensions with aggregation
+
 ;; ## Reshaping
 
 ;; Sometimes it's convenient to flatten spatial dimensions into a single axis.
@@ -243,11 +259,6 @@ original-tensor
 ;; throughout this tutorial. We'll use tiny toy tensors to demonstrate each concept.
 
 ;; ## Creating Tensors: tensor/compute-tensor
-
-(require '[tech.v3.tensor :as tensor])
-
-;; The [`tech.v3.tensor`](https://cnuernber.github.io/dtype-next/tech.v3.tensor.html)
-;; namespace provides multi-dimensional array operations.
 
 ;; `tensor/compute-tensor` creates a tensor by calling a function for each position.
 ;; The function receives indices and returns the value for that position.
