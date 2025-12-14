@@ -26,6 +26,10 @@
   :kindly/kind :kind/hidden}
 (set! *warn-on-reflection* true)
 
+;; **Exploration from the [Scicloj DSP Study Group](https://scicloj.github.io/docs/community/groups/dsp-study/)**
+
+;; Welcome! This exploration comes from our DSP study group, where we're learning digital signal processing together using Clojure. We're following the excellent book [**Think DSP** by Allen B. Downey](https://greenteapress.com/wp/think-dsp/) (available free online).
+
 ;; # Introduction
 ;;
 ;; The [Fast Fourier Transform](https://en.wikipedia.org/wiki/Fast_Fourier_transform) (FFT) is fundamental to signal processing, audio analysis, image compression, and scientific computing. If you're working with frequency analysis in Clojure, you have several Java FFT libraries to choose from.
