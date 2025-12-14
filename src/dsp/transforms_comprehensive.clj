@@ -41,9 +41,9 @@
 ;; you automatically remove a 60 Hz electrical hum without affecting the music?
 ;;
 ;; These questions lead us to **signal transforms**—mathematical tools that reveal hidden structure
-;; in data. Every JPEG image you view uses the Discrete Cosine Transform for compression. MP3
-;; audio files rely on the same mathematics. Speech recognition, radar systems, medical imaging—all
-;; depend on transforming signals between different representations.
+;; in data. Classic JPEG images use the Discrete Cosine Transform for compression. MP3 audio uses
+;; a variant called the Modified DCT. Speech recognition, radar systems, medical imaging—all depend
+;; on transforming signals between different representations.
 ;;
 ;; At their core, transforms answer a simple question: **can we express this signal as a weighted
 ;; sum of simpler basis functions?** The Fourier transform uses sines and cosines. Wavelets use
@@ -399,8 +399,8 @@
 (def freq-bin-5-real (dtype/get-value cosine-spectrum (* 2 5)))
 (def freq-bin-5-imag (dtype/get-value cosine-spectrum (+ 1 (* 2 5))))
 
-;; Pure cosine = all energy in REAL part (cosine basis function)
-;; Imaginary part ≈ 0 (no sine component needed)
+;; Pure cosine = nearly all energy in REAL part (cosine basis function)
+;; Imaginary part ≈ 0 (no sine component needed, apart from numerical noise)
 
 ;; Now try a pure sine wave
 (def pure-sine-signal
@@ -412,8 +412,8 @@
 (def sine-freq-bin-5-real (dtype/get-value sine-spectrum (* 2 5)))
 (def sine-freq-bin-5-imag (dtype/get-value sine-spectrum (+ 1 (* 2 5))))
 
-;; Pure sine = all energy in IMAGINARY part (sine basis function)
-;; Real part ≈ 0 (no cosine component needed)
+;; Pure sine = nearly all energy in IMAGINARY part (sine basis function)
+;; Real part ≈ 0 (no cosine component needed, apart from numerical noise)
 
 ;; **Key Takeaway**: 
 ;; - Pure **cosine** signal → FFT has large **real part**, near-zero imaginary part
@@ -523,7 +523,7 @@
 ;; a high-performance Java library that automatically parallelizes large transforms.
 ;;
 ;; **Key performance features**:
-;; - **Automatic parallelization**: For arrays larger than ~8K elements, JTransforms splits
+;; - **Automatic parallelization**: For large arrays (typically >8-16K elements), JTransforms splits
 ;;   work across available CPU cores using Java's `ForkJoinPool`
 ;; - **SIMD optimizations**: Uses Java's auto-vectorization where possible
 ;; - **In-place transforms**: Can operate directly on input arrays (fastmath wraps this safely)
@@ -531,7 +531,7 @@
 ;;   Bluestein) based on array size
 ;;
 ;; **What this means for you**: You don't need to think about parallelism—just pass large
-;; arrays and JTransforms automatically uses all available cores. For smaller signals (<8K),
+;; arrays and JTransforms automatically uses available CPU cores. For smaller signals,
 ;; the overhead of parallelization exceeds the benefit, so it runs single-threaded.
 ;;
 ;; **Performance tip**: Reuse transformer objects! The constructor pre-computes lookup tables
@@ -718,13 +718,13 @@
     :passed? (:passed? result)
     :status (if (:passed? result) "✓ PASS" "✗ FAIL")}))
 
-;; **Result**: All signals pass - FFT is perfectly invertible!
+;; **Result**: All signals pass - FFT is mathematically invertible (within floating-point precision)!
 ;;
 ;; This round-trip property is crucial. It means we can:
 ;; 1. Transform signal → frequency domain
 ;; 2. Manipulate frequencies (filter, compress, analyze)
 ;; 3. Transform back → time domain
-;; 4. Get our original signal back (within numerical precision)
+;; 4. Get our original signal back (within numerical precision, typically ~1e-10 RMSE)
 ;;
 ;; Next, let's use this round-trip capability to build practical tools.
 
@@ -820,7 +820,7 @@
 ;; concentrates in low frequencies. The **Discrete Cosine Transform (DCT)** uses only cosines,
 ;; which for smooth signals concentrates energy even more efficiently than FFT.
 ;;
-;; This is why JPEG compresses images with DCT, not FFT. Let's see why.
+;; This is why classic JPEG (baseline) compresses images with DCT, not FFT. Let's see why.
 
 ;; ### Understanding DCT as Cosine Decomposition
 ;;
@@ -836,8 +836,8 @@
 ;;
 ;; Smooth signals have most energy in low frequencies.
 ;; DCT with cosine-only basis captures this more efficiently than DFT.
-;; Result: [JPEG](https://en.wikipedia.org/wiki/JPEG), [MP3](https://en.wikipedia.org/wiki/MP3),
-;; and modern codecs all use DCT!
+;; Result: [JPEG](https://en.wikipedia.org/wiki/JPEG) (baseline), [MP3](https://en.wikipedia.org/wiki/MP3)
+;; (using Modified DCT), and many modern codecs use DCT or DCT variants!
 
 ;; ### Energy Concentration Example
 
@@ -977,7 +977,7 @@
 
 ;; **What we just learned**: The DCT uses only cosines (instead of FFT's sines + cosines),
 ;; which concentrates energy more efficiently for smooth signals. This makes it ideal for
-;; compression—JPEG and MP3 both exploit this property.
+;; compression—classic JPEG and MP3 (via Modified DCT) both exploit this property.
 ;;
 ;; But both FFT and DCT have a fundamental limitation: they use **global basis functions**
 ;; that span the entire signal. A sine wave at 10 Hz in the FFT basis oscillates across the
@@ -1316,8 +1316,8 @@
 
 ;; ### 2D DCT Basis Functions
 ;;
-;; Understanding how JPEG compression works: visualizing the 8×8 DCT basis images.
-;; Each 8×8 block in JPEG is decomposed into a weighted sum of these 64 basis patterns.
+;; Understanding how baseline JPEG compression works: visualizing the 8×8 DCT basis images.
+;; Each 8×8 block in baseline JPEG is decomposed into a weighted sum of these 64 basis patterns.
 
 ;; 2D DCT-II basis function
 (defn dct-2d-basis
@@ -1356,7 +1356,7 @@
                   :=mark-color :value
                   :=facet-x :freq-u
                   :=facet-y :freq-v
-                  :=title "2D DCT Basis Functions (JPEG uses these!)"
+                  :=title "2D DCT Basis Functions (Baseline JPEG uses these!)"
                   :=width 600
                   :=height 600})
     (plotly/layer-point {:=mark-symbol "square"}))
@@ -1365,8 +1365,8 @@
 ;; - Top-left (0,0) = DC component (constant, average brightness)
 ;; - Moving right → increasing horizontal frequency
 ;; - Moving down → increasing vertical frequency
-;; - JPEG keeps low-frequency basis (top-left) and discards high-frequency (bottom-right)
-;; - This is why JPEG works well for natural images (most energy in low frequencies)
+;; - Baseline JPEG keeps low-frequency basis (top-left) and discards high-frequency (bottom-right)
+;; - This is why JPEG compression works well for natural images (most energy in low frequencies)
 
 ;; ## Part 7: Practical Applications
 
@@ -1701,8 +1701,8 @@
    :speedup "~2-3x vs non-power-of-2"}
 
   {:tip "Use dtype-next"
-   :reason "Vectorized operations, lazy evaluation"
-   :speedup "10-100x vs seq operations"}
+   :reason "Vectorized operations, avoids boxing"
+   :speedup "Often 10-100x vs boxed seq operations"}
 
   {:tip "Avoid boxing"
    :reason "Type hints for primitive arrays"
