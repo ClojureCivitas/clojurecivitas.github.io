@@ -22,6 +22,8 @@
            [com.github.psambit9791.jdsp.transform FastFourier]
            [org.jtransforms.fft DoubleFFT_1D]))
 
+(set! *warn-on-reflection* true)
+
 ;; # Introduction
 ;;
 ;; The [Fast Fourier Transform](https://en.wikipedia.org/wiki/Fast_Fourier_transform) (FFT) is fundamental to signal processing, audio analysis, image compression, and scientific computing. If you're working with frequency analysis in Clojure, you have several Java FFT libraries to choose from.
@@ -84,7 +86,7 @@
 
 ;; We'll create a simple test signal: a combination of two [sine waves](https://en.wikipedia.org/wiki/Sine_wave) at 5 Hz and 12 Hz, [sampled](https://en.wikipedia.org/wiki/Sampling_(signal_processing)) at 100 Hz for 1 second.
 
-; Hz
+                                        ; Hz
 (def sample-rate 100.0)
 ; seconds
 (def duration 1.0)
@@ -156,7 +158,7 @@
 
 (defn fft-apache-commons
   "Compute FFT using Apache Commons Math."
-  [signal]
+  [^doubles signal]
   (let [transformer (FastFourierTransformer. DftNormalization/STANDARD)]
     ; Result is Complex[] array
     (.transform transformer signal TransformType/FORWARD)))
