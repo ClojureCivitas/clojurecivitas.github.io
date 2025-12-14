@@ -93,7 +93,7 @@
 ;;
 ;; Let's begin by learning to generate the signals we'll be transforming!
 
-;; # Part 1: Signal Generation and Visualization
+;; # Signal Generation and Visualization
 
 ;; Before we can analyze frequencies, we need signals to analyze. This section introduces
 ;; signal generation and visualization—the foundation for everything that follows.
@@ -276,7 +276,7 @@
 ;; Next, we'll explore the FFT—but first, we need to understand why its output is complex-valued
 ;; even though our input signals are real numbers.
 
-;; ## Part 1.5: Understanding Complex Transform Outputs
+;; ## Understanding Complex Transform Outputs
 
 ;; Before we dive into the FFT, we need to address a puzzling fact: when we transform a
 ;; real-valued signal (just regular numbers like 1.5, -0.3, 2.7), the FFT returns
@@ -462,7 +462,7 @@
 ;;
 ;; Now that we understand the complex output format, let's put the FFT to work!
 
-;; ## Part 2: DFT and FFT - Discovering Frequencies in Signals
+;; ## DFT and FFT - Discovering Frequencies in Signals
 
 ;; We're finally ready to answer our opening question: how do we write code to discover the
 ;; frequencies in a signal? The answer is the **[Discrete Fourier Transform](https://en.wikipedia.org/wiki/Discrete_Fourier_transform) (DFT)**, computed
@@ -790,7 +790,7 @@
 ;; But the FFT has a weakness: it's not optimal for compression. Let's explore why the Discrete
 ;; Cosine Transform (DCT) outperforms FFT for smooth signals.
 
-;; ## Part 3: DCT - The Compression Transform
+;; ## DCT - The Compression Transform
 
 ;; The FFT is excellent for finding frequencies, but it's not the best choice for compression.
 ;; Here's why: the FFT uses both sines AND cosines (complex output), which means we're storing
@@ -964,7 +964,7 @@
 ;; whole signal—it can't tell us that a frequency appears only briefly. Let's explore wavelets,
 ;; which solve this problem.
 
-;; ## Part 4: Wavelets - Time-Frequency Localization
+;; ## Wavelets - Time-Frequency Localization
 
 ;; Remember our chirp signal—frequency increasing from 5 to 50 Hz over time? The FFT told us
 ;; "this signal contains frequencies between 5 and 50 Hz," but it couldn't tell us WHEN each
@@ -1181,7 +1181,7 @@
 (kind/table
  (map #(update % :wavelet name) wavelet-tests))
 
-;; ## Part 5: Other Transforms - DST and DHT
+;; ## Other Transforms - DST and DHT
 
 ;; ### Discrete Sine Transform (DST)
 
@@ -1236,7 +1236,7 @@
   {:transform "DHT" :use-case "Real-valued convolution" :basis "Hartley" :output "Real" :algorithm "Fast DHT"}
   {:transform "Wavelet" :use-case "Time-frequency, denoising" :basis "Localized" :output "Real" :algorithm "Fast Wavelet"}])
 
-;; ## Part 6: 2D Transforms for Images
+;; ## 2D Transforms for Images
 
 ;; ### Creating a 2D Signal
 
@@ -1351,7 +1351,7 @@
 ;; - Baseline JPEG keeps low-frequency basis (top-left) and discards high-frequency (bottom-right)
 ;; - This is why JPEG compression works well for natural images (most energy in low frequencies)
 
-;; ## Part 7: Practical Applications
+;; ## Practical Applications
 
 ;; Now that we understand the theory behind FFT, DCT, and wavelets, let's see how to apply
 ;; these transforms to solve real-world problems. We'll build practical tools for filtering,
@@ -1454,7 +1454,7 @@
  :magnitude-rmse (format "%.4f" (Math/sqrt (dfn/mean (dfn/sq (dfn/- original compressed-magnitude)))))
  :note "Keeping largest coefficients works better than keeping first N!"}
 
-;; ## Part 8: Testing and Validation Framework
+;; ## Testing and Validation Framework
 
 ;; Transform operations can seem like black boxes. How do we know they're working correctly?
 ;; This section builds a comprehensive testing framework to validate transform properties:
@@ -1566,7 +1566,7 @@
 
 (:all-passed? final-test-results)
 
-;; ## Part 9: Best Practices and Decision Guide
+;; ## Best Practices and Decision Guide
 
 ;; ### dtype-next Best Practices Summary
 
