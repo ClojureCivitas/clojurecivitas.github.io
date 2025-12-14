@@ -22,6 +22,8 @@
            [com.github.psambit9791.jdsp.transform FastFourier]
            [org.jtransforms.fft DoubleFFT_1D]))
 
+^{:kindly/hide-code true
+  :kindly/kind :kind/hidden}
 (set! *warn-on-reflection* true)
 
 ;; # Introduction
@@ -46,8 +48,8 @@
 ;; **Key features:**
 ;; - Part of Apache Commons (widely used, stable, maintained)
 ;; - Supports multiple normalization conventions
-;; - 1D FFT, [Hadamard](https://en.wikipedia.org/wiki/Hadamard_transform), and sine/cosine transforms
-;; - Requires input length to be a [power of 2](https://en.wikipedia.org/wiki/Power_of_two)
+;; - 1D FFT, [DCT](https://en.wikipedia.org/wiki/Discrete_cosine_transform)/[DST](https://en.wikipedia.org/wiki/Discrete_sine_transform), [Hadamard](https://en.wikipedia.org/wiki/Hadamard_transform) transforms
+;; - Requires signal length to be a [power of 2](https://en.wikipedia.org/wiki/Power_of_two)
 ;; - Returns [`Complex[]`](https://commons.apache.org/proper/commons-math/javadocs/api-3.6.1/org/apache/commons/math3/complex/Complex.html) arrays (allocation overhead)
 
 ;; ### JDSP
@@ -121,8 +123,7 @@
                   :=title "Test Signal: 5 Hz + 12 Hz"
                   :=width 700
                   :=height 300})
-    (plotly/layer-line {:=mark-color "steelblue"})
-    plotly/plot)
+    (plotly/layer-line {:=mark-color "steelblue"}))
 
 ;; ## Visualization Helper
 
@@ -149,8 +150,7 @@
                       :=title title
                       :=width 700
                       :=height 300})
-        (plotly/layer-line {:=mark-color color})
-        plotly/plot)))
+        (plotly/layer-line {:=mark-color color}))))
 
 ;; ## FFT Implementation #1: Apache Commons Math
 
@@ -314,8 +314,8 @@
  (map (fn [{:keys [library size mean-ms lower-q-ms upper-q-ms]}]
         {:library library
          :size (if (= size 128) "128 (2^7)" "131K (2^17)")
-         :mean-time (format "%.3f ms" mean-ms)
-         :range (format "%.3f - %.3f ms" lower-q-ms upper-q-ms)})
+         :mean-time (format "%.6f ms" mean-ms)
+         :range (format "%.6f - %.6f ms" lower-q-ms upper-q-ms)})
       library-benchmarks))
 
 ;; ## Exploring Parallelization: An Experiment
@@ -324,18 +324,22 @@
 ;;
 ;; **Disclaimer:** This section documents an exploratory experiment with uncertain conclusions. We're learning as we go, and the results are puzzling!
 
-;; ### How JTransforms Works: Two Algorithms
+;; ### How JTransforms Works: Three Algorithm Plans
 
-;; Looking at the [JTransforms source code](https://github.com/wendykierp/JTransforms/blob/master/src/main/java/org/jtransforms/fft/DoubleFFT_1D.java), we discovered it uses **two different FFT algorithms**:
+;; Looking at the [JTransforms source code](https://github.com/wendykierp/JTransforms/blob/master/src/main/java/org/jtransforms/fft/DoubleFFT_1D.java), we discovered it uses **three different execution plans**:
 ;;
-;; 1. **[Cooley-Tukey FFT](https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm)** - Fast, parallelizable, but requires power-of-2 input sizes
-;; 2. **[Bluestein's algorithm](https://en.wikipedia.org/wiki/Chirp_Z-transform#Bluestein's_algorithm)** (`bluestein_complex` in the code) - Works with any size, likely slower and possibly single-threaded
+;; 1. **SPLIT_RADIX** ([Cooley-Tukey variant](https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm)) - Used for power-of-2 sizes, supports multithreading
+;; 2. **MIXED_RADIX** (Cooley-Tukey variant) - Used for factorable sizes (divisible by 2, 3, 4, 5), primarily sequential
+;; 3. **BLUESTEIN** ([Chirp Z-transform](https://en.wikipedia.org/wiki/Chirp_Z-transform#Bluestein's_algorithm)) - Used for arbitrary sizes with large prime factors, supports 1-4 threads
 ;;
-;; When you provide a power-of-2 size, JTransforms uses Cooley-Tukey (optimal). For other sizes, it automatically falls back to Bluestein.
+;; The plan is automatically selected in the constructor based on signal size:
+;; - Power-of-2 → SPLIT_RADIX (fastest, our benchmarks use this)
+;; - Factorable by small primes → MIXED_RADIX
+;; - Large prime factors (remainder ≥ 211) → BLUESTEIN
 ;;
-;; This explains why our earlier tests with sizes like 100, 127, 1000 worked—they used Bluestein!
+;; This explains why arbitrary sizes like 100, 127, 1000 work—they use MIXED_RADIX or BLUESTEIN!
 ;;
-;; The [JTransforms paper (Wendykier & Grote 2012)](https://www.math.emory.edu/technical-reports/techrep-00127.pdf) discusses the Cooley-Tukey implementation,
+;; The [JTransforms paper (Wendykier & Nagy 2008)](https://www.math.emory.edu/technical-reports/techrep-00127.pdf) discusses these implementations,
 ;; noting that 1D transforms can use at most 2 or 4 threads due to the algorithm's structure.
 
 ;; ### Testing Thread Performance
@@ -383,14 +387,14 @@
     (plotly/base {:=x :threads
                   :=y :mean-ms
                   :=color :size
+                  :=color-type :nominal
                   :=title "FFT Performance vs Thread Count (fastmath/JTransforms)"
                   :=x-title "Number of Threads"
                   :=y-title "Mean Time per FFT (ms)"
                   :=width 800
                   :=height 500})
     (plotly/layer-point {:=mark-size 10})
-    (plotly/layer-line {:=mark-opacity 0.6})
-    plotly/plot)
+    (plotly/layer-line {:=mark-opacity 0.6}))
 
 ;; ### What We Found (Spoiler: It's Confusing!)
 
@@ -459,9 +463,9 @@
 ;; - **Heap**: 15,936 MB max
 ;; - **Clojure**: 1.12.3
 
-;; ## Input Size Requirements
+;; ## Signal Size Requirements
 
-;; Different libraries have different requirements for input signal lengths:
+;; Different libraries have different requirements for signal lengths:
 
 ;; ### Apache Commons Math: Power-of-2 Required
 ;;
@@ -469,17 +473,18 @@
 
 ;; ### JTransforms/fastmath: Flexible (with caveats)
 ;;
-;; Based on our source code investigation (see the threading section above), JTransforms uses **two different algorithms**:
+;; Based on our source code investigation (see the threading section above), JTransforms uses **three execution plans**:
 ;;
-;; 1. **Cooley-Tukey** - Fast, parallelizable, requires power-of-2
-;; 2. **Bluestein's algorithm** - Works with arbitrary lengths
+;; 1. **SPLIT_RADIX** (Cooley-Tukey variant) - Fast, multithreaded, requires power-of-2
+;; 2. **MIXED_RADIX** (Cooley-Tukey variant) - For factorable sizes, primarily sequential
+;; 3. **BLUESTEIN** (Chirp Z-transform) - For arbitrary sizes with large prime factors, supports 1-4 threads
 ;;
-;; When you provide a non-power-of-2 size, JTransforms automatically falls back to Bluestein's algorithm. This means:
+;; When you provide a non-power-of-2 size, JTransforms uses MIXED_RADIX or BLUESTEIN depending on the size's prime factorization. This means:
 ;; - ✅ It works with any size (we tested 100, 127, 1000 successfully)
 ;; - ⚠️ Performance may be slower for non-power-of-2 sizes
-;; - ⚠️ Parallelization may not work with Bluestein (unclear from our experiments)
+;; - ⚠️ MIXED_RADIX is primarily sequential; BLUESTEIN supports limited parallelization
 ;;
-;; **Recommendation:** Use power-of-2 sizes when possible for best performance. If your data doesn't fit, zero-pad to the next power of 2, or use JTransforms/fastmath knowing it will use the Bluestein fallback.
+;; **Recommendation:** Use power-of-2 sizes when possible for best performance (triggers SPLIT_RADIX). If your data doesn't fit, zero-pad to the next power of 2, or use JTransforms/fastmath with the understanding that a different plan will be selected.
 
 ;; ## Related Functionality
 
@@ -487,7 +492,7 @@
 
 ;; ### Apache Commons Math
 ;; - [Inverse FFT](https://en.wikipedia.org/wiki/Fast_Fourier_transform#Inverse_FFT)
-;; - Sine/Cosine transforms
+;; - [DCT](https://en.wikipedia.org/wiki/Discrete_cosine_transform)/[DST](https://en.wikipedia.org/wiki/Discrete_sine_transform)
 ;; - [Hadamard transform](https://en.wikipedia.org/wiki/Hadamard_transform)
 ;; - [Complex number](https://en.wikipedia.org/wiki/Complex_number) arithmetic
 ;; - Statistical analysis, [linear algebra](https://en.wikipedia.org/wiki/Linear_algebra), [optimization](https://en.wikipedia.org/wiki/Mathematical_optimization)
