@@ -34,33 +34,49 @@
 }
 "])
 
-;; # Introduction
+;; # Introduction: Why Learn Signal Transforms?
 
-;; Signal transforms are fundamental to modern computing. Every JPEG image you view
-;; uses the Discrete Cosine Transform for compression. MP3 audio files rely on the
-;; same mathematics. Speech recognition, radar systems, medical imaging—all depend
-;; on transforming signals between time and frequency domains.
+;; Imagine you're listening to a musical note. You can hear it's an A (440 Hz), but how would
+;; you write code to discover that frequency? Or suppose you have 10 seconds of audio—how do
+;; you automatically remove a 60 Hz electrical hum without affecting the music?
 ;;
-;; At their core, transforms answer a simple question: **can we express this signal
-;; as a weighted sum of simpler basis functions?** The Fourier transform uses sines
-;; and cosines. Wavelets use localized, scaled functions. Each transform gives us a
-;; different lens for understanding and manipulating data.
+;; These questions lead us to **signal transforms**—mathematical tools that reveal hidden structure
+;; in data. Every JPEG image you view uses the Discrete Cosine Transform for compression. MP3
+;; audio files rely on the same mathematics. Speech recognition, radar systems, medical imaging—all
+;; depend on transforming signals between different representations.
+;;
+;; At their core, transforms answer a simple question: **can we express this signal as a weighted
+;; sum of simpler basis functions?** The Fourier transform uses sines and cosines. Wavelets use
+;; localized, scaled functions. Each transform gives us a different lens for understanding and
+;; manipulating data.
+
+;; ## Why These Tools for Transforms?
+
+;; Signal transforms are perfect for learning [dtype-next](https://github.com/cnuernber/dtype-next)
+;; because they provide **typed numerical arrays with immediate visual feedback**. Unlike generic
+;; sequences where numbers are boxed, dtype-next gives us:
+;;
+;; - **Efficient storage**: A 1000-sample signal is 8KB of float64 values, not 40KB+ of boxed objects
+;; - **Functional operations**: Element-wise transformations that compose naturally
+;; - **Zero-copy slicing**: Extract frequency bands without allocating new arrays
+;; - **Direct Java interop**: Pass arrays to JTransforms without conversion overhead
+;;
+;; We'll use [JTransforms](https://github.com/wendykierp/JTransforms) for the actual
+;; computation (fast, battle-tested, pure Java), wrapped in [fastmath](https://generateme.github.io/fastmath/)
+;; for a clean Clojure API, with dtype-next providing efficient array operations.
 
 ;; ## What You'll Learn
 
-;; This tutorial combines theory with practice, building from foundations to real
-;; applications:
+;; This tutorial combines theory with practice, building from foundations to real applications:
 ;;
-;; - **dtype-next foundations** — Efficient array operations without boxing overhead
-;; - **Signal generation** — Creating test signals with fastmath
+;; - **Signal generation** — Creating test signals with different characteristics
 ;; - **Core transforms** — DFT (via FFT), DCT, wavelets, and specialized variants
 ;; - **Practical applications** — Filtering, compression, denoising, spectral analysis
+;; - **dtype-next patterns** — Efficient array operations throughout
 ;; - **Validation** — Test-driven development ensuring correctness
 ;;
-;; We'll use [JTransforms](https://github.com/wendykierp/JTransforms) for the actual
-;; computation, wrapped in [fastmath](https://generateme.github.io/fastmath/) for a
-;; clean Clojure API, with [dtype-next](https://github.com/cnuernber/dtype-next) providing
-;; efficient array operations.
+;; Each section demonstrates transforms through runnable code with visual feedback, making
+;; abstract mathematics concrete and verifiable.
 
 ;; ## Prerequisites
 
@@ -73,104 +89,40 @@
 ;; No digital signal processing background required—we'll build intuition through
 ;; visualization and concrete examples.
 
-;; ## Structure
+;; ## Tutorial Structure
 
-;; The tutorial follows a progressive path:
+;; We'll progress from simple signal generation to advanced multi-dimensional transforms:
 ;;
-;; 1. **Foundation** — dtype-next array operations
-;; 2. **Signals** — Generation and visualization
-;; 3. **Complex numbers** — Why transforms output complex values
-;; 4. **DFT/FFT** — Frequency analysis
-;; 5. **DCT** — Compression (JPEG, MP3)
-;; 6. **Wavelets** — Time-frequency analysis
-;; 7. **Other transforms** — DST, DHT, 2D variants
-;; 8. **Applications** — Practical tools and pipelines
-;; 9. **Testing** — Validation framework
-;; 10. **Best practices** — Decision guides and patterns
+;; 1. **Signal Generation** — Creating test signals with known properties
+;; 2. **DFT/FFT** — Discovering frequencies in signals
+;; 3. **DCT** — Compression-optimized transform (JPEG, MP3)
+;; 4. **Wavelets** — Time-frequency localization and denoising
+;; 5. **Specialized Transforms** — DST, DHT, and 2D variants
+;; 6. **Applications** — Practical filtering, compression, and analysis tools
+;; 7. **Testing Framework** — Validation strategies for numerical code
+;; 8. **Best Practices** — Choosing the right transform for your problem
 ;;
-;; Each section builds on previous concepts, with runnable code throughout.
-;; Let's begin!
-
-;; # Part 0: Foundation - dtype-next for Arrays
-
-;; ### Introduction to dtype-next
+;; Throughout, we'll introduce dtype-next operations as needed—you'll learn efficient array
+;; manipulation in the context of solving real transform problems rather than as abstract
+;; prerequisites. Each section includes visualizations and round-trip tests to verify correctness.
 ;;
-;; [dtype-next](https://github.com/cnuernber/dtype-next) is the foundation of Clojure's 
-;; numerical computing ecosystem. For background on its design and capabilities, see 
-;; [dtype-next: The Forgotten Array Programming Library](https://scientificclojure.github.io/blog/clojure-data-scitutorials-ds-002-dtype-next/).
+;; Let's begin by learning to generate the signals we'll be transforming!
+
+;; # Part 1: Signal Generation and Visualization
+
+;; Before we can analyze frequencies, we need signals to analyze. This section introduces
+;; signal generation and visualization—the foundation for everything that follows.
 ;;
-;; dtype-next provides [NumPy](https://en.wikipedia.org/wiki/NumPy)-like operations over 
-;; typed arrays, with functional composition and lazy evaluation. Operations are 
-;; [vectorized](https://en.wikipedia.org/wiki/Array_programming) to leverage 
-;; [SIMD](https://en.wikipedia.org/wiki/SIMD) instructions and avoid 
-;; [boxing](https://en.wikipedia.org/wiki/Object_type_(object-oriented_programming)#Boxing) 
-;; overhead. Arrays can be passed directly to Java libraries like JTransforms without copying.
+;; We'll also meet **dtype-next**, Clojure's efficient array programming library. Rather than
+;; learning it abstractly, we'll discover dtype-next operations as we need them for generating
+;; and manipulating signals.
 
-;; We'll use three core namespaces throughout this tutorial:
+;; ## Introduction to fastmath.signal and dtype-next
 
+(require '[fastmath.signal :as sig])
 (require '[tech.v3.datatype :as dtype])
 (require '[tech.v3.datatype.functional :as dfn])
 (require '[tech.v3.datatype.argops :as argops])
-
-;; Let's see dtype-next in action with a few examples:
-
-(def nums (range 10))
-
-;; Element-wise addition:
-(dfn/+ nums 100)
-
-;; Compute sum:
-(dfn/sum nums)
-
-;; Find index of maximum value:
-(argops/argmax nums)
-
-;; ### Core Operations
-
-;; The main operations we'll use are element-wise math, reductions, and array access. 
-;; Here's a signal we can work with:
-
-(def signal (range 100))
-
-;; Element-wise operations let us scale, combine, and transform arrays:
-
-(dfn/* 2.0 signal)
-(dfn/+ signal (dfn/* 2.0 signal))
-(dfn/sq signal)
-
-;; Reductions aggregate array values into scalars:
-
-(dfn/sum signal)
-(dfn/mean signal)
-(dfn/standard-deviation signal)
-(dfn/reduce-max signal)
-(dfn/reduce-min signal)
-
-;; We can also access array structure and extract slices:
-
-(dtype/ecount signal)
-(dtype/get-value signal 5)
-(dtype/sub-buffer signal 10 20)
-
-;; The most powerful operation is `dtype/emap`, which applies functions to arrays. 
-;; We'll use this extensively for filtering and transforming frequency domain data:
-
-(dtype/emap (fn [x] (* x 2)) :float64 signal)
-
-;; With these operations, we can express complex computations concisely. For example, 
-;; computing root mean square error between two signals:
-
-(defn rmse [signal1 signal2]
-  (Math/sqrt (dfn/mean (dfn/sq (dfn/- signal1 signal2)))))
-
-;; ## Part 1: Signal Generation and Visualization
-
-;; Before we dive into transforms, we need signals to transform. This section introduces
-;; signal generation and visualization tools we'll use throughout the tutorial.
-
-;; ### Introduction to fastmath.signal
-
-(require '[fastmath.signal :as sig])
 
 ;; The fastmath.signal library provides signal generation through oscillators.
 ;; An oscillator is simply a function mapping time to amplitude: time → amplitude.
@@ -233,11 +185,28 @@
 (def composite-signal
   (sig/oscillator->signal composite-osc sample-rate duration))
 
-;; ### Teaching Signals
+;; ### Teaching Signals: Designed for Transform Comparison
 
-;; Canonical signals for comparing transforms:
+;; Now let's create a suite of test signals, each designed to highlight different transform strengths.
+;; These aren't arbitrary—each signal has specific characteristics that make certain transforms
+;; more effective than others.
+;;
+;; **Why multiple test signals?** Different transforms excel at different tasks:
+;; - **Pure tones** → FFT easily finds exact frequencies
+;; - **Smooth signals** → DCT concentrates energy efficiently (good for compression)
+;; - **Localized events** → Wavelets capture time-localized features
+;;
+;; By testing each transform on all signals, we'll build intuition for when to use which tool.
+
 (defn teaching-signals
-  "Standard test signals with known properties."
+  "Standard test signals with known properties.
+  
+  Each signal is designed to test different transform characteristics:
+  - :pure-sine - Single frequency (FFT baseline)
+  - :two-tones - Multiple frequencies (tests superposition)
+  - :smooth - Low frequency content (DCT compression test)
+  - :chirp - Time-varying frequency (wavelet localization test)
+  - :impulse - Sharp transient (wavelet vs FFT comparison)"
   []
   {:pure-sine
    {:signal (sig/oscillator->signal
@@ -285,12 +254,21 @@
 
 ;; ### Signal Visualization with dtype-next
 
+;; Now we'll visualize signals using dtype-next for data preparation and Tableplot for rendering.
+;; This is where dtype-next shines: we can efficiently extract slices and perform element-wise
+;; division to compute time values.
+
 (defn visualize-signal
-  "Plot signal using dtype-next for data preparation."
+  "Plot signal using dtype-next for data preparation.
+  
+  dtype-next operations used:
+  - dtype/ecount: Get array length
+  - dtype/sub-buffer: Zero-copy slice extraction
+  - dfn//: Element-wise division for time computation"
   [signal title]
   (let [display-n (min 200 (dtype/ecount signal))
-        time-vals (dfn// (range display-n) sample-rate)
-        amp-vals (dtype/sub-buffer signal 0 display-n)
+        time-vals (dfn// (range display-n) sample-rate) ; Element-wise division
+        amp-vals (dtype/sub-buffer signal 0 display-n) ; Zero-copy slice
 
         dataset (tc/dataset {:time time-vals
                              :amplitude amp-vals})]
@@ -307,34 +285,56 @@
 
 (visualize-signal (:signal (:two-tones signals)) "Two Tones: 10 Hz + 25 Hz")
 
-;; ## Part 1.5: Complex Numbers and Transform Mathematics
+;; **What we just learned**: Signal generation with fastmath oscillators and basic dtype-next
+;; operations (element-wise math, slicing, counting). We now have test signals that will help
+;; us compare different transforms.
+;;
+;; Next, we'll explore the FFT—but first, we need to understand why its output is complex-valued
+;; even though our input signals are real numbers.
 
-;; ### Why Complex Numbers for Real Signals?
-;;
-;; Real-valued signals (audio, temperature, stock prices) can be perfectly represented
-;; using complex-valued mathematics. This isn't just mathematical elegance - it's computational necessity.
-;;
-;; **Key Insight**: A [complex number](https://en.wikipedia.org/wiki/Complex_number) 
-;; packages together **two real numbers** - exactly what we need to represent 
-;; sine and cosine components at each frequency.
+;; ## Part 1.5: Understanding Complex Transform Outputs
 
-;; ### Euler's Formula: The Foundation
+;; Before we dive into the FFT, we need to address a puzzling fact: when we transform a
+;; real-valued signal (just regular numbers like 1.5, -0.3, 2.7), the FFT returns
+;; **complex numbers** (numbers with "real" and "imaginary" parts).
 ;;
-;; [Euler's formula](https://en.wikipedia.org/wiki/Euler%27s_formula) connects 
-;; complex exponentials to trigonometric functions:
-;;
-;; e^(iθ) = cos(θ) + i·sin(θ)
-;;
-;; Where:
-;; - Real part = cos(θ)
-;; - Imaginary part = sin(θ)
-;; - i = √(-1)
-;;
-;; This means a spinning complex exponential e^(2πift) traces a circle, with:
-;; - Horizontal (real) projection = cosine wave
-;; - Vertical (imaginary) projection = sine wave
+;; Why would a transform of real data produce complex output? This seems unnecessarily
+;; complicated. Let's build intuition for why complex numbers are not just mathematical
+;; elegance—they're computational necessity.
 
-;; ### Concrete Example: Visualizing Euler's Formula
+;; ### The Problem: Sines and Cosines Are Both Needed
+
+;; Here's the core issue. Suppose we want to decompose a signal into pure frequency components.
+;; Should we use sines or cosines as our basis functions?
+;;
+;; - If we use only **cosines**: We can represent cosine-like signals perfectly, but sine-like
+;;   signals require infinite cosine terms
+;; - If we use only **sines**: We can represent sine-like signals perfectly, but cosine-like
+;;   signals require infinite sine terms
+;;
+;; **Solution**: Use BOTH sines and cosines. For each frequency, we need two numbers:
+;; 1. How much of the cosine wave at that frequency
+;; 2. How much of the sine wave at that frequency
+;;
+;; A [complex number](https://en.wikipedia.org/wiki/Complex_number) packages these two values together:
+;; - **Real part** = cosine amplitude
+;; - **Imaginary part** = sine amplitude
+;;
+;; This isn't arbitrary—it's the most compact way to store both components.
+
+;; ### Euler's Formula: The Mathematical Foundation
+;;
+;; The mathematical underpinning is [Euler's formula](https://en.wikipedia.org/wiki/Euler%27s_formula),
+;; which connects complex exponentials to sine and cosine:
+;;
+;; **e^(iθ) = cos(θ) + i·sin(θ)**
+;;
+;; Where i = √(-1) is the imaginary unit. This beautiful equation tells us that a rotating
+;; complex number naturally encodes both sine and cosine components.
+;;
+;; Let's visualize this to make it concrete.
+
+;; ### Visualizing Sine and Cosine Together
 
 (def theta-points (dfn// (dfn/* 2.0 Math/PI (range 100)) 100.0))
 
@@ -365,19 +365,13 @@
                         :=mark-color "orange"
                         :=name "sin(θ) - Imaginary Part"}))
 
-;; ### Why Sine + Cosine Basis = Complex Output
-;;
-;; When we decompose a real signal into frequency components, we need BOTH:
-;; - **Cosine amplitude** (even component) 
-;; - **Sine amplitude** (odd component)
-;;
-;; These two values naturally form a complex number:
-;;
-;; Spectrum[f] = (cosine amplitude at f) + i·(sine amplitude at f)
-;;
-;; This is why FFT output is complex even though the input is real!
+;; As the angle θ increases from 0 to 2π (one full rotation), cosine and sine trace out
+;; their familiar wave shapes. The key insight: **we need both functions to completely
+;; describe a sinusoid at any phase**.
 
-;; ### Concrete Example: Real Signal → Complex Spectrum
+;; ### Concrete Example: Pure Cosine vs Pure Sine Signals
+
+;; Let's demonstrate why we need complex output by transforming pure cosine and pure sine signals.
 
 ;; Create a simple 5 Hz cosine wave
 (def pure-cosine-time (dfn// (range 100) 100.0))
@@ -412,17 +406,25 @@
 ;; Pure sine = all energy in IMAGINARY part (sine basis function)
 ;; Real part ≈ 0 (no cosine component needed)
 
-;; ### Phase: The Relationship Between Sine and Cosine
+;; **Key Takeaway**: 
+;; - Pure **cosine** signal → FFT has large **real part**, near-zero imaginary part
+;; - Pure **sine** signal → FFT has near-zero real part, large **imaginary part**
+;; - General signal → FFT has **both parts**, encoding the phase relationship
 ;;
-;; Any sinusoid can be written as either:
-;; - A·cos(2πft + φ)  ← amplitude + phase form
-;; - a·cos(2πft) + b·sin(2πft)  ← cosine + sine form
+;; This is why FFT output is complex even though input is real!
+
+;; ### Phase: Encoding the Sine/Cosine Balance
 ;;
-;; The complex number (a + ib) encodes both:
-;; - Magnitude: √(a² + b²) = amplitude A
-;; - [Phase](https://en.wikipedia.org/wiki/Phase_(waves)): arctan(b/a) = phase φ
+;; Any sinusoid can be written two ways:
+;; 1. **Amplitude + phase**: A·cos(2πft + φ)
+;; 2. **Cosine + sine**: a·cos(2πft) + b·sin(2πft)
 ;;
-;; This is why we compute magnitude as √(real² + imag²)
+;; The complex number (a + ib) from the FFT encodes both representations:
+;; - **Magnitude**: √(a² + b²) = amplitude A
+;; - **[Phase](https://en.wikipedia.org/wiki/Phase_(waves))**: arctan(b/a) = phase φ
+;;
+;; This is why we compute magnitude as √(real² + imag²)—we're combining the cosine and sine
+;; contributions to find the total amplitude at each frequency.
 
 ;; ### Visualization: Complex Plane Representation
 
@@ -466,51 +468,60 @@
 (complex-plane-viz :sine)
 (complex-plane-viz :mixed)
 
-;; **Key Takeaway**: The FFT doesn't create complex numbers arbitrarily -
-;; it's measuring "how much cosine" (real part) and "how much sine" (imaginary part)
-;; is needed at each frequency to reconstruct your signal.
+;; **What we just learned**: Complex FFT outputs aren't mysterious—they're the natural way to
+;; encode both sine and cosine components at each frequency. The real part tells us "how much
+;; cosine," the imaginary part tells us "how much sine."
+;;
+;; Now that we understand the complex output format, let's put the FFT to work!
 
-;; ## Part 2: DFT and FFT - Frequency Analysis
+;; ## Part 2: DFT and FFT - Discovering Frequencies in Signals
 
-;; Now that we understand why DFT outputs are complex, let's explore the Discrete Fourier
-;; Transform and its efficient implementation via the Fast Fourier Transform algorithm.
+;; We're finally ready to answer our opening question: how do we write code to discover the
+;; frequencies in a signal? The answer is the **Discrete Fourier Transform (DFT)**, computed
+;; efficiently via the **Fast Fourier Transform (FFT)** algorithm.
 ;;
 ;; **Terminology Note**:
 ;; - **DFT (Discrete Fourier Transform)** = the mathematical transform
-;; - **FFT (Fast Fourier Transform)** = the Cooley-Tukey algorithm for computing DFT efficiently
+;; - **FFT (Fast Fourier Transform)** = the Cooley-Tukey algorithm for computing DFT efficiently (O(n log n) instead of O(n²))
 ;;
-;; In practice, "FFT" is often used colloquially to mean both the transform and the algorithm,
-;; since the naive DFT is almost never used (O(n²) vs FFT's O(n log n)). We'll be technically
-;; precise here: "DFT" for the transform concept, "FFT" for the algorithm. But don't be surprised
-;; if you see papers and codebases using "FFT" for both!
+;; In practice, "FFT" is often used colloquially to mean both the transform and the algorithm.
+;; We'll be technically precise here, but don't be surprised if you see papers and codebases
+;; using "FFT" for both!
 
 ;; ### Introduction to fastmath.transform
 
 (require '[fastmath.transform :as t])
 
-;; The fastmath.transform library provides a unified API for all signal transforms:
-;; DFT (via FFT algorithm), DCT, DST, DHT, and wavelets. The pattern is consistent
-;; across all transforms, making it easy to experiment with different approaches.
+;; The fastmath.transform library provides a unified API for all signal transforms.
+;; The pattern is consistent across transforms, making it easy to experiment:
 
-;; Create transformer: (t/transformer method type)
+;; **Step 1**: Create a transformer (specifies input type and transform algorithm)
 (def fft (t/transformer :real :fft))
+;; :real means input is real-valued (not complex)
+;; :fft specifies the algorithm
 
-;; Forward transform: signal → spectrum
+;; **Step 2**: Forward transform (signal → spectrum)
 (t/forward-1d fft (range 16))
 
-;; Reverse transform: spectrum → signal
+;; **Step 3**: Reverse transform (spectrum → signal) 
 ;; (t/reverse-1d fft spectrum)
+;;
+;; This same pattern works for DCT, DST, DHT, and wavelets—just change the transform type!
 
-;; ### Understanding the DFT as Linear Decomposition
+;; ### Understanding the DFT: Signal Decomposition
 ;;
-;; **Core Concept**: The [Discrete Fourier Transform (DFT)](https://en.wikipedia.org/wiki/Discrete_Fourier_transform)
-;; expresses a signal as a weighted sum of sine and cosine waves.
+;; The [Discrete Fourier Transform (DFT)](https://en.wikipedia.org/wiki/Discrete_Fourier_transform)
+;; answers the question: "What frequencies are in this signal, and how strong is each one?"
 ;;
-;; Signal = a₁·sin(2π·f₁·t) + a₂·sin(2π·f₂·t) + ...
+;; Mathematically, it expresses any signal as a weighted sum of sine and cosine waves:
 ;;
-;; The DFT finds the weights (amplitudes) for each frequency. We compute it using the
+;; **Signal = a₁·cos(2π·f₁·t) + b₁·sin(2π·f₁·t) + a₂·cos(2π·f₂·t) + b₂·sin(2π·f₂·t) + ...**
+;;
+;; The DFT finds the weights (amplitudes) a₁, b₁, a₂, b₂, etc. We compute it using the
 ;; [Fast Fourier Transform (FFT)](https://en.wikipedia.org/wiki/Fast_Fourier_transform)
 ;; algorithm, which reduces complexity from O(n²) to O(n log n).
+;;
+;; Let's see this in action by building a signal from known frequencies, then recovering them.
 
 ;; ### Concrete Example: Build and Decompose
 
@@ -587,8 +598,14 @@
 ;; **Key Insight**: This is linear decomposition in action!
 ;; We built: signal = 1.0×sin(2π·10·t) + 0.5×sin(2π·25·t)
 ;; FFT found: peaks at 10 Hz (mag ≈ 1.0) and 25 Hz (mag ≈ 0.5)
+;;
+;; The FFT perfectly recovered the frequencies we put in. This is the power of the
+;; Fourier Transform—it reveals the hidden frequency structure of any signal.
 
-;; ### Finding Dominant Frequency
+;; ### Practical Function: Finding Dominant Frequency
+
+;; Now let's package this into a reusable function. This is the kind of utility you'd use
+;; in real applications: "What's the main frequency in this signal?"
 
 (defn find-dominant-frequency
   "Extract strongest frequency using FFT and dtype-next."
@@ -672,6 +689,14 @@
     :status (if (:passed? result) "✓ PASS" "✗ FAIL")}))
 
 ;; **Result**: All signals pass - FFT is perfectly invertible!
+;;
+;; This round-trip property is crucial. It means we can:
+;; 1. Transform signal → frequency domain
+;; 2. Manipulate frequencies (filter, compress, analyze)
+;; 3. Transform back → time domain
+;; 4. Get our original signal back (within numerical precision)
+;;
+;; Next, let's use this round-trip capability to build practical tools.
 
 ;; ### Practical Application: Notch Filter
 
@@ -743,13 +768,29 @@
 
 ;; **Key Observation**: The spectrogram reveals the frequency sweep!
 ;; Brighter colors = higher magnitude. We can see frequency increasing linearly over time.
-;; This is what wavelets do naturally - they provide time-frequency localization.
+;;
+;; **Limitation of FFT**: It tells us WHAT frequencies exist, but loses information about WHEN
+;; they occur. For signals with time-varying content, we need different tools—wavelets provide
+;; this naturally, as we'll see later.
+;;
+;; **What we just learned**: The FFT decomposes signals into frequency components, enabling
+;; frequency analysis, filtering, and spectral visualization. Its invertibility makes it perfect
+;; for round-trip transformations.
+;;
+;; But the FFT has a weakness: it's not optimal for compression. Let's explore why the Discrete
+;; Cosine Transform (DCT) outperforms FFT for smooth signals.
 
-;; ## Part 3: DCT - Compression Transform
+;; ## Part 3: DCT - The Compression Transform
 
-;; While the DFT is excellent for frequency analysis, it's not optimal for compression.
-;; For smooth signals like audio and images, the Discrete Cosine Transform (DCT)
-;; concentrates energy more efficiently. This is why JPEG and MP3 use DCT instead of DFT.
+;; The FFT is excellent for finding frequencies, but it's not the best choice for compression.
+;; Here's why: the FFT uses both sines AND cosines (complex output), which means we're storing
+;; twice as much information as we might need.
+;;
+;; For smooth signals—like natural images, audio, or our "smooth" teaching signal—most energy
+;; concentrates in low frequencies. The **Discrete Cosine Transform (DCT)** uses only cosines,
+;; which for smooth signals concentrates energy even more efficiently than FFT.
+;;
+;; This is why JPEG compresses images with DCT, not FFT. Let's see why.
 
 ;; ### Understanding DCT as Cosine Decomposition
 ;;
@@ -904,12 +945,24 @@
 ;; For smooth signals, keeping 10% of DCT coefficients should retain significantly more energy than FFT
 (test-dct-energy-concentration original-smooth 0.1 0.5)
 
-;; ## Part 4: Wavelets - Time-Frequency Analysis
+;; **What we just learned**: The DCT uses only cosines (instead of FFT's sines + cosines),
+;; which concentrates energy more efficiently for smooth signals. This makes it ideal for
+;; compression—JPEG and MP3 both exploit this property.
+;;
+;; But both FFT and DCT have a fundamental limitation: they use **global basis functions**
+;; that span the entire signal. A sine wave at 10 Hz in the FFT basis oscillates across the
+;; whole signal—it can't tell us that a frequency appears only briefly. Let's explore wavelets,
+;; which solve this problem.
 
-;; We've seen that FFT and DCT use global basis functions (sine and cosine waves that span
-;; the entire signal). While spectrograms can show time-varying frequencies by windowing,
-;; wavelets provide a more principled approach to time-frequency analysis through
-;; inherently localized basis functions.
+;; ## Part 4: Wavelets - Time-Frequency Localization
+
+;; Remember our chirp signal—frequency increasing from 5 to 50 Hz over time? The FFT told us
+;; "this signal contains frequencies between 5 and 50 Hz," but it couldn't tell us WHEN each
+;; frequency occurred. The spectrogram helped by windowing, but that was a workaround.
+;;
+;; **Wavelets** provide time-frequency localization naturally by using basis functions that are
+;; inherently localized in time. Instead of global sine waves, wavelets use small, localized
+;; "wavelets" (hence the name!) that can detect features at specific times AND specific frequencies.
 
 ;; ### Understanding Wavelets as Localized Decomposition
 ;;
