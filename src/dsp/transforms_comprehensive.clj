@@ -36,75 +36,60 @@
 
 ;; # Introduction: Why Learn Signal Transforms?
 
-;; Imagine you're listening to a musical note. You can hear it's an A (440 Hz), but how would
+;; Imagine you're listening to a musical note. You can hear it's an [A](https://en.wikipedia.org/wiki/A_(musical_note)) ([440 Hz](https://en.wikipedia.org/wiki/Hertz)), but how would
 ;; you write code to discover that frequency? Or suppose you have 10 seconds of audio—how do
 ;; you automatically remove a 60 Hz electrical hum without affecting the music?
 ;;
 ;; These questions lead us to **signal transforms**—mathematical tools that reveal hidden structure
-;; in data. Classic JPEG images use the Discrete Cosine Transform for compression. MP3 audio uses
-;; a variant called the Modified DCT. Speech recognition, radar systems, medical imaging—all depend
+;; in data. Classic [JPEG](https://en.wikipedia.org/wiki/JPEG) images use the [Discrete Cosine Transform](https://en.wikipedia.org/wiki/Discrete_cosine_transform) for [compression](https://en.wikipedia.org/wiki/Data_compression). [MP3](https://en.wikipedia.org/wiki/MP3) audio uses
+;; a variant called the [Modified DCT](https://en.wikipedia.org/wiki/Modified_discrete_cosine_transform). Speech recognition, radar systems, medical imaging—all depend
 ;; on transforming signals between different representations.
 ;;
 ;; At their core, transforms answer a simple question: **can we express this signal as a weighted
-;; sum of simpler basis functions?** The Fourier transform uses sines and cosines. Wavelets use
+;; sum of simpler [basis functions](https://en.wikipedia.org/wiki/Basis_function)?** The [Fourier transform](https://en.wikipedia.org/wiki/Fourier_transform) uses sines and cosines. [Wavelets](https://en.wikipedia.org/wiki/Wavelet) use
 ;; localized, scaled functions. Each transform gives us a different lens for understanding and
 ;; manipulating data.
 
-;; ## Why These Tools for Transforms?
+;; ## What Tools We'll Use
 
-;; Signal transforms are perfect for learning [dtype-next](https://github.com/cnuernber/dtype-next)
-;; because they provide **typed numerical arrays with immediate visual feedback**. Unlike generic
-;; sequences where numbers are boxed, dtype-next gives us:
+;; We'll use [JTransforms](https://github.com/wendykierp/JTransforms)—a fast, battle-tested, pure Java library—for
+;; computing the actual transforms (FFT, DCT, wavelets, etc.). It's wrapped in [fastmath](https://generateme.github.io/fastmath/),
+;; which provides a clean, idiomatic Clojure API for signal processing.
 ;;
-;; - **Efficient storage**: A 1000-sample signal is 8KB of float64 values, not 40KB+ of boxed objects
-;; - **Functional operations**: Element-wise transformations that compose naturally
-;; - **Zero-copy slicing**: Extract frequency bands without allocating new arrays
-;; - **Direct Java interop**: Pass arrays to JTransforms without conversion overhead
-;;
-;; We'll use [JTransforms](https://github.com/wendykierp/JTransforms) for the actual
-;; computation (fast, battle-tested, pure Java), wrapped in [fastmath](https://generateme.github.io/fastmath/)
-;; for a clean Clojure API, with dtype-next providing efficient array operations.
+;; For array operations on signals, we'll use [dtype-next](https://github.com/cnuernber/dtype-next), which provides
+;; efficient typed arrays and functional operations like `dfn/+`, `dfn/*`, and `dfn/sq`. This gives us the speed
+;; of Java libraries with the expressiveness of Clojure's functional style.
 
 ;; ## What You'll Learn
 
-;; This tutorial combines theory with practice, building from foundations to real applications:
-;;
-;; - **Signal generation** — Creating test signals with different characteristics
-;; - **Core transforms** — DFT (via FFT), DCT, wavelets, and specialized variants
-;; - **Practical applications** — Filtering, compression, denoising, spectral analysis
-;; - **dtype-next patterns** — Efficient array operations throughout
-;; - **Validation** — Test-driven development ensuring correctness
-;;
-;; Each section demonstrates transforms through runnable code with visual feedback, making
-;; abstract mathematics concrete and verifiable.
+;; This tutorial combines theory with practice, building from foundations to real applications.
+;; We'll start with **signal generation**, creating test signals with different characteristics.
+;; Then we'll explore the **core transforms**—DFT (via FFT), DCT, and wavelets—along with
+;; specialized variants. You'll see **practical applications** like filtering, compression, and
+;; denoising, with efficient **dtype-next** array operations throughout. Each section demonstrates
+;; transforms through runnable code with visual feedback, and we'll use **test-driven validation**
+;; to ensure correctness, making abstract mathematics concrete and verifiable.
 
 ;; ## Prerequisites
 
-;; You should be comfortable with:
-;;
-;; - Basic Clojure (functions, maps, sequences)
-;; - High school mathematics (sine, cosine, basic algebra)
-;; - The concept of frequency (higher pitch = higher frequency)
-;;
-;; No digital signal processing background required—we'll build intuition through
-;; visualization and concrete examples.
+;; You should be comfortable with basic Clojure (functions, maps, sequences) and high school
+;; mathematics (sine, cosine, basic algebra). Understanding that higher pitch means higher
+;; **frequency** is helpful. No digital signal processing background required—we'll build
+;; intuition through visualization and concrete examples.
 
 ;; ## Tutorial Structure
 
-;; We'll progress from simple signal generation to advanced multi-dimensional transforms:
+;; We'll progress from simple signal generation to advanced multi-dimensional transforms. We start
+;; with **signal generation**, creating test signals with known properties. Then we explore the
+;; **DFT/FFT** for discovering frequencies, the **DCT** for compression (used in JPEG and MP3),
+;; and **wavelets** for time-frequency localization and denoising. We'll also cover **specialized
+;; transforms** like DST, DHT, and 2D variants.
 ;;
-;; 1. **Signal Generation** — Creating test signals with known properties
-;; 2. **DFT/FFT** — Discovering frequencies in signals
-;; 3. **DCT** — Compression-optimized transform (JPEG, MP3)
-;; 4. **Wavelets** — Time-frequency localization and denoising
-;; 5. **Specialized Transforms** — DST, DHT, and 2D variants
-;; 6. **Applications** — Practical filtering, compression, and analysis tools
-;; 7. **Testing Framework** — Validation strategies for numerical code
-;; 8. **Best Practices** — Choosing the right transform for your problem
-;;
-;; Throughout, we'll introduce dtype-next operations as needed—you'll learn efficient array
-;; manipulation in the context of solving real transform problems rather than as abstract
-;; prerequisites. Each section includes visualizations and round-trip tests to verify correctness.
+;; The later sections focus on **practical applications**—filtering, compression, and analysis
+;; tools—followed by a **testing framework** for validation and **best practices** for choosing
+;; the right transform. Throughout, we'll introduce dtype-next operations as needed, learning
+;; efficient array manipulation in the context of solving real problems. Each section includes
+;; visualizations and round-trip tests to verify correctness.
 ;;
 ;; Let's begin by learning to generate the signals we'll be transforming!
 
@@ -124,19 +109,19 @@
 (require '[tech.v3.datatype.functional :as dfn])
 (require '[tech.v3.datatype.argops :as argops])
 
-;; The fastmath.signal library provides signal generation through oscillators.
-;; An oscillator is simply a function mapping time to amplitude: time → amplitude.
+;; The fastmath.signal library provides signal generation through [oscillators](https://en.wikipedia.org/wiki/Signal_generator).
+;; An oscillator is simply a function mapping time to [amplitude](https://en.wikipedia.org/wiki/Amplitude): time → amplitude.
 ;; This functional approach makes it easy to compose complex signals from simple components.
 
 ;; Create a 440 Hz sine wave oscillator
 (def osc-440 (sig/oscillator :sin 440.0 1.0 0.0))
-;; Parameters: type, frequency, amplitude, phase
+;; Parameters: type, [frequency](https://en.wikipedia.org/wiki/Frequency), amplitude, [phase](https://en.wikipedia.org/wiki/Phase_(waves))
 
 ;; Oscillators are functions - evaluate at specific times (t=0 and t=0.1s):
 [(osc-440 0.0) (osc-440 0.1)]
 
 ;; Generate discrete samples:
-;; 44.1kHz sample rate, 10ms duration
+;; 44.1kHz [sample rate](https://en.wikipedia.org/wiki/Sampling_(signal_processing)), 10ms duration
 (sig/oscillator->signal osc-440 44100.0 0.01)
 
 ;; ### Available Oscillator Types
@@ -191,12 +176,11 @@
 ;; These aren't arbitrary—each signal has specific characteristics that make certain transforms
 ;; more effective than others.
 ;;
-;; **Why multiple test signals?** Different transforms excel at different tasks:
-;; - **Pure tones** → FFT easily finds exact frequencies
-;; - **Smooth signals** → DCT concentrates energy efficiently (good for compression)
-;; - **Localized events** → Wavelets capture time-localized features
-;;
-;; By testing each transform on all signals, we'll build intuition for when to use which tool.
+;; **Why multiple test signals?** Different transforms excel at different tasks. The FFT
+;; easily finds exact frequencies in **pure tones**. The DCT concentrates energy efficiently
+;; for **smooth signals** (good for compression). **Wavelets** capture time-localized features
+;; like transient events. By testing each transform on all signals, we'll build intuition for
+;; when to use which tool.
 
 (defn teaching-signals
   "Standard test signals with known properties.
@@ -326,9 +310,7 @@
 ;; 2. How much of the sine wave at that frequency
 ;;
 ;; A [complex number](https://en.wikipedia.org/wiki/Complex_number) packages these two values together:
-;; - **Real part** = cosine amplitude
-;; - **Imaginary part** = sine amplitude
-;;
+;; the **real part** stores the cosine amplitude, and the **imaginary part** stores the sine amplitude.
 ;; This isn't arbitrary—it's the most compact way to store both components.
 
 ;; ### Euler's Formula: The Mathematical Foundation
@@ -424,13 +406,10 @@
 
 ;; ### Phase: Encoding the Sine/Cosine Balance
 ;;
-;; Any sinusoid can be written two ways:
-;; 1. **Amplitude + phase**: A·cos(2πft + φ)
-;; 2. **Cosine + sine**: a·cos(2πft) + b·sin(2πft)
-;;
-;; The complex number (a + ib) from the FFT encodes both representations:
-;; - **Magnitude**: √(a² + b²) = amplitude A
-;; - **[Phase](https://en.wikipedia.org/wiki/Phase_(waves))**: arctan(b/a) = phase φ
+;; Any sinusoid can be written two ways: as **amplitude + phase** (A·cos(2πft + φ)) or as
+;; **cosine + sine** (a·cos(2πft) + b·sin(2πft)). The complex number (a + ib) from the FFT
+;; encodes both representations. The **magnitude** √(a² + b²) gives us the amplitude A, and
+;; the **[phase](https://en.wikipedia.org/wiki/Phase_(waves))** arctan(b/a) gives us φ.
 ;;
 ;; This is why we compute magnitude as √(real² + imag²)—we're combining the cosine and sine
 ;; contributions to find the total amplitude at each frequency.
@@ -486,12 +465,12 @@
 ;; ## Part 2: DFT and FFT - Discovering Frequencies in Signals
 
 ;; We're finally ready to answer our opening question: how do we write code to discover the
-;; frequencies in a signal? The answer is the **Discrete Fourier Transform (DFT)**, computed
-;; efficiently via the **Fast Fourier Transform (FFT)** algorithm.
+;; frequencies in a signal? The answer is the **[Discrete Fourier Transform](https://en.wikipedia.org/wiki/Discrete_Fourier_transform) (DFT)**, computed
+;; efficiently via the **[Fast Fourier Transform](https://en.wikipedia.org/wiki/Fast_Fourier_transform) (FFT)** algorithm.
 ;;
 ;; **Terminology Note**:
 ;; - **DFT (Discrete Fourier Transform)** = the mathematical transform
-;; - **FFT (Fast Fourier Transform)** = the Cooley-Tukey algorithm for computing DFT efficiently (O(n log n) instead of O(n²))
+;; - **FFT (Fast Fourier Transform)** = the [Cooley-Tukey algorithm](https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm) for computing DFT efficiently (O(n log n) instead of O(n²))
 ;;
 ;; In practice, "FFT" is often used colloquially to mean both the transform and the algorithm.
 ;; We'll be technically precise here, but don't be surprised if you see papers and codebases
@@ -522,17 +501,15 @@
 ;; Under the hood, fastmath uses [JTransforms](https://github.com/wendykierp/JTransforms),
 ;; a high-performance Java library that automatically parallelizes large transforms.
 ;;
-;; **Key performance features**:
-;; - **Automatic parallelization**: For large arrays (typically >8-16K elements), JTransforms splits
-;;   work across available CPU cores using Java's `ForkJoinPool`
-;; - **SIMD optimizations**: Uses Java's auto-vectorization where possible
-;; - **In-place transforms**: Can operate directly on input arrays (fastmath wraps this safely)
-;; - **Algorithm selection**: Chooses optimal FFT algorithm (split-radix, mixed-radix, or
-;;   Bluestein) based on array size
+;; For large arrays (typically >8-16K elements), JTransforms automatically **splits work across
+;; available CPU cores** using Java's `ForkJoinPool`. It uses **SIMD optimizations** via Java's
+;; auto-vectorization and can operate **in-place** directly on input arrays (fastmath wraps this
+;; safely). It also **selects the optimal FFT algorithm** (split-radix, mixed-radix, or Bluestein)
+;; based on array size.
 ;;
-;; **What this means for you**: You don't need to think about parallelism—just pass large
-;; arrays and JTransforms automatically uses available CPU cores. For smaller signals,
-;; the overhead of parallelization exceeds the benefit, so it runs single-threaded.
+;; You don't need to think about parallelism—just pass large arrays and JTransforms automatically
+;; uses available CPU cores. For smaller signals, the overhead of parallelization exceeds the
+;; benefit, so it runs single-threaded.
 ;;
 ;; **Performance tip**: Reuse transformer objects! The constructor pre-computes lookup tables
 ;; (twiddle factors), so creating a transformer once and reusing it is much faster than
@@ -687,6 +664,9 @@
 (defn test-fft-roundtrip
   "Verify FFT → IFFT recovers original signal.
   
+  The 'tolerance' parameter sets how much error we accept due to
+  floating-point rounding - typically very small (1e-10 or less).
+  
   Returns test results with pass/fail boolean."
   [signal tolerance]
   (let [fft (t/transformer :real :fft)
@@ -718,13 +698,13 @@
     :passed? (:passed? result)
     :status (if (:passed? result) "✓ PASS" "✗ FAIL")}))
 
-;; **Result**: All signals pass - FFT is mathematically invertible (within floating-point precision)!
+;; **Result**: All signals pass - FFT perfectly recovers the original!
 ;;
 ;; This round-trip property is crucial. It means we can:
 ;; 1. Transform signal → frequency domain
 ;; 2. Manipulate frequencies (filter, compress, analyze)
 ;; 3. Transform back → time domain
-;; 4. Get our original signal back (within numerical precision, typically ~1e-10 RMSE)
+;; 4. Get our original signal back (within the limits of floating-point arithmetic)
 ;;
 ;; Next, let's use this round-trip capability to build practical tools.
 
@@ -759,9 +739,9 @@
 ;; ### Time-Frequency Analysis: Spectrograms
 ;;
 ;; **Limitation of FFT**: It tells us WHAT frequencies are present, but not WHEN.
-;; For time-varying signals (like chirps), we need to see how frequency content changes over time.
+;; For time-varying signals (like [chirps](https://en.wikipedia.org/wiki/Chirp)), we need to see how frequency content changes over time.
 ;;
-;; **Solution**: Short-Time Fourier Transform (STFT) - apply FFT to overlapping windows.
+;; **Solution**: [Short-Time Fourier Transform](https://en.wikipedia.org/wiki/Short-time_Fourier_transform) (STFT) - apply FFT to overlapping windows.
 
 (defn spectrogram
   "Compute spectrogram using sliding-window FFT.
@@ -928,12 +908,12 @@
 (defn compression-quality [original compressed keep-ratio]
   (let [error (Math/sqrt (dfn/mean (dfn/sq (dfn/- original compressed))))
         signal-power (Math/sqrt (dfn/mean (dfn/sq original)))
-        ;; Signal-to-Noise Ratio in decibels
+        ;; Quality measure: ratio of signal power to error (higher = better quality)
+        ;; Measured in [decibels](https://en.wikipedia.org/wiki/Decibel) (dB) - a logarithmic scale where 20 dB ≈ 10x better
         snr-db (* 20 (Math/log10 (/ signal-power error)))]
 
     {:compression-ratio (format "%.0f:1" (/ 1.0 keep-ratio))
-     :rmse (format "%.4f" error)
-     :snr-db (format "%.1f dB" snr-db)
+     :quality-db (format "%.1f dB" snr-db)
      :keep-ratio (format "%.0f%%" (* 100 keep-ratio))}))
 
 ^:kindly/hide-code
@@ -1003,16 +983,19 @@
 ;;
 ;; **⚠️ Important**: Most wavelet transforms (Haar, Daubechies, Symlets) require **power-of-2
 ;; array sizes** (64, 128, 256, 512, etc.). This is because wavelets work by recursively
-;; splitting signals in half. If your signal isn't a power of 2, you'll need to pad it:
+;; splitting signals in half. If your signal isn't a power of 2, you'll need to pad it.
+;;
+;; We'll show the padding pattern in our examples below.
+
+;; ^kind/md
+;; "**Padding to power-of-2 size**:
 ;;
 ;; ```clojure
 ;; ;; Pad to next power of 2
 ;; (let [n (dtype/ecount signal)
 ;;       target-n (int (Math/pow 2 (Math/ceil (/ (Math/log n) (Math/log 2)))))]
 ;;   ;; ... pad signal to target-n ...)
-;; ```
-;;
-;; We'll show the padding pattern in our examples below.
+;; ```"
 ;;
 ;; Where ψ is a localized wavelet function at different scales and positions.
 ;;
@@ -1099,7 +1082,7 @@
 
 ;; ### Wavelet Families
 
-;; Fastmath supports many wavelet families via JWave:
+;; Fastmath supports many wavelet families via [JWave](https://github.com/cscheiblich/JWave):
 ;; - [Haar](https://en.wikipedia.org/wiki/Haar_wavelet): `:haar`
 ;; - [Daubechies](https://en.wikipedia.org/wiki/Daubechies_wavelet): `:daubechies-4`, `:daubechies-8`
 ;; - [Symlets](https://en.wikipedia.org/wiki/Symlet): `:symlet-4`
@@ -1475,7 +1458,8 @@
 
 ;; Transform operations can seem like black boxes. How do we know they're working correctly?
 ;; This section builds a comprehensive testing framework to validate transform properties:
-;; invertibility, numerical stability, and mathematical correctness.
+;; invertibility (can we get the original back?), stability across different signal sizes,
+;; and mathematical correctness.
 
 ;; ### Utility Functions
 
@@ -1538,11 +1522,12 @@
 ;; ### Numerical Stability Test
 
 (defn test-numerical-stability
-  "Test across wide range of amplitudes."
+  "Test across wide range of amplitudes - verifies transform works equally
+  well on tiny signals (1e-6) and huge signals (1e6)."
   [base-signal transformer scale-factors]
   (for [scale scale-factors]
     (let [scaled-signal (dfn/* scale base-signal)
-          ;; Use relative tolerance
+          ;; Use relative tolerance - bigger signals need bigger error allowance
           tolerance (* 1e-10 scale)
           result (test-transform-roundtrip scaled-signal transformer tolerance)]
       (assoc result :scale-factor scale))))
@@ -1599,14 +1584,16 @@
 ;; Throughout the tutorial, you've seen these dtype-next patterns repeatedly. Here's a
 ;; quick reference with working examples you can use in your own code.
 
-;; **Root Mean Square Error (RMSE)** - measures how different two signals are:
-(defn compute-rmse [signal1 signal2]
+;; **Measuring signal difference** - compute how far apart two signals are:
+(defn compute-error [signal1 signal2]
+  ;; This computes the "root mean square error" - square the differences,
+  ;; average them, then take the square root. Smaller = more similar.
   (Math/sqrt (dfn/mean (dfn/sq (dfn/- signal1 signal2)))))
 
-;; Example: Compare original and compressed
+;; Example: Compare original and noisy signal
 (let [original (range 100)
       noisy (dfn/+ original 0.1)]
-  (compute-rmse original noisy))
+  (compute-error original noisy))
 
 ;; **Signal Energy** - total power in a signal:
 (defn signal-energy [signal]
@@ -1615,25 +1602,35 @@
 ;; Example: Energy before and after filtering
 (signal-energy (:signal (:pure-sine signals)))
 
-;; **Normalization** - zero mean, unit variance:
+;; **Normalization** - scale signal to have average of zero and consistent spread:
 (defn normalize [signal]
+  ;; Subtract the average (centers signal around zero)
+  ;; Then divide by standard deviation (makes the spread consistent)
+  ;; Useful for comparing signals with different scales
   (dfn// (dfn/- signal (dfn/mean signal))
          (dfn/standard-deviation signal)))
 
 ;; Example: Normalize before processing
 (let [normalized (normalize (:signal (:two-tones signals)))]
   {:mean (dfn/mean normalized)
-   :std (dfn/standard-deviation normalized)})
+   :spread (dfn/standard-deviation normalized)})
 
 ;; **Signal-to-Noise Ratio ([SNR](https://en.wikipedia.org/wiki/Signal-to-noise_ratio)) in dB**:
 (defn snr-db [signal noise]
+  ;; Measures signal quality: how much stronger is the signal than the noise?
+  ;; Higher numbers = better quality. Measured in decibels (dB).
+  ;; See: https://en.wikipedia.org/wiki/Signal-to-noise_ratio
   (* 20 (Math/log10 (/ (dfn/mean (dfn/sq signal))
                        (dfn/mean (dfn/sq noise))))))
 
-;; Example: Measure compression quality
+;; ^kind/md
+;; "**Example usage** - measuring compression quality:
+;;
+;; ```clojure
 ;; (let [signal (:signal (:smooth signals))
 ;;       noise (dfn/- signal compressed-signal)]
 ;;   (snr-db signal noise))
+;; ```"
 
 ;; ### Transform Selection Flowchart
 
@@ -1764,6 +1761,9 @@
 
 ;; **Recipe 3: Compress with quality target**
 (defn recipe-compress-to-quality [signal target-snr-db]
+  ;; Compress signal until we reach a target quality level (measured in dB)
+  ;; Higher target-snr-db = better quality = less compression
+  ;; Example: 30 dB is good quality, 20 dB is acceptable, 10 dB is poor
   (let [dct (t/transformer :real :dct)
         coeffs (t/forward-1d dct signal)]
 
@@ -1819,31 +1819,22 @@
 
 ;; ### What We Learned
 
-;; **Foundation**:
-;; - dtype-next for efficient array operations
-;; - Lazy evaluation and vectorization
-;; - One-liner power for common patterns
-
-;; **Core Transforms**:
-;; - **DFT** (via FFT): Frequency analysis, global sine/cosine basis
-;; - **DCT**: Compression, cosine-only basis, energy concentration
-;; - **Wavelets**: Time-frequency, localized basis, denoising
-
-;; **Other Transforms**:
-;; - **DST**: Boundary problems, sine-only basis
-;; - **DHT**: Real-valued convolution alternative
-;; - **2D transforms**: Image processing, frequency components
-
-;; **Applications**:
-;; - Bandpass filtering
-;; - Lossy compression with quality metrics
-;; - Wavelet denoising
-;; - Spectral analysis
-
-;; **Validation**:
-;; - Round-trip testing ensures correctness
-;; - Numerical stability across 12 orders of magnitude
-;; - Property testing (energy concentration, linearity)
+;; We used **dtype-next** for efficient array operations, leveraging vectorization and functional
+;; patterns for clean, performant code.
+;;
+;; The **core transforms** each serve different purposes. The **DFT** (via FFT) provides frequency
+;; analysis using global sine/cosine basis functions. The **DCT** excels at compression with its
+;; cosine-only basis and energy concentration properties. **Wavelets** offer time-frequency
+;; localization with localized basis functions, perfect for denoising.
+;;
+;; We also explored specialized transforms: the **DST** for boundary problems with sine-only basis,
+;; the **DHT** as a real-valued alternative for convolution, and **2D transforms** for image processing
+;; and frequency analysis.
+;;
+;; **Applications** included bandpass filtering, lossy compression with quality metrics, wavelet
+;; denoising, and spectral analysis. We validated everything through **round-trip testing**,
+;; **stability testing** across tiny and huge signals (1e-6 to 1e6), and **property testing**
+;; for characteristics like energy concentration and linearity.
 
 ;; ### Key Takeaways
 
