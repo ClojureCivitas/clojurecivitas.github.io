@@ -1,24 +1,14 @@
 ^{:kindly/hide-code true
-  :clay             {:title  "Signal Transforms: A Comprehensive Guide to FFT, DCT, and Wavelets"
-                     :quarto {:author   :daslu
-                              :draft    true
-                              :type     :post
-                              :date     "2025-12-14"
-                              :category :data
-                              :tags     [:dsp :fft :dct :wavelets :transforms :dtype-next :signal-processing
-                                         :compression :filtering :denoising :jtransforms :fastmath]}}}
+  :clay {:title "Signal Transforms: A Comprehensive Guide to FFT, DCT, and Wavelets"
+         :quarto {:author :daslu
+                  :draft true
+                  :type :post
+                  :date "2025-12-14"
+                  :category :data
+                  :tags [:dsp :fft :dct :wavelets :transforms :dtype-next :signal-processing
+                         :compression :filtering :denoising :jtransforms :fastmath]}}}
 (ns dsp.transforms-comprehensive
-  "Signal Transforms: A Comprehensive Guide
-
-  Array-oriented signal processing with dtype-next, transform theory, and practical validation.
-
-  This integrated tutorial combines:
-  - dtype-next foundations for efficient array operations
-  - Linear decomposition theory - understanding WHAT transforms are
-  - Practical applications - filtering, compression, denoising
-  - Test-driven validation - ensuring correctness
-
-  Progressive learning path: Foundation → Signals → Core Transforms → Applications → Validation"
+  "A comprehensive guide to signal transforms in Clojure using dtype-next, JTransforms, and fastmath."
   (:require [fastmath.signal :as sig]
             [fastmath.transform :as t]
             [tech.v3.datatype :as dtype]
@@ -35,14 +25,71 @@
 (kind/hiccup
  [:style
   ".clay-dataset {
-  max-height:400px; 
+  max-height:400px;
   overflow-y: auto;
 }
 .printedClojure {
-  max-height:400px; 
+  max-height:400px;
   overflow-y: auto;
 }
 "])
+
+;; # Introduction
+
+;; Signal transforms are fundamental to modern computing. Every JPEG image you view
+;; uses the Discrete Cosine Transform for compression. MP3 audio files rely on the
+;; same mathematics. Speech recognition, radar systems, medical imaging—all depend
+;; on transforming signals between time and frequency domains.
+;;
+;; At their core, transforms answer a simple question: **can we express this signal
+;; as a weighted sum of simpler basis functions?** The Fourier transform uses sines
+;; and cosines. Wavelets use localized, scaled functions. Each transform gives us a
+;; different lens for understanding and manipulating data.
+
+;; ## What You'll Learn
+
+;; This tutorial combines theory with practice, building from foundations to real
+;; applications:
+;;
+;; - **dtype-next foundations** — Efficient array operations without boxing overhead
+;; - **Signal generation** — Creating test signals with fastmath
+;; - **Core transforms** — DFT (via FFT), DCT, wavelets, and specialized variants
+;; - **Practical applications** — Filtering, compression, denoising, spectral analysis
+;; - **Validation** — Test-driven development ensuring correctness
+;;
+;; We'll use [JTransforms](https://github.com/wendykierp/JTransforms) for the actual
+;; computation, wrapped in [fastmath](https://generateme.github.io/fastmath/) for a
+;; clean Clojure API, with [dtype-next](https://github.com/cnuernber/dtype-next) providing
+;; efficient array operations.
+
+;; ## Prerequisites
+
+;; You should be comfortable with:
+;;
+;; - Basic Clojure (functions, maps, sequences)
+;; - High school mathematics (sine, cosine, basic algebra)
+;; - The concept of frequency (higher pitch = higher frequency)
+;;
+;; No digital signal processing background required—we'll build intuition through
+;; visualization and concrete examples.
+
+;; ## Structure
+
+;; The tutorial follows a progressive path:
+;;
+;; 1. **Foundation** — dtype-next array operations
+;; 2. **Signals** — Generation and visualization
+;; 3. **Complex numbers** — Why transforms output complex values
+;; 4. **DFT/FFT** — Frequency analysis
+;; 5. **DCT** — Compression (JPEG, MP3)
+;; 6. **Wavelets** — Time-frequency analysis
+;; 7. **Other transforms** — DST, DHT, 2D variants
+;; 8. **Applications** — Practical tools and pipelines
+;; 9. **Testing** — Validation framework
+;; 10. **Best practices** — Decision guides and patterns
+;;
+;; Each section builds on previous concepts, with runnable code throughout.
+;; Let's begin!
 
 ;; # Part 0: Foundation - dtype-next for Arrays
 
@@ -616,6 +663,7 @@
    :two-tones (test-fft-roundtrip (:signal (:two-tones signals)) 1e-10)
    :smooth (test-fft-roundtrip (:signal (:smooth signals)) 1e-10)})
 
+^:kindly/hide-code
 (kind/table
  (for [[sig-type result] fft-tests]
    {:signal (name sig-type)
@@ -817,6 +865,7 @@
      :snr-db (format "%.1f dB" snr-db)
      :keep-ratio (format "%.0f%%" (* 100 keep-ratio))}))
 
+^:kindly/hide-code
 (kind/table
  [(compression-quality original-smooth compressed-50pct 0.5)
   (compression-quality original-smooth compressed-25pct 0.25)
@@ -988,6 +1037,7 @@
          :sparsity-pct (format "%.0f%%" (* 100.0 (/ sparsity (alength coeffs))))
          :max-coeff (format "%.2f" (dfn/reduce-max (dfn/abs coeffs)))}))))
 
+^:kindly/hide-code
 (kind/table (compare-wavelets (:signal (:chirp signals))))
 
 ;; **Observation**: Different wavelets give different sparsity.
@@ -1048,6 +1098,7 @@
    (test-wavelet-roundtrip (take 64 (:signal (:smooth signals))) :daubechies-8 1e-10)
    (test-wavelet-roundtrip (take 64 (:signal (:smooth signals))) :symlet-4 1e-10)])
 
+^:kindly/hide-code
 (kind/table
  (map #(update % :wavelet name) wavelet-tests))
 
@@ -1098,6 +1149,7 @@
 
 ;; ### Transform Selection Guide
 
+^:kindly/hide-code
 (kind/table
  [{:transform "DFT" :use-case "Frequency analysis" :basis "Sine + Cosine" :output "Complex" :algorithm "FFT"}
   {:transform "DCT" :use-case "Compression (JPEG/MP3)" :basis "Cosine only" :output "Real" :algorithm "Fast DCT"}
@@ -1379,6 +1431,7 @@
 ;; Run comprehensive FFT tests
 (def fft-comprehensive (test-all-signal-types (t/transformer :real :fft) 1e-10))
 
+^:kindly/hide-code
 (kind/table
  (for [[sig-type result] fft-comprehensive]
    {:signal (name sig-type)
@@ -1437,6 +1490,7 @@
 ;; ### dtype-next Best Practices Summary
 
 ;; **Key Functions Actually Used**:
+^:kindly/hide-code
 (kind/table
  [{:category "Element-wise" :functions "dfn/+, dfn/-, dfn/*, dfn//, dfn/sq, dfn/sqrt, dfn/cos, dfn/sin, dfn/abs"}
   {:category "Reductions" :functions "dfn/sum, dfn/mean, dfn/standard-deviation, dfn/reduce-max, dfn/reduce-min"}
@@ -1517,6 +1571,7 @@
 
 ;; ### Performance Tips
 
+^:kindly/hide-code
 (kind/table
  [{:tip "Use :real transforms"
    :reason "2x faster than complex for real-valued signals"
@@ -1540,6 +1595,7 @@
 
 ;; ### Common Pitfalls
 
+^:kindly/hide-code
 (kind/table
  [{:pitfall "Forgetting to scale inverse FFT"
    :solution "Use scaled=true or divide by N manually"
@@ -1676,6 +1732,7 @@
 
 ;; ### Key Takeaways
 
+^:kindly/hide-code
 (kind/table
  [{:concept "Linear Decomposition"
    :insight "All transforms express signals as weighted sums of basis functions"}
