@@ -14,6 +14,10 @@
 (kind/hiccup
  [:div#streaming-chart])
 
+^:kindly/hide-code
+(kind/code (slurp "src/data_visualization/simplestplotlystreamingchart.cljs"))
+
+^:kindly/hide-code
 (kind/hiccup
  [:div
   [:script {:src "https://cdn.plot.ly/plotly-3.3.0.min.js"
@@ -22,3 +26,9 @@
             :type "application/javascript"}]
   [:script {:src "simplestplotlystreamingchart.cljs"
             :type "application/x-scittle"}]])
+
+;; ---
+
+;; Discuss here:
+;;
+;; [https://clojurians.zulipchat.com/#narrow/channel/528764-clojurecivitas/topic/Streaming.20Chart](https://clojurians.zulipchat.com/#narrow/channel/528764-clojurecivitas/topic/Streaming.20Chart)
