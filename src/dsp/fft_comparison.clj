@@ -35,7 +35,7 @@
 ;; - **Apache Commons Math** - Mature library with general mathematical transforms
 ;; - **JDSP** - Digital signal processing library (uses Apache Commons Math internally)
 ;; - **JTransforms** - First multithreaded, pure-Java FFT library
-;; - **fastmath** - Clojure math library (wraps JTransforms with idiomatic API)
+;; - **Fastmath** - Clojure math library (wraps JTransforms with idiomatic API)
 ;;
 ;; We'll compute the FFT of the same test signal using each library, measure performance, and discuss their trade-offs.
 
@@ -71,9 +71,9 @@
 ;; - Supports **1D, 2D, and 3D** transforms (FFT, [DCT](https://en.wikipedia.org/wiki/Discrete_cosine_transform), [DST](https://en.wikipedia.org/wiki/Discrete_sine_transform), [DHT](https://en.wikipedia.org/wiki/Discrete_Hartley_transform))
 ;; - [In-place mutations](https://en.wikipedia.org/wiki/In-place_algorithm) (efficient but not functional)
 ;; - Mixed-radix support: works with arbitrary sizes (not just power-of-2)
-;; - Used internally by fastmath and dtype-next
+;; - Used internally by Fastmath and dtype-next
 
-;; ### fastmath
+;; ### Fastmath
 ;;
 ;; [fastmath](https://github.com/generateme/fastmath) (version 3.x) by [Tomasz Sulej](https://github.com/genmeblog) is a Clojure library for fast primitive-based mathematics. Its [`fastmath.transform`](https://generateme.github.io/fastmath/fastmath.transform.html) namespace wraps JTransforms with an idiomatic Clojure API.
 ;;
@@ -247,9 +247,9 @@
  "FFT Spectrum (JTransforms)"
  "purple")
 
-;; ## FFT Implementation #4: fastmath
+;; ## FFT Implementation #4: Fastmath
 
-;; fastmath provides the most Clojure-idiomatic API. Create a transformer, then use `forward-1d`.
+;; Fastmath provides the most Clojure-idiomatic API. Create a transformer, then use `forward-1d`.
 
 (defn fft-fastmath
   "Compute FFT using fastmath."
@@ -260,7 +260,7 @@
 (def fastmath-result
   (time (fft-fastmath signal)))
 
-;; Extract magnitudes (fastmath uses JTransforms format internally):
+;; Extract magnitudes (Fastmath uses JTransforms format internally):
 
 (defn fastmath-magnitude
   "Compute magnitudes from fastmath FFT output."
@@ -278,7 +278,7 @@
 ; Visualize
 (plot-fft-spectrum
  fastmath-magnitudes
- "FFT Spectrum (fastmath)"
+ "FFT Spectrum (Fastmath)"
  "crimson")
 
 ;; ## Performance Comparison
@@ -302,7 +302,7 @@
         [lib-name fft-fn] [["Apache Commons Math" fft-apache-commons]
                            ["JDSP" fft-jdsp]
                            ["JTransforms" fft-jtransforms]
-                           ["fastmath" fft-fastmath]]]
+                           ["Fastmath" fft-fastmath]]]
     (let [sig (generate-test-signal size)
           result (benchmark-library fft-fn sig)]
       (assoc result
@@ -388,7 +388,7 @@
                   :=y :mean-ms
                   :=color :size
                   :=color-type :nominal
-                  :=title "FFT Performance vs Thread Count (fastmath/JTransforms)"
+                  :=title "FFT Performance vs Thread Count (Fastmath/JTransforms)"
                   :=x-title "Number of Threads"
                   :=y-title "Mean Time per FFT (ms)"
                   :=width 800
@@ -433,7 +433,7 @@
 ;;
 ;; If you need good performance, focus on:
 ;; - Using power-of-2 signal sizes (triggers fast SPLIT_RADIX plan)
-;; - Choosing an appropriate library (JTransforms/fastmath are typically fastest for 1D, though differences aren't huge)
+;; - Choosing an appropriate library (JTransforms/Fastmath are typically fastest for 1D, though differences aren't huge)
 ;; - Optimizing your overall algorithm to minimize FFT calls
 
 ;; **Note:** 2D and 3D FFTs may benefit more from parallelization since they have more work to distribute. We only tested 1D here.
@@ -471,7 +471,7 @@
 ;;
 ;; Apache Commons Math **strictly requires** signal length to be a [power of 2](https://en.wikipedia.org/wiki/Power_of_two) (128, 256, 512, 1024, etc.). This is because it only implements the classic [Cooley-Tukey algorithm](https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm).
 
-;; ### JTransforms/fastmath: Flexible (with caveats)
+;; ### JTransforms/Fastmath: Flexible (with caveats)
 ;;
 ;; Based on our source code investigation (see the threading section above), JTransforms uses **three execution plans**:
 ;;
@@ -484,7 +484,7 @@
 ;; - ⚠️ Performance may be slower for non-power-of-2 sizes
 ;; - ⚠️ MIXED_RADIX is primarily sequential; BLUESTEIN supports limited parallelization
 ;;
-;; **Recommendation:** Use power-of-2 sizes when possible for best performance (triggers SPLIT_RADIX). If your data doesn't fit, zero-pad to the next power of 2, or use JTransforms/fastmath with the understanding that a different plan will be selected.
+;; **Recommendation:** Use power-of-2 sizes when possible for best performance (triggers SPLIT_RADIX). If your data doesn't fit, zero-pad to the next power of 2, or use JTransforms/Fastmath with the understanding that a different plan will be selected.
 
 ;; ## Related Functionality
 
@@ -512,7 +512,7 @@
 ;; - [DHT](https://en.wikipedia.org/wiki/Discrete_Hartley_transform) (Discrete Hartley Transform)
 ;; - [Multithreaded](https://en.wikipedia.org/wiki/Multithreading_(computer_architecture)) variants for all transforms
 
-;; ### fastmath
+;; ### Fastmath
 ;; - [Protocol-based](https://clojure.org/reference/protocols) transform system
 ;; - All JTransforms transforms (FFT, DCT, DST, DHT)
 ;; - [Wavelet transforms](https://en.wikipedia.org/wiki/Wavelet) (Haar, Daubechies, Coiflet, Symlet)
@@ -524,9 +524,9 @@
 
 ;; After comparing these libraries, here are my recommendations:
 
-;; **For most Clojure projects: fastmath 3**
+;; **For most Clojure projects: Fastmath 3**
 ;;
-;; fastmath provides a good balance of performance and developer experience:
+;; Fastmath provides a good balance of performance and developer experience:
 ;; - Idiomatic Clojure API (functional, immutable)
 ;; - Leverages JTransforms' performance
 ;; - Rich ecosystem (transforms, signal processing, statistics)
@@ -546,7 +546,7 @@
 ;; If you want to use JTransforms directly and don't mind mutation:
 ;; - Use `DoubleFFT_1D` directly
 ;; - In-place mutations avoid allocations
-;; - May be slightly faster than fastmath wrapper in some cases
+;; - May be slightly faster than Fastmath wrapper in some cases
 ;; - Good for real-time audio processing or when you need fine-grained control
 
 ;; **For broader DSP needs: JDSP**
@@ -555,15 +555,15 @@
 ;; - Convenient, batteries-included library
 ;; - Simple API
 ;; - Good documentation
-;; - Note: FFT performance is somewhat slower than JTransforms/fastmath
+;; - Note: FFT performance is somewhat slower than JTransforms/Fastmath
 
 ;; **Apache Commons Math: Consider alternatives**
 ;;
 ;; While Commons Math is excellent for general mathematics, for FFT specifically you might prefer other options:
-;; - Somewhat slower than JTransforms/fastmath
+;; - Somewhat slower than JTransforms/Fastmath
 ;; - Returns boxed `Complex[]` objects (allocation overhead)
 ;; - Still a reasonable choice if you're already using Commons Math for other features
 
 ;; ## Summary
 
-;; The Clojure ecosystem offers several good FFT options through Java interop. For typical signal processing tasks, **fastmath 3** is a solid choice: JTransforms' performance wrapped in a Clojure-friendly API. For direct control, use **JTransforms directly**. And if you need comprehensive DSP utilities beyond FFT, **JDSP** is worth exploring.
+;; The Clojure ecosystem offers several good FFT options through Java interop. For typical signal processing tasks, **Fastmath 3** is a solid choice: JTransforms' performance wrapped in a Clojure-friendly API. For direct control, use **JTransforms directly**. And if you need comprehensive DSP utilities beyond FFT, **JDSP** is worth exploring.
