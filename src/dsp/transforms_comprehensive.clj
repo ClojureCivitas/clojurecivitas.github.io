@@ -37,6 +37,27 @@
 
 ;; # Introduction: Why Learn Signal Transforms?
 
+;; ## About This Tutorial
+
+;; This is the first in a planned series on digital signal processing in Clojure. We focus here
+;; on **core transforms**—the fundamental tools for moving between time and frequency domains.
+;; Future posts will explore specialized topics we deliberately omit here.
+
+;; **What's covered**: FFT (Fast Fourier Transform), DCT (Discrete Cosine Transform), wavelets,
+;; and their practical applications in filtering, compression, and denoising. We'll also cover
+;; critical FFT artifacts like spectral leakage, aliasing, and windowing functions.
+
+;; **What's intentionally left out** for future posts:
+;; - **Filter design** - Designing custom filters (lowpass, highpass, bandpass)
+;; - **Real-world data** - Loading and processing audio/image files
+;; - **Advanced methods** - Better spectral estimation, adaptive filtering
+;; - **Multi-rate processing** - Changing sample rates, efficient resampling
+
+;; The goal is to build a solid foundation in transforms before tackling these specialized
+;; topics.
+
+;; ## Why Learn Signal Transforms?
+
 ;; Imagine you're listening to a musical note. You can hear it's an [A](https://en.wikipedia.org/wiki/A_(musical_note)) ([440 Hz](https://en.wikipedia.org/wiki/Hertz)), but how would
 ;; you write code to discover that frequency? Or suppose you have 10 seconds of audio—how do
 ;; you automatically remove a 60 Hz electrical hum without affecting the music?
@@ -150,7 +171,7 @@
 (-> (tc/dataset osc-viz-data)
     (plotly/base {:=x :time
                   :=y :amplitude
-                  :=mark-color :type
+                  :=color :type
                   :=x-title "Time (s)"
                   :=y-title "Amplitude"
                   :=title "Oscillator Types (3 Hz)"
@@ -351,10 +372,10 @@
                   :=title "Euler's Formula: e^(iθ) = cos(θ) + i·sin(θ)"
                   :=width 700
                   :=height 300})
-    (plotly/layer-line {:=mark-color "steelblue"
+    (plotly/layer-line {:=color "steelblue"
                         :=name "cos(θ) - Real Part"})
     (plotly/layer-line {:=y :sine
-                        :=mark-color "orange"
+                        :=color "orange"
                         :=name "sin(θ) - Imaginary Part"}))
 
 ;; As the angle θ increases from 0 to 2π (one full rotation), cosine and sine trace out
@@ -451,7 +472,7 @@
                       :=width 400
                       :=height 400})
         (plotly/layer-point {:=mark-size :magnitude
-                             :=mark-color :frequency}))))
+                             :=color :frequency}))))
 
 (complex-plane-viz :cosine)
 (complex-plane-viz :sine)
@@ -707,7 +728,346 @@
 ;; 3. Transform back → time domain
 ;; 4. Get our original signal back (within the limits of floating-point arithmetic)
 ;;
-;; Next, let's use this round-trip capability to build practical tools.
+;; But before we use FFT in practice, we need to understand its limitations and artifacts.
+
+;; ## Understanding FFT Artifacts and Solutions
+
+;; The FFT examples above worked perfectly because we used "nice" signals—exact integer
+;; frequencies (10 Hz, 25 Hz) that fit evenly into our sample window. Real signals aren't
+;; so cooperative. Let's explore what happens when signals don't perfectly align with the
+;; FFT's assumptions, and how to fix the resulting artifacts.
+
+;; ### The Nyquist Frequency and Aliasing
+
+;; Before we can understand FFT artifacts, we need to establish a fundamental limit of
+;; digital signal processing: the [Nyquist frequency](https://en.wikipedia.org/wiki/Nyquist_frequency).
+;;
+;; **The Nyquist-Shannon Sampling Theorem** states: to accurately represent a signal, you must
+;; sample at **more than twice** the highest frequency present. The Nyquist frequency is
+;; **sample-rate / 2**—the maximum frequency that can be unambiguously represented.
+
+;; Why does this matter for FFT?
+
+;; **Reason 1: Spectrum Symmetry**  
+;; When you FFT a real-valued signal, the output has [Hermitian symmetry](https://en.wikipedia.org/wiki/Hermitian_function)—the second half
+;; mirrors the first half. The meaningful frequency content is **only in the first half**, from
+;; 0 Hz to Nyquist (sample-rate/2).
+
+;; Example: 100 Hz sample rate → FFT bins represent 0 to 50 Hz
+{:sample-rate sample-rate
+ :nyquist-frequency (/ sample-rate 2)
+ :interpretation "Only analyze frequencies up to Nyquist (50 Hz)"}
+
+;; This is why in our earlier `visualize-fft` function we used:
+;; `(min 50 (dtype/ecount mags))`  
+;; We're limiting display to roughly the first half of the spectrum, where meaningful content lives.
+
+;; **Reason 2: Aliasing**  
+;; What if your signal contains frequencies **above Nyquist**? They don't disappear—they
+;; **alias** (fold back) into lower frequencies, creating false peaks.
+
+;; Demonstrate aliasing:
+(def nyquist-demo-rate 100.0)
+(def below-nyquist-signal
+  (sig/oscillator->signal
+   (sig/oscillator :sin 40.0 1.0 0.0) ; 40 Hz, below Nyquist (50 Hz)
+   nyquist-demo-rate 1.0))
+
+(def above-nyquist-signal
+  (sig/oscillator->signal
+   (sig/oscillator :sin 80.0 1.0 0.0) ; 80 Hz, above Nyquist (50 Hz)
+   nyquist-demo-rate 1.0))
+
+;; Find dominant frequencies
+(def below-result (find-dominant-frequency below-nyquist-signal nyquist-demo-rate))
+(def above-result (find-dominant-frequency above-nyquist-signal nyquist-demo-rate))
+
+{:below-nyquist {:input-freq 40.0 :detected-freq (:frequency below-result) :correct? true}
+ :above-nyquist {:input-freq 80.0 :detected-freq (:frequency above-result)
+                 :aliased-to (- nyquist-demo-rate 80.0)
+                 :correct? false
+                 :explanation "80 Hz aliases to 20 Hz (100 - 80)"}}
+
+;; **Key Takeaway**: Always ensure your signal is bandlimited below Nyquist, or use an
+;; [anti-aliasing filter](https://en.wikipedia.org/wiki/Anti-aliasing_filter) before sampling.
+
+;; ### Spectral Leakage - The Picket Fence Effect
+
+;; Now for the **most important artifact**: [spectral leakage](https://en.wikipedia.org/wiki/Spectral_leakage).
+;; Our earlier examples used frequencies like 10 Hz and 25 Hz. What if the signal contains
+;; 10.3 Hz—a frequency that doesn't fall exactly on an FFT bin?
+
+;; **The Problem**: FFT assumes the signal is **periodic** within the window. If the frequency
+;; doesn't complete an integer number of cycles, the signal appears discontinuous when wrapped
+;; around. This discontinuity creates artificial high-frequency content that "leaks" into
+;; adjacent bins.
+
+;; Demonstrate with a frequency that doesn't align with FFT bins
+(def leakage-sample-rate 100.0)
+(def leakage-n-samples 100)
+
+;; Perfect bin alignment: 10 Hz completes exactly 10 cycles in 100 samples
+(def aligned-signal
+  (sig/oscillator->signal
+   (sig/oscillator :sin 10.0 1.0 0.0)
+   leakage-sample-rate (/ leakage-n-samples leakage-sample-rate)))
+
+;; Poor alignment: 10.3 Hz doesn't complete an integer number of cycles
+(def leaky-signal
+  (sig/oscillator->signal
+   (sig/oscillator :sin 10.3 1.0 0.0)
+   leakage-sample-rate (/ leakage-n-samples leakage-sample-rate)))
+
+;; Compare spectra
+(defn spectrum-comparison [signal1 signal2 label1 label2 sample-rate]
+  (let [fft (t/transformer :real :fft)
+        spec1 (fft-magnitude (t/forward-1d fft signal1))
+        spec2 (fft-magnitude (t/forward-1d fft signal2))
+        n (dtype/ecount signal1)
+        freqs (dfn/* (range (quot (dtype/ecount spec1) 2))
+                     (/ sample-rate n))
+
+        dataset (tc/dataset
+                 (concat
+                  (map (fn [i] {:frequency (dtype/get-value freqs i)
+                                :magnitude (dtype/get-value spec1 i)
+                                :signal label1})
+                       (range (dtype/ecount freqs)))
+                  (map (fn [i] {:frequency (dtype/get-value freqs i)
+                                :magnitude (dtype/get-value spec2 i)
+                                :signal label2})
+                       (range (dtype/ecount freqs)))))]
+
+    (-> dataset
+        (plotly/base {:=x :frequency
+                      :=y :magnitude
+                      :=color :signal
+                      :=x-title "Frequency (Hz)"
+                      :=y-title "Magnitude"
+                      :=title "Spectral Leakage: Aligned vs Misaligned Frequency"
+                      :=width 700
+                      :=height 300})
+        (plotly/layer-line))))
+
+(spectrum-comparison aligned-signal leaky-signal
+                     "10.0 Hz (aligned)" "10.3 Hz (leaky)"
+                     leakage-sample-rate)
+
+;; **Observation**: 
+;; - **10.0 Hz (aligned)**: Clean single peak—all energy in one bin
+;; - **10.3 Hz (leaky)**: Energy spreads across many bins—the "picket fence effect"
+;;
+;; This is spectral leakage. The true frequency (10.3 Hz) falls **between** FFT bins, so energy
+;; leaks into adjacent bins through the sidelobes of the rectangular window.
+
+;; ### Windowing Functions - The Solution to Leakage
+
+;; The root cause of leakage is the **rectangular window**—our signal is multiplied by a
+;; rectangle (1 inside the window, 0 outside). This sharp cutoff creates the discontinuity.
+;;
+;; **Solution**: Multiply the signal by a smoother [window function](https://en.wikipedia.org/wiki/Window_function)
+;; that tapers to zero at the edges. This reduces the discontinuity and suppresses sidelobes.
+
+;; Common window functions:
+;; - **Rectangular**: No windowing (what we've been using)
+;; - **[Hann](https://en.wikipedia.org/wiki/Hann_function)** (Hanning): Good general-purpose window, smooth taper
+;; - **[Hamming](https://en.wikipedia.org/wiki/Hamming_window)**: Similar to Hann, slightly different sidelobe tradeoff
+;; - **[Blackman](https://en.wikipedia.org/wiki/Blackman_window)**: Lower sidelobes, wider main lobe
+
+;; Implement window functions
+(defn hann-window
+  "Generate Hann window of length n."
+  [n]
+  (dtype/emap
+   (fn [i]
+     (let [angle (* 2.0 Math/PI (/ i n))]
+       (* 0.5 (- 1.0 (Math/cos angle)))))
+   :float64
+   (range n)))
+
+(defn hamming-window
+  "Generate Hamming window of length n."
+  [n]
+  (dtype/emap
+   (fn [i]
+     (let [angle (* 2.0 Math/PI (/ i n))]
+       (- 0.54 (* 0.46 (Math/cos angle)))))
+   :float64
+   (range n)))
+
+(defn blackman-window
+  "Generate Blackman window of length n."
+  [n]
+  (dtype/emap
+   (fn [i]
+     (let [angle (* 2.0 Math/PI (/ i n))]
+       (- 0.42
+          (* 0.5 (Math/cos angle))
+          (* 0.08 (Math/cos (* 2.0 angle))))))
+   :float64
+   (range n)))
+
+;; Visualize window shapes
+(def window-n 100)
+(def window-viz-data
+  (concat
+   (map (fn [i] {:index i :amplitude 1.0 :window "Rectangular"}) (range window-n))
+   (map-indexed (fn [i v] {:index i :amplitude v :window "Hann"})
+                (hann-window window-n))
+   (map-indexed (fn [i v] {:index i :amplitude v :window "Hamming"})
+                (hamming-window window-n))
+   (map-indexed (fn [i v] {:index i :amplitude v :window "Blackman"})
+                (blackman-window window-n))))
+
+(-> (tc/dataset window-viz-data)
+    (plotly/base {:=x :index
+                  :=y :amplitude
+                  :=color :window
+                  :=x-title "Sample Index"
+                  :=y-title "Window Amplitude"
+                  :=title "Window Functions - Taper to Zero at Edges"
+                  :=width 700
+                  :=height 300})
+    (plotly/layer-line))
+
+;; **Key Observation**: All non-rectangular windows taper to zero at edges, reducing
+;; discontinuity when the signal wraps around.
+
+;; ### Applying Windows to Reduce Leakage
+
+(defn apply-window
+  "Multiply signal by window function."
+  [signal window]
+  (dfn/* signal window))
+
+;; Apply Hann window to our leaky signal
+(def windowed-leaky-signal
+  (apply-window leaky-signal (hann-window (dtype/ecount leaky-signal))))
+
+;; Compare: no window vs Hann window
+(spectrum-comparison leaky-signal windowed-leaky-signal
+                     "No window (rectangular)" "Hann window"
+                     leakage-sample-rate)
+
+;; **Result**: The Hann window dramatically reduces sidelobe leakage! Energy is concentrated
+;; in the main lobe around 10.3 Hz, with much less spillover into distant bins.
+
+;; ### Window Tradeoffs
+
+;; Windows aren't free—they trade **frequency resolution** for **leakage suppression**.
+
+^:kindly/hide-code
+(kind/table
+ [{:window "Rectangular" :main-lobe-width "Narrowest" :sidelobe-level "Highest (-13 dB)" :use-case "Perfect bin alignment"}
+  {:window "Hann" :main-lobe-width "Medium" :sidelobe-level "Medium (-32 dB)" :use-case "General purpose"}
+  {:window "Hamming" :main-lobe-width "Medium" :sidelobe-level "Medium (-43 dB)" :use-case "Better sidelobe suppression"}
+  {:window "Blackman" :main-lobe-width "Widest" :sidelobe-level "Lowest (-58 dB)" :use-case "Maximum sidelobe suppression"}])
+
+;; **Choosing a window**:
+;; - **Known exact frequency**: Rectangular (no windowing needed)
+;; - **Unknown frequency**: Hann (good default)
+;; - **Nearby strong signals**: Blackman (best isolation)
+;; - **Need precise frequency**: Rectangular or Hamming (narrow main lobe)
+
+;; ### Frequency Resolution vs Window Size
+
+;; The FFT's frequency resolution depends on **window size** and **sample rate**:
+;;
+;; **Frequency resolution = sample-rate / window-size**
+
+;; Demonstrate resolution tradeoff
+(defn resolution-demo [window-size sample-rate]
+  (let [;; Two close frequencies: 10 Hz and 12 Hz
+        signal (sig/oscillator->signal
+                (sig/oscillators-sum
+                 (sig/oscillator :sin 10.0 1.0 0.0)
+                 (sig/oscillator :sin 12.0 1.0 0.0))
+                sample-rate (/ window-size sample-rate))
+
+        fft (t/transformer :real :fft)
+        spectrum (t/forward-1d fft signal)
+        mags (fft-magnitude spectrum)
+        n (dtype/ecount signal)
+        freqs (dfn/* (range (min 30 (dtype/ecount mags))) (/ sample-rate n))
+
+        freq-resolution (/ sample-rate n)]
+
+    {:window-size window-size
+     :frequency-resolution freq-resolution
+     :can-resolve-2hz? (< freq-resolution 2.0)
+     :peaks (take 5 (sort-by :magnitude >
+                             (map (fn [i] {:freq (dtype/get-value freqs i)
+                                           :magnitude (dtype/get-value mags i)})
+                                  (range (dtype/ecount freqs)))))}))
+
+^:kindly/hide-code
+(kind/table
+ [(resolution-demo 50 100.0) ; 2 Hz resolution - can't resolve 10 & 12 Hz
+  (resolution-demo 100 100.0) ; 1 Hz resolution - can resolve them
+  (resolution-demo 200 100.0)]) ; 0.5 Hz resolution - easily resolves them
+
+;; **Key Insight**: 
+;; - **Longer window** → better frequency resolution, worse time resolution
+;; - **Shorter window** → better time resolution, worse frequency resolution
+;;
+;; This is the fundamental [uncertainty principle](https://en.wikipedia.org/wiki/Uncertainty_principle#Signal_processing)
+;; in time-frequency analysis—you can't have perfect resolution in both domains simultaneously.
+
+;; ### Practical Guidelines for FFT Analysis
+
+^:kindly/hide-code
+(kind/table
+ [{:question "Do I need a window?"
+   :answer "Always use windowing unless frequency exactly matches an FFT bin"}
+  {:question "Which window?"
+   :answer "Hann for general use, Blackman for strong nearby signals"}
+  {:question "What window size?"
+   :answer "Larger for better frequency resolution, smaller for time localization"}
+  {:question "What about DC and Nyquist?"
+   :answer "Skip bin 0 (DC), only analyze 0 to sample-rate/2 (Nyquist)"}
+  {:question "How to avoid aliasing?"
+   :answer "Ensure signal has no content above sample-rate/2"}])
+
+;; ### Improved Frequency Analysis with Windowing
+
+(defn find-dominant-frequency-windowed
+  "Extract strongest frequency using FFT with Hann window."
+  [signal sample-rate]
+  (let [;; Apply Hann window to reduce leakage
+        window (hann-window (dtype/ecount signal))
+        windowed-signal (dfn/* signal window)
+
+        fft (t/transformer :real :fft)
+        spectrum (t/forward-1d fft windowed-signal)
+        n (dtype/ecount signal)
+        mags (fft-magnitude spectrum)
+
+        ;; Only search up to Nyquist frequency
+        nyquist-bin (quot n 2)
+
+        ;; Skip DC component (bin 0)
+        max-idx (inc (argops/argmax (dtype/sub-buffer mags 1 (dec nyquist-bin))))
+        freq (* max-idx (/ sample-rate n))]
+
+    {:frequency freq
+     :magnitude (dtype/get-value mags max-idx)
+     :frequency-resolution (/ sample-rate n)
+     :nyquist-frequency (/ sample-rate 2)}))
+
+;; Test on our leaky signal (10.3 Hz)
+(find-dominant-frequency-windowed leaky-signal leakage-sample-rate)
+
+;; Compare to original (no windowing)
+(find-dominant-frequency leaky-signal leakage-sample-rate)
+
+;; **Improvement**: Windowed version gives more accurate peak detection and magnitude!
+
+;; **What we just learned**: Real-world FFT requires understanding Nyquist limits, spectral
+;; leakage, and windowing. Always window your data unless you know frequencies align perfectly
+;; with FFT bins. Choose window size based on the frequency resolution vs time resolution
+;; tradeoff your application needs.
+;;
+;; Now let's apply these insights to build robust practical tools.
 
 ;; ### Practical Application: Notch Filter
 
@@ -743,11 +1103,24 @@
 ;; For time-varying signals (like [chirps](https://en.wikipedia.org/wiki/Chirp)), we need to see how frequency content changes over time.
 ;;
 ;; **Solution**: [Short-Time Fourier Transform](https://en.wikipedia.org/wiki/Short-time_Fourier_transform) (STFT) - apply FFT to overlapping windows.
+;;
+;; **Note on windowing**: In production spectrograms, you should apply a Hann or Hamming window
+;; to each FFT window (as discussed in the FFT Artifacts section above) to reduce spectral leakage.
+;; We omit it here for simplicity, but the pattern is:
+;;
+;; `(apply-window (dtype/sub-buffer signal start-idx window-size) (hann-window window-size))`
+;;
+;; **Window size choice**: Remember the tradeoff from the artifacts section:
+;; - Small windows (e.g., 32) → good time resolution, poor frequency resolution
+;; - Large windows (e.g., 512) → poor time resolution, good frequency resolution
 
 (defn spectrogram
   "Compute spectrogram using sliding-window FFT.
 
-  Returns sequence of {:time t :frequency f :magnitude m} maps."
+  Returns sequence of {:time t :frequency f :magnitude m} maps.
+  
+  For production use, apply windowing to each segment:
+  (apply-window (dtype/sub-buffer ...) (hann-window window-size))"
   [signal sample-rate window-size hop-size]
   (let [fft (t/transformer :real :fft)
         n-windows (quot (- (dtype/ecount signal) window-size) hop-size)]
@@ -757,7 +1130,8 @@
                 spectrum (t/forward-1d fft window)
                 mags (fft-magnitude spectrum)
                 time-center (/ (+ start-idx (/ window-size 2)) sample-rate)]
-          freq-idx (range (min 50 (dtype/ecount mags)))]
+          ;; Only show up to Nyquist frequency
+          freq-idx (range (min 50 (quot (dtype/ecount mags) 2)))]
       {:time time-center
        :frequency (* freq-idx (/ sample-rate window-size))
        :magnitude (dtype/get-value mags freq-idx)})))
@@ -769,7 +1143,7 @@
 (-> (tc/dataset chirp-spectrogram)
     (plotly/base {:=x :time
                   :=y :frequency
-                  :=mark-color :magnitude
+                  :=color :magnitude
                   :=x-title "Time (s)"
                   :=y-title "Frequency (Hz)"
                   :=title "Spectrogram: Chirp Signal (5→50 Hz sweep)"
@@ -869,7 +1243,7 @@
 (-> (tc/dataset energy-comparison)
     (plotly/base {:=x :keep-ratio
                   :=y :energy-retained
-                  :=mark-color :transform
+                  :=color :transform
                   :=x-title "% Coefficients Kept"
                   :=y-title "% Energy Retained"
                   :=title "Energy Concentration: DCT vs FFT on Smooth Signal"
@@ -1047,7 +1421,7 @@
 (-> (tc/dataset basis-comparison-data)
     (plotly/base {:=x :time
                   :=y :amplitude
-                  :=mark-color :type
+                  :=color :type
                   :=x-title "Time"
                   :=y-title "Amplitude"
                   :=title "Basis Functions: Global (Sine/Cosine) vs Local (Haar Wavelets)"
@@ -1258,7 +1632,7 @@
                   {:row i :col j :value (aget signal-2d i j)}))
     (plotly/base {:=x :col
                   :=y :row
-                  :=mark-color :value
+                  :=color :value
                   :=title "2D Signal: Horizontal 3Hz + Vertical 5Hz"
                   :=width 400
                   :=height 400})
@@ -1286,7 +1660,7 @@
                   {:row i :col j :value (Math/log (+ 1 (aget mag-2d i j)))}))
     (plotly/base {:=x :col
                   :=y :row
-                  :=mark-color :value
+                  :=color :value
                   :=x-title "Frequency X"
                   :=y-title "Frequency Y"
                   :=title "2D FFT Spectrum - Bright Spots Show Frequency Components"
@@ -1337,7 +1711,7 @@
 (-> (tc/dataset dct-basis-grid)
     (plotly/base {:=x :col
                   :=y :row
-                  :=mark-color :value
+                  :=color :value
                   :=facet-x :freq-u
                   :=facet-y :freq-v
                   :=title "2D DCT Basis Functions (Baseline JPEG uses these!)"
