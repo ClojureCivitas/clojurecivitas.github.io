@@ -41,40 +41,42 @@
 ;; [Apache Commons Math](https://commons.apache.org/proper/commons-math/) is a comprehensive mathematical library for Java. It provides [`FastFourierTransformer`](https://commons.apache.org/proper/commons-math/javadocs/api-3.6.1/org/apache/commons/math3/transform/FastFourierTransformer.html) with various transform types and [normalization](https://en.wikipedia.org/wiki/Discrete_Fourier_transform#Normalization) options.
 ;;
 ;; **Key features:**
-;; - Part of Apache Commons (widely used, stable)
+;; - Part of Apache Commons (widely used, stable, maintained)
 ;; - Supports multiple normalization conventions
+;; - 1D FFT, [Hadamard](https://en.wikipedia.org/wiki/Hadamard_transform), and sine/cosine transforms
 ;; - Requires input length to be a [power of 2](https://en.wikipedia.org/wiki/Power_of_two)
-;; - Returns [`Complex[]`](https://commons.apache.org/proper/commons-math/javadocs/api-3.6.1/org/apache/commons/math3/complex/Complex.html) arrays (Java objects)
+;; - Returns [`Complex[]`](https://commons.apache.org/proper/commons-math/javadocs/api-3.6.1/org/apache/commons/math3/complex/Complex.html) arrays (allocation overhead)
 
 ;; ### jdsp
 ;;
-;; [jdsp](https://jdsp.dev) is a Java [Digital Signal Processing](https://en.wikipedia.org/wiki/Digital_signal_processing) library providing [filters](https://en.wikipedia.org/wiki/Digital_filter), transforms, [peak detection](https://en.wikipedia.org/wiki/Peak_detection), and more. It uses Apache Commons Math internally for FFT computation.
+;; [jdsp](https://jdsp.dev) by [Sambit Paul](https://github.com/psambit9791) is a Java [Digital Signal Processing](https://en.wikipedia.org/wiki/Digital_signal_processing) library providing [filters](https://en.wikipedia.org/wiki/Digital_filter), transforms, [peak detection](https://en.wikipedia.org/wiki/Peak_detection), and more. It uses Apache Commons Math internally for FFT computation.
 ;;
 ;; **Key features:**
 ;; - Convenient wrapper around Apache Commons Math
 ;; - Simple API: [`new FastFourier(signal).transform()`](https://javadoc.io/doc/com.github.psambit9791/jdsp/latest/com/github/psambit9791/jdsp/transform/FastFourier.html)
-;; - Includes additional DSP utilities ([filters](https://en.wikipedia.org/wiki/Digital_filter), [wavelets](https://en.wikipedia.org/wiki/Wavelet), [convolution](https://en.wikipedia.org/wiki/Convolution))
-;; - Good for projects needing broader DSP functionality
+;; - Includes comprehensive DSP utilities ([filters](https://en.wikipedia.org/wiki/Digital_filter), [wavelets](https://en.wikipedia.org/wiki/Wavelet), [convolution](https://en.wikipedia.org/wiki/Convolution), [STFT](https://en.wikipedia.org/wiki/Short-time_Fourier_transform))
+;; - Good for projects needing broader DSP functionality beyond FFT
 
 ;; ### JTransforms
 ;;
-;; [JTransforms](https://github.com/wendykierp/JTransforms) by Piotr Wendykier is the first open-source, multithreaded FFT library written in pure Java. It's optimized for performance with [parallel processing](https://en.wikipedia.org/wiki/Parallel_computing) support.
+;; [JTransforms](https://github.com/wendykierp/JTransforms) by [Piotr Wendykier](https://github.com/wendykierp) is the first open-source, multithreaded FFT library written in pure Java. It's optimized for performance with [parallel processing](https://en.wikipedia.org/wiki/Parallel_computing) support.
 ;;
 ;; **Key features:**
 ;; - **Parallelized** [split-radix](https://en.wikipedia.org/wiki/Split-radix_FFT_algorithm) and [mixed-radix](https://en.wikipedia.org/wiki/Mixed-radix) algorithms
+;; - Supports **1D, 2D, and 3D** transforms (FFT, [DCT](https://en.wikipedia.org/wiki/Discrete_cosine_transform), [DST](https://en.wikipedia.org/wiki/Discrete_sine_transform), [DHT](https://en.wikipedia.org/wiki/Discrete_Hartley_transform))
 ;; - [In-place mutations](https://en.wikipedia.org/wiki/In-place_algorithm) (efficient but not functional)
-;; - Supports FFT, [DCT](https://en.wikipedia.org/wiki/Discrete_cosine_transform), [DST](https://en.wikipedia.org/wiki/Discrete_sine_transform), [DHT](https://en.wikipedia.org/wiki/Discrete_Hartley_transform) transforms
+;; - Mixed-radix support: works with arbitrary sizes (not just power-of-2)
 ;; - Used internally by fastmath and dtype-next
 
 ;; ### fastmath
 ;;
-;; [fastmath](https://github.com/generateme/fastmath) (version 3.x) is a Clojure library for fast primitive-based mathematics. Its [`fastmath.transform`](https://generateme.github.io/fastmath/fastmath.transform.html) namespace wraps JTransforms with an idiomatic Clojure API.
+;; [fastmath](https://github.com/generateme/fastmath) (version 3.x) by [Tomasz Sulej](https://github.com/genmeblog) is a Clojure library for fast primitive-based mathematics. Its [`fastmath.transform`](https://generateme.github.io/fastmath/fastmath.transform.html) namespace wraps JTransforms with an idiomatic Clojure API.
 ;;
 ;; **Key features:**
 ;; - Immutable, [functional](https://en.wikipedia.org/wiki/Functional_programming) API (no in-place mutations)
-;; - Leverages JTransforms' parallelized performance
+;; - Leverages JTransforms' parallelized performance and mixed-radix algorithms
 ;; - [Protocol-based](https://clojure.org/reference/protocols) design: `transformer` → `forward-1d`/`reverse-1d`
-;; - Supports 1D and 2D transforms, multiple transform types
+;; - Supports **1D and 2D** transforms, multiple transform types (FFT, DCT, DST, DHT, wavelets)
 
 ;; ## Test Signal: Two-Tone Sine Wave
 
@@ -105,7 +107,6 @@
 
 ;; Let's visualize the signal:
 
-^:kindly/hide-code
 (-> (tc/dataset {:time (take 128 time-points)
                  :amplitude (take 128 signal)})
     (plotly/base {:=x :time
@@ -117,6 +118,34 @@
                   :=height 300})
     (plotly/layer-line {:=mark-color "steelblue"})
     plotly/plot)
+
+;; ## Visualization Helper
+
+;; To visualize FFT results throughout this post, we'll use a helper function:
+
+(defn plot-fft-spectrum
+  "Plot FFT magnitude spectrum.
+  
+  Parameters:
+  - magnitudes: sequence of magnitude values
+  - title: plot title
+  - color: line color (e.g., 'darkgreen', 'darkorange')
+  
+  Returns Plotly visualization."
+  [magnitudes title color]
+  (let [n-bins (count magnitudes)
+        freq-bins (dfn/* (range n-bins) (/ sample-rate n-samples))]
+    (-> (tc/dataset {:frequency freq-bins
+                     :magnitude magnitudes})
+        (plotly/base {:=x :frequency
+                      :=y :magnitude
+                      :=x-title "Frequency (Hz)"
+                      :=y-title "Magnitude"
+                      :=title title
+                      :=width 700
+                      :=height 300})
+        (plotly/layer-line {:=mark-color color})
+        plotly/plot)))
 
 ;; ## FFT Implementation #1: Apache Commons Math
 
@@ -146,20 +175,10 @@
 
 ;; Visualize the first half (positive frequencies):
 
-^:kindly/hide-code
-(let [freq-bins (dfn/* (range (quot (count commons-magnitudes) 2))
-                       (/ sample-rate n-samples))]
-  (-> (tc/dataset {:frequency freq-bins
-                   :magnitude (take (quot (count commons-magnitudes) 2) commons-magnitudes)})
-      (plotly/base {:=x :frequency
-                    :=y :magnitude
-                    :=x-title "Frequency (Hz)"
-                    :=y-title "Magnitude"
-                    :=title "FFT Spectrum (Apache Commons Math)"
-                    :=width 700
-                    :=height 300})
-      (plotly/layer-line {:=mark-color "darkgreen"})
-      plotly/plot))
+(plot-fft-spectrum
+ (take (quot (count commons-magnitudes) 2) commons-magnitudes)
+ "FFT Spectrum (Apache Commons Math)"
+ "darkgreen")
 
 ;; ## FFT Implementation #2: jdsp
 
@@ -176,22 +195,11 @@
 (def jdsp-result
   (time (fft-jdsp signal)))
 
-;; Visualize:
-
-^:kindly/hide-code
-(let [freq-bins (dfn/* (range (count jdsp-result))
-                       (/ sample-rate n-samples))]
-  (-> (tc/dataset {:frequency freq-bins
-                   :magnitude jdsp-result})
-      (plotly/base {:=x :frequency
-                    :=y :magnitude
-                    :=x-title "Frequency (Hz)"
-                    :=y-title "Magnitude"
-                    :=title "FFT Spectrum (jdsp)"
-                    :=width 700
-                    :=height 300})
-      (plotly/layer-line {:=mark-color "darkorange"})
-      plotly/plot))
+; Visualize
+(plot-fft-spectrum
+ jdsp-result
+ "FFT Spectrum (jdsp)"
+ "darkorange")
 
 ;; ## FFT Implementation #3: JTransforms (Direct)
 
@@ -224,22 +232,11 @@
 (def jtransforms-magnitudes
   (jtransforms-magnitude jtransforms-result))
 
-;; Visualize:
-
-^:kindly/hide-code
-(let [freq-bins (dfn/* (range (count jtransforms-magnitudes))
-                       (/ sample-rate n-samples))]
-  (-> (tc/dataset {:frequency freq-bins
-                   :magnitude jtransforms-magnitudes})
-      (plotly/base {:=x :frequency
-                    :=y :magnitude
-                    :=x-title "Frequency (Hz)"
-                    :=y-title "Magnitude"
-                    :=title "FFT Spectrum (JTransforms)"
-                    :=width 700
-                    :=height 300})
-      (plotly/layer-line {:=mark-color "purple"})
-      plotly/plot))
+; Visualize
+(plot-fft-spectrum
+ jtransforms-magnitudes
+ "FFT Spectrum (JTransforms)"
+ "purple")
 
 ;; ## FFT Implementation #4: fastmath
 
@@ -269,22 +266,11 @@
 (def fastmath-magnitudes
   (fastmath-magnitude fastmath-result))
 
-;; Visualize:
-
-^:kindly/hide-code
-(let [freq-bins (dfn/* (range (count fastmath-magnitudes))
-                       (/ sample-rate n-samples))]
-  (-> (tc/dataset {:frequency freq-bins
-                   :magnitude fastmath-magnitudes})
-      (plotly/base {:=x :frequency
-                    :=y :magnitude
-                    :=x-title "Frequency (Hz)"
-                    :=y-title "Magnitude"
-                    :=title "FFT Spectrum (fastmath)"
-                    :=width 700
-                    :=height 300})
-      (plotly/layer-line {:=mark-color "crimson"})
-      plotly/plot))
+; Visualize
+(plot-fft-spectrum
+ fastmath-magnitudes
+ "FFT Spectrum (fastmath)"
+ "crimson")
 
 ;; ## Performance Comparison
 
@@ -310,7 +296,6 @@
      :jtransforms (benchmark-fft fft-jtransforms signal n)
      :fastmath (benchmark-fft fft-fastmath signal n)}))
 
-^:kindly/hide-code
 (kind/table
  [{:library "Apache Commons Math"
    :time-per-fft (format "%.3f ms" (get-in bench-small-128 [:apache-commons :per-iter-ms]))}
@@ -332,7 +317,6 @@
      :jtransforms (benchmark-fft fft-jtransforms signal-large n)
      :fastmath (benchmark-fft fft-fastmath signal-large n)}))
 
-^:kindly/hide-code
 (kind/table
  [{:library "Apache Commons Math"
    :time-per-fft (format "%.3f ms" (get-in bench-large-131k [:apache-commons :per-iter-ms]))}
@@ -393,7 +377,6 @@
 (ConcurrencyUtils/setNumberOfThreads (.availableProcessors (Runtime/getRuntime)))
 
 ; Visualize results
-^:kindly/hide-code
 (-> (tc/dataset thread-performance)
     (plotly/base {:=x :threads
                   :=y :per-iter-ms
@@ -441,7 +424,6 @@
    :available-processors (.availableProcessors (Runtime/getRuntime))
    :clojure-version (clojure-version)})
 
-^:kindly/hide-code
 (kind/table
  [(assoc machine-info :property "Machine Configuration")])
 
