@@ -344,7 +344,7 @@
 
 ;; ### Testing Thread Performance
 
-;; Let's test with power-of-2 sizes to ensure we're using the fast Cooley-Tukey algorithm.
+;; Let's test with power-of-2 sizes to ensure we're using the fast SPLIT_RADIX plan.
 ;; We'll use [criterium](https://github.com/hugoduncan/criterium) for proper JVM benchmarking (warmup, statistics, GC handling):
 
 (import 'pl.edu.icm.jlargearrays.ConcurrencyUtils
@@ -431,9 +431,9 @@
 
 ;; Based on our experiments: **Don't worry about thread count for 1D FFT**. Use the default (typically matching your CPU cores), or even just 1 thread. The performance difference is negligible for typical signal sizes, and single-threaded is more predictable.
 ;;
-;; If you need maximum performance, focus on:
-;; - Using power-of-2 signal sizes (triggers fast Cooley-Tukey algorithm)
-;; - Choosing the right library (JTransforms/fastmath are fastest)
+;; If you need good performance, focus on:
+;; - Using power-of-2 signal sizes (triggers fast SPLIT_RADIX plan)
+;; - Choosing an appropriate library (JTransforms/fastmath are typically fastest for 1D, though differences aren't huge)
 ;; - Optimizing your overall algorithm to minimize FFT calls
 
 ;; **Note:** 2D and 3D FFTs may benefit more from parallelization since they have more work to distribute. We only tested 1D here.
@@ -526,9 +526,9 @@
 
 ;; **For most Clojure projects: fastmath 3**
 ;;
-;; fastmath provides the best balance of performance and developer experience:
+;; fastmath provides a good balance of performance and developer experience:
 ;; - Idiomatic Clojure API (functional, immutable)
-;; - Leverages JTransforms' parallelized performance
+;; - Leverages JTransforms' performance
 ;; - Rich ecosystem (transforms, signal processing, statistics)
 ;; - Actively maintained
 ;;
@@ -539,15 +539,15 @@
   (let [fft (fm-transform/transformer :real :fft)]
     (-> signal
         (fm-transform/forward-1d fft)
-        (fm-transform/reverse-1d fft)))) ; Round-trip
+        (fm-transform/reverse-1d fft))))
 
-;; **For maximum performance: JTransforms (directly)**
+;; **For direct Java interop: JTransforms**
 ;;
-;; If you need the absolute fastest FFT and don't mind mutation:
+;; If you want to use JTransforms directly and don't mind mutation:
 ;; - Use `DoubleFFT_1D` directly
 ;; - In-place mutations avoid allocations
-;; - Parallelized algorithms scale well
-;; - Good for real-time audio processing or large-scale data
+;; - May be slightly faster than fastmath wrapper in some cases
+;; - Good for real-time audio processing or when you need fine-grained control
 
 ;; **For broader DSP needs: JDSP**
 ;;
@@ -555,17 +555,15 @@
 ;; - Convenient, batteries-included library
 ;; - Simple API
 ;; - Good documentation
-;; - Note: FFT performance lags behind JTransforms
+;; - Note: FFT performance is somewhat slower than JTransforms/fastmath
 
-;; **Avoid: Apache Commons Math (for FFT specifically)**
+;; **Apache Commons Math: Consider alternatives**
 ;;
-;; While Commons Math is excellent for general mathematics, for FFT specifically:
-;; - Slower than JTransforms
+;; While Commons Math is excellent for general mathematics, for FFT specifically you might prefer other options:
+;; - Somewhat slower than JTransforms/fastmath
 ;; - Returns boxed `Complex[]` objects (allocation overhead)
-;; - Consider it if you're already using Commons Math for other features
+;; - Still a reasonable choice if you're already using Commons Math for other features
 
 ;; ## Summary
 
-;; The Clojure ecosystem offers excellent FFT options through Java interop. For typical signal processing tasks, **fastmath 3** provides the sweet spot: JTransforms' performance wrapped in a Clojure-friendly API. For the ultimate speed, use **JTransforms directly**. And if you need comprehensive DSP utilities beyond FFT, **JDSP** is worth exploring.
-;;
-;; All code from this comparison is available in the [Clojure Civitas repository](https://github.com/clojurecivitas/clojurecivitas.github.io).
+;; The Clojure ecosystem offers several good FFT options through Java interop. For typical signal processing tasks, **fastmath 3** is a solid choice: JTransforms' performance wrapped in a Clojure-friendly API. For direct control, use **JTransforms directly**. And if you need comprehensive DSP utilities beyond FFT, **JDSP** is worth exploring.
