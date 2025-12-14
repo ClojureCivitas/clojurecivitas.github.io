@@ -301,6 +301,15 @@
 ;; Why would a transform of real data produce complex output? This seems unnecessarily
 ;; complicated. Let's build intuition for why complex numbers are not just mathematical
 ;; elegance—they're computational necessity.
+;;
+;; **Note on dtype-next operations**: In the examples below, you'll see operations like `dfn/*`
+;; and `dfn//`. These are element-wise operations from dtype-next:
+;; - `dfn/*` multiplies arrays element-by-element: `[1 2 3] * 2 → [2 4 6]`
+;; - `dfn//` divides arrays element-by-element: `[2 4 6] / 2 → [1 2 3]`  
+;; - `dfn/+`, `dfn/-` work similarly for addition and subtraction
+;; - `dfn/cos`, `dfn/sin` apply trigonometric functions to each element
+;;
+;; We'll explore these operations more deeply as we use them throughout the tutorial.
 
 ;; ### The Problem: Sines and Cosines Are Both Needed
 
@@ -507,6 +516,27 @@
 ;; (t/reverse-1d fft spectrum)
 ;;
 ;; This same pattern works for DCT, DST, DHT, and wavelets—just change the transform type!
+
+;; ### Performance: JTransforms and Parallelism
+;;
+;; Under the hood, fastmath uses [JTransforms](https://github.com/wendykierp/JTransforms),
+;; a high-performance Java library that automatically parallelizes large transforms.
+;;
+;; **Key performance features**:
+;; - **Automatic parallelization**: For arrays larger than ~8K elements, JTransforms splits
+;;   work across available CPU cores using Java's `ForkJoinPool`
+;; - **SIMD optimizations**: Uses Java's auto-vectorization where possible
+;; - **In-place transforms**: Can operate directly on input arrays (fastmath wraps this safely)
+;; - **Algorithm selection**: Chooses optimal FFT algorithm (split-radix, mixed-radix, or
+;;   Bluestein) based on array size
+;;
+;; **What this means for you**: You don't need to think about parallelism—just pass large
+;; arrays and JTransforms automatically uses all available cores. For smaller signals (<8K),
+;; the overhead of parallelization exceeds the benefit, so it runs single-threaded.
+;;
+;; **Performance tip**: Reuse transformer objects! The constructor pre-computes lookup tables
+;; (twiddle factors), so creating a transformer once and reusing it is much faster than
+;; creating a new one for each transform.
 
 ;; ### Understanding the DFT: Signal Decomposition
 ;;
@@ -970,6 +1000,19 @@
 ;; scaled and shifted basis functions.
 ;;
 ;; Signal = a₁·ψ(t-1) + a₂·ψ(2t-1) + a₃·ψ(2t-2) + ...
+;;
+;; **⚠️ Important**: Most wavelet transforms (Haar, Daubechies, Symlets) require **power-of-2
+;; array sizes** (64, 128, 256, 512, etc.). This is because wavelets work by recursively
+;; splitting signals in half. If your signal isn't a power of 2, you'll need to pad it:
+;;
+;; ```clojure
+;; ;; Pad to next power of 2
+;; (let [n (dtype/ecount signal)
+;;       target-n (int (Math/pow 2 (Math/ceil (/ (Math/log n) (Math/log 2)))))]
+;;   ;; ... pad signal to target-n ...)
+;; ```
+;;
+;; We'll show the padding pattern in our examples below.
 ;;
 ;; Where ψ is a localized wavelet function at different scales and positions.
 ;;
@@ -1551,27 +1594,46 @@
   {:category "Array access" :functions "dtype/ecount, dtype/get-value, dtype/sub-buffer"}
   {:category "Search" :functions "argops/argmax - find index of maximum"}])
 
-;; ### Common Patterns
+;; ### Common dtype-next Patterns - Quick Reference
 
-;; Throughout signal processing, certain computational patterns appear repeatedly. 
-;; Root mean square error combines difference, squaring, and averaging to measure 
-;; signal similarity:
-;;
-;; (Math/sqrt (dfn/mean (dfn/sq (dfn/- signal1 signal2))))
-;;
-;; Signal energy sums the squares of all values:
-;;
-;; (dfn/sum (dfn/sq signal))
-;;
-;; Normalization centers and scales a signal to zero mean and unit variance:
-;;
-;; (dfn// (dfn/- signal (dfn/mean signal)) (dfn/standard-deviation signal))
-;;
-;; Signal-to-noise ratio ([SNR](https://en.wikipedia.org/wiki/Signal-to-noise_ratio)) 
-;; in decibels compares signal power to noise power:
-;;
-;; (* 20 (Math/log10 (/ (dfn/mean (dfn/sq signal))
-;;                      (dfn/mean (dfn/sq noise)))))
+;; Throughout the tutorial, you've seen these dtype-next patterns repeatedly. Here's a
+;; quick reference with working examples you can use in your own code.
+
+;; **Root Mean Square Error (RMSE)** - measures how different two signals are:
+(defn compute-rmse [signal1 signal2]
+  (Math/sqrt (dfn/mean (dfn/sq (dfn/- signal1 signal2)))))
+
+;; Example: Compare original and compressed
+(let [original (range 100)
+      noisy (dfn/+ original 0.1)]
+  (compute-rmse original noisy))
+
+;; **Signal Energy** - total power in a signal:
+(defn signal-energy [signal]
+  (dfn/sum (dfn/sq signal)))
+
+;; Example: Energy before and after filtering
+(signal-energy (:signal (:pure-sine signals)))
+
+;; **Normalization** - zero mean, unit variance:
+(defn normalize [signal]
+  (dfn// (dfn/- signal (dfn/mean signal))
+         (dfn/standard-deviation signal)))
+
+;; Example: Normalize before processing
+(let [normalized (normalize (:signal (:two-tones signals)))]
+  {:mean (dfn/mean normalized)
+   :std (dfn/standard-deviation normalized)})
+
+;; **Signal-to-Noise Ratio ([SNR](https://en.wikipedia.org/wiki/Signal-to-noise_ratio)) in dB**:
+(defn snr-db [signal noise]
+  (* 20 (Math/log10 (/ (dfn/mean (dfn/sq signal))
+                       (dfn/mean (dfn/sq noise))))))
+
+;; Example: Measure compression quality
+;; (let [signal (:signal (:smooth signals))
+;;       noise (dfn/- signal compressed-signal)]
+;;   (snr-db signal noise))
 
 ;; ### Transform Selection Flowchart
 
