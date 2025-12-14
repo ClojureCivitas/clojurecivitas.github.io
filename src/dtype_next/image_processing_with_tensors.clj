@@ -1,5 +1,6 @@
 ^{:kindly/hide-code true
   :clay {:title "Image Processing with dtype-next Tensors"
+         :external-requirements ["slow computation"]
          :quarto {:author :daslu
                   :type :post
                   :date "2025-12-10"
