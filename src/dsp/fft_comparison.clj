@@ -1,5 +1,6 @@
 ^{:kindly/hide-code true
   :clay {:title "Comparing FFT Implementations in Clojure"
+         :external-requirements ["slow computation"]
          :quarto {:author :daslu
                   :draft true
                   :type :post

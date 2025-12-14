@@ -1,5 +1,6 @@
 ^{:kindly/hide-code true
   :clay {:title "Signal Transforms: A Comprehensive Guide to FFT, DCT, and Wavelets"
+         :external-requirements ["slow computation"]
          :quarto {:author :daslu
                   :draft true
                   :type :post
