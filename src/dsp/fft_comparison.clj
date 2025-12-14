@@ -13,7 +13,8 @@
             [tech.v3.datatype :as dtype]
             [tech.v3.datatype.functional :as dfn]
             [tablecloth.api :as tc]
-            [scicloj.tableplot.v1.plotly :as plotly])
+            [scicloj.tableplot.v1.plotly :as plotly]
+            [criterium.core :as crit])
   (:import [org.apache.commons.math3.transform FastFourierTransformer
             DftNormalization
             TransformType]
@@ -289,43 +290,39 @@
 
 ;; Small signal (128 samples):
 
-(def bench-small-128
-  (let [n 1000]
-    {:apache-commons (benchmark-fft fft-apache-commons signal n)
-     :jdsp (benchmark-fft fft-jdsp signal n)
-     :jtransforms (benchmark-fft fft-jtransforms signal n)
-     :fastmath (benchmark-fft fft-fastmath signal n)}))
-
-(kind/table
- [{:library "Apache Commons Math"
-   :time-per-fft (format "%.3f ms" (get-in bench-small-128 [:apache-commons :per-iter-ms]))}
-  {:library "jdsp"
-   :time-per-fft (format "%.3f ms" (get-in bench-small-128 [:jdsp :per-iter-ms]))}
-  {:library "JTransforms"
-   :time-per-fft (format "%.3f ms" (get-in bench-small-128 [:jtransforms :per-iter-ms]))}
-  {:library "fastmath"
-   :time-per-fft (format "%.3f ms" (get-in bench-small-128 [:fastmath :per-iter-ms]))}])
+(let [bench-small-128 (let [n 1000]
+                        {:apache-commons (benchmark-fft fft-apache-commons signal n)
+                         :jdsp (benchmark-fft fft-jdsp signal n)
+                         :jtransforms (benchmark-fft fft-jtransforms signal n)
+                         :fastmath (benchmark-fft fft-fastmath signal n)})]
+  (kind/table
+   [{:library "Apache Commons Math"
+     :time-per-fft (format "%.3f ms" (get-in bench-small-128 [:apache-commons :per-iter-ms]))}
+    {:library "jdsp"
+     :time-per-fft (format "%.3f ms" (get-in bench-small-128 [:jdsp :per-iter-ms]))}
+    {:library "JTransforms"
+     :time-per-fft (format "%.3f ms" (get-in bench-small-128 [:jtransforms :per-iter-ms]))}
+    {:library "fastmath"
+     :time-per-fft (format "%.3f ms" (get-in bench-small-128 [:fastmath :per-iter-ms]))}]))
 
 ;; Larger signal (2^17 = 131,072 samples):
 
 (def signal-large (generate-test-signal 131072))
 
-(def bench-large-131k
-  (let [n 10]
-    {:apache-commons (benchmark-fft fft-apache-commons signal-large n)
-     :jdsp (benchmark-fft fft-jdsp signal-large n)
-     :jtransforms (benchmark-fft fft-jtransforms signal-large n)
-     :fastmath (benchmark-fft fft-fastmath signal-large n)}))
-
-(kind/table
- [{:library "Apache Commons Math"
-   :time-per-fft (format "%.3f ms" (get-in bench-large-131k [:apache-commons :per-iter-ms]))}
-  {:library "jdsp"
-   :time-per-fft (format "%.3f ms" (get-in bench-large-131k [:jdsp :per-iter-ms]))}
-  {:library "JTransforms"
-   :time-per-fft (format "%.3f ms" (get-in bench-large-131k [:jtransforms :per-iter-ms]))}
-  {:library "fastmath"
-   :time-per-fft (format "%.3f ms" (get-in bench-large-131k [:fastmath :per-iter-ms]))}])
+(let [bench-large-131k (let [n 10]
+                         {:apache-commons (benchmark-fft fft-apache-commons signal-large n)
+                          :jdsp (benchmark-fft fft-jdsp signal-large n)
+                          :jtransforms (benchmark-fft fft-jtransforms signal-large n)
+                          :fastmath (benchmark-fft fft-fastmath signal-large n)})]
+  (kind/table
+   [{:library "Apache Commons Math"
+     :time-per-fft (format "%.3f ms" (get-in bench-large-131k [:apache-commons :per-iter-ms]))}
+    {:library "jdsp"
+     :time-per-fft (format "%.3f ms" (get-in bench-large-131k [:jdsp :per-iter-ms]))}
+    {:library "JTransforms"
+     :time-per-fft (format "%.3f ms" (get-in bench-large-131k [:jtransforms :per-iter-ms]))}
+    {:library "fastmath"
+     :time-per-fft (format "%.3f ms" (get-in bench-large-131k [:fastmath :per-iter-ms]))}]))
 
 ;; ## Understanding Parallelization Performance
 
@@ -339,16 +336,21 @@
         'org.jtransforms.utils.CommonUtils)
 
 (defn benchmark-with-threads
-  "Benchmark FFT at specific thread count."
-  [n-threads signal n-iterations]
-  (ConcurrencyUtils/setNumberOfThreads n-threads)
-  (let [start (System/nanoTime)
-        _ (dotimes [_ n-iterations]
-            (fft-fastmath signal))
-        end (System/nanoTime)
-        elapsed-ms (/ (- end start) 1e6)]
-    {:threads n-threads
-     :per-iter-ms (/ elapsed-ms n-iterations)}))
+  "Benchmark FFT at specific thread count using criterium for statistical analysis."
+  [n-threads signal]
+  (let [previous-threads (ConcurrencyUtils/getNumberOfThreads)]
+    (try
+      (ConcurrencyUtils/setNumberOfThreads n-threads)
+      ;; Use criterium's quick-bench for proper JVM warmup and statistics
+      (let [result (crit/quick-benchmark* (fn [] (fft-fastmath signal)) {})]
+        {:threads n-threads
+         ;; Criterium returns [value (lower-ci upper-ci)] for each metric
+         :mean-ms (* (first (:mean result)) 1e3) ; Convert seconds to milliseconds
+         :variance-ms (* (first (:variance result)) 1e6) ; Variance in ms^2
+         :lower-q-ms (* (first (:lower-q result)) 1e3)
+         :upper-q-ms (* (first (:upper-q result)) 1e3)})
+      (finally
+        (ConcurrencyUtils/setNumberOfThreads previous-threads)))))
 
 ; Test signals at different sizes (powers of 2)
 (def test-signals
@@ -356,39 +358,38 @@
    :size-131k (generate-test-signal 131072)
    :size-524k (generate-test-signal 524288)})
 
-(def thread-counts [1 2 4 8 16])
+;; **Important limitation**: According to [Wendykier & Grote (2012)](https://www.math.emory.edu/technical-reports/techrep-00127.pdf),
+;; JTransforms 1D FFT can only use **2 or 4 threads maximum**. The algorithm's decomposition
+;; strategy doesn't parallelize beyond this for one-dimensional transforms.
+;; (2D and 3D transforms can use more threads, but we're testing 1D here.)
+(def thread-counts [1 2 4])
 
-; Run comprehensive benchmark
-(def thread-performance
-  (for [size-key [:size-16k :size-131k :size-524k]
-        n-threads thread-counts]
-    (let [sig (get test-signals size-key)
-          n-samples (count sig)
-          n-iterations (if (< n-samples 100000) 50 10)
-          result (benchmark-with-threads n-threads sig n-iterations)]
-      (assoc result
-             :signal-size (case size-key
-                            :size-16k "16K (2^14)"
-                            :size-131k "131K (2^17)"
-                            :size-524k "524K (2^19)")
-             :n-samples n-samples))))
-
-; Reset to system default
-(ConcurrencyUtils/setNumberOfThreads (.availableProcessors (Runtime/getRuntime)))
-
-; Visualize results
-(-> (tc/dataset thread-performance)
-    (plotly/base {:=x :threads
-                  :=y :per-iter-ms
-                  :=color :signal-size
-                  :=title "FFT Performance vs Thread Count (fastmath/JTransforms)"
-                  :=x-title "Number of Threads"
-                  :=y-title "Time per FFT (ms)"
-                  :=width 800
-                  :=height 500})
-    (plotly/layer-point {:=mark-size 10})
-    (plotly/layer-line {:=mark-opacity 0.6})
-    plotly/plot)
+; Run comprehensive benchmark with criterium
+; Note: This will take several minutes as criterium performs proper JVM warmup and statistical analysis
+(let [thread-performance (for [size-key [:size-16k :size-131k :size-524k]
+                               n-threads thread-counts]
+                           (let [sig (get test-signals size-key)
+                                 n-samples (count sig)
+                                 result (benchmark-with-threads n-threads sig)]
+                             (assoc result
+                                    :signal-size (case size-key
+                                                   :size-16k "16K (2^14)"
+                                                   :size-131k "131K (2^17)"
+                                                   :size-524k "524K (2^19)")
+                                    :n-samples n-samples)))]
+  ; Visualize results
+  (-> (tc/dataset thread-performance)
+      (plotly/base {:=x :threads
+                    :=y :mean-ms
+                    :=color :signal-size
+                    :=title "FFT Performance vs Thread Count (fastmath/JTransforms)"
+                    :=x-title "Number of Threads"
+                    :=y-title "Mean Time per FFT (ms)"
+                    :=width 800
+                    :=height 500})
+      (plotly/layer-point {:=mark-size 10})
+      (plotly/layer-line {:=mark-opacity 0.6})
+      plotly/plot))
 
 ;; ### Why Limited Speedup?
 
