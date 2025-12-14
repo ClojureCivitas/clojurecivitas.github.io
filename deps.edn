@@ -10,6 +10,7 @@
   io.github.clojure/core.async.flow-monitor   {:git/tag "v0.1.2"
                                                :git/url "https://github.com/clojure/core.async.flow-monitor"
                                                :git/sha "6248a5d"}
+  criterium/criterium                                   {:mvn/version "0.4.6"}
   metosin/malli                               {:mvn/version "0.19.1"}
   clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
   clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
