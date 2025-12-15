@@ -395,22 +395,6 @@ z-rotated
 ;; **Frequency** is just **how many times the point goes around the circle during one period**.
 ;; That's it. No mysterious wave physics—just counting rotations.
 
-;; ### What k=0 Means: The DC Component
-
-;; **k=0** means **no rotation**—a point that doesn't move around the circle. It stays at the same
-;; angle all the time. This represents the **constant/average value** of the signal.
-;;
-;; For our temperature data, DFT[0] tells us the sum of all temperatures:
-
-(dfn/sum temperatures)
-
-;; The **average temperature** is this sum divided by N:
-
-(dfn/mean temperatures)
-
-;; The name "DC" comes from electrical engineering ("direct current"—electricity that doesn't alternate),
-;; but the idea is simple: it's the baseline level around which the signal oscillates.
-
 ;; ### What k=N/2 Means: The Nyquist Frequency
 
 ;; **k=N/2** (for our 8-sample signal, k=4) is the **fastest oscillation detectable**. It rotates
@@ -517,8 +501,12 @@ z-rotated
 
 ;; **Reading this spectrum:**
 ;; - k=0: The constant component (average temperature, also called DC for "direct current" from electrical engineering)
-;; - k=1: Dominant—one cycle per period (the daily pattern)
+;; - k=1: Largest oscillating component—one cycle per period (the daily pattern)
 ;; - k=2, k=3: Smaller contributions (higher harmonics—multiples of the base frequency)
+;;
+;; **Why is k=1 the dominant oscillation?** The k=0 component (DC) is large because it represents
+;; the sum of all temperatures, but it's not an oscillation—it's just the baseline. Among the
+;; oscillating components (k≥1), k=1 has by far the largest magnitude, revealing a strong daily cycle.
 
 ;; The DFT has revealed that our temperatures are dominated by a **daily cycle** (k=1),
 ;; with some higher-frequency variation.
@@ -526,13 +514,13 @@ z-rotated
 ;; ## Computational Note: Naive DFT vs FFT
 
 ;; The DFT formula we've described—computing inner products for each frequency—requires
-;; **$O(N^2)$ operations** ("order N-squared" — roughly N×N multiplications, since for each
-;; of N frequencies, we sum over N samples).
+;; **[$O(N^2)$](https://en.wikipedia.org/wiki/Big_O_notation) operations**: roughly N×N multiplications, since for each
+;; of N frequencies, we sum over N samples.
 ;;
 ;; For 1024 samples, that's ~1 million multiplications (1024 × 1024).
 ;;
 ;; The **Fast Fourier Transform (FFT)** computes the exact same result using clever
-;; algebraic factorization, reducing complexity to **$O(N \log N)$** ("order N log N")—only
+;; algebraic factorization, reducing complexity to **$O(N \log N)$**—only
 ;; ~10,000 operations for 1024 samples, a 100× speedup!
 ;;
 ;; The FFT is one of the most important algorithms in computing. It doesn't change
@@ -546,15 +534,32 @@ z-rotated
 
 ;; Let's build signals with known frequency content and verify the DFT finds them.
 
+;; Helper function to extract magnitudes from DFT results:
+
+(defn extract-magnitudes [spectrum n]
+  (mapv (fn [k]
+          (let [real (nth spectrum (* 2 k))
+                imag (nth spectrum (inc (* 2 k)))]
+            {:frequency k
+             :magnitude (Math/sqrt (+ (* real real) (* imag imag)))}))
+        (range n)))
+
+;; For these examples, create a 1-second signal sampled at 100 Hz:
+
+(def sample-rate 100.0)
+(def duration 1.0)
+(def n-samples (int (* sample-rate duration)))
+(def sample-times (dfn// (range n-samples) sample-rate))
+
 ;; ### Example 1: Sum of Two Pure Frequencies
 
 ;; Create a signal with exactly two frequency components: 5 Hz and 15 Hz
 
 (def signal-two-freqs
-  (dfn/+ (dfn/sin (dfn/* 2.0 Math/PI 5.0 time))
-         (dfn/* 0.5 (dfn/sin (dfn/* 2.0 Math/PI 15.0 time)))))
+  (dfn/+ (dfn/sin (dfn/* 2.0 Math/PI 5.0 sample-times))
+         (dfn/* 0.5 (dfn/sin (dfn/* 2.0 Math/PI 15.0 sample-times)))))
 
-(-> (tc/dataset {:time (vec time) :value (vec signal-two-freqs)})
+(-> (tc/dataset {:time (vec sample-times) :value (vec signal-two-freqs)})
     (plotly/base {:=x :time
                   :=y :value
                   :=x-title "Time (seconds)"
@@ -592,7 +597,7 @@ z-rotated
 (def noise (dfn/* 0.3 (dfn/- (repeatedly n-samples rand) 0.5)))
 (def signal-noisy (dfn/+ signal-two-freqs noise))
 
-(-> (tc/dataset {:time (vec time) :value (vec signal-noisy)})
+(-> (tc/dataset {:time (vec sample-times) :value (vec signal-noisy)})
     (plotly/base {:=x :time
                   :=y :value
                   :=x-title "Time (seconds)"
@@ -628,7 +633,7 @@ z-rotated
 
 ;; Create a signal at 7.3 Hz (doesn't align with DFT bins)
 
-(def signal-non-integer (dfn/sin (dfn/* 2.0 Math/PI 7.3 time)))
+(def signal-non-integer (dfn/sin (dfn/* 2.0 Math/PI 7.3 sample-times)))
 (def spectrum-non-integer (t/forward-1d dft-transformer signal-non-integer))
 (def mags-non-integer (extract-magnitudes spectrum-non-integer 20))
 
@@ -819,24 +824,19 @@ inner-product-diff-freq
 
 ;; ### Demonstration: A Pure Sine Wave
 
-;; Let's create a pure sine wave at exactly 10 Hz, sampled at 100 Hz for 1 second (100 samples):
-
-(def sample-rate 100.0)
-(def duration 1.0)
-(def n-samples (int (* sample-rate duration)))
-(def time (dfn// (range n-samples) sample-rate))
+;; Let's create a pure sine wave at exactly 10 Hz (using our 1-second, 100 Hz sample rate from earlier):
 
 ;; Case 1: Frequency that fits perfectly (10 Hz - exactly 10 cycles in 1 second)
-(def sine-perfect (dfn/sin (dfn/* 2.0 Math/PI 10.0 time)))
+(def sine-perfect (dfn/sin (dfn/* 2.0 Math/PI 10.0 sample-times)))
 
 ;; Case 2: Frequency that doesn't fit (10.5 Hz - creates discontinuity)
-(def sine-leaky (dfn/sin (dfn/* 2.0 Math/PI 10.5 time)))
+(def sine-leaky (dfn/sin (dfn/* 2.0 Math/PI 10.5 sample-times)))
 
 ;; Visualize the signals at the boundaries
 
 (-> (tc/concat
-     (tc/dataset {:time (vec time) :value (vec sine-perfect) :signal "10 Hz (perfect fit)"})
-     (tc/dataset {:time (vec time) :value (vec sine-leaky) :signal "10.5 Hz (discontinuous)"}))
+     (tc/dataset {:time (vec sample-times) :value (vec sine-perfect) :signal "10 Hz (perfect fit)"})
+     (tc/dataset {:time (vec sample-times) :value (vec sine-leaky) :signal "10.5 Hz (discontinuous)"}))
     (plotly/base {:=x :time
                   :=y :value
                   :=color :signal
@@ -857,14 +857,6 @@ inner-product-diff-freq
 
 (def spectrum-perfect (t/forward-1d dft-transformer sine-perfect))
 (def spectrum-leaky (t/forward-1d dft-transformer sine-leaky))
-
-(defn extract-magnitudes [spectrum n]
-  (mapv (fn [k]
-          (let [real (nth spectrum (* 2 k))
-                imag (nth spectrum (inc (* 2 k)))]
-            {:frequency k
-             :magnitude (Math/sqrt (+ (* real real) (* imag imag)))}))
-        (range n)))
 
 (def mags-perfect (extract-magnitudes spectrum-perfect 30))
 (def mags-leaky (extract-magnitudes spectrum-leaky 30))
