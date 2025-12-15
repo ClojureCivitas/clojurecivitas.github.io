@@ -259,10 +259,11 @@ rotated-90
 rotated-neg-90
 
 ;; Example 4: Multiply by point on unit circle at arbitrary angle
+;; (The **unit circle** is the circle with radius 1 centered at the origin—all points at distance 1 from (0,0))
 
 (def z-rotated
   (complex-mult {:real 1.0 :imag 1.0} ; 45° from x-axis, magnitude √2
-                {:real 0.0 :imag 1.0})) ; i = 90° rotation
+                {:real 0.0 :imag 1.0})) ; i = 90° rotation (i is on the unit circle)
 
 z-rotated
 
@@ -289,29 +290,31 @@ z-rotated
 ;; Visualize rotation by multiplying several points by i (90° counterclockwise):
 
 (def original-points
-  [{:real 1.0 :imag 0.0}
-   {:real 0.7 :imag 0.7}
-   {:real 0.0 :imag 1.0}
-   {:real -0.7 :imag 0.7}])
+  [{:real 1.0 :imag 0.2}
+   {:real 0.7 :imag 0.4}
+   {:real 0.4 :imag 0.6}
+   {:real 0.2 :imag 0.8}])
 
 (def rotated-points
   (mapv #(complex-mult % {:real 0.0 :imag 1.0}) original-points))
 
 (def rotation-demo-data
   (tc/concat
+   ;; Original points
    (tc/dataset (map-indexed
                 (fn [i p]
                   {:x (:real p)
                    :y (:imag p)
-                   :type "Original"
-                   :point (str "P" i)})
+                   :type "Original points"
+                   :label (str "P" i)})
                 original-points))
+   ;; Rotated points
    (tc/dataset (map-indexed
                 (fn [i p]
                   {:x (:real p)
                    :y (:imag p)
-                   :type "After ×i (90° rotation)"
-                   :point (str "P" i)})
+                   :type "After ×i (rotated 90°)"
+                   :label (str "P" i "′")})
                 rotated-points))))
 
 (-> rotation-demo-data
@@ -324,19 +327,12 @@ z-rotated
                   :=title "Multiplying by i Rotates All Points 90° Counterclockwise"
                   :=width 500
                   :=height 500})
-    (plotly/layer-point {:=mark-size 12})
+    (plotly/layer-point {:=mark-size 14})
     plotly/plot
     (assoc-in [:layout :yaxis :scaleanchor] "x"))
 
 ;; **Key insight:** Multiplying by a number on the unit circle (magnitude 1) performs a pure rotation
 ;; (no scaling—just rotation).
-;;
-;; **Why this matters for Fourier transforms:**
-;; - Addition = superposition of rotations
-;; - Multiplication = compose rotations (rotate by the angle, scale by magnitude)
-;;
-;; The algebra **matches the geometry**. Complex numbers aren't just a 2D plane with
-;; coordinates—they're an **algebraic structure that embodies rotation**.
 
 ;; ### Euler's Formula: The Compact Notation
 
@@ -345,18 +341,18 @@ z-rotated
 ;; **$e^{i\theta} = \cos(\theta) + i \cdot \sin(\theta)$**
 ;;
 ;; This expresses a point at angle $\theta$ on the unit circle. It's not a new concept—it's
-;; just compact notation for what we've been doing: the real part is $\cos(\theta)$ (horizontal)
+;; just compact representation for what we've been doing: the real part is $\cos(\theta)$ (horizontal)
 ;; and the imaginary part is $\sin(\theta)$ (vertical).
 ;;
-;; The exponential notation is powerful because it makes the rotation properties explicit:
-;; - $e^{i\theta}$ represents rotation by angle $\theta$
-;; - $e^{i\theta_1} \times e^{i\theta_2} = e^{i(\theta_1+\theta_2)}$ — multiplying rotations adds their angles
-;; - $e^{-i\theta}$ is rotation in the opposite direction (conjugate)
+;; The exponential is powerful because it makes the rotation properties explicit:
+;; - Multiplication by $e^{i\theta}$ is rotation by angle $\theta$
+;; - Multiplying $e^{i\theta_1} \times e^{i\theta_2} = e^{i(\theta_1+\theta_2)}$ composes rotations—angles add
+;; - Multiplication by $e^{-i\theta}$ is rotation in the opposite direction (conjugate)
 ;;
 ;; We'll use this notation when we write the DFT formula, but remember: it's describing the
 ;; same geometric rotation we've been visualizing.
 ;;
-;; **Now the compact notation makes sense:** Any number on the unit circle can be written
+;; **Now the compact representation makes sense:** Any number on the unit circle can be written
 ;; as $e^{i\theta}$ for some angle $\theta$. Multiplication by $e^{i\theta}$ rotates by angle θ,
 ;; and the algebra reflects the geometry: $e^{i\theta_1} \times e^{i\theta_2} = e^{i(\theta_1+\theta_2)}$ — angles add!
 
