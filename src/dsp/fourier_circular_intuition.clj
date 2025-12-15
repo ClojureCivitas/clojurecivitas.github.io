@@ -49,8 +49,8 @@
 ;; a circle at constant speed.
 
 ;; Generate one complete rotation
-(def n-points 100)
-(def angles (dfn/* (dfn// (range n-points) n-points) (* 2 Math/PI)))
+(def n-points 400)
+(def angles (dfn/* (dfn// (range n-points) (double n-points)) (* 2 Math/PI)))
 
 ;; Position on the circle: (cos θ, sin θ)
 (def x-positions (dfn/cos angles))
@@ -63,10 +63,13 @@
                   :=x-title "Horizontal Position"
                   :=y-title "Vertical Position"
                   :=title "A Point Rotating on a Circle"
-                  :=width 400
+                  :=width 450
                   :=height 400})
-    (plotly/layer-line)
-    (plotly/layer-point {:=mark-size 8}))
+    plotly/layer-line
+    (plotly/layer-point {:=mark-size 8
+                         :=mark-opacity 0.5})
+    plotly/plot
+    (assoc-in [:layout :showlegend] false))
 
 ;; This circle is our **fundamental object**. Everything else—sine waves, cosine waves,
 ;; complex exponentials—derives from this simple rotation.
@@ -80,13 +83,17 @@
 ;; As the point rotates, each shadow moves back and forth along its axis. Let's trace these
 ;; shadows over time.
 
-(def time-points (dfn// (range n-points) 10.0)) ; Time in arbitrary units
+(def time-points
+  ;; Normalized time 0 to 1
+  (dfn// (range n-points) (double n-points))) 
 
 ;; Create dataset with both projections
 (def projections-data
   (tc/dataset {:time time-points
-               :horizontal x-positions ; Cosine - the horizontal shadow
-               :vertical y-positions})) ; Sine - the vertical shadow
+               ;; Cosine - the horizontal shadow
+               :horizontal x-positions
+               ;; Sine - the vertical shadow
+               :vertical y-positions})) 
 
 ;; Visualize both shadows
 (-> projections-data
@@ -97,10 +104,10 @@
                   :=title "Two Shadows of One Rotation"
                   :=width 700
                   :=height 300})
-    (plotly/layer-line {:=color "steelblue"
+    (plotly/layer-line {:=mark-color "steelblue"
                         :=name "Horizontal shadow (cosine)"})
     (plotly/layer-line {:=y :vertical
-                        :=color "orange"
+                        :=mark-color "orange"
                         :=name "Vertical shadow (sine)"}))
 
 ;; **Key insight**: The horizontal shadow traces **cosine**, the vertical shadow traces **sine**.
@@ -108,71 +115,107 @@
 ;;
 ;; Cosine and sine are **projections**, not primitives. The circle is more fundamental.
 
-;; ## The Problem: Shadows Are Incomplete
+;; ## The Problem: One Shadow Loses Direction
 
-;; Here's where things get interesting. Suppose I tell you: "I see a horizontal shadow moving
-;; back and forth, reaching ±1." Can you tell me what the point on the circle is doing?
+;; Here's the fundamental issue. Imagine two points rotating at the same speed but in
+;; **opposite directions**:
+;; - Point A: rotating **counterclockwise** (upward when moving right)
+;; - Point B: rotating **clockwise** (downward when moving right)
 ;;
-;; **No!** The horizontal shadow alone is ambiguous. When the shadow is at +1, the point could be:
-;; - At the rightmost point of the circle (3 o'clock position)
-;; - Or it could have vertical position +0.5 (northeast somewhere)
-;; - Or vertical position -0.5 (southeast somewhere)
+;; Watch their horizontal shadows. At any moment when both shadows are at the same position,
+;; **you cannot tell which direction each point is rotating** by looking at horizontal position
+;; alone.
 ;;
-;; The shadow gives you **one coordinate**. To know where the point is on the circle, you need
-;; **both** horizontal and vertical positions.
+;; The horizontal shadow (cosine) captures **frequency** (speed of rotation) but loses
+;; **direction** (sign of the vertical component). You need **both shadows** to distinguish
+;; clockwise from counterclockwise.
 
-;; Let's visualize this ambiguity:
+;; Let's see this with a concrete example that matters for Fourier decomposition.
 
-;; Three different rotations, same horizontal shadow
-(def rotation-1 {:name "Starting at 3 o'clock" :phase 0.0})
-(def rotation-2 {:name "Starting at 2 o'clock" :phase (/ Math/PI 6)})
-(def rotation-3 {:name "Starting at 4 o'clock" :phase (- (/ Math/PI 6))})
+;; Two different signals, same frequency, different "direction"
+(def demo-time (dfn// (range 400) 100.0))
+(def freq 2.0) ; 2 Hz
 
-(defn rotation-with-phase [phase]
-  (let [t (dfn// (range 50) 5.0)
-        theta (dfn/+ (dfn/* 2.0 Math/PI t) phase)]
-    {:time t
-     :horizontal (dfn/cos theta)
-     :vertical (dfn/sin theta)}))
+;; Signal A: cos(2πft) - rotation starting at 3 o'clock, going counterclockwise
+(def signal-a (dfn/cos (dfn/* 2.0 Math/PI freq demo-time)))
 
-;; All three have the same frequency, different starting angles (phases)
-(def phase-comparison-data
-  (concat
-   (map (fn [i] (assoc (rotation-with-phase 0.0)
-                       :index i
-                       :rotation (:name rotation-1)))
-        (range 50))
-   (map (fn [i] (assoc (rotation-with-phase (/ Math/PI 6))
-                       :index i
-                       :rotation (:name rotation-2)))
-        (range 50))
-   (map (fn [i] (assoc (rotation-with-phase (- (/ Math/PI 6)))
-                       :index i
-                       :rotation (:name rotation-3)))
-        (range 50))))
+;; Signal B: cos(2πft + π) = -cos(2πft) - rotation starting at 9 o'clock, going counterclockwise
+;; This is like rotating in the opposite direction
+(def signal-b (dfn/* -1.0 (dfn/cos (dfn/* 2.0 Math/PI freq demo-time))))
 
-;; Show horizontal projections - they look different!
-(-> (tc/dataset (for [rot [rotation-1 rotation-2 rotation-3]
-                      :let [{:keys [time horizontal]} (rotation-with-phase (:phase rot))]
-                      i (range (count time))]
-                  {:time (nth time i)
-                   :horizontal (nth horizontal i)
-                   :rotation (:name rot)}))
+;; Visualize both signals
+(-> (tc/concat
+     (tc/dataset {:time demo-time :amplitude signal-a :signal "Signal A: cos(2πft)"})
+     (tc/dataset {:time demo-time :amplitude signal-b :signal "Signal B: -cos(2πft)"}))
     (plotly/base {:=x :time
-                  :=y :horizontal
-                  :=color :rotation
-                  :=x-title "Time"
-                  :=y-title "Horizontal Shadow"
-                  :=title "Same Speed, Different Starting Angles → Different Shadows"
+                  :=y :amplitude
+                  :=color :signal
+                  :=x-title "Time (seconds)"
+                  :=y-title "Amplitude"
+                  :=title "Two Different Signals at Same Frequency"
                   :=width 700
                   :=height 300})
     (plotly/layer-line))
 
-;; **Observation**: Even though all three rotations have the **same speed** (same frequency),
-;; their horizontal shadows look different because they started at different angles.
+;; **Key observation**: These are **different signals** - one is the negative of the other.
+;; But if we only look at their **magnitude spectrum** (which ignores phase), they appear
+;; identical.
 ;;
-;; If we only track the horizontal shadow (cosine), we lose information about the **phase**
-;; (starting angle). To fully describe the rotation, we need both shadows.
+;; Let's prove this with a more dramatic example using actual Fourier decomposition.
+
+;; ## Demonstrating Information Loss: Why Phase Matters
+
+;; Here are two completely different signals at the same frequency:
+
+;; Signal 1: cos(2πft) - starts at maximum, phase = 0
+(def t-demo (dfn// (range 400) 100.0))
+(def signal-cos (dfn/cos (dfn/* 2.0 Math/PI 5.0 t-demo)))
+
+;; Signal 2: sin(2πft) = cos(2πft - π/2) - starts at zero rising, phase = -π/2
+(def signal-sin (dfn/sin (dfn/* 2.0 Math/PI 5.0 t-demo)))
+
+;; Visualize both
+(-> (tc/concat
+     (tc/dataset {:time t-demo :amplitude signal-cos :signal "cos(2π·5t) - starts at max"})
+     (tc/dataset {:time t-demo :amplitude signal-sin :signal "sin(2π·5t) - starts at zero"}))
+    (plotly/base {:=x :time
+                  :=y :amplitude
+                  :=color :signal
+                  :=x-title "Time"
+                  :=y-title "Amplitude"
+                  :=title "Different Signals, Same Frequency and Magnitude"
+                  :=width 700
+                  :=height 300})
+    (plotly/layer-line))
+
+;; **Critical fact**: These signals have:
+;; ✓ Same frequency (5 Hz)
+;; ✓ Same magnitude spectrum (both will show amplitude 1.0 at 5 Hz)
+;; ✗ Different phase spectrum (0° vs -90°)
+;; ✗ **Completely different values at every time point!**
+
+;; Check the difference:
+(def difference-at-start (dfn/- (first signal-cos) (first signal-sin)))
+;; cos(0) - sin(0) = 1.0 - 0.0 = 1.0
+
+(kind/hiccup
+ [:div
+  [:p [:strong "At t=0:"]]
+  [:ul
+   [:li (str "cos signal: " (format "%.3f" (first signal-cos)))]
+   [:li (str "sin signal: " (format "%.3f" (first signal-sin)))]
+   [:li (str "difference: " (format "%.3f" difference-at-start))]]])
+
+;; **The fatal problem**: If you run a Fourier transform and **throw away the phase** (keeping
+;; only magnitudes), you cannot tell these signals apart. You've lost the information about
+;; whether the rotation started at 3 o'clock (cosine) or 12 o'clock going right (sine).
+;;
+;; Without phase, the Fourier transform becomes **non-invertible** - you cannot reconstruct
+;; the original signal. This isn't a mathematical quirk - it's fundamental information loss.
+;;
+;; Complex numbers solve this by preserving **both** the horizontal shadow (real part) and
+;; vertical shadow (imaginary part), which together uniquely specify the rotation and its
+;; starting angle.
 
 ;; ## The Speed of Rotation: Frequency
 
@@ -194,24 +237,15 @@
      :frequency freq}))
 
 (def freq-comparison
-  (concat
-   (let [{:keys [time position]} (rotation-at-frequency 1.0 2.0 50.0)]
-     (map-indexed (fn [i _] {:time (nth time i)
-                             :position (nth position i)
-                             :frequency "1 Hz (slow)"})
-                  time))
-   (let [{:keys [time position]} (rotation-at-frequency 3.0 2.0 50.0)]
-     (map-indexed (fn [i _] {:time (nth time i)
-                             :position (nth position i)
-                             :frequency "3 Hz (medium)"})
-                  time))
-   (let [{:keys [time position]} (rotation-at-frequency 5.0 2.0 50.0)]
-     (map-indexed (fn [i _] {:time (nth time i)
-                             :position (nth position i)
-                             :frequency "5 Hz (fast)"})
-                  time))))
+  (let [{:keys [time position]} (rotation-at-frequency 1.0 2.0 50.0)
+        {time-3 :time position-3 :position} (rotation-at-frequency 3.0 2.0 50.0)
+        {time-5 :time position-5 :position} (rotation-at-frequency 5.0 2.0 50.0)]
+    (tc/concat
+     (tc/dataset {:time time :position position :frequency "1 Hz (slow)"})
+     (tc/dataset {:time time-3 :position position-3 :frequency "3 Hz (medium)"})
+     (tc/dataset {:time time-5 :position position-5 :frequency "5 Hz (fast)"}))))
 
-(-> (tc/dataset freq-comparison)
+(-> freq-comparison
     (plotly/base {:=x :time
                   :=y :position
                   :=color :frequency
@@ -235,27 +269,18 @@
 ;; shadow is just the sum of individual shadows.
 
 ;; Create a composite signal: 1 Hz + 3 Hz
-(def composite-time (dfn// (range 200) 50.0))
+(def composite-time (dfn// (range 400) 100.0))
 (def component-1hz (dfn/cos (dfn/* 2.0 Math/PI 1.0 composite-time)))
 (def component-3hz (dfn/* 0.6 (dfn/cos (dfn/* 2.0 Math/PI 3.0 composite-time))))
 (def composite-signal (dfn/+ component-1hz component-3hz))
 
 (def superposition-data
-  (concat
-   (map-indexed (fn [i _] {:time (nth composite-time i)
-                           :amplitude (nth component-1hz i)
-                           :component "1 Hz component"})
-                composite-time)
-   (map-indexed (fn [i _] {:time (nth composite-time i)
-                           :amplitude (nth component-3hz i)
-                           :component "3 Hz component"})
-                composite-time)
-   (map-indexed (fn [i _] {:time (nth composite-time i)
-                           :amplitude (nth composite-signal i)
-                           :component "Combined signal"})
-                composite-time)))
+  (tc/concat
+   (tc/dataset {:time composite-time :amplitude component-1hz :component "1 Hz component"})
+   (tc/dataset {:time composite-time :amplitude component-3hz :component "3 Hz component"})
+   (tc/dataset {:time composite-time :amplitude composite-signal :component "Combined signal"})))
 
-(-> (tc/dataset superposition-data)
+(-> superposition-data
     (plotly/base {:=x :time
                   :=y :amplitude
                   :=color :component
@@ -311,18 +336,19 @@
 
 ;; Let's visualize what this means in the complex plane:
 
-(def omega 2.0) ; Rotation speed (frequency)
-(def demo-time (dfn// (range 100) 20.0))
+
+(def omega
+  ;; Rotation speed (frequency)
+  2.0)
+(def demo-time (dfn// (range 400) 80.0))
 (def demo-theta (dfn/* omega demo-time))
 
 (def complex-plane-data
-  (map-indexed (fn [i _]
-                 {:real (Math/cos (nth demo-theta i))
-                  :imag (Math/sin (nth demo-theta i))
-                  :time (nth demo-time i)})
-               demo-time))
+  (tc/dataset {:real (dfn/cos demo-theta)
+               :imag (dfn/sin demo-theta)
+               :time demo-time}))
 
-(-> (tc/dataset complex-plane-data)
+(-> complex-plane-data
     (plotly/base {:=x :real
                   :=y :imag
                   :=color :time
@@ -331,7 +357,6 @@
                   :=title "Complex Plane: e^(iωt) Traces a Circle"
                   :=width 450
                   :=height 450})
-    (plotly/layer-line)
     (plotly/layer-point {:=mark-size 6}))
 
 ;; **What you're seeing**: Each point represents a moment in time. The real coordinate is the
@@ -392,9 +417,3 @@
 ;; and at what angle they started.
 ;;
 ;; Real numbers give you shadows. Complex numbers give you the circle itself.
-
-;; ---
-;;
-;; **Next in the series**: 
-;; - [Signal Transforms: A Comprehensive Guide](#) - Practical tools for FFT, DCT, wavelets in Clojure
-;; - Fourier Theory Across Domains (upcoming) - Continuous, discrete, periodic, and finite cases unified
