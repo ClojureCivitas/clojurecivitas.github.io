@@ -901,11 +901,39 @@ inner-product-diff-freq
 
 ;; Apply Hann window to the leaky signal
 (def hann-window
-  (dfn/* 0.5
-         (dfn/- 1.0
-                (dfn/cos (dfn/* 2.0 Math/PI (dfn// (range n-samples) (dec n-samples)))))))
+  (let [indices (range n-samples)
+        normalized (dfn// indices (double (dec n-samples)))]
+    (dfn/* 0.5
+           (dfn/- 1.0
+                  (dfn/cos (dfn/* 2.0 Math/PI normalized))))))
 
 (def sine-windowed (dfn/* sine-leaky hann-window))
+
+;; Visualize what windowing does to the signal:
+(-> (tc/concat
+     (tc/dataset {:time sample-times
+                  :value sine-leaky
+                  :signal "Original 10.5 Hz sine"})
+     (tc/dataset {:time sample-times
+                  :value hann-window
+                  :signal "Hann window"})
+     (tc/dataset {:time sample-times
+                  :value sine-windowed
+                  :signal "Windowed result"}))
+    (plotly/base {:=x :time
+                  :=y :value
+                  :=color :signal
+                  :=x-title "Time (s)"
+                  :=y-title "Amplitude"
+                  :=title "How Windowing Tapers the Signal"
+                  :=width 700
+                  :=height 350})
+    (plotly/layer-line))
+
+;; Notice how the window smoothly tapers the sine wave to zero at both edges,
+;; eliminating the discontinuity that causes leakage.
+
+;; Now let's see the effect in the frequency domain:
 (def spectrum-windowed (t/forward-1d dft-transformer sine-windowed))
 (def mags-windowed (extract-magnitudes spectrum-windowed 30))
 
@@ -1025,21 +1053,14 @@ inner-product-diff-freq
 (def k1-magnitude (Math/sqrt (+ (* a1 a1) (* b1 b1))))
 (def k1-phase-rad (Math/atan2 (- b1) a1))
 
-(def triangle-viz
-  (tc/dataset
-   [{:x 0.0 :y 0.0 :component "Origin"}
-    {:x a1 :y 0.0 :component "Cosine coefficient (a₁)"}
-    {:x a1 :y (- b1) :component "DFT[1] = a₁ - ib₁"}
-    {:x 0.0 :y 0.0 :component "Magnitude line"}]))
-
 (-> (tc/concat
      ;; Right triangle edges
-     (tc/dataset [{:x [0.0 a1] :y [0.0 0.0] :line "Cosine (a₁)"}
-                  {:x [a1 a1] :y [0.0 (- b1)] :line "Sine (b₁)"}
-                  {:x [0.0 a1] :y [0.0 (- b1)] :line "Magnitude"}])
+     (tc/dataset {:x [0.0 a1] :y [0.0 0.0] :line "Cosine (a₁)"})
+     (tc/dataset {:x [a1 a1] :y [0.0 (- b1)] :line "Sine (b₁)"})
+     (tc/dataset {:x [0.0 a1] :y [0.0 (- b1)] :line "Magnitude"})
      ;; Points
-     (tc/dataset [{:x 0.0 :y 0.0 :point "Origin"}
-                  {:x a1 :y (- b1) :point (format "DFT[1] = (%.1f, %.1f)" a1 (- b1))}]))
+     (tc/dataset {:x 0.0 :y 0.0 :point "Origin"}
+                 {:x a1 :y (- b1) :point (format "DFT[1] = (%.1f, %.1f)" a1 (- b1))}))
     (plotly/base {:=x-title "Cosine Coefficient (a₁)"
                   :=y-title "−Sine Coefficient (−b₁)"
                   :=title (format "Geometric View: Magnitude = %.2f, Phase = %.1f°"
@@ -1047,8 +1068,8 @@ inner-product-diff-freq
                                   (Math/toDegrees k1-phase-rad))
                   :=width 500
                   :=height 500})
-    (plotly/layer-line {:=x :x :=y :y :=group :line :=mark-color :line})
-    (plotly/layer-point {:=x :x :=y :y :=size 10 :=mark-color "black"})
+    (plotly/layer-line {:=x :x :=y :y :=group :line :=color :line})
+    (plotly/layer-point {:=x :x :=y :y :=mark-size 10 :=mark-color "black"})
     plotly/plot
     (assoc-in [:layout :yaxis :scaleanchor] "x"))
 
@@ -1118,8 +1139,9 @@ inner-product-diff-freq
 ;; ### Practical Consequences
 
 ;; This symmetry means:
-;; - We only need to store $N/2+1$ coefficients (not all $N$)
-;; - Still have $N$ independent values (same as input)
+;; - We only need to store $N/2+1$ complex coefficients (not all $N$)
+;; - Each complex coefficient has 2 real values (real + imaginary parts), except k=0 and k=N/2 which are real-only
+;; - Total: $N$ independent real values (same as the N-sample input)
 ;; - Half the frequencies are redundant (mirror images of the other half)
 
 ;; For our $N=8$ temperatures:
@@ -1244,9 +1266,9 @@ inner-product-diff-freq
 
 ;; ## The Core Insight
 
-;; **Fourier transforms are about rotations, not waves.**
+;; **Fourier transforms are about rotations—waves are the shadows.**
 ;;
-;; Waves (sine and cosine) are what you see when you project rotation onto axes.
+;; Sine and cosine are what you see when you project circular motion onto axes.
 ;; The circle is more fundamental.
 ;;
 ;; When you have N numbers:
