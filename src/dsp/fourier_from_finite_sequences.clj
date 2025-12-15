@@ -206,7 +206,17 @@
 ;; You could represent rotations as 2D vectors $(x, y)$, but then **multiplication has no
 ;; geometric meaning**. What does $(x_1, y_1) \times (x_2, y_2)$ mean?
 ;;
-;; Complex multiplication is **rotation and scaling**:
+;; Complex multiplication is **rotation and scaling**. To see why, remember that any point
+;; can be described two ways:
+;; - **Cartesian**: (x, y) — how far right, how far up
+;; - **Polar**: (r, θ) — how far from origin, what angle
+;;
+;; In polar form, multiplication is simple: **(r₁, θ₁) × (r₂, θ₂) = (r₁×r₂, θ₁+θ₂)**
+;; — multiply distances, add angles. That's rotation!
+;;
+;; The formula we'll use converts this polar rule into Cartesian coordinates.
+;; It looks complicated because we're translating between two coordinate systems,
+;; but it's doing something simple: adding angles when you multiply.
 
 ;; Multiply two complex numbers
 (defn complex-mult [z1 z2]
@@ -271,7 +281,8 @@ z-rotated
    :effect "Rotate by θ"
    :example (str "(" (format "%.1f" (:real z-rotated)) ", " (format "%.1f" (:imag z-rotated)) ")")}])
 
-;; **Key insight:** Any number on the unit circle (magnitude 1) performs a pure rotation.
+;; **Key insight:** Multiplying by a number on the unit circle (magnitude 1) performs a pure rotation
+;; (no scaling—just rotation).
 ;;
 ;; **Why this matters for Fourier transforms:**
 ;; - Addition = superposition of rotations
@@ -345,6 +356,17 @@ z-rotated
 
 ;; Here's the remarkable fact: **any** periodic pattern can be created by adding up
 ;; rotations at these specific speeds.
+;;
+;; **Why these N frequencies?** Think of it like mixing colors. To make any color on a screen,
+;; you need exactly 3 independent values (red, green, blue). More than 3 is redundant, less than 3
+;; can't make all colors. It's a **3-dimensional** space.
+;;
+;; Similarly:
+;; - Eight temperature readings = 8 independent numbers
+;; - You need exactly 8 independent "ingredients" to reconstruct any pattern
+;; - These 8 rotation frequencies (k=0,1,2,...,7) are those ingredients
+;; - They're **independent** (orthogonal—we'll explain this shortly) - each contributes something unique
+;; - Together they can build any possible 8-sample pattern
 ;;
 ;; Our eight temperatures? They're the sum of (at most) eight rotating points, each
 ;; going at a different speed (k = 0, 1, 2, ..., 7).
@@ -723,12 +745,64 @@ z-rotated
 ;;
 ;; **Key insight**: The magnitude of the inner product tells you how strongly the patterns align.
 ;; Large absolute value = strong relationship, small value = unrelated patterns.
+;;
+;; **A clever trick we'll use:** To measure if your signal contains rotation at frequency k,
+;; we'll multiply by the **opposite rotation** (backward/clockwise). This counter-rotation
+;; makes the matching frequency "stand still," turning it into something easy to measure—like
+;; running on a backwards treadmill to check your speed.
+
+;; ### Why N Specific Frequencies?
+
+;; Here's the key mathematical fact: the N rotation speeds we use **don't interfere with each other**.
+;; They're like independent directions—mathematicians call this "orthogonal."
+;;
+;; Let's see this concretely. Create two rotations at different frequencies and compute their inner product:
+
+(def freq-1-rotation (dfn/cos (dfn/* 2.0 Math/PI 1.0 (dfn// (range 8) 8.0))))
+(def freq-2-rotation (dfn/cos (dfn/* 2.0 Math/PI 2.0 (dfn// (range 8) 8.0))))
+(def inner-product-diff-freq (dfn/sum (dfn/* freq-1-rotation freq-2-rotation)))
+
+inner-product-diff-freq
+
+;; The result is zero (or very close)! They're **perpendicular** in the same sense
+;; that the x-axis and y-axis are perpendicular. They don't overlap, don't interfere.
+;;
+;; **This is why the DFT works:**
+;; - You have N samples → N independent values to specify
+;; - You need N independent "building blocks" (like needing 3 colors - red, green, blue - to make any color)
+;; - These N rotation frequencies are your building blocks
+;; - They're independent (orthogonal) so measuring one doesn't affect the others
+;; - The inner product cleanly separates them: "How much of frequency k is present?"
+;;
+;; This orthogonality guarantees that:
+;; 1. Any N-sample signal can be built from these N frequencies (completeness)
+;; 2. The decomposition is unique (each frequency component is independent)
+;; 3. Reconstruction works perfectly (no information lost)
 
 ;; ## The DFT Formula: Measuring Alignment with Rotations
 
 ;; Now we can understand what the DFT does. The formula is:
 ;;
 ;; **$\text{DFT}[k] = \sum_{n=0}^{N-1} x[n] \cdot e^{-i2\pi kn/N}$**
+;;
+;; Notice the **negative** sign in the exponent. This is the key to the "treadmill test."
+;;
+;; **The Treadmill Analogy:** Imagine you want to know if someone is running at exactly 5 mph.
+;; You put them on a treadmill running **backwards** at 5 mph:
+;; - If they're running at exactly 5 mph: they stay in one place (perfect match!)
+;; - If they're running at 4 mph: they drift backwards
+;; - If they're running at 6 mph: they drift forwards
+;;
+;; **The DFT does the same thing:**
+;; - Your signal might be "rotating" at various speeds
+;; - To measure frequency k, you rotate **backwards** (clockwise) at speed k using $e^{-i2\pi kn/N}$
+;; - If the signal contains that frequency, the counter-rotation makes it "stand still" (becomes constant)
+;; - A constant pattern has large inner product (all values add constructively)
+;; - The magnitude tells you how strong that frequency was
+;;
+;; **The negative sign = "de-rotation"**: We're spinning the coordinate system backwards to see
+;; which frequency appears stationary. This transforms the detection problem into something simple:
+;; measuring a constant (non-rotating) component.
 ;;
 ;; This is an **inner product** between your signal $x[n]$ and rotation $e^{-i2\pi kn/N}$ at frequency $k$.
 ;;
@@ -1048,6 +1122,11 @@ z-rotated
 
 ;; The reconstruction is perfect (within numerical precision). We've taken eight numbers,
 ;; decomposed them into rotations, and reassembled them—no information lost.
+;;
+;; In fact, not only is the signal preserved, but **energy is preserved** too.
+;; The "energy" (sum of squared values) in the time domain equals the energy in the
+;; frequency domain (up to a scaling factor). This is called **Parseval's theorem**:
+;; another consequence of the orthogonality of the DFT basis functions.
 ;;
 ;; This is the power of the Fourier perspective: **different representation, same information,
 ;; new insights**.
