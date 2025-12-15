@@ -6,7 +6,8 @@
                   :type :post
                   :date "2025-12-14"
                   :category :data
-                  :tags [:dsp :fft :performance :benchmarks :jtransforms :fastmath :apache-commons]}}}
+                  :tags [:dsp :fft :performance :benchmarks :jtransforms :fastmath :apache-commons]
+                  :image "spectrum.png"}}}
 (ns dsp.fft-comparison
   "A practical comparison of FFT (Fast Fourier Transform) implementations available in Clojure."
   (:require [scicloj.kindly.v4.kind :as kind]
