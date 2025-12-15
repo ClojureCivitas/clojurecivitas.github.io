@@ -266,19 +266,16 @@ z-rotated
    :angle "-90° (270°)"
    :effect "Rotate 90° CW"
    :example (str "(" (format "%.1f" (:real rotated-neg-90)) ", " (format "%.1f" (:imag rotated-neg-90)) ")")}
-  {:multiply-by (kind/md "$e^{i\\theta}$")
+  {:multiply-by "Any unit circle point"
    :angle "θ"
    :effect "Rotate by θ"
    :example (str "(" (format "%.1f" (:real z-rotated)) ", " (format "%.1f" (:imag z-rotated)) ")")}])
 
 ;; **Key insight:** Any number on the unit circle (magnitude 1) performs a pure rotation.
-;; Multiplication by $e^{i\theta}$ rotates by angle θ.
 ;;
 ;; **Why this matters for Fourier transforms:**
 ;; - Addition = superposition of rotations
 ;; - Multiplication = compose rotations (rotate by the angle, scale by magnitude)
-;; - $e^{i\theta}$ = rotation by angle $\theta$
-;; - $e^{i\theta_1} \times e^{i\theta_2} = e^{i(\theta_1+\theta_2)}$ — angles add!
 ;;
 ;; The algebra **matches the geometry**. Complex numbers aren't just a 2D plane with
 ;; coordinates—they're an **algebraic structure that embodies rotation**.
@@ -300,6 +297,10 @@ z-rotated
 ;;
 ;; We'll use this notation when we write the DFT formula, but remember: it's describing the
 ;; same geometric rotation we've been visualizing.
+;;
+;; **Now the compact notation makes sense:** Any number on the unit circle can be written
+;; as $e^{i\theta}$ for some angle $\theta$. Multiplication by $e^{i\theta}$ rotates by angle θ,
+;; and the algebra reflects the geometry: $e^{i\theta_1} \times e^{i\theta_2} = e^{i(\theta_1+\theta_2)}$ — angles add!
 
 ;; ## Different Speeds: The Frequency Spectrum
 
