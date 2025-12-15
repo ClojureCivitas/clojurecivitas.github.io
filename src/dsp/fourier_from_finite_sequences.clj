@@ -5,7 +5,8 @@
                   :type :post
                   :date "2025-12-15"
                   :category :data
-                  :tags [:dsp :fourier :dft :dct :dst :complex-numbers :rotation :discrete]}}}
+                  :tags [:dsp :fourier :dft :dct :dst :complex-numbers :rotation :discrete]
+                  :image "superposition.png"}}}
 (ns dsp.fourier-from-finite-sequences
   "Building Fourier intuition from finite sequences and rotations."
   (:require [fastmath.signal :as sig]
