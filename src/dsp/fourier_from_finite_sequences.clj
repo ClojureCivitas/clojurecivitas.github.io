@@ -653,7 +653,7 @@ z-rotated
 ;; assumption of periodicity, so it requires multiple basis frequencies to approximate.
 ;;
 ;; **Solutions**:
-;; 1. **Windowing**: Apply Hann/Hamming window to reduce sidelobes
+;; 1. **Windowing**: Apply Hann/Hamming window to reduce sidelobes (we'll explore this technique later)
 ;; 2. **Zero-padding**: Increase FFT size to create finer frequency bins
 ;; 3. **Interpolation**: Use parabolic interpolation to estimate true peak location
 ;;
@@ -664,11 +664,19 @@ z-rotated
 ;; Before we see how the DFT computes its coefficients, we need one key mathematical idea:
 ;; **How do we measure if two patterns "align"**?
 ;;
-;; The answer is the **inner product** (also called dot product):
+;; The answer is the **inner product** (also called dot product). For complex numbers,
+;; we use the **conjugate** of the first pattern:
 ;;
-;; **$\langle a, b \rangle = \sum_{n} a_n \cdot b_n$**
+;; **$\langle a, b \rangle = \sum_{n} \overline{a_n} \cdot b_n$**
 ;;
-;; Multiply corresponding elements and add them up. This simple operation has deep geometric meaning:
+;; The bar over $a_n$ means complex conjugate: flip the sign of the imaginary part.
+;;
+;; For real numbers, the conjugate does nothing, so this reduces to ordinary multiplication.
+;; For complex numbers (rotations), conjugating reverses the rotation direction—this
+;; "counter-rotation" makes matching frequencies "stand still," turning them into
+;; something easy to measure.
+;;
+;; This operation has deep geometric meaning:
 ;;
 ;; - **Aligned patterns** (move together): large positive sum
 ;; - **Perpendicular patterns** (unrelated): sum ≈ 0
@@ -704,22 +712,19 @@ z-rotated
    :inner-product (format "%.2f" inner-opposite)
    :meaning "Patterns move inversely"}])
 
-;; **This is exactly correlation**: measuring whether two sequences "march together."
+;; **This is similar to correlation**: measuring whether two sequences "march together."
+;; (Correlation also involves standardization, but the core idea is the same.)
 ;;
 ;; **Key insight**: The magnitude of the inner product tells you how strongly the patterns align.
 ;; Large absolute value = strong relationship, small value = unrelated patterns.
-;;
-;; **A clever trick we'll use:** To measure if your signal contains rotation at frequency k,
-;; we'll multiply by the **opposite rotation** (backward/clockwise). This counter-rotation
-;; makes the matching frequency "stand still," turning it into something easy to measure—like
-;; running on a backwards treadmill to check your speed.
 
 ;; ### Why N Specific Frequencies?
 
 ;; Here's the key mathematical fact: the N rotation speeds we use **don't interfere with each other**.
 ;; They're like independent directions—mathematicians call this "orthogonal."
 ;;
-;; Let's see this concretely. Create two rotations at different frequencies and compute their inner product:
+;; Let's see this concretely. Take the real parts (cosine components) of two rotations
+;; at different frequencies and compute their inner product:
 
 (def freq-1-rotation (dfn/cos (dfn/* 2.0 Math/PI 1.0 (dfn// (range 8) 8.0))))
 (def freq-2-rotation (dfn/cos (dfn/* 2.0 Math/PI 2.0 (dfn// (range 8) 8.0))))
@@ -799,16 +804,17 @@ inner-product-diff-freq
 
 (def manual-k1 (manual-dft-component temperatures 1))
 
-(kind/hiccup
- [:div
-  [:p [:strong "Manual computation of DFT[1]:"]]
-  [:ul
-   [:li (str "Real part: " (format "%.4f" (:real manual-k1)))]
-   [:li (str "Imaginary part: " (format "%.4f" (:imag manual-k1)))]
-   [:li (str "Magnitude: " (format "%.4f"
-                                   (Math/sqrt (+ (* (:real manual-k1) (:real manual-k1))
-                                                 (* (:imag manual-k1) (:imag manual-k1))))))]]
-  [:p "Compare with library result: " (format "%.4f" (:magnitude (nth temp-analysis 1)))]])
+(kind/table
+ [{:component "Real part"
+   :value (format "%.4f" (:real manual-k1))}
+  {:component "Imaginary part"
+   :value (format "%.4f" (:imag manual-k1))}
+  {:component "Magnitude"
+   :value (format "%.4f"
+                  (Math/sqrt (+ (* (:real manual-k1) (:real manual-k1))
+                                (* (:imag manual-k1) (:imag manual-k1)))))}
+  {:component "Library result (for comparison)"
+   :value (format "%.4f" (:magnitude (nth temp-analysis 1)))}])
 
 ;; The formula is doing exactly what we said: measuring how well the signal matches each rotation.
 ;; ## Windowing and Edge Effects: The Implicit Assumption
