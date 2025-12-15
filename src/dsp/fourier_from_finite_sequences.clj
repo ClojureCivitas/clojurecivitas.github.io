@@ -351,10 +351,6 @@ z-rotated
 ;;
 ;; We'll use this notation when we write the DFT formula, but remember: it's describing the
 ;; same geometric rotation we've been visualizing.
-;;
-;; **Now the compact representation makes sense:** Any number on the unit circle can be written
-;; as $e^{i\theta}$ for some angle $\theta$. Multiplication by $e^{i\theta}$ rotates by angle θ,
-;; and the algebra reflects the geometry: $e^{i\theta_1} \times e^{i\theta_2} = e^{i(\theta_1+\theta_2)}$ — angles add!
 
 ;; ## Different Speeds: The Frequency Spectrum
 
@@ -510,25 +506,6 @@ z-rotated
 
 ;; The DFT has revealed that our temperatures are dominated by a **daily cycle** (k=1),
 ;; with some higher-frequency variation.
-
-;; ## Computational Note: Naive DFT vs FFT
-
-;; The DFT formula we've described—computing inner products for each frequency—requires
-;; **[$O(N^2)$](https://en.wikipedia.org/wiki/Big_O_notation) operations**: roughly N×N multiplications, since for each
-;; of N frequencies, we sum over N samples.
-;;
-;; For 1024 samples, that's ~1 million multiplications (1024 × 1024).
-;;
-;; The **Fast Fourier Transform (FFT)** computes the exact same result using clever
-;; algebraic factorization, reducing complexity to **$O(N \log N)$**—only
-;; ~10,000 operations for 1024 samples, a 100× speedup!
-;;
-;; The FFT is one of the most important algorithms in computing. It doesn't change
-;; **what** the DFT computes (still measuring alignment with rotations), only **how fast**
-;; it's computed.
-;;
-;; For comparison of different FFT implementations in Clojure/JVM, see the companion post
-;; [FFT Library Comparison](fft_comparison.html).
 
 ;; ## Interactive Exploration: Building Intuition
 
@@ -787,6 +764,12 @@ inner-product-diff-freq
 ;; - Small magnitude → signal doesn't oscillate at this frequency
 ;;
 ;; The DFT computes this inner product for every possible rotation frequency.
+;;
+;; **Implementation note:** Computing this formula directly requires $O(N^2)$ operations
+;; (N frequencies × N samples). The **Fast Fourier Transform (FFT)** uses algebraic
+;; factorization to reduce this to $O(N \log N)$—a 100× speedup for 1024 samples.
+;; The FFT doesn't change *what* is computed, only *how fast*. See the companion post
+;; [FFT Library Comparison](fft_comparison.html) for Clojure/JVM implementations.
 
 ;; Let's manually compute DFT[1] to see this:
 
@@ -1315,15 +1298,3 @@ inner-product-diff-freq
 ;;
 ;; This is the power of the Fourier perspective: **different representation, same information,
 ;; new insights**.
-
-;; ## Libraries Used
-
-;; This exploration uses several Clojure libraries from the scientific computing ecosystem:
-;;
-;; - **[Fastmath](https://github.com/generateme/fastmath)** - Provides signal processing and transform functions (DFT, DCT, DST) via JTransforms
-;; - **[dtype-next](https://github.com/cnuernber/dtype-next)** - High-performance numerical operations with functional API
-;; - **[Tablecloth](https://github.com/scicloj/tablecloth)** - Data manipulation and dataset operations
-;; - **[Tableplot](https://github.com/scicloj/tableplot)** - Declarative visualization using Plotly
-;; - **[Kindly](https://github.com/scicloj/kindly)** - Protocol for rich visualizations in literate programming
-;;
-;; Together, these libraries enable performant numerical computing with an expressive, functional style.
