@@ -29,7 +29,7 @@
 }
 "])
 
-;; ## Understanding Rotation, Complex Numbers, and Frequency
+;; ## Introduction
 
 ;; If you work with data—audio, images, sensor readings—you've encountered the Fourier
 ;; transform. It's described as "decomposing signals into frequencies," but that explanation
@@ -92,12 +92,17 @@
 ;; **Question**: Can we represent these eight numbers differently—in a way that reveals
 ;; patterns like "daily cycle" or "average temperature"?
 ;;
-;; **Answer**: Yes. Any eight numbers can be represented as a sum of **rotations at different speeds**.
+;; **Answer**: Yes (as we'll discover). Any eight numbers can be represented as a sum of **rotations at different speeds**.
 
 ;; ## From Finite to Periodic: The Circle Emerges
 
 ;; Here's the key insight: eight measurements **implicitly define a periodic pattern**.
 ;; After hour 7, the cycle repeats. Hour 8 = hour 0, hour 9 = hour 1, and so on.
+;;
+;; *(This periodicity is an **assumption** we're making—a choice of representation. We could
+;; use other bases like polynomials or wavelets that make different assumptions. But the
+;; periodic assumption is natural for cyclic phenomena and leads to the elegant frequency
+;; decomposition we're about to explore.)*
 
 ;; Visualize this by arranging the measurements around a circle:
 
@@ -174,7 +179,7 @@
                   :=height 300})
     (plotly/layer-line {:=mark-color "steelblue"}))
 
-;; **This is a cosine wave.** Not constructed—it's just the horizontal shadow of circular motion.
+;; **This is a cosine wave**—the horizontal shadow of circular motion.
 
 ;; ## Why We Need Both Shadows
 
@@ -281,6 +286,48 @@ z-rotated
    :effect "Rotate by θ"
    :example (str "(" (format "%.1f" (:real z-rotated)) ", " (format "%.1f" (:imag z-rotated)) ")")}])
 
+;; Visualize rotation by multiplying several points by i (90° counterclockwise):
+
+(def original-points
+  [{:real 1.0 :imag 0.0}
+   {:real 0.7 :imag 0.7}
+   {:real 0.0 :imag 1.0}
+   {:real -0.7 :imag 0.7}])
+
+(def rotated-points
+  (mapv #(complex-mult % {:real 0.0 :imag 1.0}) original-points))
+
+(def rotation-demo-data
+  (tc/concat
+   (tc/dataset (map-indexed
+                (fn [i p]
+                  {:x (:real p)
+                   :y (:imag p)
+                   :type "Original"
+                   :point (str "P" i)})
+                original-points))
+   (tc/dataset (map-indexed
+                (fn [i p]
+                  {:x (:real p)
+                   :y (:imag p)
+                   :type "After ×i (90° rotation)"
+                   :point (str "P" i)})
+                rotated-points))))
+
+(-> rotation-demo-data
+    (plotly/base {:=x :x
+                  :=y :y
+                  :=color :type
+                  :=mark-symbol :type
+                  :=x-title "Real Part"
+                  :=y-title "Imaginary Part"
+                  :=title "Multiplying by i Rotates All Points 90° Counterclockwise"
+                  :=width 500
+                  :=height 500})
+    (plotly/layer-point {:=mark-size 12})
+    plotly/plot
+    (assoc-in [:layout :yaxis :scaleanchor] "x"))
+
 ;; **Key insight:** Multiplying by a number on the unit circle (magnitude 1) performs a pure rotation
 ;; (no scaling—just rotation).
 ;;
@@ -352,6 +399,37 @@ z-rotated
 ;; **Frequency** is just **how many times the point goes around the circle during one period**.
 ;; That's it. No mysterious wave physics—just counting rotations.
 
+;; ### What k=0 Means: The DC Component
+
+;; **k=0** means **no rotation**—a point that doesn't move around the circle. It stays at the same
+;; angle all the time. This represents the **constant/average value** of the signal.
+;;
+;; For our temperature data, DFT[0] tells us the sum of all temperatures:
+
+(dfn/sum temperatures)
+
+;; The **average temperature** is this sum divided by N:
+
+(dfn/mean temperatures)
+
+;; The name "DC" comes from electrical engineering ("direct current"—electricity that doesn't alternate),
+;; but the idea is simple: it's the baseline level around which the signal oscillates.
+
+;; ### What k=N/2 Means: The Nyquist Frequency
+
+;; **k=N/2** (for our 8-sample signal, k=4) is the **fastest oscillation detectable**. It rotates
+;; N/2 times per period, which means it alternates every single sample: +1, -1, +1, -1, ...
+;;
+;; Why is this the limit? Because with discrete samples, you can only detect changes between sample
+;; points. If a rotation goes faster than "flip every sample," it becomes indistinguishable from
+;; slower rotations—a phenomenon called **[aliasing](https://en.wikipedia.org/wiki/Aliasing)**.
+;;
+;; **Example**: Imagine sampling a rotation at 6 cycles per period with 8 samples. The sample points
+;; land at angles: 0°, 270°, 180°, 90°, 0°, 270°, 180°, 90°. But these are the **same angles** you'd
+;; get from 2 cycles per period going the opposite direction! You can't tell them apart from samples alone.
+;;
+;; The Nyquist frequency k=N/2 is the boundary: anything faster gets "folded back" and appears as a slower frequency.
+
 ;; ## The Fundamental Theorem: Superposition
 
 ;; Here's the remarkable fact: **any** periodic pattern can be created by adding up
@@ -403,8 +481,8 @@ z-rotated
 ;; rotation speed k, it asks: "How much of rotation k is present?"
 ;;
 ;; The answer is a **complex number** $c_k$ that tells you:
-;; - **Magnitude** $|c_k|$ (the distance from origin): How strong is this rotation?
-;; - **Phase** $\arg(c_k)$ (the starting angle): What angle did it start at?
+;; - **Magnitude** (written $|c_k|$, the distance from origin): How strong is this rotation?
+;; - **Phase** (written $\arg(c_k)$, the starting angle): What angle did it start at?
 
 ;; Apply DFT to our temperatures:
 
@@ -430,12 +508,21 @@ z-rotated
 
 ;; Visualize the frequency spectrum:
 
-;; ## Measuring Alignment: The Inner Product
+(-> (tc/dataset temp-analysis)
+    (plotly/base {:=x :frequency
+                  :=y :magnitude
+                  :=x-title "Frequency (cycles per 8 hours)"
+                  :=y-title "Magnitude"
+                  :=title "Temperature Spectrum: Which Rotations Are Present?"
+                  :=width 700
+                  :=height 300})
+    (plotly/layer-line)
+    (plotly/layer-point {:=mark-size 10}))
 
 ;; **Reading this spectrum:**
-;; - k=0: DC component (average temperature)
-;; - k=1: Dominant—one cycle per period (daily pattern)
-;; - k=2, k=3: Smaller contributions (harmonics)
+;; - k=0: The constant component (average temperature, also called DC for "direct current" from electrical engineering)
+;; - k=1: Dominant—one cycle per period (the daily pattern)
+;; - k=2, k=3: Smaller contributions (higher harmonics—multiples of the base frequency)
 
 ;; The DFT has revealed that our temperatures are dominated by a **daily cycle** (k=1),
 ;; with some higher-frequency variation.
@@ -443,13 +530,14 @@ z-rotated
 ;; ## Computational Note: Naive DFT vs FFT
 
 ;; The DFT formula we've described—computing inner products for each frequency—requires
-;; **$O(N^2)$ operations** (for each of N frequencies, sum over N samples).
+;; **$O(N^2)$ operations** ("order N-squared" — roughly N×N multiplications, since for each
+;; of N frequencies, we sum over N samples).
 ;;
-;; For 1024 samples, that's ~1 million multiplications.
+;; For 1024 samples, that's ~1 million multiplications (1024 × 1024).
 ;;
 ;; The **Fast Fourier Transform (FFT)** computes the exact same result using clever
-;; algebraic factorization, reducing complexity to **$O(N \log N)$**—only ~10,000 operations
-;; for 1024 samples, a 100× speedup!
+;; algebraic factorization, reducing complexity to **$O(N \log N)$** ("order N log N")—only
+;; ~10,000 operations for 1024 samples, a 100× speedup!
 ;;
 ;; The FFT is one of the most important algorithms in computing. It doesn't change
 ;; **what** the DFT computes (still measuring alignment with rotations), only **how fast**
@@ -457,132 +545,6 @@ z-rotated
 ;;
 ;; For comparison of different FFT implementations in Clojure/JVM, see the companion post
 ;; [FFT Library Comparison](fft_comparison.html).
-
-;; ## Windowing and Edge Effects: The Implicit Assumption
-
-;; Remember our key assumption: **the signal is periodic**. We treat our 8 temperatures
-;; as if hour 8 = hour 0, hour 9 = hour 1, etc.
-;;
-;; But what if the signal doesn't actually repeat smoothly? What if there's a sharp
-;; discontinuity where the end meets the beginning?
-;;
-;; This creates **spectral leakage**: energy from one frequency "leaks" into neighboring
-;; frequencies, creating spurious peaks in the spectrum.
-
-;; ### Demonstration: A Pure Sine Wave
-
-;; Let's create a pure sine wave at exactly 10 Hz, sampled at 100 Hz for 1 second (100 samples):
-
-(def sample-rate 100.0)
-(def duration 1.0)
-(def n-samples (int (* sample-rate duration)))
-(def time (dfn// (range n-samples) sample-rate))
-
-;; Case 1: Frequency that fits perfectly (10 Hz - exactly 10 cycles in 1 second)
-(def sine-perfect (dfn/sin (dfn/* 2.0 Math/PI 10.0 time)))
-
-;; Case 2: Frequency that doesn't fit (10.5 Hz - creates discontinuity)
-(def sine-leaky (dfn/sin (dfn/* 2.0 Math/PI 10.5 time)))
-
-;; Visualize the signals at the boundaries
-
-(-> (tc/concat
-     (tc/dataset {:time (vec time) :value (vec sine-perfect) :signal "10 Hz (perfect fit)"})
-     (tc/dataset {:time (vec time) :value (vec sine-leaky) :signal "10.5 Hz (discontinuous)"}))
-    (plotly/base {:=x :time
-                  :=y :value
-                  :=color :signal
-                  :=x-title "Time (seconds)"
-                  :=y-title "Amplitude"
-                  :=title "Pure Sine Waves: Perfect vs Leaky"
-                  :=width 700
-                  :=height 300})
-    (plotly/layer-line))
-
-;; **Notice**: The 10 Hz signal ends exactly where it began (smooth loop). The 10.5 Hz
-;; signal has a discontinuity—it ends mid-cycle.
-;;
-;; When we compute the DFT, we're implicitly wrapping this signal. The 10.5 Hz case
-;; creates a sharp jump, which requires **many frequencies** to represent.
-
-;; Compare their spectra
-
-(def spectrum-perfect (t/forward-1d dft-transformer sine-perfect))
-(def spectrum-leaky (t/forward-1d dft-transformer sine-leaky))
-
-(defn extract-magnitudes [spectrum n]
-  (mapv (fn [k]
-          (let [real (nth spectrum (* 2 k))
-                imag (nth spectrum (inc (* 2 k)))]
-            {:frequency k
-             :magnitude (Math/sqrt (+ (* real real) (* imag imag)))}))
-        (range n)))
-
-(def mags-perfect (extract-magnitudes spectrum-perfect 30))
-(def mags-leaky (extract-magnitudes spectrum-leaky 30))
-
-(-> (tc/concat
-     (tc/dataset (map #(assoc % :signal "10 Hz (perfect fit)") mags-perfect))
-     (tc/dataset (map #(assoc % :signal "10.5 Hz (leaky)") mags-leaky)))
-    (plotly/base {:=x :frequency
-                  :=y :magnitude
-                  :=color :signal
-                  :=x-title "Frequency (Hz)"
-                  :=y-title "Magnitude"
-                  :=title "Spectral Leakage: Perfect Fit vs Discontinuity"
-                  :=width 700
-                  :=height 350})
-    (plotly/layer-line)
-    (plotly/layer-point {:=mark-size 6}))
-
-;; **Interpretation:**
-;; - **Perfect fit (10 Hz)**: Single sharp peak at k=10 (exactly the frequency we put in)
-;; - **Leaky (10.5 Hz)**: Energy spreads across many frequencies—the discontinuity creates
-;;   harmonics that "pollute" the spectrum
-;;
-;; This is **spectral leakage**: the implicit rectangular window (abrupt cutoff at boundaries)
-;; creates artifacts in the frequency domain.
-
-;; ### The Solution: Window Functions
-
-;; To reduce leakage, we can multiply the signal by a **window function** that smoothly
-;; tapers to zero at the edges, eliminating the discontinuity.
-;;
-;; Common windows include [Hann](https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows), 
-;; [Hamming](https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows), and 
-;; [Blackman](https://en.wikipedia.org/wiki/Window_function#Blackman_window). The tradeoff: 
-;; reduced leakage but wider main lobe (slightly blurred frequency resolution).
-
-;; Apply Hann window to the leaky signal
-(def hann-window
-  (dfn/* 0.5
-         (dfn/- 1.0
-                (dfn/cos (dfn/* 2.0 Math/PI (dfn// (range n-samples) (dec n-samples)))))))
-
-(def sine-windowed (dfn/* sine-leaky hann-window))
-(def spectrum-windowed (t/forward-1d dft-transformer sine-windowed))
-(def mags-windowed (extract-magnitudes spectrum-windowed 30))
-
-(-> (tc/concat
-     (tc/dataset (map #(assoc % :signal "No window (leaky)") mags-leaky))
-     (tc/dataset (map #(assoc % :signal "Hann window") mags-windowed)))
-    (plotly/base {:=x :frequency
-                  :=y :magnitude
-                  :=color :signal
-                  :=x-title "Frequency (Hz)"
-                  :=y-title "Magnitude"
-                  :=title "Windowing Reduces Leakage"
-                  :=width 700
-                  :=height 350})
-    (plotly/layer-line)
-    (plotly/layer-point {:=mark-size 6}))
-
-;; **Result**: The Hann window concentrates energy near the true frequency (10.5 Hz),
-;; reducing the "grass" of spurious peaks. The main lobe is wider (blurrier), but the
-;; sidelobes (leakage) are dramatically suppressed.
-;;
-;; **Practical takeaway**: When analyzing real signals that don't naturally loop,
-;; apply a window function before the DFT to reduce spectral artifacts.
 
 ;; ## Interactive Exploration: Building Intuition
 
@@ -767,6 +729,13 @@ inner-product-diff-freq
 ;; The result is zero (or very close)! They're **perpendicular** in the same sense
 ;; that the x-axis and y-axis are perpendicular. They don't overlap, don't interfere.
 ;;
+;; **Why does this happen?** Frequency k divides the circle into k equal segments. When you
+;; multiply two different frequencies (say k₁=1 and k₂=2), you're overlaying two different
+;; circular grids. Because both grids are based on whole-cycle divisions, their product has
+;; perfect rotational symmetry. Summing around the complete circle, the symmetrical positive
+;; and negative regions cancel exactly. Both frequencies complete whole numbers of cycles in
+;; N samples, and that complete-cycle symmetry is what guarantees orthogonality.
+;;
 ;; **This is why the DFT works:**
 ;; - You have N samples → N independent values to specify
 ;; - You need N independent "building blocks" (like needing 3 colors - red, green, blue - to make any color)
@@ -775,7 +744,7 @@ inner-product-diff-freq
 ;; - The inner product cleanly separates them: "How much of frequency k is present?"
 ;;
 ;; This orthogonality guarantees that:
-;; 1. Any N-sample signal can be built from these N frequencies (completeness)
+;; 1. Any N-sample signal can be built from these N frequencies (you have enough building blocks)
 ;; 2. The decomposition is unique (each frequency component is independent)
 ;; 3. Reconstruction works perfectly (no information lost)
 
@@ -841,16 +810,172 @@ inner-product-diff-freq
   [:p "Compare with library result: " (format "%.4f" (:magnitude (nth temp-analysis 1)))]])
 
 ;; The formula is doing exactly what we said: measuring how well the signal matches each rotation.
+;; ## Windowing and Edge Effects: The Implicit Assumption
+
+;; Remember our key assumption: **the signal is periodic**. We treat our 8 temperatures
+;; as if hour 8 = hour 0, hour 9 = hour 1, etc.
+;;
+;; But what if the signal doesn't actually repeat smoothly? What if there's a sharp
+;; discontinuity where the end meets the beginning?
+;;
+;; This creates **spectral leakage**: energy from one frequency "leaks" into neighboring
+;; frequencies, creating spurious peaks in the spectrum.
+
+;; ### Demonstration: A Pure Sine Wave
+
+;; Let's create a pure sine wave at exactly 10 Hz, sampled at 100 Hz for 1 second (100 samples):
+
+(def sample-rate 100.0)
+(def duration 1.0)
+(def n-samples (int (* sample-rate duration)))
+(def time (dfn// (range n-samples) sample-rate))
+
+;; Case 1: Frequency that fits perfectly (10 Hz - exactly 10 cycles in 1 second)
+(def sine-perfect (dfn/sin (dfn/* 2.0 Math/PI 10.0 time)))
+
+;; Case 2: Frequency that doesn't fit (10.5 Hz - creates discontinuity)
+(def sine-leaky (dfn/sin (dfn/* 2.0 Math/PI 10.5 time)))
+
+;; Visualize the signals at the boundaries
+
+(-> (tc/concat
+     (tc/dataset {:time (vec time) :value (vec sine-perfect) :signal "10 Hz (perfect fit)"})
+     (tc/dataset {:time (vec time) :value (vec sine-leaky) :signal "10.5 Hz (discontinuous)"}))
+    (plotly/base {:=x :time
+                  :=y :value
+                  :=color :signal
+                  :=x-title "Time (seconds)"
+                  :=y-title "Amplitude"
+                  :=title "Pure Sine Waves: Perfect vs Leaky"
+                  :=width 700
+                  :=height 300})
+    (plotly/layer-line))
+
+;; **Notice**: The 10 Hz signal ends exactly where it began (smooth loop). The 10.5 Hz
+;; signal has a discontinuity—it ends mid-cycle.
+;;
+;; When we compute the DFT, we're implicitly wrapping this signal. The 10.5 Hz case
+;; creates a sharp jump, which requires **many frequencies** to represent.
+
+;; Compare their spectra
+
+(def spectrum-perfect (t/forward-1d dft-transformer sine-perfect))
+(def spectrum-leaky (t/forward-1d dft-transformer sine-leaky))
+
+(defn extract-magnitudes [spectrum n]
+  (mapv (fn [k]
+          (let [real (nth spectrum (* 2 k))
+                imag (nth spectrum (inc (* 2 k)))]
+            {:frequency k
+             :magnitude (Math/sqrt (+ (* real real) (* imag imag)))}))
+        (range n)))
+
+(def mags-perfect (extract-magnitudes spectrum-perfect 30))
+(def mags-leaky (extract-magnitudes spectrum-leaky 30))
+
+(-> (tc/concat
+     (tc/dataset (map #(assoc % :signal "10 Hz (perfect fit)") mags-perfect))
+     (tc/dataset (map #(assoc % :signal "10.5 Hz (leaky)") mags-leaky)))
+    (plotly/base {:=x :frequency
+                  :=y :magnitude
+                  :=color :signal
+                  :=x-title "Frequency (Hz)"
+                  :=y-title "Magnitude"
+                  :=title "Spectral Leakage: Perfect Fit vs Discontinuity"
+                  :=width 700
+                  :=height 350})
+    (plotly/layer-line)
+    (plotly/layer-point {:=mark-size 6}))
+
+;; **Interpretation:**
+;; - **Perfect fit (10 Hz)**: Single sharp peak at k=10 (exactly the frequency we put in)
+;; - **Leaky (10.5 Hz)**: Energy spreads across many frequencies—the discontinuity creates
+;;   harmonics that "pollute" the spectrum
+;;
+;; This is **spectral leakage**: the implicit rectangular window (abrupt cutoff at boundaries)
+;; creates artifacts in the frequency domain.
+
+;; ### The Solution: Window Functions
+
+;; To reduce leakage, we can multiply the signal by a **window function** that smoothly
+;; tapers to zero at the edges, eliminating the discontinuity.
+;;
+;; Common windows include [Hann](https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows), 
+;; [Hamming](https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows), and 
+;; [Blackman](https://en.wikipedia.org/wiki/Window_function#Blackman_window). The tradeoff: 
+;; reduced leakage but wider main lobe (slightly blurred frequency resolution).
+
+;; Apply Hann window to the leaky signal
+(def hann-window
+  (dfn/* 0.5
+         (dfn/- 1.0
+                (dfn/cos (dfn/* 2.0 Math/PI (dfn// (range n-samples) (dec n-samples)))))))
+
+(def sine-windowed (dfn/* sine-leaky hann-window))
+(def spectrum-windowed (t/forward-1d dft-transformer sine-windowed))
+(def mags-windowed (extract-magnitudes spectrum-windowed 30))
+
+(-> (tc/concat
+     (tc/dataset (map #(assoc % :signal "No window (leaky)") mags-leaky))
+     (tc/dataset (map #(assoc % :signal "Hann window") mags-windowed)))
+    (plotly/base {:=x :frequency
+                  :=y :magnitude
+                  :=color :signal
+                  :=x-title "Frequency (Hz)"
+                  :=y-title "Magnitude"
+                  :=title "Windowing Reduces Leakage"
+                  :=width 700
+                  :=height 350})
+    (plotly/layer-line)
+    (plotly/layer-point {:=mark-size 6}))
+
+;; **Result**: The Hann window concentrates energy near the true frequency (10.5 Hz),
+;; reducing the "grass" of spurious peaks. The main lobe is wider (blurrier), but the
+;; sidelobes (leakage) are dramatically suppressed.
+;;
+;; **Practical takeaway**: When analyzing real signals that don't naturally loop,
+;; apply a window function before the DFT to reduce spectral artifacts.
 
 ;; ## Two Views of the Same Decomposition
 
-;; We've seen the DFT returns complex numbers (magnitude + phase). But remember:
-;; $e^{i\theta} = \cos(\theta) + i \cdot \sin(\theta)$. This means the DFT can also be written as a sum
-;; of **sines and cosines**:
+;; We've seen the DFT returns complex numbers (magnitude + phase). But we can also view this
+;; as sines and cosines. Let's carefully trace how the two representations connect.
+;;
+;; **Start with the DFT formula:**
+;;
+;; **$\text{DFT}[k] = \sum_{n=0}^{N-1} x[n] \cdot e^{-i2\pi kn/N}$**
+;;
+;; **Step 1: Expand using Euler's formula.** Remember $e^{-i\theta} = \cos(\theta) - i \cdot \sin(\theta)$.
+;; Notice the **negative** exponent puts a minus sign in front of sine:
+;;
+;; **$e^{-i2\pi kn/N} = \cos\left(\frac{2\pi kn}{N}\right) - i \cdot \sin\left(\frac{2\pi kn}{N}\right)$**
+;;
+;; **Step 2: Substitute into the DFT formula:**
+;;
+;; **$\text{DFT}[k] = \sum_{n=0}^{N-1} x[n] \cdot \left[\cos\left(\frac{2\pi kn}{N}\right) - i \cdot \sin\left(\frac{2\pi kn}{N}\right)\right]$**
+;;
+;; **Step 3: Separate real and imaginary parts:**
+;;
+;; **$\text{DFT}[k] = \sum_{n=0}^{N-1} x[n] \cos\left(\frac{2\pi kn}{N}\right) - i \cdot \sum_{n=0}^{N-1} x[n] \sin\left(\frac{2\pi kn}{N}\right)$**
+;;
+;; **Step 4: Define the cosine and sine coefficients:**
+;;
+;; Let $a_k = \sum_{n=0}^{N-1} x[n] \cos\left(\frac{2\pi kn}{N}\right)$ (the cosine coefficient)
+;;
+;; Let $b_k = \sum_{n=0}^{N-1} x[n] \sin\left(\frac{2\pi kn}{N}\right)$ (the sine coefficient)
+;;
+;; **Step 5: Write the DFT in terms of these coefficients:**
+;;
+;; **$\text{DFT}[k] = a_k - i \cdot b_k$**
+;;
+;; **The minus sign comes from the negative exponent in the DFT formula!**
+;;
+;; For reconstruction (going back to time domain), we use the **inverse** relationship:
 ;;
 ;; **$x[n] = \sum_{k=0}^{N-1} a_k \cos\left(\frac{2\pi kn}{N}\right) + b_k \sin\left(\frac{2\pi kn}{N}\right)$**
 ;;
-;; where the complex DFT coefficient $c_k = a_k - i \cdot b_k$ packages both together.
+;; Here the cosine and sine terms **add** (no minus sign) because we're building the signal
+;; from its components, not decomposing it.
 
 ;; Let's extract the sine and cosine coefficients from our temperature spectrum:
 
@@ -900,6 +1025,47 @@ inner-product-diff-freq
 ;; - **Starting angle (phase)**: where the combined wave begins its cycle
 ;; - **Complex form**: $c_k = a_k - i \cdot b_k$ — packages both into one rotation
 ;; - **Sine/Cosine form**: $a_k \cos + b_k \sin$ — separates the two shadows
+
+;; Visualize the geometric relationship for k=1:
+
+(def k1-magnitude (Math/sqrt (+ (* a1 a1) (* b1 b1))))
+(def k1-phase-rad (Math/atan2 (- b1) a1))
+
+(def triangle-viz
+  (tc/dataset
+   [{:x 0.0 :y 0.0 :component "Origin"}
+    {:x a1 :y 0.0 :component "Cosine coefficient (a₁)"}
+    {:x a1 :y (- b1) :component "DFT[1] = a₁ - ib₁"}
+    {:x 0.0 :y 0.0 :component "Magnitude line"}]))
+
+(-> (tc/concat
+     ;; Right triangle edges
+     (tc/dataset [{:x [0.0 a1] :y [0.0 0.0] :line "Cosine (a₁)"}
+                  {:x [a1 a1] :y [0.0 (- b1)] :line "Sine (b₁)"}
+                  {:x [0.0 a1] :y [0.0 (- b1)] :line "Magnitude"}])
+     ;; Points
+     (tc/dataset [{:x 0.0 :y 0.0 :point "Origin"}
+                  {:x a1 :y (- b1) :point (format "DFT[1] = (%.1f, %.1f)" a1 (- b1))}]))
+    (plotly/base {:=x-title "Cosine Coefficient (a₁)"
+                  :=y-title "−Sine Coefficient (−b₁)"
+                  :=title (format "Geometric View: Magnitude = %.2f, Phase = %.1f°"
+                                  k1-magnitude
+                                  (Math/toDegrees k1-phase-rad))
+                  :=width 500
+                  :=height 500})
+    (plotly/layer-line {:=x :x :=y :y :=group :line :=mark-color :line})
+    (plotly/layer-point {:=x :x :=y :y :=size 10 :=mark-color "black"})
+    plotly/plot
+    (assoc-in [:layout :yaxis :scaleanchor] "x"))
+
+;; **Geometric interpretation:**
+;; - Horizontal leg = $a_k$ (cosine coefficient)
+;; - Vertical leg = $-b_k$ (negative sine coefficient, due to DFT formula)
+;; - Hypotenuse = magnitude $\sqrt{a_k^2 + b_k^2}$
+;; - Angle from horizontal = phase
+;;
+;; This is why magnitude and phase are just another way to describe the same point!
+;; Cartesian coordinates (a, b) vs polar coordinates (magnitude, phase).
 
 ;; Here are all the frequencies with their cosine and sine contributions:
 
@@ -983,8 +1149,8 @@ inner-product-diff-freq
 
 (def even-signal [5.0 4.0 3.0 2.0 2.0 3.0 4.0 5.0])
 
-;; Check: $x[n] = x[N-n]$
-;; $x[1]=4 = x[7]=4$ ✓, $x[2]=3 = x[6]=3$ ✓, etc.
+;; The signal mirrors around its center. Using 0-based indexing: $x[n] = x[N-1-n]$
+;; Check: $x[0]=5 = x[7]=5$ ✓, $x[1]=4 = x[6]=4$ ✓, $x[2]=3 = x[5]=3$ ✓, etc.
 
 (def dct-transformer (t/transformer :real :dct))
 (def even-dct (t/forward-1d dct-transformer even-signal))
@@ -1044,17 +1210,20 @@ inner-product-diff-freq
    :input-symmetry "None (periodic)"
    :basis "$e^{i\\omega t}$ (cos + i·sin)"
    :output "Complex"
-   :use-case "General analysis, convolution"}
+   :use-case "General analysis, convolution"
+   :example "Analyzing recorded audio to find pitch, filtering signals, detecting frequencies in sensor data"}
   {:transform "DCT"
    :input-symmetry "Even (mirrors)"
    :basis "$\\cos(\\omega t)$"
    :output "Real"
-   :use-case "Compression (JPEG, MP3)"}
+   :use-case "Compression (JPEG, MP3)"
+   :example "Compressing photos (JPEG images), audio files (MP3, AAC), video codecs"}
   {:transform "DST"
    :input-symmetry "Odd (negates)"
    :basis "$\\sin(\\omega t)$"
    :output "Real"
-   :use-case "PDEs with zero boundaries"}])
+   :use-case "PDEs with zero boundaries"
+   :example "Simulating vibrating guitar strings, heat diffusion with fixed endpoints, quantum mechanics"}])
 
 ;; **The foundation**: All transforms decompose periodic patterns into rotations.
 ;; The differences are in which rotations you allow (based on symmetry constraints).
