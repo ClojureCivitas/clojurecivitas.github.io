@@ -1205,25 +1205,11 @@ inner-product-diff-freq
 ;;
 ;; But they make different assumptions:
 
-(kind/table
- [{:transform "DFT"
-   :input-symmetry "None (periodic)"
-   :basis "$e^{i\\omega t}$ (cos + i·sin)"
-   :output "Complex"
-   :use-case "General analysis, convolution"
-   :example "Analyzing recorded audio to find pitch, filtering signals, detecting frequencies in sensor data"}
-  {:transform "DCT"
-   :input-symmetry "Even (mirrors)"
-   :basis "$\\cos(\\omega t)$"
-   :output "Real"
-   :use-case "Compression (JPEG, MP3)"
-   :example "Compressing photos (JPEG images), audio files (MP3, AAC), video codecs"}
-  {:transform "DST"
-   :input-symmetry "Odd (negates)"
-   :basis "$\\sin(\\omega t)$"
-   :output "Real"
-   :use-case "PDEs with zero boundaries"
-   :example "Simulating vibrating guitar strings, heat diffusion with fixed endpoints, quantum mechanics"}])
+;; | Transform | Input Symmetry    | Basis                          | Output  | Use Case                    | Example                                                                                              |
+;; |-----------|-------------------|--------------------------------|---------|-----------------------------|------------------------------------------------------------------------------------------------------|
+;; | DFT       | None (periodic)   | $e^{i\omega t}$ (cos + i·sin) | Complex | General analysis, convolution | Analyzing recorded audio to find pitch, filtering signals, detecting frequencies in sensor data      |
+;; | DCT       | Even (mirrors)    | $\cos(\omega t)$              | Real    | Compression (JPEG, MP3)     | Compressing photos (JPEG images), audio files (MP3, AAC), video codecs                              |
+;; | DST       | Odd (negates)     | $\sin(\omega t)$              | Real    | PDEs with zero boundaries   | Simulating vibrating guitar strings, heat diffusion with fixed endpoints, quantum mechanics          |
 
 ;; **The foundation**: All transforms decompose periodic patterns into rotations.
 ;; The differences are in which rotations you allow (based on symmetry constraints).
