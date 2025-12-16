@@ -8,11 +8,11 @@ author:
   - {name: Endor Global, url: 'https://endor.global'}
   links:
   - {icon: github, href: 'https://github.com/daslu'}
-draft: true
 type: post
-date: '2025-12-14'
+date: '2025-12-16'
 category: data
 tags: [dsp, fft, performance, benchmarks, jtransforms, fastmath, apache-commons]
+image: spectrum.png
 format:
   html: {title: Comparing FFT Implementations in Clojure}
 
@@ -263,7 +263,7 @@ Let's run it and measure time:
 ::: {.callout-note}
 ## OUT
 ```
-"Elapsed time: 1.746427 msecs"
+"Elapsed time: 3.297995 msecs"
 
 ```
 :::
@@ -346,7 +346,7 @@ JDSP provides a wrapper around Apache Commons Math with a simpler API.
 ::: {.callout-note}
 ## OUT
 ```
-"Elapsed time: 1.454826 msecs"
+"Elapsed time: 3.417683 msecs"
 
 ```
 :::
@@ -404,7 +404,7 @@ JTransforms mutates the input array [in-place](https://en.wikipedia.org/wiki/In-
 ::: {.callout-note}
 ## OUT
 ```
-"Elapsed time: 4.079134 msecs"
+"Elapsed time: 6.958577 msecs"
 
 ```
 :::
@@ -486,7 +486,7 @@ Fastmath provides the most Clojure-idiomatic API. Create a transformer, then use
 ::: {.callout-note}
 ## OUT
 ```
-"Elapsed time: 0.246719 msecs"
+"Elapsed time: 0.488341 msecs"
 
 ```
 :::
@@ -599,7 +599,7 @@ Display results
 ::: {.clay-table}
 
 ```{=html}
-<table class="table table-hover table-responsive clay-table"><thead><tr><th>library</th><th>size</th><th>mean-time</th><th>range</th></tr></thead><tbody><tr><td>Apache Commons Math</td><td>128 (2^7)</td><td>0.001687 ms</td><td>0.001246 - 0.002398 ms</td></tr><tr><td>JDSP</td><td>128 (2^7)</td><td>0.002086 ms</td><td>0.001500 - 0.003128 ms</td></tr><tr><td>JTransforms</td><td>128 (2^7)</td><td>0.002488 ms</td><td>0.001832 - 0.003684 ms</td></tr><tr><td>Fastmath</td><td>128 (2^7)</td><td>0.002575 ms</td><td>0.001884 - 0.003591 ms</td></tr><tr><td>Apache Commons Math</td><td>131K (2^17)</td><td>3.592679 ms</td><td>3.422478 - 3.875740 ms</td></tr><tr><td>JDSP</td><td>131K (2^17)</td><td>3.873716 ms</td><td>3.546291 - 4.500101 ms</td></tr><tr><td>JTransforms</td><td>131K (2^17)</td><td>2.961984 ms</td><td>2.223287 - 4.067186 ms</td></tr><tr><td>Fastmath</td><td>131K (2^17)</td><td>2.923237 ms</td><td>2.323596 - 4.119916 ms</td></tr></tbody></table>
+<table class="table table-hover table-responsive clay-table"><thead><tr><th>library</th><th>size</th><th>mean-time</th><th>range</th></tr></thead><tbody><tr><td>Apache Commons Math</td><td>128 (2^7)</td><td>0.002549 ms</td><td>0.001530 - 0.003715 ms</td></tr><tr><td>JDSP</td><td>128 (2^7)</td><td>0.002323 ms</td><td>0.001799 - 0.003061 ms</td></tr><tr><td>JTransforms</td><td>128 (2^7)</td><td>0.003806 ms</td><td>0.002108 - 0.005893 ms</td></tr><tr><td>Fastmath</td><td>128 (2^7)</td><td>0.003233 ms</td><td>0.002548 - 0.003728 ms</td></tr><tr><td>Apache Commons Math</td><td>131K (2^17)</td><td>4.074209 ms</td><td>3.636852 - 4.766877 ms</td></tr><tr><td>JDSP</td><td>131K (2^17)</td><td>6.113325 ms</td><td>5.437638 - 6.811960 ms</td></tr><tr><td>JTransforms</td><td>131K (2^17)</td><td>5.189599 ms</td><td>4.337465 - 7.382050 ms</td></tr><tr><td>Fastmath</td><td>131K (2^17)</td><td>4.924395 ms</td><td>2.848666 - 7.202860 ms</td></tr></tbody></table>
 ```
 
 :::
@@ -723,7 +723,7 @@ Let's visualize the results:
 
 
 ```{=html}
-<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.3655132686375322,0.3780481164251208,0.39125373168498173,0.33332981963470326,0.39898399901960785],"r":null,"name":"16384","marker":{"color":"#1B9E77","size":10},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[1.4944454068100361,1.553588069148936,1.4566298691756276,1.5120159060283687,1.528311771929825],"r":null,"name":"65536","marker":{"color":"#D95F02","size":10},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[2.9996736985815606,3.000770451388889,2.617296619047619,2.561582072916667,3.0359948794326246],"r":null,"name":"131072","marker":{"color":"#7570B3","size":10},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[6.332124340909091,6.157582405797102,6.278519659090909,6.064242253623189,6.100504855072463],"r":null,"name":"262144","marker":{"color":"#E7298A","size":10},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[0.3655132686375322,0.3780481164251208,0.39125373168498173,0.33332981963470326,0.39898399901960785],"r":null,"name":"16384","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"#1B9E77"},"opacity":0.6,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[1.4944454068100361,1.553588069148936,1.4566298691756276,1.5120159060283687,1.528311771929825],"r":null,"name":"65536","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"#D95F02"},"opacity":0.6,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[2.9996736985815606,3.000770451388889,2.617296619047619,2.561582072916667,3.0359948794326246],"r":null,"name":"131072","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"#7570B3"},"opacity":0.6,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[6.332124340909091,6.157582405797102,6.278519659090909,6.064242253623189,6.100504855072463],"r":null,"name":"262144","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"#E7298A"},"opacity":0.6,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null}], {"width":800,"height":500,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"Number of Threads","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"Mean Time per FFT (ms)","showgrid":true},"title":"FFT Performance vs Thread Count (Fastmath\/JTransforms)"}, {});</script></div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.645272058922559,0.7023738055555557,0.7401419701086958,0.7217332180952382,0.7534418288288289],"r":null,"name":"16384","marker":{"color":"#1B9E77","size":10},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[1.9318069950248757,2.7965129366666672,3.013822530612245,2.5121108533333336,2.9569040784313727],"r":null,"name":"65536","marker":{"color":"#D95F02","size":10},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[5.5862863,5.7246660151515165,6.041997027777779,4.471185946666668,5.9928794022988505],"r":null,"name":"131072","marker":{"color":"#7570B3","size":10},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[8.34216737254902,10.31539923076923,11.46344601388889,12.141608895833334,9.75583446875],"r":null,"name":"262144","marker":{"color":"#E7298A","size":10},"fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[0.645272058922559,0.7023738055555557,0.7401419701086958,0.7217332180952382,0.7534418288288289],"r":null,"name":"16384","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"#1B9E77"},"opacity":0.6,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[1.9318069950248757,2.7965129366666672,3.013822530612245,2.5121108533333336,2.9569040784313727],"r":null,"name":"65536","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"#D95F02"},"opacity":0.6,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[5.5862863,5.7246660151515165,6.041997027777779,4.471185946666668,5.9928794022988505],"r":null,"name":"131072","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"#7570B3"},"opacity":0.6,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null},{"y":[8.34216737254902,10.31539923076923,11.46344601388889,12.141608895833334,9.75583446875],"r":null,"name":"262144","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"line":{"color":"#E7298A"},"opacity":0.6,"lon":null,"lat":null,"x":[1,2,4,8,16],"text":null}], {"width":800,"height":500,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"Number of Threads","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"Mean Time per FFT (ms)","showgrid":true},"title":"FFT Performance vs Thread Count (Fastmath\/JTransforms)"}, {});</script></div>
 ```
 
 
@@ -809,7 +809,7 @@ Performance results depend heavily on your hardware. Here's how to inspect your 
 ::: {.clay-table}
 
 ```{=html}
-<table class="table table-hover table-responsive clay-table"><thead><tr><th>jvm-vendor</th><th>available-processors</th><th>jvm-version</th><th>heap-max-mb</th><th>property</th><th>jvm-name</th><th>os-version</th><th>clojure-version</th><th>os-name</th><th>os-arch</th><th>heap-total-mb</th></tr></thead><tbody><tr><td>Ubuntu</td><td>22</td><td>21.0.9</td><td>15936.0</td><td>Machine Configuration</td><td>OpenJDK 64-Bit Server VM</td><td>6.14.0-36-generic</td><td>1.12.3</td><td>Linux</td><td>amd64</td><td>480.0</td></tr></tbody></table>
+<table class="table table-hover table-responsive clay-table"><thead><tr><th>jvm-vendor</th><th>available-processors</th><th>jvm-version</th><th>heap-max-mb</th><th>property</th><th>jvm-name</th><th>os-version</th><th>clojure-version</th><th>os-name</th><th>os-arch</th><th>heap-total-mb</th></tr></thead><tbody><tr><td>Ubuntu</td><td>22</td><td>21.0.9</td><td>15936.0</td><td>Machine Configuration</td><td>OpenJDK 64-Bit Server VM</td><td>6.14.0-36-generic</td><td>1.12.3</td><td>Linux</td><td>amd64</td><td>456.0</td></tr></tbody></table>
 ```
 
 :::
