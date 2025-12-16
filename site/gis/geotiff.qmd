@@ -1,5 +1,10 @@
 ---
-author: luke-zeitlin
+author:
+  name: Luke Zeitlin
+  url: https://github.com/larzeitlin
+  image: https://github.com/larzeitlin.png
+  affiliation: []
+image: tiff_geotiff_cog.png
 type: post
 date: '2025-12-07'
 category: gis
@@ -16,7 +21,7 @@ format:
 .clay-side-by-side .sourceCode {margin: 0}
 .clay-side-by-side {margin: 1em 0}
 </style>
-<script src="geotiff_files/md-default5.js" type="text/javascript"></script><script src="geotiff_files/md-default6.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" type="text/javascript"></script><script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" type="text/javascript"></script>
 
 # Cloud Optimized GeoTIFFs in JVM Clojure 
 
@@ -113,6 +118,14 @@ javax.imageio.stream.FileImageInputStream
 
 ::: {.sourceClojure}
 ```clojure
+(require '[tech.v3.datatype :as dtype])
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
 (defn get-pixel [^BufferedImage image x y]
   (let [raster (.getRaster image)
         ;; Handle images with an arbitrary number of bands.
@@ -120,7 +133,8 @@ javax.imageio.stream.FileImageInputStream
         num-bands (.getNumBands raster)
         pixel (double-array num-bands)]
     (.getPixel raster x y pixel)
-    (vec pixel)))
+    ;; A dtype-next read-only buffer as a view of the Java array:
+    (dtype/as-reader pixel)))
 ```
 :::
 
@@ -150,7 +164,8 @@ Now we use the above helper functions to handle our locally held TIFF.
 
 ::: {.printedClojure}
 ```clojure
-[45.0]
+#buffer<float64>[1]
+[45.00]
 
 ```
 :::
@@ -196,7 +211,8 @@ This also works for a GeoTIFF:
 
 ::: {.printedClojure}
 ```clojure
-[42.0 76.0 32.0]
+#buffer<float64>[3]
+[42.00, 76.00, 32.00]
 
 ```
 :::
@@ -219,7 +235,7 @@ to work with.
 
 ::: {.printedClojure}
 ```clojure
-#object[it.geosolutions.imageioimpl.plugins.tiff.TIFFImageMetadata 0x66719488 "it.geosolutions.imageioimpl.plugins.tiff.TIFFImageMetadata@66719488"]
+#object[com.sun.media.imageioimpl.plugins.tiff.TIFFImageMetadata 0x4b46954f "com.sun.media.imageioimpl.plugins.tiff.TIFFImageMetadata@4b46954f"]
 
 ```
 :::
@@ -232,6 +248,7 @@ into formats handled by Clojure's dataset stack. Here I have done that via `Buff
 There may well be a more convenient way - please let me know!
 
 There are several interconnected libraries for datasets in Clojure:
+
 - `tablecloth` -> high level API for interacting with `tech.ml.dataset`
 - `tech.ml.dataset` -> tabular datasets in Clojure. This is the core library.
 - `dtype-next` -> the lowest level of this stack. array operations, buffer management, etc.
@@ -242,7 +259,9 @@ bring along the rest of the stack.
 
 ::: {.sourceClojure}
 ```clojure
-(require '[tablecloth.api :as tc])
+(require '[tablecloth.api :as tc]
+         '[tech.v3.tensor :as tensor]
+         '[tech.v3.dataset.tensor :as ds-tensor])
 ```
 :::
 
@@ -253,26 +272,43 @@ bring along the rest of the stack.
 (defn buffered-image->dataset [^BufferedImage img]
   (let [width (.getWidth img)
         height (.getHeight img)
-        raster (.getRaster img)
-        num-bands (.getNumBands raster)
+        num-bands (.getNumBands (.getRaster img))
 
-        ;; Pre-allocate arrays for each band's pixel data
-        band-arrays (vec (repeatedly num-bands #(double-array (* width height))))
-
-        ;; Read each band's data
-        _ (doseq [band (range num-bands)]
-            (.getSamples raster 0 0 width height band (nth band-arrays band)))
-
-        ;; Create coordinate arrays
-        xs (vec (for [_y (range height) x (range width)] x))
-        ys (vec (for [y (range height) _x (range width)] y))
+        ;; The following will be easier after dtype-next's
+        ;; [#133](https://github.com/cnuernber/dtype-next/issues/133)
+        ;; is resolved.
+        tensor (-> img
+                   dtype/->array-buffer
+                   ;; height x width x bands
+                   (tensor/construct-tensor (dims/dimensions
+                                             [width height num-bands]))
+                   ;; bands x height x width
+                   (tensor/transpose [2 0 1]))
+        
+        xs (dtype/as-reader
+            (tensor/compute-tensor [height width]
+                                   (fn [y x] x)))
+        ys (dtype/as-reader
+            (tensor/compute-tensor [height width]
+                                   (fn [y x] y)))
 
         ;; Build dataset
-        ds-map (into {:x xs :y ys}
-                     (map-indexed
-                      (fn [i arr] [(keyword (str "band-" i)) (vec arr)])
-                      band-arrays))]
-    (tc/dataset ds-map)))
+        ds-map   (into {:x xs :y ys}
+                       (for [i (range num-bands)]
+                         [(keyword (str "band-" i))
+                          (dtype/as-reader
+                           (tensor i))]))]
+    (-> tensor
+        (tensor/reshape [(* height width)
+                         num-bands])
+        ds-tensor/tensor->dataset
+        (tc/add-columns {:x xs
+                         :y ys})
+        (tc/select-columns (concat [:x :y]
+                                   (range num-bands)))
+        (tc/rename-columns (into {} 
+                                 (for [i (range num-bands)]
+                                   [i (keyword (str "band-" i))]))))))
 ```
 :::
 
@@ -298,15 +334,15 @@ bring along the rest of the stack.
 
 
 ::: {.clay-dataset}
-_unnamed: descriptive-stats [5 11]:
+:_unnamed: descriptive-stats [5 11]:
 
-| :col-name | :datatype | :n-valid | :n-missing | :min |         :mean |   :max | :standard-deviation |           :skew | :first |  :last |
-|-----------|-----------|---------:|-----------:|-----:|--------------:|-------:|--------------------:|----------------:|-------:|-------:|
-|        :x |    :int64 | 29989001 |          0 |  0.0 | 2999.00000000 | 5998.0 |       1731.76213725 |  0.00000000E+00 |    0.0 | 5998.0 |
-|        :y |    :int64 | 29989001 |          0 |  0.0 | 2499.00000000 | 4998.0 |       1443.08699303 | -1.10958482E-17 |    0.0 | 4998.0 |
-|   :band-0 |  :float64 | 29989001 |          0 |  0.0 |   68.21786911 |  255.0 |         60.51839822 |  1.33067394E+00 |   42.0 |    9.0 |
-|   :band-1 |  :float64 | 29989001 |          0 |  0.0 |   88.75898750 |  255.0 |         38.37694129 |  1.53742117E+00 |   76.0 |   54.0 |
-|   :band-2 |  :float64 | 29989001 |          0 |  0.0 |   73.80655098 |  255.0 |         41.20030938 |  1.29732261E+00 |   32.0 |   71.0 |
+| :col-name | :datatype | :n-valid | :n-missing | :min |         :mean |   :max | :standard-deviation |           :skew | :first | :last |
+|-----------|-----------|---------:|-----------:|-----:|--------------:|-------:|--------------------:|----------------:|-------:|------:|
+|        :x |    :int64 | 29989001 |          0 |  0.0 | 2999.00000000 | 5998.0 |       1731.76213725 |  0.00000000E+00 |      0 |  5998 |
+|        :y |    :int64 | 29989001 |          0 |  0.0 | 2499.00000000 | 4998.0 |       1443.08699303 | -1.10958482E-17 |      0 |  4998 |
+|   :band-0 |    :uint8 | 29989001 |          0 |  0.0 |   76.92727144 |  255.0 |         48.50581256 |  1.20979977E+00 |     42 |    72 |
+|   :band-1 |    :uint8 | 29989001 |          0 |  0.0 |   76.92790493 |  255.0 |         48.50363602 |  1.20979051E+00 |     33 |    73 |
+|   :band-2 |    :uint8 | 29989001 |          0 |  0.0 |   76.92823122 |  255.0 |         48.50667146 |  1.20996005E+00 |     38 |    71 |
 
 
 :::
@@ -349,7 +385,6 @@ a multispectral image.
 ::: {.sourceClojure}
 ```clojure
 (require '[tech.v3.dataset :as ds]
-         '[tech.v3.datatype :as dtype]
          '[tech.v3.datatype.statistics :as dstats])
 ```
 :::
@@ -406,35 +441,22 @@ java.awt.Color
 ::: {.sourceClojure}
 ```clojure
 (defn dataset->image
-  [dataset {:keys [r g b]}]
-  (let [xs (ds/column dataset :x)
-        ys (ds/column dataset :y)
-        rs (ds/column dataset r)
-        gs (ds/column dataset g)
-        bs (ds/column dataset b)
-
-        max-x (-> xs last int)
-        min-x (-> xs first int)
-        max-y (-> ys last int)
-        min-y (-> ys first int)
-
-        width (inc (- max-x min-x))
-        height (inc (- max-y min-y))
-
-        ;; Create the image
-        img (BufferedImage. width height BufferedImage/TYPE_INT_RGB)]
-
-    ;; Set pixels
-    (dotimes [i (ds/row-count dataset)]
-      (let [x (- (int (dtype/get-value xs i)) min-x)
-            y (- (int (dtype/get-value ys i)) min-y)
-            r (int (dtype/get-value rs i))
-            g (int (dtype/get-value gs i))
-            b (int (dtype/get-value bs i))
-            color (Color. r g b)]
-        (.setRGB img x y (.getRGB color))))
-
-    img))
+  [dataset {:as columns-mapping
+            :keys [r g b]}]
+  (let [height (->> dataset
+                    :y
+                    ((juxt dstats/max dstats/min))
+                    (apply -))
+        width (->> dataset
+                   :x
+                   ((juxt dstats/max dstats/min))
+                   (apply -))]
+    (-> columns-mapping
+        (update-vals dataset)
+        tc/dataset
+        ds-tensor/dataset->tensor
+        (tensor/reshape [height width 3])
+        bufimg/tensor->image)))
 ```
 :::
 
@@ -472,8 +494,10 @@ such a way that makes it not straightforward
 to read using only built-in Java libraries. This metadata contains useful information
 such as coordinate system, location, number of channels and so on.
 If we want to use it, we have a number of options:
+
 - Roll your own GeoTIFF metadata reader using `javax.imageio.metadata` and use
 field accessors and walk the metadata tree to find the information that you want.
+
 - Apache SIS
 - GeoTools
 - Python Interop (with Rasterio)
@@ -488,6 +512,7 @@ GIS operations such as getting raster values at specific geographic
 coordinates.
 Here are [developer docs](https://sis.apache.org/book/en/developer-guide.html) for Apache SIS.
 It's worth a scan to be aware of some terminology used in this library, for example:
+
 - [Coverage](https://sis.apache.org/book/en/developer-guide.html#Coverage): a function that returns an attribute value for a given coordinate
 (this includes raster images).
 
@@ -545,7 +570,7 @@ We can view the metadata in this interesting output format that SIS provides.
 ::: {.callout-note}
 ## OUT
 ```
-#object[org.apache.sis.metadata.iso.DefaultMetadata 0x4af9f150 Metadata                                       
+#object[org.apache.sis.metadata.iso.DefaultMetadata 0x78245dd0 Metadata                                       
   ├─Metadata identifier……………………………………………………………… example_geotiff_medium
   ├─Metadata standard (1 of 2)…………………………………………… Geographic Information — Metadata Part 1: Fundamentals
   │   ├─Edition…………………………………………………………………………………… ISO 19115-1:2014
@@ -817,7 +842,7 @@ View COG dimensions without downloading the full image
 {:x [499980.0 609780.0],
  :y [1790220.0 1900020.0],
  :crs
- #object[org.apache.sis.referencing.crs.DefaultProjectedCRS 0x70bbb286 "ProjectedCRS[\"WGS 84 / UTM zone 36N\",\n  BaseGeogCRS[\"WGS 84\",\n    Datum[\"World Geodetic System 1984\",\n      Ellipsoid[\"WGS 1984\", 6378137.0, 298.257223563]],\n    Unit[\"degree\", 0.017453292519943295]],\n  Conversion[\"UTM zone 36N\",\n    Method[\"Transverse Mercator\"],\n    Parameter[\"Latitude of natural origin\", 0.0],\n    Parameter[\"Longitude of natural origin\", 33.0],\n    Parameter[\"Scale factor at natural origin\", 0.9996],\n    Parameter[\"False easting\", 500000.0],\n    Parameter[\"False northing\", 0.0]],\n  CS[Cartesian, 2],\n    Axis[\"Easting (E)\", east],\n    Axis[\"Northing (N)\", north],\n    Unit[\"metre\", 1],\n  Id[\"EPSG\", 32636, \"9.9.1\", Citation[\"Subset of EPSG\"], URI[\"urn:ogc:def:crs:EPSG:9.9.1:32636\"]],\n  Remark[\"Definitions from public sources. When a definition corresponds to an EPSG object (ignoring metadata), the EPSG code is provided as a reference where to find the complete definition.\"]]"]}
+ #object[org.apache.sis.referencing.crs.DefaultProjectedCRS 0x37992194 "ProjectedCRS[\"WGS 84 / UTM zone 36N\",\n  BaseGeogCRS[\"WGS 84\",\n    Datum[\"World Geodetic System 1984\",\n      Ellipsoid[\"WGS 1984\", 6378137.0, 298.257223563]],\n    Unit[\"degree\", 0.017453292519943295]],\n  Conversion[\"UTM zone 36N\",\n    Method[\"Transverse Mercator\"],\n    Parameter[\"Latitude of natural origin\", 0.0],\n    Parameter[\"Longitude of natural origin\", 33.0],\n    Parameter[\"Scale factor at natural origin\", 0.9996],\n    Parameter[\"False easting\", 500000.0],\n    Parameter[\"False northing\", 0.0]],\n  CS[Cartesian, 2],\n    Axis[\"Easting (E)\", east],\n    Axis[\"Northing (N)\", north],\n    Unit[\"metre\", 1],\n  Id[\"EPSG\", 32636, \"9.9.1\", Citation[\"Subset of EPSG\"], URI[\"urn:ogc:def:crs:EPSG:9.9.1:32636\"]],\n  Remark[\"Definitions from public sources. When a definition corresponds to an EPSG object (ignoring metadata), the EPSG code is provided as a reference where to find the complete definition.\"]]"]}
 
 ```
 :::
