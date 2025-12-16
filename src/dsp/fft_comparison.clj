@@ -2,9 +2,8 @@
   :clay {:title "Comparing FFT Implementations in Clojure"
          :external-requirements ["slow computation"]
          :quarto {:author :daslu
-                  :draft true
                   :type :post
-                  :date "2025-12-14"
+                  :date "2025-12-16"
                   :category :data
                   :tags [:dsp :fft :performance :benchmarks :jtransforms :fastmath :apache-commons]
                   :image "spectrum.png"}}}
