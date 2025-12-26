@@ -2845,10 +2845,21 @@ iris
 ;; regressions for each (species × island) combination.
 
 (facet (=* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm {:color :species})
+           (mapping :bill-length-mm
+                    :bill-depth-mm
+                    {:color :species})
            (=+ (scatter {:alpha 0.5})
                (linear)))
        {:col :island})
+
+;; equivalently:
+(-> (data penguins)
+    (mapping :bill-length-mm
+             :bill-depth-mm
+             {:color :species})
+    (=+ (scatter {:alpha 0.5})
+        (linear))
+    (facet {:col :island}))
 
 (kind/test-last [#(and (= (count %) 2)
                        (= (:=col (first %)) :island)
