@@ -1,12 +1,12 @@
 ^{:kindly/hide-code true
-  :clay {:title  "Implementing the Algebra of Graphics in Clojure - Part 1"
-         :quarto {:type     :post
-                  :author   [:daslu]
-                  :draft    true
-                  :date     "2025-12-26"
+  :clay {:title "Implementing the Algebra of Graphics in Clojure - Part 1"
+         :quarto {:type :post
+                  :author [:daslu]
+                  :draft true
+                  :date "2025-12-26"
                   :description "A Design Exploration for a plotting API"
                   :category :data-visualization
-                  :tags     [:datavis]
+                  :tags [:datavis]
                   :keywords [:datavis]}}}
 (ns data-visualization.aog-in-clojure-part1)
 
@@ -4130,5 +4130,58 @@ iris
 ;; **Decision:** Worth pursuing, but not in this initial design phase.
 ;; Keep current Malli errors for now, enhance in future iteration.
 
+;; # Conclusion
+
+;; ### 📖 Where We Are
+
+;; So that's the exploration. We set out to see if AlgebraOfGraphics.jl's compositional
+;; approach could work in Clojure using plain maps and standard operations. The flat
+;; structure with distinctive `:=` keys turned out pretty well—standard `merge` just works,
+;; everything stays inspectable, and the threading macros feel natural. Getting type
+;; information from Tablecloth for free was a nice bonus that eliminated a lot of
+;; complexity.
+
+;; The minimal delegation strategy (we compute transforms, rendering targets handle
+;; layout) seems about right. We need domains before we can bin histograms anyway,
+;; so might as well compute them. Everything else—axis formatting, tick placement,
+;; "nice numbers"—the existing libraries already do better than we would.
+
+;; There are rough edges. The threading-macro polymorphism (detecting whether the first
+;; arg is layers or data) adds some complexity. Faceting works but doesn't feel as
+;; algebraically elegant as `=*` and `=+`. Error messages could be much better. And we
+;; haven't tested with large datasets yet. But nothing here feels like a fundamental
+;; blocker—more like things to improve as we learn from usage.
+
+;; ### 📖 What's Missing
+
+;; This is a prototype, not a complete plotting library. We've got scatter, line,
+;; histogram, linear regression, and faceting working across three rendering targets.
+;; That's enough to explore the design, but Tableplot's existing APIs handle many more
+;; plot types, aesthetics, transforms, and coordinate systems. Those aren't abandoned,
+;; just deferred until we know if this approach is worth pursuing.
+
+;; ### 📖 What Comes Next
+
+;; Honestly, we're not sure yet. This could become a new namespace in Tableplot,
+;; or it could just inform improvements to the existing APIs, or it could stay as
+;; a design study. The goal was to explore whether a compositional approach could
+;; work with plain Clojure data structures—and it seems like it can. What we do
+;; with that depends on what we hear from people who try it.
+
+;; If you've read this far and have thoughts—especially if you use Tableplot or build
+;; visualizations regularly—we'd be interested to hear them. Try the code, see what
+;; feels right or awkward, share what's missing for your use cases. This is happening
+;; in the [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/)
+;; context, so feedback actually shapes what gets built.
+
+;; Thanks to the AlgebraOfGraphics.jl folks for the inspiration, to Tableplot users
+;; for the feedback that motivated this exploration, and to the Real-World Data group
+;; for the space to try new ideas.
+
 ;; ---
-;; *This is a design exploration. Feedback welcome!*
+;;
+;; **What comes next?** That depends on what we learn from sharing this work. For now,
+;; this is a design exploration—a snapshot of our process, shared in the spirit of
+;; collaborative development.
+;;
+;; *Feedback welcome. Let's see where this goes together.*
