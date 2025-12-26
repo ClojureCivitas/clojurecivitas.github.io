@@ -10,10 +10,10 @@
                   :keywords [:datavis]}}}
 (ns data-visualization.aog-in-clojure-part1)
 
-^:kindly/hide-code
-(kind/hiccup
- [:style
-  ".clay-dataset {
+^{:kindly/hide-code true
+  :kindly/kind :kind/hiccup}
+[:style
+ ".clay-dataset {
   max-height:400px;
   overflow-y: auto;
 }
@@ -21,7 +21,7 @@
   max-height:400px;
   overflow-y: auto;
 }
-"])
+"]
 
 ;; **A Design Exploration for a plotting API**
 ;;
@@ -342,17 +342,17 @@
 
 ;; Nested structure requires a custom `merge-layer` function. Not ideal.
 
-;; ### 📖 The Solution: Flat Structure with Namespaced Keys
+;; ### 📖 The Solution: Flat Structure with Disticnctive Keys
 
 (def flat-layer-example
-  #:aog{:data {:bill-length-mm [39.1 39.5 40.3]
-               :bill-depth-mm [18.7 17.4 18.0]
-               :species [:adelie :adelie :adelie]}
-        :x :bill-length-mm
-        :y :bill-depth-mm
-        :color :species
-        :alpha 0.5
-        :plottype :scatter})
+  {:=data {:bill-length-mm [39.1 39.5 40.3]
+           :bill-depth-mm [18.7 17.4 18.0]
+           :species [:adelie :adelie :adelie]}
+   :=x :bill-length-mm
+   :=y :bill-depth-mm
+   :=color :species
+   :=alpha 0.5
+   :=plottype :scatter})
 
 ;; # Malli Schemas
 ;;
@@ -471,7 +471,7 @@
 (def Layer
   "Schema for a complete layer specification.
   
-  A layer is a flat map with namespaced :aog/* keys containing all the
+  A layer is a flat map with distinctive :=... keys containing all the
   information needed to render a visualization layer:
   - Data source
   - Aesthetic mappings (x, y, color, size, etc.)
@@ -481,39 +481,39 @@
   - Optional faceting"
   [:map
    ;; Data (required for most layers)
-   [:aog/data {:optional true} Dataset]
+   [:=data {:optional true} Dataset]
 
    ;; Positional aesthetics
-   [:aog/x {:optional true} PositionalAesthetic]
-   [:aog/y {:optional true} PositionalAesthetic]
+   [:=x {:optional true} PositionalAesthetic]
+   [:=y {:optional true} PositionalAesthetic]
 
    ;; Other aesthetics
-   [:aog/color {:optional true} ColorAesthetic]
-   [:aog/size {:optional true} SizeAesthetic]
+   [:=color {:optional true} ColorAesthetic]
+   [:=size {:optional true} SizeAesthetic]
 
    ;; Faceting
-   [:aog/row {:optional true} FacetAesthetic]
-   [:aog/col {:optional true} FacetAesthetic]
+   [:=row {:optional true} FacetAesthetic]
+   [:=col {:optional true} FacetAesthetic]
 
    ;; Attributes (constant visual properties)
-   [:aog/alpha {:optional true} AlphaAttribute]
+   [:=alpha {:optional true} AlphaAttribute]
 
    ;; Plot type and transformation
-   [:aog/plottype {:optional true} PlotType]
-   [:aog/transformation {:optional true} Transformation]
+   [:=plottype {:optional true} PlotType]
+   [:=transformation {:optional true} Transformation]
 
    ;; Histogram-specific
-   [:aog/bins {:optional true} BinsMethod]
+   [:=bins {:optional true} BinsMethod]
 
    ;; Scales
-   [:aog/scale-x {:optional true} ScaleSpec]
-   [:aog/scale-y {:optional true} ScaleSpec]
-   [:aog/scale-color {:optional true} ScaleSpec]
+   [:=scale-x {:optional true} ScaleSpec]
+   [:=scale-y {:optional true} ScaleSpec]
+   [:=scale-color {:optional true} ScaleSpec]
 
    ;; Rendering
-   [:aog/target {:optional true} Backend]
-   [:aog/width {:optional true} pos-int?]
-   [:aog/height {:optional true} pos-int?]])
+   [:=target {:optional true} Backend]
+   [:=width {:optional true} pos-int?]
+   [:=height {:optional true} pos-int?]])
 
 (def Layers
   "Schema for one or more layers.
@@ -536,11 +536,11 @@
   - Humanized error map if invalid
   
   Example:
-  (validate Layer {:aog/data {:x [1 2 3]} :aog/plottype :scatter})
+  (validate Layer {:=data {:x [1 2 3]} :=plottype :scatter})
   ;; => nil (valid)
   
-  (validate Layer {:aog/plottype :invalid})
-  ;; => {:aog/plottype [\"should be one of: :scatter, :line, :area, :bar, :histogram\"]}"
+  (validate Layer {:=plottype :invalid})
+  ;; => {:=plottype [\"should be one of: :scatter, :line, :area, :bar, :histogram\"]}"
   [schema value]
   (when-not (m/validate schema value)
     (me/humanize (m/explain schema value))))
@@ -588,52 +588,52 @@
       :message "Layer structure is invalid"})
 
    ;; Check plottype-specific requirements
-   (let [plottype (:aog/plottype layer)]
+   (let [plottype (:=plottype layer)]
      (when plottype
        (case plottype
          ;; Scatter/line need x and y
          (:scatter :line)
-         (when-not (and (:aog/x layer) (:aog/y layer))
+         (when-not (and (:=x layer) (:=y layer))
            {:type :missing-required-aesthetic
             :plottype plottype
             :missing (cond
-                       (and (nil? (:aog/x layer)) (nil? (:aog/y layer))) [:aog/x :aog/y]
-                       (nil? (:aog/x layer)) [:aog/x]
-                       :else [:aog/y])
-            :message (str plottype " plots require both :aog/x and :aog/y")})
+                       (and (nil? (:=x layer)) (nil? (:=y layer))) [:=x :=y]
+                       (nil? (:=x layer)) [:=x]
+                       :else [:=y])
+            :message (str plottype " plots require both :=x and :=y")})
 
          ;; Bar needs at least x
          :bar
-         (when-not (:aog/x layer)
+         (when-not (:=x layer)
            {:type :missing-required-aesthetic
             :plottype plottype
-            :missing [:aog/x]
-            :message "Bar plots require :aog/x"})
+            :missing [:=x]
+            :message "Bar plots require :=x"})
 
          ;; Histogram needs just x
          :histogram
-         (when-not (:aog/x layer)
+         (when-not (:=x layer)
            {:type :missing-required-aesthetic
             :plottype plottype
-            :missing [:aog/x]
-            :message "Histogram requires :aog/x"})
+            :missing [:=x]
+            :message "Histogram requires :=x"})
 
          ;; Area needs x and y
          :area
-         (when-not (and (:aog/x layer) (:aog/y layer))
+         (when-not (and (:=x layer) (:=y layer))
            {:type :missing-required-aesthetic
             :plottype plottype
             :missing (cond
-                       (and (nil? (:aog/x layer)) (nil? (:aog/y layer))) [:aog/x :aog/y]
-                       (nil? (:aog/x layer)) [:aog/x]
-                       :else [:aog/y])
-            :message "Area plots require both :aog/x and :aog/y"})
+                       (and (nil? (:=x layer)) (nil? (:=y layer))) [:=x :=y]
+                       (nil? (:=x layer)) [:=x]
+                       :else [:=y])
+            :message "Area plots require both :=x and :=y"})
 
          ;; Default - no specific requirements
          nil)))
 
    ;; Check data-related validations if data is present
-   (when-let [data (:aog/data layer)]
+   (when-let [data (:=data layer)]
      (let [column-keys (cond
                          ;; Tablecloth dataset
                          (tc/dataset? data)
@@ -653,12 +653,12 @@
 
            ;; Collect all column references from aesthetics
            aesthetic-cols (filter keyword?
-                                  [(:aog/x layer)
-                                   (:aog/y layer)
-                                   (when (keyword? (:aog/color layer)) (:aog/color layer))
-                                   (when (keyword? (:aog/size layer)) (:aog/size layer))
-                                   (:aog/row layer)
-                                   (:aog/col layer)])
+                                  [(:=x layer)
+                                   (:=y layer)
+                                   (when (keyword? (:=color layer)) (:=color layer))
+                                   (when (keyword? (:=size layer)) (:=size layer))
+                                   (:=row layer)
+                                   (:=col layer)])
 
            ;; Find missing columns
            missing-cols (when column-keys
@@ -707,9 +707,8 @@
 ;; **Why this works**:
 ;;
 ;; - Standard `merge` composes correctly (flat structure)
-;; - No collision with data columns (`:aog/plottype` ≠ `:plottype`)
+;; - No collision with data columns (`:=plottype` ≠ `:plottype`)
 ;; - All standard library operations work: `assoc`, `update`, `mapv`, `filter`, `into`
-;; - Namespace map syntax `#:aog{...}` keeps things concise
 
 ;; # Rendering Targets
 ;;
@@ -892,7 +891,7 @@
 ;; - Extension: Add features not yet supported by the layer API
 ;;
 ;; **When to use `kind/pprint`**:
-;; - Inspect the raw layer specification (`:aog/*` keys)
+;; - Inspect the raw layer specification (`:=...` keys)
 ;; - Understand how composition merges layers
 ;; - Debug layer construction before rendering
 
@@ -901,12 +900,12 @@
 (defn- layers?
   "Check if x is a vector of layer maps (not data).
 
-  Layers have :aog/* namespaced keys, while data vectors contain plain maps."
+  Layers have :=... distingtive keys, while data vectors contain plain maps."
   [x]
   (and (vector? x)
        (seq x)
        (map? (first x))
-       (some #(= "aog" (namespace %))
+       (some #(-> % name first (= \=))
              (keys (first x)))))
 
 ;; ### ⚙️ Renderer
@@ -915,7 +914,7 @@
   "Internal multimethod for plot dispatch."
   (fn [layers opts]
     (let [layers-vec (if (vector? layers) layers [layers])
-          spec-target (some :aog/target layers-vec)]
+          spec-target (some :=target layers-vec)]
       (or (:target opts) spec-target :geom))))
 
 (defn plot
@@ -934,7 +933,7 @@
     - :height - Height in pixels (default 400)
 
   The rendering target is determined by:
-  1. `:aog/target` key in layers (set via `target` function)
+  1. `:=target` key in layers (set via `target` function)
   2. :geom (static SVG) as default
 
   Returns:
@@ -964,7 +963,7 @@
   return values, so most users never call this function directly.
 
   Args:
-  - layers: Vector of layer maps (with :aog/* keys)
+  - layers: Vector of layer maps (with :=... keys)
 
   Returns:
   - The same layers, wrapped with Kindly auto-display metadata
@@ -1014,7 +1013,10 @@
   (and (vector? x)
        (seq x)
        (every? map? x)
-       (every? #(some (fn [[k _]] (= "aog" (namespace k))) %) x)))
+       (every? #(some (fn [[k _]]
+                        (-> k name first (= \=)))
+                      %)
+               x)))
 
 (defn =+
   "Combine multiple layer specifications for overlay (sum).
@@ -1045,12 +1047,12 @@
   - Maps of vectors: {:x [1 2 3] :y [4 5 6]}
   - Vector of maps: [{:x 1 :y 4} {:x 2 :y 5}]
 
-  Returns a vector containing a layer map with :aog/data.
+  Returns a vector containing a layer map with :=data.
   
   When called with layers as first arg, merges data into those layers."
   ([dataset]
    (validate! Dataset dataset)
-   [{:aog/data dataset}])
+   [{:=data dataset}])
   ([layers dataset]
    (=* layers (data dataset))))
 
@@ -1060,6 +1062,11 @@
 (data [{:x 1 :y 4} {:x 2 :y 5} {:x 3 :y 6}])
 
 ;; Works with datasets too (shown later when we load penguins)
+
+(defn =key
+  "Add a = sign to the name of a given keyword."
+  [k]
+  (-> k name (str "-") keyword))
 
 (defn mapping
   "Define aesthetic mappings from data columns to visual properties.
@@ -1071,15 +1078,15 @@
   Returns a vector containing a mapping layer.
   
   When called with layers-or-data as first arg:
-  - If layers (vector with :aog/* keys): merges mapping into those layers
+  - If layers (vector with :=... keys): merges mapping into those layers
   - If data: converts to layer first, then adds mapping"
   ([x y]
-   [{:aog/x x :aog/y y}])
+   [{:=x x :=y y}])
   ([x y named]
    (if (map? named)
      ;; Regular 3-arg: mapping :x :y {:color :species}
-     [(merge {:aog/x x :aog/y y}
-             (update-keys named #(keyword "aog" (name %))))]
+     [(merge {:=x x :=y y}
+             (update-keys named =key))]
      ;; Threading-friendly: (-> layers (mapping :x :y))
      (let [layers-or-data x
            x-field y
@@ -1119,7 +1126,7 @@
   (-> penguins (mapping :x :y) (scatter) (facet {:col :species}))"
   [layer-spec facet-spec]
   (displays-as-plot
-   (let [facet-keys (update-keys facet-spec #(keyword "aog" (name %)))]
+   (let [facet-keys (update-keys facet-spec =key)]
      (if (vector? layer-spec)
        (mapv #(merge % facet-keys) layer-spec)
        [(merge layer-spec facet-keys)]))))
@@ -1144,7 +1151,7 @@
   Threading-friendly:
   (-> penguins (mapping :x :y) (scatter) (scale :x {:domain [30 65]}))"
   ([aesthetic opts]
-   (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
+   (let [scale-key (keyword (str "=scale-" (name aesthetic)))]
      [{scale-key opts}]))
   ([layers aesthetic opts]
    (=* layers (scale aesthetic opts))))
@@ -1161,7 +1168,7 @@
   
   See Multi-Target Rendering section for usage examples."
   ([target-kw]
-   [{:aog/target target-kw}])
+   [{:=target target-kw}])
   ([layers target-kw]
    (=* layers (target target-kw))))
 
@@ -1180,7 +1187,7 @@
   (size 800 600)
   (-> penguins (mapping :x :y) (scatter) (size 800 600))"
   ([width height]
-   [{:aog/width width :aog/height height}])
+   [{:=width width :=height height}])
   ([layers width height]
    (=* layers (size width height))))
 
@@ -1313,7 +1320,7 @@ iris
 (defn- validate-layer-columns
   "Validate that all aesthetic mappings in a layer reference existing columns.
   
-  Checks :aog/x, :aog/y, :aog/color, :aog/row, :aog/col, :aog/group.
+  Checks :=x, :=y, :=color, :=row, :=col, :=group.
   
   Args:
   - layer: Layer map with aesthetic mappings
@@ -1321,13 +1328,13 @@ iris
   Throws informative exception if any referenced column doesn't exist.
   Returns layer if valid (for threading)."
   [layer]
-  (when-let [data (:aog/data layer)]
+  (when-let [data (:=data layer)]
     (let [dataset (ensure-dataset data)
-          aesthetics [:aog/x :aog/y :aog/color :aog/row :aog/col]
+          aesthetics [:=x :=y :=color :=row :=col]
           ;; Collect all column references
           cols (keep #(get layer %) aesthetics)
-          ;; Handle :aog/group which can be keyword or vector
-          group-cols (let [g (:aog/group layer)]
+          ;; Handle :=group which can be keyword or vector
+          group-cols (let [g (:=group layer)]
                        (cond
                          (keyword? g) [g]
                          (vector? g) g
@@ -1346,9 +1353,9 @@ iris
   If no faceting, returns vector with single element containing original layer.
   Labels are nil for dimensions without faceting."
   [layer]
-  (let [col-var (:aog/col layer)
-        row-var (:aog/row layer)
-        data (:aog/data layer)]
+  (let [col-var (:=col layer)
+        row-var (:=row layer)
+        data (:=data layer)]
 
     (if-not (or col-var row-var)
       ;; No faceting - return original layer
@@ -1388,7 +1395,7 @@ iris
                                  col-var (tc/select-rows
                                           (fn [row]
                                             (= (get row col-var) col-label))))
-                      new-layer (assoc layer :aog/data filtered)]
+                      new-layer (assoc layer :=data filtered)]
                   {:row-label row-label
                    :col-label col-label
                    :layer new-layer}))
@@ -1397,7 +1404,7 @@ iris
 (defn- has-faceting?
   "Check if any layer has faceting."
   [layers-vec]
-  (some #(or (:aog/col %) (:aog/row %)) layers-vec))
+  (some #(or (:=col %) (:=row %)) layers-vec))
 
 (defn- organize-by-facets
   "Organize multiple layers by their facet groups.
@@ -1454,22 +1461,22 @@ iris
   "Determine which columns should be used for grouping statistical transforms.
 
   Returns a vector of column keywords that create groups:
-  - :aog/group (explicit, can be keyword or vector)
-  - :aog/color (if categorical)
-  - :aog/col (facet column, if categorical)
-  - :aog/row (facet row, if categorical)
+  - :=group (explicit, can be keyword or vector)
+  - :=color (if categorical)
+  - :=col (facet column, if categorical)
+  - :=row (facet row, if categorical)
 
   Logic:
-  1. Explicit :aog/group always included (supports single keyword or vector)
+  1. Explicit :=group always included (supports single keyword or vector)
   2. Categorical aesthetics (:color, :col, :row) create groups
   3. Continuous/temporal aesthetics are visual-only, don't create groups
 
   Returns vector of column keywords, or empty vector if no grouping."
   [layer dataset]
-  (let [explicit-group (:aog/group layer)
-        color-col (:aog/color layer)
-        col-facet (:aog/col layer)
-        row-facet (:aog/row layer)
+  (let [explicit-group (:=group layer)
+        color-col (:=color layer)
+        col-facet (:=col layer)
+        row-facet (:=row layer)
 
         ;; Helper to check if a column is categorical
         categorical? (fn [col-key]
@@ -1508,31 +1515,31 @@ iris
   Validates column existence and handles missing data gracefully.
   
   Args:
-  - layer: Layer map with :aog/data and aesthetic mappings
+  - layer: Layer map with :=data and aesthetic mappings
   
   Returns: Sequence of point maps with :x, :y (optional), :color (optional), :group (optional)"
   [layer]
-  (let [data (:aog/data layer)]
+  (let [data (:=data layer)]
     (when-not data
-      (throw (ex-info "Layer missing :aog/data"
-                      {:layer (dissoc layer :aog/data)})))
+      (throw (ex-info "Layer missing :=data"
+                      {:layer (dissoc layer :=data)})))
 
     (let [dataset (ensure-dataset data)
           _ (validate-layer-columns layer) ;; Validate all columns exist
 
-          x-col (:aog/x layer)
+          x-col (:=x layer)
           _ (when-not x-col
-              (throw (ex-info "Layer missing :aog/x mapping"
-                              {:layer (select-keys layer [:aog/data :aog/y :aog/color])})))
+              (throw (ex-info "Layer missing :=x mapping"
+                              {:layer (select-keys layer [:=data :=y :=color])})))
 
           x-vals (vec (get dataset x-col))
 
           ;; Y is optional for some plot types (histograms)
-          y-col (:aog/y layer)
+          y-col (:=y layer)
           y-vals (when y-col (vec (get dataset y-col)))
 
           ;; Color is optional
-          color-col (:aog/color layer)
+          color-col (:=color layer)
           color-vals (when color-col (vec (get dataset color-col)))
 
           ;; Get grouping columns for statistical transforms
@@ -1564,7 +1571,7 @@ iris
 (defmulti apply-transform
   "Apply statistical transform to layer points.
 
-  Dispatches on the :aog/transformation key in the layer.
+  Dispatches on the :=transformation key in the layer.
 
   Handles grouping: if points contain :group key, applies transform per group.
 
@@ -1572,7 +1579,7 @@ iris
   - nil (no transform): {:type :raw :points points}
   - :linear: {:type :regression :points points :fitted fitted-points} or :grouped map
   - :histogram: {:type :histogram :points points :bars bar-specs} or :grouped map"
-  (fn [layer points] (:aog/transformation layer)))
+  (fn [layer points] (:=transformation layer)))
 
 ;; Default method: no transformation (scatter, line, etc.)
 (defmethod apply-transform nil
@@ -1612,7 +1619,7 @@ iris
   Dispatches on [target plottype-or-transform], where plottype-or-transform
   is the transformation type if present, otherwise the plottype."
   (fn [target layer transform-result alpha]
-    [target (or (:aog/transformation layer) (:aog/plottype layer))]))
+    [target (or (:=transformation layer) (:=plottype layer))]))
 
 ;; ### ⚙️ Geom Target Rendering Methods
 
@@ -1732,7 +1739,7 @@ iris
         ;; Process each layer using render-layer multimethod
         layer-data (mapcat (fn [layer]
                              (let [points (layer->points layer)
-                                   alpha (or (:aog/alpha layer) 1.0)
+                                   alpha (or (:=alpha layer) 1.0)
                                    transform-result (apply-transform layer points)]
                                (render-layer :geom layer transform-result alpha)))
                            layers)
@@ -1782,7 +1789,7 @@ iris
 (defn- get-scale-domain
   "Extract custom domain for an aesthetic from layers, or return nil if not specified."
   [layers-vec aesthetic]
-  (let [scale-key (keyword "aog" (str "scale-" (name aesthetic)))]
+  (let [scale-key (keyword (str "=scale-" (name aesthetic)))]
     (some #(get-in % [scale-key :domain]) layers-vec)))
 
 ;; Render plot using thi.ng/geom to static SVG.
@@ -1804,11 +1811,11 @@ iris
   (validate-layers! layers)
 
   (let [layers-vec (if (vector? layers) layers [layers])
-        ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
-        width (or (some :aog/width layers-vec)
+        ;; Check :=width and :=height in layers first, then opts, then defaults
+        width (or (some :=width layers-vec)
                   (:width opts)
                   default-plot-width)
-        height (or (some :aog/height layers-vec)
+        height (or (some :=height layers-vec)
                    (:height opts)
                    default-plot-height)
 
@@ -1951,12 +1958,12 @@ iris
   
   When called with layers-or-data as first arg, merges scatter into those layers."
   ([]
-   [{:aog/plottype :scatter}])
+   [{:=plottype :scatter}])
   ([attrs-or-layers]
    (if (layers? attrs-or-layers)
      (=* attrs-or-layers (scatter))
-     (let [result (merge {:aog/plottype :scatter}
-                         (update-keys attrs-or-layers #(keyword "aog" (name %))))]
+     (let [result (merge {:=plottype :scatter}
+                         (update-keys attrs-or-layers =key))]
        (validate! Layer result)
        [result])))
   ([layers attrs]
@@ -1998,11 +2005,11 @@ iris
 
 (kind/test-last [#(and (vector? %)
                        (map? (first %))
-                       (contains? (first %) :aog/data)
-                       (contains? (first %) :aog/x)
-                       (contains? (first %) :aog/y)
-                       (contains? (first %) :aog/plottype)
-                       (= (:aog/plottype (first %)) :scatter)
+                       (contains? (first %) :=data)
+                       (contains? (first %) :=x)
+                       (contains? (first %) :=y)
+                       (contains? (first %) :=plottype)
+                       (= (:=plottype (first %)) :scatter)
                        ;; Also test that it renders to valid HTML
                        (let [rendered (plot %)]
                          (and (map? (meta rendered))
@@ -2022,7 +2029,7 @@ iris
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)))
 
-;; Notice the `:aog/data`, `:aog/x`, `:aog/y`, `:aog/plottype` keys.
+;; Notice the `:=data`, `:=x`, `:=y`, `:=plottype` keys.
 ;; This is the compositional layer specification before rendering.
 
 ;; ### 🧪 Example 2: Plain Clojure Data Structures
@@ -2037,9 +2044,9 @@ iris
     (scatter))
 
 (kind/test-last [#(and (vector? %)
-                       (= (:aog/x (first %)) :x)
-                       (= (:aog/y (first %)) :y)
-                       (map? (:aog/data (first %))))])
+                       (= (:=x (first %)) :x)
+                       (= (:=y (first %)) :y)
+                       (map? (:=data (first %))))])
 
 ;; **Vector of maps** (row-oriented data):
 (=* (data [{:x 1 :y 2}
@@ -2051,8 +2058,8 @@ iris
     (scatter))
 
 (kind/test-last [#(and (vector? %)
-                       (= (:aog/x (first %)) :x)
-                       (= (:aog/y (first %)) :y))])
+                       (= (:=x (first %)) :x)
+                       (= (:=y (first %)) :y))])
 
 ;; **What happens here**:
 
@@ -2076,17 +2083,17 @@ iris
     (scatter))
 
 (kind/test-last [#(and (vector? %)
-                       (= (:aog/x (first %)) :bill-length-mm)
-                       (= (:aog/y (first %)) :bill-depth-mm)
-                       (= (:aog/plottype (first %)) :scatter))])
+                       (= (:=x (first %)) :bill-length-mm)
+                       (= (:=y (first %)) :bill-depth-mm)
+                       (= (:=plottype (first %)) :scatter))])
 
 ;; **With color aesthetic**:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (scatter))
 
-(kind/test-last [#(and (= (:aog/color (first %)) :species)
-                       (= (:aog/x (first %)) :bill-length-mm))])
+(kind/test-last [#(and (= (:=color (first %)) :species)
+                       (= (:=x (first %)) :bill-length-mm))])
 
 ;; **Combining scale customization**:
 (-> penguins
@@ -2095,8 +2102,8 @@ iris
     (scale :x {:domain [30 65]})
     (scale :y {:domain [12 23]}))
 
-(kind/test-last [#(and (= (get-in (first %) [:aog/scale-x :domain]) [30 65])
-                       (= (get-in (first %) [:aog/scale-y :domain]) [12 23]))])
+(kind/test-last [#(and (= (get-in (first %) [:=scale-x :domain]) [30 65])
+                       (= (get-in (first %) [:=scale-y :domain]) [12 23]))])
 
 ;; **Works with plain data too**:
 (-> {:x [1 2 3 4 5]
@@ -2104,12 +2111,12 @@ iris
     (mapping :x :y)
     (scatter))
 
-(kind/test-last [#(and (= (:aog/x (first %)) :x)
-                       (= (:aog/plottype (first %)) :scatter))])
+(kind/test-last [#(and (= (:=x (first %)) :x)
+                       (= (:=plottype (first %)) :scatter))])
 
 ;; **What's happening under the hood**:
 ;;
-;; 1. Each function detects whether its first argument is layers (vector with `:aog/*` keys)
+;; 1. Each function detects whether its first argument is layers (vector with `:=...` keys)
 ;;    or data (dataset, map-of-vectors, vector-of-maps)
 ;; 2. If data: converts to layers first via `(data ...)`
 ;; 3. If layers: merges the new specification using `*`
@@ -2139,9 +2146,9 @@ iris
 (defn infer-scale-type
   "Infer scale type from values in a layer."
   [layer aesthetic]
-  (let [data (:aog/data layer)
+  (let [data (:=data layer)
         dataset (ensure-dataset data)
-        col-key (get layer (keyword "aog" (name aesthetic)))
+        col-key (get layer (=key aesthetic))
         values (when col-key (tc/column dataset col-key))]
     (cond
       (nil? values) nil
@@ -2153,9 +2160,9 @@ iris
                 (mapping :bill-length-mm :bill-depth-mm {:color :species})
                 (scatter))
       layer (first layer)]
-  {:x-type (infer-scale-type layer :aog/x)
-   :y-type (infer-scale-type layer :aog/y)
-   :color-type (infer-scale-type layer :aog/color)})
+  {:x-type (infer-scale-type layer :=x)
+   :y-type (infer-scale-type layer :=y)
+   :color-type (infer-scale-type layer :=color)})
 
 ;; Notice: Type inference is instant (O(1) lookup from Tablecloth metadata),
 ;; not O(n) value examination.
@@ -2178,8 +2185,8 @@ iris
   
   When called with layers-or-data as first arg, merges linear into those layers."
   ([]
-   (let [result {:aog/transformation :linear
-                 :aog/plottype :line}]
+   (let [result {:=transformation :linear
+                 :=plottype :line}]
      (validate! Layer result)
      [result]))
   ([layers-or-data]
@@ -2262,7 +2269,7 @@ iris
   [layer points]
   (when-not (seq points)
     (throw (ex-info "Cannot compute linear regression on empty dataset"
-                    {:layer-transform (:aog/transformation layer)
+                    {:layer-transform (:=transformation layer)
                      :point-count 0})))
 
   (let [has-groups? (some :group points)]
@@ -2337,9 +2344,9 @@ iris
 
 (kind/test-last [#(and (vector? %)
                        (= (count %) 2)
-                       (= (:aog/plottype (first %)) :scatter)
-                       (= (:aog/transformation (second %)) :linear)
-                       (= (:aog/alpha (first %)) 0.5)
+                       (= (:=plottype (first %)) :scatter)
+                       (= (:=transformation (second %)) :linear)
+                       (= (:=alpha (first %)) 0.5)
                        ;; Test that multi-layer renders to valid HTML
                        (let [rendered (plot %)]
                          (and (map? (meta rendered))
@@ -2366,16 +2373,16 @@ iris
   
   When called with layers-or-data as first arg, merges histogram into those layers."
   ([]
-   [{:aog/transformation :histogram
-     :aog/plottype :bar
-     :aog/bins :sturges}])
+   [{:=transformation :histogram
+     :=plottype :bar
+     :=bins :sturges}])
   ([opts-or-layers]
    (if (layers? opts-or-layers)
      (=* opts-or-layers (histogram))
-     (let [result (merge {:aog/transformation :histogram
-                          :aog/plottype :bar
-                          :aog/bins :sturges}
-                         (update-keys opts-or-layers #(keyword "aog" (name %))))]
+     (let [result (merge {:=transformation :histogram
+                          :=plottype :bar
+                          :=bins :sturges}
+                         (update-keys opts-or-layers =key))]
        (validate! Layer result)
        [result])))
   ([layers opts]
@@ -2429,7 +2436,7 @@ iris
 ;; Handles both single and grouped histograms based on :group key in points.
 ;;
 ;; Args:
-;; - layer: Layer map containing :aog/bins specification
+;; - layer: Layer map containing :=bins specification
 ;; - points: Sequence of point maps with :x and optional :group keys
 ;;
 ;; Returns:
@@ -2443,7 +2450,7 @@ iris
   [layer points]
   (when-not (seq points)
     (throw (ex-info "Cannot compute histogram on empty dataset"
-                    {:layer-transform (:aog/transformation layer)
+                    {:layer-transform (:=transformation layer)
                      :point-count 0})))
 
   (let [has-groups? (some :group points)]
@@ -2453,14 +2460,14 @@ iris
             group-results (into {}
                                 (map (fn [[group-val group-points]]
                                        [group-val
-                                        {:bars (compute-histogram group-points (:aog/bins layer))
+                                        {:bars (compute-histogram group-points (:=bins layer))
                                          :points group-points}])
                                      grouped))]
         {:type :grouped-histogram
          :points points
          :groups group-results})
       ;; Single histogram
-      (let [bins-method (:aog/bins layer)
+      (let [bins-method (:=bins layer)
             bars (compute-histogram points bins-method)]
         {:type :histogram
          :points points
@@ -2570,8 +2577,8 @@ iris
 
 (kind/test-last [#(and (vector? %)
                        (= (count %) 2)
-                       (= (:aog/color (first %)) :species)
-                       (= (:aog/transformation (second %)) :linear))])
+                       (= (:=color (first %)) :species)
+                       (= (:=transformation (second %)) :linear))])
 
 ;; **What happens here**:
 
@@ -2587,9 +2594,9 @@ iris
     (mapping :bill-length-mm nil {:color :species :alpha 0.7})
     (histogram))
 
-(kind/test-last [#(and (= (:aog/transformation (first %)) :histogram)
-                       (= (:aog/color (first %)) :species)
-                       (= (:aog/alpha (first %)) 0.7))])
+(kind/test-last [#(and (= (:=transformation (first %)) :histogram)
+                       (= (:=color (first %)) :species)
+                       (= (:=alpha (first %)) 0.7))])
 
 ;; **What happens here**:
 
@@ -2611,8 +2618,8 @@ iris
         (linear)))
 
 (kind/test-last [#(and (= (count %) 2)
-                       (= (:aog/color (first %)) :body-mass-g)
-                       (= (:aog/transformation (second %)) :linear))])
+                       (= (:=color (first %)) :body-mass-g)
+                       (= (:=transformation (second %)) :linear))])
 
 ;; **What happens here**:
 
@@ -2638,8 +2645,8 @@ iris
         (linear)))
 
 (kind/test-last [#(and (= (count %) 2)
-                       (= (:aog/group (first %)) :cyl)
-                       (= (:aog/transformation (second %)) :linear))])
+                       (= (:=group (first %)) :cyl)
+                       (= (:=transformation (second %)) :linear))])
 
 ;; **What happens here**:
 
@@ -2654,9 +2661,9 @@ iris
     (=+ (scatter {:alpha 0.5})
         (linear)))
 
-(kind/test-last [#(and (= (:aog/color (first %)) :sex)
-                       (= (:aog/group (first %)) :species)
-                       (= (:aog/transformation (second %)) :linear))])
+(kind/test-last [#(and (= (:=color (first %)) :sex)
+                       (= (:=group (first %)) :species)
+                       (= (:=transformation (second %)) :linear))])
 
 ;; **What happens here**:
 
@@ -2789,7 +2796,7 @@ iris
            (scatter))
        {:col :species})
 
-(kind/test-last [#(= (:aog/col (first %)) :species)])
+(kind/test-last [#(= (:=col (first %)) :species)])
 
 ;; Faceted histogram - per-species histograms with shared scales:
 
@@ -2807,7 +2814,7 @@ iris
            (scatter))
        {:row :species})
 
-(kind/test-last [#(= (:aog/row (first %)) :species)])
+(kind/test-last [#(= (:=row (first %)) :species)])
 
 ;; ### 🧪 Example 12: Row × Column Grid Faceting
 ;;
@@ -2819,8 +2826,8 @@ iris
            (scatter))
        {:row :island :col :sex})
 
-(kind/test-last [#(and (= (:aog/row (first %)) :island)
-                       (= (:aog/col (first %)) :sex))])
+(kind/test-last [#(and (= (:=row (first %)) :island)
+                       (= (:=col (first %)) :sex))])
 
 ;; **What happens here**:
 
@@ -2844,8 +2851,8 @@ iris
        {:col :island})
 
 (kind/test-last [#(and (= (count %) 2)
-                       (= (:aog/col (first %)) :island)
-                       (= (:aog/color (first %)) :species))])
+                       (= (:=col (first %)) :island)
+                       (= (:=color (first %)) :species))])
 
 ;; **What happens here**:
 ;;
@@ -2856,7 +2863,7 @@ iris
 ;; 5. This demonstrates that `get-grouping-columns` returns `[:species :island]`
 ;;
 ;; **Implementation detail**: The `get-grouping-columns` function collects all
-;; categorical aesthetics that create groups (:aog/color, :aog/col, :aog/row, :aog/group)
+;; categorical aesthetics that create groups (:=color, :=col, :=row, :=group)
 ;; and returns a vector. Transforms then group by the combination of all these columns.
 
 ;; ### 🧪 Example 13: Custom Scale Domains
@@ -2873,7 +2880,7 @@ iris
     (scatter)
     (scale :y {:domain [0 40]}))
 
-(kind/test-last [#(= (get-in (first %) [:aog/scale-y :domain]) [0 40])])
+(kind/test-last [#(= (get-in (first %) [:=scale-y :domain]) [0 40])])
 
 ;; **What happens here**:
 
@@ -2914,11 +2921,11 @@ iris
   (validate-layers! layers)
 
   (let [layers-vec (if (vector? layers) layers [layers])
-        ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
-        width (or (some :aog/width layers-vec)
+        ;; Check :=width and :=height in layers first, then opts, then defaults
+        width (or (some :=width layers-vec)
                   (:width opts)
                   600)
-        height (or (some :aog/height layers-vec)
+        height (or (some :=height layers-vec)
                    (:height opts)
                    400)
 
@@ -2927,8 +2934,8 @@ iris
         is-faceted? (has-faceting? layers-vec)
 
         ;; Get facet dimensions if faceted
-        row-var (when is-faceted? (some :aog/row layers-vec))
-        col-var (when is-faceted? (some :aog/col layers-vec))
+        row-var (when is-faceted? (some :=row layers-vec))
+        col-var (when is-faceted? (some :=col layers-vec))
 
         ;; Check for custom scale domains
         custom-x-domain (get-scale-domain layers-vec :x)
@@ -2936,13 +2943,13 @@ iris
 
         ;; Helper to convert layer to VL data format
         layer->vl-data (fn [layer]
-                         (let [data (:aog/data layer)
+                         (let [data (:=data layer)
                                dataset (ensure-dataset data)
-                               x-col (:aog/x layer)
-                               y-col (:aog/y layer)
-                               color-col (:aog/color layer)
-                               row-col (:aog/row layer)
-                               col-col (:aog/col layer)
+                               x-col (:=x layer)
+                               y-col (:=y layer)
+                               color-col (:=color layer)
+                               row-col (:=row layer)
+                               col-col (:=col layer)
                                rows (tc/rows dataset :as-maps)]
                            (mapv (fn [row]
                                    (cond-> {}
@@ -2955,8 +2962,8 @@ iris
 
         ;; Helper to create VL mark for a layer
         layer->vl-mark (fn [layer]
-                         (let [plottype (:aog/plottype layer)
-                               transform (:aog/transformation layer)]
+                         (let [plottype (:=plottype layer)
+                               transform (:=transformation layer)]
                            (cond
                              (= transform :linear) "line"
                              (= transform :histogram) "bar"
@@ -2966,11 +2973,11 @@ iris
 
         ;; Helper to create encoding for a layer
         layer->vl-encoding (fn [layer vl-data]
-                             (let [x-col (:aog/x layer)
-                                   y-col (:aog/y layer)
-                                   color-col (:aog/color layer)
-                                   alpha (:aog/alpha layer)
-                                   transform (:aog/transformation layer)
+                             (let [x-col (:=x layer)
+                                   y-col (:=y layer)
+                                   color-col (:=color layer)
+                                   alpha (:=alpha layer)
+                                   transform (:=transformation layer)
                                    ;; Build tooltip fields
                                    tooltip-fields (cond-> []
                                                     x-col (conj {:field (name x-col) :type "quantitative"})
@@ -3004,8 +3011,8 @@ iris
                                 :regression
                                 (let [fitted (:fitted transform-result)
                                       fitted-data (mapv (fn [p]
-                                                          {(keyword (name (:aog/x layer))) (:x p)
-                                                           (keyword (name (:aog/y layer))) (:y p)})
+                                                          {(keyword (name (:=x layer))) (:x p)
+                                                           (keyword (name (:=y layer))) (:y p)})
                                                         fitted)]
                                   [{:mark "line"
                                     :data {:values fitted-data}
@@ -3014,15 +3021,15 @@ iris
                                 ;; Grouped regression - one line per group
                                 :grouped-regression
                                 (let [groups (:groups transform-result)
-                                      grouping-cols (get-grouping-columns layer (ensure-dataset (:aog/data layer)))]
+                                      grouping-cols (get-grouping-columns layer (ensure-dataset (:=data layer)))]
                                   (mapv (fn [[group-val {:keys [fitted]}]]
                                           (when fitted
                                             (let [;; Create map of grouping column names to values
                                                   group-map (zipmap (map #(keyword (name %)) grouping-cols)
                                                                     (if (vector? group-val) group-val [group-val]))
                                                   group-fitted-data (mapv (fn [p]
-                                                                            (merge {(keyword (name (:aog/x layer))) (:x p)
-                                                                                    (keyword (name (:aog/y layer))) (:y p)}
+                                                                            (merge {(keyword (name (:=x layer))) (:x p)
+                                                                                    (keyword (name (:=y layer))) (:y p)}
                                                                                    group-map))
                                                                           fitted)]
                                               {:mark "line"
@@ -3043,7 +3050,7 @@ iris
                                     :encoding {:x {:field "bin-start"
                                                    :type "quantitative"
                                                    :bin {:binned true :step (- (:x-max (first bars)) (:x-min (first bars)))}
-                                                   :axis {:title (name (:aog/x layer))}}
+                                                   :axis {:title (name (:=x layer))}}
                                                :x2 {:field "bin-end"}
                                                :y {:field "count" :type "quantitative"}
                                                :tooltip [{:field "bin-start" :type "quantitative" :title "Min"}
@@ -3053,7 +3060,7 @@ iris
                                 ;; Grouped histogram - bars per group
                                 :grouped-histogram
                                 (let [groups (:groups transform-result)
-                                      grouping-cols (get-grouping-columns layer (ensure-dataset (:aog/data layer)))]
+                                      grouping-cols (get-grouping-columns layer (ensure-dataset (:=data layer)))]
                                   (mapcat (fn [[group-val {:keys [bars]}]]
                                             (when bars
                                               (let [;; Create map of grouping column names to values
@@ -3077,7 +3084,7 @@ iris
                                                              {:x {:field "bin-start"
                                                                   :type "quantitative"
                                                                   :bin {:binned true :step (- (:x-max (first bars)) (:x-min (first bars)))}
-                                                                  :axis {:title (name (:aog/x layer))}}
+                                                                  :axis {:title (name (:=x layer))}}
                                                               :x2 {:field "bin-end"}
                                                               :y {:field "count" :type "quantitative"}
                                                               :tooltip tooltip-fields}
@@ -3141,18 +3148,18 @@ iris
   (validate-layers! layers)
 
   (let [layers-vec (if (vector? layers) layers [layers])
-        ;; Check :aog/width and :aog/height in layers first, then opts, then defaults
-        width (or (some :aog/width layers-vec)
+        ;; Check :=width and :=height in layers first, then opts, then defaults
+        width (or (some :=width layers-vec)
                   (:width opts)
                   600)
-        height (or (some :aog/height layers-vec)
+        height (or (some :=height layers-vec)
                    (:height opts)
                    400)
 
         ;; Check for faceting
         is-faceted? (has-faceting? layers-vec)
-        row-var (when is-faceted? (some :aog/row layers-vec))
-        col-var (when is-faceted? (some :aog/col layers-vec))
+        row-var (when is-faceted? (some :=row layers-vec))
+        col-var (when is-faceted? (some :=col layers-vec))
 
         ;; Check for custom scale domains
         custom-x-domain (get-scale-domain layers-vec :x)
@@ -3160,13 +3167,13 @@ iris
 
         ;; Helper to convert layer to Plotly data
         layer->plotly-data (fn [layer]
-                             (let [data (:aog/data layer)
+                             (let [data (:=data layer)
                                    dataset (ensure-dataset data)
-                                   x-col (:aog/x layer)
-                                   y-col (:aog/y layer)
-                                   color-col (:aog/color layer)
-                                   row-col (:aog/row layer)
-                                   col-col (:aog/col layer)]
+                                   x-col (:=x layer)
+                                   y-col (:=y layer)
+                                   color-col (:=color layer)
+                                   row-col (:=row layer)
+                                   col-col (:=col layer)]
                                {:x-vals (when x-col (vec (tc/column dataset x-col)))
                                 :y-vals (when y-col (vec (tc/column dataset y-col)))
                                 :color-vals (when color-col (vec (tc/column dataset color-col)))
@@ -3180,9 +3187,9 @@ iris
                                 (let [plotly-data (layer->plotly-data layer)
                                       points (layer->points layer)
                                       transform-result (apply-transform layer points)
-                                      plottype (:aog/plottype layer)
-                                      transform (:aog/transformation layer)
-                                      color-col (:aog/color layer)]
+                                      plottype (:=plottype layer)
+                                      transform (:=transformation layer)
+                                      color-col (:=color layer)]
                                   (case (:type transform-result)
                                     ;; Scatter plot
                                     :raw
@@ -3280,7 +3287,7 @@ iris
         spec (if is-faceted?
                (let [;; Get unique facet values
                      first-layer (first layers-vec)
-                     data (:aog/data first-layer)
+                     data (:=data first-layer)
                      dataset (ensure-dataset data)
                      row-vals (when row-var (sort (distinct (tc/column dataset row-var))))
                      col-vals (when col-var (sort (distinct (tc/column dataset col-var))))
@@ -3296,7 +3303,7 @@ iris
                                              row-var (tc/select-rows #(= (get % row-var) row-val))
                                              col-var (tc/select-rows #(= (get % col-var) col-val)))
                              ;; Create layer with filtered data
-                             facet-layer (assoc (first layers-vec) :aog/data filtered-data)
+                             facet-layer (assoc (first layers-vec) :=data filtered-data)
                              facet-points (layer->points facet-layer)
                              transform-result (apply-transform facet-layer facet-points)
                              subplot-idx (clojure.core/+ (clojure.core/* row-idx num-cols) col-idx 1)
@@ -3371,7 +3378,7 @@ iris
     (scatter)
     (target :vl))
 
-(kind/test-last [#(and (= (:aog/target (first %)) :vl)
+(kind/test-last [#(and (= (:=target (first %)) :vl)
                        ;; Test that it renders to valid Vega-Lite spec
                        (let [rendered (plot %)]
                          (and (map? rendered)
@@ -3396,7 +3403,7 @@ iris
     (target :vl))
 
 (kind/test-last [#(and (= (count %) 2)
-                       (= (:aog/target (first %)) :vl))])
+                       (= (:=target (first %)) :vl))])
 
 ;; **What happens here**:
 
@@ -3413,8 +3420,8 @@ iris
         (linear))
     (target :vl))
 
-(kind/test-last [#(and (= (:aog/color (first %)) :species)
-                       (= (:aog/target (first %)) :vl))])
+(kind/test-last [#(and (= (:=color (first %)) :species)
+                       (= (:=target (first %)) :vl))])
 
 ;; **What happens here**:
 
@@ -3445,8 +3452,8 @@ iris
     (facet {:col :species})
     (target :vl))
 
-(kind/test-last [#(and (= (:aog/col (first %)) :species)
-                       (= (:aog/target (first %)) :vl))])
+(kind/test-last [#(and (= (:=col (first %)) :species)
+                       (= (:=target (first %)) :vl))])
 
 ;; **What happens here**:
 
@@ -3459,13 +3466,13 @@ iris
 
 ;; Grid faceting with custom dimensions using compositional `size`:
 
-(plot
- (-> penguins
-     (mapping :bill-length-mm :bill-depth-mm)
-     (scatter)
-     (facet {:row :island :col :sex})
-     (target :vl)
-     (size 800 600)))
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:row :island :col :sex})
+    (target :vl)
+    (size 800 600)
+    plot)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :spec)
@@ -3489,8 +3496,8 @@ iris
     (scale :y {:domain [10 25]})
     (target :vl))
 
-(kind/test-last [#(and (= (get-in (first %) [:aog/scale-x :domain]) [30 65])
-                       (= (:aog/target (first %)) :vl))])
+(kind/test-last [#(and (= (get-in (first %) [:=scale-x :domain]) [30 65])
+                       (= (:=target (first %)) :vl))])
 
 ;; **What happens here**:
 
@@ -3500,7 +3507,7 @@ iris
 
 ;; ### 📖 The Power of Backend Agnosticism
 ;;
-;; **Key insight**: Our flat map representation with `:aog/*` keys creates a
+;; **Key insight**: Our flat map representation with `:=...` keys creates a
 ;; separation between plot semantics and rendering implementation.
 ;;
 ;; **What we control** (across all targets):
@@ -3530,7 +3537,7 @@ iris
     (scatter)
     (target :plotly))
 
-(kind/test-last [#(and (= (:aog/target (first %)) :plotly)
+(kind/test-last [#(and (= (:=target (first %)) :plotly)
                        ;; Test that it renders to valid Plotly spec
                        (let [rendered (plot %)]
                          (and (map? rendered)
@@ -3554,7 +3561,7 @@ iris
     (target :plotly))
 
 (kind/test-last [#(and (= (count %) 2)
-                       (= (:aog/target (first %)) :plotly))])
+                       (= (:=target (first %)) :plotly))])
 
 ;; **What happens here**:
 
@@ -3571,8 +3578,8 @@ iris
         (linear))
     (target :plotly))
 
-(kind/test-last [#(and (= (:aog/color (first %)) :species)
-                       (= (:aog/target (first %)) :plotly))])
+(kind/test-last [#(and (= (:=color (first %)) :species)
+                       (= (:=target (first %)) :plotly))])
 
 ;; **What happens here**:
 
@@ -3647,8 +3654,8 @@ iris
     (scale :y {:domain [10 25]})
     (target :plotly))
 
-(kind/test-last [#(and (= (get-in (first %) [:aog/scale-x :domain]) [30 65])
-                       (= (:aog/target (first %)) :plotly))])
+(kind/test-last [#(and (= (get-in (first %) [:=scale-x :domain]) [30 65])
+                       (= (:=target (first %)) :plotly))])
 
 ;; **What happens here**:
 
@@ -3670,9 +3677,9 @@ iris
     (target :vl)
     (size 800 600))
 
-(kind/test-last [#(and (= (:aog/width (first %)) 800)
-                       (= (:aog/height (first %)) 600)
-                       (= (:aog/target (first %)) :vl))])
+(kind/test-last [#(and (= (:=width (first %)) 800)
+                       (= (:=height (first %)) 600)
+                       (= (:=target (first %)) :vl))])
 
 ;; **Full threading with `plot`**:
 ;; The `plot` function also supports threading, so you can optionally call it
@@ -3688,9 +3695,9 @@ iris
 
 ;; **What happens here**:
 
-;; 1. `size` merges `:aog/width` and `:aog/height` into layers
+;; 1. `size` merges `:=width` and `:=height` into layers
 ;; 2. `plot-impl` methods check layers first, then opts, then defaults
-;; 3. Priority: `:aog/width` > `:width opts` > `default-plot-width`
+;; 3. Priority: `:=width` > `:width opts` > `default-plot-width`
 ;; 4. Fully compositional - size is part of the layer spec, not external config
 
 ;; **Backwards compatibility**:
@@ -3721,11 +3728,11 @@ iris
 ;;     (scatter)
 ;;     (target :vl)
 ;;     (size 800 600))
-;; ;; => [{:aog/data ... :aog/x :x :aog/y :y :aog/plottype :scatter 
-;; ;;      :aog/target :vl :aog/width 800 :aog/height 600}]
+;; ;; => [{:=data ... :=x :x :=y :y :=plottype :scatter 
+;; ;;      :=target :vl :=width 800 :=height 600}]
 ;; ```
 ;;
-;; Notice that `:aog/target`, `:aog/width`, and `:aog/height` appear in every layer,
+;; Notice that `:=target`, `:=width`, and `:=height` appear in every layer,
 ;; even though their meaning applies to **all layers together**, not individual layers.
 ;; These are plot-level properties, not layer-level properties.
 ;;
@@ -3742,8 +3749,8 @@ iris
 ;;
 ;; The current workaround: `plot-impl` extracts the first occurrence:
 ;; ```clojure
-;; (some :aog/target layers-vec)  ;; Get first non-nil target
-;; (some :aog/width layers-vec)   ;; Get first non-nil width
+;; (some :=target layers-vec)  ;; Get first non-nil target
+;; (some :=width layers-vec)   ;; Get first non-nil width
 ;; ```
 ;;
 ;; ### Alternative Approaches Considered
@@ -3752,11 +3759,11 @@ iris
 ;;
 ;; ```clojure
 ;; (defn target [target-kw]
-;;   (with-meta [] {:aog/target target-kw}))
+;;   (with-meta [] {:=target target-kw}))
 ;;
 ;; ;; Result:
-;; ^{:aog/target :vl :aog/width 800 :aog/height 600}
-;; [{:aog/data ... :aog/x :x :aog/plottype :scatter}]
+;; ^{:=target :vl :=width 800 :=height 600}
+;; [{:=data ... :=x :x :=plottype :scatter}]
 ;; ```
 ;;
 ;; **Pros**: Conceptually clean separation - layers are grammar, metadata is rendering config
@@ -3766,8 +3773,8 @@ iris
 ;; **2. Wrapper Map**
 ;;
 ;; ```clojure
-;; {:layers [{:aog/data ... :aog/x :x}
-;;           {:aog/transformation :linear}]
+;; {:layers [{:=data ... :=x :x}
+;;           {:=transformation :linear}]
 ;;  :config {:target :vl :width 800 :height 600}}
 ;; ```
 ;;
@@ -3778,9 +3785,9 @@ iris
 ;; **3. Special Marker Layer**
 ;;
 ;; ```clojure
-;; [{:aog/data ... :aog/x :x :aog/plottype :scatter}
-;;  {:aog/plot-config true
-;;   :aog/target :vl :aog/width 800 :aog/height 600}]
+;; [{:=data ... :=x :x :=plottype :scatter}
+;;  {:=plot-config true
+;;   :=target :vl :=width 800 :=height 600}]
 ;; ```
 ;;
 ;; **Pros**: Keeps vector structure, filterable
@@ -3818,7 +3825,7 @@ iris
 ;; This notebook demonstrates a composable graphics API with **minimal delegation**:
 ;;
 ;; **Core Design**:
-;; - Layers as flat maps with `:aog/*` namespaced keys
+;; - Layers as flat maps with `:=...` distinctive keys
 ;; - Composition using `*` (merge) and `+` (overlay)
 ;; - Standard library operations work natively
 ;; - Backend-agnostic IR
@@ -3844,54 +3851,54 @@ iris
 
 ;; A properly constructed layer passes validation silently
 (validate Layer
-          {:aog/data {:x [1 2 3] :y [4 5 6]}
-           :aog/x :x
-           :aog/y :y
-           :aog/plottype :scatter
-           :aog/alpha 0.7})
+          {:=data {:x [1 2 3] :y [4 5 6]}
+           :=x :x
+           :=y :y
+           :=plottype :scatter
+           :=alpha 0.7})
 
 ;; ### 🧪 Example 2: Invalid Alpha (Out of Range)
 
 ;; Alpha must be between 0.0 and 1.0
 (validate Layer
-          {:aog/data {:x [1 2 3]}
-           :aog/plottype :scatter
-           :aog/alpha 1.5})
+          {:=data {:x [1 2 3]}
+           :=plottype :scatter
+           :=alpha 1.5})
 
 ;; ### 🧪 Example 3: Invalid Plot Type
 
 ;; Plot type must be one of the defined enums
 (validate Layer
-          {:aog/data {:x [1 2 3]}
-           :aog/plottype :invalid-type})
+          {:=data {:x [1 2 3]}
+           :=plottype :invalid-type})
 
 ;; ### 🧪 Example 4: Missing Required Aesthetics
 
 ;; Scatter plots require both x and y
 (validate-layer
- {:aog/data {:x [1 2 3] :y [4 5 6]}
-  :aog/x :x
-  ;; Missing :aog/y!
-  :aog/plottype :scatter})
+ {:=data {:x [1 2 3] :y [4 5 6]}
+  :=x :x
+  ;; Missing :=y!
+  :=plottype :scatter})
 
 ;; ### 🧪 Example 5: Missing Column in Dataset
 
 ;; Column references must exist in the data
 (validate-layer
- {:aog/data {:x [1 2 3]}
-  :aog/x :x
-  :aog/y :y ;; y column doesn't exist!
-  :aog/plottype :scatter})
+ {:=data {:x [1 2 3]}
+  :=x :x
+  :=y :y ;; y column doesn't exist!
+  :=plottype :scatter})
 
 ;; ### 🧪 Example 6: Programmatic Validation
 
 ;; Check validity without throwing
-(valid? Layer {:aog/data {:x [1 2 3]} :aog/plottype :scatter})
+(valid? Layer {:=data {:x [1 2 3]} :=plottype :scatter})
 
-(valid? Layer {:aog/plottype :invalid})
+(valid? Layer {:=plottype :invalid})
 
 ;; Get detailed error information
-(validate Layer {:aog/plottype :invalid :aog/alpha 2.0})
+(validate Layer {:=plottype :invalid :=alpha 2.0})
 
 ;; ## Design Discussions
 
@@ -3930,7 +3937,7 @@ iris
 ;; ```clojure
 ;; (defmulti render-layer
 ;;   (fn [target layer transform-result alpha]
-;;     [target (or (:aog/transformation layer) (:aog/plottype layer))]))
+;;     [target (or (:=transformation layer) (:=plottype layer))]))
 ;; ```
 
 ;; With 3 targets (:geom, :vl, :plotly) and growing plottypes (:scatter, :line,
@@ -3961,19 +3968,19 @@ iris
 
 ;; ### 📖 Key Naming Convention
 
-;; Every layer key uses the `:aog/` namespace prefix:
+;; Every layer key uses the `:=` prefix:
 ;; ```clojure
-;; {:aog/data penguins
-;;  :aog/x :bill-length-mm
-;;  :aog/y :bill-depth-mm
-;;  :aog/color :species
-;;  :aog/plottype :scatter}
+;; {:=data penguins
+;;  :=x :bill-length-mm
+;;  :=y :bill-depth-mm
+;;  :=color :species
+;;  :=plottype :scatter}
 ;; ```
 
 ;; **The Problem:**
 
-;; The `:aog/` namespace prefix is verbose and creates visual noise:
-;; - `:aog/` appears constantly throughout code
+;; The `:=` namespace prefix is verbose and creates visual noise:
+;; - `:=` appears constantly throughout code
 ;; - More typing required
 ;; - Heavier than necessary for the protection it provides
 
@@ -3991,7 +3998,7 @@ iris
 ;; **Benefits:**
 ;; - Distinctive: prevents collision with data column names (`:=color` vs `:color`)
 ;; - Consistent with other Tableplot APIs
-;; - Lightweight: less visual noise than `:aog/`
+;; - Lightweight: less visual noise than `:=`
 ;; - Clear distinction between layer spec and data
 ;; - Less typing required
 
@@ -4091,7 +4098,7 @@ iris
 
 ;; The current validation system produces structured error messages via Malli:
 ;; ```clojure
-;; (validate Layer {:aog/plottype :invalid})
+;; (validate Layer {:=plottype :invalid})
 ;; ;; Returns detailed Malli error with path and humanized explanation
 ;; ```
 
@@ -4105,7 +4112,7 @@ iris
 ;; The current Malli errors are functional but could be significantly improved:
 ;; ```clojure
 ;; ;; Current:
-;; "Invalid value for :aog/plottype. Should be one of :scatter, :point, :line"
+;; "Invalid value for :=plottype. Should be one of :scatter, :point, :line"
 ;;
 ;; ;; Enhanced:
 ;; "Unknown plot type :scater. Did you mean :scatter? 
