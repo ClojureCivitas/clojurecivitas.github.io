@@ -9,6 +9,20 @@
                   :tags     [:datavis]
                   :keywords [:datavis]}}}
 (ns data-visualization.aog-in-clojure-part1)
+
+^:kindly/hide-code
+(kind/hiccup
+ [:style
+  ".clay-dataset {
+  max-height:400px;
+  overflow-y: auto;
+}
+.printedClojure {
+  max-height:400px;
+  overflow-y: auto;
+}
+"])
+
 ;; **A Design Exploration for a plotting API**
 ;;
 ;; This is the first post in a series documenting the design and implementation of a new
