@@ -553,10 +553,10 @@
   Example:
   (validate! Layer my-layer)"
   [schema value]
-  #_(when-let [errors (validate schema value)]
-      (throw (ex-info "Validation failed"
-                      {:errors errors
-                       :value value}))))
+  (when-let [errors (validate schema value)]
+    (throw (ex-info "Validation failed"
+                    {:errors errors
+                     :value value}))))
 
 (defn valid?
   "Check if a value is valid according to a schema.
@@ -2845,14 +2845,18 @@ iris
 ;; regressions for each (species × island) combination.
 
 (facet (=* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm {:color :species})
+           (mapping :bill-length-mm
+                    :bill-depth-mm
+                    {:color :species})
            (=+ (scatter {:alpha 0.5})
                (linear)))
        {:col :island})
 
 ;; equivalently:
 (-> (data penguins)
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm
+             :bill-depth-mm
+             {:color :species})
     (=+ (scatter {:alpha 0.5})
         (linear))
     (facet {:col :island}))
