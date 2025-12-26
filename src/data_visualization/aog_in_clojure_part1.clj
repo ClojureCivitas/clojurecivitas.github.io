@@ -2,6 +2,7 @@
   :clay {:title  "Implementing the Algebra of Graphics in Clojure - Part 1"
          :quarto {:type     :post
                   :author   [:daslu]
+                  :draft    true
                   :date     "2025-12-26"
                   :description "A Design Exploration for a plotting API"
                   :category :data-visualization
