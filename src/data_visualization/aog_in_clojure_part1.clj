@@ -1209,23 +1209,23 @@ iris
 ;; # Constants
 
 ;; ggplot2-compatible color palette for categorical variables
-(def ^:private ggplot2-colors
+(def ggplot2-colors
   ["#F8766D" "#00BA38" "#619CFF" "#F564E3"])
 
 ;; ggplot2 theme colors
-(def ^:private ggplot2-background "#EBEBEB")
-(def ^:private ggplot2-grid "#FFFFFF")
-(def ^:private ggplot2-default-mark "#333333")
+(def ggplot2-background "#EBEBEB")
+(def ggplot2-grid "#FFFFFF")
+(def ggplot2-default-mark "#333333")
 
 ;; Layout constants (extracted magic numbers for maintainability)
-(def ^:private default-plot-width 600)
-(def ^:private default-plot-height 400)
-(def ^:private panel-margin-left 50)
-(def ^:private panel-margin-right 50)
-(def ^:private panel-margin-top 50)
-(def ^:private panel-margin-bottom 50)
-(def ^:private facet-label-offset 30)
-(def ^:private facet-label-side-offset 20)
+(def default-plot-width 600)
+(def default-plot-height 400)
+(def panel-margin-left 50)
+(def panel-margin-right 50)
+(def panel-margin-top 50)
+(def panel-margin-bottom 50)
+(def facet-label-offset 30)
+(def facet-label-side-offset 20)
 
 ;; ### 🧪 Type Information Example
 ;;
