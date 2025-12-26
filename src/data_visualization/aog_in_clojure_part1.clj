@@ -1066,7 +1066,7 @@
 (defn =key
   "Add a = sign to the name of a given keyword."
   [k]
-  (-> k name (str "-") keyword))
+  (->> k name (str "=") keyword))
 
 (defn mapping
   "Define aesthetic mappings from data columns to visual properties.
