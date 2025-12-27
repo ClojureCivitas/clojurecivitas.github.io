@@ -11,7 +11,7 @@ website:
   favicon: "favicon.ico"
   site-url: "https://clojurecivitas.github.io"
   image: "/images/civitas-icon.svg"
-  draft-mode: unlinked
+  draft-mode: visible
   open-graph: true
   navbar:
     logo: "/images/civitas-icon.svg"
@@ -19,6 +19,7 @@ website:
     right:
       - about.qmd
       - posts.qmd
+      - drafts.qmd
       - civitas/authors.qmd
       - civitas/explorer.qmd
       - icon: github
