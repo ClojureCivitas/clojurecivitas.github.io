@@ -534,9 +534,13 @@
 ;; This gives us control where it matters (correctness, consistency) while
 ;; leveraging mature tools where they excel (formatting, layout).
 ;;
-;; **Why compute transforms ourselves?** Two reasons:
-;; 1. Consistency - visualizations match statistical computations in Clojure libs
-;; 2. Efficiency - compute summaries (20 histogram bars), not raw data (1M points)
+;; **Why compute transforms ourselves?**
+
+;; 1. Consistency - We want the isualizations to match the 
+;; statistical computations of our Clojure libraries.
+;; 2. Efficiency - Especially with browser-based rendering targets,
+;; what we wish to pass to the target is summaries (say, 20 histogram bars)
+;; tather than raw data (say, 1M points).
 
 ;; # Malli Schemas
 ;;
@@ -1151,6 +1155,120 @@
        (cond-> all-plot-props
          (seq all-layers) (assoc :=layers all-layers))))))
 
+;; ## 🧪 Composition Operator Examples
+;;
+;; These examples test the core compositional semantics of `=*` and `=+`.
+
+;; ### 🧪 Example: =* Cross-Product Composition
+
+;; The `=*` operator performs cross-product merge of layers:
+
+(kind/pprint
+ (=* {:=layers [{:=x :a}]}
+     {:=layers [{:=y :b}]}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 1)
+                       (= (:=x (first (:=layers %))) :a)
+                       (= (:=y (first (:=layers %))) :b))])
+
+;; Multiple layers create cross-products:
+
+(kind/pprint
+ (=* {:=layers [{:=x :a} {:=x :b}]}
+     {:=layers [{:=y :c} {:=y :d}]}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 4)
+                       ;; Should have all combinations: (a,c), (a,d), (b,c), (b,d)
+                       (some (fn [layer] (and (= (:=x layer) :a) (= (:=y layer) :c))) (:=layers %))
+                       (some (fn [layer] (and (= (:=x layer) :a) (= (:=y layer) :d))) (:=layers %))
+                       (some (fn [layer] (and (= (:=x layer) :b) (= (:=y layer) :c))) (:=layers %))
+                       (some (fn [layer] (and (= (:=x layer) :b) (= (:=y layer) :d))) (:=layers %)))])
+
+;; ### 🧪 Example: =* Merges Plot-Level Properties
+
+;; Plot-level properties (non-layer keys) merge with right-side wins:
+
+(kind/pprint
+ (=* {:=layers [{:=x :a}] :=target :geom}
+     {:=layers [{:=y :b}] :=width 800}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=target %) :geom)
+                       (= (:=width %) 800)
+                       (= (count (:=layers %)) 1)
+                       (= (:=x (first (:=layers %))) :a)
+                       (= (:=y (first (:=layers %))) :b))])
+
+;; Right-side wins for conflicting plot-level properties:
+
+(kind/pprint
+ (=* {:=target :geom :=width 400}
+     {:=target :vl :=height 300}))
+
+(kind/test-last [#(and (map? %)
+                       (= (:=target %) :vl)
+                       (= (:=width %) 400)
+                       (= (:=height %) 300))])
+
+;; ### 🧪 Example: =+ Overlay Without Inheritance
+
+;; The `=+` operator concatenates layers when both specs have plottypes:
+
+(kind/pprint
+ (=+ {:=layers [{:=plottype :scatter :=alpha 0.5}]}
+     {:=layers [{:=plottype :line :=color :blue}]}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       (= (:=plottype (first (:=layers %))) :scatter)
+                       (= (:=plottype (second (:=layers %))) :line)
+                       (= (:=alpha (first (:=layers %))) 0.5)
+                       (= (:=color (second (:=layers %))) :blue))])
+
+;; ### 🧪 Example: =+ Inheritance Pattern
+
+;; When first spec has incomplete layer (no plottype), it provides shared properties:
+
+(kind/pprint
+ (=+ {:=layers [{:=data {:x [1 2 3] :y [4 5 6]} :=x :x :=y :y}]}
+     {:=layers [{:=plottype :scatter}]}
+     {:=layers [{:=plottype :line}]}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       ;; Both layers inherit data and aesthetics from base
+                       (= (:=data (first (:=layers %))) {:x [1 2 3] :y [4 5 6]})
+                       (= (:=data (second (:=layers %))) {:x [1 2 3] :y [4 5 6]})
+                       (= (:=x (first (:=layers %))) :x)
+                       (= (:=x (second (:=layers %))) :x)
+                       (= (:=y (first (:=layers %))) :y)
+                       (= (:=y (second (:=layers %))) :y)
+                       ;; Each has its own plottype
+                       (= (:=plottype (first (:=layers %))) :scatter)
+                       (= (:=plottype (second (:=layers %))) :line))])
+
+;; This is the pattern used in threading forms:
+;; (-> (mapping data :x :y) (=+ (scatter) (linear)))
+
+;; ### 🧪 Example: =+ Merges Plot-Level Properties
+
+(kind/pprint
+ (=+ {:=layers [{:=plottype :scatter}] :=target :geom :=width 600}
+     {:=layers [{:=plottype :line}] :=height 400}))
+
+(kind/test-last [#(and (map? %)
+                       (= (:=target %) :geom)
+                       (= (:=width %) 600)
+                       (= (:=height %) 400)
+                       (= (count (:=layers %)) 2))])
+
 ;; ### ⚙️ Constructors
 
 (defn data
@@ -1304,6 +1422,105 @@
    {:=width width :=height height})
   ([spec width height]
    (=* spec (size width height))))
+
+;; ## 🧪 Plot-Level Properties Examples
+;;
+;; These examples test the plot-level constructors (`target`, `scale`, `size`).
+
+;; ### 🧪 Example: target Constructor
+
+;; The `target` constructor sets the rendering backend:
+
+(kind/pprint
+ (target :vl))
+
+(kind/test-last [#(and (map? %)
+                       (= (:=target %) :vl)
+                       (not (contains? % :=layers)))])
+
+;; Threading form merges target with existing spec:
+
+(kind/pprint
+ (-> {:=layers [{:=data {:x [1 2 3] :y [4 5 6]}}]}
+     (target :plotly)))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=target %) :plotly)
+                       (= (:=data (first (:=layers %))) {:x [1 2 3] :y [4 5 6]}))])
+
+;; ### 🧪 Example: scale Constructor
+
+;; The `scale` constructor sets custom domains:
+
+(kind/pprint
+ (scale :x {:domain [0 100]}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=scale-x)
+                       (= (get-in % [:=scale-x :domain]) [0 100])
+                       (not (contains? % :=layers)))])
+
+;; Multiple scales can be composed:
+
+(kind/pprint
+ (=* (scale :x {:domain [0 100]})
+     (scale :y {:domain [0 50]})))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=scale-x)
+                       (contains? % :=scale-y)
+                       (= (get-in % [:=scale-x :domain]) [0 100])
+                       (= (get-in % [:=scale-y :domain]) [0 50]))])
+
+;; Threading form merges scale with plot spec:
+
+(kind/pprint
+ (-> {:=layers [{:=x :a :=y :b}]}
+     (scale :x {:domain [30 60]})))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (contains? % :=scale-x)
+                       (= (get-in % [:=scale-x :domain]) [30 60]))])
+
+;; ### 🧪 Example: size Constructor
+
+;; The `size` constructor sets plot dimensions:
+
+(kind/pprint
+ (size 800 600))
+
+(kind/test-last [#(and (map? %)
+                       (= (:=width %) 800)
+                       (= (:=height %) 600)
+                       (not (contains? % :=layers)))])
+
+;; Threading form merges size with plot spec:
+
+(kind/pprint
+ (-> {:=layers [{:=x :a :=y :b}]}
+     (size 1000 500)))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=width %) 1000)
+                       (= (:=height %) 500))])
+
+;; ### 🧪 Example: Composing Multiple Plot-Level Properties
+
+;; All plot-level properties compose via `=*`:
+
+(kind/pprint
+ (=* (target :vl)
+     (size 800 600)
+     (scale :x {:domain [0 100]})))
+
+(kind/test-last [#(and (map? %)
+                       (= (:=target %) :vl)
+                       (= (:=width %) 800)
+                       (= (:=height %) 600)
+                       (contains? % :=scale-x))])
 
 ;; # Setup & Constants
 ;;
@@ -2635,6 +2852,36 @@ iris
                          (and (map? (meta rendered))
                               (= (:kindly/kind (meta rendered)) :kind/html))))])
 
+;; ### 🧪 Example 5: Grouped Linear Regression (Color Aesthetic)
+
+;; When a categorical aesthetic (`:color`) is used, linear regression computes
+;; separate regression lines for each group:
+
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (=+ (scatter {:alpha 0.6})
+        (linear)))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       ;; Both layers have color aesthetic
+                       (= (:=color (first (:=layers %))) :species)
+                       (= (:=color (second (:=layers %))) :species)
+                       ;; Second layer is linear transform
+                       (= (:=transformation (second (:=layers %))) :linear)
+                       ;; Verify it renders (triggers grouped regression computation)
+                       (let [rendered (plot %)]
+                         (and (map? (meta rendered))
+                              (= (:kindly/kind (meta rendered)) :kind/html))))])
+
+;; **What happens here**:
+
+;; 1. Dataset is grouped by `:species` (categorical column detected via Tablecloth's `col/typeof`)
+;; 2. Three separate OLS regressions computed (one per species)
+;; 3. Three regression lines rendered with matching colors
+;; 4. Demonstrates type-aware grouping for statistical transforms
+
 ;; Histograms demonstrate statistical transforms that derive new data from the input.
 
 ;; # Histograms
@@ -2895,6 +3142,27 @@ iris
 (-> penguins
     (mapping :bill-length-mm nil)
     (histogram {:bins 15}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=transformation (first (:=layers %))) :histogram)
+                       (= (:=bins (first (:=layers %))) 15)
+                       ;; Verify histogram renders
+                       (let [rendered (plot %)]
+                         (and (map? (meta rendered))
+                              (= (:kindly/kind (meta rendered)) :kind/html))))])
+
+;; ### 🧪 Histogram Binning Methods
+
+;; Different binning algorithms are supported:
+
+(-> penguins
+    (mapping :bill-length-mm nil)
+    (histogram {:bins :sqrt}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=bins (first (:=layers %))) :sqrt))])
 
 ;; # Grouping & Color
 ;; 
