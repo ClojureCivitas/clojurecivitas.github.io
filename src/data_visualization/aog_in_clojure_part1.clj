@@ -438,6 +438,40 @@
 ;;
 ;; If you want to skip ahead to see it working, jump to "Basic Scatter Plots".
 
+;; ### 📖 How Plots are Displayed
+;;
+;; Layer specifications returned by `*` and `+` are **automatically displayed as plots**
+;; in the notebook. This means you typically don't need to call `plot` explicitly.
+;;
+;; ```clojure
+;; ;; Auto-displays as plot:
+;; (-> penguins
+;;     (mapping :bill-length-mm :bill-depth-mm)
+;;     (scatter))
+;;
+;; ;; To inspect the raw layer data, use kind/pprint:
+;; (kind/pprint
+;;   (-> penguins
+;;       (mapping :bill-length-mm :bill-depth-mm)
+;;       (scatter)))
+;;
+;; ;; To get the target spec (for debugging or customization):
+;; (plot
+;;   (-> penguins
+;;       (mapping :bill-length-mm :bill-depth-mm)
+;;       (scatter)))
+;; ```
+;;
+;; **When to use `plot` explicitly**:
+;; - Debugging: Inspect the Plotly.js/Vega-Lite/SVG spec
+;; - Customization: Post-process the spec with target-specific features
+;; - Extension: Add features not yet supported by the layer API
+;;
+;; **When to use `kind/pprint`**:
+;; - Inspect the raw layer specification (`:=...` keys)
+;; - Understand how composition merges layers
+;; - Debug layer construction before rendering
+
 ;; # Malli Schemas
 ;;
 ;; The following Malli schemas define the structure and valid values for plot specs,
@@ -897,40 +931,6 @@
 ;; The focus is on a minimal, well-understood core that can be extended incrementally.
 ;; Missing features are deferred, not abandoned - they can be added as needed while
 ;; maintaining the compositional design.
-
-;; ### 📖 How Plots are Displayed
-;;
-;; Layer specifications returned by `*` and `+` are **automatically displayed as plots**
-;; in the notebook. This means you typically don't need to call `plot` explicitly.
-;;
-;; ```clojure
-;; ;; Auto-displays as plot:
-;; (-> penguins
-;;     (mapping :bill-length-mm :bill-depth-mm)
-;;     (scatter))
-;;
-;; ;; To inspect the raw layer data, use kind/pprint:
-;; (kind/pprint
-;;   (-> penguins
-;;       (mapping :bill-length-mm :bill-depth-mm)
-;;       (scatter)))
-;;
-;; ;; To get the target spec (for debugging or customization):
-;; (plot
-;;   (-> penguins
-;;       (mapping :bill-length-mm :bill-depth-mm)
-;;       (scatter)))
-;; ```
-;;
-;; **When to use `plot` explicitly**:
-;; - Debugging: Inspect the Plotly.js/Vega-Lite/SVG spec
-;; - Customization: Post-process the spec with target-specific features
-;; - Extension: Add features not yet supported by the layer API
-;;
-;; **When to use `kind/pprint`**:
-;; - Inspect the raw layer specification (`:=...` keys)
-;; - Understand how composition merges layers
-;; - Debug layer construction before rendering
 
 ;; ### ⚙️ Helper Functions
 
