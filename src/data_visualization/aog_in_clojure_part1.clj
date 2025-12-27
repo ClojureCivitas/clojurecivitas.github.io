@@ -166,6 +166,7 @@
    ;; Malli - Schema validation
    [malli.core :as m]
    [malli.error :as me]
+   [malli.util :as mu]
 
    ;; RDatasets - Example datasets
    [scicloj.metamorph.ml.rdatasets :as rdatasets]))
@@ -536,7 +537,7 @@
 ;;
 ;; **Why compute transforms ourselves?**
 
-;; 1. Consistency - We want the isualizations to match the 
+;; 1. Consistency - We want the visualizations to match the 
 ;; statistical computations of our Clojure libraries.
 ;; 2. Efficiency - Especially with browser-based rendering targets,
 ;; what we wish to pass to the target is summaries (say, 20 histogram bars)
@@ -555,6 +556,15 @@
 ;;
 ;; **You can skim this section** - it's reference material. The schemas will be
 ;; used by validation helpers later, and referenced in examples as needed.
+
+;; ### ⚙️ Malli Registry Setup
+;;
+;; Create a registry that includes both default schemas and malli.util schemas.
+;; This enables declarative schema utilities like :merge, :union, :select-keys.
+
+(def registry
+  "Malli registry with default schemas and util schemas (for :merge, etc.)"
+  (merge (m/default-schemas) (mu/schemas)))
 
 ;; ### ⚙️ Core Type Schemas
 
@@ -662,24 +672,11 @@
 
 ;; ### ⚙️ Layer Schema
 
-(def Layer
-  "Schema for a complete layer specification.
-  
-  A layer is a flat map with distinctive :=... keys containing all the
-  information needed to render a visualization layer:
-  - Data source
-  - Aesthetic mappings (x, y, color, size, etc.)
-  - Plot type
-  - Visual attributes
-  - Optional statistical transformation
-  - Optional faceting"
+(def BaseLayer
+  "Base layer fields shared across all plot types."
   [:map
    ;; Data (required for most layers)
    [:=data {:optional true} Dataset]
-
-   ;; Positional aesthetics
-   [:=x {:optional true} PositionalAesthetic]
-   [:=y {:optional true} PositionalAesthetic]
 
    ;; Other aesthetics
    [:=color {:optional true} ColorAesthetic]
@@ -692,8 +689,7 @@
    ;; Attributes (constant visual properties)
    [:=alpha {:optional true} AlphaAttribute]
 
-   ;; Plot type and transformation
-   [:=plottype {:optional true} PlotType]
+   ;; Transformation
    [:=transformation {:optional true} Transformation]
 
    ;; Histogram-specific
@@ -704,6 +700,73 @@
    [:=scale-y {:optional true} ScaleSpec]
    [:=scale-color {:optional true} ScaleSpec]])
 
+(def Layer
+  "Schema for a complete layer specification with plottype-specific requirements.
+  
+  Uses :multi to dispatch on :=plottype and enforce different requirements:
+  - :scatter, :line, :area require both :=x and :=y
+  - :bar, :histogram require :=x (y is optional)
+  - nil (no plottype) allows incomplete layers for composition
+  
+  This replaces the nested conditionals in validate-layer with declarative schemas."
+  (m/schema
+   [:multi {:dispatch :=plottype}
+
+    ;; Scatter requires both x and y
+    [:scatter
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype [:enum :scatter]]
+       [:=x PositionalAesthetic]
+       [:=y PositionalAesthetic]]]]
+
+    ;; Line requires both x and y
+    [:line
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype [:enum :line]]
+       [:=x PositionalAesthetic]
+       [:=y PositionalAesthetic]]]]
+
+    ;; Bar requires x, y optional
+    [:bar
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype [:enum :bar]]
+       [:=x PositionalAesthetic]
+       [:=y {:optional true} PositionalAesthetic]]]]
+
+    ;; Histogram requires x, y optional
+    [:histogram
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype [:enum :histogram]]
+       [:=x PositionalAesthetic]
+       [:=y {:optional true} PositionalAesthetic]]]]
+
+    ;; Area requires both x and y
+    [:area
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype [:enum :area]]
+       [:=x PositionalAesthetic]
+       [:=y PositionalAesthetic]]]]
+
+    ;; Incomplete layer (no plottype) - for composition
+    [nil
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype {:optional true} [:maybe nil?]]
+       [:=x {:optional true} PositionalAesthetic]
+       [:=y {:optional true} PositionalAesthetic]]]]]
+   {:registry registry}))
+
 (def Layers
   "Schema for one or more layers.
   
@@ -712,15 +775,17 @@
   [:or Layer [:vector Layer]])
 
 (def PlotSpec
-  "Schema for a complete plot specification.
+  "Schema for a plot specification (complete or partial).
   
-  A plot spec is a map containing:
-  - Layers: Vector of layer maps
+  A plot spec is a map that can contain:
+  - Layers: Vector of layer maps (optional - allows partial specs)
   - Plot-level properties: target, width, height
-  - Plot-level scales (optional)"
+  - Plot-level scales (optional)
+  
+  All fields are optional to support composition via =* and =+."
   [:map
-   ;; Layers (required)
-   [:=layers [:vector Layer]]
+   ;; Layers (optional - allows partial specs with just plot-level properties)
+   [:=layers {:optional true} [:vector Layer]]
 
    ;; Plot-level properties (all optional)
    [:=target {:optional true} Backend]
@@ -784,65 +849,19 @@
   "Validate a layer with context-aware checks.
   
   Performs:
-  1. Schema validation (structure)
-  2. Semantic validation (required fields for plottype)
-  3. Data validation (columns exist)
+  1. Schema validation (structure + plottype-specific requirements via :multi)
+  2. Data column validation (columns exist) - runtime check
   
   Returns nil if valid, error map if invalid."
   [layer]
-  ;; First check schema
+  ;; Schema validation now handles both structure AND plottype-specific requirements
   (or
    (when-let [schema-errors (validate Layer layer)]
      {:type :schema-error
       :errors schema-errors
-      :message "Layer structure is invalid"})
+      :message "Layer validation failed"})
 
-   ;; Check plottype-specific requirements
-   (let [plottype (:=plottype layer)]
-     (when plottype
-       (case plottype
-         ;; Scatter/line need x and y
-         (:scatter :line)
-         (when-not (and (:=x layer) (:=y layer))
-           {:type :missing-required-aesthetic
-            :plottype plottype
-            :missing (cond
-                       (and (nil? (:=x layer)) (nil? (:=y layer))) [:=x :=y]
-                       (nil? (:=x layer)) [:=x]
-                       :else [:=y])
-            :message (str plottype " plots require both :=x and :=y")})
-
-         ;; Bar needs at least x
-         :bar
-         (when-not (:=x layer)
-           {:type :missing-required-aesthetic
-            :plottype plottype
-            :missing [:=x]
-            :message "Bar plots require :=x"})
-
-         ;; Histogram needs just x
-         :histogram
-         (when-not (:=x layer)
-           {:type :missing-required-aesthetic
-            :plottype plottype
-            :missing [:=x]
-            :message "Histogram requires :=x"})
-
-         ;; Area needs x and y
-         :area
-         (when-not (and (:=x layer) (:=y layer))
-           {:type :missing-required-aesthetic
-            :plottype plottype
-            :missing (cond
-                       (and (nil? (:=x layer)) (nil? (:=y layer))) [:=x :=y]
-                       (nil? (:=x layer)) [:=x]
-                       :else [:=y])
-            :message "Area plots require both :=x and :=y"})
-
-         ;; Default - no specific requirements
-         nil)))
-
-   ;; Check data-related validations if data is present
+   ;; Data column validation (runtime check - can't be done in schema)
    (when-let [data (:=data layer)]
      (let [column-keys (cond
                          ;; Tablecloth dataset
@@ -930,15 +949,15 @@
 (defn- plot-spec?
   "Check if x is a plot spec (map with :=layers or plot-level keys).
   
-  Plot specs are maps that can have:
-  - :=layers key with vector of layer maps
-  - Plot-level :=... keys like :=target, :=width, :=height"
+  Plot specs are maps that have at least one key starting with :=
+  Uses Malli validation as a fallback check for well-formed specs."
   [x]
   (and (map? x)
-       (or (contains? x :=layers)
-           ;; Has plot-level keys
-           (some #(-> % name first (= \=))
-                 (keys x)))))
+       ;; Has at least one := key
+       (some #(-> % name first (= \=))
+             (keys x))
+       ;; Validates against PlotSpec schema (additional safety check)
+       (valid? PlotSpec x)))
 
 ;; ### ⚙️ Renderer
 
@@ -1083,14 +1102,12 @@
     (reduce =* (=* x y) more))))
 
 ;; Test helper: check if result is a valid layer vector
-(defn- valid-layers? [x]
-  (and (vector? x)
-       (seq x)
-       (every? map? x)
-       (every? #(some (fn [[k _]]
-                        (-> k name first (= \=)))
-                      %)
-               x)))
+(defn- valid-layers?
+  "Check if x is a valid vector of layers using Malli validation.
+  
+  Note: This specifically checks for a vector of layers, not a single layer."
+  [x]
+  (valid? [:vector Layer] x))
 
 (defn =+
   "Combine multiple plot specifications for overlay (sum).
@@ -2383,7 +2400,6 @@ iris
      (=* attrs-or-spec (scatter))
      (let [result (merge {:=plottype :scatter}
                          (update-keys attrs-or-spec =key))]
-       (validate! Layer result)
        {:=layers [result]})))
   ([spec attrs]
    ;; Threading-friendly: (-> spec (scatter {:alpha 0.5}))
@@ -2685,7 +2701,6 @@ iris
   ([]
    (let [result {:=transformation :linear
                  :=plottype :line}]
-     (validate! Layer result)
      {:=layers [result]}))
   ([spec-or-data]
    (let [spec (if (plot-spec? spec-or-data)
@@ -2750,19 +2765,19 @@ iris
 
 ;; Apply linear regression transform to points.
 ;;
-;; Handles both single and grouped regression based on :group key in points.
+;; Handles both single and grouped regression based on `:group` key in points.
 ;;
 ;; Args:
-;; - layer: Layer map containing transformation specification
-;; - points: Sequence of point maps with :x, :y, and optional :group keys
+;; - `layer`: Layer map containing transformation specification
+;; - `points`: Sequence of point maps with `:x`, `:y`, and optional `:group` keys
 ;;
 ;; Returns:
-;; - For ungrouped: {:type :regression :points points :fitted [p1 p2]}
-;; - For grouped: {:type :grouped-regression :points points :groups {group-val {:fitted [...] :points [...]}}}
+;; - For ungrouped: `{:type :regression :points points :fitted [p1 p2]}`
+;; - For grouped: `{:type :grouped-regression :points points :groups {group-val {:fitted [...] :points [...]}}}`
 ;;
 ;; Edge cases:
 ;; - Returns original points if regression fails (< 2 points, degenerate data)
-;; - Handles nil fitted values gracefully (skipped during rendering)
+;; - Handles `nil` fitted values gracefully (skipped during rendering)
 (defmethod apply-transform :linear
   [layer points]
   (when-not (seq points)
@@ -2966,7 +2981,6 @@ iris
                           :=plottype :bar
                           :=bins :sturges}
                          (update-keys opts-or-spec =key))]
-       (validate! Layer result)
        {:=layers [result]})))
   ([spec opts]
    (=* spec (histogram opts))))
@@ -3016,19 +3030,19 @@ iris
 ;; Apply histogram transform to points.
 ;;
 ;; Bins continuous x values and counts occurrences per bin.
-;; Handles both single and grouped histograms based on :group key in points.
+;; Handles both single and grouped histograms based on `:group` key in points.
 ;;
 ;; Args:
-;; - layer: Layer map containing :=bins specification
-;; - points: Sequence of point maps with :x and optional :group keys
+;; - `layer`: Layer map containing `:=bins` specification
+;; - `points`: Sequence of point maps with `:x` and optional `:group` keys
 ;;
 ;; Returns:
-;; - For ungrouped: {:type :histogram :points points :bars [{:x-min :x-max :x-center :height}...]}
-;; - For grouped: {:type :grouped-histogram :points points :groups {group-val {:bars [...] :points [...]}}}
+;; - For ungrouped: `{:type :histogram :points points :bars [{:x-min :x-max :x-center :height}...]}`
+;; - For grouped: `{:type :grouped-histogram :points points :groups {group-val {:bars [...] :points [...]}}}`
 ;;
 ;; Edge cases:
-;; - Returns nil bars if compute-histogram fails (empty, non-numeric, or identical values)
-;; - Histogram with nil bars will not render (graceful degradation)
+;; - Returns `nil` bars if `compute-histogram` fails (empty, non-numeric, or identical values)
+;; - Histogram with `nil` bars will not render (graceful degradation)
 (defmethod apply-transform :histogram
   [layer points]
   (when-not (seq points)
