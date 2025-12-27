@@ -150,7 +150,7 @@
   (:require
    ;; Tablecloth - Dataset manipulation
    [tablecloth.api :as tc]
-   [tablecloth.column.api :as col]
+   [tablecloth.column.api :as tcc]
 
    ;; Kindly - Notebook visualization protocol
    [scicloj.kindly.v4.kind :as kind]
@@ -394,7 +394,7 @@
 ;;   - Why: transforms need domains first; rendering libs handle layout better
 ;;
 ;; **4. Type-aware grouping**
-;;   - Tablecloth gives us column types via `col/typeof` for free
+;;   - Tablecloth gives us column types via `tcc/typeof` for free
 ;;   - Categorical aesthetics (`:=color :species`) create groups for transforms
 ;;   - Continuous aesthetics are visual-only (no grouping)
 ;;   - Explicit `:=group` aesthetic for manual control
@@ -533,7 +533,7 @@
 ;; computing derived data. So we compute:
 ;; - Statistical transforms (histogram bins, regression lines)
 ;; - Domains when needed (always for `:geom`, only custom for `:vl`/`:plotly`)
-;; - Type information (from Tablecloth's `col/typeof`)
+;; - Type information (from Tablecloth's `tcc/typeof`)
 ;;
 ;; We delegate to rendering targets:
 ;; - Axis rendering, tick placement, "nice numbers"
@@ -1831,12 +1831,12 @@
         row-facet (:=row layer)
 
         ;; Helper to check if a column is categorical
-        ;; Uses Tablecloth's col/typeof when available, falls back to value inspection
+        ;; Uses Tablecloth's tcc/typeof when available, falls back to value inspection
         categorical? (fn [col-key]
                        (when (and col-key dataset)
                          (let [col-type (try
                                           ;; Primary: Get type from Tablecloth metadata
-                                          (col/typeof (get dataset col-key))
+                                          (tcc/typeof (get dataset col-key))
                                           (catch Exception _
                                             ;; Fallback: Infer from values for plain Clojure data
                                             (infer-from-values (get dataset col-key))))]
@@ -2353,9 +2353,9 @@ iris
 ;; Tablecloth provides precise type information for each column, which we use
 ;; for type-aware grouping and aesthetic mapping.
 
-{:bill-length-type (col/typeof (penguins :bill-length-mm))
- :species-type (col/typeof (penguins :species))
- :island-type (col/typeof (penguins :island))}
+{:bill-length-type (tcc/typeof (penguins :bill-length-mm))
+ :species-type (tcc/typeof (penguins :species))
+ :island-type (tcc/typeof (penguins :island))}
 
 ;; Notice: We get precise type information (`:float64`, `:string`) without
 ;; examining values. This eliminates the need for complex type inference.
@@ -2919,7 +2919,7 @@ iris
 
 ;; **What happens here**:
 
-;; 1. Dataset is grouped by `:species` (categorical column detected via Tablecloth's `col/typeof`)
+;; 1. Dataset is grouped by `:species` (categorical column detected via Tablecloth's `tcc/typeof`)
 ;; 2. Three separate OLS regressions computed (one per species)
 ;; 3. Three regression lines rendered with matching colors
 ;; 4. Demonstrates type-aware grouping for statistical transforms
@@ -4641,7 +4641,7 @@ iris
 ;; ```clojure
 ;; (try
 ;;   ;; Primary: Get type from Tablecloth metadata
-;;   (col/typeof (get dataset col-key))
+;;   (tcc/typeof (get dataset col-key))
 ;;   (catch Exception _
 ;;     ;; Fallback: Simple inference for plain Clojure data
 ;;     (infer-from-values (get dataset col-key))))
@@ -4649,7 +4649,7 @@ iris
 
 ;; **How it works:**
 
-;; 1. **Tablecloth datasets (primary path)** - Use `col/typeof` to get precise type information
+;; 1. **Tablecloth datasets (primary path)** - Use `tcc/typeof` to get precise type information
 ;;    - Returns types like `:float64`, `:string`, `:int32`, etc.
 ;;    - Free, accurate, no guessing required
 ;;    - This is why we convert plain data to datasets via `ensure-dataset`
