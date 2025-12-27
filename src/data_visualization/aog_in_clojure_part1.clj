@@ -537,7 +537,7 @@
 ;;
 ;; **Why compute transforms ourselves?**
 
-;; 1. Consistency - We want the isualizations to match the 
+;; 1. Consistency - We want the visualizations to match the 
 ;; statistical computations of our Clojure libraries.
 ;; 2. Efficiency - Especially with browser-based rendering targets,
 ;; what we wish to pass to the target is summaries (say, 20 histogram bars)
@@ -775,15 +775,17 @@
   [:or Layer [:vector Layer]])
 
 (def PlotSpec
-  "Schema for a complete plot specification.
+  "Schema for a plot specification (complete or partial).
   
-  A plot spec is a map containing:
-  - Layers: Vector of layer maps
+  A plot spec is a map that can contain:
+  - Layers: Vector of layer maps (optional - allows partial specs)
   - Plot-level properties: target, width, height
-  - Plot-level scales (optional)"
+  - Plot-level scales (optional)
+  
+  All fields are optional to support composition via =* and =+."
   [:map
-   ;; Layers (required)
-   [:=layers [:vector Layer]]
+   ;; Layers (optional - allows partial specs with just plot-level properties)
+   [:=layers {:optional true} [:vector Layer]]
 
    ;; Plot-level properties (all optional)
    [:=target {:optional true} Backend]
@@ -947,15 +949,15 @@
 (defn- plot-spec?
   "Check if x is a plot spec (map with :=layers or plot-level keys).
   
-  Plot specs are maps that can have:
-  - :=layers key with vector of layer maps
-  - Plot-level :=... keys like :=target, :=width, :=height"
+  Plot specs are maps that have at least one key starting with :=
+  Uses Malli validation as a fallback check for well-formed specs."
   [x]
   (and (map? x)
-       (or (contains? x :=layers)
-           ;; Has plot-level keys
-           (some #(-> % name first (= \=))
-                 (keys x)))))
+       ;; Has at least one := key
+       (some #(-> % name first (= \=))
+             (keys x))
+       ;; Validates against PlotSpec schema (additional safety check)
+       (valid? PlotSpec x)))
 
 ;; ### ⚙️ Renderer
 
@@ -1100,14 +1102,12 @@
     (reduce =* (=* x y) more))))
 
 ;; Test helper: check if result is a valid layer vector
-(defn- valid-layers? [x]
-  (and (vector? x)
-       (seq x)
-       (every? map? x)
-       (every? #(some (fn [[k _]]
-                        (-> k name first (= \=)))
-                      %)
-               x)))
+(defn- valid-layers?
+  "Check if x is a valid vector of layers using Malli validation.
+  
+  Note: This specifically checks for a vector of layers, not a single layer."
+  [x]
+  (valid? [:vector Layer] x))
 
 (defn =+
   "Combine multiple plot specifications for overlay (sum).
@@ -2765,19 +2765,19 @@ iris
 
 ;; Apply linear regression transform to points.
 ;;
-;; Handles both single and grouped regression based on :group key in points.
+;; Handles both single and grouped regression based on `:group` key in points.
 ;;
 ;; Args:
-;; - layer: Layer map containing transformation specification
-;; - points: Sequence of point maps with :x, :y, and optional :group keys
+;; - `layer`: Layer map containing transformation specification
+;; - `points`: Sequence of point maps with `:x`, `:y`, and optional `:group` keys
 ;;
 ;; Returns:
-;; - For ungrouped: {:type :regression :points points :fitted [p1 p2]}
-;; - For grouped: {:type :grouped-regression :points points :groups {group-val {:fitted [...] :points [...]}}}
+;; - For ungrouped: `{:type :regression :points points :fitted [p1 p2]}`
+;; - For grouped: `{:type :grouped-regression :points points :groups {group-val {:fitted [...] :points [...]}}}`
 ;;
 ;; Edge cases:
 ;; - Returns original points if regression fails (< 2 points, degenerate data)
-;; - Handles nil fitted values gracefully (skipped during rendering)
+;; - Handles `nil` fitted values gracefully (skipped during rendering)
 (defmethod apply-transform :linear
   [layer points]
   (when-not (seq points)
@@ -3030,19 +3030,19 @@ iris
 ;; Apply histogram transform to points.
 ;;
 ;; Bins continuous x values and counts occurrences per bin.
-;; Handles both single and grouped histograms based on :group key in points.
+;; Handles both single and grouped histograms based on `:group` key in points.
 ;;
 ;; Args:
-;; - layer: Layer map containing :=bins specification
-;; - points: Sequence of point maps with :x and optional :group keys
+;; - `layer`: Layer map containing `:=bins` specification
+;; - `points`: Sequence of point maps with `:x` and optional `:group` keys
 ;;
 ;; Returns:
-;; - For ungrouped: {:type :histogram :points points :bars [{:x-min :x-max :x-center :height}...]}
-;; - For grouped: {:type :grouped-histogram :points points :groups {group-val {:bars [...] :points [...]}}}
+;; - For ungrouped: `{:type :histogram :points points :bars [{:x-min :x-max :x-center :height}...]}`
+;; - For grouped: `{:type :grouped-histogram :points points :groups {group-val {:bars [...] :points [...]}}}`
 ;;
 ;; Edge cases:
-;; - Returns nil bars if compute-histogram fails (empty, non-numeric, or identical values)
-;; - Histogram with nil bars will not render (graceful degradation)
+;; - Returns `nil` bars if `compute-histogram` fails (empty, non-numeric, or identical values)
+;; - Histogram with `nil` bars will not render (graceful degradation)
 (defmethod apply-transform :histogram
   [layer points]
   (when-not (seq points)
