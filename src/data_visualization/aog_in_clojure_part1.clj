@@ -427,10 +427,13 @@
 ;; ### 📖 What's Coming
 ;;
 ;; The rest of this notebook:
-;; 1. Schemas and validation (reference material, can skim)
-;; 2. Implementation (operators, constructors, helpers, rendering)
-;; 3. Examples showing the API in action (scatter, linear, histogram, faceting)
-;; 4. Multi-target rendering (same spec, different backends)
+;; 1. How plots display (auto-display behavior, when to use `plot` explicitly)
+;; 2. Implementation status (what works, what's missing)
+;; 3. Rendering targets & delegation strategy (design principles)
+;; 4. Schemas and validation (reference material, can skim)
+;; 5. API implementation (operators, constructors, rendering function)
+;; 6. Examples showing the API in action (scatter, linear, histogram, faceting)
+;; 7. Multi-target rendering (same spec works across geom, Vega-Lite, Plotly)
 ;;
 ;; **Note on IR:** The internal representation uses maps with `:=layers` keys,
 ;; separating plot-level properties from layer specs. This enables clean composition
@@ -1288,12 +1291,12 @@
   ([spec width height]
    (=* spec (size width height))))
 
-;; # Examples
+;; # Setup & Constants
 ;;
 ;; These examples demonstrate the design in practice, showing how minimal
 ;; delegation works.
 
-;; ### ⚙️ Setup: Load Datasets
+;; ### ⚙️ Datasets for Examples
 
 ;; Palmer Penguins - 344 observations, 3 species
 (def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
@@ -1310,7 +1313,7 @@ mtcars
 
 iris
 
-;; # Visual Theme Constants
+;; ### ⚙️ Visual Theme Constants
 ;;
 ;; These constants define the ggplot2-compatible visual theme used across
 ;; all rendering targets. Extracted here for maintainability.
@@ -1345,7 +1348,13 @@ iris
 ;; Notice: We get precise type information (`:float64`, `:string`) without
 ;; examining values. This eliminates the need for complex type inference.
 
-;; ## ⚙️ Implementation: Helper Functions & :geom Target
+;; # Core Implementation: Helpers & Rendering Infrastructure
+;;
+;; This section contains the foundational helper functions and the core
+;; rendering infrastructure for the :geom target. These are used by all
+;; plot types but aren't part of the user-facing API.
+
+;; ## Helper Functions & Utilities
 ;;
 ;; Before we can render examples, we need basic implementation.
 ;; This version follows the minimal delegation strategy.
@@ -1703,7 +1712,11 @@ iris
   [categories]
   (zipmap categories (cycle ggplot2-colors)))
 
-;; ## ⚙️ Rendering Multimethod
+;; ## Geom Target Rendering
+;;
+;; Core rendering infrastructure for the :geom (thi.ng/geom) target.
+
+;; ### ⚙️ Core Rendering Multimethods
 ;;
 ;; The render-layer multimethod dispatches on [target plottype-or-transform].
 ;; This allows us to define each rendering strategy separately and introduce
@@ -2675,7 +2688,7 @@ iris
     (mapping :bill-length-mm nil)
     (histogram {:bins 15}))
 
-;; # Grouping ;; # 📊 Grouping & Color Color
+;; # Grouping & Color
 ;; 
 ;; Type-aware grouping: categorical colors create groups for statistical transforms.
 
@@ -2803,7 +2816,11 @@ iris
 ;; See the Multi-Target Rendering section for examples of using `plot`
 ;; with :vl and :plotly targets.
 
-;; # Faceting: Architectural Questions Revealed
+;; # Faceting
+;;
+;; Small multiples: splitting data across rows and columns for comparison.
+
+;; ## 📖 Architectural Considerations
 ;;
 ;; Implementing faceting has exposed several important design questions:
 ;;
@@ -2884,11 +2901,7 @@ iris
 ;; **This is our value proposition**: Compute on JVM, send summaries to browser.
 ;; With faceting, even more important!"
 
-;; # Faceting Exploration
-;;
-;; Let's explore faceting to see what architectural questions emerge.
-
-;; ### 📖 Faceting Design Decisions
+;; ## 📖 Design Decisions
 ;;
 ;; After prototyping, we've decided:
 ;;
@@ -2897,7 +2910,7 @@ iris
 ;; 3. **Shared scales by default** - All facets use same domain (easier comparison)
 ;; 4. **Statistical transforms per-facet** - Histogram by species = 3 separate histograms
 ;;
-;; ### ⚙️ Implementation Strategy
+;; ## ⚙️ Implementation Strategy
 ;;
 ;; 1. `split-by-facets` - Groups data by facet variable(s)
 ;; 2. Apply transforms to each facet group separately
@@ -2907,14 +2920,11 @@ iris
 ;; For :geom target - compute layout positions manually
 ;; For :vl/:plotly targets - could use their grid layout features
 
+;; ## 🧪 Examples
+
 ;; ### 🧪 Example 10: Simple Column Faceting
 ;;
 ;; Facet a scatter plot by species - this creates 3 side-by-side plots.
-;; # Faceting
-;; 
-;; Small multiples: splitting data across rows and columns.
-
-;; Test faceted scatter plot - 3 side-by-side plots
 (facet (=* (data penguins)
            (mapping :bill-length-mm :bill-depth-mm)
            (scatter))
@@ -3045,14 +3055,6 @@ iris
 ;; 1. Both axes use custom ranges
 ;; 2. Zooms into a specific region of the data
 ;; 3. Useful for focusing on areas of interest or ensuring consistent scales across multiple plots
-
-;; # Multiple Rendering Targets
-;;
-;; One of the key benefits of our API design is **backend agnosticism**. The same
-;; plot specification can be rendered by different visualization libraries.
-;;
-;; So far, all examples have used the `:geom` target (thi.ng/geom for static SVG),
-;; which is the default. To select a different target, use the `target` function.
 
 ;; # Multi-Target Rendering
 ;; 
@@ -3504,7 +3506,7 @@ iris
 
     (kind/plotly spec)))
 
-;; ## 🧪 Examples
+;; ## 🧪 Vega-Lite Examples
 
 ;; ### 🧪 Example 14: Simple Scatter with Vega-Lite
 
@@ -3650,7 +3652,7 @@ iris
 ;; 2. VL respects our domain constraints
 ;; 3. Same composition semantics across targets
 
-;; ### 📖 The Power of Backend Agnosticism
+;; ## 📖 The Power of Backend Agnosticism
 ;;
 ;; **Key insight**: Our flat map representation with `:=...` keys creates a
 ;; separation between plot semantics and rendering implementation.
@@ -3672,10 +3674,7 @@ iris
 
 ;; Now we can demonstrate multi-target rendering with the same spec.
 
-;; # Plotly.js Target Examples
-;;
-;; Now let's explore the `:plotly` target, which provides interactivity
-;; and is particularly strong for dashboards and web applications.
+;; ## 🧪 Plotly Examples
 
 ;; ### 🧪 Example 21: Simple Scatter with Plotly
 
@@ -3818,7 +3817,7 @@ iris
 ;; 2. Zoom/pan constrained to specified ranges
 ;; 3. Same composition semantics across all targets
 
-;; ### 🧪 Example 15: Compositional Size Specification
+;; ## 🧪 Compositional Size Specification
 
 ;; Width and height can be specified compositionally using the `size` constructor,
 ;; just like `target`. This enables full threading and keeps plot dimensions as
@@ -3870,85 +3869,7 @@ iris
 ;; Both approaches work. The `size` constructor enables full threading and
 ;; treats dimensions as compositional layer properties.
 
-;; # Design Discussion
-;;
-;; ## 📖 Map-Based IR: Separating Layers from Plot Configuration
-;;
-;; ### The Design Choice
-;;
-;; The internal representation uses a map structure with explicit separation:
-
-(-> penguins
-    (mapping :bill-length-mm :bill-depth-mm)
-    (scatter)
-    (target :vl)
-    (size 800 600))
-
-;; This produces a map with `:=layers` and plot-level properties separated:
-
-;; ```clojure
-;; {:=layers [{:=data penguins 
-;;             :=x :bill-length-mm 
-;;             :=y :bill-depth-mm 
-;;             :=plottype :scatter}]
-;;  :=target :vl
-;;  :=width 800
-;;  :=height 600}
-;; ```
-;;
-;; ### Why This Structure?
-;;
-;; **Clean separation of concerns:**
-;; - **Layer properties** (`:=data`, `:=x`, `:=y`, `:=plottype`) describe what to visualize
-;; - **Plot properties** (`:=target`, `:=width`, `:=height`, scales) describe how to render
-;;
-;; **Benefits:**
-;; 1. **Inspectable** - `kind/pprint` shows clear structure
-;; 2. **No duplication** - Plot config appears once, not in every layer
-;; 3. **Composable** - `=*` and `=+` can merge both levels correctly
-;; 4. **Extensible** - Easy to add new plot-level properties (themes, titles, etc.)
-;;
-;; ### How Operators Handle It
-;;
-;; **`=*` (merge):**
-;; - Performs cross-product on `:=layers` vectors
-;; - Merges plot-level properties (right side wins)
-;;
-;; **`=+` (overlay):**
-;; - Concatenates `:=layers` vectors
-;; - Merges plot-level properties (right side wins)
-;;
-;; **Constructors:**
-;; - Layer constructors (`data`, `mapping`, `scatter`) return `{:=layers [...]}`
-;; - Plot constructors (`target`, `size`, `scale`) return `{:=property value}`
-;; - Both compose naturally via `=*`
-;;
-;; This design balances compositional elegance with practical clarity.
-
-;; # Summary
-;;
-;; ### 📖 What We've Explored
-;;
-;; This notebook demonstrates a composable graphics API with **minimal delegation**:
-;;
-;; **Core Design**:
-;; - Layers as flat maps with `:=...` distinctive keys
-;; - Composition using `*` (merge) and `+` (overlay)
-;; - Standard library operations work natively
-;; - Backend-agnostic IR
-;;
-;; **Delegation Strategy**:
-
-;; 1. ✅ **We compute**: Statistical transforms, domains (when needed), types (from Tablecloth)
-;; 2. ❌ **We delegate**: Axis rendering, ranges, ticks, "nice numbers", layout
-;;
-;; **Key Wins**:
-;; - Type information from Tablecloth (free!)
-;; - Domain computation only for statistical transforms
-;; - Leverage rendering target polish for rendering
-;; - Simple, focused implementation
-
-;; # 🧪 Validation Examples
+;; # Validation Examples
 ;;
 ;; The Malli schemas enable validation at two points:
 ;; - Construction time
@@ -4007,9 +3928,54 @@ iris
 ;; Get detailed error information
 (validate Layer {:=plottype :invalid :=alpha 2.0})
 
-;; ## Design Discussions
+;; # Design Discussions
 
-;; ### 📖 Auto-display vs Explicit Rendering
+;; ## 📖 Map-Based IR: Separating Layers from Plot Configuration
+;;
+;; ### The Design Choice
+;;
+;; The internal representation uses a map structure with explicit separation:
+;;
+;; ```clojure
+;; {:=layers [{:=data penguins 
+;;             :=x :bill-length-mm 
+;;             :=y :bill-depth-mm 
+;;             :=plottype :scatter}]
+;;  :=target :vl
+;;  :=width 800
+;;  :=height 600}
+;; ```
+;;
+;; ### Why This Structure?
+;;
+;; **Clean separation of concerns:**
+;; - **Layer properties** (`:=data`, `:=x`, `:=y`, `:=plottype`) describe what to visualize
+;; - **Plot properties** (`:=target`, `:=width`, `:=height`, scales) describe how to render
+;;
+;; **Benefits:**
+;; 1. **Inspectable** - `kind/pprint` shows clear structure
+;; 2. **No duplication** - Plot config appears once, not in every layer
+;; 3. **Composable** - `=*` and `=+` can merge both levels correctly
+;; 4. **Extensible** - Easy to add new plot-level properties (themes, titles, etc.)
+;;
+;; ### How Operators Handle It
+;;
+;; **`=*` (merge):**
+;; - Performs cross-product on `:=layers` vectors
+;; - Merges plot-level properties (right side wins)
+;;
+;; **`=+` (overlay):**
+;; - Concatenates `:=layers` vectors
+;; - Merges plot-level properties (right side wins)
+;;
+;; **Constructors:**
+;; - Layer constructors (`data`, `mapping`, `scatter`) return `{:=layers [...]}`
+;; - Plot constructors (`target`, `size`, `scale`) return `{:=property value}`
+;; - Both compose naturally via `=*`
+;;
+;; This design balances compositional elegance with practical clarity.
+
+;; ## 📖 Auto-display vs Explicit Rendering
 
 ;; The current design supports two rendering modes:
 ;; 1. Auto-display: `(=* ...)` returns an object that automatically renders in notebooks
@@ -4238,6 +4204,26 @@ iris
 ;; Keep current Malli errors for now, enhance in future iteration.
 
 ;; # Conclusion
+
+;; ### 📖 What We've Explored
+;;
+;; This notebook demonstrates a composable graphics API with **minimal delegation**:
+;;
+;; **Core Design**:
+;; - Layers as flat maps with `:=...` distinctive keys
+;; - Composition using `*` (merge) and `+` (overlay)
+;; - Standard library operations work natively
+;; - Backend-agnostic IR
+;;
+;; **Delegation Strategy**:
+;; 1. ✅ **We compute**: Statistical transforms, domains (when needed), types (from Tablecloth)
+;; 2. ❌ **We delegate**: Axis rendering, ranges, ticks, "nice numbers", layout
+;;
+;; **Key Wins**:
+;; - Type information from Tablecloth (free!)
+;; - Domain computation only for statistical transforms
+;; - Leverage rendering target polish for rendering
+;; - Simple, focused implementation
 
 ;; ### 📖 Where We Are
 
