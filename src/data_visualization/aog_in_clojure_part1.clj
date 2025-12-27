@@ -435,8 +435,8 @@
 ;; display as plots in Kindly-compatible notebooks. Use `kind/pprint` to inspect
 ;; the raw plot spec map (with `:=layers` key) instead.
 ;;
-;; **Want to see it in action?** Skip ahead to "Basic Scatter Plots" to see the API working,
-;; or continue reading for implementation details.
+;; **Want to see it in action?** Skip ahead to [Basic Scatter Plots](#basic-scatter-plots)
+;; to see the API working, or continue reading for implementation details.
 
 ;; ### 📖 How Plots are Displayed
 ;;
