@@ -508,12 +508,7 @@
    ;; Scales
    [:=scale-x {:optional true} ScaleSpec]
    [:=scale-y {:optional true} ScaleSpec]
-   [:=scale-color {:optional true} ScaleSpec]
-
-   ;; Rendering
-   [:=target {:optional true} Backend]
-   [:=width {:optional true} pos-int?]
-   [:=height {:optional true} pos-int?]])
+   [:=scale-color {:optional true} ScaleSpec]])
 
 (def Layers
   "Schema for one or more layers.
@@ -521,6 +516,27 @@
   - Single layer map
   - Vector of layer maps"
   [:or Layer [:vector Layer]])
+
+(def PlotSpec
+  "Schema for a complete plot specification.
+  
+  A plot spec is a map containing:
+  - Layers: Vector of layer maps
+  - Plot-level properties: target, width, height
+  - Plot-level scales (optional)"
+  [:map
+   ;; Layers (required)
+   [:=layers [:vector Layer]]
+
+   ;; Plot-level properties (all optional)
+   [:=target {:optional true} Backend]
+   [:=width {:optional true} pos-int?]
+   [:=height {:optional true} pos-int?]
+
+   ;; Plot-level scales (optional)
+   [:=scale-x {:optional true} ScaleSpec]
+   [:=scale-y {:optional true} ScaleSpec]
+   [:=scale-color {:optional true} ScaleSpec]])
 
 ;; # Validation Helpers
 ;;
@@ -897,25 +913,27 @@
 
 ;; ### ⚙️ Helper Functions
 
-(defn- layers?
-  "Check if x is a vector of layer maps (not data).
-
-  Layers have :=... distingtive keys, while data vectors contain plain maps."
+(defn- plot-spec?
+  "Check if x is a plot spec (map with :=layers or plot-level keys).
+  
+  Plot specs are maps that can have:
+  - :=layers key with vector of layer maps
+  - Plot-level :=... keys like :=target, :=width, :=height"
   [x]
-  (and (vector? x)
-       (seq x)
-       (map? (first x))
-       (some #(-> % name first (= \=))
-             (keys (first x)))))
+  (and (map? x)
+       (or (contains? x :=layers)
+           ;; Has plot-level keys
+           (some #(-> % name first (= \=))
+                 (keys x)))))
 
 ;; ### ⚙️ Renderer
 
 (defmulti plot-impl
   "Internal multimethod for plot dispatch."
-  (fn [layers opts]
-    (let [layers-vec (if (vector? layers) layers [layers])
-          spec-target (some :=target layers-vec)]
-      (or (:target opts) spec-target :geom))))
+  (fn [spec opts]
+    (or (:target opts)
+        (:=target spec)
+        :geom)))
 
 (defn plot
   "Unified rendering function supporting multiple targets.
@@ -927,52 +945,54 @@
   - Access to the raw target specification for debugging or customization
 
   Args:
-  - layers: Vector of layer maps or single layer map
+  - spec: Plot spec map with :=layers
   - opts: Optional map with:
     - :width - Width in pixels (default 600)
     - :height - Height in pixels (default 400)
+    - :target - Rendering target (:geom, :vl, :plotly)
 
   The rendering target is determined by:
-  1. `:=target` key in layers (set via `target` function)
-  2. :geom (static SVG) as default
+  1. :target in opts (highest priority)
+  2. `:=target` key in spec (set via `target` function)
+  3. :geom (static SVG) as default
 
   Returns:
   - Kindly-wrapped visualization specification
 
   Examples:
   ;; Get raw spec for customization:
-  (plot layers {:width 800 :height 600})
+  (plot spec {:width 800 :height 600})
   
   ;; Override dimensions for a plot:
   (plot (-> data (mapping :x :y) (scatter))
         {:width 1000})"
-  ([layers]
-   (plot-impl layers {}))
-  ([layers opts]
-   (plot-impl layers opts)))
+  ([spec]
+   (plot-impl spec {}))
+  ([spec opts]
+   (plot-impl spec opts)))
 
 (defn displays-as-plot
-  "Annotate layers to auto-display as a plot in notebooks.
+  "Annotate a plot specification to auto-display as a plot in notebooks.
 
-  Wraps layer specifications with Kindly metadata that tells the notebook
+  Wraps plot specifications with Kindly metadata that tells the notebook
   rendering system to call `plot` automatically when displaying the value.
 
-  This enables the compositional workflow where layer specs auto-display.
+  This enables the compositional workflow where plot specs auto-display.
 
-  The `*`, `+`, and `facet` operators automatically apply this annotation to their
+  The `=*`, `=+`, and `facet` operators automatically apply this annotation to their
   return values, so most users never call this function directly.
 
   Args:
-  - layers: Vector of layer maps (with :=... keys)
+  - spec: Plot specification map (with :=layers and optional plot-level properties)
 
   Returns:
-  - The same layers, wrapped with Kindly auto-display metadata
+  - The same spec, wrapped with Kindly auto-display metadata
 
   See also:
-  - Use `kind/pprint` to inspect raw layers without auto-display
+  - Use `kind/pprint` to inspect raw specs without auto-display
   - Use `plot` explicitly when you need the target spec for customization"
-  [layers]
-  (kind/fn layers
+  [spec]
+  (kind/fn spec
     {:kindly/f #'plot}))
 
 (defn- ensure-vec
@@ -992,18 +1012,50 @@
 ;; ### ⚙️ Composition Operators
 
 (defn =*
-  "Merge layer specifications (composition).
+  "Merge plot specifications (composition).
   
-  Auto-wraps single items for cleaner API. These are equivalent:
-  - (=* data mapping geom)
-  - (=* [data] [mapping] [geom])"
+  Handles both layer cross-product and plot-level merge:
+  - Layers: Cross-product merge (for [a b], [c d] -> [merge(a,c) merge(a,d) merge(b,c) merge(b,d)])
+  - Plot-level properties: Right-side wins
+  
+  Examples:
+  (=* {:=layers [{:=x :a}]} {:=layers [{:=y :b}]})
+  ;; => {:=layers [{:=x :a :=y :b}]}
+  
+  (=* {:=layers [{:=x :a}]} {:=target :geom})
+  ;; => {:=layers [{:=x :a}] :=target :geom}"
   ([x]
-   (displays-as-plot (ensure-vec x)))
+   (displays-as-plot x))
   ([x y]
-   (let [xs (ensure-vec x)
-         ys (ensure-vec y)]
+   (let [;; Extract layers (default to empty if no :=layers key)
+         x-layers (get x :=layers [])
+         y-layers (get y :=layers [])
+
+         ;; Extract plot-level properties
+         x-plot (dissoc x :=layers)
+         y-plot (dissoc y :=layers)
+
+         ;; Cross-product merge of layers
+         merged-layers (cond
+                         ;; Both have layers: cross-product
+                         (and (seq x-layers) (seq y-layers))
+                         (vec (for [a x-layers, b y-layers]
+                                (merge a b)))
+
+                         ;; Only one has layers: keep them
+                         (seq x-layers) x-layers
+                         (seq y-layers) y-layers
+
+                         ;; Neither has layers: empty
+                         :else [])
+
+         ;; Merge plot-level properties (right wins)
+         merged-plot (merge x-plot y-plot)]
+
+     ;; Return map with both
      (displays-as-plot
-      (vec (for [a xs, b ys] (merge a b))))))
+      (cond-> merged-plot
+        (seq merged-layers) (assoc :=layers merged-layers)))))
   ([x y & more]
    (displays-as-plot
     (reduce =* (=* x y) more))))
@@ -1019,23 +1071,58 @@
                x)))
 
 (defn =+
-  "Combine multiple layer specifications for overlay (sum).
+  "Combine multiple plot specifications for overlay (sum).
   
-  Auto-wraps single items for cleaner API. These are equivalent:
-  - (=+ scatter-layer linear-layer)
-  - (=+ [scatter-layer] [linear-layer])
+  Concatenates layers and merges plot-level properties (last wins).
   
-  When used in threading with layers as first arg, distributes layers over the rest:
-  (-> layers (=+ (scatter) (linear))) → (=* layers (=+ (scatter) (linear)))"
-  [& layer-specs]
-  (let [wrapped (map ensure-vec layer-specs)]
-    (displays-as-plot
-     (if (and (>= (count layer-specs) 3) ; Threading produces 3+ args
-              (layers? (first layer-specs)))
-       ;; First arg is layers - distribute over the rest
-       (=* (first layer-specs) (apply =+ (rest layer-specs)))
-       ;; Normal concatenation
-       (vec (apply concat wrapped))))))
+  When used in threading form (-> base (=+ spec1 spec2 ...)), merges each spec
+  with the base's layer properties before concatenating, so layers inherit
+  data/aesthetics from the base. The base layer itself is not included unless
+  it has a plottype.
+  
+  Examples:
+  (=+ {:=layers [{:=plottype :scatter}]} {:=layers [{:=plottype :line}]})
+  ;; => {:=layers [{:=plottype :scatter} {:=plottype :line}]}
+  
+  (-> (mapping penguins :x :y)
+      (=+ (scatter) (linear)))
+  ;; => {:=layers [{:=data penguins :=x :x :=y :y :=plottype :scatter}
+  ;;               {:=data penguins :=x :x :=y :y :=plottype :line :=transformation :linear}]}"
+  [& specs]
+  (if (= (count specs) 1)
+    (displays-as-plot (first specs))
+    (let [[first-spec & rest-specs] specs
+          first-layers (:=layers first-spec [])
+          first-plot-props (dissoc first-spec :=layers)
+
+          ;; Extract a "base layer" to merge with subsequent specs
+          ;; This is the common properties from the first spec's first layer
+          base-layer (when (seq first-layers) (first first-layers))
+
+          ;; Check if base layer has a plottype (complete layer)
+          base-has-plottype? (and base-layer (:=plottype base-layer))
+
+          ;; For each subsequent spec, merge with base layer before extracting layers
+          merged-rest-layers (mapcat (fn [spec]
+                                       (let [spec-layers (:=layers spec [])]
+                                         (if (and base-layer (seq spec-layers))
+                                           ;; Merge each layer from this spec with base layer
+                                           (map #(merge base-layer %) spec-layers)
+                                           ;; No base layer or no spec layers, just use spec layers
+                                           spec-layers)))
+                                     rest-specs)
+
+          ;; Combine layers: include first-layers only if base has plottype
+          all-layers (vec (if base-has-plottype?
+                            (concat first-layers merged-rest-layers)
+                            merged-rest-layers))
+
+          ;; Merge all plot-level properties
+          all-plot-props (apply merge first-plot-props (map #(dissoc % :=layers) rest-specs))]
+
+      (displays-as-plot
+       (cond-> all-plot-props
+         (seq all-layers) (assoc :=layers all-layers))))))
 
 ;; ### ⚙️ Constructors
 
@@ -1047,14 +1134,14 @@
   - Maps of vectors: {:x [1 2 3] :y [4 5 6]}
   - Vector of maps: [{:x 1 :y 4} {:x 2 :y 5}]
 
-  Returns a vector containing a layer map with :=data.
+  Returns a plot spec map with :=layers containing a layer map with :=data.
   
-  When called with layers as first arg, merges data into those layers."
+  When called with spec as first arg, merges data into those layers."
   ([dataset]
    (validate! Dataset dataset)
-   [{:=data dataset}])
-  ([layers dataset]
-   (=* layers (data dataset))))
+   {:=layers [{:=data dataset}]})
+  ([spec dataset]
+   (=* spec (data dataset))))
 
 ;; Examples:
 (data {:x [1 2 3] :y [4 5 6]})
@@ -1075,32 +1162,32 @@
   - x, y: Column names (keywords) for positional aesthetics
   - named: (optional) Map of other aesthetics
   
-  Returns a vector containing a mapping layer.
+  Returns a plot spec map with :=layers containing a mapping layer.
   
-  When called with layers-or-data as first arg:
-  - If layers (vector with :=... keys): merges mapping into those layers
+  When called with spec-or-data as first arg:
+  - If plot spec (map with :=layers keys): merges mapping into those layers
   - If data: converts to layer first, then adds mapping"
   ([x y]
-   [{:=x x :=y y}])
+   {:=layers [{:=x x :=y y}]})
   ([x y named]
    (if (map? named)
      ;; Regular 3-arg: mapping :x :y {:color :species}
-     [(merge {:=x x :=y y}
-             (update-keys named =key))]
-     ;; Threading-friendly: (-> layers (mapping :x :y))
-     (let [layers-or-data x
+     {:=layers [(merge {:=x x :=y y}
+                       (update-keys named =key))]}
+     ;; Threading-friendly: (-> spec (mapping :x :y))
+     (let [spec-or-data x
            x-field y
            y-field named
-           layers (if (layers? layers-or-data)
-                    layers-or-data
-                    (data layers-or-data))]
-       (=* layers (mapping x-field y-field)))))
+           spec (if (plot-spec? spec-or-data)
+                  spec-or-data
+                  (data spec-or-data))]
+       (=* spec (mapping x-field y-field)))))
   ([first-arg x y named]
-   ;; Threading-friendly: (-> layers (mapping :x :y {:color :species}))
-   (let [layers (if (layers? first-arg)
-                  first-arg
-                  (data first-arg))]
-     (=* layers (mapping x y named)))))
+   ;; Threading-friendly: (-> spec (mapping :x :y {:color :species}))
+   (let [spec (if (plot-spec? first-arg)
+                first-arg
+                (data first-arg))]
+     (=* spec (mapping x y named)))))
 
 ;; Examples:
 (mapping :bill-length-mm :bill-depth-mm)
@@ -1110,26 +1197,26 @@
 (mapping :wt :mpg {:color :cyl :size :hp})
 
 (defn facet
-  "Add faceting to a layer specification.
+  "Add faceting to a plot specification.
   
   Args:
-  - layer-spec: Layer or vector of layers
+  - spec: Plot spec with :=layers
   - facet-spec: Map with :row and/or :col keys specifying faceting variables
   
-  Returns a vector of layers with faceting applied.
+  Returns plot spec with faceting applied to all layers.
   
   Examples:
-  (facet layers {:col :species})
-  (facet layers {:row :sex :col :island})
+  (facet spec {:col :species})
+  (facet spec {:row :sex :col :island})
   
   Threading-friendly:
   (-> penguins (mapping :x :y) (scatter) (facet {:col :species}))"
-  [layer-spec facet-spec]
+  [spec facet-spec]
   (displays-as-plot
    (let [facet-keys (update-keys facet-spec =key)]
-     (if (vector? layer-spec)
-       (mapv #(merge % facet-keys) layer-spec)
-       [(merge layer-spec facet-keys)]))))
+     (update spec :=layers
+             (fn [layers]
+               (mapv #(merge % facet-keys) layers))))))
 
 (defn scale
   "Specify scale properties for an aesthetic.
@@ -1140,9 +1227,9 @@
     - :domain - [min max] for continuous, or vector of categories
     - :transform - :log, :sqrt, :identity (default)
   
-  Returns a vector containing scale specification.
+  Returns a plot-level property map with scale specification.
   
-  When called with layers as first arg, merges scale into those layers.
+  When called with spec as first arg, merges scale into that spec.
   
   Examples:
   (scale :x {:domain [0 100]})
@@ -1152,25 +1239,25 @@
   (-> penguins (mapping :x :y) (scatter) (scale :x {:domain [30 65]}))"
   ([aesthetic opts]
    (let [scale-key (keyword (str "=scale-" (name aesthetic)))]
-     [{scale-key opts}]))
-  ([layers aesthetic opts]
-   (=* layers (scale aesthetic opts))))
+     {scale-key opts}))
+  ([spec aesthetic opts]
+   (=* spec (scale aesthetic opts))))
 
 (defn target
-  "Specify the rendering target for layers.
+  "Specify the rendering target for plot.
   
   Args:
   - target-kw: One of :geom (static SVG), :vl (Vega-Lite), or :plotly (Plotly.js)
   
-  Returns a vector containing target specification.
+  Returns a plot-level property map (no :=layers).
   
-  When called with layers as first arg, merges target into those layers.
+  When called with spec as first arg, merges target into that spec.
   
   See Multi-Target Rendering section for usage examples."
   ([target-kw]
-   [{:=target target-kw}])
-  ([layers target-kw]
-   (=* layers (target target-kw))))
+   {:=target target-kw})
+  ([spec target-kw]
+   (=* spec (target target-kw))))
 
 (defn size
   "Specify width and height for the plot.
@@ -1179,17 +1266,17 @@
   - width: Plot width in pixels
   - height: Plot height in pixels
   
-  Returns a vector containing size specification.
+  Returns a plot-level property map (no :=layers).
   
-  When called with layers as first arg, merges size into those layers.
+  When called with spec as first arg, merges size into that spec.
   
   Examples:
   (size 800 600)
   (-> penguins (mapping :x :y) (scatter) (size 800 600))"
   ([width height]
-   [{:=width width :=height height}])
-  ([layers width height]
-   (=* layers (size width height))))
+   {:=width width :=height height})
+  ([spec width height]
+   (=* spec (size width height))))
 
 ;; # Examples
 ;;
@@ -1807,17 +1894,14 @@ iris
 ;;
 ;; Returns: Kindly-wrapped HTML containing SVG
 (defmethod plot-impl :geom
-  [layers opts]
-  (validate-layers! layers)
+  [spec opts]
+  ;; Extract layers from spec
+  (let [layers-vec (get spec :=layers [])
+        _ (validate-layers! layers-vec)
 
-  (let [layers-vec (if (vector? layers) layers [layers])
-        ;; Check :=width and :=height in layers first, then opts, then defaults
-        width (or (some :=width layers-vec)
-                  (:width opts)
-                  default-plot-width)
-        height (or (some :=height layers-vec)
-                   (:height opts)
-                   default-plot-height)
+        ;; Extract plot-level properties (spec first, then opts, then defaults)
+        width (or (:=width spec) (:width opts) default-plot-width)
+        height (or (:=height spec) (:height opts) default-plot-height)
 
         ;; Organize layers by facets
         facet-groups (organize-by-facets layers-vec)
@@ -1954,21 +2038,21 @@ iris
 (defn scatter
   "Create a scatter plot layer.
   
-  Returns a vector containing a scatter layer.
+  Returns a plot spec map with :=layers containing a scatter layer.
   
-  When called with layers-or-data as first arg, merges scatter into those layers."
+  When called with spec-or-attrs as first arg, merges scatter into those layers."
   ([]
-   [{:=plottype :scatter}])
-  ([attrs-or-layers]
-   (if (layers? attrs-or-layers)
-     (=* attrs-or-layers (scatter))
+   {:=layers [{:=plottype :scatter}]})
+  ([attrs-or-spec]
+   (if (plot-spec? attrs-or-spec)
+     (=* attrs-or-spec (scatter))
      (let [result (merge {:=plottype :scatter}
-                         (update-keys attrs-or-layers =key))]
+                         (update-keys attrs-or-spec =key))]
        (validate! Layer result)
-       [result])))
-  ([layers attrs]
-   ;; Threading-friendly: (-> layers (scatter {:alpha 0.5}))
-   (=* layers (scatter attrs))))
+       {:=layers [result]})))
+  ([spec attrs]
+   ;; Threading-friendly: (-> spec (scatter {:alpha 0.5}))
+   (=* spec (scatter attrs))))
 
 ;; ### ⚙️ Rendering Multimethod
 
@@ -2003,13 +2087,14 @@ iris
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter))
 
-(kind/test-last [#(and (vector? %)
-                       (map? (first %))
-                       (contains? (first %) :=data)
-                       (contains? (first %) :=x)
-                       (contains? (first %) :=y)
-                       (contains? (first %) :=plottype)
-                       (= (:=plottype (first %)) :scatter)
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (map? (first (:=layers %)))
+                       (contains? (first (:=layers %)) :=data)
+                       (contains? (first (:=layers %)) :=x)
+                       (contains? (first (:=layers %)) :=y)
+                       (contains? (first (:=layers %)) :=plottype)
+                       (= (:=plottype (first (:=layers %))) :scatter)
                        ;; Also test that it renders to valid HTML
                        (let [rendered (plot %)]
                          (and (map? (meta rendered))
@@ -2017,20 +2102,20 @@ iris
 
 ;; **What happens here**:
 
-;; 1. We create layer spec with data, mapping, plottype
-;; 2. The `*` operator returns layers annotated to auto-display as a plot
+;; 1. We create a plot spec with data, mapping, and plottype
+;; 2. The `=*` operator returns a plot spec annotated to auto-display as a plot
 ;; 3. We DON'T compute X/Y domains
 ;; 4. Rendering target receives data and computes domain itself
 ;; 5. This is simpler - we delegate what rendering targets do well.
 
-;; **Inspecting the raw layer specification**:
+;; **Inspecting the raw plot specification**:
 (kind/pprint
  (=* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)))
 
-;; Notice the `:=data`, `:=x`, `:=y`, `:=plottype` keys.
-;; This is the compositional layer specification before rendering.
+;; Notice the `:=layers` key containing layer maps with `:=data`, `:=x`, `:=y`, `:=plottype` keys.
+;; This is the compositional plot specification before rendering.
 
 ;; ### 🧪 Example 2: Plain Clojure Data Structures
 
@@ -2043,10 +2128,11 @@ iris
     (mapping :x :y)
     (scatter))
 
-(kind/test-last [#(and (vector? %)
-                       (= (:=x (first %)) :x)
-                       (= (:=y (first %)) :y)
-                       (map? (:=data (first %))))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=x (first (:=layers %))) :x)
+                       (= (:=y (first (:=layers %))) :y)
+                       (map? (:=data (first (:=layers %)))))])
 
 ;; **Vector of maps** (row-oriented data):
 (=* (data [{:x 1 :y 2}
@@ -2057,9 +2143,10 @@ iris
     (mapping :x :y)
     (scatter))
 
-(kind/test-last [#(and (vector? %)
-                       (= (:=x (first %)) :x)
-                       (= (:=y (first %)) :y))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=x (first (:=layers %))) :x)
+                       (= (:=y (first (:=layers %))) :y))])
 
 ;; **What happens here**:
 
@@ -2082,18 +2169,21 @@ iris
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter))
 
-(kind/test-last [#(and (vector? %)
-                       (= (:=x (first %)) :bill-length-mm)
-                       (= (:=y (first %)) :bill-depth-mm)
-                       (= (:=plottype (first %)) :scatter))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=x (first (:=layers %))) :bill-length-mm)
+                       (= (:=y (first (:=layers %))) :bill-depth-mm)
+                       (= (:=plottype (first (:=layers %))) :scatter))])
 
 ;; **With color aesthetic**:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (scatter))
 
-(kind/test-last [#(and (= (:=color (first %)) :species)
-                       (= (:=x (first %)) :bill-length-mm))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=color (first (:=layers %))) :species)
+                       (= (:=x (first (:=layers %))) :bill-length-mm))])
 
 ;; **Combining scale customization**:
 (-> penguins
@@ -2102,8 +2192,10 @@ iris
     (scale :x {:domain [30 65]})
     (scale :y {:domain [12 23]}))
 
-(kind/test-last [#(and (= (get-in (first %) [:=scale-x :domain]) [30 65])
-                       (= (get-in (first %) [:=scale-y :domain]) [12 23]))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (get-in % [:=scale-x :domain]) [30 65])
+                       (= (get-in % [:=scale-y :domain]) [12 23]))])
 
 ;; **Works with plain data too**:
 (-> {:x [1 2 3 4 5]
@@ -2111,8 +2203,10 @@ iris
     (mapping :x :y)
     (scatter))
 
-(kind/test-last [#(and (= (:=x (first %)) :x)
-                       (= (:=plottype (first %)) :scatter))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=x (first (:=layers %))) :x)
+                       (= (:=plottype (first (:=layers %))) :scatter))])
 
 ;; **What's happening under the hood**:
 ;;
@@ -2156,10 +2250,10 @@ iris
       (some #(instance? java.time.temporal.Temporal %) values) :temporal
       :else :categorical)))
 
-(let [layer (=* (data penguins)
-                (mapping :bill-length-mm :bill-depth-mm {:color :species})
-                (scatter))
-      layer (first layer)]
+(let [spec (=* (data penguins)
+               (mapping :bill-length-mm :bill-depth-mm {:color :species})
+               (scatter))
+      layer (first (:=layers spec))]
   {:x-type (infer-scale-type layer :=x)
    :y-type (infer-scale-type layer :=y)
    :color-type (infer-scale-type layer :=color)})
@@ -2177,34 +2271,34 @@ iris
 
 (defn linear
   "Add linear regression transformation.
-  
+
   Computes best-fit line through points.
   When combined with color aesthetic, computes separate regression per group.
-  
-  Returns a vector containing a linear regression layer.
-  
-  When called with layers-or-data as first arg, merges linear into those layers."
+
+  Returns a plot spec map with :=layers containing a linear regression layer.
+
+  When called with spec-or-data as first arg, merges linear into those layers."
   ([]
    (let [result {:=transformation :linear
                  :=plottype :line}]
      (validate! Layer result)
-     [result]))
-  ([layers-or-data]
-   (let [layers (if (layers? layers-or-data)
-                  layers-or-data
-                  (data layers-or-data))]
-     (=* layers (linear)))))
+     {:=layers [result]}))
+  ([spec-or-data]
+   (let [spec (if (plot-spec? spec-or-data)
+                spec-or-data
+                (data spec-or-data))]
+     (=* spec (linear)))))
 
 ;; ### ⚙️ Compute Function
 
 (defn- compute-linear-regression
   "Compute linear regression using fastmath.
-  
+
   Args:
   - points: Sequence of point maps with :x and :y keys
-  
+
   Returns: Vector of 2 points representing the fitted line, or nil if regression fails.
-  
+
   Edge cases:
   - Returns nil if fewer than 2 points
   - Returns nil if all x values are identical (vertical line, undefined slope)
@@ -2342,11 +2436,13 @@ iris
     (=+ (scatter {:alpha 0.5})
         (linear)))
 
-(kind/test-last [#(and (vector? %)
-                       (= (count %) 2)
-                       (= (:=plottype (first %)) :scatter)
-                       (= (:=transformation (second %)) :linear)
-                       (= (:=alpha (first %)) 0.5)
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (vector? (:=layers %))
+                       (= (count (:=layers %)) 2)
+                       (= (:=plottype (first (:=layers %))) :scatter)
+                       (= (:=transformation (second (:=layers %))) :linear)
+                       (= (:=alpha (first (:=layers %))) 0.5)
                        ;; Test that multi-layer renders to valid HTML
                        (let [rendered (plot %)]
                          (and (map? (meta rendered))
@@ -2362,44 +2458,44 @@ iris
 
 (defn histogram
   "Add histogram transformation.
-  
+
   Bins continuous data and counts occurrences. Requires domain computation
   to determine bin edges.
-  
+
   Options:
   - :bins - Binning method: :sturges (default), :sqrt, :rice, :freedman-diaconis, or explicit number
-  
-  Returns a vector containing a histogram layer.
-  
-  When called with layers-or-data as first arg, merges histogram into those layers."
+
+  Returns a plot spec map with :=layers containing a histogram layer.
+
+  When called with spec-or-opts as first arg, merges histogram into those layers."
   ([]
-   [{:=transformation :histogram
-     :=plottype :bar
-     :=bins :sturges}])
-  ([opts-or-layers]
-   (if (layers? opts-or-layers)
-     (=* opts-or-layers (histogram))
+   {:=layers [{:=transformation :histogram
+               :=plottype :bar
+               :=bins :sturges}]})
+  ([opts-or-spec]
+   (if (plot-spec? opts-or-spec)
+     (=* opts-or-spec (histogram))
      (let [result (merge {:=transformation :histogram
                           :=plottype :bar
                           :=bins :sturges}
-                         (update-keys opts-or-layers =key))]
+                         (update-keys opts-or-spec =key))]
        (validate! Layer result)
-       [result])))
-  ([layers opts]
-   (=* layers (histogram opts))))
+       {:=layers [result]})))
+  ([spec opts]
+   (=* spec (histogram opts))))
 
 ;; ### ⚙️ Compute Function
 
 (defn- compute-histogram
   "Compute histogram bins using fastmath.stats/histogram.
-  
+
   Args:
   - points: Sequence of point maps with :x key
   - bins-method: Binning method - :sturges, :sqrt, :rice, :freedman-diaconis, or integer count
-  
+
   Returns: Vector of bar specifications with x-min, x-max, x-center, and height.
            Returns nil if data is invalid (empty, non-numeric, or all identical values).
-  
+
   Edge cases:
   - Returns nil if no points
   - Returns nil if x values are not all numeric
@@ -2575,10 +2671,11 @@ iris
     (=+ (scatter {:alpha 0.5})
         (linear)))
 
-(kind/test-last [#(and (vector? %)
-                       (= (count %) 2)
-                       (= (:=color (first %)) :species)
-                       (= (:=transformation (second %)) :linear))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       (= (:=color (first (:=layers %))) :species)
+                       (= (:=transformation (second (:=layers %))) :linear))])
 
 ;; **What happens here**:
 
@@ -2594,9 +2691,11 @@ iris
     (mapping :bill-length-mm nil {:color :species :alpha 0.7})
     (histogram))
 
-(kind/test-last [#(and (= (:=transformation (first %)) :histogram)
-                       (= (:=color (first %)) :species)
-                       (= (:=alpha (first %)) 0.7))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=transformation (first (:=layers %))) :histogram)
+                       (= (:=color (first (:=layers %))) :species)
+                       (= (:=alpha (first (:=layers %))) 0.7))])
 
 ;; **What happens here**:
 
@@ -2617,9 +2716,11 @@ iris
     (=+ (scatter {:alpha 0.5})
         (linear)))
 
-(kind/test-last [#(and (= (count %) 2)
-                       (= (:=color (first %)) :body-mass-g)
-                       (= (:=transformation (second %)) :linear))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       (= (:=color (first (:=layers %))) :body-mass-g)
+                       (= (:=transformation (second (:=layers %))) :linear))])
 
 ;; **What happens here**:
 
@@ -2644,9 +2745,11 @@ iris
     (=+ (scatter)
         (linear)))
 
-(kind/test-last [#(and (= (count %) 2)
-                       (= (:=group (first %)) :cyl)
-                       (= (:=transformation (second %)) :linear))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       (= (:=group (first (:=layers %))) :cyl)
+                       (= (:=transformation (second (:=layers %))) :linear))])
 
 ;; **What happens here**:
 
@@ -2661,9 +2764,11 @@ iris
     (=+ (scatter {:alpha 0.5})
         (linear)))
 
-(kind/test-last [#(and (= (:=color (first %)) :sex)
-                       (= (:=group (first %)) :species)
-                       (= (:=transformation (second %)) :linear))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=color (first (:=layers %))) :sex)
+                       (= (:=group (first (:=layers %))) :species)
+                       (= (:=transformation (second (:=layers %))) :linear))])
 
 ;; **What happens here**:
 
@@ -2796,7 +2901,9 @@ iris
            (scatter))
        {:col :species})
 
-(kind/test-last [#(= (:=col (first %)) :species)])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=col (first (:=layers %))) :species))])
 
 ;; Faceted histogram - per-species histograms with shared scales:
 
@@ -2814,7 +2921,9 @@ iris
            (scatter))
        {:row :species})
 
-(kind/test-last [#(= (:=row (first %)) :species)])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=row (first (:=layers %))) :species))])
 
 ;; ### 🧪 Example 12: Row × Column Grid Faceting
 ;;
@@ -2826,8 +2935,10 @@ iris
            (scatter))
        {:row :island :col :sex})
 
-(kind/test-last [#(and (= (:=row (first %)) :island)
-                       (= (:=col (first %)) :sex))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=row (first (:=layers %))) :island)
+                       (= (:=col (first (:=layers %))) :sex))])
 
 ;; **What happens here**:
 
@@ -2861,9 +2972,11 @@ iris
         (linear))
     (facet {:col :island}))
 
-(kind/test-last [#(and (= (count %) 2)
-                       (= (:=col (first %)) :island)
-                       (= (:=color (first %)) :species))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       (= (:=col (first (:=layers %))) :island)
+                       (= (:=color (first (:=layers %))) :species))])
 
 ;; **What happens here**:
 ;;
@@ -2891,7 +3004,9 @@ iris
     (scatter)
     (scale :y {:domain [0 40]}))
 
-(kind/test-last [#(= (get-in (first %) [:=scale-y :domain]) [0 40])])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (get-in % [:=scale-y :domain]) [0 40]))])
 
 ;; **What happens here**:
 
@@ -2927,18 +3042,14 @@ iris
 ;; ## ⚙️ Implementation: Vega-Lite Target
 
 (defmethod plot-impl :vl
-  [layers opts]
-  ;; Validate layers before rendering
-  (validate-layers! layers)
+  [spec opts]
+  ;; Extract layers from spec
+  (let [layers-vec (get spec :=layers [])
+        _ (validate-layers! layers-vec)
 
-  (let [layers-vec (if (vector? layers) layers [layers])
-        ;; Check :=width and :=height in layers first, then opts, then defaults
-        width (or (some :=width layers-vec)
-                  (:width opts)
-                  600)
-        height (or (some :=height layers-vec)
-                   (:height opts)
-                   400)
+        ;; Extract plot-level properties (spec first, then opts, then defaults)
+        width (or (:=width spec) (:width opts) 600)
+        height (or (:=height spec) (:height opts) 400)
 
         ;; Check for faceting
         facet-groups (organize-by-facets layers-vec)
@@ -3154,18 +3265,14 @@ iris
 ;; ## ⚙️ Implementation: Plotly Target
 
 (defmethod plot-impl :plotly
-  [layers opts]
-  ;; Validate layers before rendering
-  (validate-layers! layers)
+  [spec opts]
+  ;; Extract layers from spec
+  (let [layers-vec (get spec :=layers [])
+        _ (validate-layers! layers-vec)
 
-  (let [layers-vec (if (vector? layers) layers [layers])
-        ;; Check :=width and :=height in layers first, then opts, then defaults
-        width (or (some :=width layers-vec)
-                  (:width opts)
-                  600)
-        height (or (some :=height layers-vec)
-                   (:height opts)
-                   400)
+        ;; Extract plot-level properties (spec first, then opts, then defaults)
+        width (or (:=width spec) (:width opts) 600)
+        height (or (:=height spec) (:height opts) 400)
 
         ;; Check for faceting
         is-faceted? (has-faceting? layers-vec)
@@ -3389,7 +3496,7 @@ iris
     (scatter)
     (target :vl))
 
-(kind/test-last [#(and (= (:=target (first %)) :vl)
+(kind/test-last [#(and (= (:=target %) :vl)
                        ;; Test that it renders to valid Vega-Lite spec
                        (let [rendered (plot %)]
                          (and (map? rendered)
@@ -3413,8 +3520,10 @@ iris
         (linear))
     (target :vl))
 
-(kind/test-last [#(and (= (count %) 2)
-                       (= (:=target (first %)) :vl))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       (= (:=target %) :vl))])
 
 ;; **What happens here**:
 
@@ -3431,8 +3540,10 @@ iris
         (linear))
     (target :vl))
 
-(kind/test-last [#(and (= (:=color (first %)) :species)
-                       (= (:=target (first %)) :vl))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=color (first (:=layers %))) :species)
+                       (= (:=target %) :vl))])
 
 ;; **What happens here**:
 
@@ -3463,8 +3574,10 @@ iris
     (facet {:col :species})
     (target :vl))
 
-(kind/test-last [#(and (= (:=col (first %)) :species)
-                       (= (:=target (first %)) :vl))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=col (first (:=layers %))) :species)
+                       (= (:=target %) :vl))])
 
 ;; **What happens here**:
 
@@ -3507,8 +3620,10 @@ iris
     (scale :y {:domain [10 25]})
     (target :vl))
 
-(kind/test-last [#(and (= (get-in (first %) [:=scale-x :domain]) [30 65])
-                       (= (:=target (first %)) :vl))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (get-in % [:=scale-x :domain]) [30 65])
+                       (= (:=target %) :vl))])
 
 ;; **What happens here**:
 
@@ -3548,7 +3663,9 @@ iris
     (scatter)
     (target :plotly))
 
-(kind/test-last [#(and (= (:=target (first %)) :plotly)
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=target %) :plotly)
                        ;; Test that it renders to valid Plotly spec
                        (let [rendered (plot %)]
                          (and (map? rendered)
@@ -3571,8 +3688,10 @@ iris
         (linear))
     (target :plotly))
 
-(kind/test-last [#(and (= (count %) 2)
-                       (= (:=target (first %)) :plotly))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       (= (:=target %) :plotly))])
 
 ;; **What happens here**:
 
@@ -3589,8 +3708,10 @@ iris
         (linear))
     (target :plotly))
 
-(kind/test-last [#(and (= (:=color (first %)) :species)
-                       (= (:=target (first %)) :plotly))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=color (first (:=layers %))) :species)
+                       (= (:=target %) :plotly))])
 
 ;; **What happens here**:
 
@@ -3665,8 +3786,10 @@ iris
     (scale :y {:domain [10 25]})
     (target :plotly))
 
-(kind/test-last [#(and (= (get-in (first %) [:=scale-x :domain]) [30 65])
-                       (= (:=target (first %)) :plotly))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (get-in % [:=scale-x :domain]) [30 65])
+                       (= (:=target %) :plotly))])
 
 ;; **What happens here**:
 
@@ -3688,9 +3811,10 @@ iris
     (target :vl)
     (size 800 600))
 
-(kind/test-last [#(and (= (:=width (first %)) 800)
-                       (= (:=height (first %)) 600)
-                       (= (:=target (first %)) :vl))])
+(kind/test-last [#(and (map? %)
+                       (= (:=width %) 800)
+                       (= (:=height %) 600)
+                       (= (:=target %) :vl))])
 
 ;; **Full threading with `plot`**:
 ;; The `plot` function also supports threading, so you can optionally call it
@@ -3706,10 +3830,10 @@ iris
 
 ;; **What happens here**:
 
-;; 1. `size` merges `:=width` and `:=height` into layers
-;; 2. `plot-impl` methods check layers first, then opts, then defaults
+;; 1. `size` adds `:=width` and `:=height` to the plot spec (plot-level properties)
+;; 2. `plot-impl` methods check spec first, then opts, then defaults
 ;; 3. Priority: `:=width` > `:width opts` > `default-plot-width`
-;; 4. Fully compositional - size is part of the layer spec, not external config
+;; 4. Fully compositional - size is part of the plot spec, not external config
 
 ;; **Backwards compatibility**:
 ;; The old pattern still works - `plot` with opts map:
