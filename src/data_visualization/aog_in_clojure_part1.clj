@@ -138,6 +138,31 @@
 ;; This convention helps you navigate the document and quickly find what you're looking for:
 ;; conceptual explanations (📖), working code (⚙️), or usage examples (🧪).
 
+;; ### 📖 Notebook Structure
+;;
+;; The rest of this notebook:
+;; 1. **Setup** - dependencies and example datasets
+;; 2. **Inspiration** - AlgebraOfGraphics.jl background
+;; 3. **Design exploration** - problem/solution for compositional API
+;; 4. **Design overview** - key decisions and API preview
+;; 5. **How plots display** - auto-display behavior
+;; 6. **Implementation status** - what works, what's missing
+;; 7. **Rendering targets & delegation** - backend strategy
+;; 8. **Malli schemas** - reference material (can skim)
+;; 9. **Validation helpers** - error checking utilities
+;; 10. **API implementation** - operators, layer/plot-level properties
+;; 11. **Core implementation** - helper functions and rendering infrastructure
+;; 12. **Examples** - scatter, linear regression, histograms, grouping, faceting
+;; 13. **Multi-target rendering** - same spec across all backends
+;; 14. **Validation examples** - error messages in action
+;; 15. **Design discussions** - reflections on choices made
+;;
+;; **Note on IR:** The internal representation uses maps with `:=layers` keys,
+;; separating plot-level properties from layer specs. This enables clean composition
+;; and clear semantics for plot configuration.
+;;
+;; If you want to skip ahead to see it working, jump to "Basic Scatter Plots".
+
 ;; # Setup
 
 ;; ### ⚙️ Dependencies
@@ -411,41 +436,27 @@
 ;;
 ;; The API will consist of:
 ;;
-;; **Constructors** - build partial layer specs:
+;; **Layer-level properties** - build partial layer specs:
 ;; - `(data dataset)` - attach data
 ;; - `(mapping :x :y {:color :species})` - define aesthetic mappings  
 ;; - `(scatter)`, `(linear)`, `(histogram)` - specify plot types/transforms
 ;;
+;; **Plot-level properties** - configure rendering and scales:
+;; - `(target :geom)` - specify rendering target (:geom, :vl, :plotly)
+;; - `(size 800 600)` - set plot dimensions
+;; - `(scale :x {:domain [0 100]})` - customize axis scales
+;; - `(facet {:col :species})` - add faceting
+                                        ;
 ;; **Composition operators** - combine specs:
 ;; - `(=* data mapping geom)` - merge properties (cross-product for layers, merge for plot-level)
 ;; - `(=+ scatter linear)` - overlay layers with inheritance (concatenate `:=layers`, merge plot-level)
-;;
-;; **Utilities**:
+                                        ;
+;; **Rendering**:
 ;; - `(plot spec)` - explicitly render (usually auto-displays)
-;; - `(facet {:col :species})` - add faceting (compositional)
-;; - `(scale :x {:domain [0 100]})` - customize scales (compositional)
-;; - `(target :geom)`, `(size 800 600)` - set plot-level properties (compositional)
 ;;
 ;; **Auto-display:** Plot specs returned by `=*`, `=+`, and constructors automatically
 ;; display as plots in Kindly-compatible notebooks. Use `kind/pprint` to inspect
 ;; the raw plot spec map (with `:=layers` key) instead.
-
-;; ### 📖 What's Coming
-;;
-;; The rest of this notebook:
-;; 1. How plots display (auto-display behavior, when to use `plot` explicitly)
-;; 2. Implementation status (what works, what's missing)
-;; 3. Rendering targets & delegation strategy (design principles)
-;; 4. Schemas and validation (reference material, can skim)
-;; 5. API implementation (operators, constructors, rendering function)
-;; 6. Examples showing the API in action (scatter, linear, histogram, faceting)
-;; 7. Multi-target rendering (same spec works across geom, Vega-Lite, Plotly)
-;;
-;; **Note on IR:** The internal representation uses maps with `:=layers` keys,
-;; separating plot-level properties from layer specs. This enables clean composition
-;; and clear semantics for plot configuration.
-;;
-;; If you want to skip ahead to see it working, jump to "Basic Scatter Plots".
 
 ;; ### 📖 How Plots are Displayed
 ;;
