@@ -1040,36 +1040,44 @@
   ([x]
    (displays-as-plot x))
   ([x y]
-   (let [;; Extract layers (default to empty if no :=layers key)
+   (let [;; Extract layers from each spec (default to empty if no :=layers key)
          x-layers (get x :=layers [])
          y-layers (get y :=layers [])
 
-         ;; Extract plot-level properties
+         ;; Extract plot-level properties (everything except :=layers)
          x-plot (dissoc x :=layers)
          y-plot (dissoc y :=layers)
 
          ;; Cross-product merge of layers
+         ;; This implements the "multiplication" semantics:
+         ;; - (data d) * (mapping :x :y) => layer with both data and mapping
+         ;; - Each layer from x combines with each layer from y
          merged-layers (cond
-                         ;; Both have layers: cross-product
+                         ;; Both have layers: full cross-product
+                         ;; Example: [a b] * [c d] => [a+c, a+d, b+c, b+d]
                          (and (seq x-layers) (seq y-layers))
                          (vec (for [a x-layers, b y-layers]
                                 (merge a b)))
 
-                         ;; Only one has layers: keep them
+                         ;; Only x has layers: keep them unchanged
                          (seq x-layers) x-layers
+
+                         ;; Only y has layers: keep them unchanged
                          (seq y-layers) y-layers
 
-                         ;; Neither has layers: empty
+                         ;; Neither has layers: result has no layers
                          :else [])
 
-         ;; Merge plot-level properties (right wins)
+         ;; Merge plot-level properties (right side wins for conflicts)
+         ;; This handles properties like :=target, :=width, :=height, scales
          merged-plot (merge x-plot y-plot)]
 
-     ;; Return map with both
+     ;; Return combined spec with auto-display wrapper
      (displays-as-plot
       (cond-> merged-plot
         (seq merged-layers) (assoc :=layers merged-layers)))))
   ([x y & more]
+   ;; Multi-arg: reduce left-to-right
    (displays-as-plot
     (reduce =* (=* x y) more))))
 
@@ -1103,34 +1111,43 @@
   ;;               {:=data penguins :=x :x :=y :y :=plottype :line :=transformation :linear}]}"
   [& specs]
   (if (= (count specs) 1)
+    ;; Single spec: just wrap with auto-display
     (displays-as-plot (first specs))
+
+    ;; Multiple specs: overlay with inheritance
     (let [[first-spec & rest-specs] specs
           first-layers (:=layers first-spec [])
           first-plot-props (dissoc first-spec :=layers)
 
-          ;; Extract a "base layer" to merge with subsequent specs
-          ;; This is the common properties from the first spec's first layer
+          ;; Extract a "base layer" from first spec to merge with subsequent specs
+          ;; This enables inheritance: (-> base (=+ layer1 layer2))
+          ;; where layer1 and layer2 inherit properties from base
           base-layer (when (seq first-layers) (first first-layers))
 
-          ;; Check if base layer has a plottype (complete layer)
+          ;; Check if base layer is complete (has a plottype)
+          ;; If not, it's just providing shared properties (data, aesthetics)
           base-has-plottype? (and base-layer (:=plottype base-layer))
 
           ;; For each subsequent spec, merge with base layer before extracting layers
+          ;; This implements inheritance: each new layer gets base's data/aesthetics
           merged-rest-layers (mapcat (fn [spec]
                                        (let [spec-layers (:=layers spec [])]
                                          (if (and base-layer (seq spec-layers))
                                            ;; Merge each layer from this spec with base layer
+                                           ;; This is what makes (-> base (=+ s1 s2)) work
                                            (map #(merge base-layer %) spec-layers)
                                            ;; No base layer or no spec layers, just use spec layers
                                            spec-layers)))
                                      rest-specs)
 
           ;; Combine layers: include first-layers only if base has plottype
+          ;; (if base is incomplete, it's only for inheritance, not rendering)
           all-layers (vec (if base-has-plottype?
                             (concat first-layers merged-rest-layers)
                             merged-rest-layers))
 
-          ;; Merge all plot-level properties
+          ;; Merge all plot-level properties (right side wins for conflicts)
+          ;; This handles :=target, :=width, :=height, scales
           all-plot-props (apply merge first-plot-props (map #(dissoc % :=layers) rest-specs))]
 
       (displays-as-plot
@@ -1404,12 +1421,32 @@ iris
   (when col-key
     (let [col-names (set (tc/column-names dataset))]
       (when-not (contains? col-names col-key)
-        (throw (ex-info (str "Column " col-key " not found in dataset")
-                        {:column col-key
-                         :context context
-                         :available-columns (vec col-names)
-                         :suggestion (str "Did you mean one of: " (pr-str (vec col-names)) "?")}))))
-    col-key))
+        (let [;; Find similar column names (simple string similarity)
+              col-name-str (name col-key)
+              similar-cols (filter (fn [available-col]
+                                     (let [available-str (name available-col)
+                                           ;; Check for substring match or similar length
+                                           substring-match? (or (.contains available-str col-name-str)
+                                                                (.contains col-name-str available-str))
+                                           similar-length? (< (Math/abs (- (count available-str)
+                                                                           (count col-name-str)))
+                                                              3)]
+                                       (or substring-match? similar-length?)))
+                                   col-names)
+
+              ;; Build error message with helpful suggestions
+              error-msg (str "Column " col-key " not found in dataset")
+              suggestion (if (seq similar-cols)
+                           (str "Did you mean one of: " (pr-str (vec (sort similar-cols))) "?")
+                           (str "Available columns: " (pr-str (vec (sort col-names)))))]
+
+          (throw (ex-info error-msg
+                          {:column col-key
+                           :context context
+                           :available-columns (vec (sort col-names))
+                           :similar-columns (when (seq similar-cols) (vec (sort similar-cols)))
+                           :suggestion suggestion}))))))
+  col-key)
 
 (defn- validate-columns
   "Validate multiple columns exist in a dataset.
@@ -1526,25 +1563,30 @@ iris
     [{:row-label nil :col-label nil :layers layers-vec}]
 
     ;; Has faceting - split each layer and group by facet
-    (let [;; Split each layer by its facets
+    (let [;; Step 1: Split each layer by its facet variables
+          ;; Each layer becomes multiple {:row-label :col-label :layer} maps
           all-split (mapcat split-by-facets layers-vec)
 
-          ;; Group by row and col labels
+          ;; Step 2: Group split layers by their facet labels
+          ;; Creates map: [row-label col-label] -> [{:layer ...} ...]
           by-labels (group-by (juxt :row-label :col-label) all-split)
 
-          ;; Get all unique combinations (sorted)
+          ;; Step 3: Get unique row and column labels (sorted for consistency)
           row-labels (sort (distinct (map :row-label all-split)))
           col-labels (sort (distinct (map :col-label all-split)))
 
-          ;; Create combinations in row-major order
+          ;; Step 4: Create all combinations in row-major order
+          ;; This ensures consistent panel ordering for rendering
           combinations (for [r row-labels
                              c col-labels]
                          [r c])]
 
-      ;; For each combination, collect all layers
+      ;; Step 5: For each combination, collect all layers for that facet
+      ;; Result: Vector of facet groups, each containing all layers for that facet
       (mapv (fn [[r c]]
               {:row-label r
                :col-label c
+               ;; Extract just the layer maps from the grouped data
                :layers (mapv :layer (get by-labels [r c]))})
             combinations))))
 
@@ -1588,34 +1630,39 @@ iris
         row-facet (:=row layer)
 
         ;; Helper to check if a column is categorical
+        ;; Uses Tablecloth's col/typeof when available, falls back to value inspection
         categorical? (fn [col-key]
                        (when (and col-key dataset)
                          (let [col-type (try
+                                          ;; Primary: Get type from Tablecloth metadata
                                           (col/typeof (get dataset col-key))
                                           (catch Exception _
-                                            ;; Fallback for plain Clojure data
+                                            ;; Fallback: Infer from values for plain Clojure data
                                             (infer-from-values (get dataset col-key))))]
+                           ;; Check if type indicates categorical data
                            (categorical-type? col-type))))
 
-        ;; Collect all grouping columns
+        ;; Collect all grouping columns in order of precedence
         grouping-cols (cond-> []
-                        ;; Explicit group (can be keyword or vector)
+                        ;; 1. Explicit group (highest priority, can be keyword or vector)
                         explicit-group
                         (into (if (vector? explicit-group) explicit-group [explicit-group]))
 
-                        ;; Color if categorical
+                        ;; 2. Color aesthetic if categorical
+                        ;; (continuous color scales don't create groups)
                         (categorical? color-col)
                         (conj color-col)
 
-                        ;; Column facet if categorical
+                        ;; 3. Column facet if categorical
                         (categorical? col-facet)
                         (conj col-facet)
 
-                        ;; Row facet if categorical
+                        ;; 4. Row facet if categorical
                         (categorical? row-facet)
                         (conj row-facet))]
 
-    ;; Remove duplicates, preserve order
+    ;; Remove duplicates while preserving order
+    ;; (e.g., if :color and :col both reference same column)
     (vec (distinct grouping-cols))))
 
 (defn- layer->points
@@ -2066,9 +2113,55 @@ iris
 (defn scatter
   "Create a scatter plot layer.
   
-  Returns a plot spec map with :=layers containing a scatter layer.
+  A scatter plot displays individual data points as marks (circles) positioned
+  according to their x and y values. Useful for showing relationships between
+  two continuous variables or the distribution of discrete points.
   
-  When called with spec-or-attrs as first arg, merges scatter into those layers."
+  Args (when provided):
+  - attrs-or-spec: Either a map of attributes {:alpha 0.5} or a plot spec to compose with
+  - attrs: (2-arg form) Map of visual attributes like {:alpha 0.5}
+  
+  Attributes:
+  - :alpha - Opacity (0.0 to 1.0, default 1.0)
+  
+  Returns:
+  - Plot spec map with :=layers containing a scatter layer
+  
+  Forms:
+  
+  1. No args - Returns basic scatter layer:
+     (scatter)
+     ;; => {:=layers [{:=plottype :scatter}]}
+  
+  2. With attributes - Returns scatter layer with custom attributes:
+     (scatter {:alpha 0.5})
+     ;; => {:=layers [{:=plottype :scatter :=alpha 0.5}]}
+  
+  3. Threading form - Composes with existing spec:
+     (-> (data penguins)
+         (mapping :bill-length-mm :bill-depth-mm)
+         (scatter))
+     ;; => {:=layers [{:=data penguins :=x ... :=y ... :=plottype :scatter}]}
+  
+  4. Threading with attributes:
+     (-> (data penguins)
+         (mapping :bill-length-mm :bill-depth-mm)
+         (scatter {:alpha 0.7}))
+  
+  Example - basic scatter plot:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm)
+      (scatter))
+  
+  Example - semi-transparent points:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm)
+      (scatter {:alpha 0.5}))
+  
+  Example - colored by species:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm {:color :species})
+      (scatter))"
   ([]
    {:=layers [{:=plottype :scatter}]})
   ([attrs-or-spec]
@@ -2213,6 +2306,32 @@ iris
                        (= (:=color (first (:=layers %))) :species)
                        (= (:=x (first (:=layers %))) :bill-length-mm))])
 
+;; ### 🧪 Example 2c: Semi-Transparent Points
+;;
+;; Control visual attributes like opacity using the attributes parameter.
+;; This is useful when you have overlapping points and want to show density.
+
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter {:alpha 0.5}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=alpha (first (:=layers %))) 0.5)
+                       (= (:=plottype (first (:=layers %))) :scatter))])
+
+;; **Combining attributes with aesthetics**:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (scatter {:alpha 0.7}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=alpha (first (:=layers %))) 0.7)
+                       (= (:=color (first (:=layers %))) :species))])
+
+;; ### 🧪 Example 2d: Scale Customization
+;;
 ;; **Combining scale customization**:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
@@ -2300,14 +2419,55 @@ iris
 ;; ### ⚙️ Constructor
 
 (defn linear
-  "Add linear regression transformation.
+  "Add linear regression transformation layer.
 
-  Computes best-fit line through points.
-  When combined with color aesthetic, computes separate regression per group.
+  Computes the best-fit line through data points using linear regression.
+  When combined with a categorical color aesthetic, computes separate
+  regression lines for each group automatically.
 
-  Returns a plot spec map with :=layers containing a linear regression layer.
+  The regression is computed using ordinary least squares (OLS) and rendered
+  as a line layer. This is a statistical transform - it derives new data
+  (the fitted line) from the raw data points.
 
-  When called with spec-or-data as first arg, merges linear into those layers."
+  Args (when provided):
+  - spec-or-data: Plot spec to compose with, or data to create spec from
+
+  Returns:
+  - Plot spec map with :=layers containing a linear regression layer
+
+  Forms:
+
+  1. No args - Returns basic linear regression layer:
+     (linear)
+     ;; => {:=layers [{:=transformation :linear :=plottype :line}]}
+
+  2. Threading with existing spec:
+     (-> (data penguins)
+         (mapping :bill-length-mm :bill-depth-mm)
+         (linear))
+     ;; => Adds regression layer to spec
+
+  3. Composing with data directly:
+     (linear penguins)
+     ;; => {:=layers [{:=data penguins :=transformation :linear :=plottype :line}]}
+
+  Example - simple linear regression:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm)
+      (linear))
+
+  Example - regression with scatter overlay:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm)
+      (=+ (scatter {:alpha 0.5})
+          (linear)))
+
+  Example - grouped regression by species:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm {:color :species})
+      (=+ (scatter {:alpha 0.5})
+          (linear)))
+  ;; => Computes separate regression line for each species"
   ([]
    (let [result {:=transformation :linear
                  :=plottype :line}]
@@ -2489,17 +2649,68 @@ iris
 ;; ### ⚙️ Constructor
 
 (defn histogram
-  "Add histogram transformation.
+  "Add histogram transformation layer.
 
-  Bins continuous data and counts occurrences. Requires domain computation
-  to determine bin edges.
+  Bins continuous data into intervals and counts the number of observations
+  in each bin. The histogram visualizes the distribution of a single variable.
+
+  This is a statistical transform that requires domain computation - it needs
+  to know the data range before determining bin edges. When combined with a
+  categorical aesthetic (e.g., :color), computes separate histograms for each
+  group.
+
+  Args (when provided):
+  - opts-or-spec: Either options map {:bins 20} or plot spec to compose with
+  - opts: (2-arg form) Options map
 
   Options:
-  - :bins - Binning method: :sturges (default), :sqrt, :rice, :freedman-diaconis, or explicit number
+  - :bins - Binning method (default :sturges):
+    - :sturges - Sturges' formula (good for normal distributions)
+    - :sqrt - Square root of n (simple, works for most cases)
+    - :rice - Rice's rule (for larger datasets)
+    - :freedman-diaconis - Freedman-Diaconis rule (robust to outliers)
+    - Integer - Explicit number of bins (e.g., 20)
 
-  Returns a plot spec map with :=layers containing a histogram layer.
+  Returns:
+  - Plot spec map with :=layers containing a histogram layer
 
-  When called with spec-or-opts as first arg, merges histogram into those layers."
+  Forms:
+
+  1. No args - Returns basic histogram with default binning:
+     (histogram)
+     ;; => {:=layers [{:=transformation :histogram :=plottype :bar :=bins :sturges}]}
+
+  2. With options - Custom bin count or method:
+     (histogram {:bins 20})
+     (histogram {:bins :sqrt})
+
+  3. Threading form:
+     (-> penguins
+         (mapping :bill-length-mm nil)
+         (histogram))
+
+  4. Threading with options:
+     (-> penguins
+         (mapping :bill-length-mm nil)
+         (histogram {:bins 30}))
+
+  Example - basic histogram:
+  (-> penguins
+      (mapping :bill-length-mm nil)
+      (histogram))
+
+  Example - custom bin count:
+  (-> penguins
+      (mapping :bill-length-mm nil)
+      (histogram {:bins 20}))
+
+  Example - grouped histogram by species:
+  (-> penguins
+      (mapping :bill-length-mm nil {:color :species})
+      (histogram))
+  ;; => Separate histogram for each species with shared domain
+
+  Note: Histogram only requires :=x mapping, :=y is computed from bin counts."
   ([]
    {:=layers [{:=transformation :histogram
                :=plottype :bar
