@@ -4480,6 +4480,7 @@ iris
 ;; - **Plot properties** (`:=target`, `:=width`, `:=height`, scales) describe how to render
 ;;
 ;; **Benefits:**
+
 ;; 1. **Inspectable** - `kind/pprint` shows clear structure
 ;; 2. **No duplication** - Plot config appears once, not in every layer
 ;; 3. **Composable** - `=*` and `=+` can merge both levels correctly
@@ -4505,6 +4506,7 @@ iris
 ;; ## 📖 Auto-display vs Explicit Rendering
 
 ;; The current design supports two rendering modes:
+
 ;; 1. Auto-display: `(=* ...)` returns an object that automatically renders in notebooks
 ;; 2. Explicit rendering: `(plot layers)` explicitly triggers rendering
 
@@ -4518,7 +4520,8 @@ iris
 ;; **Costs of auto-display:**
 ;; - Two ways to do the same thing can be confusing
 ;; - The display wrapper is invisible but affects behavior
-;; - Debugging difficulty: In Clay, errors during rendering (not evaluation) can be
+;; - Debugging difficulty: In Clay, errors during rendering (not evaluation)
+;;   are currently
 ;;   harder to track because the `plot` call happens during the display phase rather
 ;;   than during code evaluation
 ;; - Less control: What if you want to manipulate layers without triggering display?
@@ -4540,8 +4543,9 @@ iris
 ;;     [target (or (:=transformation layer) (:=plottype layer))]))
 ;; ```
 
-;; With 3 targets (:geom, :vl, :plotly) and growing plottypes (:scatter, :line,
-;; :histogram, :linear...), this creates a cartesian product of methods.
+;; With 3 targets (`:geom`, `:vl`, `:plotly`) and growing plottypes
+;; (`:scatter`, `:line`, `:histogram`, `:linear`, ...),
+;; this creates a cartesian product of methods.
 
 ;; **The Tension:**
 
@@ -4558,6 +4562,7 @@ iris
 ;;   (box, violin, density, contour, area, ribbon, etc.)
 
 ;; **Alternatives to consider:**
+
 ;; 1. Two-level dispatch: Dispatch on target first, then on plottype within target-specific methods
 ;; 2. Shared abstractions: Default method that delegates to target-specific renderers
 ;; 3. Hierarchical dispatch: Use Clojure's derive/isa? to share implementations across targets
@@ -4568,7 +4573,7 @@ iris
 
 ;; ### 📖 Key Naming Convention
 
-;; Every layer key uses the `:=` prefix:
+;; Every layer and plot property uses the `:=` prefix:
 ;; ```clojure
 ;; {:=data penguins
 ;;  :=x :bill-length-mm
@@ -4577,88 +4582,91 @@ iris
 ;;  :=plottype :scatter}
 ;; ```
 
-;; **The Problem:**
+;; **Why the `:=` prefix?**
 
-;; The `:=` namespace prefix is verbose and creates visual noise:
-;; - `:=` appears constantly throughout code
-;; - More typing required
-;; - Heavier than necessary for the protection it provides
+;; We need to distinguish between layer specification keys and data column names.
+;; Without a distinctive prefix, `:color` could mean either "the color aesthetic
+;; mapping" (layer spec) or "a column named color in the dataset" (data).
 
-;; **Decision:** Switch to `:=` prefix convention.
+;; **Why `:=` specifically?**
 
-;; Use convention keywords with `=` prefix: `:=color`, `:=x`, `:=data`
-;; ```clojure
-;; {:=data penguins
-;;  :=x :bill-length-mm
-;;  :=y :bill-depth-mm
-;;  :=color :species
-;;  :=plottype :scatter}
-;; ```
+;; 1. **Prevents collisions** - `:=color` (layer spec) is clearly distinct from `:color` (data column)
+;; 2. **Visually distinctive** - The `=` character stands out, making specs easy to identify
+;; 3. **Semantic connection** - The `=` suggests "assignment" or "setting" a property
+;; 4. **Consistency** - Matches the convention used in other Tableplot APIs
+;; 5. **Compact** - Shorter than namespace qualifiers like `:aog/color`
 
-;; **Benefits:**
-;; - Distinctive: prevents collision with data column names (`:=color` vs `:color`)
-;; - Consistent with other Tableplot APIs
-;; - Lightweight: less visual noise than `:=`
-;; - Clear distinction between layer spec and data
-;; - Less typing required
+;; **Alternative considered:**
+;; We initially considered namespaced keywords (`:aog/color`, `:aog/x`) but found
+;; them too verbose for something that appears so frequently in plotting code.
+;; The `:=` prefix provides the same collision protection with less visual weight.
 
 ;; ### 📖 Validation Timing
 
-;; The current design has two validation flags:
-;; - `*validate-on-construction*` (default: false) - validate when calling `scatter`, `linear`, etc.
-;; - `*validate-on-draw*` (default: true) - validate when calling `plot`
+;; The API validates plot specifications at two points:
 
-;; **The Problem:**
+;; 1. **Construction time** - when calling constructors like `scatter`, `linear`, `mapping`
+;; 2. **Draw time** - when calling `plot` to render the visualization
 
-;; The dual flag system is confusing and unnecessary. Having two separate controls creates
-;; complexity without clear benefit.
+;; **Why validate at both points?**
 
-;; **Current behavior (validate-on-draw):**
-;; - Flexible composition - build invalid intermediate states, validate at the end
-;; - Performance - avoid validating the same layer multiple times
-;; - BUT: Errors discovered late, potentially confusing stacktraces
-;; - BUT: Error points to `plot`, not the construction site where the mistake was made
+;; **Construction-time validation:**
+;; - **Fail fast** - errors caught immediately where they're created
+;; - **Better error context** - stacktraces point to the exact construction site
+;; - **Immediate feedback** - catch typos and invalid values right away
+;; - Example: `(scatter {:alpha 2.0})` fails immediately (alpha must be 0.0-1.0)
 
-;; **Better approach (validate-on-construction, true by default):**
-;; - Fail fast - errors caught immediately at the construction site
-;; - Better error context - stacktrace shows exactly where the bad layer was created
-;; - Simpler mental model - one validation flag, early validation by default
-;; - Still allow disabling for performance-critical scenarios if needed
+;; **Draw-time validation:**
+;; - **Final safety check** - ensures composed specs are valid before rendering
+;; - **Catches composition errors** - validates the complete plot structure
+;; - **Cross-layer validation** - checks that data columns exist, layers are compatible
+;; - Example: Validates that `:=x :missing-column` references an actual column
 
-;; **Decision:** Remove dual flags, use single `*validate*` flag (default: true).
-;; Validate eagerly at construction time for better developer experience.
+;; **Benefits of dual validation:**
+;; - Early errors are caught at construction (better DX)
+;; - Late errors from composition are caught before rendering (safety net)
+;; - Clear, actionable error messages at both stages
+
+;; This approach prioritizes developer experience - validation is always on,
+;; errors are caught as early as possible, and the system never renders invalid plots.
 
 ;; ### 📖 Type Inference Strategy
 
-;; The current design attempts to infer data types from plain Clojure data structures:
+;; The API needs to determine column types to support type-aware grouping (categorical
+;; aesthetics create groups, continuous ones don't). Rather than implementing custom
+;; type inference, we delegate to Tablecloth.
+
+;; **Implementation approach:**
+
 ;; ```clojure
-;; (defn- infer-from-values [values]
-;;   (cond
-;;     (every? number? values) :numerical
-;;     (every? string? values) :categorical
-;;     (every? keyword? values) :categorical
-;;     :else :categorical))
+;; (try
+;;   ;; Primary: Get type from Tablecloth metadata
+;;   (col/typeof (get dataset col-key))
+;;   (catch Exception _
+;;     ;; Fallback: Simple inference for plain Clojure data
+;;     (infer-from-values (get dataset col-key))))
 ;; ```
 
-;; **The Problem:**
+;; **How it works:**
 
-;; Maintaining separate type inference logic creates complexity and potential bugs:
-;; - Can guess wrong: `[1 2 3]` might be categories, not numerical
-;; - Silent failures: wrong inference produces incorrect visualizations without warning
-;; - Code duplication: reimplementing what tablecloth already does well
-;; - Two code paths: dataset vs plain data handling
+;; 1. **Tablecloth datasets (primary path)** - Use `col/typeof` to get precise type information
+;;    - Returns types like `:float64`, `:string`, `:int32`, etc.
+;;    - Free, accurate, no guessing required
+;;    - This is why we convert plain data to datasets via `ensure-dataset`
 
-;; **Decision:** Delegate to the dataset library.
+;; 2. **Plain data (fallback path)** - Simple heuristic when Tablecloth isn't available
+;;    - Numbers → `:continuous`
+;;    - Temporal values → `:temporal`
+;;    - Everything else → `:categorical`
+;;    - Only used as a safety fallback, not the primary path
 
-;; If users want type control, they should use datasets (tablecloth). If they provide
-;; plain data structures `{:x [1 2 3]}`, the library will convert them internally to
-;; datasets via `ensure-dataset`, and we'll rely on tablecloth's type inference logic.
+;; **Benefits of this approach:**
 
-;; This approach:
-;; - Eliminates duplicate type inference code
-;; - Leverages existing, well-tested tablecloth logic
-;; - Provides escape hatch: users who need type control can construct typed datasets
-;; - Simplifies the codebase
+;; - **Leverages existing infrastructure** - Tablecloth already solves this well
+;; - **No duplicate logic** - We don't reimplement type inference
+;; - **User control** - Users who need precise types can construct typed datasets
+;; - **Simple fallback** - Plain data still works, just with simple inference
+;; - **Consistent behavior** - Same type system as the rest of Tablecloth ecosystem
 
 ;; ### 📖 Faceting Implementation Complexity
 
@@ -4696,39 +4704,47 @@ iris
 
 ;; ### 📖 Error Message Enhancement
 
-;; The current validation system produces structured error messages via Malli:
-;; ```clojure
-;; (validate Layer {:=plottype :invalid})
-;; ;; Returns detailed Malli error with path and humanized explanation
-;; ```
+;; The validation system provides structured error messages via Malli schemas and
+;; custom validation helpers. Several enhancements have already been implemented:
 
-;; **Current state (Malli errors):**
-;; - Structured error data via `ex-data` - machine-readable for tooling
-;; - Consistent format across all validation
-;; - BUT: Generic messages like "should be one of :scatter, :point, :line..."
-;; - BUT: May not provide context-specific guidance for common mistakes
+;; **✅ Implemented enhancements:**
 
-;; **Opportunity for enhancement:**
-;; The current Malli errors are functional but could be significantly improved:
-;; ```clojure
-;; ;; Current:
-;; "Invalid value for :=plottype. Should be one of :scatter, :point, :line"
-;;
-;; ;; Enhanced:
-;; "Unknown plot type :scater. Did you mean :scatter? 
-;; Available: :scatter, :point, :line, :histogram
-;; See: (doc scatter) or https://..."
-;; ```
+;; 1. **Plottype-specific requirements** - The Layer schema uses `:multi` dispatch to
+;;    enforce different requirements per plot type:
+;;    - Scatter/line/area require both `:=x` and `:=y`
+;;    - Histogram/bar require `:=x` (`:=y` optional)
+;;    - Missing required aesthetics produce clear Malli errors
 
-;; **Enhancements to consider:**
-;; 1. Did-you-mean suggestions using string distance (typo detection)
-;; 2. Show valid examples when validation fails
-;; 3. Context-specific guidance for common errors
-;; 4. Links to relevant documentation
-;; 5. Better error messages for missing required aesthetics (e.g., "scatter requires both :x and :y")
+;; 2. **Missing column detection** - `validate-layer` checks that aesthetic column
+;;    references exist in the dataset:
+;;    ```clojure
+;;    "Columns not found in dataset: [:missing-col]
+;;     Available columns: [:bill-length-mm :bill-depth-mm :species]"
+;;    ```
 
-;; **Decision:** Worth pursuing, but not in this initial design phase.
-;; Keep current Malli errors for now, enhance in future iteration.
+;; 3. **Did-you-mean suggestions** - `validate-column!` suggests similar column names
+;;    using substring matching and length similarity:
+;;    ```clojure
+;;    "Column :bill-lenght not found in dataset
+;;     Did you mean one of: [:bill-length-mm]?"
+;;    ```
+
+;; 4. **Structured error data** - All errors include machine-readable `ex-data` for tooling
+
+;; **🔮 Future enhancements to consider:**
+
+;; 1. **Documentation links** - Point to relevant docs or examples
+;;    ```clojure
+;;    "Missing required aesthetic :=x. See: (doc scatter)"
+;;    ```
+
+;; 3. **Example snippets** - Show valid examples when validation fails
+;;    ```clojure
+;;    "Try: (scatter {:=x :col1 :=y :col2})"
+;;    ```
+
+;; The current error messages are functional and provide good context. Further
+;; enhancements could improve the developer experience but aren't critical.
 
 ;; # Conclusion
 
