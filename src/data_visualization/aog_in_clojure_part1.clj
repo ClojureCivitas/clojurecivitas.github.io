@@ -166,6 +166,7 @@
    ;; Malli - Schema validation
    [malli.core :as m]
    [malli.error :as me]
+   [malli.util :as mu]
 
    ;; RDatasets - Example datasets
    [scicloj.metamorph.ml.rdatasets :as rdatasets]))
@@ -556,6 +557,15 @@
 ;; **You can skim this section** - it's reference material. The schemas will be
 ;; used by validation helpers later, and referenced in examples as needed.
 
+;; ### ⚙️ Malli Registry Setup
+;;
+;; Create a registry that includes both default schemas and malli.util schemas.
+;; This enables declarative schema utilities like :merge, :union, :select-keys.
+
+(def registry
+  "Malli registry with default schemas and util schemas (for :merge, etc.)"
+  (merge (m/default-schemas) (mu/schemas)))
+
 ;; ### ⚙️ Core Type Schemas
 
 (def DataType
@@ -662,24 +672,11 @@
 
 ;; ### ⚙️ Layer Schema
 
-(def Layer
-  "Schema for a complete layer specification.
-  
-  A layer is a flat map with distinctive :=... keys containing all the
-  information needed to render a visualization layer:
-  - Data source
-  - Aesthetic mappings (x, y, color, size, etc.)
-  - Plot type
-  - Visual attributes
-  - Optional statistical transformation
-  - Optional faceting"
+(def BaseLayer
+  "Base layer fields shared across all plot types."
   [:map
    ;; Data (required for most layers)
    [:=data {:optional true} Dataset]
-
-   ;; Positional aesthetics
-   [:=x {:optional true} PositionalAesthetic]
-   [:=y {:optional true} PositionalAesthetic]
 
    ;; Other aesthetics
    [:=color {:optional true} ColorAesthetic]
@@ -692,8 +689,7 @@
    ;; Attributes (constant visual properties)
    [:=alpha {:optional true} AlphaAttribute]
 
-   ;; Plot type and transformation
-   [:=plottype {:optional true} PlotType]
+   ;; Transformation
    [:=transformation {:optional true} Transformation]
 
    ;; Histogram-specific
@@ -703,6 +699,73 @@
    [:=scale-x {:optional true} ScaleSpec]
    [:=scale-y {:optional true} ScaleSpec]
    [:=scale-color {:optional true} ScaleSpec]])
+
+(def Layer
+  "Schema for a complete layer specification with plottype-specific requirements.
+  
+  Uses :multi to dispatch on :=plottype and enforce different requirements:
+  - :scatter, :line, :area require both :=x and :=y
+  - :bar, :histogram require :=x (y is optional)
+  - nil (no plottype) allows incomplete layers for composition
+  
+  This replaces the nested conditionals in validate-layer with declarative schemas."
+  (m/schema
+   [:multi {:dispatch :=plottype}
+
+    ;; Scatter requires both x and y
+    [:scatter
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype [:enum :scatter]]
+       [:=x PositionalAesthetic]
+       [:=y PositionalAesthetic]]]]
+
+    ;; Line requires both x and y
+    [:line
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype [:enum :line]]
+       [:=x PositionalAesthetic]
+       [:=y PositionalAesthetic]]]]
+
+    ;; Bar requires x, y optional
+    [:bar
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype [:enum :bar]]
+       [:=x PositionalAesthetic]
+       [:=y {:optional true} PositionalAesthetic]]]]
+
+    ;; Histogram requires x, y optional
+    [:histogram
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype [:enum :histogram]]
+       [:=x PositionalAesthetic]
+       [:=y {:optional true} PositionalAesthetic]]]]
+
+    ;; Area requires both x and y
+    [:area
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype [:enum :area]]
+       [:=x PositionalAesthetic]
+       [:=y PositionalAesthetic]]]]
+
+    ;; Incomplete layer (no plottype) - for composition
+    [nil
+     [:merge
+      BaseLayer
+      [:map
+       [:=plottype {:optional true} [:maybe nil?]]
+       [:=x {:optional true} PositionalAesthetic]
+       [:=y {:optional true} PositionalAesthetic]]]]]
+   {:registry registry}))
 
 (def Layers
   "Schema for one or more layers.
@@ -784,65 +847,19 @@
   "Validate a layer with context-aware checks.
   
   Performs:
-  1. Schema validation (structure)
-  2. Semantic validation (required fields for plottype)
-  3. Data validation (columns exist)
+  1. Schema validation (structure + plottype-specific requirements via :multi)
+  2. Data column validation (columns exist) - runtime check
   
   Returns nil if valid, error map if invalid."
   [layer]
-  ;; First check schema
+  ;; Schema validation now handles both structure AND plottype-specific requirements
   (or
    (when-let [schema-errors (validate Layer layer)]
      {:type :schema-error
       :errors schema-errors
-      :message "Layer structure is invalid"})
+      :message "Layer validation failed"})
 
-   ;; Check plottype-specific requirements
-   (let [plottype (:=plottype layer)]
-     (when plottype
-       (case plottype
-         ;; Scatter/line need x and y
-         (:scatter :line)
-         (when-not (and (:=x layer) (:=y layer))
-           {:type :missing-required-aesthetic
-            :plottype plottype
-            :missing (cond
-                       (and (nil? (:=x layer)) (nil? (:=y layer))) [:=x :=y]
-                       (nil? (:=x layer)) [:=x]
-                       :else [:=y])
-            :message (str plottype " plots require both :=x and :=y")})
-
-         ;; Bar needs at least x
-         :bar
-         (when-not (:=x layer)
-           {:type :missing-required-aesthetic
-            :plottype plottype
-            :missing [:=x]
-            :message "Bar plots require :=x"})
-
-         ;; Histogram needs just x
-         :histogram
-         (when-not (:=x layer)
-           {:type :missing-required-aesthetic
-            :plottype plottype
-            :missing [:=x]
-            :message "Histogram requires :=x"})
-
-         ;; Area needs x and y
-         :area
-         (when-not (and (:=x layer) (:=y layer))
-           {:type :missing-required-aesthetic
-            :plottype plottype
-            :missing (cond
-                       (and (nil? (:=x layer)) (nil? (:=y layer))) [:=x :=y]
-                       (nil? (:=x layer)) [:=x]
-                       :else [:=y])
-            :message "Area plots require both :=x and :=y"})
-
-         ;; Default - no specific requirements
-         nil)))
-
-   ;; Check data-related validations if data is present
+   ;; Data column validation (runtime check - can't be done in schema)
    (when-let [data (:=data layer)]
      (let [column-keys (cond
                          ;; Tablecloth dataset
@@ -2383,7 +2400,6 @@ iris
      (=* attrs-or-spec (scatter))
      (let [result (merge {:=plottype :scatter}
                          (update-keys attrs-or-spec =key))]
-       (validate! Layer result)
        {:=layers [result]})))
   ([spec attrs]
    ;; Threading-friendly: (-> spec (scatter {:alpha 0.5}))
@@ -2685,7 +2701,6 @@ iris
   ([]
    (let [result {:=transformation :linear
                  :=plottype :line}]
-     (validate! Layer result)
      {:=layers [result]}))
   ([spec-or-data]
    (let [spec (if (plot-spec? spec-or-data)
@@ -2966,7 +2981,6 @@ iris
                           :=plottype :bar
                           :=bins :sturges}
                          (update-keys opts-or-spec =key))]
-       (validate! Layer result)
        {:=layers [result]})))
   ([spec opts]
    (=* spec (histogram opts))))
