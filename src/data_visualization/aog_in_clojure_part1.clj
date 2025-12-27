@@ -356,16 +356,11 @@
 
 ;; ### 📖 The Solution Works: Standard Merge Composes
 
-;; Show this actually solves the problem:
+;; Standard `merge` preserves all properties - nothing lost:
 
 (merge {:=x :bill-length-mm :=color :species}
        {:=y :bill-depth-mm :=alpha 0.5})
-;; => {:=x :bill-length-mm 
-;;     :=y :bill-depth-mm 
-;;     :=color :species 
-;;     :=alpha 0.5}
 
-;; Nothing lost! All properties preserved.
 ;; This is why `=*` (our composition operator) can use standard `merge` internally.
 
 ;; # Design Overview
@@ -3888,107 +3883,58 @@ iris
 
 ;; # Design Discussion
 ;;
-;; ## 📖 Plot-Level Properties in Layer Vectors
+;; ## 📖 Map-Based IR: Separating Layers from Plot Configuration
 ;;
-;; ### The Tension
+;; ### The Design Choice
 ;;
-;; Our current design uses a vector of layer maps as the intermediate representation:
-;;
+;; The internal representation uses a map structure with explicit separation:
+
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (target :vl)
+    (size 800 600))
+
+;; This produces a map with `:=layers` and plot-level properties separated:
+
 ;; ```clojure
-;; (-> penguins
-;;     (mapping :x :y)
-;;     (scatter)
-;;     (target :vl)
-;;     (size 800 600))
-;; ;; => [{:=data ... :=x :x :=y :y :=plottype :scatter 
-;; ;;      :=target :vl :=width 800 :=height 600}]
+;; {:=layers [{:=data penguins 
+;;             :=x :bill-length-mm 
+;;             :=y :bill-depth-mm 
+;;             :=plottype :scatter}]
+;;  :=target :vl
+;;  :=width 800
+;;  :=height 600}
 ;; ```
 ;;
-;; Notice that `:=target`, `:=width`, and `:=height` appear in every layer,
-;; even though their meaning applies to **all layers together**, not individual layers.
-;; These are plot-level properties, not layer-level properties.
+;; ### Why This Structure?
 ;;
-;; This creates a conceptual impurity: properties about "how to render the whole plot"
-;; are stored alongside properties about "what data to show and how to transform it."
+;; **Clean separation of concerns:**
+;; - **Layer properties** (`:=data`, `:=x`, `:=y`, `:=plottype`) describe what to visualize
+;; - **Plot properties** (`:=target`, `:=width`, `:=height`, scales) describe how to render
 ;;
-;; ### Why This Happens
+;; **Benefits:**
+;; 1. **Inspectable** - `kind/pprint` shows clear structure
+;; 2. **No duplication** - Plot config appears once, not in every layer
+;; 3. **Composable** - `=*` and `=+` can merge both levels correctly
+;; 4. **Extensible** - Easy to add new plot-level properties (themes, titles, etc.)
 ;;
-;; It's a consequence of our choice to use **vectors of maps** as the IR:
+;; ### How Operators Handle It
 ;;
-;; - The `*` operator merges maps: `(merge layer-a layer-b)`
-;; - When we do `(=* layers (target :vl))`, the target gets merged into all layers
-;; - Same for `(=* layers (size 800 600))` - dimensions merge into every layer
+;; **`=*` (merge):**
+;; - Performs cross-product on `:=layers` vectors
+;; - Merges plot-level properties (right side wins)
 ;;
-;; The current workaround: `plot-impl` extracts the first occurrence:
-;; ```clojure
-;; (some :=target layers-vec)  ;; Get first non-nil target
-;; (some :=width layers-vec)   ;; Get first non-nil width
-;; ```
+;; **`=+` (overlay):**
+;; - Concatenates `:=layers` vectors
+;; - Merges plot-level properties (right side wins)
 ;;
-;; ### Alternative Approaches Considered
+;; **Constructors:**
+;; - Layer constructors (`data`, `mapping`, `scatter`) return `{:=layers [...]}`
+;; - Plot constructors (`target`, `size`, `scale`) return `{:=property value}`
+;; - Both compose naturally via `=*`
 ;;
-;; **1. Metadata on the Vector**
-;;
-;; ```clojure
-;; (defn target [target-kw]
-;;   (with-meta [] {:=target target-kw}))
-;;
-;; ;; Result:
-;; ^{:=target :vl :=width 800 :=height 600}
-;; [{:=data ... :=x :x :=plottype :scatter}]
-;; ```
-;;
-;; **Pros**: Conceptually clean separation - layers are grammar, metadata is rendering config
-;;
-;; **Cons**: Metadata easily lost, less inspectable, threading needs special handling
-;;
-;; **2. Wrapper Map**
-;;
-;; ```clojure
-;; {:layers [{:=data ... :=x :x}
-;;           {:=transformation :linear}]
-;;  :config {:target :vl :width 800 :height 600}}
-;; ```
-;;
-;; **Pros**: Explicit separation, no duplication, easy to inspect
-;;
-;; **Cons**: Breaks the algebra (`*` and `+` work on vectors), operators become complex
-;;
-;; **3. Special Marker Layer**
-;;
-;; ```clojure
-;; [{:=data ... :=x :x :=plottype :scatter}
-;;  {:=plot-config true
-;;   :=target :vl :=width 800 :=height 600}]
-;; ```
-;;
-;; **Pros**: Keeps vector structure, filterable
-;;
-;; **Cons**: Still mixed concerns, just specially marked
-;;
-;; **4. Accept the Duplication (Current)**
-;;
-;; Keep plot-level properties duplicated in every layer.
-;;
-;; **Pros**: Simple, works with current algebra, extraction via `some` is straightforward
-;;
-;; **Cons**: Conceptually impure, wasteful (though negligible), could confuse on inspection
-;;
-;; ### Current Decision
-;;
-;; We've chosen **Alternative 4** (accept duplication) for now because:
-;;
-;; 1. **Simplicity**: No special cases in `*` and `+` operators
-;; 2. **Works**: The `some` extraction pattern is fast and reliable
-;; 3. **Practical**: The duplication overhead is negligible in practice
-;; 4. **Revisable**: If this becomes problematic, we can migrate to metadata later
-;;
-;; The key insight: this is a **limitation of using vectors of maps as IR**, not a
-;; fundamental flaw. If plot-level configuration grows significantly, the metadata
-;; approach (Alternative 1) would be the natural evolution, as it mirrors Clojure's
-;; philosophy of metadata for "information about the thing" vs "the thing itself."
-;;
-;; For now, the simplicity trade-off is worth it.
+;; This design balances compositional elegance with practical clarity.
 
 ;; # Summary
 ;;
