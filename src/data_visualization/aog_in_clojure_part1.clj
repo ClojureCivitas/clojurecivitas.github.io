@@ -342,7 +342,7 @@
 
 ;; Nested structure requires a custom `merge-layer` function. Not ideal.
 
-;; ### 📖 The Solution: Flat Structure with Disticnctive Keys
+;; ### 📖 The Solution: Flat Structure with Distinctive Keys
 
 (def flat-layer-example
   {:=data {:bill-length-mm [39.1 39.5 40.3]
@@ -1300,7 +1300,10 @@ mtcars
 
 iris
 
-;; # Constants
+;; # Visual Theme Constants
+;;
+;; These constants define the ggplot2-compatible visual theme used across
+;; all rendering targets. Extracted here for maintainability.
 
 ;; ggplot2-compatible color palette for categorical variables
 (def ggplot2-colors
@@ -2027,6 +2030,8 @@ iris
 
         (kind/html (svg/serialize svg-elem))))))
 
+;; We now have enough implementation to show basic scatter plots.
+
 ;; # Basic Scatter Plots
 ;; 
 ;; Simple scatter plots demonstrating the core API.
@@ -2261,6 +2266,8 @@ iris
 ;; Notice: Type inference is instant (O(1) lookup from Tablecloth metadata),
 ;; not O(n) value examination.
 
+;; With linear regression implemented, we can overlay trend lines.
+
 ;; # Linear Regression
 ;; 
 ;; Statistical transformation: computing and overlaying regression lines.
@@ -2447,6 +2454,8 @@ iris
                        (let [rendered (plot %)]
                          (and (map? (meta rendered))
                               (= (:kindly/kind (meta rendered)) :kind/html))))])
+
+;; Histograms demonstrate statistical transforms that derive new data from the input.
 
 ;; # Histograms
 ;;
@@ -3650,6 +3659,8 @@ iris
 ;; - Flat maps compose with standard library
 ;; - Minimal delegation keeps implementation focused
 ;; - Backend-agnostic IR enables multiple rendering strategies
+
+;; Now we can demonstrate multi-target rendering with the same spec.
 
 ;; # Plotly.js Target Examples
 ;;
