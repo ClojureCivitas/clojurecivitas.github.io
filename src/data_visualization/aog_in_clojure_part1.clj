@@ -7,7 +7,8 @@
                   :description "A Design Exploration for a plotting API"
                   :category :data-visualization
                   :tags [:datavis]
-                  :keywords [:datavis]}}}
+                  :keywords [:datavis]
+                  :toc true}}}
 (ns data-visualization.aog-in-clojure-part1)
 
 ^{:kindly/hide-code true
