@@ -472,6 +472,34 @@
 ;; - Understand how composition merges layers
 ;; - Debug layer construction before rendering
 
+;; ### 📖 Implementation Status
+;;
+;; This notebook implements a working prototype with:
+;;
+;; **Core features:**
+;; - ✅ Compositional operators (`=*`, `=+`) with threading-macro support
+;; - ✅ Plain Clojure data (maps, vectors - no dataset required)
+;; - ✅ Type-aware grouping (categorical aesthetics create groups)
+;; - ✅ Three rendering targets (`:geom`, `:vl`, `:plotly`) with feature parity
+;; - ✅ Malli schemas with validation and helpful error messages
+;;
+;; **Plot types & transforms:**
+;; - ✅ Scatter, line, histogram
+;; - ✅ Linear regression (with grouping support)
+;; - ✅ Faceting (row, column, and grid layouts)
+;; - ✅ Custom scale domains
+;;
+;; **Not yet implemented** (compared to `tableplot.v1.plotly`):
+;; - ⚠️ Bar, box, violin, density, smooth, heatmap, text, segment
+;; - ⚠️ Additional aesthetics: size, symbol/shape, fill, line-width  
+;; - ⚠️ Transforms: kernel density, loess/spline smoothing, correlation
+;; - ⚠️ Coordinate systems: 3D, polar, geographic
+;; - ⚠️ Advanced layouts: subplots, secondary axes, insets
+;; - ⚠️ Interactivity: hover templates, click events, selections
+;;
+;; Missing features are deferred, not abandoned - the design should accommodate
+;; them without fundamental restructuring.
+
 ;; # Malli Schemas
 ;;
 ;; The following Malli schemas define the structure and valid values for plot specs,
@@ -889,48 +917,6 @@
 ;; 2. Efficiency - compute summaries (20 histogram bars), not raw data (1M points)
 ;;
 ;; # Proposed Design
-;;
-;; ### 📖 API Overview
-;;
-;; The API consists of three parts:
-;;
-;; 1. **Constructors** - Build partial layer specifications
-;; 2. **Composition operators** - Merge layers (`*`) and overlay them (`+`)
-;; 3. **Renderer** - Single `plot` function that interprets layer specs
-;;
-;; **Current Implementation Status**:
-;;
-;; - ✅ Core composition (`*`, `+`, layer merging)
-;; - ✅ Threading-macro friendly API (`->` works naturally)
-;; - ✅ Minimal delegation (compute transforms, delegate rendering)
-;; - ✅ Type information from Tablecloth
-;; - ✅ Type-aware grouping (categorical color groups, continuous doesn't)
-;; - ✅ Explicit `:group` aesthetic for override control
-;; - ✅ Three rendering targets (:geom, :vl, :plotly - all with full feature parity)
-;; - ✅ Statistical transforms: linear regression, histograms (with grouping support)
-;; - ✅ Faceting (row, column, and grid faceting across all targets)
-;; - ✅ Custom scale domains
-;; - ✅ ggplot2-compatible theming
-;; - ✅ Plain Clojure data structures (maps, vectors - no dataset required)
-;; - ✅ Malli schemas for layer validation
-;; - ✅ Column existence validation with helpful error messages
-;;
-;; **What's Missing (compared to tableplot.v1.plotly)**:
-;;
-;; - ⚠️ Plot types: line, bar, box, violin, density, smooth, heatmap, text, segment
-;; - ⚠️ Additional aesthetics: size, symbol/shape, opacity, fill, line-width
-;; - ⚠️ Statistical transforms: density estimation, smooth (loess/spline), correlation
-;; - ⚠️ Coordinate systems: 3D, polar, geo
-;; - ⚠️ Advanced layouts: subplots, secondary axes, insets
-;; - ⚠️ Interactivity: hover templates, click events, selections
-;; - ⚠️ Handling missing data
-;;
-;; **Design Philosophy Differences**:
-;;
-;; This API prioritizes composability and algebraic clarity over feature completeness.
-;; The focus is on a minimal, well-understood core that can be extended incrementally.
-;; Missing features are deferred, not abandoned - they can be added as needed while
-;; maintaining the compositional design.
 
 ;; ### ⚙️ Helper Functions
 
