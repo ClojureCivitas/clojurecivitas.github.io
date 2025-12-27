@@ -81,7 +81,7 @@
 
 ;; # Context & Motivation
 ;;
-;; ### 📖 Why Explore a New Approach?
+;; ## 📖 Why Explore a New Approach?
 ;;
 ;; Tableplot currently provides two visualization APIs: `scicloj.tableplot.v1.hanami`
 ;; for [Vega-Lite](https://vega.github.io/vega-lite/) visualizations, and 
@@ -111,7 +111,7 @@
 ;; datasets. If you have a simple Clojure map or vector, you need to convert it 
 ;; first—even for simple visualizations.
 ;;
-;; ### 📖 What We're Exploring
+;; ## 📖 What We're Exploring
 ;;
 ;; Some of these limitations will be addressed within the current APIs themselves—
 ;; we're actively working on improvements. But as we always intended, it's valuable
@@ -141,7 +141,7 @@
 
 ;; # Setup
 
-;; ### ⚙️ Dependencies
+;; ## ⚙️ Dependencies
 ;;
 ;; This notebook relies on several libraries from the Clojure data science ecosystem.
 ;; Here's what we use and why:
@@ -215,7 +215,7 @@
 ;; We chose AoG because it seemed well-thought, small enough to grasp and reproduce, while still being
 ;; reasonably complete in its scope.
 
-;; ### 📖 Glossary: Visualization Terminology
+;; ## 📖 Glossary: Visualization Terminology
 ;;
 ;; Before diving deeper, let's clarify some terms we'll use throughout:
 ;;
@@ -252,7 +252,7 @@
 ;; **Rendering Target** - The library that produces final output: thi.ng/geom, 
 ;; Vega-Lite, or Plotly.
 
-;; ### 📖 Core Insight: Layers + Operations
+;; ## 📖 Core Insight: Layers + Operations
 ;;
 ;; AlgebraOfGraphics.jl treats visualization with two key ideas:
 ;;
@@ -296,7 +296,7 @@
 ;; This allows factoring out common properties and applying them to
 ;; multiple plot types without repetition.
 
-;; ### 📖 Comparison to ggplot2
+;; ## 📖 Comparison to ggplot2
 ;;
 ;; ggplot2 uses `+` for everything:
 ;; ```r
@@ -313,7 +313,7 @@
 ;; **Why two operators?** The separation brings clarity—`*` means "combine properties" 
 ;; while `+` means "overlay visuals"—and enables composability.
 
-;; ### 📖 Translating to Clojure
+;; ## 📖 Translating to Clojure
 ;;
 ;; Julia's approach relies on custom `*` and `+` operators defined on Layer types,
 ;; using multiple dispatch to handle different type combinations with object-oriented
@@ -331,7 +331,7 @@
 ;; The core design question: how should we structure layer specifications
 ;; so they compose naturally with Clojure's standard library?
 
-;; ### 📖 The Problem: Nested Doesn't Merge
+;; ## 📖 The Problem: Nested Doesn't Merge
 
 (def nested-layer-example
   {:transformation nil
@@ -350,7 +350,7 @@
 
 ;; Nested structure requires a custom `merge-layer` function. Not ideal.
 
-;; ### 📖 The Solution: Flat Structure with Distinctive Keys
+;; ## 📖 The Solution: Flat Structure with Distinctive Keys
 
 (def flat-layer-example
   {:=data {:bill-length-mm [39.1 39.5 40.3]
@@ -362,7 +362,7 @@
    :=alpha 0.5
    :=plottype :scatter})
 
-;; ### 📖 The Solution Works: Standard Merge Composes
+;; ## 📖 The Solution Works: Standard Merge Composes
 
 ;; Standard `merge` preserves all properties - nothing lost:
 
@@ -376,7 +376,7 @@
 ;; Before diving into implementation details, let's preview the key design decisions
 ;; and what the API will look like.
 
-;; ### 📖 Key Design Decisions
+;; ## 📖 Key Design Decisions
 ;;
 ;; **1. Flat structure with distinctive `:=` keys**
 ;;   - Layer specs are plain maps: `{:=data ... :=x ... :=y ... :=plottype ...}`
@@ -410,7 +410,7 @@
 ;;   - Backend selection via `:=target` key
 ;;   - Consistent behavior and theming
 
-;; ### 📖 API Preview
+;; ## 📖 API Preview
 ;;
 ;; The API will consist of:
 ;;
@@ -439,7 +439,7 @@
 ;; **Want to see it in action?** Skip ahead to [Basic Scatter Plots](#basic-scatter-plots)
 ;; to see the API working, or continue reading for implementation details.
 
-;; ### 📖 How Plots are Displayed
+;; ## 📖 How Plots are Displayed
 ;;
 ;; Layer specifications returned by `*` and `+` are **automatically displayed as plots**
 ;; in the notebook. This means you typically don't need to call `plot` explicitly.
@@ -473,7 +473,7 @@
 ;; - Understand how composition merges layers
 ;; - Debug layer construction before rendering
 
-;; ### 📖 Implementation Status
+;; ## 📖 Implementation Status
 ;;
 ;; This notebook implements a working prototype with:
 ;;
@@ -501,6 +501,11 @@
 ;; Missing features are deferred, not abandoned - the design should accommodate
 ;; them without fundamental restructuring.
 
+;; Now that we've explored why a flat structure with distinctive keys works well
+;; for composition, let's see how this design is implemented. The following sections
+;; walk through the key implementation details: rendering targets, delegation strategy,
+;; and the core API functions.
+
 ;; # Rendering Targets
 ;;
 ;; This API is designed to work with multiple **rendering targets**—the actual
@@ -517,7 +522,10 @@
 
 ;; # The Delegation Strategy
 ;;
-;; ### 📖 Core Principle
+;; Since we support multiple rendering targets, we need to decide what to compute
+;; ourselves versus what to delegate to each target library.
+;;
+;; ## 📖 Core Principle
 ;;
 ;; **Statistical transforms require domain computation. Everything else delegates.**
 ;;
@@ -545,19 +553,21 @@
 
 ;; # Malli Schemas
 ;;
-;; The following Malli schemas define the structure and valid values for plot specs,
-;; layers, aesthetics, and inputs. These provide:
-;; - Documentation of expected data shapes
-;; - Runtime validation with clear error messages
-;; - Type safety for plot and layer construction
+;; Before diving into the API implementation, we define the schemas that validate
+;; our plot specifications. These schemas serve three purposes:
 ;;
-;; **Key schema:** `PlotSpec` defines the map structure with `:=layers` and plot-level
-;; properties (`:=target`, `:=width`, `:=height`, scales, etc.).
+;; 1. **Documentation** - They formally specify what constitutes a valid plot
+;; 2. **Runtime validation** - They catch errors early with clear messages
+;; 3. **Type safety** - They ensure plot construction is correct
 ;;
-;; **You can skim this section** - it's reference material. The schemas will be
-;; used by validation helpers later, and referenced in examples as needed.
+;; **You can skip this section** and jump directly to [Basic Scatter Plots](#basic-scatter-plots)
+;; to see the API in action. Come back here later when you want to understand
+;; validation details or see what fields are available.
+;;
+;; **Key schema:** `PlotSpec` defines the complete plot structure with `:=layers`
+;; and plot-level properties (`:=target`, `:=width`, `:=height`, scales, etc.).
 
-;; ### ⚙️ Malli Registry Setup
+;; ## ⚙️ Malli Registry Setup
 ;;
 ;; Create a registry that includes both default schemas and malli.util schemas.
 ;; This enables declarative schema utilities like :merge, :union, :select-keys.
@@ -566,7 +576,7 @@
   "Malli registry with default schemas and util schemas (for :merge, etc.)"
   (merge (m/default-schemas) (mu/schemas)))
 
-;; ### ⚙️ Core Type Schemas
+;; ## ⚙️ Core Type Schemas
 
 (def DataType
   "Schema for column data types.
@@ -591,7 +601,7 @@
    [:enum :sturges :sqrt :rice :freedman-diaconis]
    pos-int?])
 
-;; ### ⚙️ Data Schemas
+;; ## ⚙️ Data Schemas
 
 (def Dataset
   "Schema for dataset input.
@@ -606,7 +616,7 @@
    [:fn {:error/message "Must be a tablecloth dataset"}
     tc/dataset?]])
 
-;; ### ⚙️ Aesthetic Schemas
+;; ## ⚙️ Aesthetic Schemas
 
 (def ColumnReference
   "Schema for referencing a column in the dataset."
@@ -644,7 +654,7 @@
   "Schema for faceting aesthetics (row, col)."
   [:maybe ColumnReference])
 
-;; ### ⚙️ Scale Schemas
+;; ## ⚙️ Scale Schemas
 
 (def ScaleTransform
   "Schema for scale transformations."
@@ -664,13 +674,13 @@
    [:domain {:optional true} ScaleDomain]
    [:transform {:optional true} ScaleTransform]])
 
-;; ### ⚙️ Backend Schemas
+;; ## ⚙️ Backend Schemas
 
 (def Backend
   "Schema for rendering backend selection."
   [:enum :geom :vl :plotly])
 
-;; ### ⚙️ Layer Schema
+;; ## ⚙️ Layer Schema
 
 (def BaseLayer
   "Base layer fields shared across all plot types."
@@ -799,9 +809,15 @@
 
 ;; # Validation Helpers
 ;;
-;; Helper functions for validating layers and providing clear error messages.
+;; These helper functions validate plot specs and layers, providing clear error messages
+;; when something goes wrong. They're used internally by the API constructors and also
+;; available for debugging your plots.
+;;
+;; **Feel free to skip ahead** to [Basic Scatter Plots](#basic-scatter-plots) to see
+;; the API working - these validation helpers will make more sense once you've seen
+;; what they're validating.
 
-;; ### ⚙️ Core Validation Functions
+;; ## ⚙️ Core Validation Functions
 
 (defn validate
   "Validate a value against a schema.
@@ -843,7 +859,7 @@
   [schema value]
   (m/validate schema value))
 
-;; ### ⚙️ Layer-Specific Validation
+;; ## ⚙️ Layer-Specific Validation
 
 (defn validate-layer
   "Validate a layer with context-aware checks.
@@ -941,10 +957,15 @@
 
 ;; # API Implementation
 ;;
-;; This section implements the core API: operators, constructors, and the rendering
-;; function. These are the building blocks users interact with directly.
+;; This section implements the core API: the composition operators (`=*`, `=+`),
+;; constructors (`data`, `mapping`, `scatter`, etc.), and the rendering function.
+;; These are the functions you'll actually call when creating plots.
+;;
+;; **Want to see it in action first?** Jump to [Basic Scatter Plots](#basic-scatter-plots)
+;; to start creating plots, then come back here if you want to understand how
+;; the API is implemented.
 
-;; ### ⚙️ Helper Functions
+;; ## ⚙️ Helper Functions
 
 (defn- plot-spec?
   "Check if x is a plot spec (map with :=layers or plot-level keys).
@@ -959,7 +980,7 @@
        ;; Validates against PlotSpec schema (additional safety check)
        (valid? PlotSpec x)))
 
-;; ### ⚙️ Renderer
+;; ## ⚙️ Renderer
 
 (defmulti plot-impl
   "Internal multimethod for plot dispatch."
@@ -1042,7 +1063,7 @@
   [x]
   (if (sequential? x) x [x]))
 
-;; ### ⚙️ Composition Operators
+;; ## ⚙️ Composition Operators
 
 (defn =*
   "Merge plot specifications (composition).
@@ -1174,7 +1195,10 @@
 
 ;; ## 🧪 Composition Operator Examples
 ;;
-;; These examples test the core compositional semantics of `=*` and `=+`.
+;; These examples demonstrate how the `=*` and `=+` operators work with simplified
+;; plot specs. They focus on the composition mechanics rather than creating actual
+;; visualizations. For complete, working examples with real data and plots, see
+;; [Basic Scatter Plots](#basic-scatter-plots).
 
 ;; ### 🧪 Example: =* Cross-Product Composition
 
@@ -1286,7 +1310,7 @@
                        (= (:=height %) 400)
                        (= (count (:=layers %)) 2))])
 
-;; ### ⚙️ Constructors
+;; ## ⚙️ Constructors
 
 (defn data
   "Attach data to a layer.
@@ -1442,7 +1466,10 @@
 
 ;; ## 🧪 Plot-Level Properties Examples
 ;;
-;; These examples test the plot-level constructors (`target`, `scale`, `size`).
+;; Plot-level properties configure rendering and scales for the entire plot,
+;; as opposed to layer-level properties that apply to individual visual marks.
+;; In practice, you'll typically compose these with data, mappings, and geoms
+;; using `=*`. These isolated examples show what each property constructor returns.
 
 ;; ### 🧪 Example: target Constructor
 
@@ -1538,63 +1565,6 @@
                        (= (:=width %) 800)
                        (= (:=height %) 600)
                        (contains? % :=scale-x))])
-
-;; # Setup & Constants
-;;
-;; These examples demonstrate the design in practice, showing how minimal
-;; delegation works.
-
-;; ### ⚙️ Datasets for Examples
-
-;; Palmer Penguins - 344 observations, 3 species
-(def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
-
-penguins
-
-;; Motor Trend Car Road Tests - 32 automobiles
-(def mtcars (rdatasets/datasets-mtcars))
-
-mtcars
-
-;; Fisher's Iris - 150 flowers, 3 species
-(def iris (rdatasets/datasets-iris))
-
-iris
-
-;; ### ⚙️ Visual Theme Constants
-;;
-;; These constants define the ggplot2-compatible visual theme used across
-;; all rendering targets. Extracted here for maintainability.
-
-;; ggplot2-compatible color palette for categorical variables
-(def ggplot2-colors
-  ["#F8766D" "#00BA38" "#619CFF" "#F564E3"])
-
-;; ggplot2 theme colors
-(def ggplot2-background "#EBEBEB")
-(def ggplot2-grid "#FFFFFF")
-(def ggplot2-default-mark "#333333")
-
-;; Layout constants (extracted magic numbers for maintainability)
-(def default-plot-width 600)
-(def default-plot-height 400)
-(def panel-margin-left 50)
-(def panel-margin-right 50)
-(def panel-margin-top 50)
-(def panel-margin-bottom 50)
-(def facet-label-offset 30)
-(def facet-label-side-offset 20)
-
-;; ### 🧪 Type Information Example
-;;
-;; Let's see Tablecloth's type information in action:
-
-{:bill-length-type (col/typeof (penguins :bill-length-mm))
- :species-type (col/typeof (penguins :species))
- :island-type (col/typeof (penguins :island))}
-
-;; Notice: We get precise type information (`:float64`, `:string`) without
-;; examining values. This eliminates the need for complex type inference.
 
 ;; # Core Implementation: Helpers & Rendering Infrastructure
 ;;
@@ -1985,6 +1955,30 @@ iris
   [transform-result]
   (:points transform-result))
 
+;; ### ⚙️ Visual Theme Constants
+;;
+;; These constants define the ggplot2-compatible visual theme used across
+;; all rendering targets. Extracted here for maintainability.
+
+;; ggplot2-compatible color palette for categorical variables
+(def ggplot2-colors
+  ["#F8766D" "#00BA38" "#619CFF" "#F564E3"])
+
+;; ggplot2 theme colors
+(def ggplot2-background "#EBEBEB")
+(def ggplot2-grid "#FFFFFF")
+(def ggplot2-default-mark "#333333")
+
+;; Layout constants (extracted magic numbers for maintainability)
+(def default-plot-width 600)
+(def default-plot-height 400)
+(def panel-margin-left 50)
+(def panel-margin-right 50)
+(def panel-margin-top 50)
+(def panel-margin-bottom 50)
+(def facet-label-offset 30)
+(def facet-label-side-offset 20)
+
 (defn- color-scale
   "ggplot2-like color scale for categorical data."
   [categories]
@@ -2332,6 +2326,39 @@ iris
         (kind/html (svg/serialize svg-elem))))))
 
 ;; We now have enough implementation to show basic scatter plots.
+
+;; # Example Datasets
+;;
+;; Now that we have the core implementation in place, let's load the datasets
+;; we'll use to demonstrate the API. The following examples will show how the
+;; compositional approach works with real data.
+
+;; Palmer Penguins - 344 observations, 3 species
+(def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
+
+penguins
+
+;; Motor Trend Car Road Tests - 32 automobiles
+(def mtcars (rdatasets/datasets-mtcars))
+
+mtcars
+
+;; Fisher's Iris - 150 flowers, 3 species
+(def iris (rdatasets/datasets-iris))
+
+iris
+
+;; ## Type Information
+;;
+;; Tablecloth provides precise type information for each column, which we use
+;; for type-aware grouping and aesthetic mapping.
+
+{:bill-length-type (col/typeof (penguins :bill-length-mm))
+ :species-type (col/typeof (penguins :species))
+ :island-type (col/typeof (penguins :island))}
+
+;; Notice: We get precise type information (`:float64`, `:string`) without
+;; examining values. This eliminates the need for complex type inference.
 
 ;; # Basic Scatter Plots
 ;; 
@@ -3182,7 +3209,7 @@ iris
 ;; 
 ;; Type-aware grouping: categorical colors create groups for statistical transforms.
 
-;; ### 🧪 Example 5: Grouping with Categorical Color
+;; ## 🧪 Example 5: Grouping with Categorical Color
 
 ;; When you map a **categorical** variable to color, it automatically creates groups
 ;; for statistical transforms. This matches AlgebraOfGraphics.jl and ggplot2 behavior.
@@ -3227,7 +3254,7 @@ iris
 ;; 4. Alpha transparency (0.7) lets you see overlapping bars
 ;; 5. This is different from faceting - bars can overlap/stack
 
-;; ### 🧪 Example 6: Continuous Color (No Grouping)
+;; ## 🧪 Example 6: Continuous Color (No Grouping)
 
 ;; When you map a **continuous** variable to color, it creates a visual gradient
 ;; but does NOT create groups for statistical transforms.
@@ -3256,7 +3283,7 @@ iris
 ;; - Categorical aesthetics → semantic grouping (affects computations)
 ;; - Continuous aesthetics → visual mapping only (no grouping)
 
-;; ### 🧪 Example 7: Explicit Grouping Override
+;; ## 🧪 Example 7: Explicit Grouping Override
 
 ;; You can explicitly control grouping using the `:group` aesthetic.
 ;; This lets you group by one variable while coloring by another.
@@ -3299,7 +3326,7 @@ iris
 ;; 3. Points are colored by sex, but regressions computed per species
 ;; 4. This shows that grouping and color are independent concepts
 
-;; ### 🧪 Example 8: Using `plot` for Spec Inspection and Customization
+;; ## 🧪 Example 8: Using `plot` for Spec Inspection and Customization
 
 ;; Most of the time, layers auto-display and you don't need `plot`.
 ;; But sometimes you want the raw target spec for debugging or customization.
@@ -4361,11 +4388,16 @@ iris
 
 ;; # Validation Examples
 ;;
+;; The API validates plot specs and layers automatically, so you typically don't
+;; need to call validation functions directly. This section shows how validation
+;; works and provides examples for debugging when something goes wrong. These
+;; are advanced examples - feel free to skip if you just want to create plots.
+;;
 ;; The Malli schemas enable validation at two points:
 ;; - Construction time
 ;; - Draw time
 
-;; ### 🧪 Example 1: Valid Layer
+;; ## 🧪 Example 1: Valid Layer
 
 ;; A properly constructed layer passes validation silently
 (validate Layer
@@ -4375,7 +4407,7 @@ iris
            :=plottype :scatter
            :=alpha 0.7})
 
-;; ### 🧪 Example 2: Invalid Alpha (Out of Range)
+;; ## 🧪 Example 2: Invalid Alpha (Out of Range)
 
 ;; Alpha must be between 0.0 and 1.0
 (validate Layer
@@ -4383,14 +4415,14 @@ iris
            :=plottype :scatter
            :=alpha 1.5})
 
-;; ### 🧪 Example 3: Invalid Plot Type
+;; ## 🧪 Example 3: Invalid Plot Type
 
 ;; Plot type must be one of the defined enums
 (validate Layer
           {:=data {:x [1 2 3]}
            :=plottype :invalid-type})
 
-;; ### 🧪 Example 4: Missing Required Aesthetics
+;; ## 🧪 Example 4: Missing Required Aesthetics
 
 ;; Scatter plots require both x and y
 (validate-layer
@@ -4399,7 +4431,7 @@ iris
   ;; Missing :=y!
   :=plottype :scatter})
 
-;; ### 🧪 Example 5: Missing Column in Dataset
+;; ## 🧪 Example 5: Missing Column in Dataset
 
 ;; Column references must exist in the data
 (validate-layer
@@ -4408,7 +4440,7 @@ iris
   :=y :y ;; y column doesn't exist!
   :=plottype :scatter})
 
-;; ### 🧪 Example 6: Programmatic Validation
+;; ## 🧪 Example 6: Programmatic Validation
 
 ;; Check validity without throwing
 (valid? Layer {:=data {:x [1 2 3]} :=plottype :scatter})
@@ -4419,6 +4451,11 @@ iris
 (validate Layer {:=plottype :invalid :=alpha 2.0})
 
 ;; # Design Discussions
+;;
+;; This section dives deeper into specific design decisions and their rationale.
+;; If you're curious about why certain implementation choices were made, or want
+;; to understand the tradeoffs considered, read on. Otherwise, feel free to skip
+;; to the [Conclusion](#conclusion).
 
 ;; ## 📖 Map-Based IR: Separating Layers from Plot Configuration
 ;;
@@ -4695,7 +4732,7 @@ iris
 
 ;; # Conclusion
 
-;; ### 📖 What We've Explored
+;; ## 📖 What We've Explored
 ;;
 ;; This notebook demonstrates a composable graphics API with **minimal delegation**:
 ;;
@@ -4715,7 +4752,7 @@ iris
 ;; - Leverage rendering target polish for rendering
 ;; - Simple, focused implementation
 
-;; ### 📖 Where We Are
+;; ## 📖 Where We Are
 
 ;; So that's the exploration. We set out to see if AlgebraOfGraphics.jl's compositional
 ;; approach could work in Clojure using plain maps and standard operations. The flat
@@ -4735,7 +4772,7 @@ iris
 ;; haven't tested with large datasets yet. But nothing here feels like a fundamental
 ;; blocker—more like things to improve as we learn from usage.
 
-;; ### 📖 What's Missing
+;; ## 📖 What's Missing
 
 ;; This is a prototype, not a complete plotting library. We've got scatter, line,
 ;; histogram, linear regression, and faceting working across three rendering targets.
@@ -4743,7 +4780,7 @@ iris
 ;; plot types, aesthetics, transforms, and coordinate systems. Those aren't abandoned,
 ;; just deferred until we know if this approach is worth pursuing.
 
-;; ### 📖 What Comes Next
+;; ## 📖 What Comes Next
 
 ;; Honestly, we're not sure yet. This could become a new namespace in Tableplot,
 ;; or it could just inform improvements to the existing APIs, or it could stay as
