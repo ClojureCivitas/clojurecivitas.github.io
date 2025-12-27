@@ -2474,6 +2474,8 @@ iris
 
 ;; ### 🧪 Example 1: Simple Scatter Plot (Delegated Domain)
 
+;; **Algebraic style using `=*`:**
+
 (=* (data penguins)
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter))
@@ -2490,6 +2492,21 @@ iris
                        (let [rendered (plot %)]
                          (and (map? (meta rendered))
                               (= (:kindly/kind (meta rendered)) :kind/html))))])
+
+;; **Threading macro style (equivalent):**
+
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=x (first (:=layers %))) :bill-length-mm)
+                       (= (:=y (first (:=layers %))) :bill-depth-mm)
+                       (= (:=plottype (first (:=layers %))) :scatter))])
+
+;; Both forms produce identical results. The threading style is often more
+;; natural in Clojure, while the `=*` style makes the composition operator explicit.
 
 ;; **What happens here**:
 
