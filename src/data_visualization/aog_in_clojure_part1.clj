@@ -500,6 +500,44 @@
 ;; Missing features are deferred, not abandoned - the design should accommodate
 ;; them without fundamental restructuring.
 
+;; # Rendering Targets
+;;
+;; This API is designed to work with multiple **rendering targets**—the actual
+;; visualization libraries that produce the final output. Each target has different
+;; strengths:
+;;
+;; - **`:geom`** ([thi.ng/geom](https://github.com/thi-ng/geom)) - Static SVG, easy to save to files
+;; - **`:vl`** ([Vega-Lite](https://vega.github.io/vega-lite/)) - Interactive web visualizations, some coordinate system limitations
+;; - **`:plotly`** ([Plotly.js](https://plotly.com/javascript/)) - Interactive with 3D support, static export is tricky
+;;
+;; The idea: you write your plot specification once using our API, and it can be
+;; rendered by different targets. This separates **what** you want to visualize from
+;; **how** it gets rendered.
+
+;; # The Delegation Strategy
+;;
+;; ### 📖 Core Principle
+;;
+;; **Statistical transforms require domain computation. Everything else delegates.**
+;;
+;; Transforms like histograms and regression need to know data extents before
+;; computing derived data. So we compute:
+;; - Statistical transforms (histogram bins, regression lines)
+;; - Domains when needed (always for `:geom`, only custom for `:vl`/`:plotly`)
+;; - Type information (from Tablecloth's `col/typeof`)
+;;
+;; We delegate to rendering targets:
+;; - Axis rendering, tick placement, "nice numbers"
+;; - Range computation (pixels/visual coordinates)  
+;; - Scale merging across layers
+;;
+;; This gives us control where it matters (correctness, consistency) while
+;; leveraging mature tools where they excel (formatting, layout).
+;;
+;; **Why compute transforms ourselves?** Two reasons:
+;; 1. Consistency - visualizations match statistical computations in Clojure libs
+;; 2. Efficiency - compute summaries (20 histogram bars), not raw data (1M points)
+
 ;; # Malli Schemas
 ;;
 ;; The following Malli schemas define the structure and valid values for plot specs,
@@ -878,45 +916,10 @@
 ;; - No collision with data columns (`:=plottype` ≠ `:plottype`)
 ;; - All standard library operations work: `assoc`, `update`, `mapv`, `filter`, `into`
 
-;; # Rendering Targets
+;; # API Implementation
 ;;
-;; This API is designed to work with multiple **rendering targets**—the actual
-;; visualization libraries that produce the final output. Each target has different
-;; strengths:
-;;
-;; - **`:geom`** ([thi.ng/geom](https://github.com/thi-ng/geom)) - Static SVG, easy to save to files
-;; - **`:vl`** ([Vega-Lite](https://vega.github.io/vega-lite/)) - Interactive web visualizations, some coordinate system limitations
-;; - **`:plotly`** ([Plotly.js](https://plotly.com/javascript/)) - Interactive with 3D support, static export is tricky
-;;
-;; The idea: you write your plot specification once using our API, and it can be
-;; rendered by different targets. This separates **what** you want to visualize from
-;; **how** it gets rendered.
-
-;; # The Delegation Strategy
-;;
-;; ### 📖 Core Principle
-;;
-;; **Statistical transforms require domain computation. Everything else delegates.**
-;;
-;; Transforms like histograms and regression need to know data extents before
-;; computing derived data. So we compute:
-;; - Statistical transforms (histogram bins, regression lines)
-;; - Domains when needed (always for `:geom`, only custom for `:vl`/`:plotly`)
-;; - Type information (from Tablecloth's `col/typeof`)
-;;
-;; We delegate to rendering targets:
-;; - Axis rendering, tick placement, "nice numbers"
-;; - Range computation (pixels/visual coordinates)  
-;; - Scale merging across layers
-;;
-;; This gives us control where it matters (correctness, consistency) while
-;; leveraging mature tools where they excel (formatting, layout).
-;;
-;; **Why compute transforms ourselves?** Two reasons:
-;; 1. Consistency - visualizations match statistical computations in Clojure libs
-;; 2. Efficiency - compute summaries (20 histogram bars), not raw data (1M points)
-;;
-;; # Proposed Design
+;; This section implements the core API: operators, constructors, and the rendering
+;; function. These are the building blocks users interact with directly.
 
 ;; ### ⚙️ Helper Functions
 
