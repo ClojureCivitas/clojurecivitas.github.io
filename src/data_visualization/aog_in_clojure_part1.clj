@@ -7,7 +7,8 @@
                   :description "A Design Exploration for a plotting API"
                   :category :data-visualization
                   :tags [:datavis]
-                  :keywords [:datavis]}}}
+                  :keywords [:datavis]
+                  :toc true}}}
 (ns data-visualization.aog-in-clojure-part1)
 
 ^{:kindly/hide-code true
@@ -126,9 +127,8 @@
 ;; decisions. This is for Tableplot maintainers, contributors, and curious users who
 ;; want to provide early feedback on the approach.
 
-;; # Setup
-;;
-;; ### 📖 Reading This Document
+                                        ;
+;; # 📖 Reading This Document
 ;;
 ;; Throughout this document, section headers use emojis to indicate the type of content:
 ;;
@@ -139,6 +139,9 @@
 ;; This convention helps you navigate the document and quickly find what you're looking for:
 ;; conceptual explanations (📖), working code (⚙️), or usage examples (🧪).
 
+;; # Setup
+
+;; ### ⚙️ Dependencies
 ;;
 ;; This notebook relies on several libraries from the Clojure data science ecosystem.
 ;; Here's what we use and why:
@@ -185,6 +188,10 @@
 ;; [**Fastmath**](https://github.com/generateme/fastmath) handles our statistical computations, particularly linear
 ;; regression. It's a comprehensive math library for Clojure.
 ;;
+;; [**Malli**](https://github.com/metosin/malli) provides schema validation for plot specifications.
+;; We define schemas for layers, aesthetics, and plot types to catch errors early
+;; and generate helpful error messages. Validation is optional but recommended.
+;;
 ;; [**RDatasets**](https://vincentarelbundock.github.io/Rdatasets/articles/data.html) provides classic datasets (penguins, mtcars, iris) for examples.
 ;; It is made available in Clojure through [metamorph.ml](https://github.com/scicloj/metamorph.ml).
 
@@ -202,9 +209,9 @@
 ;; This approach of 
 ;; ["describing a higher-level 'intent' how your tabular data should be transformed"](https://aog.makie.org/dev/tutorials/intro-i)
 ;; aligns naturally with Clojure's functional and declarative tendencies—something
-;; we've seen in libraries like Hanami, Oz, and others in the ecosystem.
+;; we've seen in libraries like Hanami, Tableplot, and others in the ecosystem.
 ;;
-;; We chose AoG because it seemed small enough to grasp and reproduce, while still being
+;; We chose AoG because it seemed well-thought, small enough to grasp and reproduce, while still being
 ;; reasonably complete in its scope.
 
 ;; ### 📖 Glossary: Visualization Terminology
@@ -378,7 +385,7 @@
 ;; **2. Two compositional operators**
 ;;   - `=*` merges layers (like Julia's `*`): `(=* data mapping geom)`
 ;;   - `=+` overlays layers (like Julia's `+`): `(=+ scatter linear)`
-;;   - Threading-macro friendly: `(-> data (mapping :x :y) (scatter))`
+;;   - Threading-macro friendly, implicitly merging: `(-> data (mapping :x :y) (scatter))`
 ;;
 ;; **3. Minimal delegation strategy**
 ;;   - We compute: statistical transforms, domains (when needed)
@@ -395,9 +402,10 @@
 ;;   - Plot specs are maps with `:=layers` key containing vector of layer specs
 ;;   - Plot-level properties (`:=target`, `:=width`, `:=height`, scales) separate from layers
 ;;   - Enables clear distinction between plot configuration and layer data
+;;   - This separation enables clean composition and clear semantics for plot configuration
 ;;
 ;; **6. Multi-target rendering**
-;;   - Same plot spec works across `:geom`, `:vl`, `:plotly`
+;;   - Same plot spec works across `:geom`, `:vl`, `:plotly` rendering targsts
 ;;   - Backend selection via `:=target` key
 ;;   - Consistent behavior and theming
 
@@ -405,38 +413,134 @@
 ;;
 ;; The API will consist of:
 ;;
-;; **Constructors** - build partial layer specs:
+;; **Layer-level properties** - build partial layer specs:
 ;; - `(data dataset)` - attach data
 ;; - `(mapping :x :y {:color :species})` - define aesthetic mappings  
 ;; - `(scatter)`, `(linear)`, `(histogram)` - specify plot types/transforms
 ;;
+;; **Plot-level properties** - configure rendering and scales:
+;; - `(target :geom)` - specify rendering target (:geom, :vl, :plotly)
+;; - `(size 800 600)` - set plot dimensions
+;; - `(scale :x {:domain [0 100]})` - customize axis scales
+;; - `(facet {:col :species})` - add faceting
+                                        ;
 ;; **Composition operators** - combine specs:
 ;; - `(=* data mapping geom)` - merge properties (cross-product for layers, merge for plot-level)
 ;; - `(=+ scatter linear)` - overlay layers with inheritance (concatenate `:=layers`, merge plot-level)
-;;
-;; **Utilities**:
+                                        ;
+;; **Rendering**:
 ;; - `(plot spec)` - explicitly render (usually auto-displays)
-;; - `(facet spec {:col :species})` - add faceting
-;; - `(scale :x {:domain [0 100]})` - customize scales
-;; - `(target :geom)`, `(size 800 600)` - set plot-level properties
 ;;
 ;; **Auto-display:** Plot specs returned by `=*`, `=+`, and constructors automatically
 ;; display as plots in Kindly-compatible notebooks. Use `kind/pprint` to inspect
 ;; the raw plot spec map (with `:=layers` key) instead.
+;;
+;; **Want to see it in action?** Skip ahead to [Basic Scatter Plots](#basic-scatter-plots)
+;; to see the API working, or continue reading for implementation details.
 
-;; ### 📖 What's Coming
+;; ### 📖 How Plots are Displayed
 ;;
-;; The rest of this notebook:
-;; 1. Schemas and validation (reference material, can skim)
-;; 2. Implementation (operators, constructors, helpers, rendering)
-;; 3. Examples showing the API in action (scatter, linear, histogram, faceting)
-;; 4. Multi-target rendering (same spec, different backends)
+;; Layer specifications returned by `*` and `+` are **automatically displayed as plots**
+;; in the notebook. This means you typically don't need to call `plot` explicitly.
 ;;
-;; **Note on IR:** The internal representation uses maps with `:=layers` keys,
-;; separating plot-level properties from layer specs. This enables clean composition
-;; and clear semantics for plot configuration.
+;; ```clojure
+;; ;; Auto-displays as plot:
+;; (-> penguins
+;;     (mapping :bill-length-mm :bill-depth-mm)
+;;     (scatter))
 ;;
-;; If you want to skip ahead to see it working, jump to "Basic Scatter Plots".
+;; ;; To inspect the raw layer data, use kind/pprint:
+;; (kind/pprint
+;;   (-> penguins
+;;       (mapping :bill-length-mm :bill-depth-mm)
+;;       (scatter)))
+;;
+;; ;; To get the target spec (for debugging or customization):
+;; (plot
+;;   (-> penguins
+;;       (mapping :bill-length-mm :bill-depth-mm)
+;;       (scatter)))
+;; ```
+;;
+;; **When to use `plot` explicitly**:
+;; - Debugging: Inspect the Plotly.js/Vega-Lite/SVG spec
+;; - Customization: Post-process the spec with target-specific features
+;; - Extension: Add features not yet supported by the layer API
+;;
+;; **When to use `kind/pprint`**:
+;; - Inspect the raw layer specification (`:=...` keys)
+;; - Understand how composition merges layers
+;; - Debug layer construction before rendering
+
+;; ### 📖 Implementation Status
+;;
+;; This notebook implements a working prototype with:
+;;
+;; **Core features:**
+;; - ✅ Compositional operators (`=*`, `=+`) with threading-macro support
+;; - ✅ Plain Clojure data (maps, vectors - no dataset required)
+;; - ✅ Type-aware grouping (categorical aesthetics create groups)
+;; - ✅ Three rendering targets (`:geom`, `:vl`, `:plotly`) with feature parity
+;; - ✅ Malli schemas with validation and helpful error messages
+;;
+;; **Plot types & transforms:**
+;; - ✅ Scatter, line, histogram
+;; - ✅ Linear regression (with grouping support)
+;; - ✅ Faceting (row, column, and grid layouts)
+;; - ✅ Custom scale domains
+;;
+;; **Not yet implemented** (compared to `tableplot.v1.plotly`):
+;; - ⚠️ Bar, box, violin, density, smooth, heatmap, text, segment
+;; - ⚠️ Additional aesthetics: size, symbol/shape, fill, line-width  
+;; - ⚠️ Transforms: kernel density, loess/spline smoothing, correlation
+;; - ⚠️ Coordinate systems: 3D, polar, geographic
+;; - ⚠️ Advanced layouts: subplots, secondary axes, insets
+;; - ⚠️ Interactivity: hover templates, click events, selections
+;;
+;; Missing features are deferred, not abandoned - the design should accommodate
+;; them without fundamental restructuring.
+
+;; # Rendering Targets
+;;
+;; This API is designed to work with multiple **rendering targets**—the actual
+;; visualization libraries that produce the final output. Each target has different
+;; strengths:
+;;
+;; - **`:geom`** ([thi.ng/geom](https://github.com/thi-ng/geom)) - Static SVG, easy to save to files
+;; - **`:vl`** ([Vega-Lite](https://vega.github.io/vega-lite/)) - Interactive web visualizations, some coordinate system limitations
+;; - **`:plotly`** ([Plotly.js](https://plotly.com/javascript/)) - Interactive with 3D support, static export is tricky
+;;
+;; The idea: you write your plot specification once using our API, and it can be
+;; rendered by different targets. This separates **what** you want to visualize from
+;; **how** it gets rendered.
+
+;; # The Delegation Strategy
+;;
+;; ### 📖 Core Principle
+;;
+;; **Statistical transforms require domain computation. Everything else delegates.**
+;;
+;; Transforms like histograms and regression need to know data extents before
+;; computing derived data. So we compute:
+;; - Statistical transforms (histogram bins, regression lines)
+;; - Domains when needed (always for `:geom`, only custom for `:vl`/`:plotly`)
+;; - Type information (from Tablecloth's `col/typeof`)
+;;
+;; We delegate to rendering targets:
+;; - Axis rendering, tick placement, "nice numbers"
+;; - Range computation (pixels/visual coordinates)  
+;; - Scale merging across layers
+;;
+;; This gives us control where it matters (correctness, consistency) while
+;; leveraging mature tools where they excel (formatting, layout).
+;;
+;; **Why compute transforms ourselves?**
+
+;; 1. Consistency - We want the isualizations to match the 
+;; statistical computations of our Clojure libraries.
+;; 2. Efficiency - Especially with browser-based rendering targets,
+;; what we wish to pass to the target is summaries (say, 20 histogram bars)
+;; tather than raw data (say, 1M points).
 
 ;; # Malli Schemas
 ;;
@@ -816,121 +920,10 @@
 ;; - No collision with data columns (`:=plottype` ≠ `:plottype`)
 ;; - All standard library operations work: `assoc`, `update`, `mapv`, `filter`, `into`
 
-;; # Rendering Targets
+;; # API Implementation
 ;;
-;; This API is designed to work with multiple **rendering targets**—the actual
-;; visualization libraries that produce the final output. Each target has different
-;; strengths:
-;;
-;; - **`:geom`** ([thi.ng/geom](https://github.com/thi-ng/geom)) - Static SVG, easy to save to files
-;; - **`:vl`** ([Vega-Lite](https://vega.github.io/vega-lite/)) - Interactive web visualizations, some coordinate system limitations
-;; - **`:plotly`** ([Plotly.js](https://plotly.com/javascript/)) - Interactive with 3D support, static export is tricky
-;;
-;; The idea: you write your plot specification once using our API, and it can be
-;; rendered by different targets. This separates **what** you want to visualize from
-;; **how** it gets rendered.
-
-;; # The Delegation Strategy
-;;
-;; ### 📖 Core Principle
-;;
-;; **Statistical transforms require domain computation. Everything else delegates.**
-;;
-;; Transforms like histograms and regression need to know data extents before
-;; computing derived data. So we compute:
-;; - Statistical transforms (histogram bins, regression lines)
-;; - Domains when needed (always for `:geom`, only custom for `:vl`/`:plotly`)
-;; - Type information (from Tablecloth's `col/typeof`)
-;;
-;; We delegate to rendering targets:
-;; - Axis rendering, tick placement, "nice numbers"
-;; - Range computation (pixels/visual coordinates)  
-;; - Scale merging across layers
-;;
-;; This gives us control where it matters (correctness, consistency) while
-;; leveraging mature tools where they excel (formatting, layout).
-;;
-;; **Why compute transforms ourselves?** Two reasons:
-;; 1. Consistency - visualizations match statistical computations in Clojure libs
-;; 2. Efficiency - compute summaries (20 histogram bars), not raw data (1M points)
-;;
-;; # Proposed Design
-;;
-;; ### 📖 API Overview
-;;
-;; The API consists of three parts:
-;;
-;; 1. **Constructors** - Build partial layer specifications
-;; 2. **Composition operators** - Merge layers (`*`) and overlay them (`+`)
-;; 3. **Renderer** - Single `plot` function that interprets layer specs
-;;
-;; **Current Implementation Status**:
-;;
-;; - ✅ Core composition (`*`, `+`, layer merging)
-;; - ✅ Threading-macro friendly API (`->` works naturally)
-;; - ✅ Minimal delegation (compute transforms, delegate rendering)
-;; - ✅ Type information from Tablecloth
-;; - ✅ Type-aware grouping (categorical color groups, continuous doesn't)
-;; - ✅ Explicit `:group` aesthetic for override control
-;; - ✅ Three rendering targets (:geom, :vl, :plotly - all with full feature parity)
-;; - ✅ Statistical transforms: linear regression, histograms (with grouping support)
-;; - ✅ Faceting (row, column, and grid faceting across all targets)
-;; - ✅ Custom scale domains
-;; - ✅ ggplot2-compatible theming
-;; - ✅ Plain Clojure data structures (maps, vectors - no dataset required)
-;; - ✅ Malli schemas for layer validation
-;; - ✅ Column existence validation with helpful error messages
-;;
-;; **What's Missing (compared to tableplot.v1.plotly)**:
-;;
-;; - ⚠️ Plot types: line, bar, box, violin, density, smooth, heatmap, text, segment
-;; - ⚠️ Additional aesthetics: size, symbol/shape, opacity, fill, line-width
-;; - ⚠️ Statistical transforms: density estimation, smooth (loess/spline), correlation
-;; - ⚠️ Coordinate systems: 3D, polar, geo
-;; - ⚠️ Advanced layouts: subplots, secondary axes, insets
-;; - ⚠️ Interactivity: hover templates, click events, selections
-;; - ⚠️ Handling missing data
-;;
-;; **Design Philosophy Differences**:
-;;
-;; This API prioritizes composability and algebraic clarity over feature completeness.
-;; The focus is on a minimal, well-understood core that can be extended incrementally.
-;; Missing features are deferred, not abandoned - they can be added as needed while
-;; maintaining the compositional design.
-
-;; ### 📖 How Plots are Displayed
-;;
-;; Layer specifications returned by `*` and `+` are **automatically displayed as plots**
-;; in the notebook. This means you typically don't need to call `plot` explicitly.
-;;
-;; ```clojure
-;; ;; Auto-displays as plot:
-;; (-> penguins
-;;     (mapping :bill-length-mm :bill-depth-mm)
-;;     (scatter))
-;;
-;; ;; To inspect the raw layer data, use kind/pprint:
-;; (kind/pprint
-;;   (-> penguins
-;;       (mapping :bill-length-mm :bill-depth-mm)
-;;       (scatter)))
-;;
-;; ;; To get the target spec (for debugging or customization):
-;; (plot
-;;   (-> penguins
-;;       (mapping :bill-length-mm :bill-depth-mm)
-;;       (scatter)))
-;; ```
-;;
-;; **When to use `plot` explicitly**:
-;; - Debugging: Inspect the Plotly.js/Vega-Lite/SVG spec
-;; - Customization: Post-process the spec with target-specific features
-;; - Extension: Add features not yet supported by the layer API
-;;
-;; **When to use `kind/pprint`**:
-;; - Inspect the raw layer specification (`:=...` keys)
-;; - Understand how composition merges layers
-;; - Debug layer construction before rendering
+;; This section implements the core API: operators, constructors, and the rendering
+;; function. These are the building blocks users interact with directly.
 
 ;; ### ⚙️ Helper Functions
 
@@ -1048,36 +1041,44 @@
   ([x]
    (displays-as-plot x))
   ([x y]
-   (let [;; Extract layers (default to empty if no :=layers key)
+   (let [;; Extract layers from each spec (default to empty if no :=layers key)
          x-layers (get x :=layers [])
          y-layers (get y :=layers [])
 
-         ;; Extract plot-level properties
+         ;; Extract plot-level properties (everything except :=layers)
          x-plot (dissoc x :=layers)
          y-plot (dissoc y :=layers)
 
          ;; Cross-product merge of layers
+         ;; This implements the "multiplication" semantics:
+         ;; - (data d) * (mapping :x :y) => layer with both data and mapping
+         ;; - Each layer from x combines with each layer from y
          merged-layers (cond
-                         ;; Both have layers: cross-product
+                         ;; Both have layers: full cross-product
+                         ;; Example: [a b] * [c d] => [a+c, a+d, b+c, b+d]
                          (and (seq x-layers) (seq y-layers))
                          (vec (for [a x-layers, b y-layers]
                                 (merge a b)))
 
-                         ;; Only one has layers: keep them
+                         ;; Only x has layers: keep them unchanged
                          (seq x-layers) x-layers
+
+                         ;; Only y has layers: keep them unchanged
                          (seq y-layers) y-layers
 
-                         ;; Neither has layers: empty
+                         ;; Neither has layers: result has no layers
                          :else [])
 
-         ;; Merge plot-level properties (right wins)
+         ;; Merge plot-level properties (right side wins for conflicts)
+         ;; This handles properties like :=target, :=width, :=height, scales
          merged-plot (merge x-plot y-plot)]
 
-     ;; Return map with both
+     ;; Return combined spec with auto-display wrapper
      (displays-as-plot
       (cond-> merged-plot
         (seq merged-layers) (assoc :=layers merged-layers)))))
   ([x y & more]
+   ;; Multi-arg: reduce left-to-right
    (displays-as-plot
     (reduce =* (=* x y) more))))
 
@@ -1111,39 +1112,162 @@
   ;;               {:=data penguins :=x :x :=y :y :=plottype :line :=transformation :linear}]}"
   [& specs]
   (if (= (count specs) 1)
+    ;; Single spec: just wrap with auto-display
     (displays-as-plot (first specs))
+
+    ;; Multiple specs: overlay with inheritance
     (let [[first-spec & rest-specs] specs
           first-layers (:=layers first-spec [])
           first-plot-props (dissoc first-spec :=layers)
 
-          ;; Extract a "base layer" to merge with subsequent specs
-          ;; This is the common properties from the first spec's first layer
+          ;; Extract a "base layer" from first spec to merge with subsequent specs
+          ;; This enables inheritance: (-> base (=+ layer1 layer2))
+          ;; where layer1 and layer2 inherit properties from base
           base-layer (when (seq first-layers) (first first-layers))
 
-          ;; Check if base layer has a plottype (complete layer)
+          ;; Check if base layer is complete (has a plottype)
+          ;; If not, it's just providing shared properties (data, aesthetics)
           base-has-plottype? (and base-layer (:=plottype base-layer))
 
           ;; For each subsequent spec, merge with base layer before extracting layers
+          ;; This implements inheritance: each new layer gets base's data/aesthetics
           merged-rest-layers (mapcat (fn [spec]
                                        (let [spec-layers (:=layers spec [])]
                                          (if (and base-layer (seq spec-layers))
                                            ;; Merge each layer from this spec with base layer
+                                           ;; This is what makes (-> base (=+ s1 s2)) work
                                            (map #(merge base-layer %) spec-layers)
                                            ;; No base layer or no spec layers, just use spec layers
                                            spec-layers)))
                                      rest-specs)
 
           ;; Combine layers: include first-layers only if base has plottype
+          ;; (if base is incomplete, it's only for inheritance, not rendering)
           all-layers (vec (if base-has-plottype?
                             (concat first-layers merged-rest-layers)
                             merged-rest-layers))
 
-          ;; Merge all plot-level properties
+          ;; Merge all plot-level properties (right side wins for conflicts)
+          ;; This handles :=target, :=width, :=height, scales
           all-plot-props (apply merge first-plot-props (map #(dissoc % :=layers) rest-specs))]
 
       (displays-as-plot
        (cond-> all-plot-props
          (seq all-layers) (assoc :=layers all-layers))))))
+
+;; ## 🧪 Composition Operator Examples
+;;
+;; These examples test the core compositional semantics of `=*` and `=+`.
+
+;; ### 🧪 Example: =* Cross-Product Composition
+
+;; The `=*` operator performs cross-product merge of layers:
+
+(kind/pprint
+ (=* {:=layers [{:=x :a}]}
+     {:=layers [{:=y :b}]}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 1)
+                       (= (:=x (first (:=layers %))) :a)
+                       (= (:=y (first (:=layers %))) :b))])
+
+;; Multiple layers create cross-products:
+
+(kind/pprint
+ (=* {:=layers [{:=x :a} {:=x :b}]}
+     {:=layers [{:=y :c} {:=y :d}]}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 4)
+                       ;; Should have all combinations: (a,c), (a,d), (b,c), (b,d)
+                       (some (fn [layer] (and (= (:=x layer) :a) (= (:=y layer) :c))) (:=layers %))
+                       (some (fn [layer] (and (= (:=x layer) :a) (= (:=y layer) :d))) (:=layers %))
+                       (some (fn [layer] (and (= (:=x layer) :b) (= (:=y layer) :c))) (:=layers %))
+                       (some (fn [layer] (and (= (:=x layer) :b) (= (:=y layer) :d))) (:=layers %)))])
+
+;; ### 🧪 Example: =* Merges Plot-Level Properties
+
+;; Plot-level properties (non-layer keys) merge with right-side wins:
+
+(kind/pprint
+ (=* {:=layers [{:=x :a}] :=target :geom}
+     {:=layers [{:=y :b}] :=width 800}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=target %) :geom)
+                       (= (:=width %) 800)
+                       (= (count (:=layers %)) 1)
+                       (= (:=x (first (:=layers %))) :a)
+                       (= (:=y (first (:=layers %))) :b))])
+
+;; Right-side wins for conflicting plot-level properties:
+
+(kind/pprint
+ (=* {:=target :geom :=width 400}
+     {:=target :vl :=height 300}))
+
+(kind/test-last [#(and (map? %)
+                       (= (:=target %) :vl)
+                       (= (:=width %) 400)
+                       (= (:=height %) 300))])
+
+;; ### 🧪 Example: =+ Overlay Without Inheritance
+
+;; The `=+` operator concatenates layers when both specs have plottypes:
+
+(kind/pprint
+ (=+ {:=layers [{:=plottype :scatter :=alpha 0.5}]}
+     {:=layers [{:=plottype :line :=color :blue}]}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       (= (:=plottype (first (:=layers %))) :scatter)
+                       (= (:=plottype (second (:=layers %))) :line)
+                       (= (:=alpha (first (:=layers %))) 0.5)
+                       (= (:=color (second (:=layers %))) :blue))])
+
+;; ### 🧪 Example: =+ Inheritance Pattern
+
+;; When first spec has incomplete layer (no plottype), it provides shared properties:
+
+(kind/pprint
+ (=+ {:=layers [{:=data {:x [1 2 3] :y [4 5 6]} :=x :x :=y :y}]}
+     {:=layers [{:=plottype :scatter}]}
+     {:=layers [{:=plottype :line}]}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       ;; Both layers inherit data and aesthetics from base
+                       (= (:=data (first (:=layers %))) {:x [1 2 3] :y [4 5 6]})
+                       (= (:=data (second (:=layers %))) {:x [1 2 3] :y [4 5 6]})
+                       (= (:=x (first (:=layers %))) :x)
+                       (= (:=x (second (:=layers %))) :x)
+                       (= (:=y (first (:=layers %))) :y)
+                       (= (:=y (second (:=layers %))) :y)
+                       ;; Each has its own plottype
+                       (= (:=plottype (first (:=layers %))) :scatter)
+                       (= (:=plottype (second (:=layers %))) :line))])
+
+;; This is the pattern used in threading forms:
+;; (-> (mapping data :x :y) (=+ (scatter) (linear)))
+
+;; ### 🧪 Example: =+ Merges Plot-Level Properties
+
+(kind/pprint
+ (=+ {:=layers [{:=plottype :scatter}] :=target :geom :=width 600}
+     {:=layers [{:=plottype :line}] :=height 400}))
+
+(kind/test-last [#(and (map? %)
+                       (= (:=target %) :geom)
+                       (= (:=width %) 600)
+                       (= (:=height %) 400)
+                       (= (count (:=layers %)) 2))])
 
 ;; ### ⚙️ Constructors
 
@@ -1221,23 +1345,23 @@
   "Add faceting to a plot specification.
   
   Args:
-  - spec: Plot spec with :=layers
   - facet-spec: Map with :row and/or :col keys specifying faceting variables
   
-  Returns plot spec with faceting applied to all layers.
+  Returns layer spec with faceting properties.
+  
+  When called with spec as first arg, merges faceting into that spec.
   
   Examples:
-  (facet spec {:col :species})
-  (facet spec {:row :sex :col :island})
+  (facet {:col :species})
+  (facet {:row :sex :col :island})
   
   Threading-friendly:
   (-> penguins (mapping :x :y) (scatter) (facet {:col :species}))"
-  [spec facet-spec]
-  (displays-as-plot
+  ([facet-spec]
    (let [facet-keys (update-keys facet-spec =key)]
-     (update spec :=layers
-             (fn [layers]
-               (mapv #(merge % facet-keys) layers))))))
+     {:=layers [facet-keys]}))
+  ([spec facet-spec]
+   (=* spec (facet facet-spec))))
 
 (defn scale
   "Specify scale properties for an aesthetic.
@@ -1299,12 +1423,111 @@
   ([spec width height]
    (=* spec (size width height))))
 
-;; # Examples
+;; ## 🧪 Plot-Level Properties Examples
+;;
+;; These examples test the plot-level constructors (`target`, `scale`, `size`).
+
+;; ### 🧪 Example: target Constructor
+
+;; The `target` constructor sets the rendering backend:
+
+(kind/pprint
+ (target :vl))
+
+(kind/test-last [#(and (map? %)
+                       (= (:=target %) :vl)
+                       (not (contains? % :=layers)))])
+
+;; Threading form merges target with existing spec:
+
+(kind/pprint
+ (-> {:=layers [{:=data {:x [1 2 3] :y [4 5 6]}}]}
+     (target :plotly)))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=target %) :plotly)
+                       (= (:=data (first (:=layers %))) {:x [1 2 3] :y [4 5 6]}))])
+
+;; ### 🧪 Example: scale Constructor
+
+;; The `scale` constructor sets custom domains:
+
+(kind/pprint
+ (scale :x {:domain [0 100]}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=scale-x)
+                       (= (get-in % [:=scale-x :domain]) [0 100])
+                       (not (contains? % :=layers)))])
+
+;; Multiple scales can be composed:
+
+(kind/pprint
+ (=* (scale :x {:domain [0 100]})
+     (scale :y {:domain [0 50]})))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=scale-x)
+                       (contains? % :=scale-y)
+                       (= (get-in % [:=scale-x :domain]) [0 100])
+                       (= (get-in % [:=scale-y :domain]) [0 50]))])
+
+;; Threading form merges scale with plot spec:
+
+(kind/pprint
+ (-> {:=layers [{:=x :a :=y :b}]}
+     (scale :x {:domain [30 60]})))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (contains? % :=scale-x)
+                       (= (get-in % [:=scale-x :domain]) [30 60]))])
+
+;; ### 🧪 Example: size Constructor
+
+;; The `size` constructor sets plot dimensions:
+
+(kind/pprint
+ (size 800 600))
+
+(kind/test-last [#(and (map? %)
+                       (= (:=width %) 800)
+                       (= (:=height %) 600)
+                       (not (contains? % :=layers)))])
+
+;; Threading form merges size with plot spec:
+
+(kind/pprint
+ (-> {:=layers [{:=x :a :=y :b}]}
+     (size 1000 500)))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=width %) 1000)
+                       (= (:=height %) 500))])
+
+;; ### 🧪 Example: Composing Multiple Plot-Level Properties
+
+;; All plot-level properties compose via `=*`:
+
+(kind/pprint
+ (=* (target :vl)
+     (size 800 600)
+     (scale :x {:domain [0 100]})))
+
+(kind/test-last [#(and (map? %)
+                       (= (:=target %) :vl)
+                       (= (:=width %) 800)
+                       (= (:=height %) 600)
+                       (contains? % :=scale-x))])
+
+;; # Setup & Constants
 ;;
 ;; These examples demonstrate the design in practice, showing how minimal
 ;; delegation works.
 
-;; ### ⚙️ Setup: Load Datasets
+;; ### ⚙️ Datasets for Examples
 
 ;; Palmer Penguins - 344 observations, 3 species
 (def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
@@ -1321,7 +1544,7 @@ mtcars
 
 iris
 
-;; # Visual Theme Constants
+;; ### ⚙️ Visual Theme Constants
 ;;
 ;; These constants define the ggplot2-compatible visual theme used across
 ;; all rendering targets. Extracted here for maintainability.
@@ -1356,7 +1579,13 @@ iris
 ;; Notice: We get precise type information (`:float64`, `:string`) without
 ;; examining values. This eliminates the need for complex type inference.
 
-;; ## ⚙️ Implementation: Helper Functions & :geom Target
+;; # Core Implementation: Helpers & Rendering Infrastructure
+;;
+;; This section contains the foundational helper functions and the core
+;; rendering infrastructure for the :geom target. These are used by all
+;; plot types but aren't part of the user-facing API.
+
+;; ## Helper Functions & Utilities
 ;;
 ;; Before we can render examples, we need basic implementation.
 ;; This version follows the minimal delegation strategy.
@@ -1406,12 +1635,32 @@ iris
   (when col-key
     (let [col-names (set (tc/column-names dataset))]
       (when-not (contains? col-names col-key)
-        (throw (ex-info (str "Column " col-key " not found in dataset")
-                        {:column col-key
-                         :context context
-                         :available-columns (vec col-names)
-                         :suggestion (str "Did you mean one of: " (pr-str (vec col-names)) "?")}))))
-    col-key))
+        (let [;; Find similar column names (simple string similarity)
+              col-name-str (name col-key)
+              similar-cols (filter (fn [available-col]
+                                     (let [available-str (name available-col)
+                                           ;; Check for substring match or similar length
+                                           substring-match? (or (.contains available-str col-name-str)
+                                                                (.contains col-name-str available-str))
+                                           similar-length? (< (Math/abs (- (count available-str)
+                                                                           (count col-name-str)))
+                                                              3)]
+                                       (or substring-match? similar-length?)))
+                                   col-names)
+
+              ;; Build error message with helpful suggestions
+              error-msg (str "Column " col-key " not found in dataset")
+              suggestion (if (seq similar-cols)
+                           (str "Did you mean one of: " (pr-str (vec (sort similar-cols))) "?")
+                           (str "Available columns: " (pr-str (vec (sort col-names)))))]
+
+          (throw (ex-info error-msg
+                          {:column col-key
+                           :context context
+                           :available-columns (vec (sort col-names))
+                           :similar-columns (when (seq similar-cols) (vec (sort similar-cols)))
+                           :suggestion suggestion}))))))
+  col-key)
 
 (defn- validate-columns
   "Validate multiple columns exist in a dataset.
@@ -1528,25 +1777,30 @@ iris
     [{:row-label nil :col-label nil :layers layers-vec}]
 
     ;; Has faceting - split each layer and group by facet
-    (let [;; Split each layer by its facets
+    (let [;; Step 1: Split each layer by its facet variables
+          ;; Each layer becomes multiple {:row-label :col-label :layer} maps
           all-split (mapcat split-by-facets layers-vec)
 
-          ;; Group by row and col labels
+          ;; Step 2: Group split layers by their facet labels
+          ;; Creates map: [row-label col-label] -> [{:layer ...} ...]
           by-labels (group-by (juxt :row-label :col-label) all-split)
 
-          ;; Get all unique combinations (sorted)
+          ;; Step 3: Get unique row and column labels (sorted for consistency)
           row-labels (sort (distinct (map :row-label all-split)))
           col-labels (sort (distinct (map :col-label all-split)))
 
-          ;; Create combinations in row-major order
+          ;; Step 4: Create all combinations in row-major order
+          ;; This ensures consistent panel ordering for rendering
           combinations (for [r row-labels
                              c col-labels]
                          [r c])]
 
-      ;; For each combination, collect all layers
+      ;; Step 5: For each combination, collect all layers for that facet
+      ;; Result: Vector of facet groups, each containing all layers for that facet
       (mapv (fn [[r c]]
               {:row-label r
                :col-label c
+               ;; Extract just the layer maps from the grouped data
                :layers (mapv :layer (get by-labels [r c]))})
             combinations))))
 
@@ -1590,34 +1844,39 @@ iris
         row-facet (:=row layer)
 
         ;; Helper to check if a column is categorical
+        ;; Uses Tablecloth's col/typeof when available, falls back to value inspection
         categorical? (fn [col-key]
                        (when (and col-key dataset)
                          (let [col-type (try
+                                          ;; Primary: Get type from Tablecloth metadata
                                           (col/typeof (get dataset col-key))
                                           (catch Exception _
-                                            ;; Fallback for plain Clojure data
+                                            ;; Fallback: Infer from values for plain Clojure data
                                             (infer-from-values (get dataset col-key))))]
+                           ;; Check if type indicates categorical data
                            (categorical-type? col-type))))
 
-        ;; Collect all grouping columns
+        ;; Collect all grouping columns in order of precedence
         grouping-cols (cond-> []
-                        ;; Explicit group (can be keyword or vector)
+                        ;; 1. Explicit group (highest priority, can be keyword or vector)
                         explicit-group
                         (into (if (vector? explicit-group) explicit-group [explicit-group]))
 
-                        ;; Color if categorical
+                        ;; 2. Color aesthetic if categorical
+                        ;; (continuous color scales don't create groups)
                         (categorical? color-col)
                         (conj color-col)
 
-                        ;; Column facet if categorical
+                        ;; 3. Column facet if categorical
                         (categorical? col-facet)
                         (conj col-facet)
 
-                        ;; Row facet if categorical
+                        ;; 4. Row facet if categorical
                         (categorical? row-facet)
                         (conj row-facet))]
 
-    ;; Remove duplicates, preserve order
+    ;; Remove duplicates while preserving order
+    ;; (e.g., if :color and :col both reference same column)
     (vec (distinct grouping-cols))))
 
 (defn- layer->points
@@ -1714,7 +1973,11 @@ iris
   [categories]
   (zipmap categories (cycle ggplot2-colors)))
 
-;; ## ⚙️ Rendering Multimethod
+;; ## Geom Target Rendering
+;;
+;; Core rendering infrastructure for the :geom (thi.ng/geom) target.
+
+;; ### ⚙️ Core Rendering Multimethods
 ;;
 ;; The render-layer multimethod dispatches on [target plottype-or-transform].
 ;; This allows us to define each rendering strategy separately and introduce
@@ -2064,9 +2327,55 @@ iris
 (defn scatter
   "Create a scatter plot layer.
   
-  Returns a plot spec map with :=layers containing a scatter layer.
+  A scatter plot displays individual data points as marks (circles) positioned
+  according to their x and y values. Useful for showing relationships between
+  two continuous variables or the distribution of discrete points.
   
-  When called with spec-or-attrs as first arg, merges scatter into those layers."
+  Args (when provided):
+  - attrs-or-spec: Either a map of attributes {:alpha 0.5} or a plot spec to compose with
+  - attrs: (2-arg form) Map of visual attributes like {:alpha 0.5}
+  
+  Attributes:
+  - :alpha - Opacity (0.0 to 1.0, default 1.0)
+  
+  Returns:
+  - Plot spec map with :=layers containing a scatter layer
+  
+  Forms:
+  
+  1. No args - Returns basic scatter layer:
+     (scatter)
+     ;; => {:=layers [{:=plottype :scatter}]}
+  
+  2. With attributes - Returns scatter layer with custom attributes:
+     (scatter {:alpha 0.5})
+     ;; => {:=layers [{:=plottype :scatter :=alpha 0.5}]}
+  
+  3. Threading form - Composes with existing spec:
+     (-> (data penguins)
+         (mapping :bill-length-mm :bill-depth-mm)
+         (scatter))
+     ;; => {:=layers [{:=data penguins :=x ... :=y ... :=plottype :scatter}]}
+  
+  4. Threading with attributes:
+     (-> (data penguins)
+         (mapping :bill-length-mm :bill-depth-mm)
+         (scatter {:alpha 0.7}))
+  
+  Example - basic scatter plot:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm)
+      (scatter))
+  
+  Example - semi-transparent points:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm)
+      (scatter {:alpha 0.5}))
+  
+  Example - colored by species:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm {:color :species})
+      (scatter))"
   ([]
    {:=layers [{:=plottype :scatter}]})
   ([attrs-or-spec]
@@ -2211,6 +2520,32 @@ iris
                        (= (:=color (first (:=layers %))) :species)
                        (= (:=x (first (:=layers %))) :bill-length-mm))])
 
+;; ### 🧪 Example 2c: Semi-Transparent Points
+;;
+;; Control visual attributes like opacity using the attributes parameter.
+;; This is useful when you have overlapping points and want to show density.
+
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter {:alpha 0.5}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=alpha (first (:=layers %))) 0.5)
+                       (= (:=plottype (first (:=layers %))) :scatter))])
+
+;; **Combining attributes with aesthetics**:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (scatter {:alpha 0.7}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=alpha (first (:=layers %))) 0.7)
+                       (= (:=color (first (:=layers %))) :species))])
+
+;; ### 🧪 Example 2d: Scale Customization
+;;
 ;; **Combining scale customization**:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
@@ -2298,14 +2633,55 @@ iris
 ;; ### ⚙️ Constructor
 
 (defn linear
-  "Add linear regression transformation.
+  "Add linear regression transformation layer.
 
-  Computes best-fit line through points.
-  When combined with color aesthetic, computes separate regression per group.
+  Computes the best-fit line through data points using linear regression.
+  When combined with a categorical color aesthetic, computes separate
+  regression lines for each group automatically.
 
-  Returns a plot spec map with :=layers containing a linear regression layer.
+  The regression is computed using ordinary least squares (OLS) and rendered
+  as a line layer. This is a statistical transform - it derives new data
+  (the fitted line) from the raw data points.
 
-  When called with spec-or-data as first arg, merges linear into those layers."
+  Args (when provided):
+  - spec-or-data: Plot spec to compose with, or data to create spec from
+
+  Returns:
+  - Plot spec map with :=layers containing a linear regression layer
+
+  Forms:
+
+  1. No args - Returns basic linear regression layer:
+     (linear)
+     ;; => {:=layers [{:=transformation :linear :=plottype :line}]}
+
+  2. Threading with existing spec:
+     (-> (data penguins)
+         (mapping :bill-length-mm :bill-depth-mm)
+         (linear))
+     ;; => Adds regression layer to spec
+
+  3. Composing with data directly:
+     (linear penguins)
+     ;; => {:=layers [{:=data penguins :=transformation :linear :=plottype :line}]}
+
+  Example - simple linear regression:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm)
+      (linear))
+
+  Example - regression with scatter overlay:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm)
+      (=+ (scatter {:alpha 0.5})
+          (linear)))
+
+  Example - grouped regression by species:
+  (-> penguins
+      (mapping :bill-length-mm :bill-depth-mm {:color :species})
+      (=+ (scatter {:alpha 0.5})
+          (linear)))
+  ;; => Computes separate regression line for each species"
   ([]
    (let [result {:=transformation :linear
                  :=plottype :line}]
@@ -2476,6 +2852,36 @@ iris
                          (and (map? (meta rendered))
                               (= (:kindly/kind (meta rendered)) :kind/html))))])
 
+;; ### 🧪 Example 5: Grouped Linear Regression (Color Aesthetic)
+
+;; When a categorical aesthetic (`:color`) is used, linear regression computes
+;; separate regression lines for each group:
+
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (=+ (scatter {:alpha 0.6})
+        (linear)))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       ;; Both layers have color aesthetic
+                       (= (:=color (first (:=layers %))) :species)
+                       (= (:=color (second (:=layers %))) :species)
+                       ;; Second layer is linear transform
+                       (= (:=transformation (second (:=layers %))) :linear)
+                       ;; Verify it renders (triggers grouped regression computation)
+                       (let [rendered (plot %)]
+                         (and (map? (meta rendered))
+                              (= (:kindly/kind (meta rendered)) :kind/html))))])
+
+;; **What happens here**:
+
+;; 1. Dataset is grouped by `:species` (categorical column detected via Tablecloth's `col/typeof`)
+;; 2. Three separate OLS regressions computed (one per species)
+;; 3. Three regression lines rendered with matching colors
+;; 4. Demonstrates type-aware grouping for statistical transforms
+
 ;; Histograms demonstrate statistical transforms that derive new data from the input.
 
 ;; # Histograms
@@ -2487,17 +2893,68 @@ iris
 ;; ### ⚙️ Constructor
 
 (defn histogram
-  "Add histogram transformation.
+  "Add histogram transformation layer.
 
-  Bins continuous data and counts occurrences. Requires domain computation
-  to determine bin edges.
+  Bins continuous data into intervals and counts the number of observations
+  in each bin. The histogram visualizes the distribution of a single variable.
+
+  This is a statistical transform that requires domain computation - it needs
+  to know the data range before determining bin edges. When combined with a
+  categorical aesthetic (e.g., :color), computes separate histograms for each
+  group.
+
+  Args (when provided):
+  - opts-or-spec: Either options map {:bins 20} or plot spec to compose with
+  - opts: (2-arg form) Options map
 
   Options:
-  - :bins - Binning method: :sturges (default), :sqrt, :rice, :freedman-diaconis, or explicit number
+  - :bins - Binning method (default :sturges):
+    - :sturges - Sturges' formula (good for normal distributions)
+    - :sqrt - Square root of n (simple, works for most cases)
+    - :rice - Rice's rule (for larger datasets)
+    - :freedman-diaconis - Freedman-Diaconis rule (robust to outliers)
+    - Integer - Explicit number of bins (e.g., 20)
 
-  Returns a plot spec map with :=layers containing a histogram layer.
+  Returns:
+  - Plot spec map with :=layers containing a histogram layer
 
-  When called with spec-or-opts as first arg, merges histogram into those layers."
+  Forms:
+
+  1. No args - Returns basic histogram with default binning:
+     (histogram)
+     ;; => {:=layers [{:=transformation :histogram :=plottype :bar :=bins :sturges}]}
+
+  2. With options - Custom bin count or method:
+     (histogram {:bins 20})
+     (histogram {:bins :sqrt})
+
+  3. Threading form:
+     (-> penguins
+         (mapping :bill-length-mm nil)
+         (histogram))
+
+  4. Threading with options:
+     (-> penguins
+         (mapping :bill-length-mm nil)
+         (histogram {:bins 30}))
+
+  Example - basic histogram:
+  (-> penguins
+      (mapping :bill-length-mm nil)
+      (histogram))
+
+  Example - custom bin count:
+  (-> penguins
+      (mapping :bill-length-mm nil)
+      (histogram {:bins 20}))
+
+  Example - grouped histogram by species:
+  (-> penguins
+      (mapping :bill-length-mm nil {:color :species})
+      (histogram))
+  ;; => Separate histogram for each species with shared domain
+
+  Note: Histogram only requires :=x mapping, :=y is computed from bin counts."
   ([]
    {:=layers [{:=transformation :histogram
                :=plottype :bar
@@ -2686,7 +3143,28 @@ iris
     (mapping :bill-length-mm nil)
     (histogram {:bins 15}))
 
-;; # Grouping ;; # 📊 Grouping & Color Color
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=transformation (first (:=layers %))) :histogram)
+                       (= (:=bins (first (:=layers %))) 15)
+                       ;; Verify histogram renders
+                       (let [rendered (plot %)]
+                         (and (map? (meta rendered))
+                              (= (:kindly/kind (meta rendered)) :kind/html))))])
+
+;; ### 🧪 Histogram Binning Methods
+
+;; Different binning algorithms are supported:
+
+(-> penguins
+    (mapping :bill-length-mm nil)
+    (histogram {:bins :sqrt}))
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=bins (first (:=layers %))) :sqrt))])
+
+;; # Grouping & Color
 ;; 
 ;; Type-aware grouping: categorical colors create groups for statistical transforms.
 
@@ -2814,7 +3292,11 @@ iris
 ;; See the Multi-Target Rendering section for examples of using `plot`
 ;; with :vl and :plotly targets.
 
-;; # Faceting: Architectural Questions Revealed
+;; # Faceting
+;;
+;; Small multiples: splitting data across rows and columns for comparison.
+
+;; ## 📖 Architectural Considerations
 ;;
 ;; Implementing faceting has exposed several important design questions:
 ;;
@@ -2895,11 +3377,7 @@ iris
 ;; **This is our value proposition**: Compute on JVM, send summaries to browser.
 ;; With faceting, even more important!"
 
-;; # Faceting Exploration
-;;
-;; Let's explore faceting to see what architectural questions emerge.
-
-;; ### 📖 Faceting Design Decisions
+;; ## 📖 Design Decisions
 ;;
 ;; After prototyping, we've decided:
 ;;
@@ -2908,7 +3386,7 @@ iris
 ;; 3. **Shared scales by default** - All facets use same domain (easier comparison)
 ;; 4. **Statistical transforms per-facet** - Histogram by species = 3 separate histograms
 ;;
-;; ### ⚙️ Implementation Strategy
+;; ## ⚙️ Implementation Strategy
 ;;
 ;; 1. `split-by-facets` - Groups data by facet variable(s)
 ;; 2. Apply transforms to each facet group separately
@@ -2918,18 +3396,15 @@ iris
 ;; For :geom target - compute layout positions manually
 ;; For :vl/:plotly targets - could use their grid layout features
 
+;; ## 🧪 Examples
+
 ;; ### 🧪 Example 10: Simple Column Faceting
 ;;
 ;; Facet a scatter plot by species - this creates 3 side-by-side plots.
-;; # Faceting
-;; 
-;; Small multiples: splitting data across rows and columns.
-
-;; Test faceted scatter plot - 3 side-by-side plots
-(facet (=* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-       {:col :species})
+(=* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:col :species}))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -2937,19 +3412,19 @@ iris
 
 ;; Faceted histogram - per-species histograms with shared scales:
 
-(facet (-> penguins
-           (mapping :bill-length-mm nil)
-           (histogram))
-       {:col :species})
+(-> penguins
+    (mapping :bill-length-mm nil)
+    (histogram)
+    (facet {:col :species}))
 
 ;; ### 🧪 Example 11: Row Faceting
 ;;
 ;; Facet by rows creates vertically stacked panels
 
-(facet (=* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-       {:row :species})
+(=* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:row :species}))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -2960,10 +3435,10 @@ iris
 ;; Create a 2D grid of facets.
 ;; This creates a 3×2 grid (3 islands × 2 sexes = 6 panels)
 
-(facet (=* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-       {:row :island :col :sex})
+(=* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:row :island :col :sex}))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -2985,13 +3460,13 @@ iris
 ;; by species (color) AND island (facet column), computing separate
 ;; regressions for each (species × island) combination.
 
-(facet (=* (data penguins)
-           (mapping :bill-length-mm
-                    :bill-depth-mm
-                    {:color :species})
-           (=+ (scatter {:alpha 0.5})
-               (linear)))
-       {:col :island})
+(=* (data penguins)
+    (mapping :bill-length-mm
+             :bill-depth-mm
+             {:color :species})
+    (=+ (scatter {:alpha 0.5})
+        (linear))
+    (facet {:col :island}))
 
 ;; equivalently:
 (-> (data penguins)
@@ -3056,14 +3531,6 @@ iris
 ;; 1. Both axes use custom ranges
 ;; 2. Zooms into a specific region of the data
 ;; 3. Useful for focusing on areas of interest or ensuring consistent scales across multiple plots
-
-;; # Multiple Rendering Targets
-;;
-;; One of the key benefits of our API design is **backend agnosticism**. The same
-;; plot specification can be rendered by different visualization libraries.
-;;
-;; So far, all examples have used the `:geom` target (thi.ng/geom for static SVG),
-;; which is the default. To select a different target, use the `target` function.
 
 ;; # Multi-Target Rendering
 ;; 
@@ -3515,7 +3982,7 @@ iris
 
     (kind/plotly spec)))
 
-;; ## 🧪 Examples
+;; ## 🧪 Vega-Lite Examples
 
 ;; ### 🧪 Example 14: Simple Scatter with Vega-Lite
 
@@ -3661,7 +4128,7 @@ iris
 ;; 2. VL respects our domain constraints
 ;; 3. Same composition semantics across targets
 
-;; ### 📖 The Power of Backend Agnosticism
+;; ## 📖 The Power of Backend Agnosticism
 ;;
 ;; **Key insight**: Our flat map representation with `:=...` keys creates a
 ;; separation between plot semantics and rendering implementation.
@@ -3683,10 +4150,7 @@ iris
 
 ;; Now we can demonstrate multi-target rendering with the same spec.
 
-;; # Plotly.js Target Examples
-;;
-;; Now let's explore the `:plotly` target, which provides interactivity
-;; and is particularly strong for dashboards and web applications.
+;; ## 🧪 Plotly Examples
 
 ;; ### 🧪 Example 21: Simple Scatter with Plotly
 
@@ -3829,7 +4293,7 @@ iris
 ;; 2. Zoom/pan constrained to specified ranges
 ;; 3. Same composition semantics across all targets
 
-;; ### 🧪 Example 15: Compositional Size Specification
+;; ## 🧪 Compositional Size Specification
 
 ;; Width and height can be specified compositionally using the `size` constructor,
 ;; just like `target`. This enables full threading and keeps plot dimensions as
@@ -3881,85 +4345,7 @@ iris
 ;; Both approaches work. The `size` constructor enables full threading and
 ;; treats dimensions as compositional layer properties.
 
-;; # Design Discussion
-;;
-;; ## 📖 Map-Based IR: Separating Layers from Plot Configuration
-;;
-;; ### The Design Choice
-;;
-;; The internal representation uses a map structure with explicit separation:
-
-(-> penguins
-    (mapping :bill-length-mm :bill-depth-mm)
-    (scatter)
-    (target :vl)
-    (size 800 600))
-
-;; This produces a map with `:=layers` and plot-level properties separated:
-
-;; ```clojure
-;; {:=layers [{:=data penguins 
-;;             :=x :bill-length-mm 
-;;             :=y :bill-depth-mm 
-;;             :=plottype :scatter}]
-;;  :=target :vl
-;;  :=width 800
-;;  :=height 600}
-;; ```
-;;
-;; ### Why This Structure?
-;;
-;; **Clean separation of concerns:**
-;; - **Layer properties** (`:=data`, `:=x`, `:=y`, `:=plottype`) describe what to visualize
-;; - **Plot properties** (`:=target`, `:=width`, `:=height`, scales) describe how to render
-;;
-;; **Benefits:**
-;; 1. **Inspectable** - `kind/pprint` shows clear structure
-;; 2. **No duplication** - Plot config appears once, not in every layer
-;; 3. **Composable** - `=*` and `=+` can merge both levels correctly
-;; 4. **Extensible** - Easy to add new plot-level properties (themes, titles, etc.)
-;;
-;; ### How Operators Handle It
-;;
-;; **`=*` (merge):**
-;; - Performs cross-product on `:=layers` vectors
-;; - Merges plot-level properties (right side wins)
-;;
-;; **`=+` (overlay):**
-;; - Concatenates `:=layers` vectors
-;; - Merges plot-level properties (right side wins)
-;;
-;; **Constructors:**
-;; - Layer constructors (`data`, `mapping`, `scatter`) return `{:=layers [...]}`
-;; - Plot constructors (`target`, `size`, `scale`) return `{:=property value}`
-;; - Both compose naturally via `=*`
-;;
-;; This design balances compositional elegance with practical clarity.
-
-;; # Summary
-;;
-;; ### 📖 What We've Explored
-;;
-;; This notebook demonstrates a composable graphics API with **minimal delegation**:
-;;
-;; **Core Design**:
-;; - Layers as flat maps with `:=...` distinctive keys
-;; - Composition using `*` (merge) and `+` (overlay)
-;; - Standard library operations work natively
-;; - Backend-agnostic IR
-;;
-;; **Delegation Strategy**:
-
-;; 1. ✅ **We compute**: Statistical transforms, domains (when needed), types (from Tablecloth)
-;; 2. ❌ **We delegate**: Axis rendering, ranges, ticks, "nice numbers", layout
-;;
-;; **Key Wins**:
-;; - Type information from Tablecloth (free!)
-;; - Domain computation only for statistical transforms
-;; - Leverage rendering target polish for rendering
-;; - Simple, focused implementation
-
-;; # 🧪 Validation Examples
+;; # Validation Examples
 ;;
 ;; The Malli schemas enable validation at two points:
 ;; - Construction time
@@ -4018,9 +4404,54 @@ iris
 ;; Get detailed error information
 (validate Layer {:=plottype :invalid :=alpha 2.0})
 
-;; ## Design Discussions
+;; # Design Discussions
 
-;; ### 📖 Auto-display vs Explicit Rendering
+;; ## 📖 Map-Based IR: Separating Layers from Plot Configuration
+;;
+;; ### The Design Choice
+;;
+;; The internal representation uses a map structure with explicit separation:
+;;
+;; ```clojure
+;; {:=layers [{:=data penguins 
+;;             :=x :bill-length-mm 
+;;             :=y :bill-depth-mm 
+;;             :=plottype :scatter}]
+;;  :=target :vl
+;;  :=width 800
+;;  :=height 600}
+;; ```
+;;
+;; ### Why This Structure?
+;;
+;; **Clean separation of concerns:**
+;; - **Layer properties** (`:=data`, `:=x`, `:=y`, `:=plottype`) describe what to visualize
+;; - **Plot properties** (`:=target`, `:=width`, `:=height`, scales) describe how to render
+;;
+;; **Benefits:**
+;; 1. **Inspectable** - `kind/pprint` shows clear structure
+;; 2. **No duplication** - Plot config appears once, not in every layer
+;; 3. **Composable** - `=*` and `=+` can merge both levels correctly
+;; 4. **Extensible** - Easy to add new plot-level properties (themes, titles, etc.)
+;;
+;; ### How Operators Handle It
+;;
+;; **`=*` (merge):**
+;; - Performs cross-product on `:=layers` vectors
+;; - Merges plot-level properties (right side wins)
+;;
+;; **`=+` (overlay):**
+;; - Concatenates `:=layers` vectors
+;; - Merges plot-level properties (right side wins)
+;;
+;; **Constructors:**
+;; - Layer constructors (`data`, `mapping`, `scatter`) return `{:=layers [...]}`
+;; - Plot constructors (`target`, `size`, `scale`) return `{:=property value}`
+;; - Both compose naturally via `=*`
+;;
+;; This design balances compositional elegance with practical clarity.
+
+;; ## 📖 Auto-display vs Explicit Rendering
 
 ;; The current design supports two rendering modes:
 ;; 1. Auto-display: `(=* ...)` returns an object that automatically renders in notebooks
@@ -4249,6 +4680,26 @@ iris
 ;; Keep current Malli errors for now, enhance in future iteration.
 
 ;; # Conclusion
+
+;; ### 📖 What We've Explored
+;;
+;; This notebook demonstrates a composable graphics API with **minimal delegation**:
+;;
+;; **Core Design**:
+;; - Layers as flat maps with `:=...` distinctive keys
+;; - Composition using `*` (merge) and `+` (overlay)
+;; - Standard library operations work natively
+;; - Backend-agnostic IR
+;;
+;; **Delegation Strategy**:
+;; 1. ✅ **We compute**: Statistical transforms, domains (when needed), types (from Tablecloth)
+;; 2. ❌ **We delegate**: Axis rendering, ranges, ticks, "nice numbers", layout
+;;
+;; **Key Wins**:
+;; - Type information from Tablecloth (free!)
+;; - Domain computation only for statistical transforms
+;; - Leverage rendering target polish for rendering
+;; - Simple, focused implementation
 
 ;; ### 📖 Where We Are
 
