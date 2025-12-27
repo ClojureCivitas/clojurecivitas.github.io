@@ -1,10 +1,9 @@
 ---
-title: "Posts"
+title: "Drafts"
 listing:
   contents: [".", "!./*.qmd"]
   include:
     type: post
-  exclude:
     draft: true
   sort:
     - "date desc"
