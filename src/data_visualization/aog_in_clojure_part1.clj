@@ -354,13 +354,108 @@
    :=alpha 0.5
    :=plottype :scatter})
 
+;; ### 📖 The Solution Works: Standard Merge Composes
+
+;; Show this actually solves the problem:
+
+(merge {:=x :bill-length-mm :=color :species}
+       {:=y :bill-depth-mm :=alpha 0.5})
+;; => {:=x :bill-length-mm 
+;;     :=y :bill-depth-mm 
+;;     :=color :species 
+;;     :=alpha 0.5}
+
+;; Nothing lost! All properties preserved.
+;; This is why `=*` (our composition operator) can use standard `merge` internally.
+
+;; # Design Overview
+;;
+;; Before diving into implementation details, let's preview the key design decisions
+;; and what the API will look like.
+
+;; ### 📖 Key Design Decisions
+;;
+;; **1. Flat structure with distinctive `:=` keys**
+;;   - Layer specs are plain maps: `{:=data ... :=x ... :=y ... :=plottype ...}`
+;;   - Standard `merge` composes correctly (as shown above)
+;;   - No collision with data columns (`:=x` ≠ `:x`)
+;;
+;; **2. Two compositional operators**
+;;   - `=*` merges layers (like Julia's `*`): `(=* data mapping geom)`
+;;   - `=+` overlays layers (like Julia's `+`): `(=+ scatter linear)`
+;;   - Threading-macro friendly: `(-> data (mapping :x :y) (scatter))`
+;;
+;; **3. Minimal delegation strategy**
+;;   - We compute: statistical transforms, domains (when needed)
+;;   - We delegate: axis rendering, tick placement, "nice numbers"
+;;   - Why: transforms need domains first; rendering libs handle layout better
+;;
+;; **4. Type-aware grouping**
+;;   - Tablecloth gives us column types via `col/typeof` for free
+;;   - Categorical aesthetics (`:=color :species`) create groups for transforms
+;;   - Continuous aesthetics are visual-only (no grouping)
+;;   - Explicit `:=group` aesthetic for manual control
+;;
+;; **5. Map-based internal representation (IR)**
+;;   - Plot specs are maps with `:=layers` key containing vector of layer specs
+;;   - Plot-level properties (`:=target`, `:=width`, `:=height`, scales) separate from layers
+;;   - Enables clear distinction between plot configuration and layer data
+;;
+;; **6. Multi-target rendering**
+;;   - Same plot spec works across `:geom`, `:vl`, `:plotly`
+;;   - Backend selection via `:=target` key
+;;   - Consistent behavior and theming
+
+;; ### 📖 API Preview
+;;
+;; The API will consist of:
+;;
+;; **Constructors** - build partial layer specs:
+;; - `(data dataset)` - attach data
+;; - `(mapping :x :y {:color :species})` - define aesthetic mappings  
+;; - `(scatter)`, `(linear)`, `(histogram)` - specify plot types/transforms
+;;
+;; **Composition operators** - combine specs:
+;; - `(=* data mapping geom)` - merge properties (cross-product for layers, merge for plot-level)
+;; - `(=+ scatter linear)` - overlay layers with inheritance (concatenate `:=layers`, merge plot-level)
+;;
+;; **Utilities**:
+;; - `(plot spec)` - explicitly render (usually auto-displays)
+;; - `(facet spec {:col :species})` - add faceting
+;; - `(scale :x {:domain [0 100]})` - customize scales
+;; - `(target :geom)`, `(size 800 600)` - set plot-level properties
+;;
+;; **Auto-display:** Plot specs returned by `=*`, `=+`, and constructors automatically
+;; display as plots in Kindly-compatible notebooks. Use `kind/pprint` to inspect
+;; the raw plot spec map (with `:=layers` key) instead.
+
+;; ### 📖 What's Coming
+;;
+;; The rest of this notebook:
+;; 1. Schemas and validation (reference material, can skim)
+;; 2. Implementation (operators, constructors, helpers, rendering)
+;; 3. Examples showing the API in action (scatter, linear, histogram, faceting)
+;; 4. Multi-target rendering (same spec, different backends)
+;;
+;; **Note on IR:** The internal representation uses maps with `:=layers` keys,
+;; separating plot-level properties from layer specs. This enables clean composition
+;; and clear semantics for plot configuration.
+;;
+;; If you want to skip ahead to see it working, jump to "Basic Scatter Plots".
+
 ;; # Malli Schemas
 ;;
-;; Schemas define the structure and valid values for layers, aesthetics, and inputs.
-;; They provide:
+;; The following Malli schemas define the structure and valid values for plot specs,
+;; layers, aesthetics, and inputs. These provide:
 ;; - Documentation of expected data shapes
 ;; - Runtime validation with clear error messages
-;; - Type safety for layer construction and composition
+;; - Type safety for plot and layer construction
+;;
+;; **Key schema:** `PlotSpec` defines the map structure with `:=layers` and plot-level
+;; properties (`:=target`, `:=width`, `:=height`, scales, etc.).
+;;
+;; **You can skim this section** - it's reference material. The schemas will be
+;; used by validation helpers later, and referenced in examples as needed.
 
 ;; ### ⚙️ Core Type Schemas
 
@@ -742,96 +837,27 @@
 
 ;; # The Delegation Strategy
 ;;
-;; A key architectural decision: **What do we compute vs. what do rendering targets handle?**
+;; ### 📖 Core Principle
 ;;
-;; ### 📖 The Core Principle
+;; **Statistical transforms require domain computation. Everything else delegates.**
 ;;
-;; **Statistical transforms require domain computation. Everything else can delegate.**
+;; Transforms like histograms and regression need to know data extents before
+;; computing derived data. So we compute:
+;; - Statistical transforms (histogram bins, regression lines)
+;; - Domains when needed (always for `:geom`, only custom for `:vl`/`:plotly`)
+;; - Type information (from Tablecloth's `col/typeof`)
 ;;
-;; **What are statistical transforms?** These are operations that compute derived data
-;; from your raw data points:
-;; - **Regression lines** - computing best-fit lines through points ([linear regression](https://en.wikipedia.org/wiki/Linear_regression))
-;; - **Smoothing** - [LOESS](https://en.wikipedia.org/wiki/Local_regression) or other smoothing curves
-;; - **Histograms** - binning continuous data and counting occurrences ([histogram](https://en.wikipedia.org/wiki/Histogram))
-;; - **Density estimation** - [kernel density estimation](https://en.wikipedia.org/wiki/Kernel_density_estimation) curves
+;; We delegate to rendering targets:
+;; - Axis rendering, tick placement, "nice numbers"
+;; - Range computation (pixels/visual coordinates)  
+;; - Scale merging across layers
 ;;
-;; These differ from simple visual mappings (scatter, line) which just render raw data.
+;; This gives us control where it matters (correctness, consistency) while
+;; leveraging mature tools where they excel (formatting, layout).
 ;;
-;; ### Statistical Transforms Need Domains First
-;;
-;; Consider [histogram](https://en.wikipedia.org/wiki/Histogram) computation:
-;;
-;; ```clojure
-;; (=* (data penguins) (mapping :bill-length) (histogram))
-;; 
-;; ```
-
-;; Computation sequence:
-
-;; 1. Must compute domain first (extent from 32.1 to 59.6)
-;; 2. Use domain to decide bin edges  
-;; 3. Compute bin counts
-;; 4. Create bar chart from computed bins
-;;
-;; **The dependency**: We can't delegate domain to the rendering target because we need it
-;; BEFORE we can compute bins. Statistical transforms are an **important part of a
-;; plotting library**, so we accept this dependency.
-;;
-;; **Why compute in our library rather than delegate to rendering targets?** This project is
-;; part of a holistic toolkit for data and science. We need visualizations to be consistent
-;; with statistical algorithms - when you compute a regression or histogram using Clojure's
-;; statistical libraries, the visualization should show exactly the same calculation.
-;; Additionally, when working with large datasets, we want to compute statistical summaries
-;; in our library (where we have access to the full data) and send only the summarized
-;; results to rendering targets. For example, with a million points, we compute the histogram
-;; bins and send ~20 bars to Vega-Lite or Plotly, not a million points.
-;;
-;; ### 📖 What We Compute (Minimal Set)
-;; 
-;; **1. Statistical Transforms**
-;; - Histogram, density, smoothing, regression
-;; - Why: Core value, consistency across rendering targets, inspectability
-;; 
-;; **2. Domain Computation**
-;; - Always for :geom target (min/max, then :geom handles "nice numbers")
-;; - Only custom domains for :vl and :plotly targets
-;; - Why: Required by statistical transforms, :geom needs explicit domains
-;; 
-;; **3. Type Information**
-;; - Use Tablecloth's column types (`col/typeof`)
-;; - Fallback inference for plain maps
-;; - Why: Free from Tablecloth, needed for transform selection
-;; 
-;; **4. Theme Colors**
-;; - ggplot2 color palette, background, and grid colors
-;; - Why: Consistent theming across all rendering targets
-;; 
-;; ### 📖 What We Delegate (Maximize)
-;; 
-;; **1. Axis Rendering**
-;; - Tick placement, "nice numbers", label formatting
-;; - Why: Rendering targets are polished, edge cases are many
-;; 
-;; **2. Range Computation**
-;; - Pixel/visual coordinates
-;; - Why: Tightly coupled with layout
-;; 
-;; **3. Domains for :vl and :plotly (when not customized)**
-;; - Rendering targets compute from data we send
-;; - Why: Rendering targets already do this well
-;; 
-;; **4. Scale Merging**
-;; - Multi-layer plots: rendering targets handle shared domains
-;; - Why: Avoid complex conflict resolution
-
-;; ### 📖 Tablecloth Provides Types
-;;
-;; We don't need complex type inference. Tablecloth already knows:
-;;
-;; ```clojure
-;; (col/typeof (penguins :bill-length-mm))  ;; => :float64
-;; (col/typeof (penguins :species))         ;; => :string
-;; ```
+;; **Why compute transforms ourselves?** Two reasons:
+;; 1. Consistency - visualizations match statistical computations in Clojure libs
+;; 2. Efficiency - compute summaries (20 histogram bars), not raw data (1M points)
 ;;
 ;; # Proposed Design
 ;;
