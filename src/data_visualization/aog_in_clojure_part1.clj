@@ -126,9 +126,8 @@
 ;; decisions. This is for Tableplot maintainers, contributors, and curious users who
 ;; want to provide early feedback on the approach.
 
-;; # Setup
-;;
-;; ### 📖 Reading This Document
+                                        ;
+;; # 📖 Reading This Document
 ;;
 ;; Throughout this document, section headers use emojis to indicate the type of content:
 ;;
@@ -139,6 +138,9 @@
 ;; This convention helps you navigate the document and quickly find what you're looking for:
 ;; conceptual explanations (📖), working code (⚙️), or usage examples (🧪).
 
+;; # Setup
+
+;; ### ⚙️ Dependencies
 ;;
 ;; This notebook relies on several libraries from the Clojure data science ecosystem.
 ;; Here's what we use and why:
@@ -185,6 +187,10 @@
 ;; [**Fastmath**](https://github.com/generateme/fastmath) handles our statistical computations, particularly linear
 ;; regression. It's a comprehensive math library for Clojure.
 ;;
+;; [**Malli**](https://github.com/metosin/malli) provides schema validation for plot specifications.
+;; We define schemas for layers, aesthetics, and plot types to catch errors early
+;; and generate helpful error messages. Validation is optional but recommended.
+;;
 ;; [**RDatasets**](https://vincentarelbundock.github.io/Rdatasets/articles/data.html) provides classic datasets (penguins, mtcars, iris) for examples.
 ;; It is made available in Clojure through [metamorph.ml](https://github.com/scicloj/metamorph.ml).
 
@@ -202,9 +208,9 @@
 ;; This approach of 
 ;; ["describing a higher-level 'intent' how your tabular data should be transformed"](https://aog.makie.org/dev/tutorials/intro-i)
 ;; aligns naturally with Clojure's functional and declarative tendencies—something
-;; we've seen in libraries like Hanami, Oz, and others in the ecosystem.
+;; we've seen in libraries like Hanami, Tableplot, and others in the ecosystem.
 ;;
-;; We chose AoG because it seemed small enough to grasp and reproduce, while still being
+;; We chose AoG because it seemed well-thought, small enough to grasp and reproduce, while still being
 ;; reasonably complete in its scope.
 
 ;; ### 📖 Glossary: Visualization Terminology
@@ -378,7 +384,7 @@
 ;; **2. Two compositional operators**
 ;;   - `=*` merges layers (like Julia's `*`): `(=* data mapping geom)`
 ;;   - `=+` overlays layers (like Julia's `+`): `(=+ scatter linear)`
-;;   - Threading-macro friendly: `(-> data (mapping :x :y) (scatter))`
+;;   - Threading-macro friendly, implicitly merging: `(-> data (mapping :x :y) (scatter))`
 ;;
 ;; **3. Minimal delegation strategy**
 ;;   - We compute: statistical transforms, domains (when needed)
@@ -397,7 +403,7 @@
 ;;   - Enables clear distinction between plot configuration and layer data
 ;;
 ;; **6. Multi-target rendering**
-;;   - Same plot spec works across `:geom`, `:vl`, `:plotly`
+;;   - Same plot spec works across `:geom`, `:vl`, `:plotly` rendering targsts
 ;;   - Backend selection via `:=target` key
 ;;   - Consistent behavior and theming
 
@@ -416,9 +422,9 @@
 ;;
 ;; **Utilities**:
 ;; - `(plot spec)` - explicitly render (usually auto-displays)
-;; - `(facet spec {:col :species})` - add faceting
-;; - `(scale :x {:domain [0 100]})` - customize scales
-;; - `(target :geom)`, `(size 800 600)` - set plot-level properties
+;; - `(facet {:col :species})` - add faceting (compositional)
+;; - `(scale :x {:domain [0 100]})` - customize scales (compositional)
+;; - `(target :geom)`, `(size 800 600)` - set plot-level properties (compositional)
 ;;
 ;; **Auto-display:** Plot specs returned by `=*`, `=+`, and constructors automatically
 ;; display as plots in Kindly-compatible notebooks. Use `kind/pprint` to inspect
@@ -1230,23 +1236,23 @@
   "Add faceting to a plot specification.
   
   Args:
-  - spec: Plot spec with :=layers
   - facet-spec: Map with :row and/or :col keys specifying faceting variables
   
-  Returns plot spec with faceting applied to all layers.
+  Returns layer spec with faceting properties.
+  
+  When called with spec as first arg, merges faceting into that spec.
   
   Examples:
-  (facet spec {:col :species})
-  (facet spec {:row :sex :col :island})
+  (facet {:col :species})
+  (facet {:row :sex :col :island})
   
   Threading-friendly:
   (-> penguins (mapping :x :y) (scatter) (facet {:col :species}))"
-  [spec facet-spec]
-  (displays-as-plot
+  ([facet-spec]
    (let [facet-keys (update-keys facet-spec =key)]
-     (update spec :=layers
-             (fn [layers]
-               (mapv #(merge % facet-keys) layers))))))
+     {:=layers [facet-keys]}))
+  ([spec facet-spec]
+   (=* spec (facet facet-spec))))
 
 (defn scale
   "Specify scale properties for an aesthetic.
@@ -3136,10 +3142,10 @@ iris
 ;; ### 🧪 Example 10: Simple Column Faceting
 ;;
 ;; Facet a scatter plot by species - this creates 3 side-by-side plots.
-(facet (=* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-       {:col :species})
+(=* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:col :species}))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -3147,19 +3153,19 @@ iris
 
 ;; Faceted histogram - per-species histograms with shared scales:
 
-(facet (-> penguins
-           (mapping :bill-length-mm nil)
-           (histogram))
-       {:col :species})
+(-> penguins
+    (mapping :bill-length-mm nil)
+    (histogram)
+    (facet {:col :species}))
 
 ;; ### 🧪 Example 11: Row Faceting
 ;;
 ;; Facet by rows creates vertically stacked panels
 
-(facet (=* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-       {:row :species})
+(=* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:row :species}))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -3170,10 +3176,10 @@ iris
 ;; Create a 2D grid of facets.
 ;; This creates a 3×2 grid (3 islands × 2 sexes = 6 panels)
 
-(facet (=* (data penguins)
-           (mapping :bill-length-mm :bill-depth-mm)
-           (scatter))
-       {:row :island :col :sex})
+(=* (data penguins)
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:row :island :col :sex}))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -3195,13 +3201,13 @@ iris
 ;; by species (color) AND island (facet column), computing separate
 ;; regressions for each (species × island) combination.
 
-(facet (=* (data penguins)
-           (mapping :bill-length-mm
-                    :bill-depth-mm
-                    {:color :species})
-           (=+ (scatter {:alpha 0.5})
-               (linear)))
-       {:col :island})
+(=* (data penguins)
+    (mapping :bill-length-mm
+             :bill-depth-mm
+             {:color :species})
+    (=+ (scatter {:alpha 0.5})
+        (linear))
+    (facet {:col :island}))
 
 ;; equivalently:
 (-> (data penguins)
