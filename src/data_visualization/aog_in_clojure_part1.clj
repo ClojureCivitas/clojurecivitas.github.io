@@ -41,6 +41,8 @@
 ;; and support for multiple rendering backends. By the end, we'll have a complete prototype
 ;; that handles real-world plotting tasks while maintaining an inspectable design.
 
+;; This project continues our work on the
+;; [Tableplot](https://scicloj.github.io/tableplot/) plotting library.
 ;; You may consider the design and implementation here
 ;; *a draft* for a future library API.
 ;;
@@ -436,7 +438,7 @@
 ;; display as plots in Kindly-compatible notebooks. Use `kind/pprint` to inspect
 ;; the raw plot spec map (with `:=layers` key) instead.
 ;;
-;; **Want to see it in action?** Skip ahead to [Basic Scatter Plots](#basic-scatter-plots)
+;; **Want to see it in action?** Skip ahead to [Basic Scatter Plots](#basic-scatter-plots) 🎯
 ;; to see the API working, or continue reading for implementation details.
 
 ;; ## 📖 How Plots are Displayed
@@ -560,7 +562,7 @@
 ;; 2. **Runtime validation** - They catch errors early with clear messages
 ;; 3. **Type safety** - They ensure plot construction is correct
 ;;
-;; **You can skip this section** and jump directly to [Basic Scatter Plots](#basic-scatter-plots)
+;; **You can skip this section** and jump directly to [Basic Scatter Plots](#basic-scatter-plots) 🎯
 ;; to see the API in action. Come back here later when you want to understand
 ;; validation details or see what fields are available.
 ;;
@@ -813,7 +815,7 @@
 ;; when something goes wrong. They're used internally by the API constructors and also
 ;; available for debugging your plots.
 ;;
-;; **Feel free to skip ahead** to [Basic Scatter Plots](#basic-scatter-plots) to see
+;; **Feel free to skip ahead** to [Basic Scatter Plots](#basic-scatter-plots) 🎯 to see
 ;; the API working - these validation helpers will make more sense once you've seen
 ;; what they're validating.
 
@@ -961,7 +963,7 @@
 ;; constructors (`data`, `mapping`, `scatter`, etc.), and the rendering function.
 ;; These are the functions you'll actually call when creating plots.
 ;;
-;; **Want to see it in action first?** Jump to [Basic Scatter Plots](#basic-scatter-plots)
+;; **Want to see it in action first?** Jump to [Basic Scatter Plots](#basic-scatter-plots) 🎯
 ;; to start creating plots, then come back here if you want to understand how
 ;; the API is implemented.
 
@@ -1198,7 +1200,7 @@
 ;; These examples demonstrate how the `=*` and `=+` operators work with simplified
 ;; plot specs. They focus on the composition mechanics rather than creating actual
 ;; visualizations. For complete, working examples with real data and plots, see
-;; [Basic Scatter Plots](#basic-scatter-plots).
+;; [Basic Scatter Plots](#basic-scatter-plots) 🎯.
 
 ;; ### 🧪 Example: =* Cross-Product Composition
 
@@ -1961,28 +1963,39 @@
 ;; all rendering targets. Extracted here for maintainability.
 
 ;; ggplot2-compatible color palette for categorical variables
-(def ggplot2-colors
-  ["#F8766D" "#00BA38" "#619CFF" "#F564E3"])
-
-;; ggplot2 theme colors
-(def ggplot2-background "#EBEBEB")
-(def ggplot2-grid "#FFFFFF")
-(def ggplot2-default-mark "#333333")
-
-;; Layout constants (extracted magic numbers for maintainability)
-(def default-plot-width 600)
-(def default-plot-height 400)
-(def panel-margin-left 50)
-(def panel-margin-right 50)
-(def panel-margin-top 50)
-(def panel-margin-bottom 50)
-(def facet-label-offset 30)
-(def facet-label-side-offset 20)
+(def theme
+  "Global theme configuration for plots.
+  
+  Contains:
+  - :colors - Categorical color palette (ggplot2-compatible)
+  - :background - Plot background color
+  - :grid - Grid line color
+  - :default-mark - Default mark/line color
+  - :plot-width - Default plot width
+  - :plot-height - Default plot height
+  - :panel-margin-left - Left margin for plot panel
+  - :panel-margin-right - Right margin for plot panel
+  - :panel-margin-top - Top margin for plot panel
+  - :panel-margin-bottom - Bottom margin for plot panel
+  - :facet-label-offset - Offset for facet labels (top/bottom)
+  - :facet-label-side-offset - Offset for facet labels (left/right)"
+  {:colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3"]
+   :background "#EBEBEB"
+   :grid "#FFFFFF"
+   :default-mark "#333333"
+   :plot-width 600
+   :plot-height 400
+   :panel-margin-left 50
+   :panel-margin-right 50
+   :panel-margin-top 50
+   :panel-margin-bottom 50
+   :facet-label-offset 30
+   :facet-label-side-offset 20})
 
 (defn- color-scale
   "ggplot2-like color scale for categorical data."
   [categories]
-  (zipmap categories (cycle ggplot2-colors)))
+  (zipmap categories (cycle (:colors theme))))
 
 ;; ## Geom Target Rendering
 ;;
@@ -2028,7 +2041,7 @@
       ;; Simple line
       [{:values (mapv (fn [p] [(:x p) (:y p)]) sorted-points)
         :layout viz/svg-line-plot
-        :attribs {:stroke ggplot2-default-mark
+        :attribs {:stroke (:default-mark theme)
                   :stroke-width 1
                   :fill "none"
                   :opacity alpha}}])))
@@ -2100,14 +2113,14 @@
         y-major (max 1 (clojure.core/* y-range 0.2))
 
         ;; Calculate panel boundaries using constants
-        panel-left (clojure.core/+ panel-margin-left x-offset)
+        panel-left (clojure.core/+ (:panel-margin-left theme) x-offset)
         panel-right (clojure.core/+ panel-left
                                     (clojure.core/- width
-                                                    (clojure.core/+ panel-margin-left panel-margin-right)))
-        panel-top (clojure.core/+ panel-margin-top y-offset)
+                                                    (clojure.core/+ (:panel-margin-left theme) (:panel-margin-right theme))))
+        panel-top (clojure.core/+ (:panel-margin-top theme) y-offset)
         panel-bottom (clojure.core/+ panel-top
                                      (clojure.core/- height
-                                                     (clojure.core/+ panel-margin-top panel-margin-bottom)))
+                                                     (clojure.core/+ (:panel-margin-top theme) (:panel-margin-bottom theme))))
 
         ;; Create axes
         x-axis (viz/linear-axis
@@ -2135,17 +2148,17 @@
         ;; Create the plot spec for regular data
         plot-spec {:x-axis x-axis
                    :y-axis y-axis
-                   :grid {:attribs {:stroke ggplot2-grid :stroke-width 1}}
+                   :grid {:attribs {:stroke (:grid theme) :stroke-width 1}}
                    :data (vec viz-data)}
 
         ;; Background rectangle for this panel
         bg-rect (svg/rect [panel-left panel-top]
                           (clojure.core/- width
-                                          (clojure.core/+ panel-margin-left panel-margin-right))
+                                          (clojure.core/+ (:panel-margin-left theme) (:panel-margin-right theme)))
                           (clojure.core/- height
-                                          (clojure.core/+ panel-margin-top panel-margin-bottom))
-                          {:fill ggplot2-background
-                           :stroke ggplot2-grid
+                                          (clojure.core/+ (:panel-margin-top theme) (:panel-margin-bottom theme)))
+                          {:fill (:background theme)
+                           :stroke (:grid theme)
                            :stroke-width 1})
 
         ;; Convert histogram rectangles to SVG
@@ -2153,12 +2166,12 @@
                                         (clojure.core/* (/ (clojure.core/- x (first x-domain))
                                                            (clojure.core/- (second x-domain) (first x-domain)))
                                                         (clojure.core/- width
-                                                                        (clojure.core/+ panel-margin-left panel-margin-right)))))
+                                                                        (clojure.core/+ (:panel-margin-left theme) (:panel-margin-right theme))))))
         y-scale (fn [y] (clojure.core/- panel-bottom
                                         (clojure.core/* (/ (clojure.core/- y (first y-domain))
                                                            (clojure.core/- (second y-domain) (first y-domain)))
                                                         (clojure.core/- height
-                                                                        (clojure.core/+ panel-margin-top panel-margin-bottom)))))
+                                                                        (clojure.core/+ (:panel-margin-top theme) (:panel-margin-bottom theme))))))
 
         hist-rects (mapv (fn [r]
                            (svg/rect [(x-scale (:x-min r)) (y-scale (:height r))]
@@ -2198,8 +2211,8 @@
         _ (validate-layers! layers-vec)
 
         ;; Extract plot-level properties (spec first, then opts, then defaults)
-        width (or (:=width spec) (:width opts) default-plot-width)
-        height (or (:=height spec) (:height opts) default-plot-height)
+        width (or (:=width spec) (:width opts) (:plot-width theme))
+        height (or (:=height spec) (:height opts) (:plot-height theme))
 
         ;; Organize layers by facets
         facet-groups (organize-by-facets layers-vec)
@@ -2294,7 +2307,7 @@
                                      (let [col-idx (get col-positions col-label)
                                            label-x (clojure.core/+ (clojure.core/* col-idx panel-width)
                                                                    (/ panel-width 2))]
-                                       (svg/text [label-x facet-label-offset] (str col-label)
+                                       (svg/text [label-x (:facet-label-offset theme)] (str col-label)
                                                  {:text-anchor "middle"
                                                   :font-family "Arial, sans-serif"
                                                   :font-size 12
@@ -2307,12 +2320,12 @@
                                      (let [row-idx (get row-positions row-label)
                                            label-y (clojure.core/+ (clojure.core/* row-idx panel-height)
                                                                    (/ panel-height 2))]
-                                       (svg/text [facet-label-side-offset label-y] (str row-label)
+                                       (svg/text [(:facet-label-side-offset theme) label-y] (str row-label)
                                                  {:text-anchor "middle"
                                                   :font-family "Arial, sans-serif"
                                                   :font-size 12
                                                   :font-weight "bold"
-                                                  :transform (str "rotate(-90 " facet-label-side-offset " " label-y ")")})))
+                                                  :transform (str "rotate(-90 " (:facet-label-side-offset theme) " " label-y ")")})))
                                    row-labels))))
 
             ;; Combine into single SVG
@@ -2452,8 +2465,8 @@ iris
       ;; Simple scatter
       [{:values (mapv (fn [p] [(:x p) (:y p)]) points)
         :layout viz/svg-scatter-plot
-        :attribs {:fill ggplot2-default-mark
-                  :stroke ggplot2-default-mark
+        :attribs {:fill (:default-mark theme)
+                  :stroke (:default-mark theme)
                   :stroke-width 0.5
                   :opacity alpha}}])))
 
@@ -2857,7 +2870,7 @@ iris
               (when fitted
                 {:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
                  :layout viz/svg-line-plot
-                 :attribs {:stroke (get colors group-val ggplot2-default-mark)
+                 :attribs {:stroke (get colors group-val (:default-mark theme))
                            :stroke-width 2
                            :fill "none"
                            :opacity alpha}}))
@@ -2866,7 +2879,7 @@ iris
     (when-let [fitted (:fitted transform-result)]
       [{:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
         :layout viz/svg-line-plot
-        :attribs {:stroke ggplot2-default-mark
+        :attribs {:stroke (:default-mark theme)
                   :stroke-width 2
                   :fill "none"
                   :opacity alpha}}])))
@@ -3139,8 +3152,8 @@ iris
                            :x-min (:x-min bar)
                            :x-max (:x-max bar)
                            :height (:height bar)
-                           :attribs {:fill (get colors color-val ggplot2-default-mark)
-                                     :stroke ggplot2-grid
+                           :attribs {:fill (get colors color-val (:default-mark theme))
+                                     :stroke (:grid theme)
                                      :stroke-width 1
                                      :opacity alpha}})
                         bars)))
@@ -3152,8 +3165,8 @@ iris
                :x-min (:x-min bar)
                :x-max (:x-max bar)
                :height (:height bar)
-               :attribs {:fill ggplot2-default-mark
-                         :stroke ggplot2-grid
+               :attribs {:fill (:default-mark theme)
+                         :stroke (:grid theme)
                          :stroke-width 1
                          :opacity alpha}})
             bars))))
@@ -3652,7 +3665,7 @@ iris
                                                                              (when custom-y-domain {:domain custom-y-domain})))))
                                  color-col (assoc :color {:field (name color-col)
                                                           :type "nominal"
-                                                          :scale {:range ggplot2-colors}})
+                                                          :scale {:range (:colors theme)}})
                                  alpha (assoc :opacity {:value alpha})
                                  (seq tooltip-fields) (assoc :tooltip tooltip-fields))))
 
@@ -3759,11 +3772,11 @@ iris
 
         ;; ggplot2-compatible theme config
         ggplot2-config {:view {:stroke "transparent"}
-                        :background ggplot2-background
-                        :axis {:gridColor ggplot2-grid
-                               :domainColor ggplot2-grid
-                               :tickColor ggplot2-grid}
-                        :mark {:color ggplot2-default-mark}}
+                        :background (:background theme)
+                        :axis {:gridColor (:grid theme)
+                               :domainColor (:grid theme)
+                               :tickColor (:grid theme)}
+                        :mark {:color (:default-mark theme)}}
 
         ;; Build final spec
         spec (cond
@@ -3859,7 +3872,7 @@ iris
                                             :x (mapv :x group-points)
                                             :y (mapv :y group-points)
                                             :name (str color-val)
-                                            :marker {:color (get ggplot2-colors idx ggplot2-default-mark)
+                                            :marker {:color (get (:colors theme) idx (:default-mark theme))
                                                      :size 8}})
                                          color-groups))
                                       ;; Single scatter trace
@@ -3867,7 +3880,7 @@ iris
                                         :mode "markers"
                                         :x (:x-vals plotly-data)
                                         :y (:y-vals plotly-data)
-                                        :marker {:color ggplot2-default-mark :size 8}
+                                        :marker {:color (:default-mark theme) :size 8}
                                         :showlegend false}])
 
                                     ;; Single regression line
@@ -3877,7 +3890,7 @@ iris
                                         :mode "lines"
                                         :x (mapv :x fitted)
                                         :y (mapv :y fitted)
-                                        :line {:color ggplot2-default-mark :width 2}
+                                        :line {:color (:default-mark theme) :width 2}
                                         :showlegend false}])
 
                                     ;; Grouped regression - one line per group
@@ -3891,7 +3904,7 @@ iris
                                             :x (mapv :x fitted)
                                             :y (mapv :y fitted)
                                             :name (str group-val " (fit)")
-                                            :line {:color (get ggplot2-colors idx ggplot2-default-mark)
+                                            :line {:color (get (:colors theme) idx (:default-mark theme))
                                                    :width 2}
                                             :showlegend false}))
                                        groups))
@@ -3903,8 +3916,8 @@ iris
                                         :x (mapv (fn [b] (clojure.core// (clojure.core/+ (:x-min b) (:x-max b)) 2)) bars)
                                         :y (mapv :height bars)
                                         :width (mapv (fn [b] (clojure.core/- (:x-max b) (:x-min b))) bars)
-                                        :marker {:color ggplot2-default-mark
-                                                 :line {:color ggplot2-grid :width 1}}
+                                        :marker {:color (:default-mark theme)
+                                                 :line {:color (:grid theme) :width 1}}
                                         :showlegend false}])
 
                                     ;; Grouped histogram - bars per group
@@ -3918,8 +3931,8 @@ iris
                                             :y (mapv :height bars)
                                             :width (mapv (fn [b] (clojure.core/- (:x-max b) (:x-min b))) bars)
                                             :name (str group-val)
-                                            :marker {:color (get ggplot2-colors idx ggplot2-default-mark)
-                                                     :line {:color ggplot2-grid :width 1}}}))
+                                            :marker {:color (get (:colors theme) idx (:default-mark theme))
+                                                     :line {:color (:grid theme) :width 1}}}))
                                        groups)))))
                               layers-vec)
 
@@ -3929,12 +3942,12 @@ iris
         ;; ggplot2-compatible layout
         layout {:width width
                 :height height
-                :plot_bgcolor ggplot2-background
-                :paper_bgcolor ggplot2-background
-                :xaxis {:gridcolor ggplot2-grid
+                :plot_bgcolor (:background theme)
+                :paper_bgcolor (:background theme)
+                :xaxis {:gridcolor (:grid theme)
                         :title (or (:x-name (layer->plotly-data (first layers-vec))) "x")
                         :range custom-x-domain}
-                :yaxis {:gridcolor ggplot2-grid
+                :yaxis {:gridcolor (:grid theme)
                         :title (or (:y-name (layer->plotly-data (first layers-vec))) "y")
                         :range custom-y-domain}
                 :margin {:l 60 :r 30 :t 30 :b 60}}
@@ -3973,7 +3986,7 @@ iris
                             :y (mapv :y facet-points)
                             :xaxis (name xaxis-key)
                             :yaxis (name yaxis-key)
-                            :marker {:color ggplot2-default-mark :size 6}
+                            :marker {:color (:default-mark theme) :size 6}
                             :showlegend false}
 
                            :histogram
@@ -3984,8 +3997,8 @@ iris
                               :width (mapv (fn [b] (clojure.core/- (:x-max b) (:x-min b))) bars)
                               :xaxis (name xaxis-key)
                               :yaxis (name yaxis-key)
-                              :marker {:color ggplot2-default-mark
-                                       :line {:color ggplot2-grid :width 1}}
+                              :marker {:color (:default-mark theme)
+                                       :line {:color (:grid theme) :width 1}}
                               :showlegend false})
 
                            nil)))
@@ -4369,7 +4382,7 @@ iris
 
 ;; 1. `size` adds `:=width` and `:=height` to the plot spec (plot-level properties)
 ;; 2. `plot-impl` methods check spec first, then opts, then defaults
-;; 3. Priority: `:=width` > `:width opts` > `default-plot-width`
+;; 3. Priority: `:=width` > `:width opts` > `(:plot-width theme)`
 ;; 4. Fully compositional - size is part of the plot spec, not external config
 
 ;; **Backwards compatibility**:
