@@ -5529,9 +5529,3 @@ iris
 ;; for the space to try new ideas.
 
 ;; ---
-;;
-;; **What comes next?** That depends on what we learn from sharing this work. For now,
-;; this is a design exploration—a snapshot of our process, shared in the spirit of
-;; collaborative development.
-;;
-;; *Feedback welcome. Let's see where this goes together.*
