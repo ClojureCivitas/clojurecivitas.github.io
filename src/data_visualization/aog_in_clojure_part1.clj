@@ -2,15 +2,15 @@
   :clay {:title "Implementing the Algebra of Graphics in Clojure - Part 1"
          :quarto {:type :post
                   :author [:daslu]
-                  :draft true
-                  :date "2025-12-26"
+                  :date "2025-12-28"
                   :description "A Design Exploration for a plotting API"
                   :category :data-visualization
                   :tags [:datavis]
                   :keywords [:datavis]
                   :toc true
                   :toc-depth 4
-                  :toc-expand 4}}}
+                  :toc-expand 4
+                  :image "aog_iris.png"}}}
 (ns data-visualization.aog-in-clojure-part1
   (:require [tablecloth.api :as tc]
             [scicloj.kindly.v4.kind :as kind]))
@@ -72,10 +72,10 @@
 ;; ### Learning from the community
 
 ;; This post is inspired and affected by past conversations with a few Scicloj-community friends -- in particular:
-;; Cvetomir Dimov, who helped idevelop Tableplot, Jon Anthony, who created Hanami,
+;; Cvetomir Dimov, who helped develop Tableplot, Jon Anthony, who created Hanami,
 ;; Kira Howe, who initiated the Scicloj exploration of Grammar-of-Graphics a couple of years ago,
-;; Harold Hausman, Teodor Heggelond, and most recently, Timoty Pratley, who have had very thoughtful comments about
-;; the current Tableplot APIs and internals. Many others have affected out thinking about plotting
+;; Harold Hausman, Teodor Heggelond, and most recently, Timothy Pratley, who have had very thoughtful comments about
+;; the current Tableplot APIs and internals. Many others have affected our thinking about plotting
 ;;
 ;; The feedback from Tableplot users has been invaluable. **Thank you** to everyone
 ;; who took the time to file issues, ask questions, share use cases, and push the
@@ -380,7 +380,7 @@
              :=x :bill-length-mm
              :=y :bill-depth-mm
              :=plottype :scatter}]
-  :=target :geom
+  :=target :geomviz
   :=width 800
   :=height 600})
 
@@ -393,7 +393,7 @@
 ;;    - `:=plottype` - what kind of mark (`:scatter`, `:line`, `:histogram`)
 ;;
 ;; 2. **Plot-level properties** (outside `:=layers`) - how to render:
-;;    - `:=target` - rendering backend (`:geom`, `:vl`, `:plotly`)
+;;    - `:=target` - rendering backend (`:geomviz`, `:vl`, `:plotly`)
 ;;    - `:=width`, `:=height` - dimensions
 ;;    - `:=scale-x`, `:=scale-y` - custom axis scales
 ;;    - `:=facet` - faceting specification
@@ -414,7 +414,7 @@
 
 ;; **Plot-level constructors** return property maps:
 ;; ```clj
-;; (target :geom) ; => {:=target :geom}
+;; (target :geomviz) ; => {:=target :geomviz}
 ;; (size 800 600) ; => {:=width 800 :=height 600}
 ;; (scale :x {:domain [0 100]}) ; => {:=scale-x {:domain [0 100]}}
 ;; ```
@@ -435,8 +435,8 @@
 
 ;; ```clj
 ;; (=* {:=layers [{:=data penguins}]}
-;;     {:=target :geom})
-;; => {:=layers [{:=data penguins}] :=target :geom}
+;;     {:=target :geomviz})
+;; => {:=layers [{:=data penguins}] :=target :geomviz}
 ;; ```
 
 ;; When both sides have layers, `=*` creates the cross-product:
@@ -563,7 +563,7 @@
 ;; - ✅ Compositional operators (`=*`, `=+`) with threading-macro support
 ;; - ✅ Plain Clojure data (maps, vectors - no dataset required)
 ;; - ✅ Type-aware grouping (categorical aesthetics create groups)
-;; - ✅ Three rendering targets (`:geom`, `:vl`, `:plotly`) with feature parity
+;; - ✅ Three rendering targets (`:geomviz`, `:vl`, `:plotly`) with feature parity
 ;; - ✅ Malli schemas with validation and helpful error messages
 ;;
 ;; **Plot types & transforms:**
@@ -596,7 +596,7 @@
 ;; **Why support multiple rendering targets?**
 ;;
 ;; Different rendering libraries have complementary strengths:
-;; - **`:geom`** - Static SVG, easy to save
+;; - **`:geomviz`** - Static SVG, easy to save
 ;; - **`:vl`** - Interactive, but limited coordinate systems
 ;; - **`:plotly`** - 3D support, but tricky static export
 ;;
@@ -605,7 +605,7 @@
 ;;
 ;; **The three targets in detail:**
 ;;
-;; **`:geom`** ([thi.ng/geom-viz](https://github.com/thi-ng/geom))
+;; **`:geomviz`** ([thi.ng/geom-viz](https://github.com/thi-ng/geom))
 ;; - Static SVG output
 ;; - Easy to save to files and embed in documents
 ;; - Requires explicit domain computation (we compute all domains)
@@ -630,16 +630,16 @@
 ;; 1. Plot specs are backend-agnostic (just data and mappings)
 ;; 2. The `plot` function dispatches on `:=target` using a multimethod
 ;; 3. Each backend has `render-layer` methods that convert layers to target-specific format
-;; 4. Type-based dispatch: `[target plottype]` → `[:geom :scatter]`, `[:vl :histogram]`, etc.
+;; 4. Type-based dispatch: `[target plottype]` → `[:geomviz :scatter]`, `[:vl :histogram]`, etc.
 ;;
 ;; **Specifying the target:**
 ;;
 ;; ```clojure
 ;; ;; 1. Include target in the spec:
-;; (-> penguins (mapping :x :y) (scatter) (target :geom) plot)
+;; (-> penguins (mapping :x :y) (scatter) (target :geomviz) plot)
 ;;
 ;; ;; 2. Pass target as argument to plot:
-;; (-> penguins (mapping :x :y) (scatter) (plot :geom))
+;; (-> penguins (mapping :x :y) (scatter) (plot :geomviz))
 ;;
 ;; ;; These are equivalent - the argument overrides spec's :=target if both present
 ;; ```
@@ -650,7 +650,7 @@
 ;; ;; Same spec, different renderings:
 ;; (def my-plot (-> penguins (mapping :x :y) (scatter)))
 ;;
-;; (plot my-plot :geom)    ;; Static SVG for publication
+;; (plot my-plot :geomviz)    ;; Static SVG for publication
 ;; (plot my-plot :vl)      ;; Interactive for exploration
 ;; (plot my-plot :plotly)  ;; Interactive with zoom/pan
 ;; ```
@@ -674,7 +674,7 @@
 ;; to know the range to generate fitted points.
 ;;
 ;; **2. Domains (Target-Dependent)**
-;; - **`:geom`**: We compute ALL domains (geom.viz requires explicit domains)
+;; - **`:geomviz`**: We compute ALL domains (geom.viz requires explicit domains)
 ;; - **`:vl`** and **`:plotly`**: We ONLY specify custom domains (they infer defaults)
 ;;
 ;; Why the difference? Geom.viz is a lower-level library that needs explicit scales.
@@ -927,7 +927,7 @@
 
 (def Backend
   "Schema for rendering backend selection."
-  [:enum :geom :vl :plotly])
+  [:enum :geomviz :vl :plotly])
 
 ;; ## ⚙️ Layer Schema
 
@@ -1230,7 +1230,7 @@
   (fn [spec opts]
     (or (:target opts)
         (:=target spec)
-        :geom)))
+        :geomviz)))
 
 (defn plot
   "Render a plot specification to a visualization.
@@ -1239,15 +1239,18 @@
 
   Args:
   - spec: Plot spec map with :=layers
-  - opts: Optional map with:
-    - :width - Width in pixels (default 600)
-    - :height - Height in pixels (default 400)
-    - :target - Rendering target (:geom, :vl, :plotly)
+  - target-or-opts: Either:
+    - Keyword - rendering target (:geomviz, :vl, :plotly)
+    - Map with options:
+      - :width - Width in pixels (default 600)
+      - :height - Height in pixels (default 400)
+      - :target - Rendering target (:geomviz, :vl, :plotly)
 
   The rendering target is determined by:
-  1. :target in opts (highest priority)
-  2. `:=target` key in spec (set via `target` function)
-  3. :geom (static SVG) as default
+  1. target-or-opts if it's a keyword (highest priority)
+  2. :target in opts map (if target-or-opts is a map)
+  3. `:=target` key in spec (set via `target` function)
+  4. :geomviz (static SVG) as default
 
   Returns:
   - Kindly-wrapped visualization specification
@@ -1264,15 +1267,25 @@
             (mapping :x :y)
             (scatter)))
   
-  ;; With options:
+  ;; With target shorthand:
   (-> penguins
       (mapping :x :y)
       (scatter)
-      (plot {:width 800 :height 600}))"
+      (plot :plotly))
+  
+  ;; With full options:
+  (-> penguins
+      (mapping :x :y)
+      (scatter)
+      (plot {:target :vl :width 800 :height 600}))"
   ([spec]
    (plot-impl spec {}))
-  ([spec opts]
-   (plot-impl spec opts)))
+  ([spec target-or-opts]
+   (if (keyword? target-or-opts)
+     ;; Shorthand: (plot spec :plotly)
+     (plot-impl spec {:target target-or-opts})
+     ;; Full options: (plot spec {:target :plotly :width 800})
+     (plot-impl spec target-or-opts))))
 
 (defn- ensure-vec
   "Wrap single items in a vector if not already sequential.
@@ -1301,8 +1314,8 @@
   (=* {:=layers [{:=x :a}]} {:=layers [{:=y :b}]})
   ;; => {:=layers [{:=x :a :=y :b}]}
   
-  (=* {:=layers [{:=x :a}]} {:=target :geom})
-  ;; => {:=layers [{:=x :a}] :=target :geom}"
+  (=* {:=layers [{:=x :a}]} {:=target :geomviz})
+  ;; => {:=layers [{:=x :a}] :=target :geomviz}"
   ([x] x)
   ([x y]
    (let [;; Extract layers from each spec (default to empty if no :=layers key)
@@ -1455,12 +1468,12 @@
 ;; Plot-level properties (non-layer keys) merge with right-side wins:
 
 (kind/pprint
- (=* {:=layers [{:=x :a}] :=target :geom}
+ (=* {:=layers [{:=x :a}] :=target :geomviz}
      {:=layers [{:=y :b}] :=width 800}))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
-                       (= (:=target %) :geom)
+                       (= (:=target %) :geomviz)
                        (= (:=width %) 800)
                        (= (count (:=layers %)) 1)
                        (= (:=x (first (:=layers %))) :a)
@@ -1469,7 +1482,7 @@
 ;; Right-side wins for conflicting plot-level properties:
 
 (kind/pprint
- (=* {:=target :geom :=width 400}
+ (=* {:=target :geomviz :=width 400}
      {:=target :vl :=height 300}))
 
 (kind/test-last [#(and (map? %)
@@ -1522,11 +1535,11 @@
 ;; ### 🧪 Example: =+ Merges Plot-Level Properties
 
 (kind/pprint
- (=+ {:=layers [{:=plottype :scatter}] :=target :geom :=width 600}
+ (=+ {:=layers [{:=plottype :scatter}] :=target :geomviz :=width 600}
      {:=layers [{:=plottype :line}] :=height 400}))
 
 (kind/test-last [#(and (map? %)
-                       (= (:=target %) :geom)
+                       (= (:=target %) :geomviz)
                        (= (:=width %) 600)
                        (= (:=height %) 400)
                        (= (count (:=layers %)) 2))])
@@ -1656,7 +1669,7 @@
   "Specify the rendering target for plot.
   
   Args:
-  - target-kw: One of :geom (static SVG), :vl (Vega-Lite), or :plotly (Plotly.js)
+  - target-kw: One of :geomviz (static SVG), :vl (Vega-Lite), or :plotly (Plotly.js)
   
   Returns a plot-level property map (no :=layers).
   
@@ -1791,9 +1804,22 @@
 
 ;; # Core Implementation: Helpers & Rendering Infrastructure
 ;;
-;; This section contains the foundational helper functions and the core
-;; rendering infrastructure for the :geom target. These are used by all
-;; plot types but aren't part of the user-facing API.
+;; Now that we've seen what we're building and why, let's look at how it works under the hood.
+;; This section contains the foundational helpers and core rendering logic that power the API
+;; you've been using in the examples.
+;;
+;; These aren't part of the user-facing API—they're the plumbing that makes composition,
+;; validation, and multi-target rendering possible. We're showing them here for transparency
+;; and to help contributors understand the implementation approach.
+;;
+;; **What you'll find here:**
+;; - Data conversion and validation helpers
+;; - Type-aware grouping logic (leveraging Tablecloth's type system)
+;; - Statistical transform infrastructure (the multimethod pattern)
+;; - The `:geomviz` target rendering implementation
+;;
+;; **Feel free to skip** to the next examples section if you're more interested in using
+;; the API than understanding its internals—everything here is implementation detail.
 
 ;; ## Helper Functions & Utilities
 ;;
@@ -2014,7 +2040,25 @@
                :layers (mapv :layer (get by-labels [r c]))})
             combinations))))
 
-;; Type information helpers (for grouping logic)
+;; ## 📖 Type-Driven Grouping: The Key Insight
+;;
+;; One of the design goals we mentioned earlier was leveraging type information rather
+;; than forcing users to explicitly declare how each column should be treated. Here's
+;; where that pays off.
+;;
+;; Tablecloth's `tcc/typeof` gives us precise column types for free (`:float64`, `:string`,
+;; `:keyword`, etc.). We use this to make intelligent choices about grouping behavior for
+;; statistical transforms:
+;;
+;; - **Categorical aesthetics create groups**: When you map `:species` to color, we detect
+;;   it's categorical and automatically group regression/histogram computations by species
+;; - **Continuous aesthetics are visual-only**: When you map `:body-mass-g` to color, we
+;;   detect it's continuous and create a gradient without grouping
+;;
+;; This matches users' intuitions from ggplot2 and AlgebraOfGraphics.jl, but without
+;; requiring explicit `aes(group = ...)` declarations in most cases.
+
+;; ### ⚙️ Type Information Helpers
 
 (defn- infer-from-values
   "Simple fallback type inference for plain Clojure data."
@@ -2148,6 +2192,29 @@
                        (assoc :group (mapv #(nth % i) grouping-vals))))
                    x-vals))))
 
+;; ## 📖 The Transform Pipeline: A Multimethod Pattern
+;;
+;; Statistical transforms (regression, histogram, etc.) need special handling because
+;; they derive new data from raw data. We can't just pass raw points to the renderer—
+;; we need to compute fitted lines, bin counts, density curves, etc. first.
+;;
+;; **Our approach**: A two-stage multimethod pattern:
+;;
+;; 1. `apply-transform` - Dispatches on `:=transformation` to compute derived data
+;;    - Input: Layer spec + raw points
+;;    - Output: Transform result (structure depends on transform type)
+;;    - Handles grouping automatically based on categorical aesthetics
+;;
+;; 2. `transform->domain-points` - Extracts points for domain computation
+;;    - Input: Transform result
+;;    - Output: Points to include when computing axis ranges
+;;    - Ensures domains include both raw data and derived data (e.g., fitted lines)
+;;
+;; This pattern makes it easy to add new transforms—just implement these two multimethods
+;; and add rendering methods for each target. The infrastructure handles the rest.
+
+;; ### ⚙️ Transform Multimethod Infrastructure
+
 (defmulti apply-transform
   "Apply statistical transform to layer points.
 
@@ -2178,12 +2245,24 @@
   [transform-result]
   (:points transform-result))
 
-;; ### ⚙️ Visual Theme Constants
+;; ## 📖 Visual Design: The ggplot2 Aesthetic
 ;;
-;; These constants define the ggplot2-compatible visual theme used across
-;; all rendering targets. Extracted here for maintainability.
+;; You might have noticed the plots have a distinctive look: grey background, white
+;; grid lines, and a specific color palette. This isn't accidental—we're deliberately
+;; matching ggplot2's default theme.
+;;
+;; **Why ggplot2's aesthetic?**
+;;
+;; 1. **Familiarity** - Many users coming from R or Python expect this look
+;; 2. **Thoughtful defaults** - The ggplot2 team put years into these choices
+;; 3. **Readability** - Grey background reduces eye strain, white grid aids comparison
+;; 4. **Categorical colors** - The palette is colorblind-friendly and perceptually distinct
+;;
+;; The theme is defined in a single map, making it easy to customize or replace entirely.
+;; Future versions might support multiple built-in themes (minimal, dark, colorblind-optimized).
 
-;; ggplot2-compatible color palette for categorical variables
+;; ### ⚙️ Visual Theme Constants
+
 (def theme
   "Global theme configuration for plots.
   
@@ -2220,7 +2299,7 @@
 
 ;; ## Geom Target Rendering
 ;;
-;; Core rendering infrastructure for the :geom (thi.ng/geom) target.
+;; Core rendering infrastructure for the :geomviz (thi.ng/geom) target.
 
 ;; ### ⚙️ Core Rendering Multimethods
 ;;
@@ -2239,7 +2318,7 @@
   is the transformation type if present, otherwise the plottype.
   
   Parameters:
-  - target: rendering target (:geom, :vl, :plotly)
+  - target: rendering target (:geomviz, :vl, :plotly)
   - layer: layer specification map
   - transform-result: result from apply-transform
   - alpha: opacity value
@@ -2249,7 +2328,7 @@
 
 ;; ### ⚙️ Geom Target Rendering Methods
 
-(defmethod render-layer [:geom :line]
+(defmethod render-layer [:geomviz :line]
   [target layer transform-result alpha & [context]]
   (let [points (:points transform-result)
         color-groups (group-by :color points)]
@@ -2270,7 +2349,7 @@
                   :stroke-width 2
                   :opacity alpha}}])))
 
-;; ### ⚙️ Simple :geom Target (Delegating Domain Computation)
+;; ### ⚙️ Simple :geomviz Target (Delegating Domain Computation)
 
 (defn- infer-domain
   "Infer domain from data values.
@@ -2363,7 +2442,7 @@
                              (let [points (layer->points layer)
                                    alpha (or (:=alpha layer) 1.0)
                                    transform-result (apply-transform layer points)]
-                               (render-layer :geom layer transform-result alpha nil)))
+                               (render-layer :geomviz layer transform-result alpha nil)))
                            layers)
 
         ;; Separate regular viz data from histogram rectangles
@@ -2435,7 +2514,7 @@
 ;; - opts: Map with :width and :height options
 ;;
 ;; Returns: Kindly-wrapped HTML containing SVG
-(defmethod plot-impl :geom
+(defmethod plot-impl :geomviz
   [spec opts]
   ;; Extract layers from spec
   (let [layers-vec (get spec :=layers [])
@@ -2678,7 +2757,7 @@ iris
 
 ;; ### ⚙️ Rendering Multimethod
 
-(defmethod render-layer [:geom :scatter]
+(defmethod render-layer [:geomviz :scatter]
   [target layer transform-result alpha & [context]]
   (let [points (:points transform-result)
         color-groups (group-by :color points)]
@@ -3236,7 +3315,7 @@ iris
 
 ;; ### ⚙️ Rendering Multimethod
 
-(defmethod render-layer [:geom :linear]
+(defmethod render-layer [:geomviz :linear]
   [target layer transform-result alpha & [context]]
   (let [transform-type (:type transform-result)]
     (case transform-type
@@ -3526,7 +3605,7 @@ iris
 
 ;; ### ⚙️ Rendering Multimethod
 
-(defmethod render-layer [:geom :histogram]
+(defmethod render-layer [:geomviz :histogram]
   [target layer transform-result alpha & [context]]
   (let [transform-type (:type transform-result)]
     (case transform-type
@@ -3858,10 +3937,10 @@ iris
 ;; - Color scale consistency
 ;;
 ;; **What targets can handle**:
-;; - `:geom` - we compute layout positions manually
+;; - `:geomviz` - we compute layout positions manually
 ;; - `:vl`/`:plotly` - could use their grid layout features
 ;;
-;; ### 📖 4. Rendering Architecture for :geom
+;; ### 📖 4. Rendering Architecture for :geomviz
 ;;
 ;; **Challenge**: thi.ng/geom-viz doesn't support multi-panel layouts
 ;;
@@ -3873,7 +3952,7 @@ iris
 ;; 4. Add facet labels  
 ;; 5. Combine into single SVG
 ;;
-;; **Complexity**: Significant refactoring of plot-impl :geom
+;; **Complexity**: Significant refactoring of plot-impl :geomviz
 ;;
 ;; ### 📖 5. The Core Insight
 ;;
@@ -3916,7 +3995,7 @@ iris
 ;; 3. Compute domains across all facets (for shared scales)
 ;; 4. Render each facet as mini-plot
 ;;
-;; For `:geom` target - compute layout positions manually
+;; For `:geomviz` target - compute layout positions manually
 ;; For `:vl`/`:plotly` targets - could use their grid layout features
 
 ;; ## 🧪 Examples
@@ -4124,7 +4203,7 @@ iris
 
 ;; # Multi-Target Rendering
 ;; 
-;; Same API, different backends: :geom (SVG), :vl (Vega-Lite), :plotly (Plotly.js).
+;; Same API, different backends: :geomviz (SVG), :vl (Vega-Lite), :plotly (Plotly.js).
 
 ;; ## ⚙️ Implementation: Vega-Lite Target
 
@@ -4853,7 +4932,7 @@ iris
 ;; - Composition semantics
 ;;
 ;; **What targets handle** (differently):
-;; - `:geom` - Static SVG, manual layout, ggplot2-like styling
+;; - `:geomviz` - Static SVG, manual layout, ggplot2-like styling
 ;; - `:vl` - Interactive web viz, native faceting, Vega-Lite styling
 ;; - `:plotly` - Rich interactivity, 3D support (coming soon)
 ;;
@@ -4893,7 +4972,7 @@ iris
                        (contains? % :layout)
                        (sequential? (:data %)))])
 
-;; **What's different from :geom and :vl**:
+;; **What's different from :geomviz and :vl**:
 
 ;; 1. Hover tooltips showing exact x/y values
 ;; 2. Toolbar with zoom, pan, and download options
@@ -5257,7 +5336,7 @@ iris
 ;;     [target (or (:=transformation layer) (:=plottype layer))]))
 ;; ```
 
-;; With 3 targets (`:geom`, `:vl`, `:plotly`) and growing plottypes
+;; With 3 targets (`:geomviz`, `:vl`, `:plotly`) and growing plottypes
 ;; (`:scatter`, `:line`, `:histogram`, `:linear`, ...),
 ;; this creates a cartesian product of methods.
 
