@@ -4339,13 +4339,12 @@ iris
 
 ;; ### 🧪 Example 24: Faceted Scatter with Plotly
 
-(plot
- (-> penguins
-     (mapping :bill-length-mm :bill-depth-mm)
-     (scatter)
-     (facet {:col :species})
-     (target :plotly)
-     (size 800 400)))
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:col :species})
+    (target :plotly)
+    (size 800 400))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :data)
@@ -4400,18 +4399,6 @@ iris
                        (= (:=height %) 600)
                        (= (:=target %) :vl))])
 
-;; **Full threading with `plot`**:
-;; The `plot` function also supports threading, so you can optionally call it
-;; explicitly at the end of your pipeline (though auto-display usually handles this):
-(-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
-    (scatter {:alpha 0.7})
-    (target :plotly)
-    (size 1000 500)
-    (plot))
-
-(kind/test-last [#(map? (meta %))])
-
 ;; **What happens here**:
 
 ;; 1. `size` adds `:=width` and `:=height` to the plot spec (plot-level properties)
@@ -4419,16 +4406,13 @@ iris
 ;; 3. Priority: `:=width` > `:width opts` > `(:plot-width theme)`
 ;; 4. Fully compositional - size is part of the plot spec, not external config
 
-;; **Backwards compatibility**:
-;; The old pattern still works - `plot` with opts map:
-(plot
- (-> penguins
-     (mapping :bill-length-mm :bill-depth-mm)
-     (scatter)
-     (target :vl))
- {:width 800 :height 600})
-
-(kind/test-last [#(map? (meta %))])
+;; Size arguments can also be passed directly to the `plot` function:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:row :island :col :sex})
+    (target :vl)
+    (plot {:width 800 :height 600}))
 
 ;; Both approaches work. The `size` constructor enables full threading and
 ;; treats dimensions as compositional layer properties.
