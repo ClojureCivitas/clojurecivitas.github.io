@@ -9,7 +9,8 @@
                   :tags [:datavis]
                   :keywords [:datavis]
                   :toc true}}}
-(ns data-visualization.aog-in-clojure-part1)
+(ns data-visualization.aog-in-clojure-part1
+  (:require [tablecloth.api :as tc]))
 
 ^{:kindly/hide-code true
   :kindly/kind :kind/hiccup}
@@ -3818,11 +3819,21 @@ iris
                (let [;; For faceted plots, remove :data from individual layers
                      ;; Data goes at TOP level for VL faceting, not inside spec
                      layers-without-data (mapv #(dissoc % :data) vl-layers)
-                     all-data (mapcat layer->vl-data layers-vec)]
+                     all-data (mapcat layer->vl-data layers-vec)
+
+                     ;; Count actual number of unique facet values
+                     first-layer (first layers-vec)
+                     dataset (ensure-dataset (:=data first-layer))
+                     num-cols (if col-var
+                                (count (distinct (tc/column dataset col-var)))
+                                1)
+                     num-rows (if row-var
+                                (count (distinct (tc/column dataset row-var)))
+                                1)]
                  (cond-> {:$schema "https://vega.github.io/schema/vega-lite/v5.json"
                           :data {:values all-data}
-                          :width (int (/ width (if col-var 3 1)))
-                          :height (int (/ height (if row-var 3 1)))
+                          :width (int (/ width num-cols))
+                          :height (int (/ height num-rows))
                           :config ggplot2-config
                           :spec {:layer layers-without-data}}
                    col-var (assoc :facet {:column {:field (name col-var) :type "nominal"}})
@@ -4025,6 +4036,22 @@ iris
 
                            :histogram
                            (let [bars (:bars transform-result)]
+                             {:type "bar"
+                              :x (mapv (fn [b] (/ (+ (:x-min b) (:x-max b)) 2)) bars)
+                              :y (mapv :height bars)
+                              :width (mapv (fn [b] (- (:x-max b) (:x-min b))) bars)
+                              :xaxis (name xaxis-key)
+                              :yaxis (name yaxis-key)
+                              :marker {:color (:default-mark theme)
+                                       :line {:color (:grid theme) :width 1}}
+                              :showlegend false})
+
+                           :grouped-histogram
+                           ;; For faceted histograms, data is already filtered to single facet
+                           ;; but transform still returns grouped result with one group
+                           (let [groups (:groups transform-result)
+                                 ;; Extract bars from the single group (first value in groups map)
+                                 bars (:bars (second (first groups)))]
                              {:type "bar"
                               :x (mapv (fn [b] (/ (+ (:x-min b) (:x-max b)) 2)) bars)
                               :y (mapv :height bars)
