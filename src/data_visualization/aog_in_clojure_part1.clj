@@ -2456,7 +2456,8 @@ iris
 
 ;; **Algebraic style using `=*`:**
 
-(plot
+;; Inspect the spec:
+(kind/pprint
  (=* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)))
@@ -2468,24 +2469,37 @@ iris
                        (contains? (first (:=layers %)) :=x)
                        (contains? (first (:=layers %)) :=y)
                        (contains? (first (:=layers %)) :=plottype)
-                       (= (:=plottype (first (:=layers %))) :scatter)
-                       ;; Also test that it renders to valid HTML
-                       (let [rendered (plot %)]
-                         (and (map? (meta rendered))
-                              (= (:kindly/kind (meta rendered)) :kind/html))))])
+                       (= (:=plottype (first (:=layers %))) :scatter))])
+
+;; Render the plot:
+(plot
+ (=* (data penguins)
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)))
+
+(kind/test-last [#(vector? %)])
 
 ;; **Threading macro style (equivalent):**
 
+;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
                        (= (:=x (first (:=layers %))) :bill-length-mm)
                        (= (:=y (first (:=layers %))) :bill-depth-mm)
                        (= (:=plottype (first (:=layers %))) :scatter))])
+
+;; Render the plot:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    plot)
+
+(kind/test-last [#(vector? %)])
 
 ;; Both forms produce identical results. The threading style is often more
 ;; natural in Clojure, while the `=*` style makes the composition operator explicit.
@@ -2513,7 +2527,8 @@ iris
 ;; Two formats are supported:
 
 ;; **Map of vectors** (most common for columnar data):
-(plot
+;; Inspect the spec:
+(kind/pprint
  (=* (data {:x [1 2 3 4 5]
             :y [2 4 6 8 10]})
      (mapping :x :y)
@@ -2525,8 +2540,18 @@ iris
                        (= (:=y (first (:=layers %))) :y)
                        (map? (:=data (first (:=layers %)))))])
 
-;; **Vector of maps** (row-oriented data):
+;; Render the plot:
 (plot
+ (=* (data {:x [1 2 3 4 5]
+            :y [2 4 6 8 10]})
+     (mapping :x :y)
+     (scatter)))
+
+(kind/test-last [#(vector? %)])
+
+;; **Vector of maps** (row-oriented data):
+;; Inspect the spec:
+(kind/pprint
  (=* (data [{:x 1 :y 2}
             {:x 2 :y 4}
             {:x 3 :y 6}
@@ -2539,6 +2564,18 @@ iris
                        (contains? % :=layers)
                        (= (:=x (first (:=layers %))) :x)
                        (= (:=y (first (:=layers %))) :y))])
+
+;; Render the plot:
+(plot
+ (=* (data [{:x 1 :y 2}
+            {:x 2 :y 4}
+            {:x 3 :y 6}
+            {:x 4 :y 8}
+            {:x 5 :y 10}])
+     (mapping :x :y)
+     (scatter)))
+
+(kind/test-last [#(vector? %)])
 
 ;; **What happens here**:
 
@@ -2557,10 +2594,11 @@ iris
 ;; visualizations where you're building up layers incrementally.
 
 ;; **Simple scatter plot**:
+;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -2568,46 +2606,95 @@ iris
                        (= (:=y (first (:=layers %))) :bill-depth-mm)
                        (= (:=plottype (first (:=layers %))) :scatter))])
 
+;; Render the plot:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    plot)
+
+(kind/test-last [#(vector? %)])
+
 ;; **With color aesthetic**:
+;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (scatter)
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
                        (= (:=color (first (:=layers %))) :species)
                        (= (:=x (first (:=layers %))) :bill-length-mm))])
 
+;; Render the plot:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (scatter)
+    plot)
+
+(kind/test-last [#(vector? %)])
+
 ;; ### 🧪 Example 2c: Semi-Transparent Points
 ;;
 ;; Control visual attributes like opacity using the attributes parameter.
 ;; This is useful when you have overlapping points and want to show density.
 
+;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter {:alpha 0.5})
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
                        (= (:=alpha (first (:=layers %))) 0.5)
                        (= (:=plottype (first (:=layers %))) :scatter))])
 
+;; Render the plot:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter {:alpha 0.5})
+    plot)
+
+(kind/test-last [#(vector? %)])
+
 ;; **Combining attributes with aesthetics**:
+;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (scatter {:alpha 0.7})
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
                        (= (:=alpha (first (:=layers %))) 0.7)
                        (= (:=color (first (:=layers %))) :species))])
 
+;; Render the plot:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (scatter {:alpha 0.7})
+    plot)
+
+(kind/test-last [#(vector? %)])
+
 ;; ### 🧪 Example 2d: Scale Customization
 ;;
 ;; **Combining scale customization**:
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (scale :x {:domain [30 65]})
+    (scale :y {:domain [12 23]})
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (get-in % [:=scale-x :domain]) [30 65])
+                       (= (get-in % [:=scale-y :domain]) [12 23]))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
@@ -2615,22 +2702,29 @@ iris
     (scale :y {:domain [12 23]})
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (get-in % [:=scale-x :domain]) [30 65])
-                       (= (get-in % [:=scale-y :domain]) [12 23]))])
+(kind/test-last [#(vector? %)])
 
 ;; **Works with plain data too**:
+;; Inspect the spec:
+(-> {:x [1 2 3 4 5]
+     :y [2 4 6 8 10]}
+    (mapping :x :y)
+    (scatter)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=x (first (:=layers %))) :x)
+                       (= (:=plottype (first (:=layers %))) :scatter))])
+
+;; Render the plot:
 (-> {:x [1 2 3 4 5]
      :y [2 4 6 8 10]}
     (mapping :x :y)
     (scatter)
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (:=x (first (:=layers %))) :x)
-                       (= (:=plottype (first (:=layers %))) :scatter))])
+(kind/test-last [#(vector? %)])
 
 ;; **What's happening under the hood**:
 ;;
@@ -2903,11 +2997,12 @@ iris
 
 ;; Multi-layer plots using the `=+` operator:
 
+;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (=+ (scatter {:alpha 0.5})
         (linear))
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -2915,22 +3010,28 @@ iris
                        (= (count (:=layers %)) 2)
                        (= (:=plottype (first (:=layers %))) :scatter)
                        (= (:=transformation (second (:=layers %))) :linear)
-                       (= (:=alpha (first (:=layers %))) 0.5)
-                       ;; Test that multi-layer renders to valid HTML
-                       (let [rendered (plot %)]
-                         (and (map? (meta rendered))
-                              (= (:kindly/kind (meta rendered)) :kind/html))))])
+                       (= (:=alpha (first (:=layers %))) 0.5))])
+
+;; Render the plot:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (=+ (scatter {:alpha 0.5})
+        (linear))
+    plot)
+
+(kind/test-last [#(vector? %)])
 
 ;; ### 🧪 Example 5: Grouped Linear Regression (Color Aesthetic)
 
 ;; When a categorical aesthetic (`:color`) is used, linear regression computes
 ;; separate regression lines for each group:
 
+;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (=+ (scatter {:alpha 0.6})
         (linear))
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -2939,11 +3040,16 @@ iris
                        (= (:=color (first (:=layers %))) :species)
                        (= (:=color (second (:=layers %))) :species)
                        ;; Second layer is linear transform
-                       (= (:=transformation (second (:=layers %))) :linear)
-                       ;; Verify it renders (triggers grouped regression computation)
-                       (let [rendered (plot %)]
-                         (and (map? (meta rendered))
-                              (= (:kindly/kind (meta rendered)) :kind/html))))])
+                       (= (:=transformation (second (:=layers %))) :linear))])
+
+;; Render the plot:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (=+ (scatter {:alpha 0.6})
+        (linear))
+    plot)
+
+(kind/test-last [#(vector? %)])
 
 ;; **What happens here**:
 
@@ -3204,32 +3310,46 @@ iris
 
 ;; Try different binning methods:
 
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm nil)
+    (histogram {:bins 15})
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=transformation (first (:=layers %))) :histogram)
+                       (= (:=bins (first (:=layers %))) 15))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm nil)
     (histogram {:bins 15})
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (:=transformation (first (:=layers %))) :histogram)
-                       (= (:=bins (first (:=layers %))) 15)
-                       ;; Verify histogram renders
-                       (let [rendered (plot %)]
-                         (and (map? (meta rendered))
-                              (= (:kindly/kind (meta rendered)) :kind/html))))])
+(kind/test-last [#(vector? %)])
 
 ;; ### 🧪 Histogram Binning Methods
 
 ;; Different binning algorithms are supported:
 
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm nil)
+    (histogram {:bins :sqrt})
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=bins (first (:=layers %))) :sqrt))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm nil)
     (histogram {:bins :sqrt})
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (:=bins (first (:=layers %))) :sqrt))])
+(kind/test-last [#(vector? %)])
 
 ;; # Grouping & Color
 ;; 
@@ -3241,17 +3361,27 @@ iris
 ;; for statistical transforms. This matches AlgebraOfGraphics.jl and ggplot2 behavior.
 
 ;; **Categorical color → grouped regression**:
+;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (=+ (scatter {:alpha 0.5})
         (linear))
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
                        (= (count (:=layers %)) 2)
                        (= (:=color (first (:=layers %))) :species)
                        (= (:=transformation (second (:=layers %))) :linear))])
+
+;; Render the plot:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (=+ (scatter {:alpha 0.5})
+        (linear))
+    plot)
+
+(kind/test-last [#(vector? %)])
 
 ;; **What happens here**:
 
@@ -3263,16 +3393,25 @@ iris
 
 ;; **Categorical color → grouped histogram**:
 
+;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm nil {:color :species :alpha 0.7})
     (histogram)
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
                        (= (:=transformation (first (:=layers %))) :histogram)
                        (= (:=color (first (:=layers %))) :species)
                        (= (:=alpha (first (:=layers %))) 0.7))])
+
+;; Render the plot:
+(-> penguins
+    (mapping :bill-length-mm nil {:color :species :alpha 0.7})
+    (histogram)
+    plot)
+
+(kind/test-last [#(vector? %)])
 
 ;; **What happens here**:
 
@@ -3288,17 +3427,27 @@ iris
 ;; but does NOT create groups for statistical transforms.
 
 ;; **Continuous color → single regression with gradient**:
+;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :body-mass-g})
     (=+ (scatter {:alpha 0.5})
         (linear))
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
                        (= (count (:=layers %)) 2)
                        (= (:=color (first (:=layers %))) :body-mass-g)
                        (= (:=transformation (second (:=layers %))) :linear))])
+
+;; Render the plot:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :body-mass-g})
+    (=+ (scatter {:alpha 0.5})
+        (linear))
+    plot)
+
+(kind/test-last [#(vector? %)])
 
 ;; **What happens here**:
 
@@ -3318,17 +3467,27 @@ iris
 ;; This lets you group by one variable while coloring by another.
 
 ;; **Explicit :group aesthetic**:
+;; Inspect the spec:
 (-> mtcars
     (mapping :wt :mpg {:group :cyl})
     (=+ (scatter)
         (linear))
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
                        (= (count (:=layers %)) 2)
                        (= (:=group (first (:=layers %))) :cyl)
                        (= (:=transformation (second (:=layers %))) :linear))])
+
+;; Render the plot:
+(-> mtcars
+    (mapping :wt :mpg {:group :cyl})
+    (=+ (scatter)
+        (linear))
+    plot)
+
+(kind/test-last [#(vector? %)])
 
 ;; **What happens here**:
 
@@ -3338,17 +3497,27 @@ iris
 ;; 4. No color mapping, so all points/lines use default color
 
 ;; **Group different from color**:
+;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :sex :group :species})
     (=+ (scatter {:alpha 0.5})
         (linear))
-    plot)
+    kind/pprint)
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
                        (= (:=color (first (:=layers %))) :sex)
                        (= (:=group (first (:=layers %))) :species)
                        (= (:=transformation (second (:=layers %))) :linear))])
+
+;; Render the plot:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :sex :group :species})
+    (=+ (scatter {:alpha 0.5})
+        (linear))
+    plot)
+
+(kind/test-last [#(vector? %)])
 
 ;; **What happens here**:
 
@@ -3473,7 +3642,8 @@ iris
 ;; ### 🧪 Example 10: Simple Column Faceting
 ;;
 ;; Facet a scatter plot by species - this creates 3 side-by-side plots.
-(plot
+;; Inspect the spec:
+(kind/pprint
  (=* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)
@@ -3482,6 +3652,15 @@ iris
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
                        (= (:=col (first (:=layers %))) :species))])
+
+;; Render the plot:
+(plot
+ (=* (data penguins)
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)
+     (facet {:col :species})))
+
+(kind/test-last [#(vector? %)])
 
 ;; Faceted histogram - per-species histograms with shared scales:
 
@@ -3495,7 +3674,8 @@ iris
 ;;
 ;; Facet by rows creates vertically stacked panels
 
-(plot
+;; Inspect the spec:
+(kind/pprint
  (=* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)
@@ -3505,12 +3685,22 @@ iris
                        (contains? % :=layers)
                        (= (:=row (first (:=layers %))) :species))])
 
+;; Render the plot:
+(plot
+ (=* (data penguins)
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)
+     (facet {:row :species})))
+
+(kind/test-last [#(vector? %)])
+
 ;; ### 🧪 Example 12: Row × Column Grid Faceting
 ;;
 ;; Create a 2D grid of facets.
 ;; This creates a 3×2 grid (3 islands × 2 sexes = 6 panels)
 
-(plot
+;; Inspect the spec:
+(kind/pprint
  (=* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)
@@ -3520,6 +3710,15 @@ iris
                        (contains? % :=layers)
                        (= (:=row (first (:=layers %))) :island)
                        (= (:=col (first (:=layers %))) :sex))])
+
+;; Render the plot:
+(plot
+ (=* (data penguins)
+     (mapping :bill-length-mm :bill-depth-mm)
+     (scatter)
+     (facet {:row :island :col :sex})))
+
+(kind/test-last [#(vector? %)])
 
 ;; **What happens here**:
 
@@ -3546,6 +3745,23 @@ iris
      (facet {:col :island})))
 
 ;; equivalently:
+;; Inspect the spec:
+(-> (data penguins)
+    (mapping :bill-length-mm
+             :bill-depth-mm
+             {:color :species})
+    (=+ (scatter {:alpha 0.5})
+        (linear))
+    (facet {:col :island})
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       (= (:=col (first (:=layers %))) :island)
+                       (= (:=color (first (:=layers %))) :species))])
+
+;; Render the plot:
 (-> (data penguins)
     (mapping :bill-length-mm
              :bill-depth-mm
@@ -3555,11 +3771,7 @@ iris
     (facet {:col :island})
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (count (:=layers %)) 2)
-                       (= (:=col (first (:=layers %))) :island)
-                       (= (:=color (first (:=layers %))) :species))])
+(kind/test-last [#(vector? %)])
 
 ;; **What happens here**:
 ;;
@@ -3578,12 +3790,9 @@ iris
 ;; Override auto-computed domains to control axis ranges
 
 ;; Force y-axis to start at 0
-(plot
+;; Inspect the spec:
+(kind/pprint
  (=* (data mtcars)
-     ;; # Scale Customization
-     ;; 
-     ;; Custom scale domains for precise control over axis ranges.
-
      (mapping :wt :mpg)
      (scatter)
      (scale :y {:domain [0 40]})))
@@ -3591,6 +3800,15 @@ iris
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
                        (= (get-in % [:=scale-y :domain]) [0 40]))])
+
+;; Render the plot:
+(plot
+ (=* (data mtcars)
+     (mapping :wt :mpg)
+     (scatter)
+     (scale :y {:domain [0 40]})))
+
+(kind/test-last [#(vector? %)])
 
 ;; **What happens here**:
 
@@ -4104,19 +4322,30 @@ iris
 
 ;; Use `target` to select the `:vl` target (Vega-Lite):
 
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (target :vl)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=target %) :vl)
+                       (= (:=x (first (:=layers %))) :bill-length-mm)
+                       (= (:=y (first (:=layers %))) :bill-depth-mm))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
     (target :vl)
     plot)
 
-(kind/test-last [#(and (= (:=target %) :vl)
-                       ;; Test that it renders to valid Vega-Lite spec
-                       (let [rendered (plot %)]
-                         (and (map? rendered)
-                              (contains? rendered :data)
-                              (contains? rendered :mark)
-                              (contains? rendered :encoding))))])
+(kind/test-last [#(and (map? %)
+                       (contains? % :data)
+                       (contains? % :mark)
+                       (contains? % :encoding))])
 
 ;; **What's different**:
 
@@ -4128,6 +4357,20 @@ iris
 
 ;; Scatter + regression works too:
 
+;; Inspect the spec:
+(-> mtcars
+    (mapping :wt :mpg)
+    (=+ (scatter)
+        (linear))
+    (target :vl)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       (= (:=target %) :vl))])
+
+;; Render the plot:
 (-> mtcars
     (mapping :wt :mpg)
     (=+ (scatter)
@@ -4135,10 +4378,7 @@ iris
     (target :vl)
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (count (:=layers %)) 2)
-                       (= (:=target %) :vl))])
+(kind/test-last [#(map? %)])
 
 ;; **What happens here**:
 
@@ -4149,6 +4389,20 @@ iris
 
 ;; ### 🧪 Example 16: Color Mapping with Vega-Lite
 
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (=+ (scatter)
+        (linear))
+    (target :vl)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=color (first (:=layers %))) :species)
+                       (= (:=target %) :vl))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (=+ (scatter)
@@ -4156,10 +4410,7 @@ iris
     (target :vl)
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (:=color (first (:=layers %))) :species)
-                       (= (:=target %) :vl))])
+(kind/test-last [#(map? %)])
 
 ;; **What happens here**:
 
@@ -4185,6 +4436,20 @@ iris
 
 ;; ### 🧪 Example 17: Faceting with Vega-Lite
 
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:col :species})
+    (target :vl)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=col (first (:=layers %))) :species)
+                       (= (:=target %) :vl))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
@@ -4192,10 +4457,7 @@ iris
     (target :vl)
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (:=col (first (:=layers %))) :species)
-                       (= (:=target %) :vl))])
+(kind/test-last [#(map? %)])
 
 ;; **What happens here**:
 
@@ -4208,6 +4470,24 @@ iris
 
 ;; Grid faceting with custom dimensions using compositional `size`:
 
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:row :island :col :sex})
+    (target :vl)
+    (size 800 600)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=target %) :vl)
+                       (= (:=row (first (:=layers %))) :island)
+                       (= (:=col (first (:=layers %))) :sex)
+                       (= (:=width %) 800)
+                       (= (:=height %) 600))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
@@ -4231,6 +4511,21 @@ iris
 
 ;; ### 🧪 Example 20: Custom Domains with Vega-Lite
 
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (scale :x {:domain [30 65]})
+    (scale :y {:domain [10 25]})
+    (target :vl)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (get-in % [:=scale-x :domain]) [30 65])
+                       (= (:=target %) :vl))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
@@ -4239,10 +4534,7 @@ iris
     (target :vl)
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (get-in % [:=scale-x :domain]) [30 65])
-                       (= (:=target %) :vl))])
+(kind/test-last [#(map? %)])
 
 ;; **What happens here**:
 
@@ -4277,6 +4569,20 @@ iris
 
 ;; ### 🧪 Example 21: Simple Scatter with Plotly
 
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (target :plotly)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=target %) :plotly)
+                       (= (:=x (first (:=layers %))) :bill-length-mm)
+                       (= (:=y (first (:=layers %))) :bill-depth-mm))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
@@ -4284,14 +4590,9 @@ iris
     plot)
 
 (kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (:=target %) :plotly)
-                       ;; Test that it renders to valid Plotly spec
-                       (let [rendered (plot %)]
-                         (and (map? rendered)
-                              (contains? rendered :data)
-                              (contains? rendered :layout)
-                              (sequential? (:data rendered)))))])
+                       (contains? % :data)
+                       (contains? % :layout)
+                       (sequential? (:data %)))])
 
 ;; **What's different from :geom and :vl**:
 
@@ -4302,6 +4603,20 @@ iris
 
 ;; ### 🧪 Example 22: Multi-Layer with Plotly
 
+;; Inspect the spec:
+(-> mtcars
+    (mapping :wt :mpg)
+    (=+ (scatter)
+        (linear))
+    (target :plotly)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (count (:=layers %)) 2)
+                       (= (:=target %) :plotly))])
+
+;; Render the plot:
 (-> mtcars
     (mapping :wt :mpg)
     (=+ (scatter)
@@ -4309,10 +4624,7 @@ iris
     (target :plotly)
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (count (:=layers %)) 2)
-                       (= (:=target %) :plotly))])
+(kind/test-last [#(map? %)])
 
 ;; **What happens here**:
 
@@ -4323,6 +4635,20 @@ iris
 
 ;; ### 🧪 Example 23: Color-Grouped Regression with Plotly
 
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (=+ (scatter)
+        (linear))
+    (target :plotly)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=color (first (:=layers %))) :species)
+                       (= (:=target %) :plotly))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:color :species})
     (=+ (scatter)
@@ -4330,10 +4656,7 @@ iris
     (target :plotly)
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (:=color (first (:=layers %))) :species)
-                       (= (:=target %) :plotly))])
+(kind/test-last [#(map? %)])
 
 ;; **What happens here**:
 
@@ -4379,6 +4702,23 @@ iris
 
 ;; ### 🧪 Example 24: Faceted Scatter with Plotly
 
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:col :species})
+    (target :plotly)
+    (size 800 400)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (:=target %) :plotly)
+                       (= (:=col (first (:=layers %))) :species)
+                       (= (:=width %) 800)
+                       (= (:=height %) 400))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
@@ -4403,6 +4743,21 @@ iris
 
 ;; ### 🧪 Example 26: Custom Domains with Plotly
 
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (scale :x {:domain [30 65]})
+    (scale :y {:domain [10 25]})
+    (target :plotly)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (contains? % :=layers)
+                       (= (get-in % [:=scale-x :domain]) [30 65])
+                       (= (:=target %) :plotly))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
@@ -4411,10 +4766,7 @@ iris
     (target :plotly)
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (contains? % :=layers)
-                       (= (get-in % [:=scale-x :domain]) [30 65])
-                       (= (:=target %) :plotly))])
+(kind/test-last [#(map? %)])
 
 ;; **What happens here**:
 
@@ -4429,6 +4781,21 @@ iris
 ;; part of the layer specification.
 
 ;; **Using the `size` constructor**:
+;; Inspect the spec:
+(-> penguins
+    (mapping :bill-length-mm :bill-depth-mm)
+    (scatter)
+    (facet {:row :island :col :sex})
+    (target :vl)
+    (size 800 600)
+    kind/pprint)
+
+(kind/test-last [#(and (map? %)
+                       (= (:=width %) 800)
+                       (= (:=height %) 600)
+                       (= (:=target %) :vl))])
+
+;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
@@ -4437,10 +4804,7 @@ iris
     (size 800 600)
     plot)
 
-(kind/test-last [#(and (map? %)
-                       (= (:=width %) 800)
-                       (= (:=height %) 600)
-                       (= (:=target %) :vl))])
+(kind/test-last [#(map? %)])
 
 ;; **What happens here**:
 
