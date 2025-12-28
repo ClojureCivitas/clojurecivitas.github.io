@@ -338,6 +338,32 @@
 ;; inspectable. How do we get the compositional approach of AoG while keeping everything
 ;; as simple Clojure data?
 
+;; ## 📖 The Algebraic Foundation in Clojure
+;;
+;; Remarkably, Clojure's standard `merge` and `concat` already exhibit distributive-like
+;; properties similar to Julia's `*` and `+`:
+
+;; **Merge distributes over concat:**
+(let [shared {:data :penguins}
+      layers [{:plottype :scatter} {:plottype :line}]]
+  (map #(merge shared %) layers))
+
+;; This mirrors the algebraic property from AoG:
+;; ```julia
+;;   data(penguins) * (scatter + line) 
+;;     = (data(penguins) * scatter) + (data(penguins) * line)
+;; ```
+
+;; **Concat preserves structure:**
+(concat [{:x :a}] [{:y :b}])
+
+;; **Merge combines properties:**
+(merge {:x :a} {:y :b})
+
+;; So we can build `=*` (merge-based) and `=+` (concat-based) that preserve
+;; these algebraic properties while working with plain Clojure data. The algebra
+;; isn't imposed artificially—it emerges naturally from Clojure's data operations.
+
 ;; # Design Overview
 ;;
 ;; Before diving into implementation, let's establish what we're building and how it works.
@@ -793,7 +819,7 @@
 ;; ## ⚙️ Malli Registry Setup
 ;;
 ;; Create a registry that includes both default schemas and malli.util schemas.
-;; This enables declarative schema utilities like :merge, :union, :select-keys.
+;; This enables declarative schema utilities like `:merge`, `:union`, `:select-keys`.
 
 (def registry
   "Malli registry with default schemas and util schemas (for :merge, etc.)"
@@ -1171,12 +1197,6 @@
   (when-let [errors (validate-layers layers)]
     (throw (ex-info "Layer validation failed"
                     errors))))
-
-;; **Why this works**:
-;;
-;; - Standard `merge` composes correctly (flat structure)
-;; - No collision with data columns (`:=plottype` ≠ `:plottype`)
-;; - All standard library operations work: `assoc`, `update`, `mapv`, `filter`, `into`
 
 ;; # API Implementation
 ;;
@@ -2982,12 +3002,12 @@ iris
 ;; 1. Each function detects whether its first argument is a plot spec
 ;;    or data (dataset, map-of-vectors, vector-of-maps)
 ;; 2. If data: converts to a plot spec first via `(data ...)`
-;; 3. If a plot spec: merges the new specification using `*`
+;; 3. If a plot spec: merges the new specification using `=*`
 ;; 4. Everything returns plot specs, so threading works naturally
 ;;
 ;; **Both styles work**:
 ;;
-;; You can use compositional style with `*`:
+;; You can use compositional style with `=*`:
 ;; ```clojure
 ;; (=* (data penguins) (mapping :x :y) (scatter))
 ;; ```
@@ -3795,13 +3815,6 @@ iris
 ;; 3. Points are colored by sex, but regressions computed per species
 ;; 4. This shows that grouping and color are independent concepts
 
-;; ## 🧪 Example 8: Using `plot` for Spec Inspection and Customization
-
-;; Most of the time, layers auto-display and you don't need `plot`.
-;; But sometimes you want the raw target spec for debugging or customization.
-;; See the Multi-Target Rendering section for examples of using `plot`
-;; with `:vl` and `:plotly` targets.
-
 ;; # Faceting
 ;;
 ;; Small multiples: splitting data across rows and columns for comparison.
@@ -3903,8 +3916,8 @@ iris
 ;; 3. Compute domains across all facets (for shared scales)
 ;; 4. Render each facet as mini-plot
 ;;
-;; For :geom target - compute layout positions manually
-;; For :vl/:plotly targets - could use their grid layout features
+;; For `:geom` target - compute layout positions manually
+;; For `:vl`/`:plotly` targets - could use their grid layout features
 
 ;; ## 🧪 Examples
 
@@ -4093,7 +4106,7 @@ iris
 
 ;; 1. Y-axis forced to extend from 0 to 40 instead of auto-computed range from 10.4 to 33.9
 ;; 2. Useful for starting axes at meaningful values (like 0)
-;; 3. Custom domains compose via `*` operator
+;; 3. Custom domains compose via `=*` operator
 
 ;; Custom domains on both axes
 (plot
@@ -5455,7 +5468,7 @@ iris
 ;;
 ;; **Core Design**:
 ;; - Layers as flat maps with `:=...` distinctive keys (see [Design Exploration](#design-exploration))
-;; - Composition using `*` (merge) and `+` (overlay)
+;; - Composition using `=*` (merge) and `=+` (overlay)
 ;; - Standard library operations work natively
 ;; - Backend-agnostic IR
 ;;
