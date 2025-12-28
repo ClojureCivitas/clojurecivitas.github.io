@@ -8,9 +8,12 @@
                   :category :data-visualization
                   :tags [:datavis]
                   :keywords [:datavis]
-                  :toc true}}}
+                  :toc true
+                  :toc-depth 4
+                  :toc-expand 4}}}
 (ns data-visualization.aog-in-clojure-part1
-  (:require [tablecloth.api :as tc]))
+  (:require [tablecloth.api :as tc]
+            [scicloj.kindly.v4.kind :as kind]))
 
 ^{:kindly/hide-code true
   :kindly/kind :kind/hiccup}
@@ -335,12 +338,139 @@
 ;; inspectable. How do we get the compositional approach of AoG while keeping everything
 ;; as simple Clojure data?
 
-;; # Design Exploration
+;; # Design Overview
 ;;
-;; The core design question: how should we structure layer specifications
-;; so they compose naturally with Clojure's standard library?
+;; Before diving into implementation, let's establish what we're building and how it works.
+;; This section shows the core data structures and composition model.
 
-;; ## 📖 The Problem: Nested Doesn't Merge
+;; ## 📖 The Internal Representation (IR)
+;;
+;; At the heart of this design is a simple data structure: **plot specifications are maps**.
+;;
+;; A complete plot spec looks like this:
+
+(kind/pprint
+ {:=layers [{:=data penguins
+             :=x :bill-length-mm
+             :=y :bill-depth-mm
+             :=plottype :scatter}]
+  :=target :geom
+  :=width 800
+  :=height 600})
+
+;; **Two kinds of properties:**
+;;
+;; 1. **Layer-level properties** (inside `:=layers` vector) - what to plot:
+;;    - `:=data` - the dataset
+;;    - `:=x`, `:=y` - aesthetic mappings
+;;    - `:=color`, `:=alpha` - visual properties
+;;    - `:=plottype` - what kind of mark (`:scatter`, `:line`, `:histogram`)
+;;
+;; 2. **Plot-level properties** (outside `:=layers`) - how to render:
+;;    - `:=target` - rendering backend (`:geom`, `:vl`, `:plotly`)
+;;    - `:=width`, `:=height` - dimensions
+;;    - `:=scale-x`, `:=scale-y` - custom axis scales
+;;    - `:=facet` - faceting specification
+;;
+;; Each layer is a flat map with distinctive `:=` keys. Why the `=` prefix?
+;; It prevents collision with data columns - `:=x` is the aesthetic, `:x` could be your data.
+
+;; ## 📖 The API: Building Plot Specs
+;;
+;; You rarely write these maps by hand. Instead, constructor functions build them for you:
+
+;; **Layer constructors** return `{:=layers [...]}`:
+;; ```clj
+;; (data penguins) ; => {:=layers [{:=data penguins}]}
+;; (mapping :x :y) ; => {:=layers [{:=x :x :=y :y}]}
+;; (scatter) ; => {:=layers [{:=plottype :scatter}]}
+;; ```
+
+;; **Plot-level constructors** return property maps:
+;; ```clj
+;; (target :geom) ; => {:=target :geom}
+;; (size 800 600) ; => {:=width 800 :=height 600}
+;; (scale :x {:domain [0 100]}) ; => {:=scale-x {:domain [0 100]}}
+;; ```
+
+;; ## 📖 How Composition Works
+;;
+;; Two operators combine these specs, mirroring AoG's algebraic approach:
+
+;; ### The `=*` operator (merge/product)
+;;
+;; Merges layer properties via cross-product and combines plot-level properties:
+
+;; ```clj
+;; (=* {:=layers [{:=x :bill-length}]}
+;;     {:=layers [{:=y :bill-depth}]})
+;; => {:=layers [{:=x :bill-length :=y :bill-depth}]}
+;; ```
+
+;; ```clj
+;; (=* {:=layers [{:=data penguins}]}
+;;     {:=target :geom})
+;; => {:=layers [{:=data penguins}] :=target :geom}
+;; ```
+
+;; When both sides have layers, `=*` creates the cross-product:
+;; ```clj
+;; (=* {:=layers [{:=x :a}]}
+;;     {:=layers [{:=y :b} {:=y :c}]})
+;; => {:=layers [{:=x :a :=y :b} {:=x :a :=y :c}]}
+;; ```
+
+;; ### The `=+` operator (overlay/sum)
+;;
+;; Concatenates layers with inheritance and merges plot-level properties:
+
+;; ```clj
+;; (=+ {:=layers [{:=plottype :scatter}]}
+;;     {:=layers [{:=plottype :linear}]})
+;; => {:=layers [{:=plottype :scatter} {:=plottype :linear}]}
+;; ```
+
+;; Layers on the right inherit properties from common ancestor:
+;; ```clj
+;; (=+ (=* (data penguins) (mapping :x :y) (scatter))
+;;     (linear))
+;; ```
+;; Both scatter and linear inherit the data and mapping
+
+;; ### Threading macro style
+;;
+;; Most constructors detect whether they're threading into a spec or standalone:
+
+;; ```clj
+;; (-> penguins ;; dataset → {:=layers [{:=data penguins}]}
+;;     (mapping :x :y) ;; thread → merges into existing spec
+;;     (scatter) ;; thread → merges :=plottype
+;;     (target :vl) ;; thread → adds plot-level property
+;;     plot) ;; render
+;; ```
+
+;; This is equivalent to:
+;; ```clj
+;; (plot
+;;  (=* (data penguins)
+;;      (mapping :x :y)
+;;      (scatter)
+;;      (target :vl)))
+;; ```
+
+;; ## 📖 Why This Works: Flat Structure + Standard Merge
+;;
+;; The key enabling detail: **layers are flat maps, so standard `merge` composes them**.
+;;
+;; Consider what happens with standard merge:
+
+(merge {:=x :bill-length :=color :species}
+       {:=y :bill-depth :=alpha 0.5})
+
+;; Nothing is lost. All properties preserved. This is why `=*` can use
+;; standard `merge` internally for layer composition.
+;;
+;; Compare to a nested structure (what we DON'T do):
 
 (def nested-layer-example
   {:transformation nil
@@ -351,15 +481,16 @@
    :named {:color :species}
    :attributes {:alpha 0.5}})
 
-;; Standard `merge` doesn't compose nested structures:
-
 (merge {:positional [:x] :named {:color :species}}
        {:positional [:y] :named {:size :body-mass}})
-;; Lost `:x` and `:color`.
+;; Lost `:x` and `:color!`
 
-;; Nested structure requires a custom `merge-layer` function. Not ideal.
+;; With nested maps, you'd need a custom `merge-layer` function that knows
+;; about your structure. With flat maps, standard Clojure functions work.
+;; This means users can manipulate specs with `assoc`, `update`, `dissoc`,
+;; `filter`, `map` - all the standard tools.
 
-;; ## 📖 The Solution: Flat Structure with Distinctive Keys
+;; Here's our flat structure for comparison:
 
 (def flat-layer-example
   {:=data {:bill-length-mm [39.1 39.5 40.3]
@@ -371,86 +502,12 @@
    :=alpha 0.5
    :=plottype :scatter})
 
-;; ## 📖 The Solution Works: Standard Merge Composes
-
-;; Standard `merge` preserves all properties - nothing lost:
-
-(merge {:=x :bill-length-mm :=color :species}
-       {:=y :bill-depth-mm :=alpha 0.5})
-
-;; This is why `=*` (our composition operator) can use standard `merge` internally.
-;; More importantly, it hopefully allows library users to process the structures
-;; a bit more easily using standard Clojure functions, when they need something
-;; a bit more flexible than what the library functions offer.
-
-;; # Design Overview
-;;
-;; Before diving into implementation details, let's preview the key design decisions
-;; and what the API will look like.
-
-;; ## 📖 Key Design Decisions
-;;
-;; **1. Flat structure with distinctive `:=` keys**
-;;   - Layer specs are plain maps: `{:=data ... :=x ... :=y ... :=plottype ...}`
-;;   - Standard `merge` composes correctly (as shown above)
-;;   - No collision with data columns (`:=x` ≠ `:x`)
-;;
-;; **2. Two compositional operators**
-;;   - `=*` merges layers (like Julia's `*`): `(=* data mapping geom)`
-;;   - `=+` overlays layers (like Julia's `+`): `(=+ scatter linear)`
-;;   - Threading-macro friendly, implicitly merging: `(-> data (mapping :x :y) (scatter))`
-;;
-;; **3. Minimal delegation strategy**
-;;   - We compute: statistical transforms, domains (when needed)
-;;   - We delegate: axis rendering, tick placement, "nice numbers"
-;;   - Why: transforms need domains first; rendering libs handle layout better
-;;
-;; **4. Type-aware grouping**
-;;   - Tablecloth gives us column types via `tcc/typeof` for free
-;;   - Categorical aesthetics (`:=color :species`) create groups for transforms
-;;   - Continuous aesthetics are visual-only (no grouping)
-;;   - Explicit `:=group` aesthetic for manual control
-;;
-;; **5. Map-based internal representation (IR)**
-;;   - Plot specs are maps with `:=layers` key containing vector of layer specs
-;;   - Plot-level properties (`:=target`, `:=width`, `:=height`, scales) separate from layers
-;;   - Enables clear distinction between plot configuration and layer data
-;;   - This separation enables clean composition and clear semantics for plot configuration
-;;
-;; **6. Multi-target rendering**
-;;   - Same plot spec works across `:geom`, `:vl`, `:plotly` rendering targsts
-;;   - Backend selection via `:=target` key
-;;   - Consistent behavior and theming
-
-;; ## 📖 API Preview
-;;
-;; The API will consist of:
-;;
-;; **Layer-level properties** - build partial layer specs:
-;; - `(data dataset)` - attach data
-;; - `(mapping :x :y {:color :species})` - define aesthetic mappings  
-;; - `(scatter)`, `(linear)`, `(histogram)` - specify plot types/transforms
-;;
-;; **Plot-level properties** - configure rendering and scales:
-;; - `(target :geom)` - specify rendering target (:geom, :vl, :plotly)
-;; - `(size 800 600)` - set plot dimensions
-;; - `(scale :x {:domain [0 100]})` - customize axis scales
-;; - `(facet {:col :species})` - add faceting
-                                        ;
-;; **Composition operators** - combine specs:
-;; - `(=* data mapping geom)` - merge properties (cross-product for layers, merge for plot-level)
-;; - `(=+ scatter linear)` - overlay layers with inheritance (concatenate `:=layers`, merge plot-level)
-                                        ;
-;; **Rendering**:
-;; - `(plot spec)` - render a plot spec (use as final step in threading chain or wrap composition)
-;;
-;; **Want to see it in action?** Skip ahead to [Basic Scatter Plots](#basic-scatter-plots) 🎯
-;; to see the API working, or continue reading for implementation details.
-
 ;; ## 📖 How Plots are Displayed
 ;;
 ;; Plot specifications are plain Clojure data structures (maps with `:=layers` key).
 ;; To render a plot, use `plot` as the final step in your pipeline.
+;; This will create a value annotated by the [Kindly](https://scicloj.github.io/kindly) standard, that can be thus rendered by
+;; Kindly-compatible tools such as [Clay](https://scicloj.github.io/clay/).
 ;;
 ;; ```clojure
 ;; ;; Threading style (recommended):
@@ -471,7 +528,7 @@
 ;;       (mapping :bill-length-mm :bill-depth-mm)
 ;;       (scatter)))
 ;; ```
-;;
+
 ;; ## 📖 Implementation Status
 ;;
 ;; This notebook implements a working prototype with:
@@ -499,58 +556,223 @@
 ;; - ⚠️ Advanced layouts: subplots, secondary axes, insets
 ;; - ⚠️ Interactivity: hover templates, click events, selections
 ;;
-;; Missing features are deferred, not abandoned - the design should accommodate
-;; them without fundamental restructuring.
+;; **Want to see it in action?** Skip ahead to [Basic Scatter Plots](#basic-scatter-plots) 🎯
+;; to see the API working, or continue reading for implementation details.
 
-;; Now that we've explored why a flat structure with distinctive keys works well
-;; for composition, let's see how this design is implemented. The following sections
-;; walk through the key implementation details: rendering targets, delegation strategy,
-;; and the core API functions.
+;; # Implementation Architecture
+;;
+;; The Design Overview showed *what* we're building and *how* composition works.
+;; This section dives into implementation details: how we handle multiple rendering
+;; targets, leverage type information, and decide what to compute versus delegate.
 
-;; # Rendering Targets
+;; ## 📖 Rendering Targets
 ;;
-;; This API is designed to work with multiple **rendering targets**—the actual
-;; visualization libraries that produce the final output. Each target has different
-;; strengths:
+;; **Why support multiple rendering targets?**
 ;;
-;; - **`:geom`** ([thi.ng/geom](https://github.com/thi-ng/geom)) - Static SVG, easy to save to files
-;; - **`:vl`** ([Vega-Lite](https://vega.github.io/vega-lite/)) - Interactive web visualizations, some coordinate system limitations
-;; - **`:plotly`** ([Plotly.js](https://plotly.com/javascript/)) - Interactive with 3D support, static export is tricky
+;; Different rendering libraries have complementary strengths:
+;; - **`:geom`** - Static SVG, easy to save
+;; - **`:vl`** - Interactive, but limited coordinate systems
+;; - **`:plotly`** - 3D support, but tricky static export
 ;;
-;; The idea: you write your plot specification once using our API, and it can be
-;; rendered by different targets. This separates **what** you want to visualize from
-;; **how** it gets rendered.
+;; By keeping plot specs target-agnostic, you can switch backends to work around
+;; limitations without rewriting your visualization code. Write once, render anywhere.
+;;
+;; **The three targets in detail:**
+;;
+;; **`:geom`** ([thi.ng/geom-viz](https://github.com/thi-ng/geom))
+;; - Static SVG output
+;; - Easy to save to files and embed in documents
+;; - Requires explicit domain computation (we compute all domains)
+;; - Best for: Publication-quality static graphics
+;;
+;; **`:vl`** ([Vega-Lite](https://vega.github.io/vega-lite/))
+;; - Interactive web visualizations with tooltips, zoom, pan
+;; - Declarative JSON specification
+;; - Excellent automatic layout and domain inference (we only specify custom domains)
+;; - Some coordinate system limitations (no native 3D, limited polar support)
+;; - Best for: Exploratory data analysis, dashboards
+;;
+;; **`:plotly`** ([Plotly.js](https://plotly.com/javascript/))
+;; - Interactive with strong 3D support
+;; - Imperative structure (arrays of traces)
+;; - Good automatic layout (we only specify custom domains)
+;; - Static export requires additional tooling
+;; - Best for: 3D visualizations, complex interactivity
+;;
+;; **How this works:**
+;;
+;; 1. Plot specs are backend-agnostic (just data and mappings)
+;; 2. The `plot` function dispatches on `:=target` using a multimethod
+;; 3. Each backend has `render-layer` methods that convert layers to target-specific format
+;; 4. Type-based dispatch: `[target plottype]` → `[:geom :scatter]`, `[:vl :histogram]`, etc.
+;;
+;; **Specifying the target:**
+;;
+;; ```clojure
+;; ;; 1. Include target in the spec:
+;; (-> penguins (mapping :x :y) (scatter) (target :geom) plot)
+;;
+;; ;; 2. Pass target as argument to plot:
+;; (-> penguins (mapping :x :y) (scatter) (plot :geom))
+;;
+;; ;; These are equivalent - the argument overrides spec's :=target if both present
+;; ```
+;;
+;; **Switching targets:**
+;;
+;; ```clojure
+;; ;; Same spec, different renderings:
+;; (def my-plot (-> penguins (mapping :x :y) (scatter)))
+;;
+;; (plot my-plot :geom)    ;; Static SVG for publication
+;; (plot my-plot :vl)      ;; Interactive for exploration
+;; (plot my-plot :plotly)  ;; Interactive with zoom/pan
+;; ```
 
-;; # The Delegation Strategy
+;; ## 📖 Delegation in Practice
 ;;
 ;; Since we support multiple rendering targets, we need to decide what to compute
 ;; ourselves versus what to delegate to each target library.
 ;;
-;; ## 📖 Core Principle
+;; **Core Principle: Statistical transforms require domain computation. Everything else delegates.**
 ;;
-;; **Statistical transforms require domain computation. Everything else delegates.**
+;; ### What We Compute
 ;;
-;; Transforms like histograms and regression need to know data extents before
-;; computing derived data. So we compute:
-;; - Statistical transforms (histogram bins, regression lines)
-;; - Domains when needed (always for `:geom`, only custom for `:vl`/`:plotly`)
-;; - Type information (from Tablecloth's `tcc/typeof`)
+;; **1. Statistical Transforms**
+;; - Histogram binning (compute bins, counts before rendering)
+;; - Linear regression (fit models, generate predicted points)
+;; - Future: density estimation, smoothing, aggregations
 ;;
-;; We delegate to rendering targets:
-;; - Axis rendering, tick placement, "nice numbers"
-;; - Range computation (pixels/visual coordinates)  
-;; - Scale merging across layers
+;; Why? Transforms derive new data from raw data and need domain information.
+;; A histogram needs x-axis extent to compute bin boundaries. A regression needs
+;; to know the range to generate fitted points.
 ;;
-;; This gives us control where it matters (correctness, consistency) while
-;; leveraging mature tools where they excel (formatting, layout).
+;; **2. Domains (Target-Dependent)**
+;; - **`:geom`**: We compute ALL domains (geom.viz requires explicit domains)
+;; - **`:vl`** and **`:plotly`**: We ONLY specify custom domains (they infer defaults)
+;;
+;; Why the difference? Geom.viz is a lower-level library that needs explicit scales.
+;; Vega-Lite and Plotly have sophisticated automatic domain inference.
+;;
+;; **3. Type Information and Grouping**
+;; - Leverage Tablecloth's `tcc/typeof` for column types
+;; - Determine grouping from categorical aesthetics (`:=color :species` → group by species)
+;; - Apply grouping to statistical transforms (one regression per group)
+;;
+;; ### What We Delegate
+;;
+;; **1. Axis Rendering**
+;; - Tick placement and spacing
+;; - "Nice number" rounding for tick labels
+;; - Axis labels and titles
+;; - Grid lines
+;;
+;; **2. Visual Layout**
+;; - Range computation (data → pixel coordinates)
+;; - Margin calculations
+;; - Legend placement and formatting
+;; - Scale merging across multiple layers
+;;
+;; **3. Interactivity (for `:vl` and `:plotly`)**
+;; - Tooltips
+;; - Zoom and pan
+;; - Hover effects
+;; - Click handlers
+;;
+;; ### Rationale
 ;;
 ;; **Why compute transforms ourselves?**
+;;
+;; 1. **Consistency** - Visualizations should match statistical computations in
+;;    our Clojure libraries (fastmath, tablecloth). If we compute a regression
+;;    in our code, the plotted line should use the same algorithm.
+;;
+;; 2. **Efficiency** - Especially with browser-based targets, we want to send
+;;    summaries (20 histogram bars) rather than raw data (1M points). Transform
+;;    first, then send compact results.
+;;
+;; 3. **Correctness** - Statistical transforms are complex and need to be right.
+;;    We control the implementation and can test it thoroughly.
+;;
+;; **Why delegate rendering to targets?**
+;;
+;; 1. **They're better at it** - Vega-Lite, Plotly, and geom.viz have sophisticated
+;;    algorithms for tick placement, label formatting, and visual layout developed
+;;    over years. Why reimplement?
+;;
+;; 2. **Leverage their strengths** - Each target has unique capabilities
+;;    (Plotly's 3D, Vega-Lite's interactivity, geom.viz's SVG precision). By
+;;    delegating, we get all these features for free.
+;;
+;; 3. **Maintainability** - Visual rendering is complex and evolves. Let the
+;;    experts handle it while we focus on the API and data transformations.
 
-;; 1. Consistency - We want the visualizations to match the 
-;; statistical computations of our Clojure libraries.
-;; 2. Efficiency - Especially with browser-based rendering targets,
-;; what we wish to pass to the target is summaries (say, 20 histogram bars)
-;; tather than raw data (say, 1M points).
+;; ## 📖 Type-Driven Behavior
+;;
+;; **Why column types matter**
+;;
+;; Tablecloth provides column type information via `tcc/typeof` for free. Rather than
+;; requiring users to explicitly declare how each column should be treated, we use
+;; type information to make intelligent default choices. This enables a more ergonomic
+;; API while maintaining correctness.
+
+(tcc/typeof (penguins :species)) ;; => :string (categorical)
+(tcc/typeof (penguins :bill-length-mm)) ;; => :float64 (continuous)
+
+;; **Type-driven behaviors:**
+;;
+;; ### 1. Grouping for Statistical Transforms
+;;
+;; Statistical transforms like linear regression often need to group data by
+;; categorical variables. When you map `:=color :species`, you probably want
+;; separate regression lines for each species.
+;;
+;; **Grouping rules:**
+;; - Categorical aesthetics (`:=color :species`) create groups for transforms
+;; - Continuous aesthetics are visual-only (no grouping)
+;; - Explicit `:=group` aesthetic for manual control
+;;
+;; **Example:**
+;; ```clojure
+;; (-> penguins
+;;     (mapping :bill-length-mm :bill-depth-mm {:color :species})
+;;     (=+ (scatter) (linear)))
+;; ```
+;; Automatically produces:
+;; - One scatter layer with points colored by species
+;; - Three regression lines (one per species)
+;;
+;; ### 2. Color Scales
+;;
+;; When mapping a column to the color aesthetic, we choose the appropriate color scale:
+;;
+;; - **Categorical columns** (`:string`, `:keyword`) → Discrete color palette
+;;   - Use distinct, perceptually-separated colors
+;;   - Each category gets a unique color from the palette
+;;   - Example: Species (Adelie, Gentoo, Chinstrap) → 3 distinct colors
+;;
+;; - **Continuous columns** (`:float64`, `:int64`) → Color gradient *(not yet implemented)*
+;;   - Use sequential or diverging color scales
+;;   - Map values smoothly across a color range
+;;   - Example: Temperature (0°C to 40°C) → Blue to red gradient
+;;
+;; **Current implementation:** Only categorical colors are supported. Continuous
+;; color gradients are planned for a future version.
+;;
+;; ### 3. Default Histogram Bins *(future)*
+;;
+;; The optimal number of histogram bins depends on data characteristics:
+;; - **Continuous data** → Use Sturges' or Freedman-Diaconis rule
+;; - **Discrete data** → One bin per unique value
+;;
+;; ### 4. Axis Types *(delegated to rendering targets)*
+;;
+;; Rendering libraries need to know axis types for proper formatting:
+;; - **Categorical** → Evenly spaced tick marks, one per category
+;; - **Continuous** → Algorithmically determined tick positions, "nice numbers"
+;; - **Temporal** → Date/time-aware formatting and spacing
+;;
+;; We infer these from column types and pass them to rendering targets.
 
 ;; # Malli Schemas
 ;;
