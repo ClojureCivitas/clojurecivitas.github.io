@@ -4253,8 +4253,9 @@ iris
 
 ;; ## 📖 The Power of Backend Agnosticism
 ;;
-;; **Key insight**: Our flat map representation with `:=...` keys creates a
-;; separation between plot semantics and rendering implementation.
+;; **Key insight**: The flat map structure with `:=...` keys (explained in
+;; [Design Exploration](#design-exploration)) creates a clean separation between
+;; plot semantics and rendering implementation.
 ;;
 ;; **What we control** (across all targets):
 ;; - Statistical transforms (regression, histogram)
@@ -4819,7 +4820,7 @@ iris
 ;; This notebook demonstrates a composable graphics API with **minimal delegation**:
 ;;
 ;; **Core Design**:
-;; - Layers as flat maps with `:=...` distinctive keys
+;; - Layers as flat maps with `:=...` distinctive keys (see [Design Exploration](#design-exploration))
 ;; - Composition using `*` (merge) and `+` (overlay)
 ;; - Standard library operations work natively
 ;; - Backend-agnostic IR
@@ -4838,9 +4839,9 @@ iris
 
 ;; So that's the exploration. We set out to see if AlgebraOfGraphics.jl's compositional
 ;; approach could work in Clojure using plain maps and standard operations. The flat
-;; structure with distinctive `:=` keys turned out pretty well—standard `merge` just works,
-;; everything stays inspectable, and the threading macros feel natural. Getting type
-;; information from Tablecloth for free was a nice bonus that eliminated a lot of
+;; structure with distinctive `:=` keys (detailed earlier) turned out well—standard `merge`
+;; just works, everything stays inspectable, and the threading macros feel natural. Getting
+;; type information from Tablecloth for free was a nice bonus that eliminated a lot of
 ;; complexity.
 
 ;; The minimal delegation strategy (we compute transforms, rendering targets handle
