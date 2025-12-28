@@ -10,7 +10,8 @@
                   :keywords [:datavis]
                   :toc true
                   :toc-depth 4
-                  :toc-expand 4}}}
+                  :toc-expand 4
+                  :image "aog_iris.png"}}}
 (ns data-visualization.aog-in-clojure-part1
   (:require [tablecloth.api :as tc]
             [scicloj.kindly.v4.kind :as kind]))
@@ -1239,15 +1240,18 @@
 
   Args:
   - spec: Plot spec map with :=layers
-  - opts: Optional map with:
-    - :width - Width in pixels (default 600)
-    - :height - Height in pixels (default 400)
-    - :target - Rendering target (:geomviz, :vl, :plotly)
+  - target-or-opts: Either:
+    - Keyword - rendering target (:geom, :vl, :plotly)
+    - Map with options:
+      - :width - Width in pixels (default 600)
+      - :height - Height in pixels (default 400)
+      - :target - Rendering target (:geom, :vl, :plotly)
 
   The rendering target is determined by:
-  1. :target in opts (highest priority)
-  2. `:=target` key in spec (set via `target` function)
-  3. :geomviz (static SVG) as default
+  1. target-or-opts if it's a keyword (highest priority)
+  2. :target in opts map (if target-or-opts is a map)
+  3. `:=target` key in spec (set via `target` function)
+  4. :geom (static SVG) as default
 
   Returns:
   - Kindly-wrapped visualization specification
@@ -1264,15 +1268,25 @@
             (mapping :x :y)
             (scatter)))
   
-  ;; With options:
+  ;; With target shorthand:
   (-> penguins
       (mapping :x :y)
       (scatter)
-      (plot {:width 800 :height 600}))"
+      (plot :plotly))
+  
+  ;; With full options:
+  (-> penguins
+      (mapping :x :y)
+      (scatter)
+      (plot {:target :vl :width 800 :height 600}))"
   ([spec]
    (plot-impl spec {}))
-  ([spec opts]
-   (plot-impl spec opts)))
+  ([spec target-or-opts]
+   (if (keyword? target-or-opts)
+     ;; Shorthand: (plot spec :plotly)
+     (plot-impl spec {:target target-or-opts})
+     ;; Full options: (plot spec {:target :plotly :width 800})
+     (plot-impl spec target-or-opts))))
 
 (defn- ensure-vec
   "Wrap single items in a vector if not already sequential.
@@ -5595,3 +5609,12 @@ iris
 ;; for the space to try new ideas.
 
 ;; ---
+
+(-> iris
+    (mapping :sepal-length
+             :petal-length
+             {:color :species})
+    (=+ (scatter)
+        (linear))
+    (plot :plotly))
+
