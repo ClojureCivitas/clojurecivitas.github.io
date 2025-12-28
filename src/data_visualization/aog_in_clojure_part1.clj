@@ -66,7 +66,13 @@
 ;; plotting in Clojure. They were a decent compromise—pragmatic, functional,
 ;; good enough to be useful. Better designs have been waiting to be explored.
 ;;
-;; ### Learning from Our Users
+;; ### Learning from the community
+
+;; This post is inspired and affected by past conversations with a few Scicloj-community friends -- in particular:
+;; Cvetomir Dimov, who helped idevelop Tableplot, Jon Anthony, who created Hanami,
+;; Kira Howe, who initiated the Scicloj exploration of Grammar-of-Graphics a couple of years ago,
+;; Harold Hausman, Teodor Heggelond, and most recently, Timoty Pratley, who have had very thoughtful comments about
+;; the current Tableplot APIs and internals. Many others have affected out thinking about plotting
 ;;
 ;; The feedback from Tableplot users has been invaluable. **Thank you** to everyone
 ;; who took the time to file issues, ask questions, share use cases, and push the
@@ -373,6 +379,9 @@
        {:=y :bill-depth-mm :=alpha 0.5})
 
 ;; This is why `=*` (our composition operator) can use standard `merge` internally.
+;; More importantly, it hopefully allows library users to process the structures
+;; a bit more easily using standard Clojure functions, when they need something
+;; a bit more flexible than what the library functions offer.
 
 ;; # Design Overview
 ;;
@@ -2477,7 +2486,9 @@ iris
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)))
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **Threading macro style (equivalent):**
 
@@ -2499,7 +2510,9 @@ iris
     (scatter)
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; Both forms produce identical results. The threading style is often more
 ;; natural in Clojure, while the `=*` style makes the composition operator explicit.
@@ -2547,7 +2560,9 @@ iris
      (mapping :x :y)
      (scatter)))
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **Vector of maps** (row-oriented data):
 ;; Inspect the spec:
@@ -2575,7 +2590,9 @@ iris
      (mapping :x :y)
      (scatter)))
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **What happens here**:
 
@@ -2612,7 +2629,9 @@ iris
     (scatter)
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **With color aesthetic**:
 ;; Inspect the spec:
@@ -2632,7 +2651,9 @@ iris
     (scatter)
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; ### 🧪 Example 2c: Semi-Transparent Points
 ;;
@@ -2656,7 +2677,9 @@ iris
     (scatter {:alpha 0.5})
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **Combining attributes with aesthetics**:
 ;; Inspect the spec:
@@ -2676,7 +2699,9 @@ iris
     (scatter {:alpha 0.7})
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; ### 🧪 Example 2d: Scale Customization
 ;;
@@ -2702,7 +2727,9 @@ iris
     (scale :y {:domain [12 23]})
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **Works with plain data too**:
 ;; Inspect the spec:
@@ -2724,7 +2751,9 @@ iris
     (scatter)
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **What's happening under the hood**:
 ;;
@@ -3019,7 +3048,9 @@ iris
         (linear))
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; ### 🧪 Example 5: Grouped Linear Regression (Color Aesthetic)
 
@@ -3049,7 +3080,9 @@ iris
         (linear))
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **What happens here**:
 
@@ -3327,7 +3360,9 @@ iris
     (histogram {:bins 15})
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; ### 🧪 Histogram Binning Methods
 
@@ -3349,7 +3384,9 @@ iris
     (histogram {:bins :sqrt})
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; # Grouping & Color
 ;; 
@@ -3381,7 +3418,9 @@ iris
         (linear))
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **What happens here**:
 
@@ -3411,7 +3450,9 @@ iris
     (histogram)
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **What happens here**:
 
@@ -3447,7 +3488,9 @@ iris
         (linear))
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **What happens here**:
 
@@ -3487,7 +3530,9 @@ iris
         (linear))
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **What happens here**:
 
@@ -3517,7 +3562,9 @@ iris
         (linear))
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **What happens here**:
 
@@ -3660,7 +3707,9 @@ iris
      (scatter)
      (facet {:col :species})))
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; Faceted histogram - per-species histograms with shared scales:
 
@@ -3692,7 +3741,9 @@ iris
      (scatter)
      (facet {:row :species})))
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; ### 🧪 Example 12: Row × Column Grid Faceting
 ;;
@@ -3718,7 +3769,9 @@ iris
      (scatter)
      (facet {:row :island :col :sex})))
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **What happens here**:
 
@@ -3771,7 +3824,9 @@ iris
     (facet {:col :island})
     plot)
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **What happens here**:
 ;;
@@ -3808,7 +3863,9 @@ iris
      (scatter)
      (scale :y {:domain [0 40]})))
 
-(kind/test-last [#(vector? %)])
+(kind/test-last [#(and (vector? %)
+                       (string? (first %))
+                       (clojure.string/includes? (first %) "<svg"))])
 
 ;; **What happens here**:
 
@@ -4378,7 +4435,9 @@ iris
     (target :vl)
     plot)
 
-(kind/test-last [#(map? %)])
+(kind/test-last [#(and (map? %)
+                       (contains? % :layer)
+                       (= (count (:layer %)) 2))])
 
 ;; **What happens here**:
 
@@ -4410,7 +4469,9 @@ iris
     (target :vl)
     plot)
 
-(kind/test-last [#(map? %)])
+(kind/test-last [#(and (map? %)
+                       (contains? % :layer)
+                       (>= (count (:layer %)) 2))])
 
 ;; **What happens here**:
 
@@ -4457,7 +4518,9 @@ iris
     (target :vl)
     plot)
 
-(kind/test-last [#(map? %)])
+(kind/test-last [#(and (map? %)
+                       (contains? % :facet)
+                       (contains? % :spec))])
 
 ;; **What happens here**:
 
@@ -4534,7 +4597,8 @@ iris
     (target :vl)
     plot)
 
-(kind/test-last [#(map? %)])
+(kind/test-last [#(and (map? %)
+                       (contains? % :encoding))])
 
 ;; **What happens here**:
 
@@ -4624,7 +4688,9 @@ iris
     (target :plotly)
     plot)
 
-(kind/test-last [#(map? %)])
+(kind/test-last [#(and (map? %)
+                       (contains? % :data)
+                       (>= (count (:data %)) 2))])
 
 ;; **What happens here**:
 
@@ -4656,7 +4722,9 @@ iris
     (target :plotly)
     plot)
 
-(kind/test-last [#(map? %)])
+(kind/test-last [#(and (map? %)
+                       (contains? % :data)
+                       (>= (count (:data %)) 2))])
 
 ;; **What happens here**:
 
@@ -4766,7 +4834,9 @@ iris
     (target :plotly)
     plot)
 
-(kind/test-last [#(map? %)])
+(kind/test-last [#(and (map? %)
+                       (contains? % :layout)
+                       (get-in % [:layout :xaxis :range]))])
 
 ;; **What happens here**:
 
@@ -4804,7 +4874,9 @@ iris
     (size 800 600)
     plot)
 
-(kind/test-last [#(map? %)])
+(kind/test-last [#(and (map? %)
+                       (contains? % :facet)
+                       (contains? % :spec))])
 
 ;; **What happens here**:
 
