@@ -72,10 +72,10 @@
 ;; ### Learning from the community
 
 ;; This post is inspired and affected by past conversations with a few Scicloj-community friends -- in particular:
-;; Cvetomir Dimov, who helped idevelop Tableplot, Jon Anthony, who created Hanami,
+;; Cvetomir Dimov, who helped develop Tableplot, Jon Anthony, who created Hanami,
 ;; Kira Howe, who initiated the Scicloj exploration of Grammar-of-Graphics a couple of years ago,
-;; Harold Hausman, Teodor Heggelond, and most recently, Timoty Pratley, who have had very thoughtful comments about
-;; the current Tableplot APIs and internals. Many others have affected out thinking about plotting
+;; Harold Hausman, Teodor Heggelond, and most recently, Timothy Pratley, who have had very thoughtful comments about
+;; the current Tableplot APIs and internals. Many others have affected our thinking about plotting
 ;;
 ;; The feedback from Tableplot users has been invaluable. **Thank you** to everyone
 ;; who took the time to file issues, ask questions, share use cases, and push the
@@ -1240,17 +1240,17 @@
   Args:
   - spec: Plot spec map with :=layers
   - target-or-opts: Either:
-    - Keyword - rendering target (:geom, :vl, :plotly)
+    - Keyword - rendering target (:geomviz, :vl, :plotly)
     - Map with options:
       - :width - Width in pixels (default 600)
       - :height - Height in pixels (default 400)
-      - :target - Rendering target (:geom, :vl, :plotly)
+      - :target - Rendering target (:geomviz, :vl, :plotly)
 
   The rendering target is determined by:
   1. target-or-opts if it's a keyword (highest priority)
   2. :target in opts map (if target-or-opts is a map)
   3. `:=target` key in spec (set via `target` function)
-  4. :geom (static SVG) as default
+  4. :geomviz (static SVG) as default
 
   Returns:
   - Kindly-wrapped visualization specification
