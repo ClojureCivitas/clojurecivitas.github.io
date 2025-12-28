@@ -4021,16 +4021,17 @@ iris
                              facet-points (layer->points facet-layer)
                              transform-result (apply-transform facet-layer facet-points)
                              subplot-idx (+ (* row-idx num-cols) col-idx 1)
-                             xaxis-key (if (= subplot-idx 1) :xaxis (keyword (str "xaxis" subplot-idx)))
-                             yaxis-key (if (= subplot-idx 1) :yaxis (keyword (str "yaxis" subplot-idx)))]
+                             ;; Plotly.js expects "x", "x2", "x3" not "xaxis", "xaxis2", "xaxis3"
+                             xaxis-ref (if (= subplot-idx 1) "x" (str "x" subplot-idx))
+                             yaxis-ref (if (= subplot-idx 1) "y" (str "y" subplot-idx))]
                          (case (:type transform-result)
                            :raw
                            {:type "scatter"
                             :mode "markers"
                             :x (mapv :x facet-points)
                             :y (mapv :y facet-points)
-                            :xaxis (name xaxis-key)
-                            :yaxis (name yaxis-key)
+                            :xaxis xaxis-ref
+                            :yaxis yaxis-ref
                             :marker {:color (:default-mark theme) :size 6}
                             :showlegend false}
 
@@ -4040,8 +4041,8 @@ iris
                               :x (mapv (fn [b] (/ (+ (:x-min b) (:x-max b)) 2)) bars)
                               :y (mapv :height bars)
                               :width (mapv (fn [b] (- (:x-max b) (:x-min b))) bars)
-                              :xaxis (name xaxis-key)
-                              :yaxis (name yaxis-key)
+                              :xaxis xaxis-ref
+                              :yaxis yaxis-ref
                               :marker {:color (:default-mark theme)
                                        :line {:color (:grid theme) :width 1}}
                               :showlegend false})
@@ -4056,8 +4057,8 @@ iris
                               :x (mapv (fn [b] (/ (+ (:x-min b) (:x-max b)) 2)) bars)
                               :y (mapv :height bars)
                               :width (mapv (fn [b] (- (:x-max b) (:x-min b))) bars)
-                              :xaxis (name xaxis-key)
-                              :yaxis (name yaxis-key)
+                              :xaxis xaxis-ref
+                              :yaxis yaxis-ref
                               :marker {:color (:default-mark theme)
                                        :line {:color (:grid theme) :width 1}}
                               :showlegend false})
