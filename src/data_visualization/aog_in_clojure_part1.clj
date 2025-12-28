@@ -2193,10 +2193,17 @@
      :hist-rects hist-rects}))
 
 (defn- get-scale-domain
-  "Extract custom domain for an aesthetic from layers, or return nil if not specified."
-  [layers-vec aesthetic]
+  "Extract custom domain for an aesthetic from plot spec, or return nil if not specified.
+  
+  Args:
+  - spec: Plot specification map (not layers-vec)
+  - aesthetic: Keyword like :x, :y, :color
+  
+  Returns:
+  - Domain vector [min max] or nil if not specified"
+  [spec aesthetic]
   (let [scale-key (keyword (str "=scale-" (name aesthetic)))]
-    (some #(get-in % [scale-key :domain]) layers-vec)))
+    (get-in spec [scale-key :domain])))
 
 ;; Render plot using thi.ng/geom to static SVG.
 ;;
@@ -2237,8 +2244,8 @@
         panel-height (/ height num-rows)
 
         ;; Check for custom scale domains
-        custom-x-domain (get-scale-domain layers-vec :x)
-        custom-y-domain (get-scale-domain layers-vec :y)
+        custom-x-domain (get-scale-domain spec :x)
+        custom-y-domain (get-scale-domain spec :y)
 
         ;; Compute transformed points for ALL facets (for shared domain)
         all-transformed-points
@@ -3786,8 +3793,8 @@ iris
         col-var (when is-faceted? (some :=col layers-vec))
 
         ;; Check for custom scale domains
-        custom-x-domain (get-scale-domain layers-vec :x)
-        custom-y-domain (get-scale-domain layers-vec :y)
+        custom-x-domain (get-scale-domain spec :x)
+        custom-y-domain (get-scale-domain spec :y)
 
         ;; Create context map for render-layer
         context {:custom-x-domain custom-x-domain
@@ -3962,8 +3969,8 @@ iris
         col-var (when is-faceted? (some :=col layers-vec))
 
         ;; Check for custom scale domains
-        custom-x-domain (get-scale-domain layers-vec :x)
-        custom-y-domain (get-scale-domain layers-vec :y)
+        custom-x-domain (get-scale-domain spec :x)
+        custom-y-domain (get-scale-domain spec :y)
 
         ;; Create context map for render-layer
         context {:custom-x-domain custom-x-domain
