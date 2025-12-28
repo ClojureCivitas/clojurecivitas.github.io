@@ -5608,12 +5608,3 @@ iris
 ;; for the space to try new ideas.
 
 ;; ---
-
-(-> iris
-    (mapping :sepal-length
-             :petal-length
-             {:color :species})
-    (=+ (scatter)
-        (linear))
-    (plot :plotly))
-
