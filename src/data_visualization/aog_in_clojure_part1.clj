@@ -495,6 +495,8 @@
 ;; **Not yet implemented** (compared to `tableplot.v1.plotly`):
 ;; - ⚠️ Bar, box, violin, density, smooth, heatmap, text, segment
 ;; - ⚠️ Additional aesthetics: size, symbol/shape, fill, line-width  
+;; - ⚠️ Color gradients: Continuous color scales for numerical columns (currently uses categorical colors only)
+;; - ⚠️ Legends: Automatic legend generation for color, size, and other aesthetics
 ;; - ⚠️ Transforms: kernel density, loess/spline smoothing, correlation
 ;; - ⚠️ Coordinate systems: 3D, polar, geographic
 ;; - ⚠️ Advanced layouts: subplots, secondary axes, insets
@@ -1356,12 +1358,14 @@
   - If plot spec (map with :=layers keys): merges mapping into those layers
   - If data: converts to layer first, then adds mapping"
   ([x y]
-   {:=layers [{:=x x :=y y}]})
+   {:=layers [(into {} (filter (fn [[_ v]] (some? v))
+                               {:=x x :=y y}))]})
   ([x y named]
    (if (map? named)
      ;; Regular 3-arg: mapping :x :y {:color :species}
-     {:=layers [(merge {:=x x :=y y}
-                       (update-keys named =key))]}
+     {:=layers [(into {} (filter (fn [[_ v]] (some? v))
+                                 (merge {:=x x :=y y}
+                                        (update-keys named =key))))]}
      ;; Threading-friendly: (-> spec (mapping :x :y))
      (let [spec-or-data x
            x-field y
@@ -2009,41 +2013,44 @@
 ;;
 ;; Design: Transform computation (apply-transform) is target-independent and shared.
 ;; Rendering is target-specific - each [target plottype] combination is a separate method.
-;; This makes it easy to add new targets: define [:vl :scatter], [:plotly :scatter], etc.
+;; This makes it easy to add new targets: define `[:vl :scatter]`, `[:plotly :scatter]`, etc.
 
 (defmulti render-layer
   "Render a layer for a specific target.
   
   Dispatches on [target plottype-or-transform], where plottype-or-transform
-  is the transformation type if present, otherwise the plottype."
-  (fn [target layer transform-result alpha]
+  is the transformation type if present, otherwise the plottype.
+  
+  Parameters:
+  - target: rendering target (:geom, :vl, :plotly)
+  - layer: layer specification map
+  - transform-result: result from apply-transform
+  - alpha: opacity value
+  - context: (optional) context map with plot-level properties like :custom-x-domain, :custom-y-domain"
+  (fn [target layer transform-result alpha & [context]]
     [target (or (:=transformation layer) (:=plottype layer))]))
 
 ;; ### ⚙️ Geom Target Rendering Methods
 
 (defmethod render-layer [:geom :line]
-  [target layer transform-result alpha]
+  [target layer transform-result alpha & [context]]
   (let [points (:points transform-result)
-        sorted-points (sort-by :x points)
-        color-groups (group-by :color sorted-points)]
+        color-groups (group-by :color points)]
     (if (> (count color-groups) 1)
       ;; Colored lines
       (let [colors (color-scale (keys color-groups))]
         (mapv (fn [[color group-points]]
-                {:values (mapv (fn [p] [(:x p) (:y p)])
-                               (sort-by :x group-points))
+                {:values (mapv (fn [p] [(:x p) (:y p)]) group-points)
                  :layout viz/svg-line-plot
                  :attribs {:stroke (get colors color)
-                           :stroke-width 1
-                           :fill "none"
+                           :stroke-width 2
                            :opacity alpha}})
               color-groups))
       ;; Simple line
-      [{:values (mapv (fn [p] [(:x p) (:y p)]) sorted-points)
+      [{:values (mapv (fn [p] [(:x p) (:y p)]) points)
         :layout viz/svg-line-plot
         :attribs {:stroke (:default-mark theme)
-                  :stroke-width 1
-                  :fill "none"
+                  :stroke-width 2
                   :opacity alpha}}])))
 
 ;; ### ⚙️ Simple :geom Target (Delegating Domain Computation)
@@ -2139,7 +2146,7 @@
                              (let [points (layer->points layer)
                                    alpha (or (:=alpha layer) 1.0)
                                    transform-result (apply-transform layer points)]
-                               (render-layer :geom layer transform-result alpha)))
+                               (render-layer :geom layer transform-result alpha nil)))
                            layers)
 
         ;; Separate regular viz data from histogram rectangles
@@ -2448,7 +2455,7 @@ iris
 ;; ### ⚙️ Rendering Multimethod
 
 (defmethod render-layer [:geom :scatter]
-  [target layer transform-result alpha]
+  [target layer transform-result alpha & [context]]
   (let [points (:points transform-result)
         color-groups (group-by :color points)]
     (if (> (count color-groups) 1)
@@ -2644,11 +2651,11 @@ iris
 
 ;; **What's happening under the hood**:
 ;;
-;; 1. Each function detects whether its first argument is layers (vector with `:=...` keys)
+;; 1. Each function detects whether its first argument is a plot spec
 ;;    or data (dataset, map-of-vectors, vector-of-maps)
-;; 2. If data: converts to layers first via `(data ...)`
-;; 3. If layers: merges the new specification using `*`
-;; 4. Everything returns vectors, so threading works naturally
+;; 2. If data: converts to a plot spec first via `(data ...)`
+;; 3. If a plot spec: merges the new specification using `*`
+;; 4. Everything returns plot specs, so threading works naturally
 ;;
 ;; **Both styles work**:
 ;;
@@ -2676,7 +2683,7 @@ iris
   [layer aesthetic]
   (let [data (:=data layer)
         dataset (ensure-dataset data)
-        col-key (get layer (=key aesthetic))
+        col-key (get layer aesthetic)
         values (when col-key (tc/column dataset col-key))]
     (cond
       (nil? values) nil
@@ -2694,6 +2701,11 @@ iris
 
 ;; Notice: Type inference is instant (O(1) lookup from Tablecloth metadata),
 ;; not O(n) value examination.
+
+;; **Why this matters:** Column types influence many plotting decisions—scale types,
+;; grouping behavior for statistical transforms, default visual encodings, and more.
+;; Getting types efficiently from metadata rather than examining values makes the
+;; API faster and more predictable.
 
 ;; With linear regression implemented, we can overlay trend lines.
 
@@ -2877,29 +2889,30 @@ iris
 ;; ### ⚙️ Rendering Multimethod
 
 (defmethod render-layer [:geom :linear]
-  [target layer transform-result alpha]
-  (if (= :grouped-regression (:type transform-result))
-    ;; Grouped regression - one line per group
-    (let [groups (:groups transform-result)
-          color-groups (group-by :color (:points transform-result))
-          colors (color-scale (keys color-groups))]
-      (keep (fn [[group-val {:keys [fitted]}]]
-              (when fitted
-                {:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
-                 :layout viz/svg-line-plot
-                 :attribs {:stroke (get colors group-val (:default-mark theme))
-                           :stroke-width 2
-                           :fill "none"
-                           :opacity alpha}}))
-            groups))
-    ;; Single regression
-    (when-let [fitted (:fitted transform-result)]
-      [{:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
-        :layout viz/svg-line-plot
-        :attribs {:stroke (:default-mark theme)
-                  :stroke-width 2
-                  :fill "none"
-                  :opacity alpha}}])))
+  [target layer transform-result alpha & [context]]
+  (let [transform-type (:type transform-result)]
+    (case transform-type
+      ;; Single regression line
+      :regression
+      (let [fitted (:fitted transform-result)]
+        [{:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
+          :layout viz/svg-line-plot
+          :attribs {:stroke (:default-mark theme)
+                    :stroke-width 2
+                    :opacity alpha}}])
+
+      ;; Grouped regression lines
+      :grouped-regression
+      (let [groups (:groups transform-result)
+            colors (color-scale (keys groups))]
+        (mapv (fn [[group-val {:keys [fitted]}]]
+                (when fitted
+                  {:values (mapv (fn [p] [(:x p) (:y p)]) fitted)
+                   :layout viz/svg-line-plot
+                   :attribs {:stroke (get colors group-val)
+                             :stroke-width 2
+                             :opacity alpha}}))
+              groups)))))
 
 ;; ## 🧪 Examples
 
@@ -3148,45 +3161,40 @@ iris
 ;; ### ⚙️ Rendering Multimethod
 
 (defmethod render-layer [:geom :histogram]
-  [target layer transform-result alpha]
-  (if (= :grouped-histogram (:type transform-result))
-    ;; Grouped histogram - bars per group
-    (let [groups (:groups transform-result)
-          ;; Extract color from first point of each group for coloring
-          ;; group-val is now a vector like [:Adelie] or [:Adelie :Biscoe]
-          ;; We use the first element (typically :color aesthetic) for bar color
-          group-colors (into {} (map (fn [[group-val {:keys [points]}]]
-                                       (let [color-val (if (vector? group-val) (first group-val) group-val)]
-                                         [group-val color-val]))
-                                     groups))
-          ;; Build color scale from unique color values
-          unique-colors (distinct (vals group-colors))
-          colors (color-scale unique-colors)]
-      (mapcat (fn [[group-val {:keys [bars]}]]
-                (let [color-val (get group-colors group-val)]
-                  (mapv (fn [bar]
-                          {:type :rect
-                           :x-min (:x-min bar)
-                           :x-max (:x-max bar)
-                           :height (:height bar)
-                           :attribs {:fill (get colors color-val (:default-mark theme))
-                                     :stroke (:grid theme)
-                                     :stroke-width 1
-                                     :opacity alpha}})
-                        bars)))
-              groups))
-    ;; Single histogram
-    (when-let [bars (:bars transform-result)]
-      (mapv (fn [bar]
-              {:type :rect
-               :x-min (:x-min bar)
-               :x-max (:x-max bar)
-               :height (:height bar)
-               :attribs {:fill (:default-mark theme)
-                         :stroke (:grid theme)
-                         :stroke-width 1
-                         :opacity alpha}})
-            bars))))
+  [target layer transform-result alpha & [context]]
+  (let [transform-type (:type transform-result)]
+    (case transform-type
+      ;; Single histogram
+      :histogram
+      (let [bars (:bars transform-result)]
+        (mapv (fn [bar]
+                {:type :rect
+                 :x-min (:x-min bar)
+                 :x-max (:x-max bar)
+                 :height (:height bar)
+                 :attribs {:fill (:default-mark theme)
+                           :stroke (:grid theme)
+                           :stroke-width 1
+                           :opacity alpha}})
+              bars))
+
+      ;; Grouped histogram
+      :grouped-histogram
+      (let [groups (:groups transform-result)
+            colors (color-scale (keys groups))]
+        (mapcat (fn [[group-val {:keys [bars]}]]
+                  (when bars
+                    (mapv (fn [bar]
+                            {:type :rect
+                             :x-min (:x-min bar)
+                             :x-max (:x-max bar)
+                             :height (:height bar)
+                             :attribs {:fill (get colors group-val)
+                                       :stroke (:grid theme)
+                                       :stroke-width 1
+                                       :opacity alpha}})
+                          bars)))
+                groups)))))
 
 ;; ## 🧪 Examples
 
@@ -3361,7 +3369,7 @@ iris
 ;; Most of the time, layers auto-display and you don't need `plot`.
 ;; But sometimes you want the raw target spec for debugging or customization.
 ;; See the Multi-Target Rendering section for examples of using `plot`
-;; with :vl and :plotly targets.
+;; with `:vl` and `:plotly` targets.
 
 ;; # Faceting
 ;;
@@ -3609,6 +3617,158 @@ iris
 
 ;; ## ⚙️ Implementation: Vega-Lite Target
 
+;; ### ⚙️ Vega-Lite Helper Functions
+
+(defn- layer->vl-data
+  "Convert layer data to Vega-Lite data format."
+  [layer]
+  (let [data (:=data layer)
+        dataset (ensure-dataset data)
+        x-col (:=x layer)
+        y-col (:=y layer)
+        color-col (:=color layer)
+        row-col (:=row layer)
+        col-col (:=col layer)
+        rows (tc/rows dataset :as-maps)]
+    (mapv (fn [row]
+            (cond-> {}
+              x-col (assoc (keyword (name x-col)) (get row x-col))
+              y-col (assoc (keyword (name y-col)) (get row y-col))
+              color-col (assoc (keyword (name color-col)) (get row color-col))
+              row-col (assoc (keyword (name row-col)) (get row row-col))
+              col-col (assoc (keyword (name col-col)) (get row col-col))))
+          rows)))
+
+(defn- layer->vl-encoding
+  "Create Vega-Lite encoding for a layer."
+  [layer context]
+  (let [x-col (:=x layer)
+        y-col (:=y layer)
+        color-col (:=color layer)
+        alpha (:=alpha layer)
+        custom-x-domain (:custom-x-domain context)
+        custom-y-domain (:custom-y-domain context)
+        ;; Build tooltip fields
+        tooltip-fields (cond-> []
+                         x-col (conj {:field (name x-col) :type "quantitative"})
+                         y-col (conj {:field (name y-col) :type "quantitative"})
+                         color-col (conj {:field (name color-col) :type "nominal"}))]
+    (cond-> {}
+      x-col (assoc :x (cond-> {:field (name x-col) :type "quantitative"}
+                        true (assoc :scale (merge {:zero false}
+                                                  (when custom-x-domain {:domain custom-x-domain})))))
+      y-col (assoc :y (cond-> {:field (name y-col) :type "quantitative"}
+                        true (assoc :scale (merge {:zero false}
+                                                  (when custom-y-domain {:domain custom-y-domain})))))
+      color-col (assoc :color {:field (name color-col)
+                               :type "nominal"
+                               :scale {:range (:colors theme)}})
+      alpha (assoc :opacity {:value alpha})
+      (seq tooltip-fields) (assoc :tooltip tooltip-fields))))
+
+;; ### ⚙️ Vega-Lite Target Rendering Methods
+
+(defmethod render-layer [:vl :scatter]
+  [target layer transform-result alpha & [context]]
+  (let [vl-data (layer->vl-data layer)]
+    [{:mark "circle"
+      :data {:values vl-data}
+      :encoding (layer->vl-encoding layer context)}]))
+
+(defmethod render-layer [:vl :linear]
+  [target layer transform-result alpha & [context]]
+  (let [transform-type (:type transform-result)]
+    (case transform-type
+      ;; Single regression - send computed line
+      :regression
+      (let [fitted (:fitted transform-result)
+            fitted-data (mapv (fn [p]
+                                {(keyword (name (:=x layer))) (:x p)
+                                 (keyword (name (:=y layer))) (:y p)})
+                              fitted)]
+        [{:mark "line"
+          :data {:values fitted-data}
+          :encoding (layer->vl-encoding layer context)}])
+
+      ;; Grouped regression - one line per group
+      :grouped-regression
+      (let [groups (:groups transform-result)
+            grouping-cols (get-grouping-columns layer (ensure-dataset (:=data layer)))]
+        (mapv (fn [[group-val {:keys [fitted]}]]
+                (when fitted
+                  (let [;; Create map of grouping column names to values
+                        group-map (zipmap (map #(keyword (name %)) grouping-cols)
+                                          (if (vector? group-val) group-val [group-val]))
+                        group-fitted-data (mapv (fn [p]
+                                                  (merge {(keyword (name (:=x layer))) (:x p)
+                                                          (keyword (name (:=y layer))) (:y p)}
+                                                         group-map))
+                                                fitted)]
+                    {:mark "line"
+                     :data {:values group-fitted-data}
+                     :encoding (layer->vl-encoding layer context)})))
+              groups)))))
+
+(defmethod render-layer [:vl :histogram]
+  [target layer transform-result alpha & [context]]
+  (let [transform-type (:type transform-result)]
+    (case transform-type
+      ;; Single histogram - send computed bars
+      :histogram
+      (let [bars (:bars transform-result)
+            bar-data (mapv (fn [bar]
+                             {:bin-start (:x-min bar)
+                              :bin-end (:x-max bar)
+                              :count (:height bar)})
+                           bars)]
+        [{:mark "bar"
+          :data {:values bar-data}
+          :encoding {:x {:field "bin-start"
+                         :type "quantitative"
+                         :bin {:binned true :step (- (:x-max (first bars)) (:x-min (first bars)))}
+                         :axis {:title (name (:=x layer))}}
+                     :x2 {:field "bin-end"}
+                     :y {:field "count" :type "quantitative"}
+                     :tooltip [{:field "bin-start" :type "quantitative" :title "Min"}
+                               {:field "bin-end" :type "quantitative" :title "Max"}
+                               {:field "count" :type "quantitative" :title "Count"}]}}])
+
+      ;; Grouped histogram - bars per group
+      :grouped-histogram
+      (let [groups (:groups transform-result)
+            grouping-cols (get-grouping-columns layer (ensure-dataset (:=data layer)))]
+        (mapcat (fn [[group-val {:keys [bars]}]]
+                  (when bars
+                    (let [;; Create map of grouping column names to values
+                          group-map (zipmap (map #(keyword (name %)) grouping-cols)
+                                            (if (vector? group-val) group-val [group-val]))
+                          bar-data (mapv (fn [bar]
+                                           (merge {:bin-start (:x-min bar)
+                                                   :bin-end (:x-max bar)
+                                                   :count (:height bar)}
+                                                  group-map))
+                                         bars)
+                          ;; Add all grouping columns to tooltip
+                          tooltip-fields (concat [{:field "bin-start" :type "quantitative" :title "Min"}
+                                                  {:field "bin-end" :type "quantitative" :title "Max"}
+                                                  {:field "count" :type "quantitative" :title "Count"}]
+                                                 (map #(hash-map :field (name %) :type "nominal")
+                                                      grouping-cols))]
+                      [{:mark "bar"
+                        :data {:values bar-data}
+                        :encoding (merge
+                                   {:x {:field "bin-start"
+                                        :type "quantitative"
+                                        :bin {:binned true :step (- (:x-max (first bars)) (:x-min (first bars)))}
+                                        :axis {:title (name (:=x layer))}}
+                                    :x2 {:field "bin-end"}
+                                    :y {:field "count" :type "quantitative"}
+                                    :tooltip tooltip-fields}
+                                   ;; Use first grouping column for color (typically :color aesthetic)
+                                   (when (seq grouping-cols)
+                                     {:color {:field (name (first grouping-cols)) :type "nominal"}}))}])))
+                groups)))))
+
 (defmethod plot-impl :vl
   [spec opts]
   ;; Extract layers from spec
@@ -3620,10 +3780,7 @@ iris
         height (or (:=height spec) (:height opts) 400)
 
         ;; Check for faceting
-        facet-groups (organize-by-facets layers-vec)
         is-faceted? (has-faceting? layers-vec)
-
-        ;; Get facet dimensions if faceted
         row-var (when is-faceted? (some :=row layers-vec))
         col-var (when is-faceted? (some :=col layers-vec))
 
@@ -3631,160 +3788,19 @@ iris
         custom-x-domain (get-scale-domain layers-vec :x)
         custom-y-domain (get-scale-domain layers-vec :y)
 
-        ;; Helper to convert layer to VL data format
-        layer->vl-data (fn [layer]
-                         (let [data (:=data layer)
-                               dataset (ensure-dataset data)
-                               x-col (:=x layer)
-                               y-col (:=y layer)
-                               color-col (:=color layer)
-                               row-col (:=row layer)
-                               col-col (:=col layer)
-                               rows (tc/rows dataset :as-maps)]
-                           (mapv (fn [row]
-                                   (cond-> {}
-                                     x-col (assoc (keyword (name x-col)) (get row x-col))
-                                     y-col (assoc (keyword (name y-col)) (get row y-col))
-                                     color-col (assoc (keyword (name color-col)) (get row color-col))
-                                     row-col (assoc (keyword (name row-col)) (get row row-col))
-                                     col-col (assoc (keyword (name col-col)) (get row col-col))))
-                                 rows)))
+        ;; Create context map for render-layer
+        context {:custom-x-domain custom-x-domain
+                 :custom-y-domain custom-y-domain}
 
-        ;; Helper to create VL mark for a layer
-        layer->vl-mark (fn [layer]
-                         (let [plottype (:=plottype layer)
-                               transform (:=transformation layer)]
-                           (cond
-                             (= transform :linear) "line"
-                             (= transform :histogram) "bar"
-                             (= plottype :scatter) "circle"
-                             (= plottype :line) "line"
-                             :else "circle")))
-
-        ;; Helper to create encoding for a layer
-        layer->vl-encoding (fn [layer vl-data]
-                             (let [x-col (:=x layer)
-                                   y-col (:=y layer)
-                                   color-col (:=color layer)
-                                   alpha (:=alpha layer)
-                                   transform (:=transformation layer)
-                                   ;; Build tooltip fields
-                                   tooltip-fields (cond-> []
-                                                    x-col (conj {:field (name x-col) :type "quantitative"})
-                                                    y-col (conj {:field (name y-col) :type "quantitative"})
-                                                    color-col (conj {:field (name color-col) :type "nominal"}))]
-                               (cond-> {}
-                                 x-col (assoc :x (cond-> {:field (name x-col) :type "quantitative"}
-                                                   true (assoc :scale (merge {:zero false}
-                                                                             (when custom-x-domain {:domain custom-x-domain})))))
-                                 y-col (assoc :y (cond-> {:field (name y-col) :type "quantitative"}
-                                                   true (assoc :scale (merge {:zero false}
-                                                                             (when custom-y-domain {:domain custom-y-domain})))))
-                                 color-col (assoc :color {:field (name color-col)
-                                                          :type "nominal"
-                                                          :scale {:range (:colors theme)}})
-                                 alpha (assoc :opacity {:value alpha})
-                                 (seq tooltip-fields) (assoc :tooltip tooltip-fields))))
-
-        ;; Process each layer
+        ;; Process each layer using render-layer multimethod
         vl-layers (mapcat (fn [layer]
                             (let [points (layer->points layer)
+                                  alpha (or (:=alpha layer) 1.0)
                                   transform-result (apply-transform layer points)]
-                              (case (:type transform-result)
-                                ;; Scatter/line - use raw data
-                                :raw
-                                [{:mark (layer->vl-mark layer)
-                                  :data {:values (layer->vl-data layer)}
-                                  :encoding (layer->vl-encoding layer (layer->vl-data layer))}]
-
-                                ;; Single regression - send computed line
-                                :regression
-                                (let [fitted (:fitted transform-result)
-                                      fitted-data (mapv (fn [p]
-                                                          {(keyword (name (:=x layer))) (:x p)
-                                                           (keyword (name (:=y layer))) (:y p)})
-                                                        fitted)]
-                                  [{:mark "line"
-                                    :data {:values fitted-data}
-                                    :encoding (layer->vl-encoding layer fitted-data)}])
-
-                                ;; Grouped regression - one line per group
-                                :grouped-regression
-                                (let [groups (:groups transform-result)
-                                      grouping-cols (get-grouping-columns layer (ensure-dataset (:=data layer)))]
-                                  (mapv (fn [[group-val {:keys [fitted]}]]
-                                          (when fitted
-                                            (let [;; Create map of grouping column names to values
-                                                  group-map (zipmap (map #(keyword (name %)) grouping-cols)
-                                                                    (if (vector? group-val) group-val [group-val]))
-                                                  group-fitted-data (mapv (fn [p]
-                                                                            (merge {(keyword (name (:=x layer))) (:x p)
-                                                                                    (keyword (name (:=y layer))) (:y p)}
-                                                                                   group-map))
-                                                                          fitted)]
-                                              {:mark "line"
-                                               :data {:values group-fitted-data}
-                                               :encoding (layer->vl-encoding layer group-fitted-data)})))
-                                        groups))
-
-                                ;; Single histogram - send computed bars
-                                :histogram
-                                (let [bars (:bars transform-result)
-                                      bar-data (mapv (fn [bar]
-                                                       {:bin-start (:x-min bar)
-                                                        :bin-end (:x-max bar)
-                                                        :count (:height bar)})
-                                                     bars)]
-                                  [{:mark "bar"
-                                    :data {:values bar-data}
-                                    :encoding {:x {:field "bin-start"
-                                                   :type "quantitative"
-                                                   :bin {:binned true :step (- (:x-max (first bars)) (:x-min (first bars)))}
-                                                   :axis {:title (name (:=x layer))}}
-                                               :x2 {:field "bin-end"}
-                                               :y {:field "count" :type "quantitative"}
-                                               :tooltip [{:field "bin-start" :type "quantitative" :title "Min"}
-                                                         {:field "bin-end" :type "quantitative" :title "Max"}
-                                                         {:field "count" :type "quantitative" :title "Count"}]}}])
-
-                                ;; Grouped histogram - bars per group
-                                :grouped-histogram
-                                (let [groups (:groups transform-result)
-                                      grouping-cols (get-grouping-columns layer (ensure-dataset (:=data layer)))]
-                                  (mapcat (fn [[group-val {:keys [bars]}]]
-                                            (when bars
-                                              (let [;; Create map of grouping column names to values
-                                                    group-map (zipmap (map #(keyword (name %)) grouping-cols)
-                                                                      (if (vector? group-val) group-val [group-val]))
-                                                    bar-data (mapv (fn [bar]
-                                                                     (merge {:bin-start (:x-min bar)
-                                                                             :bin-end (:x-max bar)
-                                                                             :count (:height bar)}
-                                                                            group-map))
-                                                                   bars)
-                                                    ;; Add all grouping columns to tooltip
-                                                    tooltip-fields (concat [{:field "bin-start" :type "quantitative" :title "Min"}
-                                                                            {:field "bin-end" :type "quantitative" :title "Max"}
-                                                                            {:field "count" :type "quantitative" :title "Count"}]
-                                                                           (map #(hash-map :field (name %) :type "nominal")
-                                                                                grouping-cols))]
-                                                [{:mark "bar"
-                                                  :data {:values bar-data}
-                                                  :encoding (merge
-                                                             {:x {:field "bin-start"
-                                                                  :type "quantitative"
-                                                                  :bin {:binned true :step (- (:x-max (first bars)) (:x-min (first bars)))}
-                                                                  :axis {:title (name (:=x layer))}}
-                                                              :x2 {:field "bin-end"}
-                                                              :y {:field "count" :type "quantitative"}
-                                                              :tooltip tooltip-fields}
-                                                             ;; Use first grouping column for color (typically :color aesthetic)
-                                                             (when (seq grouping-cols)
-                                                               {:color {:field (name (first grouping-cols)) :type "nominal"}}))}])))
-                                          groups)))))
+                              (render-layer :vl layer transform-result alpha context)))
                           layers-vec)
 
-        ;; Remove nils from nested regression per-group
+        ;; Remove nils from nested groups (e.g., grouped regression)
         vl-layers (remove nil? (flatten vl-layers))
 
         ;; ggplot2-compatible theme config
@@ -3832,6 +3848,93 @@ iris
 
 ;; ## ⚙️ Implementation: Plotly Target
 
+;; ### ⚙️ Plotly Target Rendering Methods
+
+(defmethod render-layer [:plotly :scatter]
+  [target layer transform-result alpha & [context]]
+  (let [points (:points transform-result)
+        color-col (:=color layer)]
+    (if color-col
+      ;; Grouped scatter - one trace per group
+      (let [color-groups (group-by :color points)]
+        (map-indexed
+         (fn [idx [color-val group-points]]
+           {:type "scatter"
+            :mode "markers"
+            :x (mapv :x group-points)
+            :y (mapv :y group-points)
+            :name (str color-val)
+            :marker {:color (get (:colors theme) idx (:default-mark theme))
+                     :size 8}})
+         color-groups))
+      ;; Single scatter trace
+      [{:type "scatter"
+        :mode "markers"
+        :x (mapv :x points)
+        :y (mapv :y points)
+        :marker {:color (:default-mark theme) :size 8}
+        :showlegend false}])))
+
+(defmethod render-layer [:plotly :linear]
+  [target layer transform-result alpha & [context]]
+  (let [transform-type (:type transform-result)]
+    (case transform-type
+      ;; Single regression line
+      :regression
+      (let [fitted (:fitted transform-result)]
+        [{:type "scatter"
+          :mode "lines"
+          :x (mapv :x fitted)
+          :y (mapv :y fitted)
+          :line {:color (:default-mark theme) :width 2}
+          :showlegend false}])
+
+      ;; Grouped regression - one line per group
+      :grouped-regression
+      (let [groups (:groups transform-result)]
+        (map-indexed
+         (fn [idx [group-val {:keys [fitted]}]]
+           (when fitted
+             {:type "scatter"
+              :mode "lines"
+              :x (mapv :x fitted)
+              :y (mapv :y fitted)
+              :name (str group-val " (fit)")
+              :line {:color (get (:colors theme) idx (:default-mark theme))
+                     :width 2}
+              :showlegend false}))
+         groups)))))
+
+(defmethod render-layer [:plotly :histogram]
+  [target layer transform-result alpha & [context]]
+  (let [transform-type (:type transform-result)]
+    (case transform-type
+      ;; Single histogram
+      :histogram
+      (let [bars (:bars transform-result)]
+        [{:type "bar"
+          :x (mapv (fn [b] (/ (+ (:x-min b) (:x-max b)) 2)) bars)
+          :y (mapv :height bars)
+          :width (mapv (fn [b] (- (:x-max b) (:x-min b))) bars)
+          :marker {:color (:default-mark theme)
+                   :line {:color (:grid theme) :width 1}}
+          :showlegend false}])
+
+      ;; Grouped histogram - bars per group
+      :grouped-histogram
+      (let [groups (:groups transform-result)]
+        (map-indexed
+         (fn [idx [group-val {:keys [bars]}]]
+           (when bars
+             {:type "bar"
+              :x (mapv (fn [b] (/ (+ (:x-min b) (:x-max b)) 2)) bars)
+              :y (mapv :height bars)
+              :width (mapv (fn [b] (- (:x-max b) (:x-min b))) bars)
+              :name (str group-val)
+              :marker {:color (get (:colors theme) idx (:default-mark theme))
+                       :line {:color (:grid theme) :width 1}}}))
+         groups)))))
+
 (defmethod plot-impl :plotly
   [spec opts]
   ;; Extract layers from spec
@@ -3851,110 +3954,25 @@ iris
         custom-x-domain (get-scale-domain layers-vec :x)
         custom-y-domain (get-scale-domain layers-vec :y)
 
-        ;; Helper to convert layer to Plotly data
-        layer->plotly-data (fn [layer]
-                             (let [data (:=data layer)
-                                   dataset (ensure-dataset data)
-                                   x-col (:=x layer)
-                                   y-col (:=y layer)
-                                   color-col (:=color layer)
-                                   row-col (:=row layer)
-                                   col-col (:=col layer)]
-                               {:x-vals (when x-col (vec (tc/column dataset x-col)))
-                                :y-vals (when y-col (vec (tc/column dataset y-col)))
-                                :color-vals (when color-col (vec (tc/column dataset color-col)))
-                                :row-vals (when row-col (vec (tc/column dataset row-col)))
-                                :col-vals (when col-col (vec (tc/column dataset col-col)))
-                                :x-name (when x-col (name x-col))
-                                :y-name (when y-col (name y-col))}))
+        ;; Create context map for render-layer
+        context {:custom-x-domain custom-x-domain
+                 :custom-y-domain custom-y-domain}
 
-        ;; Process each layer into Plotly traces
+        ;; Process each layer using render-layer multimethod
         plotly-traces (mapcat (fn [layer]
-                                (let [plotly-data (layer->plotly-data layer)
-                                      points (layer->points layer)
-                                      transform-result (apply-transform layer points)
-                                      plottype (:=plottype layer)
-                                      transform (:=transformation layer)
-                                      color-col (:=color layer)]
-                                  (case (:type transform-result)
-                                    ;; Scatter plot
-                                    :raw
-                                    (if color-col
-                                      ;; Grouped scatter - one trace per group
-                                      (let [color-groups (group-by :color points)]
-                                        (map-indexed
-                                         (fn [idx [color-val group-points]]
-                                           {:type "scatter"
-                                            :mode "markers"
-                                            :x (mapv :x group-points)
-                                            :y (mapv :y group-points)
-                                            :name (str color-val)
-                                            :marker {:color (get (:colors theme) idx (:default-mark theme))
-                                                     :size 8}})
-                                         color-groups))
-                                      ;; Single scatter trace
-                                      [{:type "scatter"
-                                        :mode "markers"
-                                        :x (:x-vals plotly-data)
-                                        :y (:y-vals plotly-data)
-                                        :marker {:color (:default-mark theme) :size 8}
-                                        :showlegend false}])
-
-                                    ;; Single regression line
-                                    :regression
-                                    (let [fitted (:fitted transform-result)]
-                                      [{:type "scatter"
-                                        :mode "lines"
-                                        :x (mapv :x fitted)
-                                        :y (mapv :y fitted)
-                                        :line {:color (:default-mark theme) :width 2}
-                                        :showlegend false}])
-
-                                    ;; Grouped regression - one line per group
-                                    :grouped-regression
-                                    (let [groups (:groups transform-result)]
-                                      (map-indexed
-                                       (fn [idx [group-val {:keys [fitted]}]]
-                                         (when fitted
-                                           {:type "scatter"
-                                            :mode "lines"
-                                            :x (mapv :x fitted)
-                                            :y (mapv :y fitted)
-                                            :name (str group-val " (fit)")
-                                            :line {:color (get (:colors theme) idx (:default-mark theme))
-                                                   :width 2}
-                                            :showlegend false}))
-                                       groups))
-
-                                    ;; Single histogram
-                                    :histogram
-                                    (let [bars (:bars transform-result)]
-                                      [{:type "bar"
-                                        :x (mapv (fn [b] (clojure.core// (clojure.core/+ (:x-min b) (:x-max b)) 2)) bars)
-                                        :y (mapv :height bars)
-                                        :width (mapv (fn [b] (clojure.core/- (:x-max b) (:x-min b))) bars)
-                                        :marker {:color (:default-mark theme)
-                                                 :line {:color (:grid theme) :width 1}}
-                                        :showlegend false}])
-
-                                    ;; Grouped histogram - bars per group
-                                    :grouped-histogram
-                                    (let [groups (:groups transform-result)]
-                                      (map-indexed
-                                       (fn [idx [group-val {:keys [bars]}]]
-                                         (when bars
-                                           {:type "bar"
-                                            :x (mapv (fn [b] (clojure.core// (clojure.core/+ (:x-min b) (:x-max b)) 2)) bars)
-                                            :y (mapv :height bars)
-                                            :width (mapv (fn [b] (clojure.core/- (:x-max b) (:x-min b))) bars)
-                                            :name (str group-val)
-                                            :marker {:color (get (:colors theme) idx (:default-mark theme))
-                                                     :line {:color (:grid theme) :width 1}}}))
-                                       groups)))))
+                                (let [points (layer->points layer)
+                                      alpha (or (:=alpha layer) 1.0)
+                                      transform-result (apply-transform layer points)]
+                                  (render-layer :plotly layer transform-result alpha context)))
                               layers-vec)
 
-        ;; Remove nils (mapcat already flattened one level)
+        ;; Remove nils from nested groups (e.g., grouped regression)
         plotly-traces (remove nil? plotly-traces)
+
+        ;; Get column names for axis titles
+        first-layer (first layers-vec)
+        x-name (when-let [x-col (:=x first-layer)] (name x-col))
+        y-name (when-let [y-col (:=y first-layer)] (name y-col))
 
         ;; ggplot2-compatible layout
         layout {:width width
@@ -3962,17 +3980,16 @@ iris
                 :plot_bgcolor (:background theme)
                 :paper_bgcolor (:background theme)
                 :xaxis {:gridcolor (:grid theme)
-                        :title (or (:x-name (layer->plotly-data (first layers-vec))) "x")
+                        :title (or x-name "x")
                         :range custom-x-domain}
                 :yaxis {:gridcolor (:grid theme)
-                        :title (or (:y-name (layer->plotly-data (first layers-vec))) "y")
+                        :title (or y-name "y")
                         :range custom-y-domain}
                 :margin {:l 60 :r 30 :t 30 :b 60}}
 
         ;; Handle faceting
         spec (if is-faceted?
                (let [;; Get unique facet values
-                     first-layer (first layers-vec)
                      data (:=data first-layer)
                      dataset (ensure-dataset data)
                      row-vals (when row-var (sort (distinct (tc/column dataset row-var))))
@@ -3989,10 +4006,10 @@ iris
                                              row-var (tc/select-rows #(= (get % row-var) row-val))
                                              col-var (tc/select-rows #(= (get % col-var) col-val)))
                              ;; Create layer with filtered data
-                             facet-layer (assoc (first layers-vec) :=data filtered-data)
+                             facet-layer (assoc first-layer :=data filtered-data)
                              facet-points (layer->points facet-layer)
                              transform-result (apply-transform facet-layer facet-points)
-                             subplot-idx (clojure.core/+ (clojure.core/* row-idx num-cols) col-idx 1)
+                             subplot-idx (+ (* row-idx num-cols) col-idx 1)
                              xaxis-key (if (= subplot-idx 1) :xaxis (keyword (str "xaxis" subplot-idx)))
                              yaxis-key (if (= subplot-idx 1) :yaxis (keyword (str "yaxis" subplot-idx)))]
                          (case (:type transform-result)
@@ -4009,9 +4026,9 @@ iris
                            :histogram
                            (let [bars (:bars transform-result)]
                              {:type "bar"
-                              :x (mapv (fn [b] (clojure.core// (clojure.core/+ (:x-min b) (:x-max b)) 2)) bars)
+                              :x (mapv (fn [b] (/ (+ (:x-min b) (:x-max b)) 2)) bars)
                               :y (mapv :height bars)
-                              :width (mapv (fn [b] (clojure.core/- (:x-max b) (:x-min b))) bars)
+                              :width (mapv (fn [b] (- (:x-max b) (:x-min b))) bars)
                               :xaxis (name xaxis-key)
                               :yaxis (name yaxis-key)
                               :marker {:color (:default-mark theme)
@@ -4030,7 +4047,7 @@ iris
                                                  {:text (str val)
                                                   :xref "paper"
                                                   :yref "paper"
-                                                  :x (clojure.core// (clojure.core/+ idx 0.5) num-cols)
+                                                  :x (/ (+ idx 0.5) num-cols)
                                                   :y 1.0
                                                   :xanchor "center"
                                                   :yanchor "bottom"
@@ -4041,7 +4058,7 @@ iris
                                                   :xref "paper"
                                                   :yref "paper"
                                                   :x -0.05
-                                                  :y (clojure.core/- 1.0 (clojure.core// (clojure.core/+ idx 0.5) num-rows))
+                                                  :y (- 1.0 (/ (+ idx 0.5) num-rows))
                                                   :xanchor "right"
                                                   :yanchor "middle"
                                                   :showarrow false})))})]
