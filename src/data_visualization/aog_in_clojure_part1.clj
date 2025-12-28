@@ -376,6 +376,8 @@
 ;;
 ;; A complete plot spec looks like this:
 
+(def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
+
 (kind/pprint
  {:=layers [{:=data penguins
              :=x :bill-length-mm
