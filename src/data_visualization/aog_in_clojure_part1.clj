@@ -74,7 +74,7 @@
 ;; This post is inspired and affected by past conversations with a few Scicloj-community friends -- in particular:
 ;; Cvetomir Dimov, who helped develop Tableplot, Jon Anthony, who created Hanami,
 ;; Kira Howe, who initiated the Scicloj exploration of Grammar-of-Graphics a couple of years ago,
-;; Andrew Foltz-Morrison, June Choe, Harold Hausman, Teodor Heggelond,
+;; Andrew Foltz-Morrison, June Choe, Bruce Durling, Harold Hausman, Teodor Heggelond, 
 ;; and most recently, Timothy Pratley, who have had very thoughtful comments about
 ;; the current Tableplot APIs and internals. Many others have affected our thinking about plotting
 ;;
