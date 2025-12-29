@@ -50,6 +50,9 @@
 ;; You may consider the design and implementation here
 ;; *a draft* for a future library API.
 ;;
+;; Clojurians Zulip discussion (requires login):
+;; [#**data-science>AlgebraOfGraphics.jl**](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/AlgebraOfGraphics.2Ejl/)
+;;
 ;; ### 📖 A Bit of Context: Tableplot's Journey
 ;;
 ;; Before we dive into the technical details, let's talk about where we're coming from.
