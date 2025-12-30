@@ -1,161 +1,431 @@
 ^{:kindly/hide-code true
-  :clay {:title "The Algebra of Data"
+  :clay {:title "Composable Graphics: Blend, Cross, and Nest"
          :quarto {:type :post
                   :author [:timothypratley]
                   :draft true
                   :date "2025-12-29"
-                  :description "Exploring algebraic operators for generic data"
+                  :description "Algebraic operators for composing graphic specifications"
                   :category :data-visualization
-                  :tags [:datavis]
-                  :keywords [:datavis]}}}
+                  :tags [:datavis :algebra]
+                  :keywords [:datavis :composition :operators]}}}
 (ns data-visualization.aog.algebra-of-data)
 
 ;; Inspired by [the algebra of graphics](../aog_in_clojure_part1.html).
 
 ;; ## Axioms
 
-;; We shall take it as given that we are interested in combining sequence of maps:
+;; We shall take it as given that we are interested in combining maps:
 
-[{:theme "dark"} {:font "serif"}]
+;; The graphic object structure:
 
-;; AoG calls the maps "layers", but in this article I'll call them "configs".
+^:kindly/hide-code
+{:data :dataframe
+ :mappings {:x :x :y :y}
+ :geometries []
+ :options {}
+ :layers []}
 
-;; ## Transitive operators
+;; And there are 3 operators we will use to combine them:
 
-;; One way to combine configs is to concatenate them:
+(declare blend cross nest)
 
-(def add
-  (comp vec concat))
+;; ## Graphic Objects
 
-(add [{:theme "dark"}]
-     [{:font "serif"}])
+;; The goal is to match some data with how to visualize it
+
+(def penguin-data
+  [{:species "Adelie" :bill_length 39.1 :bill_depth 18.7 :sex "MALE"}
+   {:species "Adelie" :bill_length 39.5 :bill_depth 17.4 :sex "FEMALE"}
+   {:species "Chinstrap" :bill_length 46.5 :bill_depth 17.9 :sex "FEMALE"}
+   {:species "Gentoo" :bill_length 47.3 :bill_depth 13.8 :sex "MALE"}])
+
+(defn graphic [data mappings geometries options]
+  {:data data
+   :mappings mappings
+   :geometries geometries
+   :options options})
+
+(def scatter-plot
+  (graphic #'penguin-data
+           {:x :bill_length :y :bill_depth}
+           [:point]
+           {:title "Penguin bills"}))
+
+scatter-plot
+
+;; We don't intend to use `graphic` directly very often,
+;; but rather to compose smaller parts together.
+;; A graphic can be an empty map `{}`, contain just one key, or several.
+;; Later in "Constructors" we will demostrate using smaller graphics objects.
+
+;; ## Operators
+
+(defn blend
+  "Concatinates or creates layers from multiple graphics
+   into a single graphic with multiple layers."
+  ([] {})
+  ([g] g)
+  ([g1 g2]
+   (let [g1 (or g1 {})
+         g2 (or g2 {})
+         layers1 (get g1 :layers [g1])
+         layers2 (get g2 :layers [g2])
+         merged-options (merge (:options g1) (:options g2))]
+     {:layers (vec (concat layers1 layers2))
+      :options merged-options}))
+  ([g1 g2 & more]
+   (reduce blend (blend g1 g2) more)))
+
+(def scatter-plot
+  (graphic #'penguin-data
+           {:x :bill_length :y :bill_depth}
+           [:point]
+           {:title "Bill Dimensions"}))
+
+scatter-plot
+
+(def mean-line-data
+  [{:avg_length 44.0 :avg_depth 16.5}])
+
+(def mean-line-plot
+  (graphic #'mean-line-data
+           {:x :avg_length :y :avg_depth}
+           [:line]
+           {}))
+
+mean-line-plot
+
+(def blended-graphic
+  (blend scatter-plot mean-line-plot))
+
+blended-graphic
 
 ;; Another thing we can do is a cartesian merge:
 
-(defn cross-merge
-  ;; Given 2 sequences, merge all combinations
-  ([xs ys]
-   (vec (for [x xs
-              y ys]
-          (merge x y))))
-  ;; Extended to work with multiple arguments
-  ([xs ys & rest]
-   (reduce cross-merge (cross-merge xs ys) rest))
-  ([xs] xs)
-  ([] []))
+(defn cross
+  "Merges specifications from g1 and g2 within a single layer.
+   Layers undergo a cartesian merge."
+  ([] {})
+  ([g] g)
+  ([g1 g2]
+   (let [g1 (or g1 {})
+         g2 (or g2 {})
+         layers1 (or (:layers g1) [g1])
+         layers2 (or (:layers g2) [g2])
+         merge-layer (fn [a b]
+                       (let [mappings   (merge (:mappings a) (:mappings b))
+                             geometries (vec (concat (or (:geometries a) [])
+                                                     (or (:geometries b) [])))
+                             options    (merge (:options a) (:options b))
+                             data       (or (:data b) (:data a))]
+                         (-> a
+                             (merge b)
+                             (assoc :data data
+                                    :mappings mappings
+                                    :geometries geometries
+                                    :options options)
+                             (dissoc :layers))))
+         merged-layers (vec (for [a layers1
+                                  b layers2]
+                              (merge-layer a b)))
+         top-options (merge (:options g1) (:options g2))]
+     {:layers merged-layers
+      :options top-options}))
+  ([g1 g2 & more]
+   (reduce cross (cross g1 g2) more)))
 
-;; The standard case of cross-merging 2 configs
+(def base-plot
+  (graphic #'penguin-data
+           {:x :bill_length :y :bill_depth}
+           [:point]
+           {:title "Penguin Bill Dimensions by Species and Sex"}))
 
-(cross-merge [{:theme "dark"}]
-             [{:font "serif"}])
+(def color-mapping
+  {:mappings {:color :species}})
 
-;; Extended to 3 configs
+(def shape-mapping
+  {:mappings {:shape :sex}})
 
-(cross-merge [{:theme "dark"}]
-             [{:font "serif"}]
-             [{:x :customer :y :order-count}])
+;; Usage:
 
-;; ## Why is this interesting?
+(def crossed-graphic
+  (cross base-plot color-mapping shape-mapping))
 
-;; In short we can specify a larger structure with overlapping concerns concisely
+;; When drawn, points have both color and shape determined by data.
 
-(def a [{:theme "dark" :color "black"}])
-(def b [{:theme "light" :color "white"}])
-(def c [{:font "serif" :size 12}])
-(def d [{:font "sans-serif" :size 14}])
+crossed-graphic
 
-(cross-merge (add a b) (add c d))
+(defn nest
+  "Partitions the data in g1 based on the variable specified in g2's mappings.
+   Returns a sequence of new graphic objects, one per data partition (facet)."
+  [g1 g2]
+  (let [partition-key (-> g2 :mappings :by)
+        data-to-partition @(:data g1)
+        grouped-data (group-by partition-key data-to-partition)
+        facet-role (or (:facet-role (:options g2)) :facet-col)]
+    (map (fn [[group-value subset-data]]
+           (-> g1
+               (assoc :data subset-data)
+               (assoc-in [:options facet-role] group-value)
+               (update :mappings dissoc :by)))
+         grouped-data)))
 
-;; We gained some expressive power.
+(def base-scatter
+  (graphic #'penguin-data
+           {:x :bill_length :y :bill_depth}
+           [:point]
+           {:title "Dimensions by Sex"}))
+
+(def nesting-specifier
+  {:mappings {:by :sex}
+   :options  {:facet-role :facet-col}})
+
+;; Usage:
+
+(def nested-graphics
+  (nest base-scatter nesting-specifier))
+
+;; A sequence of two graphic objects:
+
+nested-graphics
 
 ;; ## Constructors
 
 ;; Given we like configs due to their combinatorial expressiveness,
 ;; we may introduce some constructors to help us prepare configs concisely.
 
-(defn theme [name color]
-  [{:theme name :color color}])
+;; TODO: data should take different shapes and tech.ml.datasets,
+;; and normalize them to make the code simpler
+(defn data [g x & gs]
+  (let [d {:data x}]
+    (if (some-> (:data g) (not= d))
+      (blend g (apply cross d gs))
+      (apply cross g d gs))))
 
-(theme "dark" "black")
+;; The behavior of all constructors is that they take their specific inputs,
+;; followed optionally by a graphic to compose with (as the last argument).
+;; This makes them convenient to use with ->> threading.
+;; There are many constructors and the code is boring and repetative,
+;; but on the plus side, it provides a concrete interface of what is possible.
 
-(defn font [name color]
-  [{:font name :size color}])
+(defn scatter [& gs]
+  (let [g (last gs)
+        geom {:geometries [:point]}]
+    (if (some-> (:geometries g) (not-empty))
+      (blend g geom)
+      (cross (or g {}) geom))))
 
-(font "serif" 12)
+(defn line [& gs]
+  (let [g (last gs)
+        geom {:geometries [:line]}]
+    (if (some-> (:geometries g) (not-empty))
+      (blend g geom)
+      (cross (or g {}) geom))))
 
-(defn dims [x y]
-  [{:x x :y y}])
+(defn bar [& gs]
+  (let [g (last gs)
+        geom {:geometries [:bar]}]
+    (if (some-> (:geometries g) (not-empty))
+      (blend g geom)
+      (cross (or g {}) geom))))
 
-(dims :customers :orders)
+(defn area [& gs]
+  (let [g (last gs)
+        geom {:geometries [:area]}]
+    (if (some-> (:geometries g) (not-empty))
+      (blend g geom)
+      (cross (or g {}) geom))))
 
-;; Now we can start combining our constructors and operators
+(defn histogram [& gs]
+  (let [g (last gs)
+        geom {:geometries [:histogram]}]
+    (if (some-> (:geometries g) (not-empty))
+      (blend g geom)
+      (cross (or g {}) geom))))
 
-(cross-merge (add (theme "dark" "black")
-                  (font "serif" 12))
-             (dims :customers :orders))
+(defn boxplot [& gs]
+  (let [g (last gs)
+        geom {:geometries [:boxplot]}]
+    (if (some-> (:geometries g) (not-empty))
+      (blend g geom)
+      (cross (or g {}) geom))))
+
+(defn smooth [& gs]
+  (let [g (last gs)
+        geom {:geometries [:smooth]}]
+    (if (some-> (:geometries g) (not-empty))
+      (blend g geom)
+      (cross (or g {}) geom))))
+
+(defn data [x & gs]
+  (let [g (last gs)
+        d {:data x}]
+    (if (some-> (:data g) (not= x))
+      (blend g d)
+      (cross (or g {}) d))))
+
+(defn xy [x y & gs]
+  (let [g (last gs)
+        m {:mappings {:x x :y y}}]
+    (if (some-> (:mappings g) (not-empty))
+      (blend g m)
+      (cross (or g {}) m))))
+
+(defn color [x & gs]
+  (let [g (last gs)
+        m {:mappings {:color x}}]
+    (if (some-> (:mappings g :color))
+      (blend g m)
+      (cross (or g {}) m))))
+
+(defn size [x & gs]
+  (let [g (last gs)
+        m {:mappings {:size x}}]
+    (if (some-> (:mappings g :size))
+      (blend g m)
+      (cross (or g {}) m))))
+
+(defn alpha [x & gs]
+  (let [g (last gs)
+        m {:mappings {:alpha x}}]
+    (if (some-> (:mappings g :alpha))
+      (blend g m)
+      (cross (or g {}) m))))
+
+(defn fill [x & gs]
+  (let [g (last gs)
+        m {:mappings {:fill x}}]
+    (if (some-> (:mappings g :fill))
+      (blend g m)
+      (cross (or g {}) m))))
+
+(defn stroke [x & gs]
+  (let [g (last gs)
+        m {:mappings {:stroke x}}]
+    (if (some-> (:mappings g :stroke))
+      (blend g m)
+      (cross (or g {}) m))))
+
+(defn group [x & gs]
+  (let [g (last gs)
+        m {:mappings {:group x}}]
+    (if (some-> (:mappings g :group))
+      (blend g m)
+      (cross (or g {}) m))))
+
+(defn facet-col [x & gs]
+  (let [g (last gs)
+        spec {:mappings {:by x} :options {:facet-role :facet-col}}]
+    (nest (or g {}) spec)))
+
+(defn facet-row [x & gs]
+  (let [g (last gs)
+        spec {:mappings {:by x} :options {:facet-role :facet-row}}]
+    (nest (or g {}) spec)))
+
+(defn xlim [min-val max-val & gs]
+  (let [g (last gs)
+        o {:options {:xlim [min-val max-val]}}]
+    (if (some-> (:options g :xlim))
+      (blend g o)
+      (cross (or g {}) o))))
+
+(defn ylim [min-val max-val & gs]
+  (let [g (last gs)
+        o {:options {:ylim [min-val max-val]}}]
+    (if (some-> (:options g :ylim))
+      (blend g o)
+      (cross (or g {}) o))))
+
+(defn xscale [scale-type & gs]
+  (let [g (last gs)
+        o {:options {:xscale scale-type}}]
+    (if (some-> (:options g :xscale))
+      (blend g o)
+      (cross (or g {}) o))))
+
+(defn yscale [scale-type & gs]
+  (let [g (last gs)
+        o {:options {:yscale scale-type}}]
+    (if (some-> (:options g :yscale))
+      (blend g o)
+      (cross (or g {}) o))))
+
+(defn theme [theme-name & gs]
+  (let [g (last gs)
+        o {:options {:theme theme-name}}]
+    (if (some-> (:options g :theme))
+      (blend g o)
+      (cross (or g {}) o))))
+
+(defn width [w & gs]
+  (let [g (last gs)
+        o {:options {:width w}}]
+    (if (some-> (:options g :width))
+      (blend g o)
+      (cross (or g {}) o))))
+
+(defn height [h & gs]
+  (let [g (last gs)
+        o {:options {:height h}}]
+    (if (some-> (:options g :height))
+      (blend g o)
+      (cross (or g {}) o))))
+
+(defn legend [position & gs]
+  (let [g (last gs)
+        o {:options {:legend position}}]
+    (if (some-> (:options g :legend))
+      (blend g o)
+      (cross (or g {}) o))))
+
+(defn title [t & gs]
+  (let [g (last gs)
+        o {:options {:title t}}]
+    (if (some-> (:options g :title))
+      (blend g o)
+      (cross (or g {}) o))))
+
+;; ## Constructor examples
+
+;; Constructors can be used without a graphic
+
+(bar)
+
+;; Constructors take arbitrary graphics to cross with
+
+(bar (title "hello") (xy :species :bill-depth-mm))
 
 ;; ## Threading
+
+;; Which means they can be composed with ->>
+
+(->> (xy :x :y)
+     (bar))
+
+(->> (xy :x :y)
+     (bar (title "hello")))
+
+;; Thread last is important because it allows implied blend to occur,
+;; with a crossed graphic.
+
+;; TODO: there is a bug that crossed graphics are always in a layer,
+;; and so the implied blend doesn't happen.
+
+(->> (xy :x :y)
+     (scatter)
+     (bar (title "hello")))
+
+(->> (data #'penguin-data)
+     (xy :bill-depth-mm :bill-length-mm)
+     (scatter)
+     (bar (xy :species :bill-depth-mm)))
+
 
 ;; Rather than constructors, we could define "methods"
 ;; that accept configs, and cross-merge them with constructed configs.
 
-(defn dims* [configs x y]
-  (cross-merge configs [{:x x :y y}]))
-
-(defn theme* [configs name color]
-  (cross-merge configs [{:theme name :color color}]))
-
-(defn font* [configs name color]
-  (cross-merge configs [{:font name :size color}]))
-
-(-> (theme "dark" "black")
-    (font* "serif" 12))
-
-;; A key collision implies addition
-;; TODO: explain this idea in more detail,
-;; TLDR: threading can represent almost everything
-
 ;; ## Unification
 
-;; The most obvious thing we can do with "configs" is merge them together.
-
-(def configs
-  (cross-merge (add (theme "dark" "black")
-                    (font "serif" 12))
-               (add (dims :customers :orders)
-                    (dims :products :orders))))
-
-configs
-
-(apply merge configs)
-
-;; But doing so loses information (specifically additions).
-;; Rather we might wish to detect conflicts where they occur.
-
-(apply merge-with list configs)
-
-;; Convert config map values into sets so merging can unify
-;; multiple possible values per key without duplicates.
-;; This is a simple form of "unification": collapsing alternatives.
-(defn normalize-to-sets [m]
-  (update-vals m hash-set))
-
-;; Merge a sequence of config maps, unifying values as sets
-;; (flat, unique per key).
-(defn merge-as-sets [configs]
-  (apply merge-with clojure.set/union
-    (map normalize-to-sets configs)))
-
-(merge-as-sets configs)
-
-;; Why is this interesting?
-;; Well in a chart for example we will have some properties
-;; that are global, and some that are "layered".
-;; This just demonstrates one process to convert an algebraic representation
-;; into a structured representation.
-
-;; ## Conclusion
-
-;; I think these ideas are more broadly applicable than just graphics.
-;; The only domain specific part about them is defining useful constructors,
-;; and the unification behaviors.
+;; We can lift common datasets out into a named or indexed dataset.
+;; Possibly there are other things that can be collapsed.
