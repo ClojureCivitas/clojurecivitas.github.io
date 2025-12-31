@@ -8,7 +8,8 @@
                   :category :data-visualization
                   :tags [:datavis :algebra]
                   :keywords [:datavis :composition :operators]}}}
-(ns data-visualization.aog.algebra-of-data)
+(ns data-visualization.aog.algebra-of-data
+  (:require [clojure.test :refer [deftest is]]))
 
 ;; Inspired by [the algebra of graphics](../aog_in_clojure_part1.html).
 
@@ -18,22 +19,30 @@
 
 ;; The graphic object structure:
 
-^:kindly/hide-code
-{:data :dataframe
- :mappings {:x :x :y :y}
- :geometries []
- :options {}
- :layers []}
+;; ```
+;; {:data :dataframe
+;;  :mappings {:x :x :y :y}
+;;  :geometries []
+;;  :options {}
+;;  :layers []}
+;; ```
 
-;; And there are 3 operators we will use to combine them:
+;; There are 3 operators we will use to combine them:
 
 (declare blend cross nest)
+
+;; blend
+;; : adds a layer; concatinates two or more layers of graphic objects
+;; cross
+;; : merges layers cartesianally
+;; nest
+;; : divides a graphic object into smaller graphics by facet
 
 ;; ## Graphic Objects
 
 ;; The goal is to match some data with how to visualize it
 
-(def penguin-data
+(def penguins
   [{:species "Adelie" :bill_length 39.1 :bill_depth 18.7 :sex "MALE"}
    {:species "Adelie" :bill_length 39.5 :bill_depth 17.4 :sex "FEMALE"}
    {:species "Chinstrap" :bill_length 46.5 :bill_depth 17.9 :sex "FEMALE"}
@@ -45,30 +54,27 @@
    :geometries geometries
    :options options})
 
-(def scatter-plot
-  (graphic #'penguin-data
-           {:x :bill_length :y :bill_depth}
-           [:point]
-           {:title "Penguin bills"}))
-
-scatter-plot
+(graphic #'penguins
+         {:x :bill_length :y :bill_depth}
+         [:point]
+         {:title "Penguin bills"})
 
 ;; We don't intend to use `graphic` directly very often,
 ;; but rather to compose smaller parts together.
-;; A graphic can be an empty map `{}`, contain just one key, or several.
+;; A graphic can be nil, contain just one key-value, or several.
 ;; Later in "Constructors" we will demostrate using smaller graphics objects.
+
+;; Graphic objects may contain layers of other graphic objects.
 
 ;; ## Operators
 
 (defn blend
   "Concatinates or creates layers from multiple graphics
    into a single graphic with multiple layers."
-  ([] {})
+  ([] nil)
   ([g] g)
   ([g1 g2]
-   (let [g1 (or g1 {})
-         g2 (or g2 {})
-         layers1 (get g1 :layers [g1])
+   (let [layers1 (get g1 :layers [g1])
          layers2 (get g2 :layers [g2])
          merged-options (merge (:options g1) (:options g2))]
      {:layers (vec (concat layers1 layers2))
@@ -77,7 +83,7 @@ scatter-plot
    (reduce blend (blend g1 g2) more)))
 
 (def scatter-plot
-  (graphic #'penguin-data
+  (graphic #'penguins
            {:x :bill_length :y :bill_depth}
            [:point]
            {:title "Bill Dimensions"}))
@@ -102,40 +108,35 @@ blended-graphic
 
 ;; Another thing we can do is a cartesian merge:
 
+(defn merge-layer [a b]
+  (let [mappings   (merge (:mappings a) (:mappings b))
+        geometries (vec (concat (or (:geometries a) [])
+                                (or (:geometries b) [])))
+        options    (merge (:options a) (:options b))
+        data       (or (:data b) (:data a))]
+    (-> a
+        (merge b)
+        (assoc :data data
+               :mappings mappings
+               :geometries geometries
+               :options options)
+        (dissoc :layers))))
+
 (defn cross
   "Merges specifications from g1 and g2 within a single layer.
    Layers undergo a cartesian merge."
-  ([] {})
+  ([] nil)
   ([g] g)
   ([g1 g2]
-   (let [g1 (or g1 {})
-         g2 (or g2 {})
-         layers1 (or (:layers g1) [g1])
-         layers2 (or (:layers g2) [g2])
-         merge-layer (fn [a b]
-                       (let [mappings   (merge (:mappings a) (:mappings b))
-                             geometries (vec (concat (or (:geometries a) [])
-                                                     (or (:geometries b) [])))
-                             options    (merge (:options a) (:options b))
-                             data       (or (:data b) (:data a))]
-                         (-> a
-                             (merge b)
-                             (assoc :data data
-                                    :mappings mappings
-                                    :geometries geometries
-                                    :options options)
-                             (dissoc :layers))))
-         merged-layers (vec (for [a layers1
-                                  b layers2]
-                              (merge-layer a b)))
-         top-options (merge (:options g1) (:options g2))]
-     {:layers merged-layers
-      :options top-options}))
+   {:layers (vec (for [a (or (:layers g1) [g1])
+                       b (or (:layers g2) [g2])]
+                   (merge-layer a b)))
+    :options (merge (:options g1) (:options g2))})
   ([g1 g2 & more]
    (reduce cross (cross g1 g2) more)))
 
 (def base-plot
-  (graphic #'penguin-data
+  (graphic #'penguins
            {:x :bill_length :y :bill_depth}
            [:point]
            {:title "Penguin Bill Dimensions by Species and Sex"}))
@@ -171,7 +172,7 @@ crossed-graphic
          grouped-data)))
 
 (def base-scatter
-  (graphic #'penguin-data
+  (graphic #'penguins
            {:x :bill_length :y :bill_depth}
            [:point]
            {:title "Dimensions by Sex"}))
@@ -194,14 +195,6 @@ nested-graphics
 ;; Given we like configs due to their combinatorial expressiveness,
 ;; we may introduce some constructors to help us prepare configs concisely.
 
-;; TODO: data should take different shapes and tech.ml.datasets,
-;; and normalize them to make the code simpler
-(defn data [g x & gs]
-  (let [d {:data x}]
-    (if (some-> (:data g) (not= d))
-      (blend g (apply cross d gs))
-      (apply cross g d gs))))
-
 ;; The behavior of all constructors is that they take their specific inputs,
 ;; followed optionally by a graphic to compose with (as the last argument).
 ;; This makes them convenient to use with ->> threading.
@@ -210,181 +203,186 @@ nested-graphics
 
 (defn scatter [& gs]
   (let [g (last gs)
-        geom {:geometries [:point]}]
-    (if (some-> (:geometries g) (not-empty))
-      (blend g geom)
-      (cross (or g {}) geom))))
+        m {:geometries [:point]}]
+    (if (or (seq (:layers g))
+            (some-> g :geometries (not= (:geometries m))))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn line [& gs]
   (let [g (last gs)
-        geom {:geometries [:line]}]
-    (if (some-> (:geometries g) (not-empty))
-      (blend g geom)
-      (cross (or g {}) geom))))
+        m {:geometries [:line]}]
+    (if (or (seq (:layers g))
+            (some-> g :geometries (not= (:geometries m))))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn bar [& gs]
   (let [g (last gs)
-        geom {:geometries [:bar]}]
-    (if (some-> (:geometries g) (not-empty))
-      (blend g geom)
-      (cross (or g {}) geom))))
+        m {:geometries [:bar]}]
+    (if (or (seq (:layers g))
+            (some-> g :geometries (not= (:geometries m))))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn area [& gs]
   (let [g (last gs)
-        geom {:geometries [:area]}]
-    (if (some-> (:geometries g) (not-empty))
-      (blend g geom)
-      (cross (or g {}) geom))))
+        m {:geometries [:area]}]
+    (if (or (seq (:layers g))
+            (some-> g :geometries (not= (:geometries m))))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn histogram [& gs]
   (let [g (last gs)
-        geom {:geometries [:histogram]}]
-    (if (some-> (:geometries g) (not-empty))
-      (blend g geom)
-      (cross (or g {}) geom))))
+        m {:geometries [:histogram]}]
+    (if (or (seq (:layers g))
+            (some-> g :geometries (not= (:geometries m))))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn boxplot [& gs]
   (let [g (last gs)
-        geom {:geometries [:boxplot]}]
-    (if (some-> (:geometries g) (not-empty))
-      (blend g geom)
-      (cross (or g {}) geom))))
+        m {:geometries [:boxplot]}]
+    (if (or (seq (:layers g))
+            (some-> g :geometries (not= (:geometries m))))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn smooth [& gs]
   (let [g (last gs)
-        geom {:geometries [:smooth]}]
-    (if (some-> (:geometries g) (not-empty))
-      (blend g geom)
-      (cross (or g {}) geom))))
+        m {:geometries [:smooth]}]
+    (if (or (seq (:layers g))
+            (some-> g :geometries (not= (:geometries m))))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn data [x & gs]
   (let [g (last gs)
         d {:data x}]
-    (if (some-> (:data g) (not= x))
-      (blend g d)
-      (cross (or g {}) d))))
+    (if (some-> g :data (not= x))
+      (blend g (apply cross d (butlast gs)))
+      (apply cross d gs))))
 
 (defn xy [x y & gs]
   (let [g (last gs)
         m {:mappings {:x x :y y}}]
-    (if (some-> (:mappings g) (not-empty))
-      (blend g m)
-      (cross (or g {}) m))))
+    (if (some-> g :mappings (not= (:mappings m)))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn color [x & gs]
   (let [g (last gs)
         m {:mappings {:color x}}]
-    (if (some-> (:mappings g :color))
-      (blend g m)
-      (cross (or g {}) m))))
+    (if (some-> g :mappings :color (not= x))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn size [x & gs]
   (let [g (last gs)
         m {:mappings {:size x}}]
-    (if (some-> (:mappings g :size))
-      (blend g m)
-      (cross (or g {}) m))))
+    (if (some-> g :mappings :size (not= x))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn alpha [x & gs]
   (let [g (last gs)
         m {:mappings {:alpha x}}]
-    (if (some-> (:mappings g :alpha))
-      (blend g m)
-      (cross (or g {}) m))))
+    (if (some-> g :mappings :alpha (not= x))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn fill [x & gs]
   (let [g (last gs)
         m {:mappings {:fill x}}]
-    (if (some-> (:mappings g :fill))
-      (blend g m)
-      (cross (or g {}) m))))
+    (if (some-> g :mappings :fill (not= x))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn stroke [x & gs]
   (let [g (last gs)
         m {:mappings {:stroke x}}]
-    (if (some-> (:mappings g :stroke))
-      (blend g m)
-      (cross (or g {}) m))))
+    (if (some-> g :mappings :stroke (not= x))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn group [x & gs]
   (let [g (last gs)
         m {:mappings {:group x}}]
-    (if (some-> (:mappings g :group))
-      (blend g m)
-      (cross (or g {}) m))))
+    (if (some-> g :mappings :group (not= x))
+      (blend g (apply cross m (butlast gs)))
+      (apply cross m gs))))
 
 (defn facet-col [x & gs]
-  (let [g (last gs)
-        spec {:mappings {:by x} :options {:facet-role :facet-col}}]
-    (nest (or g {}) spec)))
+  (let [spec {:mappings {:by x} :options {:facet-role :facet-col}}]
+    (nest (last gs) (apply cross spec (butlast gs)))))
 
 (defn facet-row [x & gs]
-  (let [g (last gs)
-        spec {:mappings {:by x} :options {:facet-role :facet-row}}]
-    (nest (or g {}) spec)))
+  (let [spec {:mappings {:by x} :options {:facet-role :facet-row}}]
+    (nest (last gs) (apply cross spec (butlast gs)))))
 
 (defn xlim [min-val max-val & gs]
   (let [g (last gs)
         o {:options {:xlim [min-val max-val]}}]
-    (if (some-> (:options g :xlim))
-      (blend g o)
-      (cross (or g {}) o))))
+    (if (some-> g :options :xlim (not= [min-val max-val]))
+      (blend g (apply cross o (butlast gs)))
+      (apply cross o gs))))
 
 (defn ylim [min-val max-val & gs]
   (let [g (last gs)
         o {:options {:ylim [min-val max-val]}}]
-    (if (some-> (:options g :ylim))
-      (blend g o)
-      (cross (or g {}) o))))
+    (if (some-> g :options :ylim (not= [min-val max-val]))
+      (blend g (apply cross o (butlast gs)))
+      (apply cross o gs))))
 
 (defn xscale [scale-type & gs]
   (let [g (last gs)
         o {:options {:xscale scale-type}}]
-    (if (some-> (:options g :xscale))
-      (blend g o)
-      (cross (or g {}) o))))
+    (if (some-> g :options :xscale (not= scale-type))
+      (blend g (apply cross o (butlast gs)))
+      (apply cross o gs))))
 
 (defn yscale [scale-type & gs]
   (let [g (last gs)
         o {:options {:yscale scale-type}}]
-    (if (some-> (:options g :yscale))
-      (blend g o)
-      (cross (or g {}) o))))
+    (if (some-> g :options :yscale (not= scale-type))
+      (blend g (apply cross o (butlast gs)))
+      (apply cross o gs))))
 
 (defn theme [theme-name & gs]
   (let [g (last gs)
         o {:options {:theme theme-name}}]
-    (if (some-> (:options g :theme))
-      (blend g o)
-      (cross (or g {}) o))))
+    (if (some-> g :options :theme (not= theme-name))
+      (blend g (apply cross o (butlast gs)))
+      (apply cross o gs))))
 
 (defn width [w & gs]
   (let [g (last gs)
         o {:options {:width w}}]
-    (if (some-> (:options g :width))
-      (blend g o)
-      (cross (or g {}) o))))
+    (if (some-> g :options :width (not= w))
+      (blend g (apply cross o (butlast gs)))
+      (apply cross o gs))))
 
 (defn height [h & gs]
   (let [g (last gs)
         o {:options {:height h}}]
-    (if (some-> (:options g :height))
-      (blend g o)
-      (cross (or g {}) o))))
+    (if (some-> g :options :height (not= h))
+      (blend g (apply cross o (butlast gs)))
+      (apply cross o gs))))
 
 (defn legend [position & gs]
   (let [g (last gs)
         o {:options {:legend position}}]
-    (if (some-> (:options g :legend))
-      (blend g o)
-      (cross (or g {}) o))))
+    (if (some-> g :options :legend (not= position))
+      (blend g (apply cross o (butlast gs)))
+      (apply cross o gs))))
 
 (defn title [t & gs]
   (let [g (last gs)
         o {:options {:title t}}]
-    (if (some-> (:options g :title))
-      (blend g o)
-      (cross (or g {}) o))))
+    (if (some-> g :options :title (not= t))
+      (blend g (apply cross o (butlast gs)))
+      (apply cross o gs))))
 
 ;; ## Constructor examples
 
@@ -394,9 +392,25 @@ nested-graphics
 
 ;; Constructors take arbitrary graphics to cross with
 
+(bar (title "hello"))
+
 (bar (title "hello") (xy :species :bill-depth-mm))
 
 ;; ## Threading
+
+;; We can think of a threaded expression as a sequence of terms
+;; synonymous with graphics objects.
+;; The challenge is how to group those terms.
+
+;; The most common operation is cross:
+
+(->> (data #'penguins)
+     (xy :bill-depth-mm :bill-length-mm))
+
+;; Observe that having a `scatter` and a `bar` implies the use of `blend`.
+
+(->> (scatter)
+     (bar))
 
 ;; Which means they can be composed with ->>
 
@@ -409,14 +423,11 @@ nested-graphics
 ;; Thread last is important because it allows implied blend to occur,
 ;; with a crossed graphic.
 
-;; TODO: there is a bug that crossed graphics are always in a layer,
-;; and so the implied blend doesn't happen.
-
 (->> (xy :x :y)
      (scatter)
      (bar (title "hello")))
 
-(->> (data #'penguin-data)
+(->> (data #'penguins)
      (xy :bill-depth-mm :bill-length-mm)
      (scatter)
      (bar (xy :species :bill-depth-mm)))
@@ -429,3 +440,5 @@ nested-graphics
 
 ;; We can lift common datasets out into a named or indexed dataset.
 ;; Possibly there are other things that can be collapsed.
+;; It may be essentential that we do so.
+;; currently the data key is lost when it is moved to a layer.
