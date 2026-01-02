@@ -10,7 +10,8 @@
                   :toc true
                   :toc-depth 4
                   :toc-expand 4
-                  :image "aog_iris.png"}}}
+                  :image "aog_iris.png"
+                  :draft true}}}
 (ns data-visualization.aog-in-clojure-part2
   (:require [tablecloth.api :as tc]
             [scicloj.kindly.v4.kind :as kind]))
@@ -30,21 +31,20 @@
 
 ;; **A Design Exploration for a plotting API**
 ;;
-;; This is the first post in a series documenting the design and implementation of a new
-;; compositional plotting API for Clojure. We're exploring fresh approaches to declarative
-;; data visualization, drawing inspiration from Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/)
-;; while staying true to Clojure's values of simplicity and composability.
+;; This is the second post in a series exploring compositional plotting APIs for Clojure.
+;; In [Part 1](aog_in_clojure_part1.html), we developed a working prototype inspired by
+;; Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/), using a map-based
+;; intermediate representation with `:=layers` and two composition operators (`=*` and `=+`).
 ;;
-;; Each post in this series combines narrative explanation with executable code — this is a
-;; working Clojure notebook that can be used with
-;; [Kindly](https://scicloj.github.io/kindly/)-compatible
-;; tools like [Clay](https://scicloj.github.io/clay/).
-;; Code examples are tested using
+;; This post continues that exploration with a revised design proposal. While Part 2 can be
+;; read as self-contained—all code and examples are included—Part 1 provides additional
+;; context regarding the motivation, background, and design decisions that led us here.
+;;
+;; Like Part 1, this is a working Clojure notebook that can be used with
+;; [Kindly](https://scicloj.github.io/kindly/)-compatible tools like
+;; [Clay](https://scicloj.github.io/clay/). Code examples are tested using
 ;; [Clay's test generation](https://scicloj.github.io/clay/clay_book.test_generation.html).
-;; You'll see the API evolve from basic scatter plots through faceting, statistical transforms,
-;; and support for multiple rendering backends. By the end, we'll have a complete prototype
-;; that handles real-world plotting tasks while maintaining an inspectable design.
-
+;;
 ;; This project continues our work on the
 ;; [Tableplot](https://scicloj.github.io/tableplot/) plotting library.
 ;; You may consider the design and implementation here
@@ -53,94 +53,17 @@
 ;; Clojurians Zulip discussion (requires login):
 ;; [#**data-science>AlgebraOfGraphics.jl**](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/AlgebraOfGraphics.2Ejl/)
 ;;
-;; ### 📖 A Bit of Context: Tableplot's Journey
 ;;
-;; Before we dive into the technical details, let's talk about where we're coming from.
-;;
-;; [Tableplot](https://scicloj.github.io/tableplot/) was created in mid-2024 as a pragmatic plotting solution for the
-;; [Noj](https://scicloj.github.io/noj/) toolkit—Clojure's growing data science
-;; and scientific computing ecosystem. We needed *something* that worked, and we
-;; needed it soon. The goal was to add to Noj's offering:
-;; a way to visualize data without leaving Clojure or reaching for external tools.
-;;
-;; Since then, Tableplot's current APIs 
-;; ([`scicloj.tableplot.v1.hanami`](https://scicloj.github.io/tableplot/tableplot_book.hanami_walkthrough.html) and
-;; [`scicloj.tableplot.v1.plotly`](https://scicloj.github.io/tableplot/tableplot_book.plotly_walkthrough.html)) 
-;; have been used in quite a few serious projects.
-;;
-;; However, we never intended these APIs to be the final word on
-;; plotting in Clojure. They were a decent compromise—pragmatic, functional,
-;; good enough to be useful. Better designs have been waiting to be explored.
-;;
-;; ### Learning from the community
+;; For background on Tableplot's journey, community context, and the Real-World Data dev group,
+;; see [Part 1](aog_in_clojure_part1.html).
 
-;; This post is inspired and affected by past conversations with a few Scicloj-community friends -- in particular:
-;; Cvetomir Dimov, who helped develop Tableplot, Jon Anthony, who created Hanami,
-;; Kira Howe, who initiated the Scicloj exploration of Grammar-of-Graphics a couple of years ago,
-;; Andrew Foltz-Morrison, June Choe, Bruce Durling, Harold Hausman, Teodor Heggelond, 
-;; and most recently, Timothy Pratley, who have had very thoughtful comments about
-;; the current Tableplot APIs and internals. Many others have affected our thinking about plotting
 ;;
-;; The feedback from Tableplot users has been invaluable. **Thank you** to everyone
-;; who took the time to file issues, ask questions, share use cases, and push the
-;; library in directions we hadn't anticipated. Your patience with the rough edges
-;; and your insights about what works (and what doesn't) have shaped this next iteration.
+;; ## 📖 Context & Motivation
 ;;
-;; ### The Real-World Data Dev Group
-;;
-;; This work is also happening in the context of the
-;; [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/),
-;; recently reinitiated by Timothy Pratley with new spirit and a stronger focus on
-;; open-source collaboration.
-;;
-;; With that context in mind, let's explore what we're building.
-
-;; # Context & Motivation
-;;
-;; ## 📖 Why Explore a New Approach?
-;;
-;; Tableplot currently provides two visualization APIs: `scicloj.tableplot.v1.hanami`
-;; for [Vega-Lite](https://vega.github.io/vega-lite/) visualizations, and 
-;; `scicloj.tableplot.v1.plotly` for [Plotly.js](https://plotly.com/javascript/).
-;; Both have proven useful in real projects, but they've also revealed some constraints
-;; that are worth thinking about fresh.
-;;
-;; The `hanami` API extends the original Hanami library, inheriting its template
-;; substitution system with uppercase keywords like `:X` and `:Y`. This brings
-;; backwards compatibility requirements that affect both APIs, since `plotly`
-;; shares some infrastructure with `hanami`. When you want to change something
-;; fundamental, you have to consider the impact across multiple layers.
-;;
-;; Each API is also tied to a specific rendering target. If you choose `hanami`,
-;; you get Vega-Lite—which works for many use cases but has limitations
-;; with certain coordinate systems. If you choose `plotly`, you get interactivity
-;; but rendering static images programmatically becomes tricky. When you hit a
-;; limitation of your chosen rendering target, switching means learning a different API.
-;;
-;; The intermediate representation between the API and the renderers uses Hanami
-;; templates. Template substitution is flexible, but it can be
-;; open-ended and difficult to understand when debugging. Error messages sometimes
-;; reference template internals rather than your code, and it's not always clear
-;; which substitution parameters are valid in which contexts.
-;;
-;; The APIs also currently expect [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset) 
-;; datasets. If you have a simple Clojure map or vector, you need to convert it 
-;; first—even for simple visualizations.
-;;
-;; ## 📖 What We're Exploring
-;;
-;; Some of these limitations will be addressed within the current APIs themselves—
-;; we're actively working on improvements. But as we always intended, it's valuable
-;; to explore fresh solutions in parallel. A fresh design lets us ask questions
-;; that are harder to answer incrementally: Can we design an API where the intermediate
-;; representation is plain maps that are easy to inspect and manipulate with standard
-;; operations, while working harmoniously with both a functional interface and multiple
-;; rendering targets?
-;;
-;; This notebook prototypes an alternative compositional API to explore these ideas.
-;; It's not meant to replace the existing Tableplot APIs—it might become an additional
-;; namespace coexisting with `hanami` and `plotly`, or it might inform future design
-;; decisions. This is for Tableplot maintainers, contributors, and curious users who
+;; As detailed in [Part 1](aog_in_clojure_part1.html), we're exploring alternatives to
+;; Tableplot's current APIs to address template complexity, target-specific APIs, and
+;; plain data support. Part 1 developed a working prototype with map-based IR and two
+;; composition operators. This post refines that design based on initial feedback.
 ;; want to provide early feedback on the approach.
 
                                         ;
@@ -159,217 +82,30 @@
 
 ;; ## ⚙️ Dependencies
 ;;
-;; This notebook relies on several libraries from the Clojure data science ecosystem.
-;; Here's what we use and why:
-
-(ns data-visualization.aog-in-clojure-part2
-  (:require
-   ;; Tablecloth - Dataset manipulation
-   [tablecloth.api :as tc]
-   [tablecloth.column.api :as tcc]
-
-   ;; Kindly - Notebook visualization protocol
-   [scicloj.kindly.v4.kind :as kind]
-
-   ;; thi.ng/geom-viz - Static SVG visualization
-   [thi.ng.geom.viz.core :as viz]
-   [thi.ng.geom.svg.core :as svg]
-
-   ;; Fastmath - Statistical computations
-   [fastmath.ml.regression :as regr]
-   [fastmath.stats :as stats]
-
-   ;; Malli - Schema validation
-   [malli.core :as m]
-   [malli.error :as me]
-   [malli.util :as mu]
-
-   ;; RDatasets - Example datasets
-   [scicloj.metamorph.ml.rdatasets :as rdatasets]))
-
-;; [**Tablecloth**](https://scicloj.github.io/tablecloth/) provides our dataset API, wrapping 
-;; [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset) with a
-;; friendly interface. We use it to manipulate data and access column types.
 ;;
-;; **Key insight**: Tablecloth provides column type information via `tablecloth.column.api/typeof`,
-;; which eliminates the need for complex type inference.
-;;
-;; [**Kindly**](https://scicloj.github.io/kindly-noted/) is the visualization protocol that lets this notebook render
-;; plots in different environments ([Clay](https://scicloj.github.io/clay/), [Portal](https://github.com/djblue/portal), etc.). Each rendering target returns
-;; a Kindly-wrapped spec.
-;;
-;; [**thi.ng/geom**](https://github.com/thi-ng/geom) gives us the static SVG target for visualizations that can be saved as images.
-;; We specifically use
-;; [geom.viz](https://github.com/thi-ng/geom/blob/feature/no-org/org/examples/viz/demos.org) for data visualization.
-;;
-;; [**Fastmath**](https://github.com/generateme/fastmath) handles our statistical computations, particularly linear
-;; regression. It's a comprehensive math library for Clojure.
-;;
-;; [**Malli**](https://github.com/metosin/malli) provides schema validation for plot specifications.
-;; We define schemas for layers, aesthetics, and plot types to catch errors early
-;; and generate helpful error messages. Validation is optional but recommended.
-;;
-;; [**RDatasets**](https://vincentarelbundock.github.io/Rdatasets/articles/data.html) provides classic datasets (penguins, mtcars, iris) for examples.
-;; It is made available in Clojure through [metamorph.ml](https://github.com/scicloj/metamorph.ml).
+;; Uses the same stack as Part 1: Tablecloth (datasets + column types), Kindly (visualization
+;; protocol), thi.ng/geom (SVG), Fastmath (statistics), and Malli (validation). See
+;; [Part 1](aog_in_clojure_part1.html#dependencies) for detailed explanations.
 
 ;; # Inspiration: AlgebraOfGraphics.jl
 ;;
-;; This design is inspired by Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/),
-;; a visualization library that builds on decades of experience from systems
-;; like [ggplot2](https://ggplot2.tidyverse.org/) while introducing clear compositional principles.
 ;;
-;; As the [AoG philosophy](https://aog.makie.org/stable/philosophy) states:
+;; Building on the compositional approach of Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/).
+;; See [Part 1](aog_in_clojure_part1.html#inspiration) for background on AoG's philosophy and design.
 
-;; > "In a declarative framework, the user needs to express the _question_, and the 
-;; > library will take care of creating the visualization."
 ;;
-;; This approach of 
-;; ["describing a higher-level 'intent' how your tabular data should be transformed"](https://aog.makie.org/dev/tutorials/intro-i)
-;; aligns naturally with Clojure's functional and declarative tendencies—something
-;; we've seen in libraries like Hanami, Tableplot, and others in the ecosystem.
+;; ## 📖 Terminology
 ;;
-;; We chose AoG because it seemed well-thought, small enough to grasp and reproduce, while still being
-;; reasonably complete in its scope.
-
-;; ## 📖 Glossary: Visualization Terminology
+;; See [Part 1's glossary](aog_in_clojure_part1.html#glossary) for definitions of domain,
+;; range, scale, aesthetic, mapping, coordinate systems, statistical transforms, layers,
+;; and rendering targets.
 ;;
-;; Before diving deeper, let's clarify some terms we'll use throughout:
+;; ## 📖 Core Concepts
 ;;
-;; **Domain** - The extent of input values from your data. For a column of bill lengths 
-;; containing values 32.1, 45.3, and 59.6, the domain extends from 32.1 to 59.6. This is *data space*.
-;;
-;; **Range** - The extent of output values in the visualization. For an x-axis that spans 
-;; from pixel 50 to pixel 550, the range extends from 50 to 550. This is *visual space*.
-;;
-;; **Scale** - The mapping function from domain to range. A [linear scale](https://en.wikipedia.org/wiki/Scale_(ratio))
-;; maps data value 32.1 → pixel 50, and 59.6 → pixel 550, with proportional mapping in between.
-;; Other scale types include logarithmic, time, and categorical.
-;;
-;; **Aesthetic** - A visual property that can encode data. Common aesthetics: `x` position, 
-;; `y` position, `color`, `size`, `shape`, `alpha` (opacity). Each aesthetic needs 
-;; a scale to map data to visual values.
-;;
-;; **Mapping** - The connection between a data column and an aesthetic. "Map `:bill-length` 
-;; to `x` aesthetic" means "use the bill-length values to determine x positions."
-;;
-;; **Coordinate System** - The spatial framework for positioning marks. [Cartesian](https://en.wikipedia.org/wiki/Cartesian_coordinate_system) 
-;; (standard x/y grid), [polar](https://en.wikipedia.org/wiki/Polar_coordinate_system) (angle/radius), 
-;; and [geographic](https://en.wikipedia.org/wiki/Geographic_coordinate_system) (latitude/longitude) 
-;; interpret positions differently and affect domain computation.
-;;
-;; **Statistical Transform** - A computation that derives new data from raw data. Examples: 
-;; [linear regression](https://en.wikipedia.org/wiki/Linear_regression) (fit line), 
-;; [histogram](https://en.wikipedia.org/wiki/Histogram) (bin and count), 
-;; [kernel density](https://en.wikipedia.org/wiki/Kernel_density_estimation) (smooth distribution).
-;;
-;; **Layer** (in AoG sense) - A composable unit containing data, mappings, visual marks, 
-;; and optional transforms. Different from ggplot2's "layer" (which means overlaid visuals).
-;;
-;; **Rendering Target** - The library that produces final output: thi.ng/geom, 
-;; Vega-Lite, or Plotly.
-
-;; ## 📖 Core Insight: Layers + Operations
-;;
-;; AlgebraOfGraphics.jl treats visualization with two key ideas:
-;;
-;; **1. Everything is a [layer](https://aog.makie.org/dev/tutorials/intro-i#Layers:-data,-mapping,-visual-and-transformation)**: 
-;; Data, mappings, visuals, and transformations all compose the same way
-;;
-;; - Data sources
-;; - Aesthetic mappings (x → column, color → column)
-;; - Visual marks (scatter, line, bar)
-;; - Statistical transformations (regression, smoothing)
-;;
-;; *(Note: This is a different notion from "layers" in
-;; the [layered grammar of graphics](https://vita.had.co.nz/papers/layered-grammar.html) used by ggplot2 and Vega-Lite,
-;; where layers specifically refer to overlaid visual marks. In AoG, "layer" is the fundamental 
-;; compositional unit containing data, mappings, visuals, and transformations.)*
-;;
-;; **2. Two operations**: `*` (product) and `+` (sum)
-;;
-;; - `*` **merges** layers together (composition)
-;;   ```julia
-;;   data(penguins) * mapping(:bill_length, :bill_depth) * visual(Scatter)
-;;   # → Single layer with all properties combined
-;;   ```
-;;
-;; - `+` **overlays** layers (overlay)
-;;   ```julia
-;;   visual(Scatter) + visual(Lines)
-;;   # → Two separate visual marks on same plot
-;;   ```
-;;
-;; **3. Distributive property**: `a * (b + c) = (a * b) + (a * c)`
-;;
-;;   ```julia
-;;   data(penguins) * mapping(:bill_length, :bill_depth) * 
-;;       (visual(Scatter) + linear())
-;;   # ↓ expands to
-;;   (data(penguins) * mapping(:bill_length, :bill_depth) * visual(Scatter)) + 
-;;   (data(penguins) * mapping(:bill_length, :bill_depth) * linear())
-;;   ```
-;;
-;; This allows factoring out common properties and applying them to
-;; multiple plot types without repetition.
-
-;; ## 📖 Comparison to ggplot2
-;;
-;; ggplot2 uses `+` for everything:
-;; ```r
-;; ggplot(data, aes(x, y)) + 
-;;   geom_point() +
-;;   geom_smooth()
-;; ```
-;;
-;; AlgebraOfGraphics separates concerns:
-;; ```julia
-;; data(df) * mapping(:x, :y) * (visual(Scatter) + smooth())
-;; ```
-;;
-;; **Why two operators?** The separation brings clarity—`*` means "combine properties" 
-;; while `+` means "overlay visuals"—and enables composability.
-
-;; ## 📖 Translating to Clojure
-;;
-;; Julia's approach relies on custom `*` and `+` operators defined on Layer types,
-;; using multiple dispatch to handle different type combinations with object-oriented
-;; layer representations. This works in Julia's type system.
-;;
-;; One of our goals here would be bringing this compositional approach while staying
-;; true to Clojure idioms: using plain data structures (maps, not objects), enabling
-;; standard library operations like `merge`, `assoc`, and `filter`, maintaining the
-;; compositional benefits, and making the intermediate representation transparent and
-;; inspectable. How do we get the compositional approach of AoG while keeping everything
-;; as simple Clojure data?
-
-;; ## 📖 The Algebraic Foundation in Clojure
-;;
-;; Remarkably, Clojure's standard `merge` and `concat` already exhibit distributive-like
-;; properties similar to Julia's `*` and `+`:
-
-;; **Merge distributes over concat:**
-(let [shared {:data :penguins}
-      layers [{:plottype :scatter} {:plottype :line}]]
-  (map #(merge shared %) layers))
-
-;; This mirrors the algebraic property from AoG:
-;; ```julia
-;;   data(penguins) * (scatter + line) 
-;;     = (data(penguins) * scatter) + (data(penguins) * line)
-;; ```
-
-;; **Concat preserves structure:**
-(concat [{:x :a}] [{:y :b}])
-
-;; **Merge combines properties:**
-(merge {:x :a} {:y :b})
-
-;; So we can build `=*` (merge-based) and `=+` (concat-based) that preserve
-;; these algebraic properties while working with plain Clojure data. The algebra
-;; isn't imposed artificially—it emerges naturally from Clojure's data operations.
-
-;; # Design Overview
-;;
+;; Building on AoG's compositional approach: everything is a layer (data, mappings, visuals,
+;; transforms), combined via two operations—merge/product (`*`) and overlay/sum (`+`). Clojure's
+;; standard `merge` and `concat` naturally exhibit the distributive properties needed for this algebra.
+;; See [Part 1](aog_in_clojure_part1.html#core-insight) for detailed explanation.
 ;; Before diving into implementation, let's establish what we're building and how it works.
 ;; This section shows the core data structures and composition model.
 
