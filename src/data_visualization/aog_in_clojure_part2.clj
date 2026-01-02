@@ -57,6 +57,34 @@
 ;; For background on Tableplot's journey, community context, and the Real-World Data dev group,
 ;; see [Part 1](aog_in_clojure_part1.html).
 
+;; # What's Different in Part 2?
+;;
+;; This section summarizes the key design and implementation changes from Part 1:
+;;
+;; **API Changes:**
+;; - **Consistent `:=` prefix in named aesthetics:** Named aesthetic mappings now use `:=` prefix
+;;   to match the internal representation. In Part 1, named aesthetics used plain keywords
+;;   (`:color`, `:size`) that were transformed to `:=color`, `:=size` internally.
+;;   - `(mapping :bill-length-mm :bill-depth-mm {:=color :species})` instead of `{:color :species}`
+;;   - `(facet {:=row :species :=col :island})` instead of `{:row :species :col :island}`
+;;   - Note: Positional parameters (x, y) still use column names directly
+;;   - **Benefit:** What you write is what you see - no mental translation needed
+;;   - **Benefit:** Easier direct manipulation of specs with standard Clojure functions
+;;   - **Benefit:** Clearer distinction between aesthetics (`:=color`) and data columns (`:color`)
+;;   - **Tradeoff:** Slightly more verbose, one extra character per aesthetic
+;;
+;; **Implementation Changes:**
+;; - **Removed `=key` helper:** No longer needed since API keys match IR keys directly
+;;
+;; **Design Changes:**
+;; - *(To be filled in as the design evolves)*
+;;
+;; **Implementation Changes:**
+;; - *(To be filled in as implementation progresses)*
+;;
+;; **API Changes:**
+;; - *(To be filled in as the API is refined)*
+
 ;;
 ;; ## 📖 Context & Motivation
 ;;
@@ -115,7 +143,7 @@
 ;;
 ;; A complete plot spec looks like this:
 
-(def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
+;; (def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
 
 (kind/pprint
  {:=layers [{:=data penguins
@@ -246,10 +274,10 @@
           :bill-depth-mm [18.7 17.4 18.0]
           :species [:adelie :adelie :adelie]}
    :positional [:bill-length-mm :bill-depth-mm]
-   :named {:color :species}
+   :named {:=color :species}
    :attributes {:alpha 0.5}})
 
-(merge {:positional [:x] :named {:color :species}}
+(merge {:positional [:x] :named {:=color :species}}
        {:positional [:y] :named {:size :body-mass}})
 ;; Lost `:x` and `:color!`
 
@@ -503,7 +531,7 @@
 ;; **Example:**
 ;; ```clojure
 ;; (-> penguins
-;;     (mapping :bill-length-mm :bill-depth-mm {:color :species})
+;;     (mapping :bill-length-mm :bill-depth-mm {:=color :species})
 ;;     (=+ (scatter) (linear)))
 ;; ```
 ;; Automatically produces:
@@ -1312,32 +1340,33 @@
 
 ;; Works with datasets too (shown later when we load penguins)
 
-(defn =key
-  "Add a = sign to the name of a given keyword."
-  [k]
-  (->> k name (str "=") keyword))
-
 (defn mapping
   "Define aesthetic mappings from data columns to visual properties.
   
   Args:
-  - x, y: Column names (keywords) for positional aesthetics
-  - named: (optional) Map of other aesthetics
+  - x, y: Column names (keywords) to map to :=x and :=y aesthetics
+  - named: (optional) Map of other aesthetics with := prefix keys to column names
   
   Returns a plot spec map with :=layers containing a mapping layer.
   
   When called with spec-or-data as first arg:
   - If plot spec (map with :=layers keys): merges mapping into those layers
-  - If data: converts to layer first, then adds mapping"
+  - If data: converts to layer first, then adds mapping
+  
+  Examples:
+  (mapping :bill-length-mm :bill-depth-mm)
+  (mapping :bill-length-mm :bill-depth-mm {:=color :species})
+  
+  Threading-friendly:
+  (-> penguins (mapping :x :y) (scatter))"
   ([x y]
    {:=layers [(into {} (filter (fn [[_ v]] (some? v))
                                {:=x x :=y y}))]})
   ([x y named]
    (if (map? named)
-     ;; Regular 3-arg: mapping :x :y {:color :species}
+     ;; Regular 3-arg: mapping :x :y {:=color :species}
      {:=layers [(into {} (filter (fn [[_ v]] (some? v))
-                                 (merge {:=x x :=y y}
-                                        (update-keys named =key))))]}
+                                 (merge {:=x x :=y y} named)))]}
      ;; Threading-friendly: (-> spec (mapping :x :y))
      (let [spec-or-data x
            x-field y
@@ -1347,7 +1376,7 @@
                   (data spec-or-data))]
        (=* spec (mapping x-field y-field)))))
   ([first-arg x y named]
-   ;; Threading-friendly: (-> spec (mapping :x :y {:color :species}))
+   ;; Threading-friendly: (-> spec (mapping :x :y {:=color :species}))
    (let [spec (if (plot-spec? first-arg)
                 first-arg
                 (data first-arg))]
@@ -1356,29 +1385,28 @@
 ;; Examples:
 (mapping :bill-length-mm :bill-depth-mm)
 
-(mapping :bill-length-mm :bill-depth-mm {:color :species})
+(mapping :bill-length-mm :bill-depth-mm {:=color :species})
 
-(mapping :wt :mpg {:color :cyl :size :hp})
+(mapping :wt :mpg {:=color :cyl :=size :hp})
 
 (defn facet
   "Add faceting to a plot specification.
   
   Args:
-  - facet-spec: Map with :row and/or :col keys specifying faceting variables
+  - facet-spec: Map with :=row and/or :=col keys specifying faceting variables
   
   Returns layer spec with faceting properties.
   
   When called with spec as first arg, merges faceting into that spec.
   
   Examples:
-  (facet {:col :species})
-  (facet {:row :sex :col :island})
+  (facet {:=col :species})
+  (facet {:=row :sex :=col :island})
   
   Threading-friendly:
-  (-> penguins (mapping :x :y) (scatter) (facet {:col :species}))"
+  (-> penguins (mapping :x :y) (scatter) (facet {:=col :species}))"
   ([facet-spec]
-   (let [facet-keys (update-keys facet-spec =key)]
-     {:=layers [facet-keys]}))
+   {:=layers [facet-spec]})
   ([spec facet-spec]
    (=* spec (facet facet-spec))))
 
@@ -1386,7 +1414,7 @@
   "Specify scale properties for an aesthetic.
   
   Args:
-  - aesthetic: Keyword like :x, :y, :color
+  - aesthetic: Aesthetic keyword without := prefix (:x, :y, :color, etc.)
   - opts: Map with scale options:
     - :domain - [min max] for continuous, or vector of categories
     - :transform - :log, :sqrt, :identity (default)
@@ -1398,11 +1426,12 @@
   Examples:
   (scale :x {:domain [0 100]})
   (scale :y {:transform :log})
+  (scale :color {:domain [:a :b :c]})
   
   Threading-friendly:
   (-> penguins (mapping :x :y) (scatter) (scale :x {:domain [30 65]}))"
   ([aesthetic opts]
-   (let [scale-key (keyword (str "=scale-" (name aesthetic)))]
+   (let [scale-key (keyword (str "=" (name aesthetic) "scale"))]
      {scale-key opts}))
   ([spec aesthetic opts]
    (=* spec (scale aesthetic opts))))
@@ -2483,7 +2512,7 @@ iris
   
   Example - colored by species:
   (-> penguins
-      (mapping :bill-length-mm :bill-depth-mm {:color :species})
+      (mapping :bill-length-mm :bill-depth-mm {:=color :species})
       (scatter))"
   ([]
    {:=layers [{:=plottype :scatter}]})
@@ -2699,7 +2728,7 @@ iris
 ;; **With color aesthetic**:
 ;; Inspect the spec:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (scatter)
     kind/pprint)
 
@@ -2710,7 +2739,7 @@ iris
 
 ;; Render the plot:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (scatter)
     plot)
 
@@ -2747,7 +2776,7 @@ iris
 ;; **Combining attributes with aesthetics**:
 ;; Inspect the spec:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (scatter {:alpha 0.7})
     kind/pprint)
 
@@ -2758,7 +2787,7 @@ iris
 
 ;; Render the plot:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (scatter {:alpha 0.7})
     plot)
 
@@ -2861,7 +2890,7 @@ iris
       :else :categorical)))
 
 (let [spec (=* (data penguins)
-               (mapping :bill-length-mm :bill-depth-mm {:color :species})
+               (mapping :bill-length-mm :bill-depth-mm {:=color :species})
                (scatter))
       layer (first (:=layers spec))]
   {:x-type (infer-scale-type layer :=x)
@@ -2932,7 +2961,7 @@ iris
 
   Example - grouped regression by species:
   (-> penguins
-      (mapping :bill-length-mm :bill-depth-mm {:color :species})
+      (mapping :bill-length-mm :bill-depth-mm {:=color :species})
       (=+ (scatter {:alpha 0.5})
           (linear)))
   ;; => Computes separate regression line for each species"
@@ -3122,7 +3151,7 @@ iris
 
 ;; Inspect the spec:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (=+ (scatter {:alpha 0.6})
         (linear))
     kind/pprint)
@@ -3138,7 +3167,7 @@ iris
 
 ;; Render the plot:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (=+ (scatter {:alpha 0.6})
         (linear))
     plot)
@@ -3222,7 +3251,7 @@ iris
 
   Example - grouped histogram by species:
   (-> penguins
-      (mapping :bill-length-mm nil {:color :species})
+      (mapping :bill-length-mm nil {:=color :species})
       (histogram))
   ;; => Separate histogram for each species with shared domain
 
@@ -3463,7 +3492,7 @@ iris
 ;; **Categorical color → grouped regression**:
 ;; Inspect the spec:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (=+ (scatter {:alpha 0.5})
         (linear))
     kind/pprint)
@@ -3476,7 +3505,7 @@ iris
 
 ;; Render the plot:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (=+ (scatter {:alpha 0.5})
         (linear))
     plot)
@@ -3575,7 +3604,7 @@ iris
 ;; **Explicit :group aesthetic**:
 ;; Inspect the spec:
 (-> mtcars
-    (mapping :wt :mpg {:group :cyl})
+    (mapping :wt :mpg {:=group :cyl})
     (=+ (scatter)
         (linear))
     kind/pprint)
@@ -3588,7 +3617,7 @@ iris
 
 ;; Render the plot:
 (-> mtcars
-    (mapping :wt :mpg {:group :cyl})
+    (mapping :wt :mpg {:=group :cyl})
     (=+ (scatter)
         (linear))
     plot)
@@ -3750,7 +3779,7 @@ iris
  (=* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)
-     (facet {:col :species})))
+     (facet {:=col :species})))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -3761,7 +3790,7 @@ iris
  (=* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)
-     (facet {:col :species})))
+     (facet {:=col :species})))
 
 (kind/test-last [#(and (vector? %)
                        (string? (first %))
@@ -3772,7 +3801,7 @@ iris
 (-> penguins
     (mapping :bill-length-mm nil)
     (histogram)
-    (facet {:col :species})
+    (facet {:=col :species})
     plot)
 
 ;; ### 🧪 Example 11: Row Faceting
@@ -3784,7 +3813,7 @@ iris
  (=* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)
-     (facet {:row :species})))
+     (facet {:=row :species})))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -3795,7 +3824,7 @@ iris
  (=* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)
-     (facet {:row :species})))
+     (facet {:=row :species})))
 
 (kind/test-last [#(and (vector? %)
                        (string? (first %))
@@ -3848,7 +3877,7 @@ iris
  (=* (data penguins)
      (mapping :bill-length-mm
               :bill-depth-mm
-              {:color :species})
+              {:=color :species})
      (=+ (scatter {:alpha 0.5})
          (linear))
      (facet {:col :island})))
@@ -3858,7 +3887,7 @@ iris
 (-> (data penguins)
     (mapping :bill-length-mm
              :bill-depth-mm
-             {:color :species})
+             {:=color :species})
     (=+ (scatter {:alpha 0.5})
         (linear))
     (facet {:col :island})
@@ -3874,7 +3903,7 @@ iris
 (-> (data penguins)
     (mapping :bill-length-mm
              :bill-depth-mm
-             {:color :species})
+             {:=color :species})
     (=+ (scatter {:alpha 0.5})
         (linear))
     (facet {:col :island})
@@ -4506,7 +4535,7 @@ iris
 
 ;; Inspect the spec:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (=+ (scatter)
         (linear))
     (target :vl)
@@ -4519,7 +4548,7 @@ iris
 
 ;; Render the plot:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (=+ (scatter)
         (linear))
     (target :vl)
@@ -4557,7 +4586,7 @@ iris
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
-    (facet {:col :species})
+    (facet {:=col :species})
     (target :vl)
     kind/pprint)
 
@@ -4570,7 +4599,7 @@ iris
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
-    (facet {:col :species})
+    (facet {:=col :species})
     (target :vl)
     plot)
 
@@ -4759,7 +4788,7 @@ iris
 
 ;; Inspect the spec:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (=+ (scatter)
         (linear))
     (target :plotly)
@@ -4772,7 +4801,7 @@ iris
 
 ;; Render the plot:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :species})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :species})
     (=+ (scatter)
         (linear))
     (target :plotly)
@@ -4811,7 +4840,7 @@ iris
 (-> penguins
     (mapping :bill-length-mm nil)
     (histogram {:bins 12})
-    (facet {:col :species})
+    (facet {:=col :species})
     (target :plotly)
     (size 900 350)
     plot)
@@ -4830,7 +4859,7 @@ iris
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
-    (facet {:col :species})
+    (facet {:=col :species})
     (target :plotly)
     (size 800 400)
     kind/pprint)
@@ -4846,7 +4875,7 @@ iris
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
-    (facet {:col :species})
+    (facet {:=col :species})
     (target :plotly)
     (size 800 400)
     plot)
