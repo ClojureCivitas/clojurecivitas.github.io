@@ -13,8 +13,29 @@
                   :image "aog_iris.png"
                   :draft true}}}
 (ns data-visualization.aog-in-clojure-part2
-  (:require [tablecloth.api :as tc]
-            [scicloj.kindly.v4.kind :as kind]))
+  (:require
+   ;; Tablecloth - Dataset manipulation
+   [tablecloth.api :as tc]
+   [tablecloth.column.api :as tcc]
+
+   ;; Kindly - Notebook visualization protocol
+   [scicloj.kindly.v4.kind :as kind]
+
+   ;; thi.ng/geom-viz - Static SVG visualization
+   [thi.ng.geom.viz.core :as viz]
+   [thi.ng.geom.svg.core :as svg]
+
+   ;; Fastmath - Statistical computations
+   [fastmath.ml.regression :as regr]
+   [fastmath.stats :as stats]
+
+   ;; Malli - Schema validation
+   [malli.core :as m]
+   [malli.error :as me]
+   [malli.util :as mu]
+
+   ;; RDatasets - Example datasets
+   [scicloj.metamorph.ml.rdatasets :as rdatasets]))
 
 ^{:kindly/hide-code true
   :kindly/kind :kind/hiccup}
@@ -65,8 +86,8 @@
 ;; - **Consistent `:=` prefix in named aesthetics:** Named aesthetic mappings now use `:=` prefix
 ;;   to match the internal representation. In Part 1, named aesthetics used plain keywords
 ;;   (`:color`, `:size`) that were transformed to `:=color`, `:=size` internally.
-;;   - `(mapping :bill-length-mm :bill-depth-mm {:=color :species})` instead of `{:color :species}`
-;;   - `(facet {:=row :species :=col :island})` instead of `{:row :species :col :island}`
+;;   - `(mapping :bill-length-mm :bill-depth-mm {:=color :species})` instead of `{:=color :species}`
+;;   - `(facet {:=row :species :=col :island})` instead of `{:row :species :=col :island}`
 ;;   - Note: Positional parameters (x, y) still use column names directly
 ;;   - **Benefit:** What you write is what you see - no mental translation needed
 ;;   - **Benefit:** Easier direct manipulation of specs with standard Clojure functions
@@ -144,6 +165,9 @@
 ;; A complete plot spec looks like this:
 
 ;; (def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
+
+(require '[scicloj.metamorph.ml.rdatasets :as rdatasets])
+(def penguins (tc/drop-missing (rdatasets/palmerpenguins-penguins)))
 
 (kind/pprint
  {:=layers [{:=data penguins
@@ -275,10 +299,10 @@
           :species [:adelie :adelie :adelie]}
    :positional [:bill-length-mm :bill-depth-mm]
    :named {:=color :species}
-   :attributes {:alpha 0.5}})
+   :attributes {:=alpha 0.5}})
 
 (merge {:positional [:x] :named {:=color :species}}
-       {:positional [:y] :named {:size :body-mass}})
+       {:positional [:y] :named {:=size :body-mass}})
 ;; Lost `:x` and `:color!`
 
 ;; With nested maps, you'd need a custom `merge-layer` function that knows
@@ -981,17 +1005,13 @@
 ;; ## ⚙️ Helper Functions
 
 (defn- plot-spec?
-  "Check if x is a plot spec (map with :=layers or plot-level keys).
+  "Check if x is a plot spec (map with :=layers key).
   
-  Plot specs are maps that have at least one key starting with :=
-  Uses Malli validation as a fallback check for well-formed specs."
+  Plot specs are maps that contain the :=layers key, which is the core
+  structure for our compositional API."
   [x]
   (and (map? x)
-       ;; Has at least one := key
-       (some #(-> % name first (= \=))
-             (keys x))
-       ;; Validates against PlotSpec schema (additional safety check)
-       (valid? PlotSpec x)))
+       (contains? x :=layers)))
 
 ;; ## ⚙️ Renderer
 
@@ -1431,7 +1451,7 @@
   Threading-friendly:
   (-> penguins (mapping :x :y) (scatter) (scale :x {:domain [30 65]}))"
   ([aesthetic opts]
-   (let [scale-key (keyword (str "=" (name aesthetic) "scale"))]
+   (let [scale-key (keyword (str "=scale-" (name aesthetic)))]
      {scale-key opts}))
   ([spec aesthetic opts]
    (=* spec (scale aesthetic opts))))
@@ -1912,7 +1932,7 @@
   Args:
   - layer: Layer map with :=data and aesthetic mappings
   
-  Returns: Sequence of point maps with :x, :y (optional), :color (optional), :group (optional)"
+  Returns: Sequence of point maps with :x, :y (optional), :color (optional), :=group (optional)"
   [layer]
   (let [data (:=data layer)]
     (when-not data
@@ -1960,7 +1980,7 @@
                        color-vals (assoc :color (nth color-vals i))
                        ;; Create composite group key from all grouping columns
                        (seq grouping-cols)
-                       (assoc :group (mapv #(nth % i) grouping-vals))))
+                       (assoc :=group (mapv #(nth % i) grouping-vals))))
                    x-vals))))
 
 ;; ## 📖 The Transform Pipeline: A Multimethod Pattern
@@ -1991,7 +2011,7 @@
 
   Dispatches on the :=transformation key in the layer.
 
-  Handles grouping: if points contain :group key, applies transform per group.
+  Handles grouping: if points contain :=group key, applies transform per group.
 
   Returns structured result based on transformation type:
   - nil (no transform): {:type :raw :points points}
@@ -2470,11 +2490,11 @@ iris
   two continuous variables or the distribution of discrete points.
   
   Args (when provided):
-  - attrs-or-spec: Either a map of attributes {:alpha 0.5} or a plot spec to compose with
-  - attrs: (2-arg form) Map of visual attributes like {:alpha 0.5}
+  - attrs-or-spec: Either a map of attributes {:=alpha 0.5} or a plot spec to compose with
+  - attrs: (2-arg form) Map of visual attributes like {:=alpha 0.5}
   
   Attributes:
-  - :alpha - Opacity (0.0 to 1.0, default 1.0)
+  - :=alpha - Opacity (0.0 to 1.0, default 1.0)
   
   Returns:
   - Plot spec map with :=layers containing a scatter layer
@@ -2486,7 +2506,7 @@ iris
      ;; => {:=layers [{:=plottype :scatter}]}
   
   2. With attributes - Returns scatter layer with custom attributes:
-     (scatter {:alpha 0.5})
+     (scatter {:=alpha 0.5})
      ;; => {:=layers [{:=plottype :scatter :=alpha 0.5}]}
   
   3. Threading form - Composes with existing spec:
@@ -2498,7 +2518,7 @@ iris
   4. Threading with attributes:
      (-> (data penguins)
          (mapping :bill-length-mm :bill-depth-mm)
-         (scatter {:alpha 0.7}))
+         (scatter {:=alpha 0.7}))
   
   Example - basic scatter plot:
   (-> penguins
@@ -2508,7 +2528,7 @@ iris
   Example - semi-transparent points:
   (-> penguins
       (mapping :bill-length-mm :bill-depth-mm)
-      (scatter {:alpha 0.5}))
+      (scatter {:=alpha 0.5}))
   
   Example - colored by species:
   (-> penguins
@@ -2520,10 +2540,10 @@ iris
    (if (plot-spec? attrs-or-spec)
      (=* attrs-or-spec (scatter))
      (let [result (merge {:=plottype :scatter}
-                         (update-keys attrs-or-spec =key))]
+                         attrs-or-spec)]
        {:=layers [result]})))
   ([spec attrs]
-   ;; Threading-friendly: (-> spec (scatter {:alpha 0.5}))
+   ;; Threading-friendly: (-> spec (scatter {:=alpha 0.5}))
    (=* spec (scatter attrs))))
 
 ;; ### ⚙️ Rendering Multimethod
@@ -2755,7 +2775,7 @@ iris
 ;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
-    (scatter {:alpha 0.5})
+    (scatter {:=alpha 0.5})
     kind/pprint)
 
 (kind/test-last [#(and (map? %)
@@ -2766,7 +2786,7 @@ iris
 ;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
-    (scatter {:alpha 0.5})
+    (scatter {:=alpha 0.5})
     plot)
 
 (kind/test-last [#(and (vector? %)
@@ -2777,7 +2797,7 @@ iris
 ;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:=color :species})
-    (scatter {:alpha 0.7})
+    (scatter {:=alpha 0.7})
     kind/pprint)
 
 (kind/test-last [#(and (map? %)
@@ -2788,7 +2808,7 @@ iris
 ;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:=color :species})
-    (scatter {:alpha 0.7})
+    (scatter {:=alpha 0.7})
     plot)
 
 (kind/test-last [#(and (vector? %)
@@ -2956,13 +2976,13 @@ iris
   Example - regression with scatter overlay:
   (-> penguins
       (mapping :bill-length-mm :bill-depth-mm)
-      (=+ (scatter {:alpha 0.5})
+      (=+ (scatter {:=alpha 0.5})
           (linear)))
 
   Example - grouped regression by species:
   (-> penguins
       (mapping :bill-length-mm :bill-depth-mm {:=color :species})
-      (=+ (scatter {:alpha 0.5})
+      (=+ (scatter {:=alpha 0.5})
           (linear)))
   ;; => Computes separate regression line for each species"
   ([]
@@ -3052,10 +3072,10 @@ iris
                     {:layer-transform (:=transformation layer)
                      :point-count 0})))
 
-  (let [has-groups? (some :group points)]
+  (let [has-groups? (some :=group points)]
     (if has-groups?
       ;; Group-wise regression
-      (let [grouped (group-by :group points)
+      (let [grouped (group-by :=group points)
             group-results (into {}
                                 (map (fn [[group-val group-points]]
                                        [group-val
@@ -3121,7 +3141,7 @@ iris
 ;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
-    (=+ (scatter {:alpha 0.5})
+    (=+ (scatter {:=alpha 0.5})
         (linear))
     kind/pprint)
 
@@ -3136,7 +3156,7 @@ iris
 ;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
-    (=+ (scatter {:alpha 0.5})
+    (=+ (scatter {:=alpha 0.5})
         (linear))
     plot)
 
@@ -3152,7 +3172,7 @@ iris
 ;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:=color :species})
-    (=+ (scatter {:alpha 0.6})
+    (=+ (scatter {:=alpha 0.6})
         (linear))
     kind/pprint)
 
@@ -3168,7 +3188,7 @@ iris
 ;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:=color :species})
-    (=+ (scatter {:alpha 0.6})
+    (=+ (scatter {:=alpha 0.6})
         (linear))
     plot)
 
@@ -3201,15 +3221,15 @@ iris
 
   This is a statistical transform that requires domain computation - it needs
   to know the data range before determining bin edges. When combined with a
-  categorical aesthetic (e.g., :color), computes separate histograms for each
+  categorical aesthetic (e.g., :=color), computes separate histograms for each
   group.
 
   Args (when provided):
-  - opts-or-spec: Either options map {:bins 20} or plot spec to compose with
+  - opts-or-spec: Either options map {:=bins 20} or plot spec to compose with
   - opts: (2-arg form) Options map
 
   Options:
-  - :bins - Binning method (default :sturges):
+  - :=bins - Binning method (default :sturges):
     - :sturges - Sturges' formula (good for normal distributions)
     - :sqrt - Square root of n (simple, works for most cases)
     - :rice - Rice's rule (for larger datasets)
@@ -3226,8 +3246,8 @@ iris
      ;; => {:=layers [{:=transformation :histogram :=plottype :bar :=bins :sturges}]}
 
   2. With options - Custom bin count or method:
-     (histogram {:bins 20})
-     (histogram {:bins :sqrt})
+     (histogram {:=bins 20})
+     (histogram {:=bins :sqrt})
 
   3. Threading form:
      (-> penguins
@@ -3237,7 +3257,7 @@ iris
   4. Threading with options:
      (-> penguins
          (mapping :bill-length-mm nil)
-         (histogram {:bins 30}))
+         (histogram {:=bins 30}))
 
   Example - basic histogram:
   (-> penguins
@@ -3247,7 +3267,7 @@ iris
   Example - custom bin count:
   (-> penguins
       (mapping :bill-length-mm nil)
-      (histogram {:bins 20}))
+      (histogram {:=bins 20}))
 
   Example - grouped histogram by species:
   (-> penguins
@@ -3266,7 +3286,7 @@ iris
      (let [result (merge {:=transformation :histogram
                           :=plottype :bar
                           :=bins :sturges}
-                         (update-keys opts-or-spec =key))]
+                         opts-or-spec)]
        {:=layers [result]})))
   ([spec opts]
    (=* spec (histogram opts))))
@@ -3336,10 +3356,10 @@ iris
                     {:layer-transform (:=transformation layer)
                      :point-count 0})))
 
-  (let [has-groups? (some :group points)]
+  (let [has-groups? (some :=group points)]
     (if has-groups?
       ;; Group-wise histogram
-      (let [grouped (group-by :group points)
+      (let [grouped (group-by :=group points)
             group-results (into {}
                                 (map (fn [[group-val group-points]]
                                        [group-val
@@ -3438,7 +3458,7 @@ iris
 ;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm nil)
-    (histogram {:bins 15})
+    (histogram {:=bins 15})
     kind/pprint)
 
 (kind/test-last [#(and (map? %)
@@ -3449,7 +3469,7 @@ iris
 ;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm nil)
-    (histogram {:bins 15})
+    (histogram {:=bins 15})
     plot)
 
 (kind/test-last [#(and (vector? %)
@@ -3463,7 +3483,7 @@ iris
 ;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm nil)
-    (histogram {:bins :sqrt})
+    (histogram {:=bins :sqrt})
     kind/pprint)
 
 (kind/test-last [#(and (map? %)
@@ -3473,7 +3493,7 @@ iris
 ;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm nil)
-    (histogram {:bins :sqrt})
+    (histogram {:=bins :sqrt})
     plot)
 
 (kind/test-last [#(and (vector? %)
@@ -3493,7 +3513,7 @@ iris
 ;; Inspect the spec:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:=color :species})
-    (=+ (scatter {:alpha 0.5})
+    (=+ (scatter {:=alpha 0.5})
         (linear))
     kind/pprint)
 
@@ -3506,7 +3526,7 @@ iris
 ;; Render the plot:
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm {:=color :species})
-    (=+ (scatter {:alpha 0.5})
+    (=+ (scatter {:=alpha 0.5})
         (linear))
     plot)
 
@@ -3526,7 +3546,7 @@ iris
 
 ;; Inspect the spec:
 (-> penguins
-    (mapping :bill-length-mm nil {:color :species :alpha 0.7})
+    (mapping :bill-length-mm nil {:=color :species :=alpha 0.7})
     (histogram)
     kind/pprint)
 
@@ -3538,7 +3558,7 @@ iris
 
 ;; Render the plot:
 (-> penguins
-    (mapping :bill-length-mm nil {:color :species :alpha 0.7})
+    (mapping :bill-length-mm nil {:=color :species :=alpha 0.7})
     (histogram)
     plot)
 
@@ -3562,8 +3582,8 @@ iris
 ;; **Continuous color → single regression with gradient**:
 ;; Inspect the spec:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :body-mass-g})
-    (=+ (scatter {:alpha 0.5})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :body-mass-g})
+    (=+ (scatter {:=alpha 0.5})
         (linear))
     kind/pprint)
 
@@ -3575,8 +3595,8 @@ iris
 
 ;; Render the plot:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :body-mass-g})
-    (=+ (scatter {:alpha 0.5})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :body-mass-g})
+    (=+ (scatter {:=alpha 0.5})
         (linear))
     plot)
 
@@ -3601,7 +3621,7 @@ iris
 ;; You can explicitly control grouping using the `:group` aesthetic.
 ;; This lets you group by one variable while coloring by another.
 
-;; **Explicit :group aesthetic**:
+;; **Explicit :=group aesthetic**:
 ;; Inspect the spec:
 (-> mtcars
     (mapping :wt :mpg {:=group :cyl})
@@ -3636,8 +3656,8 @@ iris
 ;; **Group different from color**:
 ;; Inspect the spec:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :sex :group :species})
-    (=+ (scatter {:alpha 0.5})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :sex :=group :species})
+    (=+ (scatter {:=alpha 0.5})
         (linear))
     kind/pprint)
 
@@ -3649,8 +3669,8 @@ iris
 
 ;; Render the plot:
 (-> penguins
-    (mapping :bill-length-mm :bill-depth-mm {:color :sex :group :species})
-    (=+ (scatter {:alpha 0.5})
+    (mapping :bill-length-mm :bill-depth-mm {:=color :sex :=group :species})
+    (=+ (scatter {:=alpha 0.5})
         (linear))
     plot)
 
@@ -3737,7 +3757,7 @@ iris
 ;; (plot (facet (=* (data penguins)
 ;;                  (mapping :bill-length-mm nil)
 ;;                  (histogram))
-;;              {:col :species}))
+;;              {:=col :species}))
 ;; ```
 ;;
 ;; This requires:
@@ -3840,7 +3860,7 @@ iris
  (=* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)
-     (facet {:row :island :col :sex})))
+     (facet {:=row :island :=col :sex})))
 
 (kind/test-last [#(and (map? %)
                        (contains? % :=layers)
@@ -3852,7 +3872,7 @@ iris
  (=* (data penguins)
      (mapping :bill-length-mm :bill-depth-mm)
      (scatter)
-     (facet {:row :island :col :sex})))
+     (facet {:=row :island :=col :sex})))
 
 (kind/test-last [#(and (vector? %)
                        (string? (first %))
@@ -3878,9 +3898,9 @@ iris
      (mapping :bill-length-mm
               :bill-depth-mm
               {:=color :species})
-     (=+ (scatter {:alpha 0.5})
+     (=+ (scatter {:=alpha 0.5})
          (linear))
-     (facet {:col :island})))
+     (facet {:=col :island})))
 
 ;; equivalently:
 ;; Inspect the spec:
@@ -3888,9 +3908,9 @@ iris
     (mapping :bill-length-mm
              :bill-depth-mm
              {:=color :species})
-    (=+ (scatter {:alpha 0.5})
+    (=+ (scatter {:=alpha 0.5})
         (linear))
-    (facet {:col :island})
+    (facet {:=col :island})
     kind/pprint)
 
 (kind/test-last [#(and (map? %)
@@ -3904,9 +3924,9 @@ iris
     (mapping :bill-length-mm
              :bill-depth-mm
              {:=color :species})
-    (=+ (scatter {:alpha 0.5})
+    (=+ (scatter {:=alpha 0.5})
         (linear))
-    (facet {:col :island})
+    (facet {:=col :island})
     plot)
 
 (kind/test-last [#(and (vector? %)
@@ -4622,7 +4642,7 @@ iris
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
-    (facet {:row :island :col :sex})
+    (facet {:=row :island :=col :sex})
     (target :vl)
     (size 800 600)
     kind/pprint)
@@ -4639,7 +4659,7 @@ iris
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
-    (facet {:row :island :col :sex})
+    (facet {:=row :island :=col :sex})
     (target :vl)
     (size 800 600)
     plot)
@@ -4839,7 +4859,7 @@ iris
 
 (-> penguins
     (mapping :bill-length-mm nil)
-    (histogram {:bins 12})
+    (histogram {:=bins 12})
     (facet {:=col :species})
     (target :plotly)
     (size 900 350)
@@ -4940,7 +4960,7 @@ iris
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
-    (facet {:row :island :col :sex})
+    (facet {:=row :island :=col :sex})
     (target :vl)
     (size 800 600)
     kind/pprint)
@@ -4954,7 +4974,7 @@ iris
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
-    (facet {:row :island :col :sex})
+    (facet {:=row :island :=col :sex})
     (target :vl)
     (size 800 600)
     plot)
@@ -4974,7 +4994,7 @@ iris
 (-> penguins
     (mapping :bill-length-mm :bill-depth-mm)
     (scatter)
-    (facet {:row :island :col :sex})
+    (facet {:=row :island :=col :sex})
     (target :vl)
     (plot {:width 800 :height 600}))
 
@@ -5178,7 +5198,7 @@ iris
 ;; - **Fail fast** - errors caught immediately where they're created
 ;; - **Better error context** - stacktraces point to the exact construction site
 ;; - **Immediate feedback** - catch typos and invalid values right away
-;; - Example: `(scatter {:alpha 2.0})` fails immediately (alpha must be 0.0-1.0)
+;; - Example: `(scatter {:=alpha 2.0})` fails immediately (alpha must be 0.0-1.0)
 
 ;; **Draw-time validation:**
 ;; - **Final safety check** - ensures composed specs are valid before rendering
