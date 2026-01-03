@@ -77,7 +77,6 @@
 ;; [**Metamorph.ml**](https://github.com/scicloj/metamorph.ml) provides classic datasets.
 ;; We use `toydata/iris-ds` to load the full 150-row Iris dataset.
 
-
 ^{:kindly/hide-code true
   :kindly/kind :kind/hiccup}
 [:style
@@ -90,7 +89,6 @@
   overflow-y: auto;
 }
 "]
-
 
 ;; ## The Data
 
@@ -242,21 +240,17 @@ iris
 ;; ### The Domain
 
 ;;
-;; Wilkinson distinguishes between the *values* (actual data) and the *domain*
-;; (the range of possible values). For continuous variables, the domain is
-;; typically [min, max]. For categorical variables, it's the set of categories.
+;; The **domain** is the extent of values in your data. For a numeric column containing
+;; values like 4.4, 5.1, and 7.6, the domain extends from 4.4 to 7.6 — this is *data space*.
+;; For categorical variables, the domain is the set of distinct categories.
 ;;
-;; We compute the domain from the data. In a more complete implementation,
-;; you might allow explicit domain specification (e.g., for consistent scales
-;; across facets).
+;; We compute domains from the data. For numeric columns, we return a pair of numbers
+;; (min and max). For categorical columns, we return a sorted vector of unique values.
 
 (defn column-domain
-  "Compute the domain for a single column.
+  "Compute domain for a column.
    
-   For numeric columns: [min max]
-   For categorical columns: sorted vector of unique values
-   
-   Uses only the rows specified by indices."
+   Numeric: pair of (min, max). Categorical: sorted unique values."
   [ds col indices]
   (let [column (get ds col)
         values (map #(nth column %) indices)]
