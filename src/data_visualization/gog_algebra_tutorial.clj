@@ -182,7 +182,7 @@
   [vs]
   (count (:columns vs)))
 
-(varset-dim sl) ; => 1
+(varset-dim sl)
 
 ;; ### Accessing Values
 
@@ -234,7 +234,7 @@
     (mapv #(nth (get ds %) idx) (:columns vs))))
 
 ;; Example: get the sepal length of observation 0
-(varset-value-at sl 0) ; => [5.1]
+(varset-value-at sl 0)
 
 (defn varset-values
   "Get all values from a varset as a sequence of tuples.
@@ -284,7 +284,7 @@
   (let [{:keys [dataset columns indices]} vs]
     (mapv #(column-domain dataset % indices) columns)))
 
-(varset-domain sl) ; => [[4.4 7.6]] for our subset
+(varset-domain sl)
 
 ;; ## Part 3: The Cross Operator (*)
 
@@ -376,11 +376,10 @@
      (assoc :indices-sample (take 5 (:indices sl-x-sw)))))
 
 ;; Check dimension:
-(varset-dim sl-x-sw) ; => 2
+(varset-dim sl-x-sw)
 
 ;; Get some values:
 (take 5 (varset-values sl-x-sw))
-;; => ([5.1 3.5] [4.9 3.0] [4.7 3.2] ...)
 
 ;; ## Part 4: The Blend Operator (+)
 
@@ -590,11 +589,10 @@
 (def iris-splom-blend (cross-blend iris-blend iris-blend))
 
 ;; Check: we should have 16 alternatives
-(count (:alternatives iris-splom-blend)) ; => 16
+(count (:alternatives iris-splom-blend))
 
 ;; Look at a few alternatives:
 (kind/pprint (take 4 (:alternatives iris-splom-blend)))
-;; Each has 2 columns and 2 labels (a 2D varset specification)
 
 ;; ## Part 6: Expanding Blends into Frames
 
@@ -628,7 +626,7 @@
 (def iris-frames (expand-blend iris-splom-blend))
 
 ;; We have 16 frames:
-(count iris-frames) ; => 16
+(count iris-frames)
 
 ;; Each frame is a 2D varset:
 (kind/pprint
@@ -740,7 +738,6 @@
 
 ;; Check diagonal frames:
 (filter diagonal-frame? iris-grid-frames)
-;; Should return 4 frames (one per variable)
 
 (kind/pprint
  (map #(select-keys % [:x-label :y-label :grid-row :grid-col])
@@ -787,8 +784,7 @@
    - group-col: Column name to group by (e.g., :species)
    
    Example:
-     (nest sl :species)
-     ; => Three varsets, indices partitioned by species"
+     (nest sl :species)"
   [vs group-col]
   (let [ds (:dataset vs)
         indices (:indices vs)
@@ -835,7 +831,7 @@
 (def iris-blend-by-species (nest-blend iris-blend :species))
 
 ;; Three blends, one per species:
-(count iris-blend-by-species) ; => 3
+(count iris-blend-by-species)
 
 (kind/pprint
  (map #(-> %
