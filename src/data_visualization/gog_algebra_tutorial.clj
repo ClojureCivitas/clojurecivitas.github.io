@@ -19,7 +19,19 @@
 ;; This tutorial implements the algebra in Clojure using [Tablecloth](https://scicloj.github.io/tablecloth/)
 ;; and [dtype-next](https://github.com/cnuernber/dtype-next), keeping indices explicit
 ;; throughout to enable brushing/linking across views.
+
+;; ### Acknowledgments
 ;;
+;; This work is part of the ongoing exploration within the
+;; [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/),
+;; where we're building practical tools for data visualization in Clojure.
+;;
+;; Special thanks to [**respatialized**](https://respatialized.net/) for insightful comments,
+;; for encouraging us to dive deeper into the Grammar of Graphics, and particularly for
+;; the thoughtful post "[A Syntax of Graphics](https://respatialized.net/syntax-of-graphics.html)",
+;; which helped clarify the distinction between Wilkinson's algebraic foundation and
+;; the layered syntax built atop it.
+
 ;; ### What We'll Build
 ;;
 ;; 1. **Varsets**: The fundamental unit — a mapping from indices to tuples
@@ -27,51 +39,60 @@
 ;; 3. **Frame expansion**: How blend * blend produces multiple frames
 ;; 4. **Geoms**: Different renderings of the same frame structure
 ;; 5. **Linked views**: SPLOM + correlation matrix + table, all brushable
-;;
-;; ### Key Design Decisions
-;;
-;; - **Indices are explicit**: Every varset carries its index vector. This is pedagogically
-;;   important and enables efficient brushing. In production, `:all` might be a valid
-;;   sentinel, but we keep indices materialized here for clarity.
-;;
-;; - **Blend is a distinct type**: Not a varset with extra columns, but a "superposition"
-;;   that expands under cross via the distributive law.
-;;
-;; - **Labels carry identity**: When we blend variables, labels distinguish them.
-;;   The diagonal of a SPLOM is where `(= x-label y-label)` — semantic, not positional.
-;;
-;; - **Algebra produces structure, geoms render it**: The same frame structure can be
-;;   rendered as scatter, histogram, correlation coefficient, etc.
 
 
 ;; ## Setup
 
-
 (ns data-visualization.gog-algebra-tutorial
-  "Grammar of Graphics algebra tutorial: from varsets to brushable SPLOM.
-   
-   This is a Clay notebook. Render with:
-   (require '[scicloj.clay.v2.api :as clay])
-   (clay/make! {:source-path \"src/data_visualization/gog_algebra_tutorial.clj\"})
-   
-   Dependencies expected in deps.edn:
-   - org.scicloj/tablecloth
-   - org.scicloj/clay
-   - org.scicloj/kindly
-   - org.scicloj/metamorph.ml (for iris dataset)
-   - generateme/fastmath (for statistics)"
   (:require
+   ;; Tablecloth - Dataset manipulation
    [tablecloth.api :as tc]
    [tablecloth.column.api :as tcc]
+
+   ;; dtype-next - Low-level columnar operations
    [tech.v3.dataset :as ds]
    [tech.v3.datatype :as dtype]
    [tech.v3.datatype.functional :as dfn]
+
+   ;; Kindly - Notebook visualization protocol
    [scicloj.kindly.v4.kind :as kind]
    [scicloj.kindly.v4.api :as kindly]
-   [scicloj.metamorph.ml.toydata :as toydata]
-   ;; Uncomment when available:
-   ;; [fastmath.stats :as stats]
-   ))
+
+   ;; Metamorph.ml - Example datasets
+   [scicloj.metamorph.ml.toydata :as toydata]))
+
+;; [**Tablecloth**](https://scicloj.github.io/tablecloth/) wraps
+;; [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset) with a
+;; friendly, pipeline-oriented interface. We mostly use `tc/select-rows` for subsetting,
+;; `tc/add-column` for augmenting datasets, and `tc/map-columns` for transformations.
+;;
+;; [**dtype-next**](https://github.com/cnuernber/dtype-next) (via tech.v3.*) is the columnar engine underneath.
+;; Tablecloth datasets are dtype-next datasets, so we can use both APIs interchangeably.
+;; Our varsets use `(get dataset :column-name)` to extract column vectors,
+;; then `(nth column idx)` for fast indexed access.
+;;
+;; [**Kindly**](https://scicloj.github.io/kindly-noted/) lets this notebook render in different environments
+;; ([Clay](https://scicloj.github.io/clay/), [Portal](https://github.com/djblue/portal), etc.).
+;; We use `kind/table` for data display and `kind/pprint` for inspecting structures.
+;;
+;; [**Metamorph.ml**](https://github.com/scicloj/metamorph.ml) provides classic datasets.
+;; We use `toydata/iris-ds` to load the full 150-row Iris dataset.
+
+
+^{:kindly/hide-code true
+  :kindly/kind :kind/hiccup}
+[:style
+ ".clay-dataset {
+  max-height:400px;
+  overflow-y: auto;
+}
+.printedClojure {
+  max-height:400px;
+  overflow-y: auto;
+}
+"]
+
+
 ;; ## Part 1: The Data
 
 ;;
@@ -80,13 +101,7 @@
 ;; Perfect for demonstrating SPLOM.
 
 (def iris-raw
-  "[Iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) as a Tablecloth dataset.
-   
-   Columns:
-   - :sepal-length, :sepal-width, :petal-length, :petal-width (numeric)
-   - :species (categorical: setosa, versicolor, virginica)
-   
-   Loaded from rdatasets via scicloj.metamorph.ml.toydata."
+  "The Iris dataset with species decoded to names."
   (-> (toydata/iris-ds)
       (tc/map-columns :species [:species]
                       (fn [code]
@@ -96,10 +111,7 @@
                           2 "virginica")))))
 
 (def iris
-  "Iris dataset with row indices added explicitly.
-   
-   We add an :index column so that every row knows its position.
-   This makes the connection between data and visual elements traceable."
+  "Iris dataset with explicit row indices."
   (tc/add-column iris-raw :index (range (tc/row-count iris-raw))))
 
 ;; Quick look at the data:
@@ -122,39 +134,23 @@
 ;;    :indices [0 1 2...]} ; which rows are "active" in this varset
 ;; ```
 ;;
-;; Key insight: The **indices** vector is what allows subsetting (for nesting)
-;; and linking (for brushing). All varsets over the same dataset share
-;; index semantics — index 7 in varset A is the same observation as index 7
-;; in varset B.
+;; The **indices** vector is what allows subsetting (for nesting) and linking (for brushing).
+;; All varsets over the same dataset share index semantics — index 7 in varset A is the
+;; same observation as index 7 in varset B. We keep indices explicit and materialized
+;; throughout this tutorial. In production code, you might use `:all` as a sentinel,
+;; but here we make them concrete.
 
-;; **Mathematical definition:**
-;;
-;; A varset $V$ is a function $V: I \rightarrow D$ where:
-;;
-;; - $I$ is a set of indices (observation IDs)
-;; - $D$ is the domain (set of possible values)
-;; - $V(i)$ gives the value for observation $i$
-;;
-;; For multi-dimensional varsets, $D = D_1 \times D_2 \times \ldots \times D_k$
+;; Formally, a varset $V$ is a function $V: I \rightarrow D$ where $I$ is a set of
+;; indices, $D$ is the domain, and $V(i)$ gives the value for observation $i$.
+;; For multi-dimensional varsets, $D = D_1 \times D_2 \times \ldots \times D_k$.
 
 (defn varset
-  "Create a varset from a dataset, column(s), and optional label(s).
+  "Create a varset from dataset columns.
    
-   Arguments:
-   - ds:      A Tablecloth dataset
-   - columns: A keyword or vector of keywords naming columns
-   - opts:    Optional map with :labels and :indices
+   (varset iris :sepal-length)
+   (varset iris [:sepal-length :sepal-width] {:labels [\"SL\" \"SW\"]})
    
-   The :indices default to all rows. The :labels default to column names.
-   
-   Examples:
-     (varset iris :sepal-length)
-     (varset iris [:sepal-length :sepal-width] {:labels [\"SL\" \"SW\"]})
-   
-   Design note:
-   We store columns as a vector even for 1D varsets. This uniformity
-   simplifies the implementation of cross (which concatenates columns).
-   A 1D varset has (count columns) = 1; a 2D varset has (count columns) = 2."
+   Indices default to all rows. Labels default to column names."
   ([ds columns]
    (varset ds columns {}))
   ([ds columns {:keys [labels indices]}]
@@ -224,11 +220,7 @@
 ;; across different variables and visualizations.
 
 (defn varset-value-at
-  "Get the tuple value for a given index in a varset.
-   
-   Returns a vector of values, one per column.
-   For a 1D varset, returns a single-element vector like [5.1].
-   For a 2D varset, returns a pair like [5.1 3.5]."
+  "Get the tuple value for a given index."
   [vs idx]
   (let [ds (:dataset vs)]
     (mapv #(nth (get ds %) idx) (:columns vs))))
@@ -308,44 +300,13 @@
 ;; This is why a scatterplot works: we cross X with Y, and each point
 ;; represents one observation with (x, y) coordinates.
 
-;; **Mathematical definition:**
-;;
-;; The cross operator $\times$ combines varsets:
-;;
-;; $$(A \times B)(i) = (A(i), B(i))$$
-;;
-;; This concatenates tuple components for aligned indices.
-;; 
-;; - Input: $A: I \rightarrow D_A$, $B: I \rightarrow D_B$
-;; - Output: $(A \times B): I \rightarrow D_A \times D_B$
-;; - Dimension: $\dim(A \times B) = \dim(A) + \dim(B)$
+;; In math notation: $(A \times B)(i) = (A(i), B(i))$ — concatenating tuple components
+;; for aligned indices. The dimension adds: $\dim(A \times B) = \dim(A) + \dim(B)$.
 
 (defn cross
-  "Cross two varsets, producing a higher-dimensional varset.
+  "Cross two varsets to make a higher-dimensional one.
    
-   The result has:
-   - columns: concatenation of A's and B's columns
-   - labels: concatenation of A's and B's labels
-   - indices: intersection of A's and B's indices (usually identical)
-   - dataset: must be the same for both (enforced)
-   
-   Mathematically: (A * B)(i) = (A(i), B(i)) — tuple concatenation.
-   
-   The dimension increases: dim(A * B) = dim(A) + dim(B).
-   
-   Examples:
-     (cross sl sw)  ; 1D * 1D -> 2D varset for scatterplot
-     (cross (cross sl sw) pl)  ; 2D * 1D -> 3D varset
-   
-   Note on indices:
-   We take the intersection of indices. In simple cases where both varsets
-   come from the same dataset and haven't been filtered, indices are identical.
-   After nesting (filtering by group), indices may differ, and intersection
-   ensures we only keep observations present in both varsets.
-   
-   Design question:
-   Should cross of mismatched datasets be an error or attempt a join?
-   For now, we enforce same dataset (same object identity)."
+   Concatenates columns/labels, intersects indices."
   [vs-a vs-b]
   (assert (= :varset (:type vs-a) (:type vs-b))
           "Cross requires two varsets (not blends). Use expand for blends.")
@@ -401,25 +362,15 @@
 ;;    :dataset ds
 ;;    :indices [...]}
 ;;
-;; A blend is NOT a varset with multiple columns. It's a container
-;; of alternatives that get multiplied out under cross.
+;; A blend is a distinct type, not a varset with multiple columns. It's a "superposition"
+;; that expands under cross via the distributive law. Blends are specifications, not
+;; concrete frames. The labels inside a blend distinguish the alternatives. When we
+;; cross (A + B) with (A + B), we get four frames: A*A, A*B, B*A, B*B. The diagonal
+;; is where both labels are the same.
 ;;
-;; Subtle point: The labels inside a blend are what distinguish the
-;; alternatives. When we cross (A + B) with (A + B), we get four frames:
-;; A*A, A*B, B*A, B*B. The diagonal is where both labels are the same.
-
-;; **Mathematical definition:**
-;;
-;; The blend operator $+$ creates alternatives:
-;;
-;; $$A + B = \{A, B\}$$
-;;
-;; This is a set union, not addition. The power comes from
-;; the **distributive law** with cross:
-;;
-;; $$(A + B) \times (C + D) = AC + AD + BC + BD$$
-;;
-;; Each term in the expansion becomes a frame in the visualization.
+;; In notation: $A + B = \{A, B\}$ — a set union, not addition. The power comes from
+;; distributivity: $(A + B) \times (C + D) = AC + AD + BC + BD$. Each term becomes
+;; a frame in the visualization.
 
 (defn blend
   "Create a blend (union) of varsets.
@@ -511,7 +462,7 @@
 ;; Before we see the full 4×4 SPLOM, let's understand the distributive law
 ;; with a simple 2×2 example.
 ;;
-;; **The algebra:** $(A + B) \times (C + D) = AC + AD + BC + BD$
+;; The algebra: $(A + B) \times (C + D) = AC + AD + BC + BD$
 ;;
 ;; Let's see this with actual data:
 
@@ -559,9 +510,7 @@
 ;;
 ;; Now for the key insight: Cross a blend with **itself** to get a SPLOM.
 ;;
-;; **Mathematics:** If $X = A + B + C + D$, then $X \times X$ produces 16 terms.
-;;
-;; **Visually:**
+;; If $X = A + B + C + D$, then $X \times X$ produces 16 terms.
 ;;
 ;; ```
 ;;        A         B         C         D
@@ -698,21 +647,24 @@
 ;; The diagonal of a SPLOM is where `x-variable = y-variable`.
 ;; These cells are fundamentally different from off-diagonal cells:
 ;;
-;; **Diagonal (e.g., Sepal Length × Sepal Length):**
+;; Diagonal (e.g., Sepal Length × Sepal Length):
 ;;
 ;; - Both axes show the *same* variable
 ;; - Each point would plot at $(v, v)$ — all points on the line $y = x$
-;; - This doesn't show relationships — it shows the **distribution** of one variable
-;; - Best rendered as: **histogram** or **density plot**
+;; - This shows the distribution of one variable, not relationships
+;; - Best rendered as: histogram or density plot
 ;;
-;; **Off-diagonal (e.g., Sepal Length × Petal Length):**
+;; Off-diagonal (e.g., Sepal Length × Petal Length):
 ;;
 ;; - Axes show *different* variables  
 ;; - Points plot at $(x_i, y_i)$ — scattered across the plane
-;; - Shows the **relationship** between two variables
-;; - Best rendered as: **scatterplot**
+;; - Shows the relationship between two variables
+;; - Best rendered as: scatterplot
 ;;
-;; **Detection rule:** Check if labels match (not grid position!)
+;; We detect the diagonal by checking if labels match (not grid position). Labels carry
+;; identity — when we blend variables, labels distinguish them. The diagonal of a SPLOM
+;; is where `(= x-label y-label)`. This is semantic, not positional, so it works even
+;; for asymmetric crosses where rows and columns have different variables.
 
 (defn diagonal-frame?
   "Is this frame on the diagonal (same variable on both axes)?
@@ -762,15 +714,9 @@
 ;;
 ;; Implementation: We use Tablecloth's group-by to get row indices per group.
 
-;; **Mathematical definition:**
-;;
-;; The nest operator $/$ partitions by grouping:
-;;
-;; $$A / G = \{A|_{G=g_1}, A|_{G=g_2}, \ldots\}$$
-;;
-;; Where $A|_{G=g}$ restricts $A$ to indices where grouping variable $G$ equals $g$.
-;;
-;; This creates separate varsets for each group, enabling faceted displays.
+;; In notation: $A / G = \{A|_{G=g_1}, A|_{G=g_2}, \ldots\}$ where $A|_{G=g}$ restricts
+;; $A$ to indices where grouping variable $G$ equals $g$. This creates separate varsets
+;; for each group, enabling faceted displays.
 
 (defn nest
   "Partition a varset by a grouping column.
@@ -851,8 +797,8 @@
 ;; - :regression — fitted line
 ;; - :correlation — single number (the correlation coefficient)
 ;;
-;; This separation is key: the algebra produces frames, rendering
-;; interprets them.
+;; The algebra produces frames (what data to show), geoms decide how to visualize it
+;; (scatter plot, histogram, correlation coefficient, etc.).
 
 (defn frame->geom-type
   "Determine the appropriate geom type for a frame.
@@ -1624,26 +1570,14 @@ function onBrush(selectedIndices) {
 }
 ")
 
-;; The D3 code above is illustrative. In practice, you'd:
-;; 1. Put it in a separate .js file
-;; 2. Load D3 from CDN
-;; 3. Use Kindly's :kind/hiccup to embed the visualization
-;; 4. Pass data via a ClojureScript/JavaScript bridge or inline JSON
-
-;; End of Tutorial
+;; The D3 code above is illustrative. In practice, you'd put it in a separate .js file,
+;; load D3 from CDN, use Kindly's :kind/hiccup to embed the visualization, and pass
+;; data via a ClojureScript/JavaScript bridge or inline JSON.
 
 ;;
-;; This notebook demonstrates how the Grammar of Graphics algebra
-;; produces complex visualizations from simple operations:
-;;
-;; - Varsets map indices to tuples
-;; - Cross concatenates tuples (building dimensions)
-;; - Blend creates alternatives (that expand under cross)
-;; - Nest partitions indices (enabling faceting)
-;; - Geoms interpret frames (same structure, different rendering)
-;; - Selection is an index set (enabling linked views)
-;;
-;; The SPLOM "falls out" of (blend * blend). No special-case code.
+;; That's the core idea: varsets map indices to tuples, cross concatenates tuples,
+;; blend creates alternatives that expand under cross, nest partitions indices,
+;; geoms interpret frames. The SPLOM falls out of (blend * blend). No special-case code.
 ;;
 ;; ## References and Further Reading
 ;;
