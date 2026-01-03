@@ -73,7 +73,6 @@
 ;;
 ;; [**Kindly**](https://scicloj.github.io/kindly-noted/) lets this notebook render in different environments
 ;; ([Clay](https://scicloj.github.io/clay/), [Portal](https://github.com/djblue/portal), etc.).
-;; We use `kind/table` for data display and `kind/pprint` for inspecting structures.
 ;;
 ;; [**Metamorph.ml**](https://github.com/scicloj/metamorph.ml) provides classic datasets.
 ;; We use `toydata/iris-ds` to load the full 150-row Iris dataset.
@@ -115,7 +114,7 @@
   (tc/add-column iris-raw :index (range (tc/row-count iris-raw))))
 
 ;; Quick look at the data:
-(kind/table (tc/head iris 5))
+iris
 
 ;; ## Varsets — The Fundamental Unit
 
@@ -202,7 +201,7 @@
 ;; Index 5 refers to the 6th observation in the dataset
 ;; Let's see what that observation looks like:
 
-(kind/table (tc/select-rows iris [5]))
+(tc/select-rows iris [5])
 
 ;; Now get the values from each varset at index 5:
 
@@ -331,10 +330,9 @@
 ;; Cross two varsets to get a 2D varset (one scatterplot frame):
 (def sl-x-sw (cross sl sw))
 
-(kind/pprint
- (-> sl-x-sw
-     (dissoc :dataset)
-     (assoc :indices-sample (take 5 (:indices sl-x-sw)))))
+(-> sl-x-sw
+    (dissoc :dataset)
+    (assoc :indices-sample (take 5 (:indices sl-x-sw))))
 
 ;; Check dimension:
 (varset-dim sl-x-sw)
@@ -400,10 +398,9 @@
 ;; Create a blend of all four Iris numeric variables:
 (def iris-blend (blend sl sw pl pw))
 
-(kind/pprint
- (-> iris-blend
-     (dissoc :dataset)
-     (assoc :indices-count (count (:indices iris-blend)))))
+(-> iris-blend
+    (dissoc :dataset)
+    (assoc :indices-count (count (:indices iris-blend))))
 
 ;; ## Crossing Blends — The Distributive Law
 
@@ -541,7 +538,7 @@
 (count (:alternatives iris-splom-blend))
 
 ;; Look at a few alternatives:
-(kind/pprint (take 4 (:alternatives iris-splom-blend)))
+(take 4 (:alternatives iris-splom-blend))
 
 ;; ## Expanding Blends into Frames
 
@@ -578,11 +575,10 @@
 (count iris-frames)
 
 ;; Each frame is a 2D varset:
-(kind/pprint
- (let [frame (first iris-frames)]
-   (-> frame
-       (dissoc :dataset)
-       (assoc :indices-count (count (:indices frame))))))
+(let [frame (first iris-frames)]
+  (-> frame
+      (dissoc :dataset)
+      (assoc :indices-count (count (:indices frame)))))
 
 ;; ### Organizing Frames into a Grid
 
@@ -623,9 +619,8 @@
 (def iris-grid-frames (frames-grid-positions iris-frames))
 
 ;; Check a few frames:
-(kind/pprint
- (map #(select-keys % [:x-label :y-label :grid-row :grid-col])
-      (take 5 iris-grid-frames)))
+(map #(select-keys % [:x-label :y-label :grid-row :grid-col])
+     (take 5 iris-grid-frames))
 
 ;; ### Detecting the Diagonal
 
@@ -691,9 +686,8 @@
 ;; Check diagonal frames:
 (filter diagonal-frame? iris-grid-frames)
 
-(kind/pprint
- (map #(select-keys % [:x-label :y-label :grid-row :grid-col])
-      (filter diagonal-frame? iris-grid-frames)))
+(map #(select-keys % [:x-label :y-label :grid-row :grid-col])
+     (filter diagonal-frame? iris-grid-frames))
 
 ;; ## The Nest Operator (/)
 
@@ -746,11 +740,10 @@
 ;; Nest sepal-length by species:
 (def sl-by-species (nest sl :species))
 
-(kind/pprint
- (map #(-> %
-           (dissoc :dataset)
-           (select-keys [:labels :facet-value :indices]))
-      sl-by-species))
+(map #(-> %
+          (dissoc :dataset)
+          (select-keys [:labels :facet-value :indices]))
+     sl-by-species)
 
 ;; ### Nesting Blends
 
@@ -779,11 +772,10 @@
 ;; Three blends, one per species:
 (count iris-blend-by-species)
 
-(kind/pprint
- (map #(-> %
-           (dissoc :dataset :alternatives)
-           (assoc :n-indices (count (:indices %))))
-      iris-blend-by-species))
+(map #(-> %
+          (dissoc :dataset :alternatives)
+          (assoc :n-indices (count (:indices %))))
+     iris-blend-by-species)
 
 ;; ## Frames and Geoms
 
@@ -817,9 +809,8 @@
 (def iris-frames-with-geoms
   (map #(assoc % :geom (frame->geom-type %)) iris-grid-frames))
 
-(kind/pprint
- (map #(select-keys % [:x-label :y-label :geom])
-      (take 6 iris-frames-with-geoms)))
+(map #(select-keys % [:x-label :y-label :geom])
+     (take 6 iris-frames-with-geoms))
 
 ;; ## Computing Statistics on Frames
 
@@ -1053,9 +1044,8 @@
 ;; Generate the full SPLOM spec:
 (def iris-splom-spec (splom->d3-spec iris-frames-with-geoms nil))
 
-(kind/pprint
- (-> iris-splom-spec
-     (update :frames #(take 2 %)))) ; Just show first 2 frames
+(-> iris-splom-spec
+    (update :frames #(take 2 %))) ; Just show first 2 frames
 
 ;; ## D3 Rendering Code
 
@@ -1182,10 +1172,10 @@ console.log('SPLOM spec:', " spec-json ");
          :n n}))))
 
 ;; Summary stats for all data:
-(kind/pprint (summary-stats-spec iris-blend nil))
+(summary-stats-spec iris-blend nil)
 
 ;; Summary stats for a selection:
-(kind/pprint (summary-stats-spec iris-blend #{0 1 2 3 4 5 6 7 8 9}))
+(summary-stats-spec iris-blend #{0 1 2 3 4 5 6 7 8 9})
 
 (defn data-table-spec
   "Generate a data table showing selected rows.
@@ -1206,10 +1196,9 @@ console.log('SPLOM spec:', " spec-json ");
                    (map (fn [col] [col (nth (get ds col) idx)]) columns)))}))
 
 ;; Data table for first 10 observations:
-(kind/pprint
- (-> (data-table-spec iris [:sepal-length :sepal-width :species]
-                      #{0 1 2 3 4 5 6 7 8 9})
-     (update :rows #(take 5 %))))
+(-> (data-table-spec iris [:sepal-length :sepal-width :species]
+                     #{0 1 2 3 4 5 6 7 8 9})
+    (update :rows #(take 5 %)))
 
 ;; ## Putting It All Together — The Dashboard Structure
 
@@ -1262,17 +1251,15 @@ console.log('SPLOM spec:', " spec-json ");
 ;; Generate a dashboard with no selection:
 (def dashboard-no-selection (dashboard-spec iris iris-blend nil))
 
-(kind/pprint
- (-> dashboard-no-selection
-     (assoc-in [:views :splom :spec :frames] "[16 frames...]")
-     (assoc-in [:views :data-table :spec :rows] "[rows...]")))
+(-> dashboard-no-selection
+    (assoc-in [:views :splom :spec :frames] "[16 frames...]")
+    (assoc-in [:views :data-table :spec :rows] "[rows...]"))
 
 ;; Generate a dashboard with a selection:
 (def selection-example #{0 1 2 3 4 10 11 12 13 14 20 21 22 23 24})
 (def dashboard-with-selection (dashboard-spec iris iris-blend selection-example))
 
-(kind/pprint
- (:summary (:views dashboard-with-selection)))
+(:summary (:views dashboard-with-selection))
 
 ;; ## Faceted SPLOM
 
@@ -1304,11 +1291,10 @@ console.log('SPLOM spec:', " spec-json ");
 
 (def iris-faceted-splom (faceted-splom-spec iris-blend :species))
 
-(kind/pprint
- (map #(-> %
-           (select-keys [:facet-value :n-observations])
-           (assoc :n-frames (count (get-in % [:splom :frames]))))
-      iris-faceted-splom))
+(map #(-> %
+          (select-keys [:facet-value :n-observations])
+          (assoc :n-frames (count (get-in % [:splom :frames]))))
+     iris-faceted-splom)
 
 ;; ## Summary: The Algebra at Work
 
