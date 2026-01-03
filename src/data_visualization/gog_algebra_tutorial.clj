@@ -93,7 +93,7 @@
 "]
 
 
-;; ## Part 1: The Data
+;; ## The Data
 
 ;;
 ;; We use the classic [Iris flower dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set):
@@ -117,7 +117,7 @@
 ;; Quick look at the data:
 (kind/table (tc/head iris 5))
 
-;; ## Part 2: Varsets — The Fundamental Unit
+;; ## Varsets — The Fundamental Unit
 
 ;;
 ;; A **varset** is a function from indices to tuples of values.
@@ -278,7 +278,7 @@
 
 (varset-domain sl)
 
-;; ## Part 3: The Cross Operator (*)
+;; ## The Cross Operator (*)
 
 ;;
 ;; Cross is the fundamental operation for building multi-dimensional frames.
@@ -342,7 +342,7 @@
 ;; Get some values:
 (take 5 (varset-values sl-x-sw))
 
-;; ## Part 4: The Blend Operator (+)
+;; ## The Blend Operator (+)
 
 ;;
 ;; Blend is the key to SPLOM. It creates a *superposition* of varsets
@@ -405,7 +405,7 @@
      (dissoc :dataset)
      (assoc :indices-count (count (:indices iris-blend)))))
 
-;; ## Part 5: Crossing Blends — The Distributive Law
+;; ## Crossing Blends — The Distributive Law
 
 ;;
 ;; When we cross two blends, the distributive law applies:
@@ -543,7 +543,7 @@
 ;; Look at a few alternatives:
 (kind/pprint (take 4 (:alternatives iris-splom-blend)))
 
-;; ## Part 6: Expanding Blends into Frames
+;; ## Expanding Blends into Frames
 
 ;;
 ;; A blend is a specification. To render it, we need to expand it into
@@ -695,7 +695,7 @@
  (map #(select-keys % [:x-label :y-label :grid-row :grid-col])
       (filter diagonal-frame? iris-grid-frames)))
 
-;; ## Part 7: The Nest Operator (/)
+;; ## The Nest Operator (/)
 
 ;;
 ;; Nest partitions a varset by the values of a grouping variable.
@@ -785,7 +785,7 @@
            (assoc :n-indices (count (:indices %))))
       iris-blend-by-species))
 
-;; ## Part 8: Frames and Geoms
+;; ## Frames and Geoms
 
 ;;
 ;; A frame is a 2D varset — it specifies which data to plot.
@@ -821,7 +821,7 @@
  (map #(select-keys % [:x-label :y-label :geom])
       (take 6 iris-frames-with-geoms)))
 
-;; ## Part 9: Computing Statistics on Frames
+;; ## Computing Statistics on Frames
 
 ;;
 ;; Some geoms require derived data:
@@ -904,7 +904,7 @@
   {:label (:x-label frame)
    :bins (frame-histogram-bins frame 5)})
 
-;; ## Part 10: Selection and Brushing
+;; ## Selection and Brushing
 
 ;;
 ;; [Brushing and linking](https://en.wikipedia.org/wiki/Brushing_and_linking) is the
@@ -967,7 +967,7 @@
   (map #(select-keys % [:x-label :y-label :n-selected])
        (take 4 highlighted)))
 
-;; ## Part 11: Rendering to D3 Specification
+;; ## Rendering to D3 Specification
 
 ;;
 ;; We now have all the algebraic machinery. The final step is rendering.
@@ -1057,7 +1057,7 @@
  (-> iris-splom-spec
      (update :frames #(take 2 %)))) ; Just show first 2 frames
 
-;; ## Part 12: D3 Rendering Code
+;; ## D3 Rendering Code
 
 ;;
 ;; This section contains the D3 JavaScript code that renders the SPLOM.
@@ -1114,7 +1114,7 @@ console.log('SPLOM spec:', " spec-json ");
 ;; Generate the visualization (placeholder):
 ;; (kind/hiccup (splom-hiccup iris-splom-spec {:cell-size 80}))
 
-;; ## Part 13: Linked Views — The Dashboard
+;; ## Linked Views — The Dashboard
 
 ;;
 ;; A linked dashboard combines multiple views over the same data,
@@ -1211,7 +1211,7 @@ console.log('SPLOM spec:', " spec-json ");
                       #{0 1 2 3 4 5 6 7 8 9})
      (update :rows #(take 5 %))))
 
-;; ## Part 14: Putting It All Together — The Dashboard Structure
+;; ## Putting It All Together — The Dashboard Structure
 
 ;;
 ;; A complete dashboard specification combines all views with shared state.
@@ -1274,7 +1274,7 @@ console.log('SPLOM spec:', " spec-json ");
 (kind/pprint
  (:summary (:views dashboard-with-selection)))
 
-;; ## Part 15: Faceted SPLOM
+;; ## Faceted SPLOM
 
 ;;
 ;; The nest operator allows us to create faceted SPLOMs — one SPLOM per group.
