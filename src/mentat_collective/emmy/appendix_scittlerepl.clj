@@ -16,15 +16,11 @@
 
 ;; ## Starting the Scittle Repl of this Clay Notebook
 
-(defonce start-scittle-nrepl-server
-  (memoize
-    (fn [start?]
-      (println "starting Scittle nrepl server")
-      (nrepl/start! {:nrepl-port 1339 :websocket-port 1340}))))
-
 ;; To start the nrepl server, in the local .clj file of this very notebook, uncomment the following line ...
 
-;; (start-scittle-nrepl-server true)
+;;```clojure
+;; (nrepl/start! {:nrepl-port 1339 :websocket-port 1340})
+;;```
 
 ;; ... and (re)load this notebook within your local Clay instance.
 
