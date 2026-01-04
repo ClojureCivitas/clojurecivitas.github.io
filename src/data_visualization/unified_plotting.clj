@@ -12,26 +12,7 @@
                   :toc-expand 4
                   :image "unified_splom.png"
                   :draft true}}}
-(ns data-visualization.unified-plotting
-  (:require
-   ;; Tablecloth - Dataset manipulation
-   [tablecloth.api :as tc]
-   [tablecloth.column.api :as tcc]
-
-   ;; Kindly - Notebook visualization protocol
-   [scicloj.kindly.v4.kind :as kind]
-
-   ;; thi.ng/geom-viz - Static SVG visualization
-   [thi.ng.geom.viz.core :as viz]
-   [thi.ng.geom.svg.core :as svg]
-   [thi.ng.geom.core :as g]
-
-   ;; Fastmath - Statistical computations
-   [fastmath.ml.regression :as regr]
-   [fastmath.stats :as stats]
-
-   ;; Toydata - Example datasets
-   [scicloj.metamorph.ml.toydata :as toydata]))
+(ns data-visualization.unified-plotting)
 
 ^{:kindly/hide-code true
   :kindly/kind :kind/hiccup}
@@ -95,6 +76,29 @@
       (plot)))
 
 ;; Let's build up to this step by step.
+
+;; ## Setup
+
+(ns data-visualization.unified-plotting
+  (:require
+   ;; Tablecloth - Dataset manipulation
+   [tablecloth.api :as tc]
+   [tablecloth.column.api :as tcc]
+
+   ;; Kindly - Notebook visualization protocol
+   [scicloj.kindly.v4.kind :as kind]
+
+   ;; thi.ng/geom-viz - Static SVG visualization
+   [thi.ng.geom.viz.core :as viz]
+   [thi.ng.geom.svg.core :as svg]
+   [thi.ng.geom.core :as g]
+
+   ;; Fastmath - Statistical computations
+   [fastmath.ml.regression :as regr]
+   [fastmath.stats :as stats]
+
+   ;; Toydata - Example datasets
+   [scicloj.metamorph.ml.toydata :as toydata]))
 
 ;; ## The Dataset
 ;;
