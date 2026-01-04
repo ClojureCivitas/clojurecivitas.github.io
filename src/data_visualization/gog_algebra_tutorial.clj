@@ -36,8 +36,8 @@
 ;;
 ;; 1. **Varsets**: The fundamental unit — a mapping from indices to tuples
 ;; 2. **Operators**: Cross (*), Blend (+), Nest (/) — and their algebraic properties
-;; 3. **Frame expansion**: How blend * blend produces multiple frames
-;; 4. **Geoms**: Different renderings of the same frame structure
+;; 3. **Frames**: How blend × blend produces multiple 2D varsets (one per SPLOM cell)
+;; 4. **Geoms**: Different renderings of the same data structure
 ;; 5. **Linked views**: SPLOM + correlation matrix + table, all brushable
 
 
@@ -124,7 +124,7 @@ iris
 ;;   from indices (case IDs) to values.
 ;;
 ;; Our representation:
-;; ```
+;; ```clj
 ;;   {:dataset ds        ; the underlying data source
 ;;    :columns [:col1]   ; which columns define the tuple (can be multiple)
 ;;    :labels  ["Label"] ; human-readable names (used for axis labels, identity)
@@ -182,23 +182,27 @@ iris
 ;;
 ;; A varset maps each index to a tuple. Let's make this concrete.
 
+(defn varset-value-at
+  "Get the tuple value for a given index."
+  [vs idx]
+  (let [ds (:dataset vs)]
+    (mapv #(nth (get ds %) idx) (:columns vs))))
+
+;; Example: get the sepal length of observation 0
+(varset-value-at sl 0)
+
 ;; ### Understanding Index Semantics
 ;;
 ;; The key to understanding varsets is that **indices provide identity**.
 ;; The same index across different varsets refers to the *same observation*.
 ;;
-;; Let's make this concrete with an example:
+;; Let's make this concrete:
 
 ;; Create two varsets from different columns
 (def vs-sepal-length (varset iris :sepal-length))
 (def vs-sepal-width (varset iris :sepal-width))
 
-;; Index 7 refers to the 8th observation in the dataset
-;; Let's see what that observation looks like:
-
 ;; Index 5 refers to the 6th observation in the dataset
-;; Let's see what that observation looks like:
-
 (tc/select-rows iris [5])
 
 ;; Now get the values from each varset at index 5:
@@ -215,15 +219,6 @@ iris
 ;;
 ;; Without explicit indices, we couldn't track which data points correspond
 ;; across different variables and visualizations.
-
-(defn varset-value-at
-  "Get the tuple value for a given index."
-  [vs idx]
-  (let [ds (:dataset vs)]
-    (mapv #(nth (get ds %) idx) (:columns vs))))
-
-;; Example: get the sepal length of observation 0
-(varset-value-at sl 0)
 
 (defn varset-values
   "Get all values from a varset as a sequence of tuples.
@@ -274,26 +269,27 @@ iris
 ;; ## The Cross Operator (*)
 
 ;;
-;; Cross is the fundamental operation for building multi-dimensional frames.
+;; Cross is the fundamental operation for building multi-dimensional varsets.
 ;;
 ;; In Wilkinson's algebra:
-;;   A * B produces tuples (a, b) for aligned indices
+;;   $A \times B$ produces tuples $(a, b)$ for aligned indices
 ;;
 ;; The key insight: cross doesn't multiply cases — it concatenates tuple
-;; components. If A maps index i to value a_i, and B maps index i to value b_i,
-;; then A * B maps index i to tuple (a_i, b_i).
+;; components. If $A$ maps index $i$ to value $a_i$, and $B$ maps index $i$ to value $b_i$,
+;; then $A \times B$ maps index $i$ to tuple $(a_i, b_i)$.
 ;;
 ;; This is NOT a Cartesian product of values. It's a join on indices.
 ;;
 ;; Visual intuition:
-;;   A (1D): index -> [x]
-;;   B (1D): index -> [y]
-;;   A * B (2D): index -> [x, y]
-;;
-;; This is why a scatterplot works: we cross X with Y, and each point
-;; represents one observation with (x, y) coordinates.
 
-;; In math notation: $(A \times B)(i) = (A(i), B(i))$ — concatenating tuple components
+;; - $A$ (1D): `index -> [x]`
+;; - $B$ (1D): `index -> [y]`
+;; - $A \times B$ (2D): `index -> [x, y]`
+;;
+;; This is why a scatterplot works: we cross $X$ with $Y$, and each point
+;; represents one observation with $(x, y)$ coordinates.
+
+;; In notation: $(A \times B)(i) = (A(i), B(i))$ — concatenating tuple components
 ;; for aligned indices. The dimension adds: $\dim(A \times B) = \dim(A) + \dim(B)$.
 
 (defn cross
@@ -305,10 +301,9 @@ iris
           "Cross requires two varsets (not blends). Use expand for blends.")
   (assert (identical? (:dataset vs-a) (:dataset vs-b))
           "Cross requires varsets from the same dataset")
-  (let [idx-a (set (:indices vs-a))
-        idx-b (set (:indices vs-b))
-        ;; Intersection preserves order from first varset
-        shared-indices (filterv idx-b (:indices vs-a))]
+  (let [;; Intersection preserves order from first varset
+        shared-indices (filterv (set (:indices vs-b))
+                                (:indices vs-a))]
     {:type :varset
      :dataset (:dataset vs-a)
      :columns (vec (concat (:columns vs-a) (:columns vs-b)))
@@ -346,23 +341,26 @@ iris
 ;; But the real power comes from distributivity:
 ;;   (A + B) * (C + D) = A*C + A*D + B*C + B*D
 ;;
-;; This is how X * X for a 4-variable blend produces 16 frames.
+;; This is how $X \times X$ for a 4-variable blend produces 16 alternatives.
 ;;
 ;; Our representation:
+
+;; ```clj
 ;;   {:type :blend
 ;;    :alternatives [{:columns [...] :labels [...]} ...]
 ;;    :dataset ds
 ;;    :indices [...]}
+;; ```
 ;;
 ;; A blend is a distinct type, not a varset with multiple columns. It's a "superposition"
-;; that expands under cross via the distributive law. Blends are specifications, not
-;; concrete frames. The labels inside a blend distinguish the alternatives. When we
-;; cross (A + B) with (A + B), we get four frames: A*A, A*B, B*A, B*B. The diagonal
-;; is where both labels are the same.
+;; that expands under cross via the distributive law. The labels inside a blend distinguish
+;; the alternatives. When we cross $(A + B)$ with $(A + B)$, we get four alternatives:
+;; $A \times A$, $A \times B$, $B \times A$, $B \times B$. The diagonal is where both
+;; labels are the same.
 ;;
 ;; In notation: $A + B = \{A, B\}$ — a set union, not addition. The power comes from
 ;; distributivity: $(A + B) \times (C + D) = AC + AD + BC + BD$. Each term becomes
-;; a frame in the visualization.
+;; a 2D varset in the visualization.
 
 (defn blend
   "Create a blend (union) of varsets.
@@ -405,7 +403,7 @@ iris
 ;; For SPLOM, we cross a blend with itself:
 ;;   (A + B + C + D)^2 = 16 terms
 ;;
-;; Each term is a 2D varset (a frame for one cell of the SPLOM).
+;; Each term is a 2D varset for one cell of the SPLOM.
 ;;
 ;; Implementation strategy:
 ;; - cross-blend takes two blends and returns a new blend
@@ -469,8 +467,8 @@ iris
 ;; What did we get?
 {:x-variables 2
  :y-variables 2
- :total-frames (count (:alternatives grid-2x2))
- :frame-labels (map :labels (:alternatives grid-2x2))}
+ :total-alternatives (count (:alternatives grid-2x2))
+ :alternative-labels (map :labels (:alternatives grid-2x2))}
 
 ;; Let's visualize the grid structure:
 ;;
@@ -484,18 +482,9 @@ iris
 ;;    └─────────┘    └─────────┘
 ;; ```
 ;;
-;; Each cell is a 2D frame with coordinates from one x-variable and one y-variable.
-;;
-;; Now expand and position in a grid:
-
-(def frames-2x2 (vec (expand-blend grid-2x2)))
-(def positioned-2x2 (vec (frames-grid-positions frames-2x2)))
-
-(map #(select-keys % [:x-label :y-label :grid-row :grid-col])
-     positioned-2x2)
-
-;; Notice: No cell has the same variable on both axes (no diagonal).
-;; That only happens when we cross a blend with *itself*.
+;; Each cell is a 2D varset with coordinates from one x-variable and one y-variable.
+;; Notice: No cell has the same variable on both axes (no diagonal). That only
+;; happens when we cross a blend with *itself*.
 
 ;; ### SPLOM Emerges from $X \times X$
 ;;
@@ -1582,8 +1571,3 @@ function onBrush(selectedIndices) {
 ;; - [D3 Brushable Scatterplot Matrix](https://observablehq.com/@d3/brushable-scatterplot-matrix)
 ;; - [Vega-Lite SPLOM](https://vega.github.io/vega-lite/examples/interactive_splom.html)
 ;;
-;; ### Clojure Data Science
-;; - [Tablecloth](https://scicloj.github.io/tablecloth/): DataFrame library
-;; - [dtype-next](https://github.com/cnuernber/dtype-next): High-performance arrays
-;; - [Scicloj](https://scicloj.github.io/): Clojure data science community
-;; - [Clay](https://scicloj.github.io/clay/): Notebook system for literate programming
