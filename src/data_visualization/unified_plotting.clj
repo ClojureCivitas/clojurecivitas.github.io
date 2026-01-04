@@ -326,16 +326,25 @@
 ;; First, some rendering infrastructure:
 
 (def theme
-  "Visual theme for plots - colors, sizes, etc."
-  {:background "#ffffff"
-   :grid-stroke "#e0e0e0"
-   :axis-stroke "#333333"
-   :point-fill "#4682b4"
-   :point-stroke "#ffffff"
-   :point-size 3
+  "Visual theme for plots - matches ggplot2 aesthetic.
+
+  Key features:
+  - Grey background (#EBEBEB) reduces eye strain
+  - White grid lines (#FFFFFF) aid visual comparison
+  - Color palette from ggplot2 (colorblind-friendly)
+  - Dark marks (#333333) for single-color plots"
+  {:background "#EBEBEB"
+   :grid "#FFFFFF"
+   :colors ["#F8766D" "#00BA38" "#619CFF" "#F564E3"]
+   :default-mark "#333333"
+   :point-fill "#333333"
+   :point-stroke "#FFFFFF"
+   :point-size 2
    :line-stroke "#333333"
-   :histogram-fill "#6495ed"
-   :histogram-stroke "#4169e1"})
+   :line-width 1.5
+   :histogram-fill "#333333"
+   :histogram-stroke "#FFFFFF"
+   :histogram-stroke-width 0.5})
 
 (defn- infer-domain
   "Infer min/max domain from values."
@@ -499,12 +508,21 @@
 
   All layers in the panel share the same domain and coordinate system."
   [layers width height]
-  (let [;; Extract all points to compute domains
+  (let [;; Check if we have histogram layers (they need special y-domain handling)
+        has-histogram? (some #(= (:=plottype %) :histogram) layers)
+
+        ;; Extract all points to compute domains
         all-points (mapcat layer->points layers)
         x-vals (map first all-points)
-        y-vals (map second all-points)
+        y-vals (if has-histogram?
+                 ;; For histograms, y domain should be [0, max-count]
+                 ;; We'll compute this from the histogram bars
+                 []
+                 (map second all-points))
         [x-min x-max] (infer-domain x-vals)
-        [y-min y-max] (infer-domain y-vals)
+        [y-min y-max] (if has-histogram?
+                        [0 0] ; Will be updated after rendering histogram
+                        (infer-domain y-vals))
 
         ;; Add 5% padding to domains
         x-padding (* 0.05 (- x-max x-min))
@@ -522,10 +540,58 @@
                          (let [points (layer->points layer)]
                            (render-layer layer points nil nil)))
 
-        ;; Filter out nils and separate histogram bars
+        ;; Filter out nils and separate histogram bars from viz layers
         rendered-layers (remove nil? rendered-layers)
         histogram-layers (filter :bars rendered-layers)
         viz-layers (remove :bars rendered-layers)
+
+        ;; Update y-domain if we have histograms
+        y-domain (if (seq histogram-layers)
+                   (let [max-count (apply max (map :max-count histogram-layers))]
+                     [0 (* 1.05 max-count)]) ; 5% padding at top
+                   y-domain)
+
+        ;; Recalculate y-padding with updated domain
+        y-padding (if has-histogram? 0 (* 0.05 (- (second y-domain) (first y-domain))))
+
+        ;; Create scale functions for coordinate mapping
+        x-scale (fn [x] (+ (first x-range)
+                           (* (/ (- x (first x-domain))
+                                 (- (second x-domain) (first x-domain)))
+                              (- (second x-range) (first x-range)))))
+        ;; For y-scale: SVG y increases downward, so we need to invert
+        ;; y=y-min maps to y-range[0] (bottom, larger pixel value)
+        ;; y=y-max maps to y-range[1] (top, smaller pixel value)
+        y-scale (fn [y] (+ (first y-range)
+                           (* (/ (- y (first y-domain))
+                                 (- (second y-domain) (first y-domain)))
+                              (- (second y-range) (first y-range)))))
+
+        ;; Convert histogram bars to SVG rect elements
+        histogram-rects (mapcat (fn [hist-layer]
+                                  (let [bars (:bars hist-layer)
+                                        fill (:fill hist-layer)
+                                        stroke (:stroke hist-layer)
+                                        max-count (:max-count hist-layer)]
+                                    (map (fn [bar]
+                                           (let [x1 (x-scale (:bin-start bar))
+                                                 x2 (x-scale (:bin-end bar))
+                                                 ;; In SVG, y increases downward
+                                                 ;; y=0 (bottom) is at y-range[0] (larger value)
+                                                 ;; y=max (top) is at y-range[1] (smaller value)
+                                                 y-base (y-scale 0) ; bottom of bar (count=0)
+                                                 y-top (y-scale (:count bar)) ; top of bar
+                                                 bar-width (- x2 x1)
+                                                 bar-height (- y-base y-top)] ; positive because y-base > y-top
+                                             [:rect {:x x1
+                                                     :y y-top
+                                                     :width bar-width
+                                                     :height bar-height
+                                                     :fill fill
+                                                     :stroke stroke
+                                                     :stroke-width (:histogram-stroke-width theme)}]))
+                                         bars)))
+                                histogram-layers)
 
         ;; Build viz spec
         viz-spec {:x-axis (viz/linear-axis
@@ -538,11 +604,25 @@
                             :range y-range
                             :major (/ (- (second y-domain) (first y-domain)) 5)
                             :pos (first x-range)})
-                  :grid {:attribs {:stroke (:grid-stroke theme)}}
-                  :data viz-layers}]
+                  :grid {:attribs {:stroke (:grid theme)}}
+                  :data viz-layers}
 
-    ;; Render to SVG (returns hiccup)
-    (viz/svg-plot2d-cartesian viz-spec)))
+        ;; Render base plot
+        base-plot (viz/svg-plot2d-cartesian viz-spec)]
+
+    ;; If we have histogram bars, insert them into the SVG
+    (if (seq histogram-rects)
+      ;; The structure is [:g nil [...grid...] () [...x-axis...] [...y-axis...]]
+      ;; Insert histogram bars after the grid (index 2) and before the empty () (index 3)
+      (let [[tag attrs & children] base-plot]
+        (if (= tag :g)
+          ;; Insert histogram group as a new child
+          (into [tag attrs]
+                (concat (take 3 children)  ; grid and major/minor ticks
+                        [(into [:g {:class "histogram-bars"}] histogram-rects)]
+                        (drop 3 children))) ; axes
+          base-plot))
+      base-plot)))
 
 (defn plot
   "Render a plot specification to SVG.
