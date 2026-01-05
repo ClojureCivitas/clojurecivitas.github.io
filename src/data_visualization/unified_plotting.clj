@@ -572,14 +572,15 @@
   (render-linear layer points x-scale y-scale))
 
 (defn- render-single-panel
-  "Render a single panel (one or more overlaid layers) to SVG.
+  "Render a single panel (one or more overlaid layers) to SVG hiccup.
 
-  All layers in the panel share the same domain and coordinate system."
+  All layers in the panel share the same domain and coordinate system.
+  Returns hiccup vector (not string - serialization happens in plot function)."
   [layers width height]
   (let [;; Check if we have histogram layers (they need special y-domain handling)
         has-histogram? (some #(= (:=plottype %) :histogram) layers)
 
-;; Extract all points to compute domains
+        ;; Extract all points to compute domains
         all-points (mapcat layer->points layers)
         x-vals (map :x all-points)
         y-vals (if has-histogram?
@@ -608,7 +609,7 @@
                           (let [points (layer->points layer)]
                             (render-layer layer points nil nil)))
 
-;; Filter out nils and separate special layers from viz layers
+        ;; Filter out nils and separate special layers from viz layers
         ;; Flatten because render-scatter/render-linear can return lists for colored groups
         rendered-layers (remove nil? (flatten rendered-layers))
         histogram-layers (filter :bars rendered-layers)
@@ -637,7 +638,7 @@
                                  (- (second y-domain) (first y-domain)))
                               (- (second y-range) (first y-range)))))
 
-;; Convert histogram bars to SVG rect elements
+        ;; Convert histogram bars to SVG rect elements
         histogram-rects (mapcat (fn [hist-layer]
                                   (let [bars (:bars hist-layer)
                                         fill (:fill hist-layer)
@@ -653,30 +654,29 @@
                                                  y-top (y-scale (:count bar)) ; top of bar
                                                  bar-width (- x2 x1)
                                                  bar-height (- y-base y-top)] ; positive because y-base > y-top
-                                             [:rect {:x x1
-                                                     :y y-top
-                                                     :width bar-width
-                                                     :height bar-height
-                                                     :fill fill
-                                                     :stroke stroke
-                                                     :stroke-width (:histogram-stroke-width theme)}]))
+                                             (svg/rect [x1 y-top] bar-width bar-height
+                                                       {:fill fill
+                                                        :stroke stroke
+                                                        :stroke-width (:histogram-stroke-width theme)})))
                                          bars)))
                                 histogram-layers)
 
-;; Convert line data to SVG line elements
+        ;; Convert line data to SVG line elements
         regression-lines (keep (fn [line-layer]
                                  (when-let [line-data (:line-data line-layer)]
                                    (let [{:keys [x1 y1 x2 y2]} line-data
                                          stroke (:stroke line-layer)
                                          stroke-width (:stroke-width line-layer)
-                                         opacity (:opacity line-layer)]
-                                     [:line {:x1 (x-scale x1)
-                                             :y1 (y-scale y1)
-                                             :x2 (x-scale x2)
-                                             :y2 (y-scale y2)
-                                             :stroke stroke
-                                             :stroke-width stroke-width
-                                             :opacity opacity}])))
+                                         opacity (:opacity line-layer)
+                                         ;; Scale coordinates to pixel space
+                                         x1-px (x-scale x1)
+                                         y1-px (y-scale y1)
+                                         x2-px (x-scale x2)
+                                         y2-px (y-scale y2)]
+                                     (svg/line [x1-px y1-px] [x2-px y2-px]
+                                               {:stroke stroke
+                                                :stroke-width stroke-width
+                                                :opacity opacity}))))
                                line-layers)
 
         ;; Build viz spec
@@ -696,16 +696,16 @@
         ;; Render base plot
         base-plot (viz/svg-plot2d-cartesian viz-spec)]
 
-;; Insert histogram bars and regression lines into the SVG
+    ;; Insert histogram bars and regression lines into the SVG
     (if (or (seq histogram-rects) (seq regression-lines))
       ;; The structure is [:g nil [...grid...] () [...x-axis...] [...y-axis...]]
       ;; Insert custom elements after the grid (index 2) and before the empty () (index 3)
       (let [[tag attrs & children] base-plot
             custom-groups (concat
                            (when (seq histogram-rects)
-                             [[:g {:class "histogram-bars"} (vec histogram-rects)]])
+                             [(into [:g {:class "histogram-bars"}] histogram-rects)])
                            (when (seq regression-lines)
-                             [[:g {:class "regression-lines"} (vec regression-lines)]]))]
+                             [(into [:g {:class "regression-lines"}] regression-lines)]))]
         (if (= tag :g)
           ;; Insert custom groups as new children
           (into [tag attrs]
@@ -729,10 +729,11 @@
     (case layout
       ;; Single panel: all layers overlay in one coordinate system
       :single
-      (kind/hiccup
-       [:div {:style {:background (:background theme)}}
-        [:svg {:width width :height height}
-         (render-single-panel layers width height)]])
+      (kind/html
+       (svg/serialize
+        [:div {:style (str "background:" (:background theme))}
+         [:svg {:width width :height height}
+          (render-single-panel layers width height)]]))
 
       ;; Grid layout: multiple panels arranged spatially
       :grid
@@ -745,23 +746,25 @@
             total-width (* (inc max-col) panel-width)
             total-height (* (inc max-row) panel-height)]
 
-        (kind/hiccup
-         [:div {:style {:background (:background theme)}}
-          [:svg {:width total-width :height total-height}
-           (for [row (range (inc max-row))
-                 col (range (inc max-col))]
-             (when-let [panel-layers (get grid-map [row col])]
-               (let [x-offset (* col panel-width)
-                     y-offset (* row panel-height)
-                     panel-svg (render-single-panel panel-layers panel-width panel-height)]
-                 [:g {:transform (str "translate(" x-offset "," y-offset ")")}
-                  panel-svg])))]]))
+        (kind/html
+         (svg/serialize
+          [:div {:style (str "background:" (:background theme))}
+           [:svg {:width total-width :height total-height}
+            (for [row (range (inc max-row))
+                  col (range (inc max-col))]
+              (when-let [panel-layers (get grid-map [row col])]
+                (let [x-offset (* col panel-width)
+                      y-offset (* row panel-height)
+                      panel-svg (render-single-panel panel-layers panel-width panel-height)]
+                  [:g {:transform (str "translate(" x-offset "," y-offset ")")}
+                   panel-svg])))]])))
 
       ;; Default: single panel
-      (kind/hiccup
-       [:div {:style {:background (:background theme)}}
-        [:svg {:width width :height height}
-         (render-single-panel layers width height)]]))))
+      (kind/html
+       (svg/serialize
+        [:div {:style (str "background:" (:background theme))}
+         [:svg {:width width :height height}
+          (render-single-panel layers width height)]])))))
 
 ;; ## Seeing It in Action
 ;;
@@ -1156,6 +1159,29 @@
 ;; This is a powerful pattern - the same aesthetic (`:=color :species`) drives
 ;; both the visual encoding and the statistical computation.
 
+;; ### SPLOM with Color Groups
+;;
+;; Now let's combine everything: a SPLOM with color grouping. This reveals multivariate
+;; patterns within each species across all variable pairs.
+
+(-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
+    (=* {:=layers [{:=color :species}]})
+    plot)
+
+;; Each panel now shows three colored groups (one per species):
+;; - Red: Setosa
+;; - Green: Versicolor
+;; - Blue: Virginica
+;;
+;; This is powerful - we can see at a glance:
+;; - Setosa clusters separately from the other species (visible in all panels)
+;; - Petal dimensions (length/width) strongly separate species
+;; - Sepal dimensions show more overlap between versicolor and virginica
+;;
+;; The color aesthetic is applied via `=*` composition, which merges the `:=color :species`
+;; property into all layers in the SPLOM grid. Each panel independently groups and colors
+;; its points by species.
+
 ;; ## What We've Built
 ;;
 ;; Let's take stock of what we have:
@@ -1169,6 +1195,7 @@
 ;; 7. **Grid Layout** - Spatial arrangement of multiple panels
 ;; 8. **SPLOM** - Scatterplot matrices in one line
 ;; 9. **Color Aesthetic** - Group by categorical variables with automatic coloring and grouped statistics
+;; 10. **Colored SPLOMs** - Multivariate pattern exploration across species groups
 ;;
 ;; The key insight has proven powerful: **the structure of the algebra determines sensible defaults for geometry**.
 ;; When we cross a variable with itself, we're asking about distribution (histogram).
