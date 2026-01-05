@@ -106,12 +106,7 @@
 ;; with measurements of sepal and petal dimensions, plus the species (setosa, versicolor, virginica).
 
 (def iris
-  (-> (toydata/iris-ds)
-      (tc/rename-columns {:sepal_length :sepal-length
-                          :sepal_width :sepal-width
-                          :petal_length :petal-length
-                          :petal_width :petal-width
-                          :species :species})))
+  (toydata/iris-ds))
 
 ;; Let's peek at the data:
 
@@ -405,15 +400,22 @@
   (vec (get dataset column)))
 
 (defn- layer->points
-  "Extract [x y] points from a layer.
-  Returns vector of [x-val y-val] pairs."
+  "Extract point data from a layer.
+
+  Returns sequence of point maps with :x, :y, and optionally :color."
   [layer]
   (let [dataset (:=data layer)
         x-col (:=x layer)
         y-col (:=y layer)
+        color-col (:=color layer)
         x-vals (get-column-values dataset x-col)
-        y-vals (get-column-values dataset y-col)]
-    (mapv vector x-vals y-vals)))
+        y-vals (get-column-values dataset y-col)
+        color-vals (when color-col (get-column-values dataset color-col))]
+    (map-indexed (fn [i _]
+                   (cond-> {:x (nth x-vals i)
+                            :y (nth y-vals i)}
+                     color-vals (assoc :color (nth color-vals i))))
+                 x-vals)))
 
 ;; ## Rendering Scatter Plots
 ;;
@@ -423,16 +425,29 @@
 (defn- render-scatter
   "Render scatter plot points to geom.viz spec.
 
-  Returns a viz data map for svg-plot2d-cartesian."
+  Returns a viz data map (or vector of maps for colored groups) for svg-plot2d-cartesian."
   [layer points x-scale y-scale]
   (let [point-fill (:point-fill theme)
-        point-stroke (:point-stroke theme)]
-    {:values points
-     :layout viz/svg-scatter-plot
-     :attribs {:fill point-fill
-               :stroke point-stroke
-               :stroke-width 0.5
-               :opacity 1.0}}))
+        point-stroke (:point-stroke theme)
+        color-groups (group-by :color points)]
+    (if (> (count color-groups) 1)
+      ;; Colored scatter - multiple groups
+      (let [colors (:colors theme)]
+        (map-indexed (fn [idx [color-val group-points]]
+                       {:values (mapv (fn [p] [(:x p) (:y p)]) group-points)
+                        :layout viz/svg-scatter-plot
+                        :attribs {:fill (get colors idx point-fill)
+                                  :stroke (get colors idx point-stroke)
+                                  :stroke-width 0.5
+                                  :opacity 1.0}})
+                     color-groups))
+      ;; Simple scatter - single group
+      {:values (mapv (fn [p] [(:x p) (:y p)]) points)
+       :layout viz/svg-scatter-plot
+       :attribs {:fill point-fill
+                 :stroke point-stroke
+                 :stroke-width 0.5
+                 :opacity 1.0}})))
 
 ;; ## Rendering Histograms
 ;;
@@ -440,39 +455,32 @@
 ;; occurrences in each bin. For diagonal panels (x=y), we only use the x values.
 
 (defn- compute-histogram-bins
-  "Compute histogram bins using Sturges' formula for bin count.
-
+  "Compute histogram bins using Sturges' rule.
+  
+  Points should be maps with :x key (y is ignored for histograms).
   Returns vector of {:bin-start :bin-end :count} maps."
-  [values]
-  (let [n (count values)
-        ;; Sturges' formula: k = ceil(log2(n) + 1)
-        k (Math/ceil (+ (Math/log (double n)) 1.0))
-        bin-count (max 5 (int k))
-        [min-val max-val] (infer-domain values)
-        bin-width (/ (- max-val min-val) bin-count)]
-    (when (pos? bin-width)
-      (let [bins (for [i (range bin-count)]
-                   (let [bin-start (+ min-val (* i bin-width))
-                         bin-end (+ min-val (* (inc i) bin-width))]
-                     {:bin-start bin-start
-                      :bin-end bin-end
-                      :count 0}))]
-        ;; Count values in each bin
-        (reduce
-         (fn [bins val]
-           (let [bin-idx (min (dec bin-count)
-                              (int (/ (- val min-val) bin-width)))]
-             (update-in bins [bin-idx :count] inc)))
-         (vec bins)
-         values)))))
+  [points]
+  (let [values (mapv :x points)
+        n (count values)
+        num-bins (max 5 (int (Math/ceil (+ 1 (* 3.322 (Math/log10 n))))))
+        min-val (reduce min values)
+        max-val (reduce max values)
+        bin-width (/ (- max-val min-val) num-bins)
+        bins (for [i (range num-bins)]
+               (let [start (+ min-val (* i bin-width))
+                     end (+ min-val (* (inc i) bin-width))]
+                 {:bin-start start
+                  :bin-end end
+                  :count (count (filter #(<= start % end) values))}))]
+    (vec bins)))
 
 (defn- render-histogram
   "Render histogram bars to geom.viz spec.
 
-  For diagonal panels, only uses x values (y values are the same)."
+  For diagonal panels, only uses x values (y values are the same).
+  Points should be maps with :x and :y keys."
   [layer points x-scale y-scale]
-  (let [x-vals (map first points)
-        bins (compute-histogram-bins x-vals)
+  (let [bins (compute-histogram-bins points)
         max-count (apply max (map :count bins))
         histogram-fill (:histogram-fill theme)
         histogram-stroke (:histogram-stroke theme)]
@@ -487,44 +495,58 @@
 ;; We'll compute the slope and intercept, then render the fitted line.
 
 (defn- compute-linear-regression
-  "Compute linear regression (slope and intercept) from points.
-
-  Returns {:slope m :intercept b} or nil if not enough variation."
+  "Compute linear regression for a collection of points.
+  
+  Points should be maps with :x and :y keys.
+  Returns map with :slope, :intercept, :x-min, :x-max or nil if not enough data."
   [points]
-  (when (> (count points) 1)
-    (let [xs (map first points)
-          ys (map second points)
-          n (count points)
-          sum-x (reduce + xs)
-          sum-y (reduce + ys)
-          sum-xy (reduce + (map * xs ys))
-          sum-x2 (reduce + (map #(* % %) xs))
-          mean-x (/ sum-x n)
-          mean-y (/ sum-y n)
-          ;; Calculate slope: m = (n*Σxy - Σx*Σy) / (n*Σx² - (Σx)²)
-          numerator (- (* n sum-xy) (* sum-x sum-y))
-          denominator (- (* n sum-x2) (* sum-x sum-x))]
-      (when (> (Math/abs denominator) 1e-10)
-        (let [slope (/ numerator denominator)
-              intercept (- mean-y (* slope mean-x))]
-          {:slope slope
-           :intercept intercept
-           :x-min (reduce min xs)
-           :x-max (reduce max xs)})))))
+  (when (>= (count points) 2)
+    (let [xs (mapv :x points)
+          ys (mapv :y points)
+          ;; regr/lm expects (lm ys xss) - response first, then predictors
+          result (regr/lm ys xs)
+          slope (first (:beta result))
+          intercept (:intercept result)]
+      (when (and slope intercept
+                 (not (Double/isNaN slope))
+                 (not (Double/isNaN intercept)))
+        {:slope slope
+         :intercept intercept
+         :x-min (reduce min xs)
+         :x-max (reduce max xs)}))))
 
 (defn- render-linear
-  "Render linear regression line to geom.viz spec."
+  "Render linear regression line to geom.viz spec.
+  
+  Handles both single regression and grouped regressions (by color)."
   [layer points x-scale y-scale]
-  (when-let [regression (compute-linear-regression points)]
-    (let [{:keys [slope intercept x-min x-max]} regression
-          y-start (+ (* slope x-min) intercept)
-          y-end (+ (* slope x-max) intercept)
-          line-stroke (:line-stroke theme)]
-      {:values [[x-min y-start] [x-max y-end]]
-       :layout viz/svg-line-plot
-       :attribs {:stroke line-stroke
-                 :stroke-width 2
-                 :opacity 1.0}})))
+  (let [line-stroke (:line-stroke theme)
+        colors (:colors theme)
+        color-groups (group-by :color points)]
+    (if (> (count color-groups) 1)
+      ;; Colored regression - one line per group
+      ;; Return as maps since viz/svg-line-plot won't work here
+      (keep-indexed (fn [idx [color-val group-points]]
+                      (when-let [regression (compute-linear-regression group-points)]
+                        (let [{:keys [slope intercept x-min x-max]} regression
+                              y-start (+ (* slope x-min) intercept)
+                              y-end (+ (* slope x-max) intercept)]
+                          ;; Return line data as map for manual rendering
+                          {:line-data {:x1 x-min :y1 y-start :x2 x-max :y2 y-end}
+                           :stroke (get colors idx line-stroke)
+                           :stroke-width 2
+                           :opacity 1.0})))
+                    color-groups)
+      ;; Simple regression - single line
+      (when-let [regression (compute-linear-regression points)]
+        (let [{:keys [slope intercept x-min x-max]} regression
+              y-start (+ (* slope x-min) intercept)
+              y-end (+ (* slope x-max) intercept)]
+          ;; Return line data as map for manual rendering
+          {:line-data {:x1 x-min :y1 y-start :x2 x-max :y2 y-end}
+           :stroke line-stroke
+           :stroke-width 2
+           :opacity 1.0})))))
 
 ;; ## Coordinating the Rendering
 ;;
@@ -557,14 +579,14 @@
   (let [;; Check if we have histogram layers (they need special y-domain handling)
         has-histogram? (some #(= (:=plottype %) :histogram) layers)
 
-        ;; Extract all points to compute domains
+;; Extract all points to compute domains
         all-points (mapcat layer->points layers)
-        x-vals (map first all-points)
+        x-vals (map :x all-points)
         y-vals (if has-histogram?
                  ;; For histograms, y domain should be [0, max-count]
                  ;; We'll compute this from the histogram bars
                  []
-                 (map second all-points))
+                 (map :y all-points))
         [x-min x-max] (infer-domain x-vals)
         [y-min y-max] (if has-histogram?
                         [0 0] ; Will be updated after rendering histogram
@@ -586,10 +608,12 @@
                           (let [points (layer->points layer)]
                             (render-layer layer points nil nil)))
 
-        ;; Filter out nils and separate histogram bars from viz layers
-        rendered-layers (remove nil? rendered-layers)
+;; Filter out nils and separate special layers from viz layers
+        ;; Flatten because render-scatter/render-linear can return lists for colored groups
+        rendered-layers (remove nil? (flatten rendered-layers))
         histogram-layers (filter :bars rendered-layers)
-        viz-layers (remove :bars rendered-layers)
+        line-layers (filter :line-data rendered-layers)
+        viz-layers (remove #(or (:bars %) (:line-data %)) rendered-layers)
 
         ;; Update y-domain if we have histograms
         y-domain (if (seq histogram-layers)
@@ -613,7 +637,7 @@
                                  (- (second y-domain) (first y-domain)))
                               (- (second y-range) (first y-range)))))
 
-        ;; Convert histogram bars to SVG rect elements
+;; Convert histogram bars to SVG rect elements
         histogram-rects (mapcat (fn [hist-layer]
                                   (let [bars (:bars hist-layer)
                                         fill (:fill hist-layer)
@@ -639,6 +663,22 @@
                                          bars)))
                                 histogram-layers)
 
+;; Convert line data to SVG line elements
+        regression-lines (keep (fn [line-layer]
+                                 (when-let [line-data (:line-data line-layer)]
+                                   (let [{:keys [x1 y1 x2 y2]} line-data
+                                         stroke (:stroke line-layer)
+                                         stroke-width (:stroke-width line-layer)
+                                         opacity (:opacity line-layer)]
+                                     [:line {:x1 (x-scale x1)
+                                             :y1 (y-scale y1)
+                                             :x2 (x-scale x2)
+                                             :y2 (y-scale y2)
+                                             :stroke stroke
+                                             :stroke-width stroke-width
+                                             :opacity opacity}])))
+                               line-layers)
+
         ;; Build viz spec
         viz-spec {:x-axis (viz/linear-axis
                            {:domain x-domain
@@ -656,16 +696,21 @@
         ;; Render base plot
         base-plot (viz/svg-plot2d-cartesian viz-spec)]
 
-    ;; If we have histogram bars, insert them into the SVG
-    (if (seq histogram-rects)
+;; Insert histogram bars and regression lines into the SVG
+    (if (or (seq histogram-rects) (seq regression-lines))
       ;; The structure is [:g nil [...grid...] () [...x-axis...] [...y-axis...]]
-      ;; Insert histogram bars after the grid (index 2) and before the empty () (index 3)
-      (let [[tag attrs & children] base-plot]
+      ;; Insert custom elements after the grid (index 2) and before the empty () (index 3)
+      (let [[tag attrs & children] base-plot
+            custom-groups (concat
+                           (when (seq histogram-rects)
+                             [[:g {:class "histogram-bars"} (vec histogram-rects)]])
+                           (when (seq regression-lines)
+                             [[:g {:class "regression-lines"} (vec regression-lines)]]))]
         (if (= tag :g)
-          ;; Insert histogram group as a new child
+          ;; Insert custom groups as new children
           (into [tag attrs]
                 (concat (take 3 children) ; grid and major/minor ticks
-                        [(into [:g {:class "histogram-bars"}] histogram-rects)]
+                        custom-groups
                         (drop 3 children))) ; axes
           base-plot))
       base-plot)))
@@ -1063,6 +1108,54 @@
 ;;
 ;; The negative correlation in [0,1] and [1,0] is immediately visible from the regression lines.
 
+;; ### Color Aesthetic for Grouping
+;;
+;; We can add a color aesthetic to group observations by a categorical variable.
+;; This reveals patterns within subgroups. Let's color points by species:
+
+(plot
+ {:=layers [{:=data iris
+             :=x :sepal-length
+             :=y :sepal-width
+             :=color :species
+             :=plottype :scatter}]
+  :=layout :single})
+
+;; Each species gets a different color from the theme palette (ggplot2 colors).
+;; Now we can see that the three species cluster in different regions of the plot.
+
+;; ### Colored Regression Lines
+;;
+;; We can also compute separate regressions for each color group.
+;; This reveals whether the relationship differs across subgroups:
+
+(plot
+ {:=layers [{:=data iris
+             :=x :sepal-length
+             :=y :sepal-width
+             :=color :species
+             :=plottype :scatter}
+            {:=data iris
+             :=x :sepal-length
+             :=y :sepal-width
+             :=color :species
+             :=plottype :linear}]
+  :=layout :single})
+
+;; Three regression lines, one per species:
+;; - Setosa (red): Shows a positive correlation - wider sepals tend to be longer
+;; - Versicolor (green): Slight positive correlation  
+;; - Virginica (blue): Slight positive correlation
+;;
+;; The color aesthetic automatically:
+;; 1. Groups points by the categorical variable (:species)
+;; 2. Assigns colors from the theme palette
+;; 3. Computes separate regressions for each group
+;; 4. Renders each group with matching colors
+;;
+;; This is a powerful pattern - the same aesthetic (`:=color :species`) drives
+;; both the visual encoding and the statistical computation.
+
 ;; ## What We've Built
 ;;
 ;; Let's take stock of what we have:
@@ -1075,6 +1168,7 @@
 ;; 6. **Rendering** - Scatter, histogram, and linear regression to SVG
 ;; 7. **Grid Layout** - Spatial arrangement of multiple panels
 ;; 8. **SPLOM** - Scatterplot matrices in one line
+;; 9. **Color Aesthetic** - Group by categorical variables with automatic coloring and grouped statistics
 ;;
 ;; The key insight has proven powerful: **the structure of the algebra determines sensible defaults for geometry**.
 ;; When we cross a variable with itself, we're asking about distribution (histogram).
