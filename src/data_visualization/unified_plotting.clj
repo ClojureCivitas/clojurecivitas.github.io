@@ -599,8 +599,8 @@
         x-domain [(- x-min x-padding) (+ x-max x-padding)]
         y-domain [(- y-min y-padding) (+ y-max y-padding)]
 
-        ;; Calculate ranges based on margins
-        margin 40
+        ;; Calculate ranges based on margins (reduced from 40 to 20 for tighter grids)
+        margin 20
         x-range [margin (- width margin)]
         y-range [(- height margin) margin]
 
@@ -1104,10 +1104,11 @@
     plot)
 
 ;; Four panels:
-;; - [0,0]: sepal-length × sepal-length → histogram (diagonal)
-;; - [0,1]: sepal-length × sepal-width → scatter + regression (off-diagonal)
-;; - [1,0]: sepal-width × sepal-length → scatter + regression (off-diagonal)
-;; - [1,1]: sepal-width × sepal-width → histogram (diagonal)
+
+;; - 0,0: sepal-length × sepal-length → histogram (diagonal)
+;; - 0,1: sepal-length × sepal-width → scatter + regression (off-diagonal)
+;; - 1,0: sepal-width × sepal-length → scatter + regression (off-diagonal)
+;; - 1,1: sepal-width × sepal-width → histogram (diagonal)
 ;;
 ;; The negative correlation in [0,1] and [1,0] is immediately visible from the regression lines.
 
