@@ -12,7 +12,29 @@
                   :toc-expand 4
                   :image "unified_splom.png"
                   :draft true}}}
-(ns data-visualization.unified-plotting)
+(ns data-visualization.unified-plotting
+  (:require
+   ;; Tablecloth - Dataset manipulation
+   [tablecloth.api :as tc]
+   [tablecloth.column.api :as tcc]
+
+   ;; Kindly - Notebook visualization protocol
+   [scicloj.kindly.v4.kind :as kind]
+
+   ;; thi.ng/geom-viz - Static SVG visualization
+   [thi.ng.geom.viz.core :as viz]
+   [thi.ng.geom.svg.core :as svg]
+   [thi.ng.geom.core :as g]
+
+   ;; Fastmath - Statistical computations
+   [fastmath.ml.regression :as regr]
+   [fastmath.stats :as stats]
+
+   ;; Combinatorics - For cartesian product in l*
+   [clojure.math.combinatorics :as combo]
+
+   ;; Toydata - Example datasets
+   [scicloj.metamorph.ml.toydata :as toydata]))
 
 ^{:kindly/hide-code true
   :kindly/kind :kind/hiccup}
@@ -26,6 +48,103 @@
   overflow-y: auto;
 }
 "]
+
+;; ## Core Algebraic Operations (Phase 1 Refactor)
+;;
+;; These functions implement the unified layer model where everything is a spec
+;; with :=layers. No separate "varset" concept - just progressive enrichment.
+
+(defn- merge-layers
+  "Merge layers with special :=columns handling.
+
+  Critical: ONLY :=columns concatenates, not all vectors!
+
+  If layers have :=x/:=y already assigned, skip :=columns concatenation
+  (assume roles are already correct, avoid conflicts)."
+  [& layers]
+  (let [has-roles? (some #(or (:=x %) (:=y %)) layers)]
+    (reduce (fn [acc layer]
+              (reduce-kv (fn [m k v]
+                           (cond
+                             ;; Only concatenate :=columns if no roles assigned yet
+                             (and (= k :=columns)
+                                  (not has-roles?)
+                                  (vector? (get m k)))
+                             (update m k into v)
+
+                             ;; If roles exist, skip :=columns concat (avoid conflicts)
+                             (and (= k :=columns) has-roles?)
+                             m ; Don't update :=columns
+
+                             ;; All other properties: normal merge (right wins)
+                             :else
+                             (assoc m k v)))
+                         acc
+                         layer))
+            {}
+            layers)))
+
+(defn auto-assign-roles
+  "Assign :=x/:=y from :=columns if not already present.
+  
+  Rules:
+  - 1 column: :=x only (univariate: histogram, density)
+  - 2 columns: :=x and :=y (bivariate: scatter, line)
+  - 3+ columns: error (user must specify explicitly)"
+  [layer]
+  (if (or (:=x layer) (:=y layer))
+    layer ; Already assigned, don't touch
+    (let [cols (:=columns layer)]
+      (case (count cols)
+        1 (assoc layer :=x (first cols))
+        2 (assoc layer :=x (first cols) :=y (second cols))
+        (throw (ex-info "Ambiguous column count; specify :=x/:=y explicitly"
+                        {:columns cols
+                         :layer layer}))))))
+
+(defn l*
+  "Cartesian product of specs/layers with property merge.
+  
+  Special handling: :=columns vectors concatenate (only if no roles assigned)."
+  [& specs]
+  (let [all-layers (map :=layers specs)
+        product-layers (apply combo/cartesian-product all-layers)
+        merged-layers (map #(apply merge-layers %) product-layers)
+        plot-props (apply merge (map #(dissoc % :=layers) specs))]
+    (assoc plot-props :=layers (vec merged-layers))))
+
+(defn l+
+  "Concatenate layers from multiple specs.
+  
+  Plot-level properties merged (right wins)."
+  [& specs]
+  (let [all-layers (mapcat :=layers specs)
+        plot-props (apply merge (map #(dissoc % :=layers) specs))]
+    (assoc plot-props :=layers (vec all-layers))))
+
+(defn d*
+  "Cross column keywords to create spec.
+  
+  Variadic - can cross 2 or more column lists.
+  Convenience wrapper around l* for ergonomic column-based API."
+  [dataset & col-lists]
+  (let [specs (map (fn [cols]
+                     {:=layers (map (fn [col] {:=columns [col]}) cols)
+                      :=data dataset
+                      :=indices (range (tc/row-count dataset))})
+                   col-lists)]
+    (reduce l* specs)))
+
+(defn d+
+  "Blend column keywords to create alternatives.
+  
+  Convenience wrapper around l+ for ergonomic column-based API."
+  [dataset col-lists]
+  (apply l+ (map (fn [cols]
+                   {:=layers [{:=columns (vec cols)}]
+                    :=data dataset
+                    :=indices (range (tc/row-count dataset))})
+                 col-lists)))
 
 ;; **Combining algebraic operations with compositional layer construction**
 ;;
