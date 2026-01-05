@@ -49,18 +49,79 @@
 }
 "]
 
-;; ## Core Algebraic Operations (Phase 1 Refactor)
+;; ## The Unified Layer Model
 ;;
-;; These functions implement the unified layer model where everything is a spec
-;; with :=layers. No separate "varset" concept - just progressive enrichment.
+;; This notebook explores a **unified approach** to data visualization that combines:
+;; - **Grammar of Graphics algebra** (cross ×, blend +, nest /) from Wilkinson
+;; - **Layer composition** from Algebra of Graphics (overlays, faceting)
+;;
+;; ### Core Insight: Everything is a Spec with :=layers
+;;
+;; Traditional GoG separates "varsets" (data projections) from "alternatives" (visualizations).
+;; We unify these: **everything is a spec** `{:=layers [...]}` that gets progressively enriched.
+;;
+;; A "varset" is just a spec with one layer containing `:=columns` provenance:
+;;   `{:=layers [{:=columns [:price]}] :=data dataset}`
+;;
+;; Crossing two varsets creates a new spec with merged columns:
+;;   `{:=layers [{:=columns [:price :size]}] :=data dataset}`
+;;
+;; The `:=columns` tuple tracks **positional provenance** - which columns were combined,
+;; in what order. This enables automatic role assignment: first→:=x, second→:=y.
+;;
+;; ### Two-Level Operation Naming
+;;
+;; We provide operations at two levels for ergonomics:
+;;
+;; **Layer level** (core algebraic operations):
+;; - `l*` - Layer cross (cartesian product)
+;; - `l+` - Layer blend (concatenation)
+;;
+;; **Dataset level** (convenience wrappers):
+;; - `d*` - Dataset cross (wraps l*, attaches :=data/:=indices)
+;; - `d+` - Dataset blend (wraps l+, attaches :=data/:=indices)
+;;
+;; ### Key Design Decisions
+;;
+;; 1. **:=columns as positional tuple** - Preserves order for role inference
+;; 2. **Algebraic closure** - Operations return specs that compose
+;; 3. **Plot-level :=data** - Shared dataset enables linking (GoG strength)
+;; 4. **Layer-level :=data override** - Flexibility when needed (AoG strength)
+;; 5. **Smart defaults** - Diagonal detection (x=y → histogram)
+;;
+;; ### The Distributive Law
+;;
+;; The operations satisfy the distributive property:
+;;   `(l* (l+ A B) C) = (l+ (l* A C) (l* B C))`
+;;
+;; This algebraic property enables powerful composition patterns like SPLOM generation.
+;;
+;; ## Core Algebraic Operations
+;;
+;; These functions implement the unified layer model described above.
 
 (defn- merge-layers
-  "Merge layers with special :=columns handling.
+  "Merge multiple layer maps with special :=columns handling.
 
-  Critical: ONLY :=columns concatenates, not all vectors!
+  **Key design decision:** :=columns vectors concatenate to preserve positional
+  provenance, but ONLY when no visual roles (:=x, :=y) are assigned yet.
 
-  If layers have :=x/:=y already assigned, skip :=columns concatenation
-  (assume roles are already correct, avoid conflicts)."
+  **Rationale:** :=columns tracks 'where columns came from' in order. When we
+  cross {:=columns [:price]} with {:=columns [:size]}, we get {:=columns [:price :size]}.
+  This positional tuple enables auto-assignment: first→:=x, second→:=y.
+
+  **Conflict prevention:** If layers already have :=x or :=y assigned, skip
+  :=columns concatenation to avoid contradictions. The roles are the source of
+  truth, not the provenance.
+
+  All other properties follow normal merge semantics (rightmost wins).
+
+  Examples:
+    (merge-layers {:=columns [:a]} {:=columns [:b]})
+    ;; => {:=columns [:a :b]}
+
+    (merge-layers {:=columns [:a] :=x :a} {:=columns [:b]})
+    ;; => {:=columns [:a] :=x :a}  ; no concat because :=x exists"
   [& layers]
   (let [has-roles? (some #(or (:=x %) (:=y %)) layers)]
     (reduce (fn [acc layer]
@@ -85,12 +146,28 @@
             layers)))
 
 (defn auto-assign-roles
-  "Assign :=x/:=y from :=columns if not already present.
-  
-  Rules:
-  - 1 column: :=x only (univariate: histogram, density)
-  - 2 columns: :=x and :=y (bivariate: scatter, line)
-  - 3+ columns: error (user must specify explicitly)"
+  "Assign :=x and :=y visual roles from :=columns positional provenance.
+
+  **Positional semantics:**
+  - 1 column → :=x only (univariate: histogram, density, bar chart)
+  - 2 columns → :=x + :=y (bivariate: scatter, line, regression)
+  - 3+ columns → error (ambiguous; user must specify explicitly)
+
+  **Design rationale:** The :=columns tuple tracks which columns were crossed,
+  in order. We use position to infer intent: first column usually maps to x-axis,
+  second to y-axis. This enables terse ergonomic APIs while maintaining precision.
+
+  **Idempotent:** If :=x/:=y already assigned, returns layer unchanged.
+
+  Examples:
+    (auto-assign-roles {:=columns [:price]})
+    ;; => {:=columns [:price] :=x :price}
+
+    (auto-assign-roles {:=columns [:price :size]})
+    ;; => {:=columns [:price :size] :=x :price :=y :size}
+
+    (auto-assign-roles {:=columns [:a :b :c]})
+    ;; => throws ex-info (ambiguous)"
   [layer]
   (if (or (:=x layer) (:=y layer))
     layer ; Already assigned, don't touch
@@ -103,9 +180,31 @@
                          :layer layer}))))))
 
 (defn l*
-  "Cartesian product of specs/layers with property merge.
-  
-  Special handling: :=columns vectors concatenate (only if no roles assigned)."
+  "Layer cross: Cartesian product of layers from multiple specs.
+
+  **Core algebraic operation** implementing the distributive law:
+    (l* (l+ A B) C) = (l+ (l* A C) (l* B C))
+
+  Takes specs with :=layers and produces their cross-product. Each combination
+  of layers is merged using merge-layers (with special :=columns handling).
+
+  Plot-level properties (everything except :=layers) are merged normally.
+
+  **Example - crossing variables:**
+    (l* {:=layers [{:=columns [:price]}] :=data ds}
+        {:=layers [{:=columns [:size]}] :=data ds})
+    ;; => {:=layers [{:=columns [:price :size]}] :=data ds}
+
+  **Example - cartesian product:**
+    (l* {:=layers [{:=x :a} {:=x :b}]}
+        {:=layers [{:=y :c} {:=y :d}]})
+    ;; => {:=layers [{:=x :a :=y :c}
+    ;;               {:=x :a :=y :d}
+    ;;               {:=x :b :=y :c}
+    ;;               {:=x :b :=y :d}]}
+
+  **Non-commutative:** (l* A B) ≠ (l* B A) when :=columns order matters.
+  Position determines role assignment, so order is semantically significant."
   [& specs]
   (let [all-layers (map :=layers specs)
         product-layers (apply combo/cartesian-product all-layers)
@@ -114,19 +213,57 @@
     (assoc plot-props :=layers (vec merged-layers))))
 
 (defn l+
-  "Concatenate layers from multiple specs.
-  
-  Plot-level properties merged (right wins)."
+  "Layer blend: Concatenate layers from multiple specs into alternatives.
+
+  **Core algebraic operation** for creating collections. In GoG terms, these
+  are 'alternatives' - different ways to visualize the same data structure.
+
+  Takes specs with :=layers and concatenates all layers into a single vector.
+  Plot-level properties are merged (rightmost wins).
+
+  **Example - creating alternatives:**
+    (l+ {:=layers [{:=columns [:price]}]}
+        {:=layers [{:=columns [:size]}]})
+    ;; => {:=layers [{:=columns [:price]}
+    ;;               {:=columns [:size]}]}
+
+  **Example - overlay composition:**
+    (l+ {:=layers [{:=plottype :scatter}]}
+        {:=layers [{:=plottype :linear}]})
+    ;; => {:=layers [{:=plottype :scatter}
+    ;;               {:=plottype :linear}]}
+
+  **Use cases:**
+  - Blending variables for SPLOM grids
+  - Creating multi-layer overlays (scatter + regression)
+  - Combining different visualizations of same data"
   [& specs]
   (let [all-layers (mapcat :=layers specs)
         plot-props (apply merge (map #(dissoc % :=layers) specs))]
     (assoc plot-props :=layers (vec all-layers))))
 
 (defn d*
-  "Cross column keywords to create spec.
-  
-  Variadic - can cross 2 or more column lists.
-  Convenience wrapper around l* for ergonomic column-based API."
+  "Dataset cross: Cross column lists at the dataset level.
+
+  **Convenience wrapper** around l* for ergonomic column-based API.
+  Variadic - can cross 2+ column lists.
+
+  Each column list becomes a spec with :=layers, then these specs are
+  crossed using l*. Attaches plot-level :=data and :=indices automatically.
+
+  **Example - simple cross:**
+    (d* iris [[:sepal-length]] [[:sepal-width]])
+    ;; => {:=layers [{:=columns [:sepal-length :sepal-width]}]
+    ;;     :=data iris
+    ;;     :=indices [0 1 2 ... 149]}
+
+  **Example - crossing blends (2×2 SPLOM):**
+    (d* iris [[:a] [:b]] [[:c] [:d]])
+    ;; Creates 4 combinations: a×c, a×d, b×c, b×d
+
+  **Typical usage:**
+    (-> (d* dataset [cols-x] [cols-y])
+        (cross))  ; Apply role assignment and smart defaults"
   [dataset & col-lists]
   (let [specs (map (fn [cols]
                      {:=layers (map (fn [col] {:=columns [col]}) cols)
@@ -136,9 +273,27 @@
     (reduce l* specs)))
 
 (defn d+
-  "Blend column keywords to create alternatives.
-  
-  Convenience wrapper around l+ for ergonomic column-based API."
+  "Dataset blend: Create column alternatives at the dataset level.
+
+  **Convenience wrapper** around l+ for ergonomic column-based API.
+
+  Each column list becomes a layer, then these are concatenated using l+.
+  Attaches plot-level :=data and :=indices automatically.
+
+  **Example - simple blend:**
+    (d+ iris [[[:sepal-length]] [[:sepal-width]]])
+    ;; => {:=layers [{:=columns [:sepal-length]}
+    ;;               {:=columns [:sepal-width]}]
+    ;;     :=data iris
+    ;;     :=indices [0 1 2 ... 149]}
+
+  **Example - creating SPLOM rows:**
+    (d+ iris [[[:a]] [[:b]] [[:c]]])
+    ;; Creates 3 alternatives for crossing
+
+  **Typical usage:**
+    (-> (d+ dataset [[col1] [col2] [col3]])
+        (cross other-blend))  ; Cross to create grid"
   [dataset col-lists]
   (apply l+ (map (fn [cols]
                    {:=layers [{:=columns (vec cols)}]
@@ -230,27 +385,6 @@
 
 ;; ## Setup
 
-(ns data-visualization.unified-plotting
-  (:require
-   ;; Tablecloth - Dataset manipulation
-   [tablecloth.api :as tc]
-   [tablecloth.column.api :as tcc]
-
-   ;; Kindly - Notebook visualization protocol
-   [scicloj.kindly.v4.kind :as kind]
-
-   ;; thi.ng/geom-viz - Static SVG visualization
-   [thi.ng.geom.viz.core :as viz]
-   [thi.ng.geom.svg.core :as svg]
-   [thi.ng.geom.core :as g]
-
-   ;; Fastmath - Statistical computations
-   [fastmath.ml.regression :as regr]
-   [fastmath.stats :as stats]
-
-   ;; Toydata - Example datasets
-   [scicloj.metamorph.ml.toydata :as toydata]))
-
 ;; ## The Dataset
 ;;
 ;; We'll use the classic Iris dataset throughout. It has 150 observations of iris flowers,
@@ -272,18 +406,14 @@ iris
 ;; Think of it as asking: "what values does this variable take, and which observations have each value?"
 
 (defn varset
-  "Create a varset from a dataset column.
+  "Create a layer spec from a dataset column.
 
-  A varset is a map with:
-  - :variable - the column name
-  - :dataset - reference to the data
-  - :indices - observation indices (always [0 1 2 ... n-1])
-
-  This represents a projection that we can combine algebraically."
+  Returns a spec with :=layers containing one layer with :=columns provenance.
+  The :=columns tuple tracks which columns this layer originated from."
   [dataset variable]
-  {:variable variable
-   :dataset dataset
-   :indices (range (tc/row-count dataset))})
+  {:=layers [{:=columns [variable]}]
+   :=data dataset
+   :=indices (range (tc/row-count dataset))})
 
 ;; Let's create varsets for sepal length and width:
 
@@ -304,32 +434,48 @@ iris
 ;; between these two dimensions."
 
 (defn cross
-  "Cross two varsets or blends to create a grid of alternatives.
+  "Cross two specs to create combinations.
 
-  For simple varsets: creates a single layer with both variables.
-  For blends: applies the distributive law to create all combinations.
-
-  This is where the magic happens - structure determines geometry."
-  [vs-x vs-y]
-  (cond
-    ;; Simple case: two varsets → one layer
-    (and (:variable vs-x) (:variable vs-y))
-    (let [x-var (:variable vs-x)
-          y-var (:variable vs-y)
-          diagonal? (= x-var y-var)]
-      {:=layers [{:=x x-var
-                  :=y y-var
-                  :=data (:dataset vs-x)
-                  :=diagonal? diagonal?
-                  ;; Phase 1 smart default: diagonal → histogram
-                  :=plottype (if diagonal? :histogram :scatter)}]
-       :=data (:dataset vs-x)
-       :=indices (:indices vs-x)})
-
-    ;; TODO: Handle blends (multiple alternatives)
-    :else
-    (throw (ex-info "Blend crossing not yet implemented"
-                    {:vs-x vs-x :vs-y vs-y}))))
+  Uses l* (layer cross) to create cartesian product of layers.
+  Auto-assigns :=x and :=y roles from :=columns provenance.
+  Detects diagonals (x=y) and applies smart default (histogram).
+  When crossing blends (multiple layers each), assigns grid positions."
+  [spec-a spec-b]
+  (let [;; Use l* to get cartesian product
+        crossed (l* spec-a spec-b)
+        ;; Check if this is a blend cross (multiple layers from each spec)
+        is-grid? (and (> (count (:=layers spec-a)) 1)
+                      (> (count (:=layers spec-b)) 1))
+        ;; Auto-assign roles and detect diagonals, with grid positions if needed
+        layers (if is-grid?
+                 ;; Grid layout: assign positions based on source layer indices
+                 (let [n-cols (count (:=layers spec-a))
+                       n-rows (count (:=layers spec-b))]
+                   (map-indexed
+                    (fn [idx layer]
+                      (let [row (quot idx n-cols)
+                            col (rem idx n-cols)
+                            assigned (auto-assign-roles layer)
+                            x-col (:=x assigned)
+                            y-col (:=y assigned)
+                            diagonal? (= x-col y-col)]
+                        (assoc assigned
+                               :=grid-row row
+                               :=grid-col col
+                               :=diagonal? diagonal?
+                               :=plottype (if diagonal? :histogram :scatter))))
+                    (:=layers crossed)))
+                 ;; Single panel: just assign roles
+                 (for [layer (:=layers crossed)]
+                   (let [assigned (auto-assign-roles layer)
+                         x-col (:=x assigned)
+                         y-col (:=y assigned)
+                         diagonal? (= x-col y-col)]
+                     (assoc assigned
+                            :=diagonal? diagonal?
+                            :=plottype (if diagonal? :histogram :scatter)))))]
+    (cond-> (assoc crossed :=layers layers)
+      is-grid? (assoc :=layout :grid))))
 
 ;; Let's cross sepal-length with sepal-width:
 
@@ -551,9 +697,10 @@ iris
 (defn- layer->points
   "Extract point data from a layer.
 
-  Returns sequence of point maps with :x, :y, and optionally :color."
-  [layer]
-  (let [dataset (:=data layer)
+  Returns sequence of point maps with :x, :y, and optionally :color.
+  Falls back to plot-level dataset if layer doesn't have :=data."
+  [layer plot-dataset]
+  (let [dataset (or (:=data layer) plot-dataset)
         x-col (:=x layer)
         y-col (:=y layer)
         color-col (:=color layer)
@@ -732,12 +879,12 @@ iris
 
   All layers in the panel share the same domain and coordinate system.
   Returns hiccup vector (not string - serialization happens in plot function)."
-  [layers width height]
+  [layers plot-dataset width height]
   (let [;; Check if we have histogram layers (they need special y-domain handling)
         has-histogram? (some #(= (:=plottype %) :histogram) layers)
 
         ;; Extract all points to compute domains
-        all-points (mapcat layer->points layers)
+        all-points (mapcat #(layer->points % plot-dataset) layers)
         x-vals (map :x all-points)
         y-vals (if has-histogram?
                  ;; For histograms, y domain should be [0, max-count]
@@ -762,7 +909,7 @@ iris
 
         ;; Render each layer
         rendered-layers (for [layer layers]
-                          (let [points (layer->points layer)]
+                          (let [points (layer->points layer plot-dataset)]
                             (render-layer layer points nil nil)))
 
         ;; Filter out nils and separate special layers from viz layers
@@ -878,6 +1025,7 @@ iris
   Handles single layers, grids, and overlays."
   [spec]
   (let [layers (:=layers spec)
+        plot-dataset (:=data spec)
         layout (:=layout spec :single)
         width 600
         height 400]
@@ -889,7 +1037,7 @@ iris
        (svg/serialize
         [:div {:style (str "background:" (:background theme))}
          [:svg {:width width :height height}
-          (render-single-panel layers width height)]]))
+          (render-single-panel layers plot-dataset width height)]]))
 
       ;; Grid layout: multiple panels arranged spatially
       :grid
@@ -911,7 +1059,7 @@ iris
               (when-let [panel-layers (get grid-map [row col])]
                 (let [x-offset (* col panel-width)
                       y-offset (* row panel-height)
-                      panel-svg (render-single-panel panel-layers panel-width panel-height)]
+                      panel-svg (render-single-panel panel-layers plot-dataset panel-width panel-height)]
                   [:g {:transform (str "translate(" x-offset "," y-offset ")")}
                    panel-svg])))]])))
 
@@ -920,7 +1068,7 @@ iris
        (svg/serialize
         [:div {:style (str "background:" (:background theme))}
          [:svg {:width width :height height}
-          (render-single-panel layers width height)]])))))
+          (render-single-panel layers plot-dataset width height)]])))))
 
 ;; ## Seeing It in Action
 ;;
@@ -982,104 +1130,14 @@ iris
 (defn blend
   "Create a blend (collection of alternatives) from multiple variables.
 
-  Takes a dataset and vector of column names.
-  Returns a structure representing multiple varsets that can be crossed."
+  Uses d+ to create a spec with multiple layers, one per variable.
+  Each layer has :=columns provenance tracking which variable it came from."
   [dataset variables]
-  {:alternatives (for [var variables]
-                   (varset dataset var))
-   :dataset dataset})
+  (d+ dataset (map vector variables)))
 
 ;; Now let's update `cross` to handle blends using the [distributive law](https://en.wikipedia.org/wiki/Distributive_property):
 ;; (A + B) × (C + D) = AC + AD + BC + BD
 ;;
-;; This algebraic property means that when we cross two blends (collections of alternatives),
-;; we get all pairwise combinations. For example, crossing {sepal-length, sepal-width} with
-;; {petal-length, petal-width} produces four panels: sepal-length×petal-length,
-;; sepal-length×petal-width, sepal-width×petal-length, and sepal-width×petal-width.
-
-(defn cross
-  "Cross two varsets or blends to create a grid of alternatives.
-
-  For simple varsets: creates a single layer with both variables.
-  For blends: applies the distributive law to create all combinations.
-
-  This is where the magic happens - structure determines geometry."
-  [vs-x vs-y]
-  (cond
-    ;; Both are blends → full cross-product with grid positions
-    (and (:alternatives vs-x) (:alternatives vs-y))
-    (let [x-vars (:alternatives vs-x)
-          y-vars (:alternatives vs-y)
-          dataset (:dataset vs-x)
-          layers (for [[row-idx y-vs] (map-indexed vector y-vars)
-                       [col-idx x-vs] (map-indexed vector x-vars)]
-                   (let [x-var (:variable x-vs)
-                         y-var (:variable y-vs)
-                         diagonal? (= x-var y-var)]
-                     {:=x x-var
-                      :=y y-var
-                      :=data dataset
-                      :=grid-row row-idx
-                      :=grid-col col-idx
-                      :=diagonal? diagonal?
-                     ;; Phase 1 smart default: diagonal → histogram
-                      :=plottype (if diagonal? :histogram :scatter)}))]
-      {:=layers layers
-       :=data dataset
-       :=indices (range (tc/row-count dataset))
-       :=layout :grid})
-
-    ;; Simple case: two varsets → one layer
-    (and (:variable vs-x) (:variable vs-y))
-    (let [x-var (:variable vs-x)
-          y-var (:variable vs-y)
-          diagonal? (= x-var y-var)]
-      {:=layers [{:=x x-var
-                  :=y y-var
-                  :=data (:dataset vs-x)
-                  :=diagonal? diagonal?
-                  ;; Phase 1 smart default: diagonal → histogram
-                  :=plottype (if diagonal? :histogram :scatter)}]
-       :=data (:dataset vs-x)
-       :=indices (:indices vs-x)})
-
-    ;; One blend, one varset → multiple layers
-    (:alternatives vs-x)
-    (let [x-vars (:alternatives vs-x)
-          y-var (:variable vs-y)
-          dataset (:dataset vs-x)
-          layers (for [[idx x-vs] (map-indexed vector x-vars)]
-                   (let [x-var (:variable x-vs)
-                         diagonal? (= x-var y-var)]
-                     {:=x x-var
-                      :=y y-var
-                      :=data dataset
-                      :=diagonal? diagonal?
-                      :=plottype (if diagonal? :histogram :scatter)}))]
-      {:=layers layers
-       :=data dataset
-       :=indices (range (tc/row-count dataset))})
-
-    (:alternatives vs-y)
-    (let [y-vars (:alternatives vs-y)
-          x-var (:variable vs-x)
-          dataset (:dataset vs-y)
-          layers (for [[idx y-vs] (map-indexed vector y-vars)]
-                   (let [y-var (:variable y-vs)
-                         diagonal? (= x-var y-var)]
-                     {:=x x-var
-                      :=y y-var
-                      :=data dataset
-                      :=diagonal? diagonal?
-                      :=plottype (if diagonal? :histogram :scatter)}))]
-      {:=layers layers
-       :=data dataset
-       :=indices (range (tc/row-count dataset))})
-
-    :else
-    (throw (ex-info "Invalid cross arguments"
-                    {:vs-x vs-x :vs-y vs-y}))))
-
 ;; Now we can create a full SPLOM! Let's try a 2×2 first:
 
 (def vars-2x2 (blend iris [:sepal-length :sepal-width]))
