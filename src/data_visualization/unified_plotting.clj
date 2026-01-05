@@ -27,12 +27,43 @@
 }
 "]
 
+;; **Combining algebraic operations with compositional layer construction**
+;;
+;; This is a pedagogical notebook exploring how the Grammar of Graphics algebra
+;; and Algebra of Graphics layer composition can work together naturally.
+;; It builds on earlier explorations in
+;; [Part 1](aog_in_clojure_part1.html) and [Part 2](aog_in_clojure_part2.html),
+;; which developed a working compositional plotting API inspired by Julia's
+;; [AlgebraOfGraphics.jl](https://aog.makie.org/stable/).
+;;
+;; This notebook demonstrates a key innovation: **smart defaults based on algebraic structure**.
+;; When you cross a variable with itself (x=y), you're looking at distribution → histogram.
+;; When you cross different variables (x≠y), you're comparing them → scatterplot.
+;; The algebra tells us what kind of question we're asking, which suggests sensible geometry.
+;;
+;; Like the earlier notebooks, this is a working Clojure namespace that can be used with
+;; [Kindly](https://scicloj.github.io/kindly/)-compatible tools like
+;; [Clay](https://scicloj.github.io/clay/). The code is executable and demonstrates
+;; a complete implementation from basic operations to interactive scatterplot matrices.
+;;
+;; This work continues our exploration of the
+;; [Tableplot](https://scicloj.github.io/tableplot/) plotting library.
+;; You may consider the design and implementation here
+;; *a draft* for future API directions.
+;;
+;; Clojurians Zulip discussion (requires login):
+;; [#**data-science>AlgebraOfGraphics.jl**](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/AlgebraOfGraphics.2Ejl/)
+
 ;; # A Unified Approach to Data Visualization
 ;;
 ;; This notebook explores a unified approach that combines two powerful ideas:
 ;;
-;; 1. **The Grammar of Graphics** - Algebraic operations on data (cross, blend, nest)
-;; 2. **Algebra of Graphics** - Compositional layer construction with `=*` and `=+`
+;; 1. **The [Grammar of Graphics](https://en.wikipedia.org/wiki/Grammar_of_graphics)** - Leland Wilkinson's algebraic framework for describing statistical graphics through operations on data (cross, blend, nest)
+;; 2. **Algebra of Graphics** - A compositional approach to layer construction inspired by [Julia's AlgebraOfGraphics.jl](https://aog.makie.org/stable/), using operators like `=*` (merge) and `=+` (overlay)
+;;
+;; While the Grammar of Graphics provides formal algebraic operations for combining variables,
+;; the Algebra of Graphics approach focuses on composing visual layers. This notebook shows
+;; how these two perspectives complement each other.
 ;;
 ;; The key insight: **structure can determine geometry**. When you cross a variable with itself
 ;; (like sepal-length × sepal-length), you're looking at the *distribution* of one variable.
@@ -43,7 +74,8 @@
 
 ;; ## What We're Building Toward
 ;;
-;; Here's a scatterplot matrix (SPLOM) showing relationships between four variables in the Iris dataset.
+;; Here's a [scatterplot matrix (SPLOM)](https://en.wikipedia.org/wiki/Scatter_plot#Scatterplot_matrices) showing relationships between four variables in the Iris dataset.
+;; A SPLOM displays all pairwise relationships in a grid: each cell shows how two variables relate.
 ;; The diagonal shows distributions (histograms), while off-diagonal panels show comparisons (scatterplots).
 ;; Notice that we can express this entire visualization quite tersely:
 
@@ -111,8 +143,7 @@
 ;; Let's peek at the data:
 
 (-> iris
-    (tc/head 5)
-    kind/table)
+    (tc/head 5))
 
 ;; Four numeric columns (sepal-length, sepal-width, petal-length, petal-width) and one categorical
 ;; column (species). Perfect for exploring multi-dimensional relationships.
@@ -455,13 +486,17 @@
 ;; occurrences in each bin. For diagonal panels (x=y), we only use the x values.
 
 (defn- compute-histogram-bins
-  "Compute histogram bins using Sturges' rule.
+  "Compute histogram bins using [Sturges' rule](https://en.wikipedia.org/wiki/Histogram#Sturges'_formula).
+  
+  Sturges' formula (k = ceil(log₂(n) + 1)) provides a simple way to choose the number
+  of bins based on sample size. It works well for roughly normal distributions.
   
   Points should be maps with :x key (y is ignored for histograms).
   Returns vector of {:bin-start :bin-end :count} maps."
   [points]
   (let [values (mapv :x points)
         n (count values)
+        ;; Sturges' formula: k = 1 + 3.322 * log10(n) = 1 + log2(n)
         num-bins (max 5 (int (Math/ceil (+ 1 (* 3.322 (Math/log10 n))))))
         min-val (reduce min values)
         max-val (reduce max values)
@@ -572,7 +607,10 @@
   (render-linear layer points x-scale y-scale))
 
 (defn- render-single-panel
-  "Render a single panel (one or more overlaid layers) to SVG hiccup.
+  "Render a single panel (one or more overlaid layers) to SVG [hiccup](https://github.com/weavejester/hiccup).
+
+  Hiccup is a Clojure library for representing HTML/SVG as data structures using vectors.
+  For example: [:svg {:width 100} [:circle {:r 10}]] represents an SVG circle.
 
   All layers in the panel share the same domain and coordinate system.
   Returns hiccup vector (not string - serialization happens in plot function)."
@@ -810,8 +848,18 @@
 
 ;; ## Building Grids with Blend
 ;;
-;; So far we've crossed individual varsets. But what if we want to cross *multiple* variables
-;; at once? That's where **blend** comes in - it creates a collection of alternatives.
+;; So far we've crossed individual varsets - one variable on x, one on y, resulting in a single panel.
+;; But what if we want to cross *multiple* variables at once to create a grid of panels?
+;;
+;; That's where **blend** comes in. While `cross` combines two varsets into a relationship,
+;; `blend` creates a *collection* of alternatives that can be crossed. Think of it this way:
+;; - `cross` asks: "how do these two variables relate?" → single panel
+;; - `blend` asks: "what are my options?" → collection of alternatives
+;; - `cross` of two `blend`s → grid showing all pairwise relationships
+;;
+;; For example, blending {sepal-length, sepal-width} gives us two alternative variables.
+;; When we cross this blend with itself, we get all four combinations: length×length,
+;; length×width, width×length, and width×width - a 2×2 grid.
 
 (defn blend
   "Create a blend (collection of alternatives) from multiple variables.
@@ -823,8 +871,13 @@
                    (varset dataset var))
    :dataset dataset})
 
-;; Now let's update `cross` to handle blends using the distributive law:
+;; Now let's update `cross` to handle blends using the [distributive law](https://en.wikipedia.org/wiki/Distributive_property):
 ;; (A + B) × (C + D) = AC + AD + BC + BD
+;;
+;; This algebraic property means that when we cross two blends (collections of alternatives),
+;; we get all pairwise combinations. For example, crossing {sepal-length, sepal-width} with
+;; {petal-length, petal-width} produces four panels: sepal-length×petal-length,
+;; sepal-length×petal-width, sepal-width×petal-length, and sepal-width×petal-width.
 
 (defn cross
   "Cross two varsets or blends to create a grid of alternatives.
@@ -1131,7 +1184,11 @@
 ;; ### Colored Regression Lines
 ;;
 ;; We can also compute separate regressions for each color group.
-;; This reveals whether the relationship differs across subgroups:
+;; This reveals whether the relationship differs across subgroups.
+;;
+;; Importantly, when you specify a categorical `:=color` aesthetic on a statistical layer
+;; (like `:linear` for regression), the system computes *separate statistics for each group*.
+;; This means each species gets its own regression line fitted to just its own points.
 
 (plot
  {:=layers [{:=data iris
@@ -1146,7 +1203,7 @@
              :=plottype :linear}]
   :=layout :single})
 
-;; Three regression lines, one per species:
+;; Three regression lines, one per species (each fitted only to that species' data):
 ;; - Setosa (red): Shows a positive correlation - wider sepals tend to be longer
 ;; - Versicolor (green): Slight positive correlation  
 ;; - Virginica (blue): Slight positive correlation
@@ -1154,11 +1211,12 @@
 ;; The color aesthetic automatically:
 ;; 1. Groups points by the categorical variable (:species)
 ;; 2. Assigns colors from the theme palette
-;; 3. Computes separate regressions for each group
+;; 3. **Computes separate regressions for each group** (not one line for all data)
 ;; 4. Renders each group with matching colors
 ;;
 ;; This is a powerful pattern - the same aesthetic (`:=color :species`) drives
-;; both the visual encoding and the statistical computation.
+;; both the visual encoding (color) and the statistical computation (grouped regression).
+;; Each species' regression line answers: "for *this* species, how do these variables relate?"
 
 ;; ### SPLOM with Color Groups
 ;;
