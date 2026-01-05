@@ -142,8 +142,7 @@
 
 ;; Let's peek at the data:
 
-(-> iris
-    (tc/head 5))
+iris
 
 ;; Four numeric columns (sepal-length, sepal-width, petal-length, petal-width) and one categorical
 ;; column (species). Perfect for exploring multi-dimensional relationships.
