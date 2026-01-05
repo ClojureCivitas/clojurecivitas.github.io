@@ -62,8 +62,8 @@
 (comment
   (-> iris
       (cross [:sepal-length :sepal-width :petal-length :petal-width])
-      (diagonal (=+ histogram density))        ;; Overlay histogram + density curve
-      (off-diagonal (=+ scatter linear))       ;; Overlay scatter + regression line
+      (diagonal (=+ histogram density)) ;; Overlay histogram + density curve
+      (off-diagonal (=+ scatter linear)) ;; Overlay scatter + regression line
       (plot)))
 
 ;; And the finale - a brushable SPLOM where selecting observations in one panel highlights
@@ -266,7 +266,7 @@
   When both specs have layers, creates cross-product.
   Otherwise merges plot-level properties.
 
-  This is the 'and' operator - combining constraints."
+  Recognizes override constructors and applies them to matching layers."
   [& specs]
   (let [specs (remove nil? specs)]
     (if (= 1 (count specs))
@@ -282,9 +282,51 @@
                            layer2 (:=layers spec)]
                        (merge layer1 layer2))))
 
-           ;; Only one has layers → merge properties
+           ;; Only one has layers → merge properties and apply overrides
            (:=layers acc)
-           (merge spec acc)
+           (let [merged (merge spec acc)
+                 diagonal-override (:=diagonal-override merged)
+                 off-diagonal-override (:=off-diagonal-override merged)]
+             (cond-> merged
+               ;; Apply diagonal override
+               diagonal-override
+               (update :=layers
+                       (fn [layers]
+                         (mapcat
+                          (fn [layer]
+                            (if (:=diagonal? layer)
+                              ;; If override has :=layers, keep original + add overlays
+                              (if-let [override-layers (:=layers diagonal-override)]
+                                (cons layer
+                                      (for [override-layer override-layers]
+                                        (merge layer override-layer)))
+                                ;; Otherwise just merge the override
+                                [(merge layer diagonal-override)])
+                              ;; Non-diagonal layers pass through unchanged
+                              [layer]))
+                          layers)))
+
+               ;; Apply off-diagonal override
+               off-diagonal-override
+               (update :=layers
+                       (fn [layers]
+                         (mapcat
+                          (fn [layer]
+                            (if-not (:=diagonal? layer)
+                              ;; If override has :=layers, keep original + add overlays
+                              (if-let [override-layers (:=layers off-diagonal-override)]
+                                (cons layer
+                                      (for [override-layer override-layers]
+                                        (merge layer override-layer)))
+                                ;; Otherwise just merge the override
+                                [(merge layer off-diagonal-override)])
+                              ;; Diagonal layers pass through unchanged
+                              [layer]))
+                          layers)))
+
+               ;; Clean up override markers
+               true
+               (dissoc :=diagonal-override :=off-diagonal-override)))
 
            (:=layers spec)
            (merge acc spec)
@@ -309,7 +351,7 @@
        (fn [acc spec]
          (let [base-layer (first (:=layers acc))
                new-layers (for [layer (:=layers spec)]
-                           (merge base-layer layer))]
+                            (merge base-layer layer))]
            (-> acc
                (update :=layers concat new-layers)
                (merge (dissoc spec :=layers)))))
@@ -419,7 +461,7 @@
         (reduce
          (fn [bins val]
            (let [bin-idx (min (dec bin-count)
-                             (int (/ (- val min-val) bin-width)))]
+                              (int (/ (- val min-val) bin-width)))]
              (update-in bins [bin-idx :count] inc)))
          (vec bins)
          values)))))
@@ -541,8 +583,8 @@
 
         ;; Render each layer
         rendered-layers (for [layer layers]
-                         (let [points (layer->points layer)]
-                           (render-layer layer points nil nil)))
+                          (let [points (layer->points layer)]
+                            (render-layer layer points nil nil)))
 
         ;; Filter out nils and separate histogram bars from viz layers
         rendered-layers (remove nil? rendered-layers)
@@ -622,7 +664,7 @@
         (if (= tag :g)
           ;; Insert histogram group as a new child
           (into [tag attrs]
-                (concat (take 3 children)  ; grid and major/minor ticks
+                (concat (take 3 children) ; grid and major/minor ticks
                         [(into [:g {:class "histogram-bars"}] histogram-rects)]
                         (drop 3 children))) ; axes
           base-plot))
@@ -644,7 +686,8 @@
       :single
       (kind/hiccup
        [:div {:style {:background (:background theme)}}
-        (render-single-panel layers width height)])
+        [:svg {:width width :height height}
+         (render-single-panel layers width height)]])
 
       ;; Grid layout: multiple panels arranged spatially
       :grid
@@ -664,14 +707,16 @@
                  col (range (inc max-col))]
              (when-let [panel-layers (get grid-map [row col])]
                (let [x-offset (* col panel-width)
-                     y-offset (* row panel-height)]
+                     y-offset (* row panel-height)
+                     panel-svg (render-single-panel panel-layers panel-width panel-height)]
                  [:g {:transform (str "translate(" x-offset "," y-offset ")")}
-                  (render-single-panel panel-layers panel-width panel-height)])))]]))
+                  panel-svg])))]]))
 
       ;; Default: single panel
       (kind/hiccup
        [:div {:style {:background (:background theme)}}
-        (render-single-panel layers width height)]))))
+        [:svg {:width width :height height}
+         (render-single-panel layers width height)]]))))
 
 ;; ## Seeing It in Action
 ;;
@@ -727,7 +772,7 @@
   Returns a structure representing multiple varsets that can be crossed."
   [dataset variables]
   {:alternatives (for [var variables]
-                  (varset dataset var))
+                   (varset dataset var))
    :dataset dataset})
 
 ;; Now let's update `cross` to handle blends using the distributive law:
@@ -748,18 +793,18 @@
           y-vars (:alternatives vs-y)
           dataset (:dataset vs-x)
           layers (for [[row-idx y-vs] (map-indexed vector y-vars)
-                      [col-idx x-vs] (map-indexed vector x-vars)]
-                  (let [x-var (:variable x-vs)
-                        y-var (:variable y-vs)
-                        diagonal? (= x-var y-var)]
-                    {:=x x-var
-                     :=y y-var
-                     :=data dataset
-                     :=grid-row row-idx
-                     :=grid-col col-idx
-                     :=diagonal? diagonal?
+                       [col-idx x-vs] (map-indexed vector x-vars)]
+                   (let [x-var (:variable x-vs)
+                         y-var (:variable y-vs)
+                         diagonal? (= x-var y-var)]
+                     {:=x x-var
+                      :=y y-var
+                      :=data dataset
+                      :=grid-row row-idx
+                      :=grid-col col-idx
+                      :=diagonal? diagonal?
                      ;; Phase 1 smart default: diagonal → histogram
-                     :=plottype (if diagonal? :histogram :scatter)}))]
+                      :=plottype (if diagonal? :histogram :scatter)}))]
       {:=layers layers
        :=data dataset
        :=indices (range (tc/row-count dataset))
@@ -785,13 +830,13 @@
           y-var (:variable vs-y)
           dataset (:dataset vs-x)
           layers (for [[idx x-vs] (map-indexed vector x-vars)]
-                  (let [x-var (:variable x-vs)
-                        diagonal? (= x-var y-var)]
-                    {:=x x-var
-                     :=y y-var
-                     :=data dataset
-                     :=diagonal? diagonal?
-                     :=plottype (if diagonal? :histogram :scatter)}))]
+                   (let [x-var (:variable x-vs)
+                         diagonal? (= x-var y-var)]
+                     {:=x x-var
+                      :=y y-var
+                      :=data dataset
+                      :=diagonal? diagonal?
+                      :=plottype (if diagonal? :histogram :scatter)}))]
       {:=layers layers
        :=data dataset
        :=indices (range (tc/row-count dataset))})
@@ -801,13 +846,13 @@
           x-var (:variable vs-x)
           dataset (:dataset vs-y)
           layers (for [[idx y-vs] (map-indexed vector y-vars)]
-                  (let [y-var (:variable y-vs)
-                        diagonal? (= x-var y-var)]
-                    {:=x x-var
-                     :=y y-var
-                     :=data dataset
-                     :=diagonal? diagonal?
-                     :=plottype (if diagonal? :histogram :scatter)}))]
+                   (let [y-var (:variable y-vs)
+                         diagonal? (= x-var y-var)]
+                     {:=x x-var
+                      :=y y-var
+                      :=data dataset
+                      :=diagonal? diagonal?
+                      :=plottype (if diagonal? :histogram :scatter)}))]
       {:=layers layers
        :=data dataset
        :=indices (range (tc/row-count dataset))})
@@ -840,8 +885,8 @@
   Can take a plottype keyword or a full layer spec for composition."
   [plottype-or-spec]
   (let [override (if (keyword? plottype-or-spec)
-                  {:=plottype plottype-or-spec}
-                  plottype-or-spec)]
+                   {:=plottype plottype-or-spec}
+                   plottype-or-spec)]
     {:=diagonal-override override}))
 
 (defn off-diagonal
@@ -850,8 +895,8 @@
   Can take a plottype keyword or a full layer spec for composition."
   [plottype-or-spec]
   (let [override (if (keyword? plottype-or-spec)
-                  {:=plottype plottype-or-spec}
-                  plottype-or-spec)]
+                   {:=plottype plottype-or-spec}
+                   plottype-or-spec)]
     {:=off-diagonal-override override}))
 
 ;; Update `=*` to recognize and apply these overrides:
@@ -878,30 +923,47 @@
                            layer2 (:=layers spec)]
                        (merge layer1 layer2))))
 
-           ;; Only one has layers → merge properties
+           ;; Only one has layers → merge properties and apply overrides
            (:=layers acc)
            (let [merged (merge spec acc)
-                 ;; Apply overrides if present
                  diagonal-override (:=diagonal-override merged)
                  off-diagonal-override (:=off-diagonal-override merged)]
              (cond-> merged
+               ;; Apply diagonal override
                diagonal-override
                (update :=layers
                        (fn [layers]
-                         (map (fn [layer]
-                               (if (:=diagonal? layer)
-                                 (merge layer diagonal-override)
-                                 layer))
-                             layers)))
+                         (mapcat
+                          (fn [layer]
+                            (if (:=diagonal? layer)
+                              ;; If override has :=layers, keep original + add overlays
+                              (if-let [override-layers (:=layers diagonal-override)]
+                                (cons layer
+                                      (for [override-layer override-layers]
+                                        (merge layer override-layer)))
+                                ;; Otherwise just merge the override
+                                [(merge layer diagonal-override)])
+                              ;; Non-diagonal layers pass through unchanged
+                              [layer]))
+                          layers)))
 
+               ;; Apply off-diagonal override
                off-diagonal-override
                (update :=layers
                        (fn [layers]
-                         (map (fn [layer]
-                               (if-not (:=diagonal? layer)
-                                 (merge layer off-diagonal-override)
-                                 layer))
-                             layers)))
+                         (mapcat
+                          (fn [layer]
+                            (if-not (:=diagonal? layer)
+                              ;; If override has :=layers, keep original + add overlays
+                              (if-let [override-layers (:=layers off-diagonal-override)]
+                                (cons layer
+                                      (for [override-layer override-layers]
+                                        (merge layer override-layer)))
+                                ;; Otherwise just merge the override
+                                [(merge layer off-diagonal-override)])
+                              ;; Diagonal layers pass through unchanged
+                              [layer]))
+                          layers)))
 
                ;; Clean up override markers
                true
@@ -919,8 +981,8 @@
 
 (def vars-2x2-custom
   (-> (cross vars-2x2 vars-2x2)
-      (=* (diagonal :scatter))  ; Override: diagonal becomes scatter instead of histogram
-      (=* (off-diagonal :histogram))))  ; Override: off-diagonal becomes histogram instead of scatter
+      (=* (diagonal :scatter)) ; Override: diagonal becomes scatter instead of histogram
+      (=* (off-diagonal :histogram)))) ; Override: off-diagonal becomes histogram instead of scatter
 
 ;; This demonstrates full control - we can make any geometry decision we want.
 
@@ -954,22 +1016,52 @@
 ;; ## Heterogeneous SPLOMs
 ;;
 ;; We can create more sophisticated SPLOMs by overriding geometry for different panel types.
-;; For example, let's add regression lines to the off-diagonal panels:
+;; The override constructors compose beautifully with the algebra.
 
-(comment
-  ;; TODO: This requires implementing =+ overlay with grid layouts
-  ;; Currently =+ works for single panels but not grids
-  (-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
-      (=* (off-diagonal (=+ (linear))))  ; Add regression to scatter
-      plot))
+;; ### Adding Regression Lines to Scatterplots
+;;
+;; Let's add regression lines to all off-diagonal panels while keeping histograms on the diagonal.
+;; The `off-diagonal` constructor targets only those panels where x≠y:
 
-;; Or change the diagonal to show density instead of histogram:
+(-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
+    (=* (off-diagonal (=+ (linear))))
+    plot)
 
-(comment
-  ;; TODO: Implement density geometry
-  (-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
-      (=* (diagonal :density))
-      plot))
+;; Each off-diagonal panel now shows both scatter points and a fitted regression line.
+;; The `=+` operator overlays the linear geometry on top of the scatter geometry,
+;; and both inherit the x/y mappings from the grid structure.
+;;
+;; This is the power of composition: we specify the relationship once (scatter + linear),
+;; and the override constructor applies it to 12 panels automatically.
+
+;; ### Swapping Diagonal and Off-Diagonal Geometries
+;;
+;; We can completely reverse the defaults for pedagogical purposes:
+
+(-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
+    (=* (diagonal :scatter))
+    (=* (off-diagonal :histogram))
+    plot)
+
+;; Diagonal panels now show scatter plots (which look like vertical lines since x=y),
+;; while off-diagonal panels show histograms (using just the x values).
+;; This demonstrates that the geometry choices are truly orthogonal to the algebra.
+
+;; ### A Minimal 2×2 SPLOM with Regression
+;;
+;; For a clearer view, let's use just two variables with regression overlays:
+
+(-> (splom iris [:sepal-length :sepal-width])
+    (=* (off-diagonal (=+ (linear))))
+    plot)
+
+;; Four panels:
+;; - [0,0]: sepal-length × sepal-length → histogram (diagonal)
+;; - [0,1]: sepal-length × sepal-width → scatter + regression (off-diagonal)
+;; - [1,0]: sepal-width × sepal-length → scatter + regression (off-diagonal)
+;; - [1,1]: sepal-width × sepal-width → histogram (diagonal)
+;;
+;; The negative correlation in [0,1] and [1,0] is immediately visible from the regression lines.
 
 ;; ## What We've Built
 ;;
