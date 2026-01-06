@@ -103,26 +103,11 @@
 
 (defn- merge-layers
   "Merge multiple layer maps with special :=columns handling.
-
-  **Key design decision:** :=columns vectors concatenate to preserve positional
-  provenance, but ONLY when no visual roles (:=x, :=y) are assigned yet.
-
-  **Rationale:** :=columns tracks 'where columns came from' in order. When we
-  cross {:=columns [:price]} with {:=columns [:size]}, we get {:=columns [:price :size]}.
-  This positional tuple enables auto-assignment: first→:=x, second→:=y.
-
-  **Conflict prevention:** If layers already have :=x or :=y assigned, skip
-  :=columns concatenation to avoid contradictions. The roles are the source of
-  truth, not the provenance.
-
-  All other properties follow normal merge semantics (rightmost wins).
-
-  Examples:
-    (merge-layers {:=columns [:a]} {:=columns [:b]})
-    ;; => {:=columns [:a :b]}
-
-    (merge-layers {:=columns [:a] :=x :a} {:=columns [:b]})
-    ;; => {:=columns [:a] :=x :a}  ; no concat because :=x exists"
+  
+  :=columns vectors concatenate to preserve positional provenance, but ONLY
+  when no visual roles (:=x, :=y) are assigned yet. If roles exist, :=columns
+  concatenation is skipped to avoid contradictions. All other properties follow
+  normal merge semantics (rightmost wins)."
   [& layers]
   (let [has-roles? (some #(or (:=x %) (:=y %)) layers)]
     (reduce (fn [acc layer]
@@ -148,27 +133,10 @@
 
 (defn auto-assign-roles
   "Assign :=x and :=y visual roles from :=columns positional provenance.
-
-  **Positional semantics:**
-  - 1 column → :=x only (univariate: histogram, density, bar chart)
-  - 2 columns → :=x + :=y (bivariate: scatter, line, regression)
-  - 3+ columns → error (ambiguous; user must specify explicitly)
-
-  **Design rationale:** The :=columns tuple tracks which columns were crossed,
-  in order. We use position to infer intent: first column usually maps to x-axis,
-  second to y-axis. This enables terse ergonomic APIs while maintaining precision.
-
-  **Idempotent:** If :=x/:=y already assigned, returns layer unchanged.
-
-  Examples:
-    (auto-assign-roles {:=columns [:price]})
-    ;; => {:=columns [:price] :=x :price}
-
-    (auto-assign-roles {:=columns [:price :size]})
-    ;; => {:=columns [:price :size] :=x :price :=y :size}
-
-    (auto-assign-roles {:=columns [:a :b :c]})
-    ;; => throws ex-info (ambiguous)"
+  
+  Positional semantics: 1 column → :=x only, 2 columns → :=x + :=y, 
+  3+ columns → error (ambiguous). Idempotent - if :=x/:=y already assigned,
+  returns layer unchanged."
   [layer]
   (if (or (:=x layer) (:=y layer))
     layer ; Already assigned, don't touch
@@ -182,42 +150,11 @@
 
 (defn l*
   "Layer cross: Cartesian product of layers from multiple specs.
-
-  **Core algebraic operation** implementing the distributive law:
-    (l* (l+ A B) C) = (l+ (l* A C) (l* B C))
-
-  Takes specs with :=layers and produces their cross-product. Each combination
-  of layers is merged using merge-layers (with special :=columns handling).
-
-  Also handles property merging and override constructors (diagonal, off-diagonal).
-
-  Plot-level properties (everything except :=layers) are merged normally.
-
-  **Example - crossing variables:**
-    (l* {:=layers [{:=columns [:price]}] :=data ds}
-        {:=layers [{:=columns [:size]}] :=data ds})
-    ;; => {:=layers [{:=columns [:price :size]}] :=data ds}
-
-  **Example - cartesian product:**
-    (l* {:=layers [{:=x :a} {:=x :b}]}
-        {:=layers [{:=y :c} {:=y :d}]})
-    ;; => {:=layers [{:=x :a :=y :c}
-    ;;               {:=x :a :=y :d}
-    ;;               {:=x :b :=y :c}
-    ;;               {:=x :b :=y :d}]}
-
-  **Example - property merging:**
-    (l* {:=layers [{:=x :a :=y :b}]}
-        {:=layers [{:=color :species}]})
-    ;; => {:=layers [{:=x :a :=y :b :=color :species}]}
-
-  **Example - override constructors:**
-    (l* (-> (d* iris [:a :b] [:a :b]) smart-defaults)
-        (diagonal :scatter))
-    ;; Applies :scatter to diagonal layers only
-
-  **Non-commutative:** (l* A B) ≠ (l* B A) when :=columns order matters.
-  Position determines role assignment, so order is semantically significant."
+  
+  Core algebraic operation implementing the distributive law. Takes specs with
+  :=layers and produces their cross-product, merging layers with special 
+  :=columns handling. Also handles property merging and override constructors 
+  (diagonal, off-diagonal). Non-commutative - order matters for :=columns."
   [& specs]
   (let [specs (remove nil? specs)]
     (if (= 1 (count specs))
@@ -289,37 +226,11 @@
 
 (defn l+
   "Layer blend: Concatenate layers from multiple specs into alternatives.
-
-  **Core algebraic operation** for creating collections. In GoG terms, these
-  are 'alternatives' - different ways to visualize the same data structure.
-
-  Takes specs with :=layers and concatenates all layers into a single vector.
-  Plot-level properties are merged (rightmost wins).
-
-  **Inheritance behavior for overlays:**
-  When adding geometry layers (e.g., `(linear)`, `(smooth)`) to a base spec,
-  new layers inherit :=x, :=y, :=color from the first layer if they don't
-  already have them. This enables overlay composition like:
-    (l+ base-scatter (linear))
-  where the linear layer automatically inherits the x/y mappings.
-
-  **Example - creating alternatives:**
-    (l+ {:=layers [{:=columns [:price]}]}
-        {:=layers [{:=columns [:size]}]})
-    ;; => {:=layers [{:=columns [:price]}
-    ;;               {:=columns [:size]}]}
-
-  **Example - overlay composition:**
-    (l+ {:=layers [{:=x :a :=y :b :=plottype :scatter}]}
-        {:=layers [{:=plottype :linear}]})
-    ;; => {:=layers [{:=x :a :=y :b :=plottype :scatter}
-    ;;               {:=x :a :=y :b :=plottype :linear}]}
-    ;; Note: linear layer inherits :=x and :=y
-
-  **Use cases:**
-  - Blending variables for SPLOM grids
-  - Creating multi-layer overlays (scatter + regression)
-  - Combining different visualizations of same data"
+  
+  Core algebraic operation for creating collections. Takes specs with :=layers
+  and concatenates all layers into a single vector. Plot-level properties are
+  merged (rightmost wins). Inheritance: new layers inherit :=x, :=y, :=color 
+  from the first layer if they don't already have them (enables overlays)."
   [& specs]
   (let [all-layers (mapcat :=layers specs)
         plot-props (apply merge (map #(dissoc % :=layers) specs))
@@ -352,35 +263,11 @@
 
 (defn smart-defaults
   "Apply opinionated visualization choices to prepare a spec for rendering.
-
-  **Transforms raw crossed/blended spec into render-ready spec:**
-  1. Auto-assign visual roles (:=columns → :=x/:=y)
-  2. Detect diagonals (:=x == :=y → :=diagonal? true)
-  3. Infer plottypes (diagonal → :histogram, else → :scatter)
-  4. Assign grid positions (:=grid-row, :=grid-col) when multi-layer
-  5. Set layout flags (:=layout :grid)
-
-  **Example - single layer:**
-    (smart-defaults {:=layers [{:=columns [:a :b]}]})
-    ;; => {:=layers [{:=columns [:a :b]
-    ;;               :=x :a :=y :b
-    ;;               :=plottype :scatter
-    ;;               :=diagonal? false}]}
-
-  **Example - grid (multiple layers):**
-    (smart-defaults {:=layers [{:=columns [:a :c]}
-                               {:=columns [:a :d]}
-                               {:=columns [:b :c]}
-                               {:=columns [:b :d]}]})
-    ;; => {:=layers [...with grid positions...]
-    ;;     :=layout :grid}
-
-  **Grid detection:** Considers it a grid when:
-  - Multiple layers (>1)
-  - All layers have 2-column tuples in :=columns
-  - Infers dimensions from unique values in first/second positions
   
-  Returns spec ready for (plot spec)."
+  Transforms raw crossed/blended spec into render-ready spec: auto-assigns 
+  visual roles (:=columns → :=x/:=y), detects diagonals (:=x == :=y), infers 
+  plottypes (diagonal → :histogram, else → :scatter), assigns grid positions, 
+  and sets layout flags. Returns spec ready for (plot spec)."
   [spec]
   (let [layers (:=layers spec)
         n-layers (count layers)
@@ -433,32 +320,10 @@
 
 (defn d*
   "Dataset cross: Pure algebraic crossing with NO inference.
-
-  **Variadic - crosses 2+ column lists.**
-  Each argument is a vector of columns to cross.
-  Returns spec with :=layers (cartesian product), :=data, :=indices.
-
-  **Use (smart-defaults spec) to prepare for rendering.**
-
-  **Example - single columns:**
-    (d* iris [:sepal-length] [:sepal-width])
-    ;; => {:=layers [{:=columns [:sepal-length :sepal-width]}]
-    ;;     :=data iris
-    ;;     :=indices [0 1 2 ... 149]}
-
-  **Example - column lists (2×2 grid):**
-    (d* iris [:sepal-length :sepal-width] [:petal-length :petal-width])
-    ;; => {:=layers [{:=columns [:sepal-length :petal-length]}
-    ;;               {:=columns [:sepal-length :petal-width]}
-    ;;               {:=columns [:sepal-width :petal-length]}
-    ;;               {:=columns [:sepal-width :petal-width]}]
-    ;;     :=data iris
-    ;;     :=indices [0 1 2 ... 149]}
-
-  **Complete workflow:**
-    (-> (d* dataset [:x] [:y])
-        smart-defaults
-        plot)"
+  
+  Variadic - crosses 2+ column lists. Each argument is a vector of columns to 
+  cross. Returns spec with :=layers (cartesian product), :=data, :=indices.
+  Use (smart-defaults spec) to prepare for rendering."
   [dataset & col-lists]
   (let [specs (map (fn [cols]
                      (let [col-vec (if (vector? cols) cols [cols])]
@@ -470,33 +335,10 @@
 
 (defn d+
   "Dataset blend: Create column alternatives with NO inference.
-
-  **Takes a vector of columns and creates alternatives.**
-  Each column becomes a separate layer.
-  Returns spec with :=layers (one per column), :=data, :=indices.
-
-  **Use (smart-defaults spec) to prepare for rendering.**
-
-  **Example - simple blend:**
-    (d+ iris [:sepal-length :sepal-width :petal-length])
-    ;; => {:=layers [{:=columns [:sepal-length]}
-    ;;               {:=columns [:sepal-width]}
-    ;;               {:=columns [:petal-length]}]
-    ;;     :=data iris
-    ;;     :=indices [0 1 2 ... 149]}
-
-  **Example - creating SPLOM (4×4 grid):**
-    (-> (d* iris [:sl :sw :pl :pw] [:sl :sw :pl :pw])
-        smart-defaults)
-    ;; Or using d+ explicitly:
-    (-> (let [vars (d+ iris [:sl :sw :pl :pw])]
-          (l* vars vars))
-        smart-defaults)
-
-  **Complete workflow:**
-    (-> (d+ dataset [:a :b :c])
-        smart-defaults
-        plot)"
+  
+  Takes a vector of columns and creates alternatives - each column becomes a 
+  separate layer. Returns spec with :=layers (one per column), :=data, :=indices.
+  Use (smart-defaults spec) to prepare for rendering."
   [dataset columns]
   (apply l+ (map (fn [col]
                    {:=layers [{:=columns [col]}]
@@ -511,32 +353,25 @@
 
 ;; **What does l* do? (Cross-product)**
 
-(comment
-  ;; Create two simple specs
-  (def spec-a {:=layers [{:=columns [:a]}]})
-  (def spec-b {:=layers [{:=columns [:b]}]})
+;; Create two simple specs
+(def spec-a {:=layers [{:=columns [:a]}]})
+(def spec-b {:=layers [{:=columns [:b]}]})
 
-  ;; Cross them with l*
-  (kind/pprint (l* spec-a spec-b))
-  ;; => {:=layers [{:=columns [:a :b]}]}
-  ;;
-  ;; Notice: The :=columns vectors merged! This is how relationships form.
-  ;; When we later cross :sepal-length with :sepal-width, l* merges their
-  ;; column tuples to create [:sepal-length :sepal-width] - a relationship.
-  )
+;; Cross them with l*
+(kind/pprint (l* spec-a spec-b))
+
+;; Notice: The :=columns vectors merged! This is how relationships form.
+;; When we later cross :sepal-length with :sepal-width, l* merges their
+;; column tuples to create [:sepal-length :sepal-width] - a relationship.
 
 ;; **What does l+ do? (Concatenation)**
 
-(comment
-  ;; Blend the same specs with l+
-  (kind/pprint (l+ spec-a spec-b))
-  ;; => {:=layers [{:=columns [:a]}
-  ;;               {:=columns [:b]}]}
-  ;;
-  ;; Notice: Two separate layers! This is how alternatives work.
-  ;; When we blend variables for a SPLOM, each variable stays separate,
-  ;; creating a collection we can later cross.
-  )
+;; Blend the same specs with l+
+(kind/pprint (l+ spec-a spec-b))
+
+;; Notice: Two separate layers! This is how alternatives work.
+;; When we blend variables for a SPLOM, each variable stays separate,
+;; creating a collection we can later cross.
 
 ;; **Key insight:** l* merges (for relationships), l+ concatenates (for alternatives).
 ;; This distinction drives the entire algebra.
@@ -580,24 +415,25 @@ iris
 ;; ## What We're Building Toward
 ;;
 ;; Here's a scatterplot matrix (SPLOM) showing all pairwise relationships in one visualization.
-;; Notice how tersely we can express it:
-
-(comment
-  ;; A complete 4×4 SPLOM in one line
-  (-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
-      plot))
-
+;; Notice how tersely we can express it - a complete 4×4 SPLOM in one line:
+;;
+;; ```clojure
+;; (-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
+;;     plot)
+;; ```
+;;
 ;; The system automatically detects diagonal panels (x=y) → renders as histograms.
 ;; Off-diagonal panels (x≠y) → renders as scatterplots. Structure determines geometry.
 ;;
 ;; We can override defaults and add layers:
-
-(comment
-  (-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
-      (l* {:=layers [{:=color :species}]}) ;; Add color grouping
-      (l* (off-diagonal (l+ (linear)))) ;; Add regression lines
-      plot))
-
+;;
+;; ```clojure
+;; (-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
+;;     (l* {:=layers [{:=color :species}]}) ;; Add color grouping
+;;     (l* (off-diagonal (l+ (linear)))) ;; Add regression lines
+;;     plot)
+;; ```
+;;
 ;; Let's build up to this step by step.
 
 ;; ## Creating Plot Specifications
@@ -1197,17 +1033,15 @@ iris
 ;;
 ;; Here's what hiccup looks like:
 
-(comment
-  ;; A simple SVG hiccup example
+;; A simple SVG hiccup example - a data structure with a red circle and green line
+(def simple-hiccup
   [:svg {:width 200 :height 200}
    [:circle {:cx 100 :cy 100 :r 50 :fill "#F8766D"}]
    [:line {:x1 50 :y1 50 :x2 150 :y2 150
-           :stroke "#00BA38" :stroke-width 2}]]
+           :stroke "#00BA38" :stroke-width 2}]])
 
-  ;; This hiccup data structure represents an SVG with a red circle and green line.
-  ;; When serialized with (svg/serialize ...), it becomes actual SVG markup that
-  ;; browsers can display.
-  )
+;; When serialized, it becomes actual SVG markup that browsers can display
+(kind/html (svg/serialize simple-hiccup))
 
 ;; **geom.viz** provides a higher-level API for creating coordinated plots with axes
 ;; and gridlines. Our rendering pipeline converts layer specs into geom.viz format,
@@ -1215,20 +1049,16 @@ iris
 ;;
 ;; Here's a quick example of geom.viz in action:
 
-(comment
-  (kind/html
-   (svg/serialize
-    (viz/svg-plot2d-cartesian
-     {:x-axis (viz/linear-axis {:domain [0 10] :range [50 350]})
-      :y-axis (viz/linear-axis {:domain [0 10] :range [350 50]})
-      :grid {:attribs {:stroke "#EBEBEB"}}
-      :data [{:values [[2 3] [5 7] [8 4]]
-              :layout viz/svg-scatter-plot
-              :attribs {:fill "#619CFF" :stroke "#FFFFFF"}}]})))
-
-  ;; This creates a coordinate system with axes and gridlines, then plots three points.
-  ;; Our rendering pipeline automates this entire process.
-  )
+;; This creates a coordinate system with axes and gridlines, then plots three points
+(kind/html
+ (svg/serialize
+  (viz/svg-plot2d-cartesian
+   {:x-axis (viz/linear-axis {:domain [0 10] :range [50 350] :major 2 :pos 350})
+    :y-axis (viz/linear-axis {:domain [0 10] :range [350 50] :major 2 :pos 50})
+    :grid {:attribs {:stroke "#EBEBEB"}}
+    :data [{:values [[2 3] [5 7] [8 4]]
+            :layout viz/svg-scatter-plot
+            :attribs {:fill "#619CFF" :stroke "#FFFFFF"}}]})))
 
 ;; ## Seeing It in Action
 ;;
@@ -1268,14 +1098,9 @@ iris
   {:=layers [{:=plottype :linear}]})
 
 (defn smooth
-  "Smooth curve geometry using moving average.
+  "Smooth curve geometry using moving average. 
   
-  Example:
-    (smooth)                    ; Default smooth
-    (smooth {:window 15})       ; Custom window size
-  
-  Composes with l+ for overlays:
-    (l+ scatter linear smooth)  ; Three-layer plot"
+  Accepts optional {:window N} to control smoothing window size."
   ([] (smooth {}))
   ([opts]
    {:=layers [(merge {:=plottype :smooth} opts)]}))
@@ -1356,21 +1181,9 @@ iris
 
 (defn splom
   "Create a scatterplot matrix (SPLOM) from a dataset and variables.
-
-  **Applies smart-defaults automatically for convenience.**
   
-  Equivalent to:
-    (-> (d* dataset variables variables)
-        smart-defaults)
-
-  Returns a grid spec ready for plotting with:
-  - Diagonal panels → histogram
-  - Off-diagonal panels → scatter
-  - Grid layout with proper positions
-
-  **Example:**
-    (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
-    ;; Creates 4×4 grid, ready to plot"
+  Applies smart-defaults automatically - equivalent to (-> (d* dataset variables variables) smart-defaults).
+  Returns grid spec ready for plotting with diagonal panels as histograms, off-diagonal as scatter."
   [dataset variables]
   (-> (d* dataset variables variables)
       smart-defaults))
