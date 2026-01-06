@@ -449,8 +449,8 @@ iris
         ;; Auto-assign roles and detect diagonals, with grid positions if needed
         layers (if is-grid?
                  ;; Grid layout: assign positions based on source layer indices
-                 (let [n-cols (count (:=layers spec-a))
-                       n-rows (count (:=layers spec-b))]
+                 (let [n-cols (count (:=layers spec-b)) ; FIXED: Right operand → columns
+                       n-rows (count (:=layers spec-a))] ; FIXED: Left operand → rows
                    (map-indexed
                     (fn [idx layer]
                       (let [row (quot idx n-cols)
@@ -694,24 +694,50 @@ iris
   [dataset column]
   (vec (get dataset column)))
 
-(defn- layer->points
-  "Extract point data from a layer.
+(defn- resolve-column
+  "Resolve column keyword to actual data during rendering.
+  
+  Precedence (from DEEPER_ANALYSIS resolution #5):
+  1. Try layer :=data first
+  2. If column missing, try plot :=data
+  3. If still missing, error with helpful message
+  
+  Example:
+    (resolve-column layer plot-data :sepal-length)
+    ; Looks in layer data first, falls back to plot data"
+  [layer plot-data col-key]
+  (let [layer-data (:=data layer)
+        dataset (or layer-data plot-data)]
+    (if-not dataset
+      (throw (ex-info "No data available"
+                      {:column col-key
+                       :layer-has-data? (some? layer-data)
+                       :plot-has-data? (some? plot-data)}))
+      (if (tc/has-column? dataset col-key)
+        (tc/column dataset col-key)
+        (throw (ex-info "Column not found in layer or plot data"
+                        {:column col-key
+                         :layer-columns (when layer-data (tc/column-names layer-data))
+                         :plot-columns (when plot-data (tc/column-names plot-data))}))))))
 
-  Returns sequence of point maps with :x, :y, and optionally :color.
-  Falls back to plot-level dataset if layer doesn't have :=data."
-  [layer plot-dataset]
-  (let [dataset (or (:=data layer) plot-dataset)
-        x-col (:=x layer)
+(defn- layer->points
+  "Extract point data from a layer, with plot-level data fallback.
+  
+  Uses resolve-column to implement inheritance chain.
+  Returns sequence of point maps with :x, :y, and optionally :color keys."
+  [layer plot-data]
+  (let [x-col (:=x layer)
         y-col (:=y layer)
-        color-col (:=color layer)
-        x-vals (get-column-values dataset x-col)
-        y-vals (get-column-values dataset y-col)
-        color-vals (when color-col (get-column-values dataset color-col))]
-    (map-indexed (fn [i _]
-                   (cond-> {:x (nth x-vals i)
-                            :y (nth y-vals i)}
-                     color-vals (assoc :color (nth color-vals i))))
-                 x-vals)))
+        xs (resolve-column layer plot-data x-col)
+        ys (resolve-column layer plot-data y-col)
+        color-col (:=color layer)]
+    (if color-col
+      ;; With color: include color value in each point
+      (let [colors (resolve-column layer plot-data color-col)]
+        (mapv (fn [x y c] {:x x :y y :color c})
+              xs ys colors))
+      ;; Without color: just point maps with :x and :y
+      (mapv (fn [x y] {:x x :y y}) xs ys))))
 
 ;; ## Rendering Scatter Plots
 ;;
@@ -815,6 +841,30 @@ iris
          :x-min (reduce min xs)
          :x-max (reduce max xs)}))))
 
+(defn- compute-smooth
+  "Compute smoothed y-values using moving average.
+  
+  Parameters:
+  - points: Vector of maps with :x and :y keys (e.g., [{:x 1 :y 2} ...])
+  - window: Window size for moving average (default 11)
+  
+  Returns: Vector of {:x x :y smoothed-y} maps sorted by x"
+  ([points] (compute-smooth points 11))
+  ([points window]
+   (when (>= (count points) 2)
+     (let [sorted-points (sort-by :x points)
+           xs (mapv :x sorted-points)
+           ys (mapv :y sorted-points)
+           n (count ys)
+           half-window (quot window 2)
+           smoothed-ys (mapv (fn [i]
+                               (let [start (max 0 (- i half-window))
+                                     end (min n (+ i half-window 1))
+                                     window-vals (subvec ys start end)]
+                                 (/ (reduce + window-vals) (count window-vals))))
+                             (range n))]
+       (mapv (fn [x y] {:x x :y y}) xs smoothed-ys)))))
+
 (defn- render-linear
   "Render linear regression line to geom.viz spec.
   
@@ -848,6 +898,47 @@ iris
            :stroke-width 2
            :opacity 1.0})))))
 
+(defn- render-smooth
+  "Render smoothed curves as SVG polyline elements.
+  Supports color grouping - creates one curve per group.
+  
+  When x-scale and y-scale are nil, returns nil (used for initial layer detection)."
+  [layer points x-scale y-scale]
+  (when (and x-scale y-scale)
+    (let [color-col (:=color layer)
+          palette ["#F8766D" "#00BA38" "#619CFF" "#F564E3"]]
+      (if color-col
+        ;; Grouped: one curve per color value
+        (let [grouped (group-by :color points)]
+          (keep-indexed
+           (fn [idx [color-val group-points]]
+             (when-let [smooth-data (compute-smooth group-points)]
+               (let [scaled-points (map (fn [{:keys [x y]}]
+                                          [(x-scale x) (y-scale y)])
+                                        smooth-data)
+                     polyline-str (clojure.string/join " "
+                                                       (map (fn [[x y]] (str x "," y))
+                                                            scaled-points))]
+                 [:polyline {:points polyline-str
+                             :fill "none"
+                             :stroke (nth palette idx "#333333")
+                             :stroke-width 2.5
+                             :opacity 0.8}])))
+           grouped))
+        ;; Ungrouped: single curve
+        (when-let [smooth-data (compute-smooth points)]
+          (let [scaled-points (map (fn [{:keys [x y]}]
+                                     [(x-scale x) (y-scale y)])
+                                   smooth-data)
+                polyline-str (clojure.string/join " "
+                                                  (map (fn [[x y]] (str x "," y))
+                                                       scaled-points))]
+            [[:polyline {:points polyline-str
+                         :fill "none"
+                         :stroke "#333333"
+                         :stroke-width 2.5
+                         :opacity 0.8}]]))))))
+
 ;; ## Coordinating the Rendering
 ;;
 ;; Now we need to dispatch to the right renderer based on plottype, and coordinate
@@ -870,6 +961,10 @@ iris
 (defmethod render-layer :linear
   [layer points x-scale y-scale]
   (render-linear layer points x-scale y-scale))
+
+(defmethod render-layer :smooth
+  [layer points x-scale y-scale]
+  (render-smooth layer points x-scale y-scale))
 
 (defn- render-single-panel
   "Render a single panel (one or more overlaid layers) to SVG [hiccup](https://github.com/weavejester/hiccup).
@@ -913,11 +1008,12 @@ iris
                             (render-layer layer points nil nil)))
 
         ;; Filter out nils and separate special layers from viz layers
-        ;; Flatten because render-scatter/render-linear can return lists for colored groups
+        ;; Flatten because render-scatter/render-linear/render-smooth can return lists for colored groups
         rendered-layers (remove nil? (flatten rendered-layers))
         histogram-layers (filter :bars rendered-layers)
         line-layers (filter :line-data rendered-layers)
-        viz-layers (remove #(or (:bars %) (:line-data %)) rendered-layers)
+        smooth-layers (filter #(= (:tag %) :polyline) rendered-layers)
+        viz-layers (remove #(or (:bars %) (:line-data %) (= (:tag %) :polyline)) rendered-layers)
 
         ;; Update y-domain if we have histograms
         y-domain (if (seq histogram-layers)
@@ -940,6 +1036,12 @@ iris
                            (* (/ (- y (first y-domain))
                                  (- (second y-domain) (first y-domain)))
                               (- (second y-range) (first y-range)))))
+
+        ;; Re-render smooth layers with proper scales
+        smooth-elements (mapcat (fn [layer]
+                                  (let [points (layer->points layer plot-dataset)]
+                                    (render-layer layer points x-scale y-scale)))
+                                (filter #(= (:=plottype %) :smooth) layers))
 
         ;; Convert histogram bars to SVG rect elements
         histogram-rects (mapcat (fn [hist-layer]
@@ -999,8 +1101,8 @@ iris
         ;; Render base plot
         base-plot (viz/svg-plot2d-cartesian viz-spec)]
 
-    ;; Insert histogram bars and regression lines into the SVG
-    (if (or (seq histogram-rects) (seq regression-lines))
+    ;; Insert histogram bars, regression lines, and smooth curves into the SVG
+    (if (or (seq histogram-rects) (seq regression-lines) (seq smooth-elements))
       ;; The structure is [:g nil [...grid...] () [...x-axis...] [...y-axis...]]
       ;; Insert custom elements after the grid (index 2) and before the empty () (index 3)
       (let [[tag attrs & children] base-plot
@@ -1008,7 +1110,9 @@ iris
                            (when (seq histogram-rects)
                              [(into [:g {:class "histogram-bars"}] histogram-rects)])
                            (when (seq regression-lines)
-                             [(into [:g {:class "regression-lines"}] regression-lines)]))]
+                             [(into [:g {:class "regression-lines"}] regression-lines)])
+                           (when (seq smooth-elements)
+                             [(into [:g {:class "smooth-curves"}] smooth-elements)]))]
         (if (= tag :g)
           ;; Insert custom groups as new children
           (into [tag attrs]
@@ -1105,6 +1209,19 @@ iris
   []
   {:=layers [{:=plottype :linear}]})
 
+(defn smooth
+  "Smooth curve geometry using moving average.
+  
+  Example:
+    (smooth)                    ; Default smooth
+    (smooth {:window 15})       ; Custom window size
+  
+  Composes with =+ for overlays:
+    (=+ scatter linear smooth)  ; Three-layer plot"
+  ([] (smooth {}))
+  ([opts]
+   {:=layers [(merge {:=plottype :smooth} opts)]}))
+
 (-> (cross sepal-length sepal-width)
     (=+ (linear))
     plot)
@@ -1128,12 +1245,20 @@ iris
 ;; length×width, width×length, and width×width - a 2×2 grid.
 
 (defn blend
-  "Create a blend (collection of alternatives) from multiple variables.
-
-  Uses d+ to create a spec with multiple layers, one per variable.
-  Each layer has :=columns provenance tracking which variable it came from."
-  [dataset variables]
-  (d+ dataset (map vector variables)))
+  "Create alternatives from multiple columns.
+  
+  Each column becomes a separate layer (alternative).
+  Uses l+ (layer blend) internally.
+  
+  Example:
+    (blend iris [:sepal-length :sepal-width :petal-length])
+    ; Creates 3 alternatives, one per column"
+  [dataset columns]
+  (apply l+ (map (fn [col]
+                   {:=layers [{:=columns [col]}]
+                    :=data dataset
+                    :=indices (range (tc/row-count dataset))})
+                 columns)))
 
 ;; Now let's update `cross` to handle blends using the [distributive law](https://en.wikipedia.org/wiki/Distributive_property):
 ;; (A + B) × (C + D) = AC + AD + BC + BD
@@ -1417,6 +1542,108 @@ iris
 ;; property into all layers in the SPLOM grid. Each panel independently groups and colors
 ;; its points by species.
 
+;; ## Multi-Layer Overlays
+
+;; The `=+` operator stacks multiple geometries in the same panel.
+;; Each geometry shares the same data and coordinate system.
+
+;; ### Three Layers: Scatter + Regression + Smooth
+
+;; Let's overlay three geometries to show different aspects of the relationship:
+
+(-> (cross sepal-length sepal-width)
+    (=+ (linear))
+    (=+ (smooth))
+    plot)
+
+;; The plot shows:
+;; - Scatter points (raw data)
+;; - Linear regression (linear trend)
+;; - Smoothed curve (local variation)
+
+;; ### With Color Groups
+
+;; Multi-layer overlays work with color grouping.
+;; Each geometry is computed and rendered separately per group:
+
+(-> (cross sepal-length sepal-width)
+    (=* {:=layers [{:=color :species}]})
+    (=+ (linear))
+    (=+ (smooth))
+    plot)
+
+;; This creates 3 species × 3 geometries = 9 visual elements:
+;; - 3 colored scatter groups
+;; - 3 colored regression lines (one per species)
+;; - 3 colored smooth curves (one per species)
+
+;; ## Asymmetric Grids (m×n)
+
+;; Not all grids are square! Asymmetric grids are useful for exploring
+;; relationships between different sets of variables.
+
+;; ### Predictor-Outcome Grid (2×3)
+
+;; Suppose we want to see how two predictors relate to three outcomes:
+
+(-> (cross (blend iris [:sepal-length :sepal-width]) ; 2 predictors
+           (blend iris [:petal-length :petal-width :sepal-length])) ; 3 outcomes
+    plot)
+
+;; This creates a 2×3 grid showing all 6 predictor-outcome relationships.
+;; Use case: Predictive modeling - which predictors matter for which outcomes?
+
+;; ### With Regression Lines
+
+(-> (cross (blend iris [:sepal-length :sepal-width])
+           (blend iris [:petal-length :petal-width]))
+    (=+ (linear))
+    plot)
+
+;; Each of the 4 panels shows scatter + regression.
+
+;; ## Rich Composition with Override Constructors
+
+;; The `diagonal` and `off-diagonal` constructors let you apply different
+;; specifications to different panel types.
+
+;; ### Heterogeneous SPLOM
+
+;; We can create a SPLOM where diagonal panels use one geometry,
+;; and off-diagonal panels use another:
+
+(-> (splom iris [:sepal-length :sepal-width])
+    (=* (diagonal :scatter))
+    (=* (off-diagonal (=+ (linear))))
+    plot)
+
+;; Result:
+;; - Diagonal panels: scatter plots (showing x=y)
+;; - Off-diagonal panels: scatter + regression (showing relationships)
+
+;; ### Multi-Layer Overrides
+
+;; Override constructors accept full layer specs created with `=+`:
+
+(-> (splom iris [:sepal-length :sepal-width :petal-length])
+    (=* (diagonal :scatter))
+    (=* (off-diagonal (=+ (linear) (smooth))))
+    plot)
+
+;; Now off-diagonal panels have THREE layers: scatter + regression + smooth.
+
+;; ### With Color Groups
+
+(-> (splom iris [:sepal-length :sepal-width :petal-length])
+    (=* {:=layers [{:=color :species}]})
+    (=* (off-diagonal (=+ (linear))))
+    plot)
+
+;; Full colored SPLOM:
+;; - All panels show 3 species in different colors
+;; - Diagonal: colored histograms
+;; - Off-diagonal: colored scatter + 3 colored regression lines
+
 ;; ## What We've Built
 ;;
 ;; Let's take stock of what we have:
@@ -1426,11 +1653,13 @@ iris
 ;; 3. **Smart Defaults** - Phase 1: diagonal → histogram, off-diagonal → scatter
 ;; 4. **Override Constructors** - `(diagonal ...)` and `(off-diagonal ...)` for control
 ;; 5. **Composition** - `=*` and `=+` operators for building complex specs
-;; 6. **Rendering** - Scatter, histogram, and linear regression to SVG
-;; 7. **Grid Layout** - Spatial arrangement of multiple panels
+;; 6. **Rendering** - Scatter, histogram, linear regression, and **smoothed curves** to SVG
+;; 7. **Grid Layout** - Spatial arrangement of multiple panels **(including asymmetric m×n grids)**
 ;; 8. **SPLOM** - Scatterplot matrices in one line
 ;; 9. **Color Aesthetic** - Group by categorical variables with automatic coloring and grouped statistics
 ;; 10. **Colored SPLOMs** - Multivariate pattern exploration across species groups
+;; 11. **Multi-Layer Overlays** - Stack 3+ geometries (scatter + linear + smooth)
+;; 12. **Rich Composition** - Combine overrides, colors, and overlays arbitrarily
 ;;
 ;; The key insight has proven powerful: **the structure of the algebra determines sensible defaults for geometry**.
 ;; When we cross a variable with itself, we're asking about distribution (histogram).
