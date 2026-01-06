@@ -16,6 +16,7 @@
    [scicloj.kindly.v4.api :as kindly]
    [scicloj.kindly.v4.kind :as kind]
    [clojure.java.io :as io]
+   [clojure.set :as set]
    ))
 
 ;; # The World's Smallest Violin (plot generating code)
@@ -66,7 +67,7 @@
 ;;; Let's start off with a simple dot-plot. We'll group the data by species, and turn each value for body_mass into a point
 
 
-;;; Vega really just requires specifying some basic mappings (encodings) between data and visual properties. This is a minimal version of dot plot:
+;;; Vega really just requires specifying some basic mappings (encodings) between data and visual properties. This is a minimal version of a dot plot, with the points grouped by species:
 
 ^:kind/vega-lite
 {:mark {:type "point"}
@@ -127,73 +128,197 @@
  }
 
 
-
-(defn dot-plot
-  [data value-field group-field min max]
-  {:mark {:type "point" :tooltip {:content :data}}
-   :data data
-   :transform [{:filter (format "datum['%s'] != 'NA'" value-field)}
-               {:calculate "random()" :as "jitter"}]
-   :height 50                            ;this is the height of each row (facet)
-   :encoding
-   {:color {:field group-field :type "nominal" :legend false}
-    :x {:field value-field
-        :type "quantitative"
-        :scale {:domain [min max]}}
-    :y {:field "jitter"
-        :type "quantitative"
-        :axis false}
-    :row {:field group-field
-          :type "nominal"
-          :columns 1
-          :spacing 0
-          :header {:labelAngle 0 :labelAlign "left"}
-          }
-    }
-   :width 800
-   })
-
-
-
-
-
 ;;; # Violin Plot
 
-;;; Violin plots extend the ida of a box plot. Isntead of showing just the mean and some percentiles, a violin plot shows the probability density as a continuous variables.
+;;; Violin plots extend the ida of a box plot. Isntead of showing a few coarse statistics like median, a violin plot shows the [probability density](https://en.wikipedia.org/wiki/Probability_density_function) as a continuous variable.
 
-;;; ## Kernel Density Estimate
-
+;;; Vega-lite provides a [`:density`](https://vega.github.io/vega-lite/docs/density.html) transform that does the work of computing this. This transform has a number of options; `:bandwidth` controls the degree of smoothign of the density curve, and you can select a value depending on your data and needs.
 
 (kind/vega-lite
  {:mark {:type :area}
   :data {:values (tc/rows penguin-data :as-maps)}
-  :transform [{:density "flipper_length_mm"
+  :transform [{:density "body_mass_g"
                :groupby ["species island"]
-               :extent [150 250]
-               :bandwidth 2
+               :bandwidth 80
                }]
-  :height 50                            ;this is the height of each row (facet)
   :encoding
   {:color {:field "species island"
            :type :nominal
            :legend false}
+   :x {:field "value"
+       :title "body_mass_g"
+       :type :quantitative
+       :scale {:zero false}}
    :y {:field "density"
        :type :quantitative
-       :stack :center                ; this reflects the area plot to produce the violin shape. 
-       :axis false                  ; hide some labels
+       :stack :center                   ; this reflects the area plot to produce the violin shape. 
+       :axis false                      ; hide some labels
        } 
-   :x {:field "value"
-       :type :quantitative
-       :scale {:zero false}}            ;not strictly necessary
    :row {:field "species island"
          :type :nominal
-         :columns 1
          :spacing 0
          :header {:labelAngle 0 :labelAlign :left}
          }
    }
+  :height 50                            ;this is the height of each row (facet)
   :width 800
   })
+
+
+;;; # Abstraction
+
+;;; Once we know how to make a visualization, it makes sense to abstract it into a procedure, so this knowledge in a function. 
+
+
+;;; For inst
+
+(defn dot-plot
+  [data value-field group-field]
+  {:mark {:type "point" :tooltip {:content :data}}
+   :data data
+   :encoding
+   {:x {:field value-field
+        :type "quantitative"
+        :scale {:zero false}}
+    :row {:field group-field
+          :type "nominal"
+          :header {:labelAngle 0 :labelAlign "left"}
+          :spacing 0}
+    :color {:field group-field
+            :type "nominal"
+            :legend false}  
+    }
+   :height 50
+   :width 800
+   })
+
+;;; Which can be used like this:
+
+
+^:kind/vega-lite
+(dot-plot {:values (tc/rows penguin-data :as-maps)}
+          "flipper_length_mm" "year"
+          )
+
+
+;;; On any data set
+^:kind/vega-lite
+(dot-plot {:url "https://vega.github.io/editor/data/movies.json"}
+          "US Gross" "Major Genre")
+
+
+
+;;; Add jitter
+
+(defn dot-plot-2
+  [data value-field group-field jitter?]
+  {:mark {:type "point" :tooltip {:content :data}}
+   :data data
+   :transform (if jitter? [{:calculate "random()" :as "jitter"}] [])
+   :encoding
+   {:x {:field value-field
+        :type "quantitative"
+        :scale {:zero false}}
+    :y (when jitter?
+         {:field "jitter"
+          :type "quantitative"
+          :axis false})
+    :row {:field group-field
+          :type "nominal"
+          :header {:labelAngle 0 :labelAlign "left"}
+          :spacing 0}
+    :color {:field group-field
+            :type "nominal"
+            :legend false}  
+    }
+   :height 50
+   :width 800
+   })
+
+
+;;; On any data set
+^:kind/vega-lite
+(dot-plot-2 {:url "https://vega.github.io/editor/data/movies.json"}
+          "US Gross" "Major Genre" true)
+
+
+;;; # Generalize
+
+;;; This section introduces a new, and somewhat funky way of using and generalizing Vega specs.
+
+;;; Take our dot-plot abstraction above. We could parameterize it further, say :type which could be :dotplot or :boxplot. But instead, we're going to hack it by introducing a function that can merge arbitrarily nested structures. This means we can alter any aspect of the spec, at the cost of having to have some knowledge of its structure. Eg we could change the height or spacing or fonts.
+
+
+;; TODO maybe more confuscing than it is worth here. For a later section?
+;; From multitool TODO link
+
+(defn merge-recursive
+  "Merge two arbitrariy nested map structures. Terminal seqs are concatentated, terminal sets are merged."
+  [m1 m2]
+  (cond (and (map? m1) (map? m2))
+        (merge-with merge-recursive m1 m2)
+        (and (set? m1) (set? m2))
+        (set/union m1 m2)
+        (and (vector? m1) (vector? m2))
+        (into [] (concat m1 m2))
+        (and (sequential? m1) (sequential? m2))
+        (concat m1 m2)
+        (nil? m2) m1
+        :else m2))
+
+(defn box-plot
+  [data value-field group-field]
+  (-> (dot-plot-2 data value-field group-field false)
+      (merge-recursive
+       {:mark {:type :boxplot
+               :extent :min-max}})))
+
+
+
+;;; Next, an abstraction for violin plots. This could also be built from dot-plot-2, but since theres a lot to change let's not.
+
+
+(defn violin-plot
+  [data value-field group-field & bandwidth]
+ {:mark {:type :area}
+  :data data
+  :transform [{:density value-field
+               :groupby [group-field]
+               :bandwidth bandwidth
+               }]
+  :encoding
+  {:color {:field group-field
+           :type :nominal
+           :legend false}
+   :x {:field "value"
+       :type :quantitative
+       :title value-field
+       :scale {:zero false}}
+   :y {:field "density"
+       :type :quantitative
+       :stack :center                   ; this reflects the area plot to produce the violin shape. 
+       :axis false                      ; hide some labels
+       } 
+   :row {:field group-field
+         :type :nominal
+         :spacing 0
+         :header {:labelAngle 0 :labelAlign :left}
+         }
+   }
+  :height 50                            ;this is the height of each row (facet)
+  :width 800
+  })
+
+
+^:kind/vega-lite
+(-> (violin-plot {:url "https://vega.github.io/editor/data/movies.json"}
+                 "US Gross" "Major Genre" 5000000)
+    (merge-recursive {:encoding {:x {:scale {:domain [0 100000000]}}} ;force scale to exclude outliers
+                      :mark {:clip true}}))                           ;and don't plot them
+
+
+
+
 
 
 ;;; We can try some of the other properties
@@ -258,8 +383,7 @@
    :width 800
    })
 
-;;; TODO show box, whiskers, points
-;;; TODO need a better dataset, this is boring
+
 
 ;;; # Here's a more scientific example
 
@@ -298,13 +422,7 @@
 
 
 
-^:kind/vega-lite
-(dot-plot {:url penguin-data-url
-           :format {:type "tsv"}
-           }
-          "flipper_length_mm" "species island"
-          150 250
-          )
+
 
 ;;; TODO vertical violins
 ;;; TODO controls
@@ -385,9 +503,7 @@
 
 ;;; ## Movie Dataset
 
-;;; Get the movie dataset
-(def movie-data
-  (json/read-str (slurp "https://vega.github.io/editor/data/movies.json") ))
+
 
 ;;; Here we'll take a look at a sample of the data (selected columns and just a few rows).
 (kind/table
