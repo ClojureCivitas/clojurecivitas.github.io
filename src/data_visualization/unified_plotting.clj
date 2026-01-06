@@ -64,6 +64,41 @@
 ;; This is a working Clojure namespace executable with Clay/Kindly. Let's build up from
 ;; simple operations to complete scatterplot matrices.
 ;;
+;; ## Architecture: Three Layers of Abstraction
+;;
+;; This library uses a **separation of concerns** design with three distinct layers:
+;;
+;; **1. Algebraic Layer (Pure Data Manipulation)**
+;; - `l*` - Layer cross (cartesian product + property merging)
+;; - `l+` - Layer blend (concatenation + inheritance)
+;; - `d*` - Dataset cross (wraps l* with dataset context)
+;; - `d+` - Dataset blend (wraps l+ with dataset context)
+;; - **NO visualization inference** - these are pure algebraic operations on data structures
+;;
+;; **2. Visualization Inference Layer (Opinionated Rendering Choices)**
+;; - `smart-defaults` - Applies visualization intelligence:
+;;   - Auto-assigns visual roles (:=columns → :=x/:=y)
+;;   - Detects diagonals (x=y → histogram, x≠y → scatter)
+;;   - Infers plottypes based on structure
+;;   - Assigns grid positions for multi-panel layouts
+;; - **Separates "what to plot" from "how to render"**
+;;
+;; **3. Rendering Layer (SVG Generation)**
+;; - `plot` - Renders specs to SVG via thi.ng/geom-viz
+;; - Geometry renderers (scatter, histogram, linear, smooth)
+;; - Multi-panel coordination and layout
+;;
+;; **Typical Workflow:**
+;; ```clojure
+;; (-> (d* dataset [:x-var] [:y-var])  ; 1. Algebra: define relationships
+;;     smart-defaults                   ; 2. Inference: apply visualization logic
+;;     plot)                            ; 3. Render: generate SVG
+;; ```
+;;
+;; This separation means you can use the algebra layer for data manipulation without
+;; committing to visualization choices, then apply different inference strategies,
+;; or bypass inference entirely for full control.
+;;
 ;; ## Core Algebraic Operations
 
 (defn- merge-layers
@@ -177,7 +212,8 @@
     ;; => {:=layers [{:=x :a :=y :b :=color :species}]}
 
   **Example - override constructors:**
-    (l* (cross vars vars) (diagonal :scatter))
+    (l* (-> (d* iris [:a :b] [:a :b]) smart-defaults)
+        (diagonal :scatter))
     ;; Applies :scatter to diagonal layers only
 
   **Non-commutative:** (l* A B) ≠ (l* B A) when :=columns order matters.
@@ -314,64 +350,159 @@
 
     (assoc plot-props :=layers (vec layers-with-inheritance))))
 
+(defn smart-defaults
+  "Apply opinionated visualization choices to prepare a spec for rendering.
+
+  **Transforms raw crossed/blended spec into render-ready spec:**
+  1. Auto-assign visual roles (:=columns → :=x/:=y)
+  2. Detect diagonals (:=x == :=y → :=diagonal? true)
+  3. Infer plottypes (diagonal → :histogram, else → :scatter)
+  4. Assign grid positions (:=grid-row, :=grid-col) when multi-layer
+  5. Set layout flags (:=layout :grid)
+
+  **Example - single layer:**
+    (smart-defaults {:=layers [{:=columns [:a :b]}]})
+    ;; => {:=layers [{:=columns [:a :b]
+    ;;               :=x :a :=y :b
+    ;;               :=plottype :scatter
+    ;;               :=diagonal? false}]}
+
+  **Example - grid (multiple layers):**
+    (smart-defaults {:=layers [{:=columns [:a :c]}
+                               {:=columns [:a :d]}
+                               {:=columns [:b :c]}
+                               {:=columns [:b :d]}]})
+    ;; => {:=layers [...with grid positions...]
+    ;;     :=layout :grid}
+
+  **Grid detection:** Considers it a grid when:
+  - Multiple layers (>1)
+  - All layers have 2-column tuples in :=columns
+  - Infers dimensions from unique values in first/second positions
+  
+  Returns spec ready for (plot spec)."
+  [spec]
+  (let [layers (:=layers spec)
+        n-layers (count layers)
+
+        ;; Check if this looks like a crossed grid:
+        ;; - Multiple layers
+        ;; - All layers have 2-element :=columns (crossed pairs)
+        all-have-pairs? (every? #(= 2 (count (:=columns %))) layers)
+        is-grid? (and (> n-layers 1) all-have-pairs?)
+
+        ;; Process layers with role assignment, diagonal detection, and grid positions
+        processed-layers
+        (if is-grid?
+          ;; Grid layout: assign positions based on unique column values
+          ;; In a grid from d*, first column varies by row, second by column
+          (let [;; Get ordered unique values for x and y variables
+                x-vars (distinct (map #(first (:=columns %)) layers))
+                y-vars (distinct (map #(second (:=columns %)) layers))
+                ;; Create lookup maps: var → grid index
+                ;; x-vars map to rows (varies vertically)
+                ;; y-vars map to cols (varies horizontally)
+                x-index (into {} (map-indexed (fn [i v] [v i]) x-vars))
+                y-index (into {} (map-indexed (fn [i v] [v i]) y-vars))]
+            (map (fn [layer]
+                   (let [assigned (auto-assign-roles layer)
+                         x-col (:=x assigned)
+                         y-col (:=y assigned)
+                         diagonal? (= x-col y-col)
+                         ;; Grid position: x determines row, y determines col
+                         row (x-index x-col)
+                         col (y-index y-col)]
+                     (assoc assigned
+                            :=grid-row row
+                            :=grid-col col
+                            :=diagonal? diagonal?
+                            :=plottype (if diagonal? :histogram :scatter))))
+                 layers))
+          ;; Single panel: just assign roles and detect diagonal
+          (for [layer layers]
+            (let [assigned (auto-assign-roles layer)
+                  x-col (:=x assigned)
+                  y-col (:=y assigned)
+                  diagonal? (= x-col y-col)]
+              (assoc assigned
+                     :=diagonal? diagonal?
+                     :=plottype (if diagonal? :histogram :scatter)))))]
+
+    (cond-> (assoc spec :=layers processed-layers)
+      is-grid? (assoc :=layout :grid))))
+
 (defn d*
-  "Dataset cross: Cross column lists at the dataset level.
+  "Dataset cross: Pure algebraic crossing with NO inference.
 
-  **Convenience wrapper** around l* for ergonomic column-based API.
-  Variadic - can cross 2+ column lists.
+  **Variadic - crosses 2+ column lists.**
+  Each argument is a vector of columns to cross.
+  Returns spec with :=layers (cartesian product), :=data, :=indices.
 
-  Each column list becomes a spec with :=layers, then these specs are
-  crossed using l*. Attaches plot-level :=data and :=indices automatically.
+  **Use (smart-defaults spec) to prepare for rendering.**
 
-  **Example - simple cross:**
-    (d* iris [[:sepal-length]] [[:sepal-width]])
+  **Example - single columns:**
+    (d* iris [:sepal-length] [:sepal-width])
     ;; => {:=layers [{:=columns [:sepal-length :sepal-width]}]
     ;;     :=data iris
     ;;     :=indices [0 1 2 ... 149]}
 
-  **Example - crossing blends (2×2 SPLOM):**
-    (d* iris [[:a] [:b]] [[:c] [:d]])
-    ;; Creates 4 combinations: a×c, a×d, b×c, b×d
+  **Example - column lists (2×2 grid):**
+    (d* iris [:sepal-length :sepal-width] [:petal-length :petal-width])
+    ;; => {:=layers [{:=columns [:sepal-length :petal-length]}
+    ;;               {:=columns [:sepal-length :petal-width]}
+    ;;               {:=columns [:sepal-width :petal-length]}
+    ;;               {:=columns [:sepal-width :petal-width]}]
+    ;;     :=data iris
+    ;;     :=indices [0 1 2 ... 149]}
 
-  **Typical usage:**
-    (-> (d* dataset [cols-x] [cols-y])
-        (cross))  ; Apply role assignment and smart defaults"
+  **Complete workflow:**
+    (-> (d* dataset [:x] [:y])
+        smart-defaults
+        plot)"
   [dataset & col-lists]
   (let [specs (map (fn [cols]
-                     {:=layers (map (fn [col] {:=columns [col]}) cols)
-                      :=data dataset
-                      :=indices (range (tc/row-count dataset))})
+                     (let [col-vec (if (vector? cols) cols [cols])]
+                       {:=layers (map (fn [col] {:=columns [col]}) col-vec)
+                        :=data dataset
+                        :=indices (range (tc/row-count dataset))}))
                    col-lists)]
     (reduce l* specs)))
 
 (defn d+
-  "Dataset blend: Create column alternatives at the dataset level.
+  "Dataset blend: Create column alternatives with NO inference.
 
-  **Convenience wrapper** around l+ for ergonomic column-based API.
+  **Takes a vector of columns and creates alternatives.**
+  Each column becomes a separate layer.
+  Returns spec with :=layers (one per column), :=data, :=indices.
 
-  Each column list becomes a layer, then these are concatenated using l+.
-  Attaches plot-level :=data and :=indices automatically.
+  **Use (smart-defaults spec) to prepare for rendering.**
 
   **Example - simple blend:**
-    (d+ iris [[[:sepal-length]] [[:sepal-width]]])
+    (d+ iris [:sepal-length :sepal-width :petal-length])
     ;; => {:=layers [{:=columns [:sepal-length]}
-    ;;               {:=columns [:sepal-width]}]
+    ;;               {:=columns [:sepal-width]}
+    ;;               {:=columns [:petal-length]}]
     ;;     :=data iris
     ;;     :=indices [0 1 2 ... 149]}
 
-  **Example - creating SPLOM rows:**
-    (d+ iris [[[:a]] [[:b]] [[:c]]])
-    ;; Creates 3 alternatives for crossing
+  **Example - creating SPLOM (4×4 grid):**
+    (-> (d* iris [:sl :sw :pl :pw] [:sl :sw :pl :pw])
+        smart-defaults)
+    ;; Or using d+ explicitly:
+    (-> (let [vars (d+ iris [:sl :sw :pl :pw])]
+          (l* vars vars))
+        smart-defaults)
 
-  **Typical usage:**
-    (-> (d+ dataset [[col1] [col2] [col3]])
-        (cross other-blend))  ; Cross to create grid"
-  [dataset col-lists]
-  (apply l+ (map (fn [cols]
-                   {:=layers [{:=columns (vec cols)}]
+  **Complete workflow:**
+    (-> (d+ dataset [:a :b :c])
+        smart-defaults
+        plot)"
+  [dataset columns]
+  (apply l+ (map (fn [col]
+                   {:=layers [{:=columns [col]}]
                     :=data dataset
                     :=indices (range (tc/row-count dataset))})
-                 col-lists)))
+                 columns)))
 
 ;; ### Understanding l* and l+
 ;;
@@ -410,6 +541,30 @@
 ;; **Key insight:** l* merges (for relationships), l+ concatenates (for alternatives).
 ;; This distinction drives the entire algebra.
 
+;; ## The Standard Workflow Pattern
+;;
+;; Before we dive into examples, here's the **standard three-step workflow** you'll see throughout:
+;;
+;; ```clojure
+;; (-> (d* dataset [:x-var] [:y-var])  ; 1. ALGEBRA: Define relationships
+;;     smart-defaults                   ; 2. INFERENCE: Apply visualization logic
+;;     plot)                            ; 3. RENDER: Generate SVG
+;; ```
+;;
+;; **Why three steps?**
+;;
+;; 1. **`d*` / `d+`** - Pure algebraic operations create data structures with no visualization decisions
+;; 2. **`smart-defaults`** - Applies intelligent defaults (auto-assigns roles, detects diagonals, infers plottypes)
+;; 3. **`plot`** - Renders the spec to SVG
+;;
+;; This separation means you can:
+;; - Inspect the raw algebra output before visualization (`kind/pprint` the spec)
+;; - Apply different inference strategies (or skip `smart-defaults` for full control)
+;; - Reuse algebraic specs across different rendering contexts
+;;
+;; **Convenience functions** like `splom` bundle these steps for common patterns, but the
+;; three-step workflow gives you maximum flexibility when you need it.
+
 ;; ## The Dataset
 ;;
 ;; We'll use the classic Iris dataset - 150 observations of iris flowers with measurements
@@ -445,87 +600,16 @@ iris
 
 ;; Let's build up to this step by step.
 
-;; ## Working with Variables and Data
+;; ## Creating Plot Specifications
 ;;
-;; The foundation of our approach is the **varset** - a projection of observations onto a variable.
-;; Think of it as asking: "what values does this variable take, and which observations have each value?"
+;; The foundation of our approach is using **d\*** (dataset cross) to create relationships
+;; between variables, then **smart-defaults** to prepare them for rendering.
 
-(defn varset
-  "Create a layer spec from a dataset column.
-
-  Returns a spec with :=layers containing one layer with :=columns provenance.
-  The :=columns tuple tracks which columns this layer originated from."
-  [dataset variable]
-  {:=layers [{:=columns [variable]}]
-   :=data dataset
-   :=indices (range (tc/row-count dataset))})
-
-;; Let's create varsets for sepal length and width:
-
-(def sepal-length (varset iris :sepal-length))
-(def sepal-width (varset iris :sepal-width))
-
-;; A varset is just a map describing which variable we're looking at:
-
-(kind/pprint sepal-length)
-
-;; The `:indices` field is crucial - it tracks observation identity. All varsets from the same
-;; dataset share the same index space (0 through 149 for Iris). This enables linked brushing later.
-
-;; ## Crossing Variables
-;;
-;; The fundamental operation is **cross** (×) - creating tuples from two varsets.
-;; When we cross sepal-length with sepal-width, we're asking: "show me the relationship
-;; between these two dimensions."
-
-(defn cross
-  "Cross two specs to create combinations.
-
-  Uses l* (layer cross) to create cartesian product of layers.
-  Auto-assigns :=x and :=y roles from :=columns provenance.
-  Detects diagonals (x=y) and applies smart default (histogram).
-  When crossing blends (multiple layers each), assigns grid positions."
-  [spec-a spec-b]
-  (let [;; Use l* to get cartesian product
-        crossed (l* spec-a spec-b)
-        ;; Check if this is a blend cross (multiple layers from each spec)
-        is-grid? (and (> (count (:=layers spec-a)) 1)
-                      (> (count (:=layers spec-b)) 1))
-        ;; Auto-assign roles and detect diagonals, with grid positions if needed
-        layers (if is-grid?
-                 ;; Grid layout: assign positions based on source layer indices
-                 (let [n-cols (count (:=layers spec-b)) ; FIXED: Right operand → columns
-                       n-rows (count (:=layers spec-a))] ; FIXED: Left operand → rows
-                   (map-indexed
-                    (fn [idx layer]
-                      (let [row (quot idx n-cols)
-                            col (rem idx n-cols)
-                            assigned (auto-assign-roles layer)
-                            x-col (:=x assigned)
-                            y-col (:=y assigned)
-                            diagonal? (= x-col y-col)]
-                        (assoc assigned
-                               :=grid-row row
-                               :=grid-col col
-                               :=diagonal? diagonal?
-                               :=plottype (if diagonal? :histogram :scatter))))
-                    (:=layers crossed)))
-                 ;; Single panel: just assign roles
-                 (for [layer (:=layers crossed)]
-                   (let [assigned (auto-assign-roles layer)
-                         x-col (:=x assigned)
-                         y-col (:=y assigned)
-                         diagonal? (= x-col y-col)]
-                     (assoc assigned
-                            :=diagonal? diagonal?
-                            :=plottype (if diagonal? :histogram :scatter)))))]
-    (cond-> (assoc crossed :=layers layers)
-      is-grid? (assoc :=layout :grid))))
-
-;; Let's cross sepal-length with sepal-width:
+;; Let's create a simple scatterplot specification - sepal length vs width:
 
 (def length-vs-width
-  (cross sepal-length sepal-width))
+  (-> (d* iris [:sepal-length] [:sepal-width])
+      smart-defaults))
 
 ;; This creates a plot specification with a single layer. Notice the structure:
 
@@ -533,11 +617,13 @@ iris
 
 ;; The `:=plottype` is `:scatter` because these are different variables (x≠y).
 ;; The spec includes `:=data` (the dataset) and `:=indices` (tracking observations).
+;; The `smart-defaults` function auto-assigned :=x and :=y roles from the column order.
 
-;; Now let's cross sepal-length with *itself*:
+;; Now let's cross sepal-length with *itself* (a diagonal):
 
 (def length-distribution
-  (cross sepal-length sepal-length))
+  (-> (d* iris [:sepal-length] [:sepal-length])
+      smart-defaults))
 
 (kind/pprint length-distribution)
 
@@ -546,38 +632,12 @@ iris
 
 ;; ## A Simple 2×2 Grid
 ;;
-;; Before we build the full machinery, let's manually construct a 2×2 grid to see the pattern.
-;; We'll cross sepal-length and sepal-width with themselves:
-
-(defn manual-grid
-  "Manually construct a 2×2 grid for pedagogical purposes.
-  Shows what cross-product of variables looks like."
-  [dataset var-x var-y]
-  (let [vs-x (varset dataset var-x)
-        vs-y (varset dataset var-y)]
-    {:=layers
-     [;; Row 0, Col 0: x × x (diagonal)
-      {:=x var-x :=y var-x :=grid-row 0 :=grid-col 0
-       :=plottype :histogram :=data dataset}
-
-      ;; Row 0, Col 1: x × y (off-diagonal)
-      {:=x var-x :=y var-y :=grid-row 0 :=grid-col 1
-       :=plottype :scatter :=data dataset}
-
-      ;; Row 1, Col 0: y × x (off-diagonal)
-      {:=x var-y :=y var-x :=grid-row 1 :=grid-col 0
-       :=plottype :scatter :=data dataset}
-
-      ;; Row 1, Col 1: y × y (diagonal)
-      {:=x var-y :=y var-y :=grid-row 1 :=grid-col 1
-       :=plottype :histogram :=data dataset}]
-
-     :=data dataset
-     :=indices (range (tc/row-count dataset))
-     :=layout :grid}))
+;; Now let's create a 2×2 grid by crossing two variables with themselves.
+;; This is where d* shows its power - it creates all combinations automatically:
 
 (def grid-2x2
-  (manual-grid iris :sepal-length :sepal-width))
+  (-> (d* iris [:sepal-length :sepal-width] [:sepal-length :sepal-width])
+      smart-defaults))
 
 ;; Let's examine the structure:
 
@@ -590,8 +650,8 @@ iris
 ;;
 ;; The `:=layout :grid` tells the renderer to arrange these spatially.
 ;;
-;; This manual construction shows the pattern. Soon we'll see how `cross` combined with
-;; `blend` creates this structure automatically using the distributive law:
+;; This demonstrates the pattern. The `d*` function with column vectors creates this
+;; structure automatically using the distributive law:
 ;; (A+B) × (C+D) = AC + AD + BC + BD
 
 ;; ## Rendering to SVG
@@ -1178,7 +1238,8 @@ iris
 ;;
 ;; When we cross different variables, we get a scatter plot:
 
-(-> (cross sepal-length sepal-width)
+(-> (d* iris [:sepal-length] [:sepal-width])
+    smart-defaults
     plot)
 
 ;; The system detected `x≠y` and chose `:scatter` geometry automatically.
@@ -1187,15 +1248,16 @@ iris
 ;;
 ;; When we cross a variable with itself, we get a histogram:
 
-(-> (cross sepal-length sepal-length)
+(-> (d* iris [:sepal-length] [:sepal-length])
+    smart-defaults
     plot)
 
 ;; The system detected `x=y` and chose `:histogram` geometry automatically.
 ;; Notice it only uses the x-axis values (y is the same anyway).
 
-;; ### Overlaying Geometries with `=+`
+;; ### Overlaying Geometries with l+
 ;;
-;; We can overlay multiple geometries using the `=+` operator. Let's add a regression line
+;; We can overlay multiple geometries using the `l+` operator. Let's add a regression line
 ;; to our scatter plot:
 
 (defn linear
@@ -1218,52 +1280,33 @@ iris
   ([opts]
    {:=layers [(merge {:=plottype :smooth} opts)]}))
 
-(-> (cross sepal-length sepal-width)
+(-> (d* iris [:sepal-length] [:sepal-width])
+    smart-defaults
     (l+ (linear))
     plot)
 
 ;; The scatter points and regression line share the same coordinate system.
-;; This is the power of `=+` - it concatenates layers with inheritance.
+;; This is the power of `l+` - it concatenates layers with inheritance.
 
-;; ## Building Grids with Blend
+;; ## Building Grids with d*
 ;;
-;; So far we've crossed individual varsets - one variable on x, one on y, resulting in a single panel.
+;; So far we've crossed single columns - one variable on x, one on y, resulting in a single panel.
 ;; But what if we want to cross *multiple* variables at once to create a grid of panels?
 ;;
-;; That's where **blend** comes in. While `cross` combines two varsets into a relationship,
-;; `blend` creates a *collection* of alternatives that can be crossed. Think of it this way:
-;; - `cross` asks: "how do these two variables relate?" → single panel
-;; - `blend` asks: "what are my options?" → collection of alternatives
-;; - `cross` of two `blend`s → grid showing all pairwise relationships
-;;
-;; For example, blending {sepal-length, sepal-width} gives us two alternative variables.
-;; When we cross this blend with itself, we get all four combinations: length×length,
-;; length×width, width×length, and width×width - a 2×2 grid.
-
-(defn blend
-  "Create alternatives from multiple columns.
-  
-  Each column becomes a separate layer (alternative).
-  Uses l+ (layer blend) internally.
-  
-  Example:
-    (blend iris [:sepal-length :sepal-width :petal-length])
-    ; Creates 3 alternatives, one per column"
-  [dataset columns]
-  (apply l+ (map (fn [col]
-                   {:=layers [{:=columns [col]}]
-                    :=data dataset
-                    :=indices (range (tc/row-count dataset))})
-                 columns)))
-
-;; Now let's update `cross` to handle blends using the [distributive law](https://en.wikipedia.org/wiki/Distributive_property):
+;; That's where **d\*** with column vectors shines. When you pass vectors of columns,
+;; d* uses the [distributive law](https://en.wikipedia.org/wiki/Distributive_property):
 ;; (A + B) × (C + D) = AC + AD + BC + BD
 ;;
-;; Now we can create a full SPLOM! Let's try a 2×2 first:
+;; For example, crossing [:sepal-length :sepal-width] with itself creates all four combinations:
+;; length×length, length×width, width×length, and width×width - a 2×2 grid.
+;;
+;; Let's try it:
 
-(def vars-2x2 (blend iris [:sepal-length :sepal-width]))
+(def vars-2x2
+  (-> (d* iris [:sepal-length :sepal-width] [:sepal-length :sepal-width])
+      smart-defaults))
 
-(-> (cross vars-2x2 vars-2x2)
+(-> vars-2x2
     plot)
 
 ;; Notice the structure - four panels in a 2×2 grid:
@@ -1297,12 +1340,11 @@ iris
                    plottype-or-spec)]
     {:=off-diagonal-override override}))
 
-;; Update `=*` to recognize and apply these overrides:
-
 ;; Now we can override the defaults! Let's change the diagonal to use a different geometry:
 
 (def vars-2x2-custom
-  (-> (cross vars-2x2 vars-2x2)
+  (-> (d* iris [:sepal-length :sepal-width] [:sepal-length :sepal-width])
+      smart-defaults
       (l* (diagonal :scatter)) ; Override: diagonal becomes scatter instead of histogram
       (l* (off-diagonal :histogram)))) ; Override: off-diagonal becomes histogram instead of scatter
 
@@ -1315,10 +1357,23 @@ iris
 (defn splom
   "Create a scatterplot matrix (SPLOM) from a dataset and variables.
 
-  Returns a grid spec with smart defaults (diagonal → histogram, off-diagonal → scatter)."
+  **Applies smart-defaults automatically for convenience.**
+  
+  Equivalent to:
+    (-> (d* dataset variables variables)
+        smart-defaults)
+
+  Returns a grid spec ready for plotting with:
+  - Diagonal panels → histogram
+  - Off-diagonal panels → scatter
+  - Grid layout with proper positions
+
+  **Example:**
+    (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
+    ;; Creates 4×4 grid, ready to plot"
   [dataset variables]
-  (let [vars-blend (blend dataset variables)]
-    (cross vars-blend vars-blend)))
+  (-> (d* dataset variables variables)
+      smart-defaults))
 
 ;; Now we can create a full 4×4 SPLOM in one line:
 
@@ -1350,7 +1405,7 @@ iris
     plot)
 
 ;; Each off-diagonal panel now shows both scatter points and a fitted regression line.
-;; The `=+` operator overlays the linear geometry on top of the scatter geometry,
+;; The `l+` operator overlays the linear geometry on top of the scatter geometry,
 ;; and both inherit the x/y mappings from the grid structure.
 ;;
 ;; This is the power of composition: we specify the relationship once (scatter + linear),
@@ -1458,20 +1513,21 @@ iris
 ;; - Petal dimensions (length/width) strongly separate species
 ;; - Sepal dimensions show more overlap between versicolor and virginica
 ;;
-;; The color aesthetic is applied via `=*` composition, which merges the `:=color :species`
+;; The color aesthetic is applied via `l*` composition, which merges the `:=color :species`
 ;; property into all layers in the SPLOM grid. Each panel independently groups and colors
 ;; its points by species.
 
 ;; ## Multi-Layer Overlays
 
-;; The `=+` operator stacks multiple geometries in the same panel.
+;; The `l+` operator stacks multiple geometries in the same panel.
 ;; Each geometry shares the same data and coordinate system.
 
 ;; ### Three Layers: Scatter + Regression + Smooth
 
 ;; Let's overlay three geometries to show different aspects of the relationship:
 
-(-> (cross sepal-length sepal-width)
+(-> (d* iris [:sepal-length] [:sepal-width])
+    smart-defaults
     (l+ (linear))
     (l+ (smooth))
     plot)
@@ -1486,7 +1542,8 @@ iris
 ;; Multi-layer overlays work with color grouping.
 ;; Each geometry is computed and rendered separately per group:
 
-(-> (cross sepal-length sepal-width)
+(-> (d* iris [:sepal-length] [:sepal-width])
+    smart-defaults
     (l* {:=layers [{:=color :species}]})
     (l+ (linear))
     (l+ (smooth))
@@ -1506,8 +1563,9 @@ iris
 
 ;; Suppose we want to see how two predictors relate to three outcomes:
 
-(-> (cross (blend iris [:sepal-length :sepal-width]) ; 2 predictors
-           (blend iris [:petal-length :petal-width :sepal-length])) ; 3 outcomes
+(-> (d* iris [:sepal-length :sepal-width] ; 2 predictors
+        [:petal-length :petal-width :sepal-length]) ; 3 outcomes
+    smart-defaults
     plot)
 
 ;; This creates a 2×3 grid showing all 6 predictor-outcome relationships.
@@ -1515,8 +1573,9 @@ iris
 
 ;; ### With Regression Lines
 
-(-> (cross (blend iris [:sepal-length :sepal-width])
-           (blend iris [:petal-length :petal-width]))
+(-> (d* iris [:sepal-length :sepal-width]
+        [:petal-length :petal-width])
+    smart-defaults
     (l+ (linear))
     plot)
 
@@ -1543,7 +1602,7 @@ iris
 
 ;; ### Multi-Layer Overrides
 
-;; Override constructors accept full layer specs created with `=+`:
+;; Override constructors accept full layer specs created with `l+`:
 
 (-> (splom iris [:sepal-length :sepal-width :petal-length])
     (l* (diagonal :scatter))
@@ -1568,11 +1627,11 @@ iris
 ;;
 ;; Let's take stock of what we have:
 ;;
-;; 1. **Varsets & Cross** - Algebraic operations on variables
-;; 2. **Blend** - Create collections of alternatives for grid layouts
-;; 3. **Smart Defaults** - Phase 1: diagonal → histogram, off-diagonal → scatter
+;; 1. **d* and d+** - Dataset-level algebraic operations (pure, no inference)
+;; 2. **l* and l+** - Layer-level operators (cross-product and concatenation)
+;; 3. **smart-defaults** - Visualization inference (auto-roles, diagonal detection, plottype)
 ;; 4. **Override Constructors** - `(diagonal ...)` and `(off-diagonal ...)` for control
-;; 5. **Composition** - `=*` and `=+` operators for building complex specs
+;; 5. **Composition** - `l*` and `l+` operators for building complex specs
 ;; 6. **Rendering** - Scatter, histogram, linear regression, and **smoothed curves** to SVG
 ;; 7. **Grid Layout** - Spatial arrangement of multiple panels **(including asymmetric m×n grids)**
 ;; 8. **SPLOM** - Scatterplot matrices in one line
