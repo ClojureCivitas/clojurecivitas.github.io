@@ -49,56 +49,22 @@
 }
 "]
 
-;; ## The Unified Layer Model
+;; # A Unified Approach to Data Visualization
 ;;
-;; This notebook explores a **unified approach** to data visualization that combines:
-;; - **Grammar of Graphics algebra** (cross ×, blend +, nest /) from Wilkinson
-;; - **Layer composition** from Algebra of Graphics (overlays, faceting)
+;; This notebook combines two powerful ideas:
 ;;
-;; ### Core Insight: Everything is a Spec with :=layers
+;; 1. **Grammar of Graphics** - Leland Wilkinson's algebraic framework (cross, blend, nest)
+;; 2. **Algebra of Graphics** - Compositional layer construction (inspired by AlgebraOfGraphics.jl)
 ;;
-;; Traditional GoG separates "varsets" (data projections) from "alternatives" (visualizations).
-;; We unify these: **everything is a spec** `{:=layers [...]}` that gets progressively enriched.
+;; **Key insight:** Structure determines geometry. When you cross a variable with itself (x=y),
+;; you're looking at *distribution* → histogram. When you cross different variables (x≠y),
+;; you're *comparing* them → scatterplot. The algebra tells us what question we're asking,
+;; which suggests sensible defaults.
 ;;
-;; A "varset" is just a spec with one layer containing `:=columns` provenance:
-;;   `{:=layers [{:=columns [:price]}] :=data dataset}`
-;;
-;; Crossing two varsets creates a new spec with merged columns:
-;;   `{:=layers [{:=columns [:price :size]}] :=data dataset}`
-;;
-;; The `:=columns` tuple tracks **positional provenance** - which columns were combined,
-;; in what order. This enables automatic role assignment: first→:=x, second→:=y.
-;;
-;; ### Two-Level Operation Naming
-;;
-;; We provide operations at two levels for ergonomics:
-;;
-;; **Layer level** (core algebraic operations):
-;; - `l*` - Layer cross (cartesian product)
-;; - `l+` - Layer blend (concatenation)
-;;
-;; **Dataset level** (convenience wrappers):
-;; - `d*` - Dataset cross (wraps l*, attaches :=data/:=indices)
-;; - `d+` - Dataset blend (wraps l+, attaches :=data/:=indices)
-;;
-;; ### Key Design Decisions
-;;
-;; 1. **:=columns as positional tuple** - Preserves order for role inference
-;; 2. **Algebraic closure** - Operations return specs that compose
-;; 3. **Plot-level :=data** - Shared dataset enables linking (GoG strength)
-;; 4. **Layer-level :=data override** - Flexibility when needed (AoG strength)
-;; 5. **Smart defaults** - Diagonal detection (x=y → histogram)
-;;
-;; ### The Distributive Law
-;;
-;; The operations satisfy the distributive property:
-;;   `(l* (l+ A B) C) = (l+ (l* A C) (l* B C))`
-;;
-;; This algebraic property enables powerful composition patterns like SPLOM generation.
+;; This is a working Clojure namespace executable with Clay/Kindly. Let's build up from
+;; simple operations to complete scatterplot matrices.
 ;;
 ;; ## Core Algebraic Operations
-;;
-;; These functions implement the unified layer model described above.
 
 (defn- merge-layers
   "Merge multiple layer maps with special :=columns handling.
@@ -188,6 +154,8 @@
   Takes specs with :=layers and produces their cross-product. Each combination
   of layers is merged using merge-layers (with special :=columns handling).
 
+  Also handles property merging and override constructors (diagonal, off-diagonal).
+
   Plot-level properties (everything except :=layers) are merged normally.
 
   **Example - crossing variables:**
@@ -203,14 +171,85 @@
     ;;               {:=x :b :=y :c}
     ;;               {:=x :b :=y :d}]}
 
+  **Example - property merging:**
+    (l* {:=layers [{:=x :a :=y :b}]}
+        {:=layers [{:=color :species}]})
+    ;; => {:=layers [{:=x :a :=y :b :=color :species}]}
+
+  **Example - override constructors:**
+    (l* (cross vars vars) (diagonal :scatter))
+    ;; Applies :scatter to diagonal layers only
+
   **Non-commutative:** (l* A B) ≠ (l* B A) when :=columns order matters.
   Position determines role assignment, so order is semantically significant."
   [& specs]
-  (let [all-layers (map :=layers specs)
-        product-layers (apply combo/cartesian-product all-layers)
-        merged-layers (map #(apply merge-layers %) product-layers)
-        plot-props (apply merge (map #(dissoc % :=layers) specs))]
-    (assoc plot-props :=layers (vec merged-layers))))
+  (let [specs (remove nil? specs)]
+    (if (= 1 (count specs))
+      (first specs)
+      (reduce
+       (fn [acc spec]
+         (cond
+           ;; Both have layers → cross-product
+           (and (:=layers acc) (:=layers spec))
+           (let [all-layers (list (:=layers acc) (:=layers spec))
+                 product-layers (apply combo/cartesian-product all-layers)
+                 merged-layers (map #(apply merge-layers %) product-layers)
+                 plot-props (merge (dissoc acc :=layers) (dissoc spec :=layers))]
+             (assoc plot-props :=layers (vec merged-layers)))
+
+           ;; Only one has layers → merge properties and apply overrides
+           (:=layers acc)
+           (let [merged (merge spec acc)
+                 diagonal-override (:=diagonal-override merged)
+                 off-diagonal-override (:=off-diagonal-override merged)]
+             (cond-> merged
+               ;; Apply diagonal override
+               diagonal-override
+               (update :=layers
+                       (fn [layers]
+                         (mapcat
+                          (fn [layer]
+                            (if (:=diagonal? layer)
+                              ;; If override has :=layers, keep original + add overlays
+                              (if-let [override-layers (:=layers diagonal-override)]
+                                (cons layer
+                                      (for [override-layer override-layers]
+                                        (merge layer override-layer)))
+                                ;; Otherwise just merge the override
+                                [(merge layer diagonal-override)])
+                              ;; Non-diagonal layers pass through unchanged
+                              [layer]))
+                          layers)))
+
+               ;; Apply off-diagonal override
+               off-diagonal-override
+               (update :=layers
+                       (fn [layers]
+                         (mapcat
+                          (fn [layer]
+                            (if-not (:=diagonal? layer)
+                              ;; If override has :=layers, keep original + add overlays
+                              (if-let [override-layers (:=layers off-diagonal-override)]
+                                (cons layer
+                                      (for [override-layer override-layers]
+                                        (merge layer override-layer)))
+                                ;; Otherwise just merge the override
+                                [(merge layer off-diagonal-override)])
+                              ;; Diagonal layers pass through unchanged
+                              [layer]))
+                          layers)))
+
+               ;; Clean up override markers
+               true
+               (dissoc :=diagonal-override :=off-diagonal-override)))
+
+           (:=layers spec)
+           (merge acc spec)
+
+           ;; Neither has layers → simple merge
+           :else
+           (merge acc spec)))
+       specs))))
 
 (defn l+
   "Layer blend: Concatenate layers from multiple specs into alternatives.
@@ -221,6 +260,13 @@
   Takes specs with :=layers and concatenates all layers into a single vector.
   Plot-level properties are merged (rightmost wins).
 
+  **Inheritance behavior for overlays:**
+  When adding geometry layers (e.g., `(linear)`, `(smooth)`) to a base spec,
+  new layers inherit :=x, :=y, :=color from the first layer if they don't
+  already have them. This enables overlay composition like:
+    (l+ base-scatter (linear))
+  where the linear layer automatically inherits the x/y mappings.
+
   **Example - creating alternatives:**
     (l+ {:=layers [{:=columns [:price]}]}
         {:=layers [{:=columns [:size]}]})
@@ -228,10 +274,11 @@
     ;;               {:=columns [:size]}]}
 
   **Example - overlay composition:**
-    (l+ {:=layers [{:=plottype :scatter}]}
+    (l+ {:=layers [{:=x :a :=y :b :=plottype :scatter}]}
         {:=layers [{:=plottype :linear}]})
-    ;; => {:=layers [{:=plottype :scatter}
-    ;;               {:=plottype :linear}]}
+    ;; => {:=layers [{:=x :a :=y :b :=plottype :scatter}
+    ;;               {:=x :a :=y :b :=plottype :linear}]}
+    ;; Note: linear layer inherits :=x and :=y
 
   **Use cases:**
   - Blending variables for SPLOM grids
@@ -239,8 +286,33 @@
   - Combining different visualizations of same data"
   [& specs]
   (let [all-layers (mapcat :=layers specs)
-        plot-props (apply merge (map #(dissoc % :=layers) specs))]
-    (assoc plot-props :=layers (vec all-layers))))
+        plot-props (apply merge (map #(dissoc % :=layers) specs))
+
+        ;; Extract inheritable properties from first layer (base layer)
+        ;; Only inherit layer-level aesthetics: :=x, :=y, :=color
+        base-layer (first all-layers)
+        inheritable-keys [:=x :=y :=color]
+        inherited-props (when base-layer
+                          (select-keys base-layer inheritable-keys))
+
+        ;; Apply inheritance: new layers get base properties if they lack them
+        ;; Only apply if we have inherited props and this is an overlay situation
+        layers-with-inheritance
+        (if (and inherited-props
+                 (seq inherited-props)
+                 (> (count all-layers) 1))
+          (map-indexed
+           (fn [idx layer]
+             (if (zero? idx)
+               ;; First layer is the base - don't modify
+               layer
+               ;; Subsequent layers inherit missing properties
+               (merge inherited-props layer)))
+           all-layers)
+          ;; No inheritance needed - just return layers as-is
+          all-layers)]
+
+    (assoc plot-props :=layers (vec layers-with-inheritance))))
 
 (defn d*
   "Dataset cross: Cross column lists at the dataset level.
@@ -301,104 +373,77 @@
                     :=indices (range (tc/row-count dataset))})
                  col-lists)))
 
-;; **Combining algebraic operations with compositional layer construction**
+;; ### Understanding l* and l+
 ;;
-;; This is a pedagogical notebook exploring how the Grammar of Graphics algebra
-;; and Algebra of Graphics layer composition can work together naturally.
-;; It builds on earlier explorations in
-;; [Part 1](aog_in_clojure_part1.html) and [Part 2](aog_in_clojure_part2.html),
-;; which developed a working compositional plotting API inspired by Julia's
-;; [AlgebraOfGraphics.jl](https://aog.makie.org/stable/).
-;;
-;; This notebook demonstrates a key innovation: **smart defaults based on algebraic structure**.
-;; When you cross a variable with itself (x=y), you're looking at distribution → histogram.
-;; When you cross different variables (x≠y), you're comparing them → scatterplot.
-;; The algebra tells us what kind of question we're asking, which suggests sensible geometry.
-;;
-;; Like the earlier notebooks, this is a working Clojure namespace that can be used with
-;; [Kindly](https://scicloj.github.io/kindly/)-compatible tools like
-;; [Clay](https://scicloj.github.io/clay/). The code is executable and demonstrates
-;; a complete implementation from basic operations to interactive scatterplot matrices.
-;;
-;; This work continues our exploration of the
-;; [Tableplot](https://scicloj.github.io/tableplot/) plotting library.
-;; You may consider the design and implementation here
-;; *a draft* for future API directions.
-;;
-;; Clojurians Zulip discussion (requires login):
-;; [#**data-science>AlgebraOfGraphics.jl**](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/AlgebraOfGraphics.2Ejl/)
+;; Before we dive into working with data, let's see what l* and l+ actually do.
+;; These are the fundamental operators that power everything else.
 
-;; # A Unified Approach to Data Visualization
-;;
-;; This notebook explores a unified approach that combines two powerful ideas:
-;;
-;; 1. **The [Grammar of Graphics](https://en.wikipedia.org/wiki/Grammar_of_graphics)** - Leland Wilkinson's algebraic framework for describing statistical graphics through operations on data (cross, blend, nest)
-;; 2. **Algebra of Graphics** - A compositional approach to layer construction inspired by [Julia's AlgebraOfGraphics.jl](https://aog.makie.org/stable/), using operators like `=*` (merge) and `=+` (overlay)
-;;
-;; While the Grammar of Graphics provides formal algebraic operations for combining variables,
-;; the Algebra of Graphics approach focuses on composing visual layers. This notebook shows
-;; how these two perspectives complement each other.
-;;
-;; The key insight: **structure can determine geometry**. When you cross a variable with itself
-;; (like sepal-length × sepal-length), you're looking at the *distribution* of one variable.
-;; When you cross different variables, you're *comparing* them. The algebra tells us what
-;; kind of comparison we're making, which suggests sensible geometric defaults.
-;;
-;; Let's see where this leads.
-
-;; ## What We're Building Toward
-;;
-;; Here's a [scatterplot matrix (SPLOM)](https://en.wikipedia.org/wiki/Scatter_plot#Scatterplot_matrices) showing relationships between four variables in the Iris dataset.
-;; A SPLOM displays all pairwise relationships in a grid: each cell shows how two variables relate.
-;; The diagonal shows distributions (histograms), while off-diagonal panels show comparisons (scatterplots).
-;; Notice that we can express this entire visualization quite tersely:
+;; **What does l* do? (Cross-product)**
 
 (comment
-  ;; This is where we're headed - don't worry if it's not clear yet
-  (-> iris
-      (cross [:sepal-length :sepal-width :petal-length :petal-width])
-      (plot)))
+  ;; Create two simple specs
+  (def spec-a {:=layers [{:=columns [:a]}]})
+  (def spec-b {:=layers [{:=columns [:b]}]})
 
-;; The `cross` operation creates a 4×4 grid of all variable combinations. The system notices that
-;; diagonal panels have the same variable on both axes (x=y), so it renders them as histograms.
-;; Off-diagonal panels have different variables (x≠y), so they become scatterplots.
-;;
-;; We can override these defaults for richer visualizations:
+  ;; Cross them with l*
+  (kind/pprint (l* spec-a spec-b))
+  ;; => {:=layers [{:=columns [:a :b]}]}
+  ;;
+  ;; Notice: The :=columns vectors merged! This is how relationships form.
+  ;; When we later cross :sepal-length with :sepal-width, l* merges their
+  ;; column tuples to create [:sepal-length :sepal-width] - a relationship.
+  )
 
-(comment
-  (-> iris
-      (cross [:sepal-length :sepal-width :petal-length :petal-width])
-      (diagonal (=+ histogram density)) ;; Overlay histogram + density curve
-      (off-diagonal (=+ scatter linear)) ;; Overlay scatter + regression line
-      (plot)))
-
-;; And the finale - a brushable SPLOM where selecting observations in one panel highlights
-;; them across all panels:
+;; **What does l+ do? (Concatenation)**
 
 (comment
-  (-> iris
-      (cross [:sepal-length :sepal-width :petal-length :petal-width])
-      (brushable true)
-      (plot)))
+  ;; Blend the same specs with l+
+  (kind/pprint (l+ spec-a spec-b))
+  ;; => {:=layers [{:=columns [:a]}
+  ;;               {:=columns [:b]}]}
+  ;;
+  ;; Notice: Two separate layers! This is how alternatives work.
+  ;; When we blend variables for a SPLOM, each variable stays separate,
+  ;; creating a collection we can later cross.
+  )
 
-;; Let's build up to this step by step.
-
-;; ## Setup
+;; **Key insight:** l* merges (for relationships), l+ concatenates (for alternatives).
+;; This distinction drives the entire algebra.
 
 ;; ## The Dataset
 ;;
-;; We'll use the classic Iris dataset throughout. It has 150 observations of iris flowers,
-;; with measurements of sepal and petal dimensions, plus the species (setosa, versicolor, virginica).
+;; We'll use the classic Iris dataset - 150 observations of iris flowers with measurements
+;; of sepal and petal dimensions, plus species (setosa, versicolor, virginica).
 
 (def iris
   (toydata/iris-ds))
 
-;; Let's peek at the data:
-
 iris
 
-;; Four numeric columns (sepal-length, sepal-width, petal-length, petal-width) and one categorical
-;; column (species). Perfect for exploring multi-dimensional relationships.
+;; Four numeric columns plus one categorical column. Perfect for exploring relationships.
+
+;; ## What We're Building Toward
+;;
+;; Here's a scatterplot matrix (SPLOM) showing all pairwise relationships in one visualization.
+;; Notice how tersely we can express it:
+
+(comment
+  ;; A complete 4×4 SPLOM in one line
+  (-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
+      plot))
+
+;; The system automatically detects diagonal panels (x=y) → renders as histograms.
+;; Off-diagonal panels (x≠y) → renders as scatterplots. Structure determines geometry.
+;;
+;; We can override defaults and add layers:
+
+(comment
+  (-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
+      (l* {:=layers [{:=color :species}]}) ;; Add color grouping
+      (l* (off-diagonal (l+ (linear)))) ;; Add regression lines
+      plot))
+
+;; Let's build up to this step by step.
 
 ;; ## Working with Variables and Data
 ;;
@@ -544,122 +589,24 @@ iris
 ;; - Off-diagonal layers have `:=plottype :scatter`
 ;;
 ;; The `:=layout :grid` tells the renderer to arrange these spatially.
-
-;; ## Composition Operators
 ;;
-;; Before we can render, we need composition operators. These let us build complex
-;; specifications from simple pieces.
-
-(defn =*
-  "Merge/compose specs (cross-product of layers).
-
-  When both specs have layers, creates cross-product.
-  Otherwise merges plot-level properties.
-
-  Recognizes override constructors and applies them to matching layers."
-  [& specs]
-  (let [specs (remove nil? specs)]
-    (if (= 1 (count specs))
-      (first specs)
-      (reduce
-       (fn [acc spec]
-         (cond
-           ;; Both have layers → cross-product
-           (and (:=layers acc) (:=layers spec))
-           (update acc :=layers
-                   (fn [layers]
-                     (for [layer1 layers
-                           layer2 (:=layers spec)]
-                       (merge layer1 layer2))))
-
-           ;; Only one has layers → merge properties and apply overrides
-           (:=layers acc)
-           (let [merged (merge spec acc)
-                 diagonal-override (:=diagonal-override merged)
-                 off-diagonal-override (:=off-diagonal-override merged)]
-             (cond-> merged
-               ;; Apply diagonal override
-               diagonal-override
-               (update :=layers
-                       (fn [layers]
-                         (mapcat
-                          (fn [layer]
-                            (if (:=diagonal? layer)
-                              ;; If override has :=layers, keep original + add overlays
-                              (if-let [override-layers (:=layers diagonal-override)]
-                                (cons layer
-                                      (for [override-layer override-layers]
-                                        (merge layer override-layer)))
-                                ;; Otherwise just merge the override
-                                [(merge layer diagonal-override)])
-                              ;; Non-diagonal layers pass through unchanged
-                              [layer]))
-                          layers)))
-
-               ;; Apply off-diagonal override
-               off-diagonal-override
-               (update :=layers
-                       (fn [layers]
-                         (mapcat
-                          (fn [layer]
-                            (if-not (:=diagonal? layer)
-                              ;; If override has :=layers, keep original + add overlays
-                              (if-let [override-layers (:=layers off-diagonal-override)]
-                                (cons layer
-                                      (for [override-layer override-layers]
-                                        (merge layer override-layer)))
-                                ;; Otherwise just merge the override
-                                [(merge layer off-diagonal-override)])
-                              ;; Diagonal layers pass through unchanged
-                              [layer]))
-                          layers)))
-
-               ;; Clean up override markers
-               true
-               (dissoc :=diagonal-override :=off-diagonal-override)))
-
-           (:=layers spec)
-           (merge acc spec)
-
-           ;; Neither has layers → simple merge
-           :else
-           (merge acc spec)))
-       specs))))
-
-(defn =+
-  "Overlay/concatenate specs (sum of layers).
-
-  Layers from second spec inherit properties from first.
-  This is the 'or' operator - alternatives/overlays."
-  [& specs]
-  (let [specs (remove nil? specs)
-        base (first specs)
-        rest-specs (rest specs)]
-    (if (empty? rest-specs)
-      base
-      (reduce
-       (fn [acc spec]
-         (let [base-layer (first (:=layers acc))
-               new-layers (for [layer (:=layers spec)]
-                            (merge base-layer layer))]
-           (-> acc
-               (update :=layers concat new-layers)
-               (merge (dissoc spec :=layers)))))
-       base
-       rest-specs))))
-
-;; These operators let us compose specifications:
-;; - `=*` combines constraints (merge layers via cross-product)
-;; - `=+` creates alternatives (concatenate layers with inheritance)
-;;
-;; We'll see them in action shortly.
+;; This manual construction shows the pattern. Soon we'll see how `cross` combined with
+;; `blend` creates this structure automatically using the distributive law:
+;; (A+B) × (C+D) = AC + AD + BC + BD
 
 ;; ## Rendering to SVG
 ;;
-;; Now we need to render our specifications to actual graphics. We'll use thi.ng/geom-viz
-;; for SVG output, which gives us precise control and works well with D3 for interactivity.
-
-;; First, some rendering infrastructure:
+;; So far we've been building specifications - data structures describing what to plot.
+;; Now we need to **render** these specs to actual visualizations.
+;;
+;; Our rendering pipeline:
+;; 1. **Theme** - Visual styling (colors, backgrounds, grid lines)
+;; 2. **Helpers** - Domain inference, column resolution, point extraction
+;; 3. **Geometry renderers** - Scatter, histogram, linear, smooth
+;; 4. **Coordination** - Multi-layer rendering and grid layout
+;;
+;; We'll use thi.ng/geom-viz to generate SVG, which works well with Kindly for notebooks
+;; and can integrate with D3 for interactivity later.
 
 (def theme
   "Visual theme for plots - matches ggplot2 aesthetic.
@@ -1134,6 +1081,11 @@ iris
         width 600
         height 400]
 
+    ;; Handle empty layers
+    (when (empty? layers)
+      (throw (ex-info "Cannot plot spec with no layers"
+                      {:spec spec})))
+
     (case layout
       ;; Single panel: all layers overlay in one coordinate system
       :single
@@ -1147,8 +1099,11 @@ iris
       :grid
       (let [;; Group layers by grid position
             grid-map (group-by (juxt :=grid-row :=grid-col) layers)
-            max-row (apply max (map :=grid-row layers))
-            max-col (apply max (map :=grid-col layers))
+            ;; Safely get max row/col, filtering out nils
+            grid-rows (keep :=grid-row layers)
+            grid-cols (keep :=grid-col layers)
+            max-row (if (seq grid-rows) (apply max grid-rows) 0)
+            max-col (if (seq grid-cols) (apply max grid-cols) 0)
             panel-width 150
             panel-height 150
             total-width (* (inc max-col) panel-width)
@@ -1174,9 +1129,50 @@ iris
          [:svg {:width width :height height}
           (render-single-panel layers plot-dataset width height)]])))))
 
+;; ### Understanding Our Rendering Target
+;;
+;; Before we see our first plot, let's understand what we're creating. We use thi.ng/geom-viz
+;; to generate SVG (Scalable Vector Graphics). In Clojure, we represent SVG using **hiccup** -
+;; a format where HTML/SVG is just nested vectors.
+;;
+;; Here's what hiccup looks like:
+
+(comment
+  ;; A simple SVG hiccup example
+  [:svg {:width 200 :height 200}
+   [:circle {:cx 100 :cy 100 :r 50 :fill "#F8766D"}]
+   [:line {:x1 50 :y1 50 :x2 150 :y2 150
+           :stroke "#00BA38" :stroke-width 2}]]
+
+  ;; This hiccup data structure represents an SVG with a red circle and green line.
+  ;; When serialized with (svg/serialize ...), it becomes actual SVG markup that
+  ;; browsers can display.
+  )
+
+;; **geom.viz** provides a higher-level API for creating coordinated plots with axes
+;; and gridlines. Our rendering pipeline converts layer specs into geom.viz format,
+;; which then produces hiccup, which finally becomes SVG.
+;;
+;; Here's a quick example of geom.viz in action:
+
+(comment
+  (kind/html
+   (svg/serialize
+    (viz/svg-plot2d-cartesian
+     {:x-axis (viz/linear-axis {:domain [0 10] :range [50 350]})
+      :y-axis (viz/linear-axis {:domain [0 10] :range [350 50]})
+      :grid {:attribs {:stroke "#EBEBEB"}}
+      :data [{:values [[2 3] [5 7] [8 4]]
+              :layout viz/svg-scatter-plot
+              :attribs {:fill "#619CFF" :stroke "#FFFFFF"}}]})))
+
+  ;; This creates a coordinate system with axes and gridlines, then plots three points.
+  ;; Our rendering pipeline automates this entire process.
+  )
+
 ;; ## Seeing It in Action
 ;;
-;; Now that we have rendering, let's see our smart defaults at work.
+;; Now that we understand the rendering target, let's see our smart defaults at work.
 
 ;; ### Scatter Plot (Off-Diagonal)
 ;;
@@ -1216,14 +1212,14 @@ iris
     (smooth)                    ; Default smooth
     (smooth {:window 15})       ; Custom window size
   
-  Composes with =+ for overlays:
-    (=+ scatter linear smooth)  ; Three-layer plot"
+  Composes with l+ for overlays:
+    (l+ scatter linear smooth)  ; Three-layer plot"
   ([] (smooth {}))
   ([opts]
    {:=layers [(merge {:=plottype :smooth} opts)]}))
 
 (-> (cross sepal-length sepal-width)
-    (=+ (linear))
+    (l+ (linear))
     plot)
 
 ;; The scatter points and regression line share the same coordinate system.
@@ -1303,88 +1299,12 @@ iris
 
 ;; Update `=*` to recognize and apply these overrides:
 
-(defn =*
-  "Merge/compose specs (cross-product of layers).
-
-  When both specs have layers, creates cross-product.
-  Otherwise merges plot-level properties.
-
-  Recognizes override constructors and applies them to matching layers."
-  [& specs]
-  (let [specs (remove nil? specs)]
-    (if (= 1 (count specs))
-      (first specs)
-      (reduce
-       (fn [acc spec]
-         (cond
-           ;; Both have layers → cross-product
-           (and (:=layers acc) (:=layers spec))
-           (update acc :=layers
-                   (fn [layers]
-                     (for [layer1 layers
-                           layer2 (:=layers spec)]
-                       (merge layer1 layer2))))
-
-           ;; Only one has layers → merge properties and apply overrides
-           (:=layers acc)
-           (let [merged (merge spec acc)
-                 diagonal-override (:=diagonal-override merged)
-                 off-diagonal-override (:=off-diagonal-override merged)]
-             (cond-> merged
-               ;; Apply diagonal override
-               diagonal-override
-               (update :=layers
-                       (fn [layers]
-                         (mapcat
-                          (fn [layer]
-                            (if (:=diagonal? layer)
-                              ;; If override has :=layers, keep original + add overlays
-                              (if-let [override-layers (:=layers diagonal-override)]
-                                (cons layer
-                                      (for [override-layer override-layers]
-                                        (merge layer override-layer)))
-                                ;; Otherwise just merge the override
-                                [(merge layer diagonal-override)])
-                              ;; Non-diagonal layers pass through unchanged
-                              [layer]))
-                          layers)))
-
-               ;; Apply off-diagonal override
-               off-diagonal-override
-               (update :=layers
-                       (fn [layers]
-                         (mapcat
-                          (fn [layer]
-                            (if-not (:=diagonal? layer)
-                              ;; If override has :=layers, keep original + add overlays
-                              (if-let [override-layers (:=layers off-diagonal-override)]
-                                (cons layer
-                                      (for [override-layer override-layers]
-                                        (merge layer override-layer)))
-                                ;; Otherwise just merge the override
-                                [(merge layer off-diagonal-override)])
-                              ;; Diagonal layers pass through unchanged
-                              [layer]))
-                          layers)))
-
-               ;; Clean up override markers
-               true
-               (dissoc :=diagonal-override :=off-diagonal-override)))
-
-           (:=layers spec)
-           (merge acc spec)
-
-           ;; Neither has layers → simple merge
-           :else
-           (merge acc spec)))
-       specs))))
-
 ;; Now we can override the defaults! Let's change the diagonal to use a different geometry:
 
 (def vars-2x2-custom
   (-> (cross vars-2x2 vars-2x2)
-      (=* (diagonal :scatter)) ; Override: diagonal becomes scatter instead of histogram
-      (=* (off-diagonal :histogram)))) ; Override: off-diagonal becomes histogram instead of scatter
+      (l* (diagonal :scatter)) ; Override: diagonal becomes scatter instead of histogram
+      (l* (off-diagonal :histogram)))) ; Override: off-diagonal becomes histogram instead of scatter
 
 ;; This demonstrates full control - we can make any geometry decision we want.
 
@@ -1426,7 +1346,7 @@ iris
 ;; The `off-diagonal` constructor targets only those panels where x≠y:
 
 (-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
-    (=* (off-diagonal (=+ (linear))))
+    (l* (off-diagonal (l+ (linear))))
     plot)
 
 ;; Each off-diagonal panel now shows both scatter points and a fitted regression line.
@@ -1441,8 +1361,8 @@ iris
 ;; We can completely reverse the defaults for pedagogical purposes:
 
 (-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
-    (=* (diagonal :scatter))
-    (=* (off-diagonal :histogram))
+    (l* (diagonal :scatter))
+    (l* (off-diagonal :histogram))
     plot)
 
 ;; Diagonal panels now show scatter plots (which look like vertical lines since x=y),
@@ -1454,7 +1374,7 @@ iris
 ;; For a clearer view, let's use just two variables with regression overlays:
 
 (-> (splom iris [:sepal-length :sepal-width])
-    (=* (off-diagonal (=+ (linear))))
+    (l* (off-diagonal (l+ (linear))))
     plot)
 
 ;; Four panels:
@@ -1525,7 +1445,7 @@ iris
 ;; patterns within each species across all variable pairs.
 
 (-> (splom iris [:sepal-length :sepal-width :petal-length :petal-width])
-    (=* {:=layers [{:=color :species}]})
+    (l* {:=layers [{:=color :species}]})
     plot)
 
 ;; Each panel now shows three colored groups (one per species):
@@ -1552,8 +1472,8 @@ iris
 ;; Let's overlay three geometries to show different aspects of the relationship:
 
 (-> (cross sepal-length sepal-width)
-    (=+ (linear))
-    (=+ (smooth))
+    (l+ (linear))
+    (l+ (smooth))
     plot)
 
 ;; The plot shows:
@@ -1567,9 +1487,9 @@ iris
 ;; Each geometry is computed and rendered separately per group:
 
 (-> (cross sepal-length sepal-width)
-    (=* {:=layers [{:=color :species}]})
-    (=+ (linear))
-    (=+ (smooth))
+    (l* {:=layers [{:=color :species}]})
+    (l+ (linear))
+    (l+ (smooth))
     plot)
 
 ;; This creates 3 species × 3 geometries = 9 visual elements:
@@ -1597,7 +1517,7 @@ iris
 
 (-> (cross (blend iris [:sepal-length :sepal-width])
            (blend iris [:petal-length :petal-width]))
-    (=+ (linear))
+    (l+ (linear))
     plot)
 
 ;; Each of the 4 panels shows scatter + regression.
@@ -1613,8 +1533,8 @@ iris
 ;; and off-diagonal panels use another:
 
 (-> (splom iris [:sepal-length :sepal-width])
-    (=* (diagonal :scatter))
-    (=* (off-diagonal (=+ (linear))))
+    (l* (diagonal :scatter))
+    (l* (off-diagonal (l+ (linear))))
     plot)
 
 ;; Result:
@@ -1626,8 +1546,8 @@ iris
 ;; Override constructors accept full layer specs created with `=+`:
 
 (-> (splom iris [:sepal-length :sepal-width :petal-length])
-    (=* (diagonal :scatter))
-    (=* (off-diagonal (=+ (linear) (smooth))))
+    (l* (diagonal :scatter))
+    (l* (off-diagonal (l+ (linear) (smooth))))
     plot)
 
 ;; Now off-diagonal panels have THREE layers: scatter + regression + smooth.
@@ -1635,8 +1555,8 @@ iris
 ;; ### With Color Groups
 
 (-> (splom iris [:sepal-length :sepal-width :petal-length])
-    (=* {:=layers [{:=color :species}]})
-    (=* (off-diagonal (=+ (linear))))
+    (l* {:=layers [{:=color :species}]})
+    (l* (off-diagonal (l+ (linear))))
     plot)
 
 ;; Full colored SPLOM:
