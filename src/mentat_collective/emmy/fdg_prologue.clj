@@ -76,7 +76,7 @@
                               (list 'if (list '= serg 'a)
                                     [:tt 'a]
                                     [:div
-                                     [:tt 'a] ;; comment this in prod
+                                     [:tt 'a]
                                      [:tt serg]])))]))))
 
 ;; ## Programming and Understanding
@@ -279,11 +279,7 @@
 ;; But, suppose we had no idea what the solution looks like. We could propose a
 ;; literal function for the path:
 
-;; [note by MAK: the following does not work in the sidebar because I could not get
-;; `literal-function` to work.
-;; As a remedy, I have an [alternative execution environment](https://kloimhardt.github.io/blog/html/sicmutils-as-js-book-part1.html) ]
-
-(show-expression :calc-on-server
+(show-expression
   (((Lagrange-equations (L-harmonic 'm 'k))
     (literal-function 'x))
    't))
