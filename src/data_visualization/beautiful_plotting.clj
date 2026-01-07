@@ -90,6 +90,368 @@
    :histogram-stroke "#FFFFFF"
    :histogram-stroke-width 0.5})
 
+;; ## Ergonomic Layer Constructor
+;;
+;; The `layer` function provides a natural keyword-args interface for creating
+;; layer specifications. This is especially useful for simple cases and teaching.
+
+(defn layer
+  "Create a layer specification with keyword arguments.
+  
+  A layer is the atomic unit - one mapping from data to visual marks.
+  
+  Arguments:
+  - data: Tablecloth dataset
+  - :x - Column for x aesthetic
+  - :y - Column for y aesthetic
+  - :color - Column for color aesthetic (also implies grouping)
+  - :size - Column for size aesthetic
+  - :group - Column for grouping (without color)
+  - :transform - Statistical transformation (:identity, :smooth, :bin, :regress)
+  - :transform-opts - Map of transform options
+  - :geom - Geometry type (:point, :line, :bar)
+  - :geom-opts - Map of geometry options
+  
+  Examples:
+    ;; Simple scatter plot
+    (layer iris :x :sepal-length :y :sepal-width)
+    
+    ;; Colored scatter
+    (layer iris :x :sepal-length :y :sepal-width :color :species)
+    
+    ;; Histogram
+    (layer iris :x :sepal-length :transform :bin :geom :bar)
+    
+    ;; Smoothed line
+    (layer iris :x :sepal-length :y :sepal-width :transform :smooth :geom :line)"
+  [data & {:keys [x y color size group
+                  transform transform-opts
+                  geom geom-opts]
+           :or {transform :identity
+                geom :point
+                transform-opts {}
+                geom-opts {}}}]
+  {:data data
+   :x x
+   :y y
+   :color color
+   :size size
+   :group group
+   :transform transform
+   :transform-opts transform-opts
+   :geom geom
+   :geom-opts geom-opts})
+
+;; ## Transform System
+;;
+;; Transforms are statistical operations applied to data BEFORE aesthetic mapping.
+;; This enables clean separation: the same geometry can render different transforms.
+;;
+;; The multimethod `transform-data` dispatches on the :transform key.
+(defn- get-column-values
+  "Extract values from a dataset column as a vector."
+  [dataset column]
+  (vec (tc/column dataset column)))
+
+(defmulti transform-data
+  "Apply statistical transformation to layer data.
+  
+  Dispatches on :transform key in layer spec.
+  
+  All implementations should return:
+  {:data original-dataset
+   :result transformed-dataset}
+   
+  This preserves provenance while providing transformed data for rendering."
+  :transform)
+
+(defmethod transform-data :identity
+  [layer]
+  (let [dataset (:data layer)
+        x-col (:x layer)
+        y-col (:y layer)
+
+        ;; Extract and rename columns to generic :x :y
+        x-vals (vec (tc/column dataset x-col))
+        y-vals (vec (tc/column dataset y-col))
+
+        ;; Create result dataset with generic column names
+        result-ds (tc/dataset {:x x-vals :y y-vals})]
+
+    {:data dataset
+     :result result-ds}))
+
+(defmethod transform-data :smooth
+  [layer]
+  (let [dataset (:data layer)
+        x-col (:x layer)
+        y-col (:y layer)
+        opts (:transform-opts layer)
+        window-size (get opts :window 11)
+
+        ;; Extract x and y values
+        x-vals (vec (get-column-values dataset x-col))
+        y-vals (vec (get-column-values dataset y-col))
+
+        ;; Sort by x for proper smoothing
+        sorted-pairs (sort-by first (map vector x-vals y-vals))
+        sorted-x (mapv first sorted-pairs)
+        sorted-y (mapv second sorted-pairs)
+
+        ;; Compute moving average
+        half-window (quot window-size 2)
+        smoothed-y (mapv (fn [i]
+                           (let [start (max 0 (- i half-window))
+                                 end (min (count sorted-y) (+ i half-window 1))
+                                 window (subvec sorted-y start end)]
+                             (/ (reduce + window) (count window))))
+                         (range (count sorted-y)))
+
+        ;; Create result dataset with generic column names
+        result-ds (tc/dataset {:x sorted-x
+                               :y smoothed-y})]
+    {:data dataset
+     :result result-ds}))
+
+(defmethod transform-data :bin
+  [layer]
+  (let [dataset (:data layer)
+        x-col (:x layer)
+        opts (:transform-opts layer)
+        num-bins (get opts :bins 30)
+
+        ;; Extract x values
+        x-vals (get-column-values dataset x-col)
+        x-min (reduce min x-vals)
+        x-max (reduce max x-vals)
+
+        ;; Compute bin edges
+        bin-width (/ (- x-max x-min) num-bins)
+        bin-edges (vec (range x-min (+ x-max bin-width) bin-width))
+
+        ;; Assign values to bins and count
+        bins (map-indexed
+              (fn [i edge]
+                (let [next-edge (if (< i (dec (count bin-edges)))
+                                  (nth bin-edges (inc i))
+                                  (+ edge bin-width))
+                      in-bin (filter #(and (>= % edge) (< % next-edge)) x-vals)
+                      bin-count (count in-bin)
+                      bin-center (+ edge (/ bin-width 2))]
+                  {:x bin-center ;; Generic x for plot-layer
+                   :y bin-count ;; Generic y for plot-layer
+                   :bin-center bin-center
+                   :bin-left edge
+                   :bin-right next-edge
+                   :count bin-count}))
+              (butlast bin-edges))
+
+        ;; Create result dataset
+        result-ds (tc/dataset bins)]
+    {:data dataset
+     :result result-ds}))
+
+(defmethod transform-data :regress
+  [layer]
+  (let [dataset (:data layer)
+        x-col (:x layer)
+        y-col (:y layer)
+
+        ;; Extract data
+        x-vals (vec (tc/column dataset x-col))
+        y-vals (vec (tc/column dataset y-col))
+
+        ;; Simple linear regression using statistics
+        ;; y = a + b*x where:
+        ;; b = covariance(x,y) / variance(x)
+        ;; a = mean(y) - b * mean(x)
+        x-mean (stats/mean x-vals)
+        y-mean (stats/mean y-vals)
+        cov (stats/covariance x-vals y-vals)
+        var-x (stats/variance x-vals)
+        slope (/ cov var-x)
+        intercept (- y-mean (* slope x-mean))
+
+        ;; Generate predictions over the range of x
+        x-min (reduce min x-vals)
+        x-max (reduce max x-vals)
+        n-points 100
+        pred-xs (mapv (fn [i]
+                        (+ x-min (* i (/ (- x-max x-min) (dec n-points)))))
+                      (range n-points))
+
+        ;; Calculate predicted y values
+        pred-ys (mapv #(+ intercept (* slope %)) pred-xs)
+
+        ;; Create dataset with predictions (using generic :x :y keys)
+        pred-data (tc/dataset {:x pred-xs :y pred-ys})]
+
+    {:data dataset
+     :result pred-data}))
+
+;; ## Geometry System  
+;;
+;; Geometries define how to render transformed data as visual marks.
+;; The multimethod `render-geom` dispatches on the :geom key.
+
+(defmulti render-geom
+  "Render layer data as geometric marks.
+  
+  Dispatches on :geom key in layer spec.
+  
+  All implementations should return:
+  {:geom/type :keyword
+   :geom/elements [hiccup-or-geom-viz-elements]}
+   
+  This uniform return type enables clean composition and filtering."
+  (fn [layer points scales] (:geom layer)))
+
+(defmethod render-geom :point
+  [layer points {:keys [x-scale y-scale]}]
+  (let [color-col (:color layer)
+        groups (if color-col
+                 (group-by :color points)
+                 {:default points})
+        colors (cycle (:colors theme))
+
+        elements (mapcat (fn [[[group-key group-points] color]]
+                           (map (fn [pt]
+                                  (let [fill (if color-col color (:point-fill theme))]
+                                    {:type :circle
+                                     :x (x-scale (:x pt))
+                                     :y (y-scale (:y pt))
+                                     :radius (:point-size theme)
+                                     :fill fill
+                                     :stroke (:point-stroke theme)
+                                     :stroke-width 0.5}))
+                                group-points))
+                         (map vector groups colors))]
+    {:geom/type :point
+     :geom/elements elements}))
+
+(defmethod render-geom :line
+  [layer points {:keys [x-scale y-scale]}]
+  (let [sorted-points (sort-by :x points)
+        line-data (mapv (fn [pt]
+                          [(x-scale (:x pt))
+                           (y-scale (:y pt))])
+                        sorted-points)]
+    {:geom/type :line
+     :geom/elements [{:type :line
+                      :points line-data
+                      :stroke (:line-stroke theme)
+                      :stroke-width (:line-width theme)
+                      :fill "none"}]}))
+
+(defmethod render-geom :bar
+  [layer points {:keys [x-scale y-scale]}]
+  (let [bars (mapv (fn [pt]
+                     (let [x-left (x-scale (:bin-left pt))
+                           x-right (x-scale (:bin-right pt))
+                           y-top (y-scale (:y pt))
+                           y-bottom (y-scale 0)
+                           width (- x-right x-left)
+                           height (- y-bottom y-top)]
+                       {:type :rect
+                        :x x-left
+                        :y y-top
+                        :width width
+                        :height height
+                        :fill (:histogram-fill theme)
+                        :stroke (:histogram-stroke theme)
+                        :stroke-width (:histogram-stroke-width theme)}))
+                   points)]
+    {:geom/type :bar
+     :geom/elements bars}))
+
+;; ## Simple Plot Function for New-Style Layers
+;;
+;; The `plot-layer` function provides a simple interface for the new-style layer API.
+;; It works directly with layer specs created by the `layer` helper function.
+
+(defn plot-layer
+  "Plot one or more layers using the new-style API.
+  
+  Accepts either a single layer or a vector of layers (for stacking).
+  Layers are created with the `layer` helper function.
+  
+  Example:
+    (plot-layer (layer iris :x :sepal-length :y :sepal-width))
+    
+    (plot-layer [(layer iris :x :petal-length :y :petal-width :geom :point)
+                 (layer iris :x :petal-length :y :petal-width 
+                        :transform :regress :geom :line)])"
+  [layer-or-layers]
+  (let [layers (if (vector? layer-or-layers) layer-or-layers [layer-or-layers])
+        width 600
+        height 400
+        margin 40]
+
+    ;; Apply transforms and collect all points for domain calculation
+    (let [transformed-layers (mapv (fn [layer]
+                                     (let [{:keys [data result]} (transform-data layer)
+                                           transformed-ds (or result data)]
+                                       (assoc layer :transformed-data transformed-ds)))
+                                   layers)
+
+          ;; Extract all points to compute shared domain
+          all-x-vals (mapcat (fn [layer]
+                               (vec (tc/column (:transformed-data layer) :x)))
+                             transformed-layers)
+          all-y-vals (mapcat (fn [layer]
+                               (vec (tc/column (:transformed-data layer) :y)))
+                             transformed-layers)
+
+          ;; Compute domains with padding
+          x-min (reduce min all-x-vals)
+          x-max (reduce max all-x-vals)
+          y-min (reduce min all-y-vals)
+          y-max (reduce max all-y-vals)
+          x-pad (* 0.05 (- x-max x-min))
+          y-pad (* 0.05 (- y-max y-min))
+          x-domain [(- x-min x-pad) (+ x-max x-pad)]
+          y-domain [(- y-min y-pad) (+ y-max y-pad)]
+
+          ;; Create scale functions
+          x-range [margin (- width margin)]
+          y-range [(- height margin) margin]
+
+          x-scale (fn [x]
+                    (+ (first x-range)
+                       (* (/ (- x (first x-domain))
+                             (- (second x-domain) (first x-domain)))
+                          (- (second x-range) (first x-range)))))
+
+          y-scale (fn [y]
+                    (+ (first y-range)
+                       (* (/ (- y (first y-domain))
+                             (- (second y-domain) (first y-domain)))
+                          (- (second y-range) (first y-range)))))
+
+          ;; Render each layer
+          rendered-geoms (mapv (fn [layer]
+                                 (let [ds (:transformed-data layer)
+                                       ;; Convert dataset rows to point maps (preserving all columns)
+                                       col-names (tc/column-names ds)
+                                       row-count (tc/row-count ds)
+                                       points (mapv (fn [i]
+                                                      (into {} (map (fn [col]
+                                                                      [col (get (tc/column ds col) i)])
+                                                                    col-names)))
+                                                    (range row-count))]
+                                   (render-geom layer points {:x-scale x-scale :y-scale y-scale})))
+                               transformed-layers)
+
+          ;; Collect all elements
+          all-elements (mapcat :geom/elements rendered-geoms)]
+
+      ;; Return SVG
+      (kind/html
+       (svg/serialize
+        [:svg {:width width :height height
+               :style (str "background:" (:background theme))}
+         [:g all-elements]])))))
+
 ;; ## Core Algebraic Operations
 
 (defn- merge-layers
@@ -305,11 +667,6 @@
   (when (seq values)
     [(reduce min values)
      (reduce max values)]))
-
-(defn- get-column-values
-  "Extract values from a dataset column."
-  [dataset column]
-  (vec (get dataset column)))
 
 (defn- resolve-column
   "Resolve column keyword to actual data during rendering.
@@ -927,6 +1284,47 @@ iris
     (l* {:=layers [{:=color :species}]})
     (off-diagonal (overlay (linear)))
     plot)
+
+;; ## New-Style Layer API Examples
+;;
+;; The following examples demonstrate the new layer-based API.
+;; This API provides a simpler, more intuitive interface with keyword arguments.
+
+;; ### Simple Scatter Plot
+
+(plot-layer (layer iris :x :petal-length :y :petal-width))
+
+;; ### Histogram with Custom Bins
+
+(plot-layer (layer iris
+                   :x :sepal-length
+                   :transform :bin
+                   :transform-opts {:bins 20}
+                   :geom :bar))
+
+;; ### Scatter with Smoothed Overlay
+
+(plot-layer [(layer iris :x :sepal-length :y :sepal-width :geom :point)
+             (layer iris :x :sepal-length :y :sepal-width
+                    :transform :smooth
+                    :transform-opts {:window 15}
+                    :geom :line)])
+
+;; ### Scatter with Linear Regression
+
+(plot-layer [(layer iris :x :petal-length :y :petal-width :geom :point)
+             (layer iris :x :petal-length :y :petal-width
+                    :transform :regress
+                    :geom :line)])
+
+;; ### Customized Histogram
+
+(plot-layer (layer iris
+                   :x :petal-width
+                   :transform :bin
+                   :transform-opts {:bins 15}
+                   :geom :bar
+                   :geom-opts {:fill "#619CFF" :stroke "#FFFFFF"}))
 
 ;; # What We've Achieved
 ;;
