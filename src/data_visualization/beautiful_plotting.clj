@@ -170,13 +170,18 @@
   (let [dataset (:data layer)
         x-col (:x layer)
         y-col (:y layer)
+        group-col (or (:color layer) (:group layer))
 
         ;; Extract and rename columns to generic :x :y
         x-vals (vec (tc/column dataset x-col))
         y-vals (vec (tc/column dataset y-col))
 
-        ;; Create result dataset with generic column names
-        result-ds (tc/dataset {:x x-vals :y y-vals})]
+        ;; Create result dataset with generic column names, preserving group if present
+        result-ds (if group-col
+                    (tc/dataset {:x x-vals
+                                 :y y-vals
+                                 group-col (vec (tc/column dataset group-col))})
+                    (tc/dataset {:x x-vals :y y-vals}))]
 
     {:data dataset
      :result result-ds}))
@@ -186,108 +191,214 @@
   (let [dataset (:data layer)
         x-col (:x layer)
         y-col (:y layer)
+        group-col (or (:color layer) (:group layer))
         opts (:transform-opts layer)
-        window-size (get opts :window 11)
+        window-size (get opts :window 11)]
 
-        ;; Extract x and y values
-        x-vals (vec (get-column-values dataset x-col))
-        y-vals (vec (get-column-values dataset y-col))
+    (if group-col
+      ;; Grouped smoothing
+      (let [groups (tc/group-by dataset [group-col])
+            smoothed-groups
+            (mapcat (fn [group-row]
+                      (let [group-name (get (:name group-row) group-col)
+                            group-ds (:data group-row)
+                            x-vals (vec (get-column-values group-ds x-col))
+                            y-vals (vec (get-column-values group-ds y-col))
 
-        ;; Sort by x for proper smoothing
-        sorted-pairs (sort-by first (map vector x-vals y-vals))
-        sorted-x (mapv first sorted-pairs)
-        sorted-y (mapv second sorted-pairs)
+                            ;; Sort by x
+                            sorted-pairs (sort-by first (map vector x-vals y-vals))
+                            sorted-x (mapv first sorted-pairs)
+                            sorted-y (mapv second sorted-pairs)
 
-        ;; Compute moving average
-        half-window (quot window-size 2)
-        smoothed-y (mapv (fn [i]
-                           (let [start (max 0 (- i half-window))
-                                 end (min (count sorted-y) (+ i half-window 1))
-                                 window (subvec sorted-y start end)]
-                             (/ (reduce + window) (count window))))
-                         (range (count sorted-y)))
+                            ;; Compute moving average
+                            half-window (quot window-size 2)
+                            smoothed-y (mapv (fn [i]
+                                               (let [start (max 0 (- i half-window))
+                                                     end (min (count sorted-y) (+ i half-window 1))
+                                                     window (subvec sorted-y start end)]
+                                                 (/ (reduce + window) (count window))))
+                                             (range (count sorted-y)))]
+                        ;; Return rows with group identifier
+                        (map (fn [x y] {:x x :y y group-col group-name})
+                             sorted-x smoothed-y)))
+                    (tc/rows groups :as-maps))
+            result-ds (tc/dataset smoothed-groups)]
+        {:data dataset
+         :result result-ds})
 
-        ;; Create result dataset with generic column names
-        result-ds (tc/dataset {:x sorted-x
-                               :y smoothed-y})]
-    {:data dataset
-     :result result-ds}))
+      ;; Non-grouped smoothing (original behavior)
+      (let [x-vals (vec (get-column-values dataset x-col))
+            y-vals (vec (get-column-values dataset y-col))
+
+            ;; Sort by x for proper smoothing
+            sorted-pairs (sort-by first (map vector x-vals y-vals))
+            sorted-x (mapv first sorted-pairs)
+            sorted-y (mapv second sorted-pairs)
+
+            ;; Compute moving average
+            half-window (quot window-size 2)
+            smoothed-y (mapv (fn [i]
+                               (let [start (max 0 (- i half-window))
+                                     end (min (count sorted-y) (+ i half-window 1))
+                                     window (subvec sorted-y start end)]
+                                 (/ (reduce + window) (count window))))
+                             (range (count sorted-y)))
+
+            ;; Create result dataset with generic column names
+            result-ds (tc/dataset {:x sorted-x
+                                   :y smoothed-y})]
+        {:data dataset
+         :result result-ds}))))
 
 (defmethod transform-data :bin
   [layer]
   (let [dataset (:data layer)
         x-col (:x layer)
+        group-col (or (:color layer) (:group layer))
         opts (:transform-opts layer)
-        num-bins (get opts :bins 30)
+        num-bins (get opts :bins 30)]
 
-        ;; Extract x values
-        x-vals (get-column-values dataset x-col)
-        x-min (reduce min x-vals)
-        x-max (reduce max x-vals)
+    (if group-col
+      ;; Grouped binning - use same bin edges across all groups
+      (let [x-vals (get-column-values dataset x-col)
+            x-min (reduce min x-vals)
+            x-max (reduce max x-vals)
+            bin-width (/ (- x-max x-min) num-bins)
+            bin-edges (vec (range x-min (+ x-max bin-width) bin-width))
 
-        ;; Compute bin edges
-        bin-width (/ (- x-max x-min) num-bins)
-        bin-edges (vec (range x-min (+ x-max bin-width) bin-width))
+            groups (tc/group-by dataset [group-col])
+            binned-groups
+            (mapcat (fn [group-row]
+                      (let [group-name (get (:name group-row) group-col)
+                            group-ds (:data group-row)
+                            group-x-vals (get-column-values group-ds x-col)]
 
-        ;; Assign values to bins and count
-        bins (map-indexed
-              (fn [i edge]
-                (let [next-edge (if (< i (dec (count bin-edges)))
-                                  (nth bin-edges (inc i))
-                                  (+ edge bin-width))
-                      in-bin (filter #(and (>= % edge) (< % next-edge)) x-vals)
-                      bin-count (count in-bin)
-                      bin-center (+ edge (/ bin-width 2))]
-                  {:x bin-center ;; Generic x for plot-layer
-                   :y bin-count ;; Generic y for plot-layer
-                   :bin-center bin-center
-                   :bin-left edge
-                   :bin-right next-edge
-                   :count bin-count}))
-              (butlast bin-edges))
+                        ;; Bin this group's data using common edges
+                        (map-indexed
+                         (fn [i edge]
+                           (let [next-edge (if (< i (dec (count bin-edges)))
+                                             (nth bin-edges (inc i))
+                                             (+ edge bin-width))
+                                 in-bin (filter #(and (>= % edge) (< % next-edge)) group-x-vals)
+                                 bin-count (count in-bin)
+                                 bin-center (+ edge (/ bin-width 2))]
+                             {:x bin-center
+                              :y bin-count
+                              :bin-center bin-center
+                              :bin-left edge
+                              :bin-right next-edge
+                              :count bin-count
+                              group-col group-name}))
+                         (butlast bin-edges))))
+                    (tc/rows groups :as-maps))
+            result-ds (tc/dataset binned-groups)]
+        {:data dataset
+         :result result-ds})
 
-        ;; Create result dataset
-        result-ds (tc/dataset bins)]
-    {:data dataset
-     :result result-ds}))
+      ;; Non-grouped binning (original behavior)
+      (let [x-vals (get-column-values dataset x-col)
+            x-min (reduce min x-vals)
+            x-max (reduce max x-vals)
+
+            ;; Compute bin edges
+            bin-width (/ (- x-max x-min) num-bins)
+            bin-edges (vec (range x-min (+ x-max bin-width) bin-width))
+
+            ;; Assign values to bins and count
+            bins (map-indexed
+                  (fn [i edge]
+                    (let [next-edge (if (< i (dec (count bin-edges)))
+                                      (nth bin-edges (inc i))
+                                      (+ edge bin-width))
+                          in-bin (filter #(and (>= % edge) (< % next-edge)) x-vals)
+                          bin-count (count in-bin)
+                          bin-center (+ edge (/ bin-width 2))]
+                      {:x bin-center ;; Generic x for plot-layer
+                       :y bin-count ;; Generic y for plot-layer
+                       :bin-center bin-center
+                       :bin-left edge
+                       :bin-right next-edge
+                       :count bin-count}))
+                  (butlast bin-edges))
+
+            ;; Create result dataset
+            result-ds (tc/dataset bins)]
+        {:data dataset
+         :result result-ds}))))
 
 (defmethod transform-data :regress
   [layer]
   (let [dataset (:data layer)
         x-col (:x layer)
         y-col (:y layer)
+        group-col (or (:color layer) (:group layer))]
 
-        ;; Extract data
-        x-vals (vec (tc/column dataset x-col))
-        y-vals (vec (tc/column dataset y-col))
+    (if group-col
+      ;; Grouped regression
+      (let [groups (tc/group-by dataset [group-col])
+            regression-groups
+            (mapcat (fn [group-row]
+                      (let [group-name (get (:name group-row) group-col)
+                            group-ds (:data group-row)
+                            x-vals (vec (tc/column group-ds x-col))
+                            y-vals (vec (tc/column group-ds y-col))
 
-        ;; Simple linear regression using statistics
-        ;; y = a + b*x where:
-        ;; b = covariance(x,y) / variance(x)
-        ;; a = mean(y) - b * mean(x)
-        x-mean (stats/mean x-vals)
-        y-mean (stats/mean y-vals)
-        cov (stats/covariance x-vals y-vals)
-        var-x (stats/variance x-vals)
-        slope (/ cov var-x)
-        intercept (- y-mean (* slope x-mean))
+                            ;; Simple linear regression
+                            x-mean (stats/mean x-vals)
+                            y-mean (stats/mean y-vals)
+                            cov (stats/covariance x-vals y-vals)
+                            var-x (stats/variance x-vals)
+                            slope (/ cov var-x)
+                            intercept (- y-mean (* slope x-mean))
 
-        ;; Generate predictions over the range of x
-        x-min (reduce min x-vals)
-        x-max (reduce max x-vals)
-        n-points 100
-        pred-xs (mapv (fn [i]
-                        (+ x-min (* i (/ (- x-max x-min) (dec n-points)))))
-                      (range n-points))
+                            ;; Generate predictions
+                            x-min (reduce min x-vals)
+                            x-max (reduce max x-vals)
+                            n-points 100
+                            pred-xs (mapv (fn [i]
+                                            (+ x-min (* i (/ (- x-max x-min) (dec n-points)))))
+                                          (range n-points))
+                            pred-ys (mapv #(+ intercept (* slope %)) pred-xs)]
 
-        ;; Calculate predicted y values
-        pred-ys (mapv #(+ intercept (* slope %)) pred-xs)
+                        ;; Return rows with group identifier
+                        (map (fn [x y] {:x x :y y group-col group-name})
+                             pred-xs pred-ys)))
+                    (tc/rows groups :as-maps))
+            result-ds (tc/dataset regression-groups)]
+        {:data dataset
+         :result result-ds})
 
-        ;; Create dataset with predictions (using generic :x :y keys)
-        pred-data (tc/dataset {:x pred-xs :y pred-ys})]
+      ;; Non-grouped regression (original behavior)
+      (let [x-vals (vec (tc/column dataset x-col))
+            y-vals (vec (tc/column dataset y-col))
 
-    {:data dataset
-     :result pred-data}))
+            ;; Simple linear regression using statistics
+            ;; y = a + b*x where:
+            ;; b = covariance(x,y) / variance(x)
+            ;; a = mean(y) - b * mean(x)
+            x-mean (stats/mean x-vals)
+            y-mean (stats/mean y-vals)
+            cov (stats/covariance x-vals y-vals)
+            var-x (stats/variance x-vals)
+            slope (/ cov var-x)
+            intercept (- y-mean (* slope x-mean))
+
+            ;; Generate predictions over the range of x
+            x-min (reduce min x-vals)
+            x-max (reduce max x-vals)
+            n-points 100
+            pred-xs (mapv (fn [i]
+                            (+ x-min (* i (/ (- x-max x-min) (dec n-points)))))
+                          (range n-points))
+
+            ;; Calculate predicted y values
+            pred-ys (mapv #(+ intercept (* slope %)) pred-xs)
+
+            ;; Create dataset with predictions (using generic :x :y keys)
+            pred-data (tc/dataset {:x pred-xs :y pred-ys})]
+
+        {:data dataset
+         :result pred-data}))))
 
 ;; ## Geometry System  
 ;;
@@ -308,15 +419,15 @@
 
 (defmethod render-geom :point
   [layer points {:keys [x-scale y-scale]}]
-  (let [color-col (:color layer)
-        groups (if color-col
-                 (group-by :color points)
+  (let [group-col (or (:color layer) (:group layer))
+        groups (if group-col
+                 (group-by group-col points)
                  {:default points})
         colors (cycle (:colors theme))
 
         elements (mapcat (fn [[[group-key group-points] color]]
                            (map (fn [pt]
-                                  (let [fill (if color-col color (:point-fill theme))]
+                                  (let [fill (if group-col color (:point-fill theme))]
                                     {:type :circle
                                      :x (x-scale (:x pt))
                                      :y (y-scale (:y pt))
@@ -331,38 +442,85 @@
 
 (defmethod render-geom :line
   [layer points {:keys [x-scale y-scale]}]
-  (let [sorted-points (sort-by :x points)
-        line-data (mapv (fn [pt]
-                          [(x-scale (:x pt))
-                           (y-scale (:y pt))])
-                        sorted-points)]
+  (let [group-col (or (:color layer) (:group layer))
+        groups (if group-col
+                 (group-by group-col points)
+                 {:default points})
+        colors (cycle (:colors theme))
+
+        elements (map (fn [[[group-key group-points] color]]
+                        (let [sorted-points (sort-by :x group-points)
+                              line-data (mapv (fn [pt]
+                                                [(x-scale (:x pt))
+                                                 (y-scale (:y pt))])
+                                              sorted-points)]
+                          {:type :line
+                           :points line-data
+                           :stroke (if group-col color (:line-stroke theme))
+                           :stroke-width (:line-width theme)
+                           :fill "none"}))
+                      (map vector groups colors))]
     {:geom/type :line
-     :geom/elements [{:type :line
-                      :points line-data
-                      :stroke (:line-stroke theme)
-                      :stroke-width (:line-width theme)
-                      :fill "none"}]}))
+     :geom/elements elements}))
 
 (defmethod render-geom :bar
   [layer points {:keys [x-scale y-scale]}]
-  (let [bars (mapv (fn [pt]
-                     (let [x-left (x-scale (:bin-left pt))
-                           x-right (x-scale (:bin-right pt))
-                           y-top (y-scale (:y pt))
-                           y-bottom (y-scale 0)
-                           width (- x-right x-left)
-                           height (- y-bottom y-top)]
-                       {:type :rect
-                        :x x-left
-                        :y y-top
-                        :width width
-                        :height height
-                        :fill (:histogram-fill theme)
-                        :stroke (:histogram-stroke theme)
-                        :stroke-width (:histogram-stroke-width theme)}))
-                   points)]
+  (let [group-col (or (:color layer) (:group layer))
+        groups (if group-col
+                 (group-by group-col points)
+                 {:default points})
+        colors (cycle (:colors theme))
+
+        elements (mapcat (fn [[[group-key group-points] color]]
+                           (map (fn [pt]
+                                  (let [x-left (x-scale (:bin-left pt))
+                                        x-right (x-scale (:bin-right pt))
+                                        y-top (y-scale (:y pt))
+                                        y-bottom (y-scale 0)
+                                        width (- x-right x-left)
+                                        height (- y-bottom y-top)]
+                                    {:type :rect
+                                     :x x-left
+                                     :y y-top
+                                     :width width
+                                     :height height
+                                     :fill (if group-col color (:histogram-fill theme))
+                                     :stroke (:histogram-stroke theme)
+                                     :stroke-width (:histogram-stroke-width theme)}))
+                                group-points))
+                         (map vector groups colors))]
     {:geom/type :bar
-     :geom/elements bars}))
+     :geom/elements elements}))
+
+(defn- element->svg
+  "Convert element map to SVG hiccup format."
+  [elem]
+  (case (:type elem)
+    :circle
+    [:circle {:cx (:x elem)
+              :cy (:y elem)
+              :r (:radius elem)
+              :fill (:fill elem)
+              :stroke (:stroke elem)
+              :stroke-width (:stroke-width elem)}]
+
+    :line
+    [:polyline {:points (:points elem)
+                :stroke (:stroke elem)
+                :stroke-width (:stroke-width elem)
+                :fill (:fill elem)}]
+
+    :rect
+    [:rect {:x (:x elem)
+            :y (:y elem)
+            :width (:width elem)
+            :height (:height elem)
+            :fill (:fill elem)
+            :stroke (:stroke elem)
+            :stroke-width (:stroke-width elem)}]
+
+    ;; Default: return as-is
+    elem))
 
 ;; ## Simple Plot Function for New-Style Layers
 ;;
@@ -450,7 +608,7 @@
        (svg/serialize
         [:svg {:width width :height height
                :style (str "background:" (:background theme))}
-         [:g all-elements]])))))
+         [:g (map element->svg all-elements)]])))))
 
 ;; ## Core Algebraic Operations
 
@@ -1325,6 +1483,48 @@ iris
                    :transform-opts {:bins 15}
                    :geom :bar
                    :geom-opts {:fill "#619CFF" :stroke "#FFFFFF"}))
+
+
+;; ## Grouped Statistics Examples
+;;
+;; The layer API supports automatic grouping via `:color` or `:group` keys.
+;; All transforms (:smooth, :regress, :bin) respect grouping.
+
+;; ### Grouped Scatter Plot
+
+(plot-layer (layer iris :x :petal-length :y :petal-width 
+                   :color :species :geom :point))
+
+;; ### Grouped Smooth Lines
+
+(plot-layer (layer iris :x :sepal-length :y :sepal-width
+                   :color :species
+                   :transform :smooth
+                   :geom :line))
+
+;; ### Grouped Regression Lines
+
+(plot-layer (layer iris :x :petal-length :y :petal-width
+                   :color :species
+                   :transform :regress
+                   :geom :line))
+
+;; ### Scatter with Grouped Regression Overlay
+
+(plot-layer [(layer iris :x :petal-length :y :petal-width 
+                    :color :species :geom :point)
+             (layer iris :x :petal-length :y :petal-width
+                    :color :species
+                    :transform :regress
+                    :geom :line)])
+
+;; ### Grouped Histogram (Side-by-Side)
+
+(plot-layer (layer iris :x :sepal-length
+                   :color :species
+                   :transform :bin
+                   :transform-opts {:bins 15}
+                   :geom :bar))
 
 ;; # What We've Achieved
 ;;
