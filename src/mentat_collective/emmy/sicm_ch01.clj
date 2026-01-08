@@ -69,21 +69,29 @@
 (kind/scittle
   '(do
      (require emmy-env)
-     #_(require emmy-lg)
-     #_(require emmy-mn)))
+     (require emmy-lg)
+     (require emmy-mn)))
 
 ^:kindly/hide-code
 (defines show-exp (comp str simplify))
 
 ^:kindly/hide-code
 (kind/scittle
-  '(def show-expression show-exp))
+  '(defn show-expression [b & c]
+     (if (keyword? b)
+       (show-exp (first c))
+       (show-exp b))))
+
+^:kindly/hide-code
+(def tex (comp kind/tex emmy.expression.render/->TeX simplify))
 
 ^:kindly/hide-code
 (defmacro show-expression [b & c]
   (case b
     :calc-on-server
     (list 'simplify (first c))
+    :tex
+    (list 'tex (first c))
     :browser
     (list 'kind/reagent
           [:tt (list 'quote
@@ -92,36 +100,28 @@
       (list 'kind/reagent
             [:div (list 'quote
                         (list 'let ['a (list 'show-exp b)]
-                              (list 'if (list '= serg 'a)
+                              (list 'if 'false #_(list '= serg 'a)
                                     [:tt 'a]
                                     [:div
-                                     ;; [:tt 'a] ;; comment this in prod
+                                     [:tt 'a] ;; comment this in prod
+                                     [:p]
                                      [:tt serg]])))]))))
 
 ^:kindly/hide-code
-(def velocities velocity)
+(defines velocities velocity)
 
 ^:kindly/hide-code
-(def coordinates coordinate)
+(defines coordinates coordinate)
 
 ^:kindly/hide-code
-(def vector-length count)
+(defines vector-length count)
 
 ^:kindly/hide-code
-(def time first)
-
-^:kindly/hide-code
-(def tex (comp kind/tex emmy.expression.render/->TeX simplify))
+(defines time first)
 
 (md "## 1.4 Computing Actions")
 (md "First task: Calculate the action for the free particle along a path. Consider the particle moving at uniform speed along a straight line.")
 
-(define (test-path t)
-  (up (+ (* 4 t) 7)
-      (+ (* 3 t) 5)
-      (+ (* 2 t) 1)))
-
-^:kindly/hide-code
 (defines (test-path t)
   (up (+ (* 4 t) 7)
       (+ (* 3 t) 5)
@@ -140,19 +140,23 @@
 (md "#### Paths of minimum Action")
 (md "Show that the action is smaller along a straight-line test path than along nearby paths")
 
-(define ((make-η ν t1 t2) t)
+(defines ((make-η ν t1 t2) t)
   (* (- t t1) (- t t2) (ν t)))
 
-(define ((varied-free-particle-action mass q ν t1 t2) ε)
+(defines ((varied-free-particle-action mass q ν t1 t2) ε)
   (let ((η (make-η ν t1 t2)))
     (Lagrangian-action (L-free-particle mass)
                        (+ q (* ε η)) t1 t2)))
-
-((varied-free-particle-action 3.0 test-path (up sin cos square) 0.0 10.0) 0.01)
+(show-expression
+  ((varied-free-particle-action 3.0 test-path (up sin cos square) 0.0 10.0) 0.01))
 
 (md "Simulate lots of the paths in this manner. Proof that the minimum value of the action is the action along the straight path. For this proof it suffices that some optimization parameter is close to zero (need not be exactly zero).")
 
-(minimize (varied-free-particle-action 3.0 test-path (up sin cos square) 0.0 10.0) -2 1)
+(show-expression
+  (minimize (varied-free-particle-action 3.0 test-path (up sin cos square) 0.0 10.0) -2 1))
+
+(defines (linear-interpolants-a t0 t1 nofsteps)
+  (map float (flatten [t0 (linear-interpolants t0 t1 (- nofsteps 2)) t1])))
 
 ^:kindly/hide-code
 (do
@@ -173,9 +177,6 @@
          {:order {:field "t" :type "temporal"}
           :color {:field "id" :type "nominal"}}}
         {:mark {:type "point" :filled true}}]}))
-
-  (defn linear-interpolants-a [t0 t1 nofsteps]
-    (map float (flatten [t0 (linear-interpolants t0 t1 (- nofsteps 2)) t1])))
 
   (defn make-path-txyz [fn_t t0 t1 nofsteps]
     (mapv #(cons % (.v (fn_t %)))
@@ -201,12 +202,12 @@
 
 (md "Create data to plot two straight paths in the xy plane. One path is along the x axis (name: path-along-x), the second path leads in all directions.")
 
-(define (path-along-x t)
+(defines (path-along-x t)
   (up (+ (* 5 t) 1)
       (* 0 t)
       (* 0 t)))
 
-(define path-points-1
+(def path-points-1
   (hash-map "a straight x" (make-path-txyz path-along-x 0 10 8)
             "b book" (make-path-txyz test-path 0 10 8)))
 
@@ -217,19 +218,20 @@
 
 (md "Create two variations of the path-along-x. Calculate the action. Show once again that the Lagrangian-action is indeed smallest for the straight path.")
 
-(define (make-varied-path ε t0 t1)
+(defines (make-varied-path ε t0 t1)
  (+ path-along-x (* ε (make-η (up #(* 0 %) identity #(* 5.0 (sin %))) t0 t1))))
 
-(define small-varied-path (make-varied-path 0.01 0 10))
-(define large-varied-path (make-varied-path 0.02 0 10))
+(defines small-varied-path (make-varied-path 0.01 0 10))
+(defines large-varied-path (make-varied-path 0.02 0 10))
 
-[(Lagrangian-action (L-free-particle 3.0) path-along-x 0.0 10.0)
- (Lagrangian-action (L-free-particle 3.0) small-varied-path 0.0 10.0)
- (Lagrangian-action (L-free-particle 3.0) large-varied-path 0.0 10.0)]
+(show-expression
+  [(Lagrangian-action (L-free-particle 3.0) path-along-x 0.0 10.0)
+   (Lagrangian-action (L-free-particle 3.0) small-varied-path 0.0 10.0)
+   (Lagrangian-action (L-free-particle 3.0) large-varied-path 0.0 10.0)])
 
 (md "Create data to plot the three paths in the xz plane along with their actions.")
 
-(define path-points-2
+(def path-points-2
   (hash-map "path-along-x" (make-path-txyz path-along-x 0 10 8)
             "small-varied-path" (make-path-txyz small-varied-path 0 10 24)
             "large-varied-path" (make-path-txyz large-varied-path 0 10 32)))
@@ -242,46 +244,45 @@
 (md "#### Finding trajectories that minimize the action")
 (md "The SICM library provides a procedure that constructs a one dimensional path (along, say, the z axis) using an interpolation polynomial: `(make-path t0 q0 t1 q1 qs)`, where q0 and q1 are the endpoints, t0 and t1 are the corresponding times, and qs is a list of intermediate points. I give an example (note that the result, `initial-path`, is itself a function):")
 
-(define pi-half (* 0.5 Math/PI))
-(define initial-qs [0.1 0.2 0.2])
-(define initial-path (lg/make-path 0 1.0 pi-half 0.0 initial-qs))
+(defines pi-half (* 0.5 Math/PI))
+(defines initial-qs [0.1 0.2 0.2])
+(defines initial-path (lg/make-path 0 1.0 pi-half 0.0 initial-qs))
 
 (md "Construct a parametric action that is just the action computed along that parametric path. Find approximate solution paths of a free particle and the harmonic oszillator respectively (hint: use the SICM procedure `multidimensional-minimize`).")
 
-(define ((parametric-path-actn Lagrangian t0 q0 t1 q1) qs)
+(defines ((parametric-path-actn Lagrangian t0 q0 t1 q1) qs)
   (let ((path (lg/make-path t0 q0 t1 q1 qs)))
     (Lagrangian-action Lagrangian path t0 t1)))
 
-(define (fnd-path Lagrangian t0 q0 t1 q1 initial-qs)
+(defines (fnd-path Lagrangian t0 q0 t1 q1 initial-qs)
   (let ((minimizing-qs
           (mn/multidimensional-minimize
             (parametric-path-actn Lagrangian t0 q0 t1 q1)
             initial-qs)))
     (lg/make-path t0 q0 t1 q1 minimizing-qs)))
 
-(define free-path
+(defines free-path
   (fnd-path (L-free-particle 3.0) 0.0 1.0 pi-half 0.0 initial-qs))
 
-(define ((L-harmonic m k) local)
+(defines ((L-harmonic m k) local)
   (let ((q (coordinate local))
         (v (velocity local)))
     (- (* 1/2 m (square v))
        (* 1/2 k (square q)))))
 
-(define harmonic-path
+(defines harmonic-path
   (fnd-path (L-harmonic 1.0 1.0) 0.0 1.0 pi-half 0.0 initial-qs))
 
 (md "Make a plot of these one dimensional paths, this time not in the x-z plane but in the t-z plane. This shows that, upon optimization, the initial-path turns into a streight line and a sinusoidal curve respectively.")
 
-(define (make-path-tz fn_t t0 t1 nofsteps)
+(defines (make-path-tz fn_t t0 t1 nofsteps)
   (map (lambda (t) (up t 0 0 (fn_t t)))
        (linear-interpolants-a t0 t1 nofsteps)))
 
-(define plot-3
-  (let ((i (make-path-tz initial-path 0 pi-half 50))
-        (f (make-path-tz free-path 0 pi-half 50))
-        (h (make-path-tz harmonic-path 0 pi-half 50)))
-    (hash-map "orange" i "blue" f "red" h)))
+(def plot-3
+  (hash-map "orange" (make-path-tz initial-path 0 pi-half 50)
+            "blue" (make-path-tz free-path 0 pi-half 50)
+            "red" (make-path-tz harmonic-path 0 pi-half 50)))
 
 (kind/vega-lite
   (points-tz->plot plot-3))
@@ -296,7 +297,8 @@
 
 (md "Calculate the Lagrange equation of the harmonic oszillator.")
 
-(tex (((Lagrange-equations (L-harmonic 'm 'k)) (literal-function 'q)) 't))
+(show-expression :tex
+  (((Lagrange-equations (L-harmonic 'm 'k)) (literal-function 'q)) 't))
 
 (md "## 1.5 The Euler-Lagrange Equations")
 (md "### 1.5.2 Computing Lagrange's Equations")
