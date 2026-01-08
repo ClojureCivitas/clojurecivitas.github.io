@@ -610,6 +610,156 @@
                :style (str "background:" (:background theme))}
          [:g (map element->svg all-elements)]])))))
 
+
+;; ## SPLOM (Scatterplot Matrix) Functions
+
+(defn splom-layer
+  "Create a scatterplot matrix (SPLOM) using the layer API.
+  
+  Generates a grid of plots showing all pairwise relationships between variables.
+  Diagonal cells show histograms of individual variables, off-diagonal cells show
+  scatter plots of variable pairs.
+  
+  Arguments:
+    dataset - The dataset to visualize
+    variables - Vector of column keywords to include in the SPLOM
+  
+  Options:
+    :color - Column to color by (applies to all cells)
+    :diagonal - Transform for diagonal cells (default :bin)
+    :diagonal-geom - Geometry for diagonal cells (default :bar)
+    :off-diagonal - Transform for off-diagonal cells (default :identity)
+    :off-diagonal-geom - Geometry for off-diagonal cells (default :point)
+  
+  Example:
+    (splom-layer iris [:sepal-length :sepal-width :petal-length :petal-width]
+                 :color :species
+                 :diagonal :bin
+                 :off-diagonal :identity)
+  
+  Returns a SPLOM spec for use with plot-splom."
+  [dataset variables & {:keys [color diagonal diagonal-geom 
+                                off-diagonal off-diagonal-geom]
+                        :or {diagonal :bin
+                             diagonal-geom :bar
+                             off-diagonal :identity
+                             off-diagonal-geom :point}}]
+  (let [n (count variables)
+        cells (for [row (range n)
+                    col (range n)]
+                (let [x-var (nth variables col)
+                      y-var (nth variables row)
+                      diagonal? (= row col)]
+                  {:row row
+                   :col col
+                   :x-var x-var
+                   :y-var y-var
+                   :diagonal? diagonal?
+                   :layer (if diagonal?
+                            ;; Diagonal: histogram
+                            (layer dataset
+                                   :x x-var
+                                   :color color
+                                   :transform diagonal
+                                   :geom diagonal-geom)
+                            ;; Off-diagonal: scatter or other
+                            (layer dataset
+                                   :x x-var
+                                   :y y-var
+                                   :color color
+                                   :transform off-diagonal
+                                   :geom off-diagonal-geom))}))]
+    {:type :splom
+     :n-vars n
+     :variables variables
+     :color color
+     :cells cells}))
+
+(defn plot-splom
+  "Render a SPLOM spec as an SVG grid.
+  
+  Takes a SPLOM spec created by splom-layer and renders it as a grid of plots.
+  Each cell is positioned using SVG translate transforms.
+  
+  Example:
+    (plot-splom (splom-layer iris [:sepal-length :sepal-width] :color :species))"
+  [splom-spec]
+  (let [{:keys [n-vars cells variables]} splom-spec
+        cell-size 200
+        padding 10
+        total-size (+ (* n-vars cell-size) (* (inc n-vars) padding))
+        margin 30]
+    
+    ;; Render each cell's panel
+    (let [panels (mapv (fn [{:keys [row col layer]}]
+                         (let [cell-x (+ padding (* col (+ cell-size padding)))
+                               cell-y (+ padding (* row (+ cell-size padding)))]
+                           {:row row :col col 
+                            :x cell-x :y cell-y
+                            :layer layer}))
+                       cells)
+          
+          ;; Render each panel using a mini version of plot-layer logic
+          rendered-panels
+          (mapv (fn [{:keys [row col x y layer]}]
+                  (let [transformed (transform-data layer)
+                        ds (or (:result transformed) (:data transformed))
+                        
+                        ;; Extract x/y values for this cell's domain
+                        x-vals (vec (tc/column ds :x))
+                        y-vals (if (:diagonal? (first (filter #(and (= row (:row %)) (= col (:col %))) cells)))
+                                 [0 (reduce max x-vals)]  ;; Histogram: y is count
+                                 (vec (tc/column ds :y)))
+                        
+                        ;; Compute domain with padding
+                        x-min (reduce min x-vals)
+                        x-max (reduce max x-vals)
+                        y-min (reduce min y-vals)
+                        y-max (reduce max y-vals)
+                        x-pad (* 0.05 (- x-max x-min))
+                        y-pad (* 0.05 (- y-max y-min))
+                        
+                        ;; Create scales for this cell
+                        x-range [margin (- cell-size margin)]
+                        y-range [(- cell-size margin) margin]
+                        
+                        x-scale (fn [xv]
+                                  (+ (first x-range)
+                                     (* (/ (- xv (- x-min x-pad))
+                                           (- (+ x-max x-pad) (- x-min x-pad)))
+                                        (- (second x-range) (first x-range)))))
+                        
+                        y-scale (fn [yv]
+                                  (+ (first y-range)
+                                     (* (/ (- yv (- y-min y-pad))
+                                           (- (+ y-max y-pad) (- y-min y-pad)))
+                                        (- (second y-range) (first y-range)))))
+                        
+                        ;; Convert dataset to points
+                        col-names (tc/column-names ds)
+                        row-count (tc/row-count ds)
+                        points (mapv (fn [i]
+                                       (into {} (map (fn [col]
+                                                       [col (get (tc/column ds col) i)])
+                                                     col-names)))
+                                     (range row-count))
+                        
+                        ;; Render geometry
+                        rendered (render-geom layer points {:x-scale x-scale :y-scale y-scale})
+                        elements (:geom/elements rendered)]
+                    
+                    {:x x :y y :elements elements}))
+                panels)]
+      
+      ;; Combine into final SVG
+      (kind/html
+       (svg/serialize
+        [:svg {:width total-size :height total-size
+               :style (str "background:" (:background theme))}
+         (for [{:keys [x y elements]} rendered-panels]
+           [:g {:transform (str "translate(" x "," y ")")}
+            (map element->svg elements)])])))))
+
 ;; ## Core Algebraic Operations
 
 (defn- merge-layers
@@ -1525,6 +1675,27 @@ iris
                    :transform :bin
                    :transform-opts {:bins 15}
                    :geom :bar))
+
+
+;; ## SPLOM (Scatterplot Matrix) Examples
+;;
+;; SPLOMs show all pairwise relationships in a grid.
+;; Diagonal cells show distributions, off-diagonal cells show relationships.
+
+;; ### Simple 2×2 SPLOM
+
+(plot-splom (splom-layer iris [:sepal-length :sepal-width]))
+
+;; ### 2×2 SPLOM with Color Grouping
+
+(plot-splom (splom-layer iris [:sepal-length :sepal-width]
+                         :color :species))
+
+;; ### Full 4×4 SPLOM
+
+(plot-splom (splom-layer iris [:sepal-length :sepal-width 
+                                :petal-length :petal-width]
+                         :color :species))
 
 ;; # What We've Achieved
 ;;
