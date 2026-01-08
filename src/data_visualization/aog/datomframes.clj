@@ -2,7 +2,6 @@
   :clay {:title "Plotting Datoms: Queries as Visual Mappings"
          :quarto {:type :post
                   :author [:timothypratley]
-                  :draft true
                   :date "2026-01-08"
                   :description "A query-first approach makes relational data available for visualization."
                   :image "datomframes.svg"
