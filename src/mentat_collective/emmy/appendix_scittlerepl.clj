@@ -57,15 +57,13 @@
 
 ;; The following code is just to reveal the inner workings, you should already be able to happily repl in your .cljs file.
 
-;; While this Scittle Repl works perfect with the standard Scittle distribution, scittle-kitchen poses problems with my setup.
-
 (kind/hiccup
   [:div
    [:script "var SCITTLE_NREPL_WEBSOCKET_PORT = 1340"]
-   ;;[:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.js"}]
-   ;;[:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.nrepl.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.6.22/dist/scittle.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.6.22/dist/scittle.nrepl.js"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.js"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.nrepl.js"}]
+   ;;[:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.6.22/dist/scittle.js"}]
+   ;;[:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.6.22/dist/scittle.nrepl.js"}]
    ])
 
 ;; ## Also with Babashka
