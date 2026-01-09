@@ -1050,33 +1050,33 @@ simple-data
 
 ;; Load penguins dataset (344 rows, 8 columns)
 (def penguins
-  (tc/dataset "https://raw.githubusercontent.com/allisonhorst/palmerpenguins/master/inst/extdata/penguins.csv"))
+  (tc/dataset "https://raw.githubusercontent.com/allisonhorst/palmerpenguins/master/inst/extdata/penguins.csv" {:key-fn keyword}))
 
 ;; ## Scatter plot with real data
 
 ;; Simple scatter: bill length vs bill depth
-(-> (layer penguins "bill_length_mm" "bill_depth_mm")
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
     resolve-roles
     apply-defaults
     plot)
 
 ;; Scatter with color grouping by species (Adelie, Gentoo, Chinstrap)
-(-> (layer penguins "bill_length_mm" "bill_depth_mm")
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
     resolve-roles
     apply-defaults
-    (update-in [:=layers 0] assoc :=color "species")
+    (update-in [:=layers 0] assoc :=color :species)
     plot)
 
 ;; ## Histogram with real data
 
 ;; Distribution of bill lengths
-(-> (layer penguins "bill_length_mm" "bill_length_mm")
+(-> (layer penguins :bill_length_mm :bill_length_mm)
     resolve-roles
     apply-defaults
     plot)
 
 ;; Distribution of body mass
-(-> (layer penguins "body_mass_g" "body_mass_g")
+(-> (layer penguins :body_mass_g :body_mass_g)
     resolve-roles
     apply-defaults
     plot)
@@ -1093,15 +1093,15 @@ simple-data
 ;; Full 3×3 SPLOM with penguins dataset
 ;; Diagonal: histograms showing distributions
 ;; Off-diagonal: scatter plots showing relationships
-(-> (cross (layers penguins ["bill_length_mm" "bill_depth_mm" "flipper_length_mm"])
-           (layers penguins ["bill_length_mm" "bill_depth_mm" "flipper_length_mm"]))
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm :flipper_length_mm])
+           (layers penguins [:bill_length_mm :bill_depth_mm :flipper_length_mm]))
     resolve-roles
     apply-defaults
     plot)
 
 ;; Custom SPLOM with different diagonal geometry
-(-> (cross (layers penguins ["bill_length_mm" "bill_depth_mm"])
-           (layers penguins ["bill_length_mm" "bill_depth_mm"]))
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+           (layers penguins [:bill_length_mm :bill_depth_mm]))
     resolve-roles
     (when-diagonal {:=plottype :histogram})
     (when-off-diagonal {:=plottype :scatter})
@@ -1112,19 +1112,19 @@ simple-data
 ;; ### Basic color grouping
 ;; Adding :=color creates groups - one layer per unique value
 
-(-> (layer penguins "bill_length_mm" "bill_depth_mm")
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
     resolve-roles
     apply-defaults
-    (assoc-in [:=layers 0 :=color] "species")
+    (assoc-in [:=layers 0 :=color] :species)
     plot)
 
 ;; ### Inspect what spread does with color
 ;; Before spread: 1 layer with :=color
 (def before-spread
-  (-> (layer penguins "bill_length_mm" "bill_depth_mm")
+  (-> (layer penguins :bill_length_mm :bill_depth_mm)
       resolve-roles
       apply-defaults
-      (assoc-in [:=layers 0 :=color] "species")))
+      (assoc-in [:=layers 0 :=color] :species)))
 
 (kind/pprint
  {:layer-count (count (:=layers before-spread))
@@ -1143,43 +1143,43 @@ simple-data
 ;; ### Color with different plot types
 
 ;; Colored lines
-(-> (layer penguins "bill_length_mm" "bill_depth_mm")
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
     resolve-roles
     apply-defaults
-    (assoc-in [:=layers 0 :=color] "species")
+    (assoc-in [:=layers 0 :=color] :species)
     (assoc-in [:=layers 0 :=plottype] :line)
     plot)
 
 ;; Colored histograms (diagonal pattern)
-(-> (layer penguins "bill_length_mm" "bill_length_mm")
+(-> (layer penguins :bill_length_mm :bill_length_mm)
     resolve-roles
     apply-defaults
-    (assoc-in [:=layers 0 :=color] "species")
+    (assoc-in [:=layers 0 :=color] :species)
     plot)
 
 ;; ### Layering with color
 
 ;; Scatter + smooth, both colored by species
 (-> (blend
-     (layer penguins "bill_length_mm" "bill_depth_mm")
-     (-> (layer penguins "bill_length_mm" "bill_depth_mm")
+     (layer penguins :bill_length_mm :bill_depth_mm)
+     (-> (layer penguins :bill_length_mm :bill_depth_mm)
          (assoc-in [:=layers 0 :=transform] :smooth)
          (assoc-in [:=layers 0 :=plottype] :line)))
     resolve-roles
     apply-defaults
     ;; Add color to both layers
-    (update-in [:=layers 0] assoc :=color "species")
-    (update-in [:=layers 1] assoc :=color "species")
+    (update-in [:=layers 0] assoc :=color :species)
+    (update-in [:=layers 1] assoc :=color :species)
     plot)
 
 ;; ### How colors are assigned
 ;; Colors are assigned by sorted unique values with indices
 
 (def color-example
-  (-> (layer penguins "bill_length_mm" "bill_depth_mm")
+  (-> (layer penguins :bill_length_mm :bill_depth_mm)
       resolve-roles
       apply-defaults
-      (assoc-in [:=layers 0 :=color] "species")
+      (assoc-in [:=layers 0 :=color] :species)
       spread))
 
 ;; Species sorted alphabetically, assigned color indices
@@ -1192,11 +1192,11 @@ simple-data
 
 (-> (blend
       ;; Layer 1: Colored by species
-     (-> (layer penguins "bill_length_mm" "bill_depth_mm")
-         (assoc-in [:=layers 0 :=color] "species"))
+     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+         (assoc-in [:=layers 0 :=color] :species))
       ;; Layer 2: Colored by island (will get different colors)
-     (-> (layer penguins "flipper_length_mm" "body_mass_g")
-         (assoc-in [:=layers 0 :=color] "island")))
+     (-> (layer penguins :flipper_length_mm :body_mass_g)
+         (assoc-in [:=layers 0 :=color] :island)))
     resolve-roles
     apply-defaults
     plot)
