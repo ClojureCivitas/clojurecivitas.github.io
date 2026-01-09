@@ -1,7 +1,7 @@
 ^{:kindly/hide-code true
   :clay {:title "Exploring Heart Rate Variability"
          :external-requirements ["WESAD dataset at /workspace/datasets/WESAD/"]
-         :quarto {:author :ludgersolbach
+         :quarto {:author :daslu
                   :draft true
                   :type :post
                   :date "2025-10-17"
