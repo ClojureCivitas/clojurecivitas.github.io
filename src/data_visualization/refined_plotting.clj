@@ -1210,45 +1210,46 @@ simple-data
 
 ;; ## Example 1: Basic scatter plot transformation
 
-;; Start with a simple layer
-(def base-spec
-  (layer penguins :bill_length_mm :bill_depth_mm))
+;; ### Stage 1: Start with a simple layer
+(kind/pprint
+ (layer penguins :bill_length_mm :bill_depth_mm))
 
-;; Inspect the initial IR
-(kind/pprint base-spec)
+;; ### Stage 1 → Stage 2: Add role resolution
+(kind/pprint
+ (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     resolve-roles))
 
-;; ### Stage 1 → Stage 2: Role resolution
-;; The resolve-roles function infers x/y roles from column positions
-(def resolved-spec (resolve-roles base-spec))
+;; ### Stage 2 → Stage 3: Add defaults
+(kind/pprint
+ (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     resolve-roles
+     apply-defaults))
 
-(kind/pprint resolved-spec)
+;; ### Stage 3 → Stage 4: Add spread (no-op here, no grouping)
+(kind/pprint
+ (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     resolve-roles
+     apply-defaults
+     spread))
 
-;; ### Stage 2 → Stage 3: Apply defaults
-;; The apply-defaults function fills in plottype, scales, dimensions
-(def defaulted-spec (apply-defaults resolved-spec))
-
-(kind/pprint defaulted-spec)
-
-;; ### Stage 3 → Stage 4: Spread (no-op here, no grouping)
-;; The spread function expands color/facet groupings (none here)
-(def spread-spec (spread defaulted-spec))
-
-(kind/pprint spread-spec)
-
-;; ### Stage 4: Render to SVG
-(plot spread-spec)
+;; ### Stage 4: Add rendering
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    resolve-roles
+    apply-defaults
+    spread
+    plot)
 
 ;; ## Example 2: Intervening between stages
 
 ;; ### Intervention after resolve-roles: Change plottype
-(-> base-spec
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
     resolve-roles
     (assoc-in [:=layers 0 :=plottype] :line)
     apply-defaults
     plot)
 
 ;; ### Intervention after apply-defaults: Override scale domain
-(-> base-spec
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
     resolve-roles
     apply-defaults
     (assoc-in [:=scales :x :domain] [30 60])
@@ -1256,7 +1257,7 @@ simple-data
     plot)
 
 ;; ### Intervention after apply-defaults: Change theme colors
-(-> base-spec
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
     resolve-roles
     apply-defaults
     (assoc :=theme (assoc theme
@@ -1266,34 +1267,41 @@ simple-data
 
 ;; ## Example 3: Color grouping transformation
 
-;; Start with a colored layer
-(def color-spec
-  (-> (layer penguins :bill_length_mm :bill_depth_mm)
-      (assoc-in [:=layers 0 :=color] :species)))
-
-;; Before spread: single layer with :=color annotation
-(def before-spread
-  (-> color-spec
-      resolve-roles
-      apply-defaults))
-
+;; ### Start with a colored layer
 (kind/pprint
- (select-keys (first (:=layers before-spread))
-              [:=columns :=color :=plottype]))
+ (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (assoc-in [:=layers 0 :=color] :species)))
 
-;; After spread: multiple layers, one per species
-(def after-spread (spread before-spread))
-
+;; ### Before spread: single layer with :=color annotation
 (kind/pprint
- (map #(select-keys % [:=columns :=color-value :=color-index :=plottype])
-      (:=layers after-spread)))
+ (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (assoc-in [:=layers 0 :=color] :species)
+     resolve-roles
+     apply-defaults
+     (#(select-keys (first (:=layers %)) [:=columns :=color :=plottype]))))
 
-;; Render the spread layers
-(plot after-spread)
+;; ### After spread: multiple layers, one per species
+(kind/pprint
+ (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (assoc-in [:=layers 0 :=color] :species)
+     resolve-roles
+     apply-defaults
+     spread
+     (#(map (fn [layer] (select-keys layer [:=columns :=color-value :=color-index :=plottype]))
+            (:=layers %)))))
+
+;; ### Render the spread layers
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=color] :species)
+    resolve-roles
+    apply-defaults
+    spread
+    plot)
 
 ;; ### Intervention after spread: Modify individual color layers
 ;; Change the second species (Chinstrap) to use line geometry
-(-> color-spec
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=color] :species)
     resolve-roles
     apply-defaults
     spread
@@ -1307,34 +1315,38 @@ simple-data
                layers)))
     plot)
 
+;; ## Example 4: Faceting transformation
 
-
-;; ## Example 5: Faceting transformation
-
-;; Create a faceted plot
-(def facet-spec
-  (-> (layer penguins :bill_length_mm :bill_depth_mm)
-      (assoc-in [:=layers 0 :=facet] :island)))
-
-;; Before spread: single layer with facet annotation
-(def facet-before
-  (-> facet-spec
-      resolve-roles
-      apply-defaults))
-
+;; ### Start with a faceted layer
 (kind/pprint
- (select-keys (first (:=layers facet-before))
-              [:=columns :=facet]))
+ (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (assoc-in [:=layers 0 :=facet] :island)))
 
-;; After spread: multiple layers, one per island
-(def facet-after (spread facet-before))
-
+;; ### Before spread: single layer with facet annotation
 (kind/pprint
- (map #(select-keys % [:=facet-value :=facet-index])
-      (:=layers facet-after)))
+ (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (assoc-in [:=layers 0 :=facet] :island)
+     resolve-roles
+     apply-defaults
+     (#(select-keys (first (:=layers %)) [:=columns :=facet]))))
 
-;; Render faceted plot
-(plot facet-after)
+;; ### After spread: multiple layers, one per island
+(kind/pprint
+ (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (assoc-in [:=layers 0 :=facet] :island)
+     resolve-roles
+     apply-defaults
+     spread
+     (#(map (fn [layer] (select-keys layer [:=facet-value :=facet-index]))
+            (:=layers %)))))
+
+;; ### Render faceted plot
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=facet] :island)
+    resolve-roles
+    apply-defaults
+    spread
+    plot)
 
 ;; ### Intervention: Combine color and facet
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
@@ -1345,30 +1357,32 @@ simple-data
     spread
     plot)
 
-;; ## Example 6: Cross (SPLOM) transformation
+;; ## Example 5: Cross (SPLOM) transformation
 
-;; Create a scatter plot matrix
-(def splom-spec
-  (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-         (layers penguins [:bill_length_mm :flipper_length_mm])))
-
-;; Initial state: cross product structure
+;; ### Start with a cross product
 (kind/pprint
- (map #(select-keys % [:=columns])
-      (:=layers splom-spec)))
+ (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+        (layers penguins [:bill_length_mm :flipper_length_mm])))
 
-;; After resolution: roles inferred
-(def splom-resolved (resolve-roles splom-spec))
-
+;; ### After resolution: roles inferred
 (kind/pprint
- (map #(select-keys % [:=columns :=x :=y])
-      (:=layers splom-resolved)))
+ (-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+            (layers penguins [:bill_length_mm :flipper_length_mm]))
+     resolve-roles
+     (#(map (fn [layer] (select-keys layer [:=columns :=x :=y]))
+            (:=layers %)))))
 
-;; Render the SPLOM
-(plot splom-resolved)
+;; ### Render the SPLOM
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+           (layers penguins [:bill_length_mm :flipper_length_mm]))
+    resolve-roles
+    apply-defaults
+    spread
+    plot)
 
 ;; ### Intervention: Add color to entire SPLOM
-(-> splom-spec
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+           (layers penguins [:bill_length_mm :flipper_length_mm]))
     resolve-roles
     apply-defaults
     (update :=layers
