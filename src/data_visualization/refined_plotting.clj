@@ -96,10 +96,13 @@ simple-data
           layers))
 
 ;; Examples:
-(merge-layers {:=columns [:a]} {:=columns [:b]})
+;; Line 99-100
+(kind/pprint
+ (merge-layers {:=columns [:a]} {:=columns [:b]}))
 
-(merge-layers {:=columns [:a] :=data "dataset1"}
-              {:=columns [:b] :=data "dataset2"})
+(kind/pprint
+ (merge-layers {:=columns [:a] :=data "dataset1"}
+               {:=columns [:b] :=data "dataset2"}))
 
 (defn cross
   "Cartesian product of specs.
@@ -134,11 +137,13 @@ simple-data
        specs))))
 
 ;; Examples:
-(cross {:=layers [{:=columns [:a]}]}
-       {:=layers [{:=columns [:b]}]})
+(kind/pprint
+ (cross {:=layers [{:=columns [:a]}]}
+        {:=layers [{:=columns [:b]}]}))
 
-(cross {:=layers [{:=columns [:a]} {:=columns [:c]}]}
-       {:=layers [{:=columns [:b]} {:=columns [:d]}]})
+(kind/pprint
+ (cross {:=layers [{:=columns [:a]} {:=columns [:c]}]}
+        {:=layers [{:=columns [:b]} {:=columns [:d]}]}))
 
 (defn blend
   "Concatenate layers from multiple specs.
@@ -686,11 +691,14 @@ simple-data
                 (:line-stroke theme))
         line-width (get-in layer [:=line-width] (:line-width theme))
 
-        ;; Get sorted points
+        ;; Get points and filter out nils
         points (for [i (range (tc/row-count data))]
-                 {:x (-> data (tc/column x-col) (nth i))
-                  :y (-> data (tc/column y-col) (nth i))})
-        sorted-points (sort-by :x points)
+                 (let [x-val (-> data (tc/column x-col) (nth i))
+                       y-val (-> data (tc/column y-col) (nth i))]
+                   (when (and (some? x-val) (some? y-val))
+                     {:x x-val :y y-val})))
+        valid-points (filter some? points)
+        sorted-points (sort-by :x valid-points)
 
         ;; Create path data string
         path-data (clojure.string/join " "
@@ -849,47 +857,54 @@ simple-data
 ;; Comprehensive examples demonstrating all functionality
 
 ;; ## Stage 1: Algebraic Operations
-
 ;; ### merge-layers - concatenate :=columns vectors
-(merge-layers {:=columns [:a]} {:=columns [:b]})
+(kind/pprint
+ (merge-layers {:=columns [:a]} {:=columns [:b]}))
 
-(merge-layers {:=columns [:a] :=data "dataset1"}
-              {:=columns [:b] :=data "dataset2"})
+(kind/pprint
+ (merge-layers {:=columns [:a] :=data "dataset1"}
+               {:=columns [:b] :=data "dataset2"}))
 
 ;; ### cross - Cartesian product
 
 ;; Simple 2x2 cross
-(cross {:=layers [{:=columns [:a]}]}
-       {:=layers [{:=columns [:b]}]})
+(kind/pprint
+ (cross {:=layers [{:=columns [:a]}]}
+        {:=layers [{:=columns [:b]}]}))
 
 ;; 2x2 grid
-(cross {:=layers [{:=columns [:a]} {:=columns [:c]}]}
-       {:=layers [{:=columns [:b]} {:=columns [:d]}]})
+(kind/pprint
+ (cross {:=layers [{:=columns [:a]} {:=columns [:c]}]}
+        {:=layers [{:=columns [:b]} {:=columns [:d]}]}))
 
 ;; Real SPLOM structure
-(cross (layers simple-data [:x :z])
-       (layers simple-data [:x :y]))
+(kind/pprint
+ (cross (layers simple-data [:x :z])
+        (layers simple-data [:x :y])))
 
 ;; ### blend - Concatenate layers (overlay)
-(blend {:=layers [{:=columns [:a]}]}
-       {:=layers [{:=columns [:b]}]})
+(kind/pprint
+ (blend {:=layers [{:=columns [:a]}]}
+        {:=layers [{:=columns [:b]}]}))
 
 ;; Overlay different plot types
-(blend {:=layers [{:=plottype :scatter}]}
-       {:=layers [{:=plottype :line}]})
+(kind/pprint
+ (blend {:=layers [{:=plottype :scatter}]}
+        {:=layers [{:=plottype :line}]}))
 
 ;; ### layer - Create single layer
-(layer simple-data :x :y)
+(kind/pprint (layer simple-data :x :y))
 
-(layer simple-data :x)
+(kind/pprint (layer simple-data :x))
 
 ;; ### layers - Create multiple layers (syntactic sugar)
-(layers simple-data [:x :y :z])
+(kind/pprint (layers simple-data [:x :y :z]))
 
 ;; Equivalent to:
-(blend (layer simple-data :x)
-       (layer simple-data :y)
-       (layer simple-data :z))
+(kind/pprint
+ (blend (layer simple-data :x)
+        (layer simple-data :y)
+        (layer simple-data :z)))
 
 ;; ## Stage 2: Role Inference & Defaults
 
