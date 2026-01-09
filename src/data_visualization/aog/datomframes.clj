@@ -67,8 +67,8 @@ penguin-db
                  (for [[x y color] results]
                    [:circle {:r 2, :cx x, :cy y
                              :fill (get color-map color "gray")}]))
-        :line (for [[x1 y1 x2 y2] results]
-                [:line {:x1 x1, :y1 y1, :x2 x2, :y2 y2}])))))
+        :connect (for [[x1 y1 x2 y2] results]
+                   [:line {:x1 x1, :y1 y1, :x2 x2, :y2 y2}])))))
 
 ;; To specify a plot, we provide a query
 
@@ -107,7 +107,7 @@ penguin-db
                               [?e1 :bill_depth ?y1]
                               [?e2 :bill_length ?x2]
                               [?e2 :bill_depth ?y2]]}
-             :geometry [:line]}])
+             :geometry [:connect]}])
 
 ;; This small example shows that the mapping lives in the query.
 ;; Queries can bind points and relationships between entities.
