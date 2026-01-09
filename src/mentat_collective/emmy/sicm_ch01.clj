@@ -16,14 +16,16 @@
             [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda]]
             [civitas.repl :as repl]))
 
+;; The following examples are taken from the MIT open-access book [Structure and Interpretation of Classical Mechanics (SICM)](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/9579/sicm_edition_2.zip/chapter001.html).
+
 ^:kindly/hide-code
-(def prod false) ;; if you set this to false, the browser will be busy calculating, be patient
+(do
+  "if you `prod` to `false`, the browser will be busy calculating, be patient"
+  (def prod true))
 
 ^:kindly/hide-code
 (def md
   (comp kindly/hide-code kind/md))
-
-(md "The following examples are taken from the MIT open-access book [Structure and Interpretation of Classical Mechanics (SICM)](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/9579/sicm_edition_2.zip/chapter001.html).")
 
 (md "Another notebook can be found on the [Road to Reality website](https://reality.mentat.org/essays/reality/introduction#welcome-to-the-road-to-reality!) by [Sam Ritchie](https://roadtoreality.substack.com/p/the-first-executable-essay-is-live), the author (along with [Colin Smith](https://github.com/littleredcomputer)) of [Emmy, the Computer Algebra System](https://emmy.mentat.org).")
 
