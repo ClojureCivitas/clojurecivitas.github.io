@@ -17,14 +17,14 @@
   - Simple IR (intermediate representation) - data is the API
   - Keep :=columns for positional algebra
   - Explicit two-stage transformation:
-    1. resolve-roles: :=columns → :=x/:=y
-    2. spread: :=color/:=facet → multiple layers
+    1. resolve-roles: :=columns -> :=x/:=y
+    2. spread: :=color/:=facet -> multiple layers
   - Both stages are visible and inspectable
   
   Architecture:
   1. Algebraic layer - cross, blend (operate on :=columns)
-  2. Role inference - resolve-roles (positional → named)
-  3. Grouping spread - spread (markers → partitioned layers)
+  2. Role inference - resolve-roles (positional -> named)
+  3. Grouping spread - spread (markers -> partitioned layers)
   4. Rendering - plot (SVG generation)"
   (:require
    [tablecloth.api :as tc]
@@ -38,7 +38,7 @@
 ;;
 ;; This notebook implements a clean Grammar of Graphics with explicit stages:
 ;;
-;; **Algebra** → **Assign Roles** → **Spread** → **Render**
+;; **Algebra** -> **Assign Roles** -> **Spread** -> **Render**
 ;;
 ;; Each stage is a pure function on data. The IR is simple and inspectable.
 
@@ -116,7 +116,7 @@ simple-data
       (reduce
        (fn [acc spec]
          (cond
-           ;; Both have layers → cross product
+           ;; Both have layers -> cross product
            (and (:=layers acc) (:=layers spec))
            (let [product-layers (for [layer-a (:=layers acc)
                                       layer-b (:=layers spec)]
@@ -124,14 +124,14 @@ simple-data
                  plot-props (merge (dissoc acc :=layers) (dissoc spec :=layers))]
              (assoc plot-props :=layers (vec product-layers)))
 
-           ;; Only one has layers → merge
+           ;; Only one has layers -> merge
            (:=layers acc)
            (merge spec acc)
 
            (:=layers spec)
            (merge acc spec)
 
-           ;; Neither has layers → merge
+           ;; Neither has layers -> merge
            :else
            (merge acc spec)))
        specs))))
@@ -194,15 +194,15 @@ simple-data
 
 ;; ## Stage 2: Role Inference and Defaults
 ;;
-;; Two steps: resolve-roles (inference) → apply-defaults (sensible defaults)
+;; Two steps: resolve-roles (inference) -> apply-defaults (sensible defaults)
 
 (defn resolve-roles
   "Resolve visual roles from :=columns positional provenance.
   
   Rules:
-  - 1 column → :=x only
-  - 2 columns → :=x and :=y
-  - 3+ columns → error (ambiguous)
+  - 1 column -> :=x only
+  - 2 columns -> :=x and :=y
+  - 3+ columns -> error (ambiguous)
   
   Also detects diagonal (:=x = :=y) for later use by apply-defaults.
   Does NOT set :=plottype - that's apply-defaults' job."
@@ -584,8 +584,8 @@ simple-data
   Returns hiccup vector of SVG elements.
   
   Different geometries may take different scale parameters:
-  - :scatter, :line → [layer x-scale y-scale]
-  - :histogram → [layer x-scale height margin]
+  - :scatter, :line -> [layer x-scale y-scale]
+  - :histogram -> [layer x-scale height margin]
   
   Users can extend by adding new methods:
   (defmethod render-geom :my-geom [layer x-scale y-scale] ...)"
@@ -718,7 +718,7 @@ simple-data
 (defn render-single-panel
   "Render a single panel with multiple layers.
   
-  Pipeline: transform-data → render-geom → SVG"
+  Pipeline: transform-data -> render-geom -> SVG"
   [layers width height margin]
   (let [;; Compute domains across all layers
         x-vals (get-column-values layers :=x :=data)
@@ -911,7 +911,7 @@ simple-data
 
 ;; ## Stage 2: Role Inference & Defaults
 
-;; ### resolve-roles - Positional → Named roles
+;; ### resolve-roles - Positional -> Named roles
 
 ;; Off-diagonal (x ≠ y)
 (-> (layer simple-data :x :y)
@@ -934,14 +934,14 @@ simple-data
 
 ;; ### apply-defaults - Structure-based defaults
 
-;; Off-diagonal → scatter
+;; Off-diagonal -> scatter
 (-> (layer simple-data :x :y)
     resolve-roles
     apply-defaults
     :=layers first
     (select-keys [:=plottype :=diagonal?]))
 
-;; Diagonal → histogram
+;; Diagonal -> histogram
 (-> (layer simple-data :x :x)
     resolve-roles
     apply-defaults
@@ -1211,26 +1211,26 @@ simple-data
 ;; ## Example 1: Basic scatter plot transformation
 
 ;; ### Stage 1: Start with a simple layer
-(kind/pprint
- (layer penguins :bill_length_mm :bill_depth_mm))
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    kind/pprint)
 
-;; ### Stage 1 → Stage 2: Add role resolution
-(kind/pprint
- (-> (layer penguins :bill_length_mm :bill_depth_mm)
-     resolve-roles))
+;; ### Stage 1 -> Stage 2: Add role resolution
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    resolve-roles
+    kind/pprint)
 
-;; ### Stage 2 → Stage 3: Add defaults
-(kind/pprint
- (-> (layer penguins :bill_length_mm :bill_depth_mm)
-     resolve-roles
-     apply-defaults))
+;; ### Stage 2 -> Stage 3: Add defaults
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    resolve-roles
+    apply-defaults
+    kind/pprint)
 
-;; ### Stage 3 → Stage 4: Add spread (no-op here, no grouping)
-(kind/pprint
- (-> (layer penguins :bill_length_mm :bill_depth_mm)
-     resolve-roles
-     apply-defaults
-     spread))
+;; ### Stage 3 -> Stage 4: Add spread (no-op here, no grouping)
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    resolve-roles
+    apply-defaults
+    spread
+    kind/pprint)
 
 ;; ### Stage 4: Add rendering
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
@@ -1268,27 +1268,27 @@ simple-data
 ;; ## Example 3: Color grouping transformation
 
 ;; ### Start with a colored layer
-(kind/pprint
- (-> (layer penguins :bill_length_mm :bill_depth_mm)
-     (assoc-in [:=layers 0 :=color] :species)))
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=color] :species)
+    kind/pprint)
 
 ;; ### Before spread: single layer with :=color annotation
-(kind/pprint
- (-> (layer penguins :bill_length_mm :bill_depth_mm)
-     (assoc-in [:=layers 0 :=color] :species)
-     resolve-roles
-     apply-defaults
-     (#(select-keys (first (:=layers %)) [:=columns :=color :=plottype]))))
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=color] :species)
+    resolve-roles
+    apply-defaults
+    (#(select-keys (first (:=layers %)) [:=columns :=color :=plottype]))
+    kind/pprint)
 
 ;; ### After spread: multiple layers, one per species
-(kind/pprint
- (-> (layer penguins :bill_length_mm :bill_depth_mm)
-     (assoc-in [:=layers 0 :=color] :species)
-     resolve-roles
-     apply-defaults
-     spread
-     (#(map (fn [layer] (select-keys layer [:=columns :=color-value :=color-index :=plottype]))
-            (:=layers %)))))
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=color] :species)
+    resolve-roles
+    apply-defaults
+    spread
+    (#(map (fn [layer] (select-keys layer [:=columns :=color-value :=color-index :=plottype]))
+           (:=layers %)))
+    kind/pprint)
 
 ;; ### Render the spread layers
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
@@ -1318,27 +1318,27 @@ simple-data
 ;; ## Example 4: Faceting transformation
 
 ;; ### Start with a faceted layer
-(kind/pprint
- (-> (layer penguins :bill_length_mm :bill_depth_mm)
-     (assoc-in [:=layers 0 :=facet] :island)))
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=facet] :island)
+    kind/pprint)
 
 ;; ### Before spread: single layer with facet annotation
-(kind/pprint
- (-> (layer penguins :bill_length_mm :bill_depth_mm)
-     (assoc-in [:=layers 0 :=facet] :island)
-     resolve-roles
-     apply-defaults
-     (#(select-keys (first (:=layers %)) [:=columns :=facet]))))
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=facet] :island)
+    resolve-roles
+    apply-defaults
+    (#(select-keys (first (:=layers %)) [:=columns :=facet]))
+    kind/pprint)
 
 ;; ### After spread: multiple layers, one per island
-(kind/pprint
- (-> (layer penguins :bill_length_mm :bill_depth_mm)
-     (assoc-in [:=layers 0 :=facet] :island)
-     resolve-roles
-     apply-defaults
-     spread
-     (#(map (fn [layer] (select-keys layer [:=facet-value :=facet-index]))
-            (:=layers %)))))
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=facet] :island)
+    resolve-roles
+    apply-defaults
+    spread
+    (#(map (fn [layer] (select-keys layer [:=facet-value :=facet-index]))
+           (:=layers %)))
+    kind/pprint)
 
 ;; ### Render faceted plot
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
@@ -1360,17 +1360,17 @@ simple-data
 ;; ## Example 5: Cross (SPLOM) transformation
 
 ;; ### Start with a cross product
-(kind/pprint
- (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-        (layers penguins [:bill_length_mm :flipper_length_mm])))
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+           (layers penguins [:bill_length_mm :flipper_length_mm]))
+    kind/pprint)
 
 ;; ### After resolution: roles inferred
-(kind/pprint
- (-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-            (layers penguins [:bill_length_mm :flipper_length_mm]))
-     resolve-roles
-     (#(map (fn [layer] (select-keys layer [:=columns :=x :=y]))
-            (:=layers %)))))
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+           (layers penguins [:bill_length_mm :flipper_length_mm]))
+    resolve-roles
+    (#(map (fn [layer] (select-keys layer [:=columns :=x :=y]))
+           (:=layers %)))
+    kind/pprint)
 
 ;; ### Render the SPLOM
 (-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
