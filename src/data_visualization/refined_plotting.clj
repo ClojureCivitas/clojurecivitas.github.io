@@ -1308,42 +1308,6 @@ simple-data
     plot)
 
 
-;; ## Example 4: Complex multi-layer transformation
-
-;; Create a blend of scatter + smooth
-(def complex-spec
-  (blend
-   (layer penguins :bill_length_mm :bill_depth_mm)
-   (-> (layer penguins :bill_length_mm :bill_depth_mm)
-       (assoc-in [:=layers 0 :=plottype] :smooth))))
-
-;; Step through the pipeline
-(kind/pprint
- (map #(select-keys % [:=columns :=plottype])
-      (:=layers complex-spec)))
-
-(def complex-resolved (resolve-roles complex-spec))
-
-(kind/pprint
- (map #(select-keys % [:=columns :=x :=y :=plottype])
-      (:=layers complex-resolved)))
-
-(def complex-defaulted (apply-defaults complex-resolved))
-
-(kind/pprint
- (map #(select-keys % [:=columns :=x :=y :=plottype :=data])
-      (:=layers complex-defaulted)))
-
-;; Render the final result
-(plot complex-defaulted)
-
-;; ### Intervention: Add color to just the scatter layer
-(-> complex-spec
-    resolve-roles
-    apply-defaults
-    (assoc-in [:=layers 0 :=color] :species)
-    spread
-    plot)
 
 ;; ## Example 5: Faceting transformation
 
