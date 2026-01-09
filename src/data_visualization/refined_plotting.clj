@@ -58,7 +58,7 @@
    :default-mark "#333333"
    :point-fill "#333333"
    :point-stroke "#FFFFFF"
-   :point-size 2
+   :point-size 3
    :line-stroke "#333333"
    :line-width 1.5
    :histogram-fill "#333333"
@@ -651,8 +651,11 @@ simple-data
         y-scale (make-scale [0 max-count]
                             [(- height margin) margin])
 
-        ;; Theme colors
-        hist-fill (:histogram-fill theme)
+        ;; Color: use color-index if present, otherwise default
+        color-index (:=color-index layer)
+        hist-fill (if color-index
+                    (get-color color-index)
+                    (:histogram-fill theme))
         hist-stroke (:histogram-stroke theme)
         hist-stroke-width (:histogram-stroke-width theme)]
 
@@ -1103,3 +1106,98 @@ simple-data
     (when-diagonal {:=plottype :histogram})
     (when-off-diagonal {:=plottype :scatter})
     plot)
+
+;; ## Color Grouping Examples
+
+;; ### Basic color grouping
+;; Adding :=color creates groups - one layer per unique value
+
+(-> (layer penguins "bill_length_mm" "bill_depth_mm")
+    resolve-roles
+    apply-defaults
+    (assoc-in [:=layers 0 :=color] "species")
+    plot)
+
+;; ### Inspect what spread does with color
+;; Before spread: 1 layer with :=color
+(def before-spread
+  (-> (layer penguins "bill_length_mm" "bill_depth_mm")
+      resolve-roles
+      apply-defaults
+      (assoc-in [:=layers 0 :=color] "species")))
+
+(kind/pprint
+ {:layer-count (count (:=layers before-spread))
+  :has-color (get-in before-spread [:=layers 0 :=color])})
+
+;; After spread: 3 layers, one per species
+(def after-spread (spread before-spread))
+
+(kind/pprint
+ {:layer-count (count (:=layers after-spread))
+  :color-values (map :=color-value (:=layers after-spread))})
+
+;; Render the spread result
+(plot after-spread)
+
+;; ### Color with different plot types
+
+;; Colored lines
+(-> (layer penguins "bill_length_mm" "bill_depth_mm")
+    resolve-roles
+    apply-defaults
+    (assoc-in [:=layers 0 :=color] "species")
+    (assoc-in [:=layers 0 :=plottype] :line)
+    plot)
+
+;; Colored histograms (diagonal pattern)
+(-> (layer penguins "bill_length_mm" "bill_length_mm")
+    resolve-roles
+    apply-defaults
+    (assoc-in [:=layers 0 :=color] "species")
+    plot)
+
+;; ### Layering with color
+
+;; Scatter + smooth, both colored by species
+(-> (blend
+     (layer penguins "bill_length_mm" "bill_depth_mm")
+     (-> (layer penguins "bill_length_mm" "bill_depth_mm")
+         (assoc-in [:=layers 0 :=transform] :smooth)
+         (assoc-in [:=layers 0 :=plottype] :line)))
+    resolve-roles
+    apply-defaults
+    ;; Add color to both layers
+    (update-in [:=layers 0] assoc :=color "species")
+    (update-in [:=layers 1] assoc :=color "species")
+    plot)
+
+;; ### How colors are assigned
+;; Colors are assigned by sorted unique values with indices
+
+(def color-example
+  (-> (layer penguins "bill_length_mm" "bill_depth_mm")
+      resolve-roles
+      apply-defaults
+      (assoc-in [:=layers 0 :=color] "species")
+      spread))
+
+;; Species sorted alphabetically, assigned color indices
+(kind/pprint
+ (map #(select-keys % [:=color-value :=color-index])
+      (:=layers color-example)))
+
+;; ### Multiple color groups in one plot
+;; Each layer can have different color groupings
+
+(-> (blend
+      ;; Layer 1: Colored by species
+     (-> (layer penguins "bill_length_mm" "bill_depth_mm")
+         (assoc-in [:=layers 0 :=color] "species"))
+      ;; Layer 2: Colored by island (will get different colors)
+     (-> (layer penguins "flipper_length_mm" "body_mass_g")
+         (assoc-in [:=layers 0 :=color] "island")))
+    resolve-roles
+    apply-defaults
+    plot)
+
