@@ -29,10 +29,12 @@
 ;; First: some tiny datoms to play with.
 
 (def penguins
-  [{:species "Adelie" :bill_length 29.1 :bill_depth 18.7 :sex "MALE"}
-   {:species "Adelie" :bill_length 33.5 :bill_depth 15.4 :sex "FEMALE"}
-   {:species "Chinstrap" :bill_length 43.5 :bill_depth 17.9 :sex "FEMALE"}
-   {:species "Gentoo" :bill_length 47.3 :bill_depth 13.8 :sex "MALE"}])
+  [{:species "Adelie" :bill_length 22.1 :bill_depth 22.7 :sex "MALE"}
+   {:species "Adelie" :bill_length 31.5 :bill_depth 14.4 :sex "FEMALE"}
+   {:species "Adelie" :bill_length 35.8 :bill_depth 19.2 :sex "MALE"}
+   {:species "Chinstrap" :bill_length 39.5 :bill_depth 27.9 :sex "FEMALE"}
+   {:species "Chinstrap" :bill_length 46.2 :bill_depth 26.8 :sex "MALE"}
+   {:species "Gentoo" :bill_length 49.1 :bill_depth 14.2 :sex "FEMALE"}])
 
 (def penguin-db
   (let [conn (d/create-conn)]
@@ -84,7 +86,7 @@ penguin-db
 
 ^:kind/hiccup
 [:svg {:width "100%" :height "300"
-       :viewBox "0 0 50 50"
+       :viewBox "10 10 30 30"
        :xmlns   "http://www.w3.org/2000/svg"}
  [:g {:stroke "gray", :fill "none"}
   (plot-basic bill-scatter)]]
@@ -92,16 +94,19 @@ penguin-db
 ;; We can also query for relationships between entities.
 ;; For example, pairs of penguins from the same species:
 
-(def same-species-relationships
+(def same-species-different-sex
   [:graphic {:db penguin-db
              :query '{:find [?x1 ?y1 ?x2 ?y2]
                       :where [[?e1 :species ?s]
                               [?e2 :species ?s]
+                              [(not= ?e1 ?e2)]
+                              [?e1 :sex ?sex1]
+                              [?e2 :sex ?sex2]
+                              [(not= ?sex1 ?sex2)]
                               [?e1 :bill_length ?x1]
                               [?e1 :bill_depth ?y1]
                               [?e2 :bill_length ?x2]
-                              [?e2 :bill_depth ?y2]
-                              [(not= ?e1 ?e2)]]}
+                              [?e2 :bill_depth ?y2]]}
              :geometry [:line]}])
 
 ;; This small example shows that the mapping lives in the query.
@@ -113,11 +118,11 @@ penguin-db
 
 ^:kind/hiccup
 [:svg {:width "100%" :height "300"
-       :viewBox "0 0 50 50"
+       :viewBox "10 10 30 30"
        :xmlns   "http://www.w3.org/2000/svg"}
  [:g {:stroke "gray", :fill "none"}
-  (plot-basic bill-scatter)
-  (plot-basic same-species-relationships)]]
+  (plot-basic same-species-different-sex)
+  (plot-basic bill-scatter)]]
 
 ;; Plots as queries let us say more.
 ;; Points and edges can be defined by a query.
