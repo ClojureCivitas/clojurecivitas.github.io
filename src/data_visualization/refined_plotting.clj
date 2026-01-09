@@ -1201,3 +1201,231 @@ simple-data
     apply-defaults
     plot)
 
+
+;; # Understanding the Pipeline: Step-by-Step Transformations
+
+;; This section demonstrates how the 4-stage pipeline gradually transforms
+;; specifications from high-level descriptions to rendered SVG, and how you
+;; can intervene at each stage for fine-grained control.
+
+;; ## Example 1: Basic scatter plot transformation
+
+;; Start with a simple layer
+(def base-spec
+  (layer penguins :bill_length_mm :bill_depth_mm))
+
+;; Inspect the initial IR
+(kind/pprint base-spec)
+
+;; ### Stage 1 → Stage 2: Role resolution
+;; The resolve-roles function infers x/y roles from column positions
+(def resolved-spec (resolve-roles base-spec))
+
+(kind/pprint resolved-spec)
+
+;; ### Stage 2 → Stage 3: Apply defaults
+;; The apply-defaults function fills in plottype, scales, dimensions
+(def defaulted-spec (apply-defaults resolved-spec))
+
+(kind/pprint defaulted-spec)
+
+;; ### Stage 3 → Stage 4: Spread (no-op here, no grouping)
+;; The spread function expands color/facet groupings (none here)
+(def spread-spec (spread defaulted-spec))
+
+(kind/pprint spread-spec)
+
+;; ### Stage 4: Render to SVG
+(plot spread-spec)
+
+;; ## Example 2: Intervening between stages
+
+;; ### Intervention after resolve-roles: Change plottype
+(-> base-spec
+    resolve-roles
+    (assoc-in [:=layers 0 :=plottype] :line)
+    apply-defaults
+    plot)
+
+;; ### Intervention after apply-defaults: Override scale domain
+(-> base-spec
+    resolve-roles
+    apply-defaults
+    (assoc-in [:=scales :x :domain] [30 60])
+    (assoc-in [:=scales :y :domain] [10 25])
+    plot)
+
+;; ### Intervention after apply-defaults: Change theme colors
+(-> base-spec
+    resolve-roles
+    apply-defaults
+    (assoc :=theme (assoc theme
+                          :background-fill "#FFF8DC"
+                          :point-fill "#8B4513"))
+    plot)
+
+;; ## Example 3: Color grouping transformation
+
+;; Start with a colored layer
+(def color-spec
+  (-> (layer penguins :bill_length_mm :bill_depth_mm)
+      (assoc-in [:=layers 0 :=color] :species)))
+
+;; Before spread: single layer with :=color annotation
+(def before-spread
+  (-> color-spec
+      resolve-roles
+      apply-defaults))
+
+(kind/pprint
+ (select-keys (first (:=layers before-spread))
+              [:=columns :=color :=plottype]))
+
+;; After spread: multiple layers, one per species
+(def after-spread (spread before-spread))
+
+(kind/pprint
+ (map #(select-keys % [:=columns :=color-value :=color-index :=plottype])
+      (:=layers after-spread)))
+
+;; Render the spread layers
+(plot after-spread)
+
+;; ### Intervention after spread: Modify individual color layers
+;; Change the second species (Chinstrap) to use line geometry
+(-> color-spec
+    resolve-roles
+    apply-defaults
+    spread
+    (update :=layers
+            (fn [layers]
+              (map-indexed
+               (fn [i layer]
+                 (if (= i 1)
+                   (assoc layer :=plottype :line)
+                   layer))
+               layers)))
+    plot)
+
+
+;; ## Example 4: Complex multi-layer transformation
+
+;; Create a blend of scatter + smooth
+(def complex-spec
+  (blend
+   (layer penguins :bill_length_mm :bill_depth_mm)
+   (-> (layer penguins :bill_length_mm :bill_depth_mm)
+       (assoc-in [:=layers 0 :=plottype] :smooth))))
+
+;; Step through the pipeline
+(kind/pprint
+ (map #(select-keys % [:=columns :=plottype])
+      (:=layers complex-spec)))
+
+(def complex-resolved (resolve-roles complex-spec))
+
+(kind/pprint
+ (map #(select-keys % [:=columns :=x :=y :=plottype])
+      (:=layers complex-resolved)))
+
+(def complex-defaulted (apply-defaults complex-resolved))
+
+(kind/pprint
+ (map #(select-keys % [:=columns :=x :=y :=plottype :=data])
+      (:=layers complex-defaulted)))
+
+;; Render the final result
+(plot complex-defaulted)
+
+;; ### Intervention: Add color to just the scatter layer
+(-> complex-spec
+    resolve-roles
+    apply-defaults
+    (assoc-in [:=layers 0 :=color] :species)
+    spread
+    plot)
+
+;; ## Example 5: Faceting transformation
+
+;; Create a faceted plot
+(def facet-spec
+  (-> (layer penguins :bill_length_mm :bill_depth_mm)
+      (assoc-in [:=layers 0 :=facet] :island)))
+
+;; Before spread: single layer with facet annotation
+(def facet-before
+  (-> facet-spec
+      resolve-roles
+      apply-defaults))
+
+(kind/pprint
+ (select-keys (first (:=layers facet-before))
+              [:=columns :=facet]))
+
+;; After spread: multiple layers, one per island
+(def facet-after (spread facet-before))
+
+(kind/pprint
+ (map #(select-keys % [:=facet-value :=facet-index])
+      (:=layers facet-after)))
+
+;; Render faceted plot
+(plot facet-after)
+
+;; ### Intervention: Combine color and facet
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=color] :species)
+    (assoc-in [:=layers 0 :=facet] :island)
+    resolve-roles
+    apply-defaults
+    spread
+    plot)
+
+;; ## Example 6: Cross (SPLOM) transformation
+
+;; Create a scatter plot matrix
+(def splom-spec
+  (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+         (layers penguins [:bill_length_mm :flipper_length_mm])))
+
+;; Initial state: cross product structure
+(kind/pprint
+ (map #(select-keys % [:=columns])
+      (:=layers splom-spec)))
+
+;; After resolution: roles inferred
+(def splom-resolved (resolve-roles splom-spec))
+
+(kind/pprint
+ (map #(select-keys % [:=columns :=x :=y])
+      (:=layers splom-resolved)))
+
+;; Render the SPLOM
+(plot splom-resolved)
+
+;; ### Intervention: Add color to entire SPLOM
+(-> splom-spec
+    resolve-roles
+    apply-defaults
+    (update :=layers
+            (fn [layers]
+              (map #(assoc % :=color :species) layers)))
+    spread
+    plot)
+
+;; ## Key Takeaways
+
+;; 1. **Idempotent operations**: You can call resolve-roles, apply-defaults,
+;;    and spread multiple times safely. The plot function calls them automatically.
+
+;; 2. **Intervention points**:
+;;    - After resolve-roles: Change inferred roles or plottypes
+;;    - After apply-defaults: Override scales, themes, dimensions
+;;    - After spread: Modify individual group layers
+
+;; 3. **IR inspection**: Use kind/pprint to see the intermediate representation
+;;    at any stage and understand what transformations are happening.
+
+;; 4. **Composability**: Algebraic operations (layer, blend, cross) create
+;;    initial structure. Prep functions (resolve-roles, apply-defaults, spread)
+;;    enrich it. Render function (plot) produces SVG.
