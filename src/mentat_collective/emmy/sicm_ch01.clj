@@ -16,11 +16,16 @@
             [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda]]
             [civitas.repl :as repl]))
 
+;; The following examples are taken from the MIT open-access book [Structure and Interpretation of Classical Mechanics (SICM)](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/9579/sicm_edition_2.zip/chapter001.html).
+
+^:kindly/hide-code
+(do
+  "if you `prod` to `false`, the browser will be busy calculating, be patient"
+  (def prod true))
+
 ^:kindly/hide-code
 (def md
   (comp kindly/hide-code kind/md))
-
-(md "The following examples are taken from the MIT open-access book [Structure and Interpretation of Classical Mechanics (SICM)](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/9579/sicm_edition_2.zip/chapter001.html).")
 
 (md "Another notebook can be found on the [Road to Reality website](https://reality.mentat.org/essays/reality/introduction#welcome-to-the-road-to-reality!) by [Sam Ritchie](https://roadtoreality.substack.com/p/the-first-executable-essay-is-live), the author (along with [Colin Smith](https://github.com/littleredcomputer)) of [Emmy, the Computer Algebra System](https://emmy.mentat.org).")
 
@@ -73,45 +78,44 @@
      (require emmy-mn)))
 
 ^:kindly/hide-code
-(define show-exp (comp str simplify))
+(kind/scittle
+  '(defn show-expression [e]
+     (simplify e)))
 
 ^:kindly/hide-code
 (kind/scittle
-  '(defn show-expression [b & c]
-     (if (keyword? b)
-       (show-exp (first c))
-       (show-exp b))))
+  '(def show-tex-expression show-expression))
 
 ^:kindly/hide-code
 (def tex (comp kind/tex emmy.expression.render/->TeX simplify))
 
 ^:kindly/hide-code
-(defmacro show-expression [b & c]
-  (let [prod      true ;; if you set this to false, the browser will be busy calculating, be patient
-        reag-comp (fn [b] (let [server-erg (show-exp (eval b))]
-                            (list 'kind/reagent
-                                  [:div (list 'quote
-                                              (list 'let ['a (list 'show-exp b)]
-                                                    (list 'if 'false #_(list '= server-erg 'a)
-                                                          [:tt 'a]
-                                                          [:div
-                                                           (when (not prod)
-                                                             [:div
-                                                              [:tt 'a]
-                                                              [:p]])
-                                                           [:tt server-erg]])))])))]
-    (case b
-      :tex
-      (if prod
-        (list 'tex (first c))
-        (reag-comp (first c)))
-      (if prod
-        (list 'simplify b)
-        (reag-comp b)))))
+(define show-exp (comp str simplify))
+
+^:kindly/hide-code
+(defn reag-comp [b]
+  (let [server-erg (show-exp (eval b))]
+    (list 'kind/reagent
+          [:div (list 'quote
+                      (list 'let ['a (list 'show-exp b)]
+                            [:div
+                             (when (not prod)
+                               [:div
+                                [:tt 'a]
+                                [:p (list 'str (list '= server-erg 'a))]])
+                             [:tt server-erg]]))])))
+
+^:kindly/hide-code
+(defmacro show-expression [e]
+  (if prod
+    (list 'simplify e)
+    (reag-comp e)))
 
 ^:kindly/hide-code
 (defmacro show-tex-expression [e]
-  (list 'show-expression :tex e))
+  (if prod
+    (list 'tex e)
+    (reag-comp e)))
 
 ^:kindly/hide-code
 (define velocities velocity)
