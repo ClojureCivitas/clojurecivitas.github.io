@@ -529,7 +529,6 @@ simple-data
   [layer]
   layer)
 
-
 ;; Moving average transform - smooths y values
 (defmethod transform-data :smooth
   [layer]
@@ -537,20 +536,20 @@ simple-data
         x-col (:=x layer)
         y-col (:=y layer)
         window-size (get-in layer [:=transform-opts :window] 5)
-        
+
         ;; Get x and y values, filtering out nils
         x-vals (vec (tc/column data x-col))
         y-vals (vec (tc/column data y-col))
-        
+
         ;; Filter out nil pairs
         pairs (filter (fn [{:keys [x y]}] (and (some? x) (some? y)))
                       (map-indexed (fn [i x] {:i i :x x :y (nth y-vals i)}) x-vals))
-        
+
         ;; Sort by x
         sorted-pairs (sort-by :x pairs)
-        
+
         ;; Compute moving average for each point
-        smoothed-pairs (map-indexed 
+        smoothed-pairs (map-indexed
                         (fn [idx {:keys [x y]}]
                           (let [start (max 0 (- idx (quot window-size 2)))
                                 end (min (count sorted-pairs) (+ idx (quot window-size 2) 1))
@@ -558,12 +557,12 @@ simple-data
                                 avg-y (/ (reduce + window-ys) (count window-ys))]
                             {:x x :y avg-y}))
                         sorted-pairs)
-        
+
         ;; Create new dataset with smoothed values
         smoothed-data (tc/dataset {:x (map :x smoothed-pairs)
                                    :y (map :y smoothed-pairs)})]
-    
-    (assoc layer 
+
+    (assoc layer
            :=data smoothed-data
            :=x :x
            :=y :y)))
@@ -686,19 +685,19 @@ simple-data
                 (get-color color-index)
                 (:line-stroke theme))
         line-width (get-in layer [:=line-width] (:line-width theme))
-        
+
         ;; Get sorted points
         points (for [i (range (tc/row-count data))]
                  {:x (-> data (tc/column x-col) (nth i))
                   :y (-> data (tc/column y-col) (nth i))})
         sorted-points (sort-by :x points)
-        
+
         ;; Create path data string
-        path-data (clojure.string/join " " 
-                    (map (fn [pt]
-                           (str (x-scale (:x pt)) "," (y-scale (:y pt))))
-                         sorted-points))]
-    
+        path-data (clojure.string/join " "
+                                       (map (fn [pt]
+                                              (str (x-scale (:x pt)) "," (y-scale (:y pt))))
+                                            sorted-points))]
+
     [[:polyline {:points path-data
                  :fill "none"
                  :stroke color
@@ -776,12 +775,16 @@ simple-data
 (defn plot
   "Render a spec to SVG.
   
-  Calls spread implicitly to ensure grouping aesthetics are expanded.
+  Automatically calls resolve-roles, apply-defaults, and spread to prepare the spec.
+  These operations are idempotent, so calling them explicitly before plot is safe.
   Assigns color indices based on sorted unique color values.
   Automatically detects grid layout from :=grid-row/:=grid-col metadata."
   [spec]
-  (let [spec-spread (spread spec)
-        spec-colored (assign-color-indices spec-spread)
+  (let [spec-prepared (-> spec
+                          resolve-roles
+                          apply-defaults
+                          spread)
+        spec-colored (assign-color-indices spec-prepared)
         layers (:=layers spec-colored)
 
         ;; Detect if this is a grid layout
