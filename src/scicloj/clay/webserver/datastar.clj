@@ -4,12 +4,14 @@
    :clay {:title  "Serving webapps from your REPL"
           :quarto {:author      :timothypratley
                    :description "Using Clay's new webserver features and Datastar to build a chart with realtime server-push updates"
+                   :image       "datastar.png"
                    :reference-location :margin
                    :citation-location :margin
                    :type        :post
                    :date        "2026-01-10"
                    :category    :clay
-                   :tags        [:clay :workflow]}}}
+                   :tags        [:clay :workflow]
+                   :keywords    [:clay :datastar]}}}
   (:require [hiccup.core :as hiccup]))
 
 ;; Clay converts a Clojure namespace into an HTML page and runs a web server to display it.
