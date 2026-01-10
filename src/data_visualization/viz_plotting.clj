@@ -1,8 +1,9 @@
 (ns data-visualization.viz-plotting
-  "Grammar of Graphics using thi.ng/geom.viz for rendering.
+  "Exploring [thi.ng/geom.viz](https://github.com/thi-ng/geom/blob/feature/no-org/org/examples/viz/demos.org) through examples.
   
-  Starting with minimal rendering functions, will gradually add
-  the full pipeline from refined-plotting.clj"
+  We build increasingly complex plots manually to understand what 
+  a grammar layer should automate. The repetitive tedium motivates 
+  the abstractions that follow."
   (:require
    [tablecloth.api :as tc]
    [scicloj.kindly.v4.kind :as kind]
@@ -11,333 +12,46 @@
    [fastmath.stats :as stats]
    [thi.ng.geom.svg.core :as svg]))
 
-;; # Theme
+;; ## Exploring geom.viz Through Examples
+;;
+;; Before building a Grammar of Graphics layer, we'll explore what 
+;; thi.ng/geom.viz can do by manually constructing increasingly 
+;; complex visualizations. We start simple—a scatter plot—then add 
+;; colors, regression lines, and finally a complete 4×4 SPLOM grid.
+;;
+;; As the examples grow, the manual work becomes tedious and error-prone.
+;; This motivates the grammar layer that will automate:
+;; - Grouping data by categorical variables
+;; - Assigning colors automatically  
+;; - Computing statistical transforms per group
+;; - Laying out grids of plots
+;; - Combining multiple layers
+;;
+;; We use the Iris dataset throughout to build familiarity.
+
+;; ### Theme and Colors
 
 (def theme
-  "Visual theme for plots - ggplot2-inspired aesthetic
-  
-  ggplot2 theme_gray characteristics:
+  "ggplot2-inspired visual theme:
   - Grey background (#EBEBEB)
-  - White grid lines  
-  - NO visible axis lines
+  - White grid lines
+  - No visible axis lines  
   - Very short tick marks (~3px)
-  - Dark grey points (#333333) by default"
+  - 10-color palette"
   {:background "#EBEBEB"
    :grid "#FFFFFF"
    :colors ["#F8766D" "#619CFF" "#00BA38" "#F564E3" "#B79F00" 
             "#00BFC4" "#FF61C3" "#C77CFF" "#7CAE00" "#00B4F0"]})
 
 (defn get-color
-  "Get color from theme by index (cycles if index exceeds palette size)"
+  "Get color from theme palette by index (cycles)"
   [index]
   (nth (:colors theme) (mod index (count (:colors theme)))))
 
-;; Examples - color palette
-(mapv get-color (range 5))
+;; Test the palette
+(mapv get-color (range 3))
 
-;; Colors cycle
-(get-color 12)
-
-;; # Simple Rendering Functions
-
-(defn make-viz-spec
-  "Create a thi.ng/geom.viz specification for 2D cartesian plot.
-  
-  Args:
-  - data: Vector of [x y] points
-  - plot-type: :scatter, :line, etc.
-  - opts: Optional map with :x-domain, :y-domain, :width, :height, :attribs, :theme
-  
-  Returns:
-  - viz spec map ready for svg-plot2d-cartesian"
-  [data plot-type {:keys [x-domain y-domain width height attribs theme-opts]
-                   :or {width 400 height 300
-                        attribs {:fill "#333333"}
-                        theme-opts theme}}]
-  (let [;; Extract x and y values
-        xs (map first data)
-        ys (map second data)
-        
-        ;; Compute domains if not provided
-        x-domain (or x-domain [(apply min xs) (apply max xs)])
-        y-domain (or y-domain [(apply min ys) (apply max ys)])
-        
-        ;; Panel margins
-        margin-left 50
-        margin-right 20
-        margin-top 20
-        margin-bottom 40
-        
-        ;; Panel boundaries
-        panel-left margin-left
-        panel-right (- width margin-right)
-        panel-top margin-top
-        panel-bottom (- height margin-top)
-        
-        ;; Create axes with ggplot2-style appearance:
-        ;; - Very short tick marks (major-size: 3)
-        ;; - No visible axis lines (stroke: none)
-        x-axis (viz/linear-axis
-                {:domain x-domain
-                 :range [panel-left panel-right]
-                 :major (/ (- (second x-domain) (first x-domain)) 5)
-                 :pos panel-bottom
-                 :major-size 3
-                 :minor-size 0
-                 :attribs {:stroke "none"}})
-        
-        y-axis (viz/linear-axis
-                {:domain y-domain
-                 :range [panel-bottom panel-top]
-                 :major (/ (- (second y-domain) (first y-domain)) 5)
-                 :pos panel-left
-                 :major-size 3
-                 :minor-size 0
-                 :attribs {:stroke "none"}})
-        
-        ;; Choose layout function based on plot type
-        layout-fn (case plot-type
-                    :scatter viz/svg-scatter-plot
-                    :line viz/svg-line-plot
-                    viz/svg-scatter-plot)]
-    
-    {:x-axis x-axis
-     :y-axis y-axis
-     :grid {:attribs {:stroke (:grid theme-opts) :stroke-width 1}}
-     :data [{:values data
-             :attribs attribs
-             :layout layout-fn}]}))
-
-(defn plot-simple
-  "Render a simple plot from data points.
-  
-  Example:
-  (plot-simple [[1 2] [3 4] [5 6]] :scatter)
-  (plot-simple [[1 2] [3 4] [5 6]] :line {:attribs {:stroke \"#f60\"}})"
-  [data plot-type & [opts]]
-  (let [width (get opts :width 400)
-        height (get opts :height 300)
-        theme-opts (get opts :theme theme)
-        
-        ;; Background rectangle
-        background (svg/rect [0 0] width height {:fill (:background theme-opts)})
-        
-        ;; Generate plot
-        plot-elements (viz/svg-plot2d-cartesian
-                       (make-viz-spec data plot-type (or opts {})))]
-    (-> (apply svg/svg {:width width :height height} 
-               (cons background plot-elements))
-        kind/hiccup)))
-
-;; # Examples
-
-
-;; Simple scatter plot - ggplot2 style!
-;; Grey background, dark grey points, no axis lines, short ticks
-(plot-simple [[1 2] [3 4] [5 6] [7 8]] :scatter)
-
-;; Line plot
-(plot-simple [[1 2] [3 4] [5 6] [7 8]] :line
-             {:attribs {:stroke "#ff6600" :fill "none"}})
-
-;; Using theme colors
-(plot-simple [[1 2] [2 3] [3 5] [4 4] [5 6]] :scatter
-             {:attribs {:fill (get-color 0)}})
-
-;; # Design Example: Scatter + Regression
-;;
-;; This section shows a complete example built with raw geom.viz,
-;; then discusses what the Grammar of Graphics layer should automate.
-
-;; ## Load Data
-
-(def penguins 
-
-  (-> (tc/dataset "https://raw.githubusercontent.com/allisonhorst/palmerpenguins/master/inst/extdata/penguins.csv" {:key-fn keyword})
-
-      (tc/drop-missing)))
-
-;; ## Manual Steps (Raw geom.viz)
-
-;; Step 1: Group by species
-(def species-groups
-  (tc/group-by penguins :species {:result-type :as-map}))
-
-;; Step 2: Extract points for each species
-(def species-data
-  (into {}
-    (map (fn [[species-name group-ds]]
-           [species-name
-            {:points (mapv vector 
-                          (group-ds :bill_length_mm)
-                          (group-ds :bill_depth_mm))}])
-         species-groups)))
-
-(map (fn [[k v]] [k (count (:points v))]) species-data)
-
-;; Step 3: Linear regression function (using fastmath)
-(defn linear-fit 
-  "Compute least-squares linear regression for points [[x y] ...] using fastmath"
-  [points]
-  (let [x-vals (mapv first points)
-        y-vals (mapv second points)
-        xss (mapv vector x-vals)
-        model (regr/lm y-vals xss)
-        intercept (:intercept model)
-        slope (first (:beta model))]
-    {:slope slope :intercept intercept}))
-
-;; Step 4: Compute regression for each species
-(def species-regressions
-  (into {}
-    (map (fn [[species data]]
-           [species (linear-fit (:points data))])
-         species-data)))
-
-species-regressions
-
-;; Step 5: Color mapping (manual)
-(def ggplot2-colors
-  ["#F8766D" "#00BA38" "#619CFF"])
-
-;; Step 6: Compute overall domain
-(def all-points (mapcat :points (vals species-data)))
-(def x-domain [(reduce min (map first all-points))
-               (reduce max (map first all-points))])
-(def y-domain [(reduce min (map second all-points))
-               (reduce max (map second all-points))])
-
-[x-domain y-domain]
-
-;; Step 7: Generate regression line points
-(defn regression-line-points 
-  "Generate [x y] points for regression line across domain"
-  [{:keys [slope intercept]} [x-min x-max]]
-  [[x-min (+ (* slope x-min) intercept)]
-   [x-max (+ (* slope x-max) intercept)]])
-
-;; Step 8: Build complete viz spec manually
-(def scatter-with-regression
-  (let [species-list ["Adelie" "Gentoo" "Chinstrap"]
-        
-        ;; Create scatter series for each species
-        scatter-series
-        (map-indexed 
-          (fn [idx species]
-            {:values (get-in species-data [species :points])
-             :attribs {:fill (ggplot2-colors idx) :stroke "none"}
-             :layout viz/svg-scatter-plot})
-          species-list)
-        
-        ;; Create line series for each species regression
-        ;; Each line spans only its species' x-range
-        line-series
-        (map-indexed
-          (fn [idx species]
-            (let [regression (species-regressions species)
-                  species-xs (map first (get-in species-data [species :points]))
-                  species-x-domain [(reduce min species-xs) (reduce max species-xs)]
-                  line-points (regression-line-points regression species-x-domain)]
-              {:values line-points
-               :attribs {:stroke (ggplot2-colors idx) 
-                        :stroke-width 2
-                        :fill "none"}
-               :layout viz/svg-line-plot}))
-          species-list)]
-    
-    {:x-axis (viz/linear-axis
-               {:domain x-domain
-                :range [50 550]
-                :major 10
-                :minor 5
-                :pos 350
-                :label-dist 15
-                :major-size 3
-                :minor-size 0
-                :attribs {:stroke "none"}})
-     :y-axis (viz/linear-axis
-               {:domain y-domain
-                :range [350 50]
-                :major 2
-                :minor 1
-                :pos 50
-                :label-dist 15
-                :label-style {:text-anchor "end"}
-                :major-size 3
-                :minor-size 0
-                :attribs {:stroke "none"}})
-     :grid {:attribs {:stroke "#FFFFFF" :stroke-width 1}
-            :minor-y false}
-     :data (vec (concat scatter-series line-series))}))
-;; Step 9: Render
-(defn render-plot [spec]
-  (let [bg-rect [:rect {:x 50 :y 50 :width 500 :height 300 
-                       :fill "#EBEBEB"}]]
-    (-> (apply svg/svg
-               {:width 600 :height 400}
-               bg-rect
-               (viz/svg-plot2d-cartesian spec))
-        kind/hiccup)))
-
-;; The final plot!
-(render-plot scatter-with-regression)
-
-;; ## What Did We Do Manually?
-;;
-;; 1. Group by species manually → `species-data`
-;; 2. Compute regressions manually → `species-regressions`  
-;; 3. Map species → colors manually → `ggplot2-colors` indexed
-;; 4. Build scatter series (one per species)
-;; 5. Build line series (one regression per species)
-;; 6. Combine all series into `:data` vector
-;; 7. Set up axes/grid explicitly
-;;
-;; This is tedious and error-prone!
-
-;; ## What the Grammar Should Automate
-;;
-;; Desired API:
-;;
-;; (plot penguins
-;;   (blend
-;;     (layer {:geom :point 
-;;             :x :bill_length_mm 
-;;             :y :bill_depth_mm 
-;;             :color :species})
-;;     (layer {:geom :smooth 
-;;             :x :bill_length_mm 
-;;             :y :bill_depth_mm 
-;;             :color :species
-;;             :method :lm})))
-;;
-;; What the grammar must infer/compute:
-;;
-;; 1. **Grouping**: `:color :species` means "group data by species"
-;; 2. **Color mapping**: Assign ggplot2-colors to species automatically
-;; 3. **Spreading**: Each layer spreads into 3 series (one per species)
-;; 4. **Transform**: `:geom :smooth :method :lm` triggers linear regression
-;; 5. **Domains**: Compute x/y domains from all data
-;; 6. **Merging**: Both layers share same grouping, so align by species
-;;
-;; Key insight: The layer spec `{:x ... :y ... :color ...}` is declarative.
-;; The pipeline must:
-;; - Detect grouping variables (`:color`, `:facet`, etc.)
-;; - Apply transforms (`:smooth` → regression computation)
-;; - Spread each layer into geom.viz series
-;; - Assign visual attributes (colors, shapes)
-;; - Combine into final spec
-
-;; ## Next: Design the Pipeline
-;;
-;; Stage 1: Layer specs → Internal representation
-;; Stage 2: Algebraic combinators (blend, cross, nest)
-;; Stage 3: Grouping & spreading (one series per group)
-;; Stage 4: Statistical transforms (smooth, bin, density)
-;; Stage 5: Rendering to geom.viz
-
-;; # SPLOM Example: Building Incrementally
-
-;; ## Step 1: Load Iris dataset
+;; ### Data
 
 (def iris
   (tc/dataset "https://gist.githubusercontent.com/netj/8836201/raw/6f9306ad21398ea43cba4f7d537619d0e07d5ae3/iris.csv"
@@ -345,499 +59,628 @@ species-regressions
 
 (tc/head iris)
 
-;; ## Step 2: Single histogram using fastmath
+;; ### Simple Scatter Plot
 
-(defn make-histogram
-  "Create histogram bins for a single variable using fastmath"
-  [data var-key]
-  (let [values (data var-key)
-        hist (stats/histogram values :sturges)]
-    ;; histogram returns {:bins-maps [{:min ... :max ... :count ...} ...]}
-    hist))
+;; Basic scatter: sepal.length vs sepal.width, all points one color
 
-;; Test it - commented out for now
-;; (make-histogram iris :sepal_length)
-
-;; ## Step 3: Render histogram with geom.viz
-
-(defn render-histogram-simple
-  "Render a single histogram as SVG using geom.viz bars"
-  [data var-key]
-  (let [hist (make-histogram data var-key)
-        bins (:bins-maps hist)
-        
-        ;; Extract domain
-        x-min (:min hist)
-        x-max (:max hist)
-        max-count (apply max (map :count bins))
-        
-        ;; Create bar data for geom.viz
-        ;; Each bar: [x-center height]
-        bar-points (mapv (fn [bin]
-                          [(:mid bin) (:count bin)])
-                        bins)
-        
-        ;; Build viz spec
-        width 400
-        height 300
-        margin 50
-        
-        x-axis (viz/linear-axis
-                 {:domain [x-min x-max]
-                  :range [margin (- width margin)]
-                  :major 5
-                  :pos (- height margin)
-                  :label-dist 15
-                  :major-size 3
-                  :minor-size 0
-                  :attribs {:stroke "none"}})
-        
-        y-axis (viz/linear-axis
-                 {:domain [0 max-count]
-                  :range [(- height margin) margin]
-                  :major 5
-                  :pos margin
-                  :label-dist 15
-                  :label-style {:text-anchor "end"}
-                  :major-size 3
-                  :minor-size 0
-                  :attribs {:stroke "none"}})
-        
-        ;; Create rectangles manually for histogram bars
-        x-scale (fn [x] (+ margin (* (/ (- x x-min) (- x-max x-min))
-                                     (- width (* 2 margin)))))
-        y-scale (fn [y] (- height margin (* (/ y max-count)
-                                            (- height (* 2 margin)))))
-        
-        bar-rects (mapv (fn [bin]
-                         (let [bar-min (:min bin)
-                               bar-max (:max bin)
-                               bar-count (:count bin)
-                               bar-x (x-scale bar-min)
-                               bar-width (- (x-scale bar-max) bar-x)
-                               bar-y (y-scale bar-count)
-                               bar-height (- (- height margin) bar-y)]
-                           (svg/rect [bar-x bar-y] bar-width bar-height
-                                    {:fill (get-color 0)
-                                     :stroke "#FFFFFF"
-                                     :stroke-width 1})))
-                       bins)
-        
-        bg-rect [:rect {:x margin :y margin 
-                       :width (- width (* 2 margin)) 
-                       :height (- height (* 2 margin))
-                       :fill (:background theme)}]
-        
-        plot-spec {:x-axis x-axis
-                   :y-axis y-axis
-                   :grid {:attribs {:stroke (:grid theme) :stroke-width 1}}
-                   :data []}]
-    
-    (-> (apply svg/svg
-               {:width width :height height}
-               bg-rect
-               (concat (viz/svg-plot2d-cartesian plot-spec)
-                      bar-rects))
-        kind/hiccup)))
-
-;; Test single histogram
-(render-histogram-simple iris :sepal.length)
-
-;; ## Step 4: Minimal 2x2 grid layout
-
-(defn render-minimal-grid
-  "Render a simple 2x2 grid to test layout"
-  []
-  (let [panel-size 120
-        total-size (* 2 panel-size)
-        
-        ;; Create 4 background rectangles at different positions
-        panels (for [row (range 2)
-                    col (range 2)]
-                 (let [x-offset (* col panel-size)
-                       y-offset (* row panel-size)]
-                   (svg/rect [x-offset y-offset]
-                            panel-size panel-size
-                            {:fill (:background theme)
-                             :stroke (:grid theme)
-                             :stroke-width 2})))]
-    
-    (-> (apply svg/svg
-               {:width total-size :height total-size}
-               panels)
-        kind/hiccup)))
-
-;; Test grid
-(render-minimal-grid)
-
-;; ## Step 5: 2x2 SPLOM with plots
-
-;; First, extract just 2 variables for testing
-(def splom-vars [:sepal.length :sepal.width])
-
-;; Compute domains for both variables
-(defn compute-domain [data var-key]
-  (let [values (data var-key)]
-    [(reduce min values) (reduce max values)]))
-
-(def splom-domains
-  (into {} (map (fn [v] [v (compute-domain iris v)]) splom-vars)))
-
-splom-domains
-
-;; ## Step 6: Panel rendering functions with offsets
-
-(defn render-scatter-panel
-  "Render scatter plot in a panel at given offset"
-  [data var-x var-y x-offset y-offset panel-size]
-  (let [x-domain (splom-domains var-x)
-        y-domain (splom-domains var-y)
-        
-        ;; Extract points
-        points (mapv vector (data var-x) (data var-y))
-        
-        ;; Panel margins (smaller for grid)
-        margin 20
-        plot-width (- panel-size (* 2 margin))
-        plot-height (- panel-size (* 2 margin))
-        
-        ;; Axes at offset positions
-        x-axis (viz/linear-axis
-                 {:domain x-domain
-                  :range [(+ x-offset margin) 
-                         (+ x-offset panel-size (- margin))]
-                  :major 2
-                  :pos (+ y-offset panel-size (- margin))
-                  :label-dist 12
-                  :major-size 2
-                  :minor-size 0
-                  :attribs {:stroke "none"}})
-        
-        y-axis (viz/linear-axis
-                 {:domain y-domain
-                  :range [(+ y-offset panel-size (- margin)) 
-                         (+ y-offset margin)]
-                  :major 2
-                  :pos (+ x-offset margin)
-                  :label-dist 12
-                  :label-style {:text-anchor "end"}
-                  :major-size 2
-                  :minor-size 0
-                  :attribs {:stroke "none"}})
-        
-        plot-spec {:x-axis x-axis
-                   :y-axis y-axis
-                   :grid {:attribs {:stroke (:grid theme) :stroke-width 0.5}}
-                   :data [{:values points
-                          :attribs {:fill (get-color 0) :stroke "none"}
-                          :layout viz/svg-scatter-plot}]}
-        
-        bg-rect (svg/rect [(+ x-offset margin) (+ y-offset margin)]
-                         plot-width plot-height
-                         {:fill (:background theme)})]
-    
-    {:background bg-rect
-     :plot (viz/svg-plot2d-cartesian plot-spec)}))
-
-;; Test scatter panel
-(let [panel (render-scatter-panel iris :sepal.length :sepal.width 0 0 150)]
+(let [points (mapv vector (iris :sepal.length) (iris :sepal.width))
+      
+      ;; Compute domains
+      xs (map first points)
+      ys (map second points)
+      x-domain [(apply min xs) (apply max xs)]
+      y-domain [(apply min ys) (apply max ys)]
+      
+      ;; Layout
+      width 500
+      height 400
+      margin 50
+      
+      ;; Axes (ggplot2 style: no axis lines, short ticks)
+      x-axis (viz/linear-axis
+               {:domain x-domain
+                :range [margin (- width margin)]
+                :major 1.0
+                :pos (- height margin)
+                :label-dist 15
+                :major-size 3
+                :minor-size 0
+                :attribs {:stroke "none"}})
+      
+      y-axis (viz/linear-axis
+               {:domain y-domain
+                :range [(- height margin) margin]
+                :major 0.5
+                :pos margin
+                :label-dist 15
+                :label-style {:text-anchor "end"}
+                :major-size 3
+                :minor-size 0
+                :attribs {:stroke "none"}})
+      
+      ;; Background rectangle
+      bg-rect (svg/rect [margin margin]
+                       (- width (* 2 margin))
+                       (- height (* 2 margin))
+                       {:fill (:background theme)})
+      
+      ;; Spec with single scatter series
+      plot-spec {:x-axis x-axis
+                 :y-axis y-axis
+                 :grid {:attribs {:stroke (:grid theme) :stroke-width 1}}
+                 :data [{:values points
+                        :attribs {:fill (get-color 0) :stroke "none"}
+                        :layout viz/svg-scatter-plot}]}]
+  
   (-> (apply svg/svg
-             {:width 150 :height 150}
-             (:background panel)
-             (:plot panel))
+             {:width width :height height}
+             bg-rect
+             (viz/svg-plot2d-cartesian plot-spec))
       kind/hiccup))
 
-;; ## Step 7: Histogram panel with offset
+;; ### Scatter Colored by Species
 
-(defn render-histogram-panel
-  "Render histogram in a panel at given offset"
-  [data var-key x-offset y-offset panel-size]
-  (let [hist (make-histogram data var-key)
-        bins (:bins-maps hist)
-        x-domain (splom-domains var-key)
-        max-count (apply max (map :count bins))
-        
-        margin 20
-        plot-width (- panel-size (* 2 margin))
-        plot-height (- panel-size (* 2 margin))
-        
-        ;; Scale functions
-        x-scale (fn [x] (+ x-offset margin 
-                          (* (/ (- x (first x-domain)) 
-                               (- (second x-domain) (first x-domain)))
-                             plot-width)))
-        y-scale (fn [y] (+ y-offset panel-size (- margin)
-                          (- (* (/ y max-count) plot-height))))
-        
-        ;; Bar rectangles
-        bar-rects (mapv (fn [bin]
-                         (let [bar-x (x-scale (:min bin))
-                               bar-width (- (x-scale (:max bin)) bar-x)
-                               bar-y (y-scale (:count bin))
-                               bar-height (- (+ y-offset panel-size (- margin)) bar-y)]
-                           (svg/rect [bar-x bar-y] bar-width bar-height
-                                    {:fill (get-color 0)
-                                     :stroke "#FFFFFF"
-                                     :stroke-width 0.5})))
-                       bins)
-        
-        bg-rect (svg/rect [(+ x-offset margin) (+ y-offset margin)]
-                         plot-width plot-height
-                         {:fill (:background theme)})]
-    
-    {:background bg-rect
-     :bars bar-rects}))
+;; Now we want each species in a different color. This requires:
+;; 1. Grouping the data manually
+;; 2. Creating one series per species
+;; 3. Assigning colors manually
 
-;; Test histogram panel
-(let [panel (render-histogram-panel iris :sepal.length 0 0 150)]
+(let [;; Group by species
+      species-groups (tc/group-by iris :variety {:result-type :as-map})
+      species-list ["Setosa" "Versicolor" "Virginica"]
+      
+      ;; Extract points for each species
+      species-points (into {}
+                       (map (fn [[species ds]]
+                              [species (mapv vector 
+                                            (ds :sepal.length)
+                                            (ds :sepal.width))])
+                            species-groups))
+      
+      ;; Compute overall domain (across all species)
+      all-points (mapcat identity (vals species-points))
+      x-domain [(apply min (map first all-points))
+                (apply max (map first all-points))]
+      y-domain [(apply min (map second all-points))
+                (apply max (map second all-points))]
+      
+      ;; Layout
+      width 500
+      height 400
+      margin 50
+      
+      ;; Axes
+      x-axis (viz/linear-axis
+               {:domain x-domain
+                :range [margin (- width margin)]
+                :major 1.0
+                :pos (- height margin)
+                :label-dist 15
+                :major-size 3
+                :minor-size 0
+                :attribs {:stroke "none"}})
+      
+      y-axis (viz/linear-axis
+               {:domain y-domain
+                :range [(- height margin) margin]
+                :major 0.5
+                :pos margin
+                :label-dist 15
+                :label-style {:text-anchor "end"}
+                :major-size 3
+                :minor-size 0
+                :attribs {:stroke "none"}})
+      
+      ;; Create one scatter series per species (manually)
+      scatter-series
+      (map-indexed
+        (fn [idx species]
+          {:values (species-points species)
+           :attribs {:fill (get-color idx) :stroke "none"}
+           :layout viz/svg-scatter-plot})
+        species-list)
+      
+      ;; Background
+      bg-rect (svg/rect [margin margin]
+                       (- width (* 2 margin))
+                       (- height (* 2 margin))
+                       {:fill (:background theme)})
+      
+      ;; Spec with three scatter series
+      plot-spec {:x-axis x-axis
+                 :y-axis y-axis
+                 :grid {:attribs {:stroke (:grid theme) :stroke-width 1}}
+                 :data (vec scatter-series)}]
+  
   (-> (apply svg/svg
-             {:width 150 :height 150}
-             (:background panel)
-             (:bars panel))
+             {:width width :height height}
+             bg-rect
+             (viz/svg-plot2d-cartesian plot-spec))
       kind/hiccup))
 
-;; ## Step 8: Complete 2x2 SPLOM
+;; Notice the manual work: grouping, extracting points per group, 
+;; mapping species names to colors via indexed iteration.
 
-(defn render-splom-2x2
-  "Render a 2x2 SPLOM with histograms on diagonal"
-  []
-  (let [panel-size 150
-        total-size (* 2 panel-size)
-        vars splom-vars
-        
-        ;; Generate all panels
-        panels (for [row (range 2)
-                    col (range 2)]
-                 (let [x-offset (* col panel-size)
-                       y-offset (* row panel-size)
-                       var-x (vars col)
-                       var-y (vars row)]
-                   (if (= row col)
-                     ;; Diagonal: histogram
-                     (render-histogram-panel iris var-x x-offset y-offset panel-size)
-                     ;; Off-diagonal: scatter
-                     (render-scatter-panel iris var-x var-y x-offset y-offset panel-size))))
-        
-        ;; Collect all elements
-        backgrounds (map :background panels)
-        plots (mapcat #(or (:plot %) []) panels)
-        bars (mapcat #(or (:bars %) []) panels)]
-    
-    (-> (apply svg/svg
-               {:width total-size :height total-size}
-               (concat backgrounds plots bars))
-        kind/hiccup)))
+;; ### Scatter + Regression Lines per Species
 
-;; Render the 2x2 SPLOM!
-(render-splom-2x2)
+;; Add linear regression lines, one per species. Each line should:
+;; - Span only that species' x-range
+;; - Match the species color
+;;
+;; More manual steps:
+;; 1. Compute regression for each species
+;; 2. Generate line points spanning each species' domain
+;; 3. Create line series matching scatter colors
 
-;; ## Step 9: Full 4x4 SPLOM with colors and regression
-
-;; All 4 numeric variables
-(def splom-vars-full [:sepal.length :sepal.width :petal.length :petal.width])
-
-;; Compute domains for all variables
-(def splom-domains-full
-  (into {} (map (fn [v] [v (compute-domain iris v)]) splom-vars-full)))
-
-splom-domains-full
-
-;; Group iris by species
-(def iris-by-species
-  (tc/group-by iris :variety {:result-type :as-map}))
-
-(keys iris-by-species)
-
-;; ## Step 10: Scatter panel with colors and regression
-
-(defn render-scatter-panel-colored
-  "Render scatter plot with species colors and regression lines"
-  [data var-x var-y x-offset y-offset panel-size]
-  (let [x-domain (splom-domains-full var-x)
-        y-domain (splom-domains-full var-y)
-        
-        ;; Group by species
-        species-list ["Setosa" "Versicolor" "Virginica"]
-        species-groups iris-by-species
-        
-        margin 20
-        plot-width (- panel-size (* 2 margin))
-        plot-height (- panel-size (* 2 margin))
-        
-        ;; Axes
-        x-axis (viz/linear-axis
-                 {:domain x-domain
-                  :range [(+ x-offset margin) 
-                         (+ x-offset panel-size (- margin))]
-                  :major 2
-                  :pos (+ y-offset panel-size (- margin))
-                  :label-dist 12
-                  :major-size 2
-                  :minor-size 0
-                  :attribs {:stroke "none"}})
-        
-        y-axis (viz/linear-axis
-                 {:domain y-domain
-                  :range [(+ y-offset panel-size (- margin)) 
-                         (+ y-offset margin)]
-                  :major 2
-                  :pos (+ x-offset margin)
-                  :label-dist 12
-                  :label-style {:text-anchor "end"}
-                  :major-size 2
-                  :minor-size 0
-                  :attribs {:stroke "none"}})
-        
-        ;; Create scatter series per species
-        scatter-series
-        (map-indexed
-          (fn [idx species]
-            (let [group-ds (species-groups species)
-                  points (mapv vector (group-ds var-x) (group-ds var-y))]
-              {:values points
-               :attribs {:fill (get-color idx) :stroke "none"}
-               :layout viz/svg-scatter-plot}))
-          species-list)
-        
-        ;; Create regression line per species
-        line-series
-        (map-indexed
-          (fn [idx species]
-            (let [group-ds (species-groups species)
-                  points (mapv vector (group-ds var-x) (group-ds var-y))
-                  regression (linear-fit points)
-                  
-                  ;; Compute species x-domain
-                  species-xs (map first points)
-                  species-x-domain [(reduce min species-xs) (reduce max species-xs)]
-                  
-                  line-points (regression-line-points regression species-x-domain)]
-              {:values line-points
-               :attribs {:stroke (get-color idx)
-                        :stroke-width 1.5
-                        :fill "none"}
-               :layout viz/svg-line-plot}))
-          species-list)
-        
-        plot-spec {:x-axis x-axis
-                   :y-axis y-axis
-                   :grid {:attribs {:stroke (:grid theme) :stroke-width 0.5}}
-                   :data (vec (concat scatter-series line-series))}
-        
-        bg-rect (svg/rect [(+ x-offset margin) (+ y-offset margin)]
-                         plot-width plot-height
-                         {:fill (:background theme)})]
-    
-    {:background bg-rect
-     :plot (viz/svg-plot2d-cartesian plot-spec)}))
-
-;; Test colored scatter with regression
-(let [panel (render-scatter-panel-colored iris :sepal.length :sepal.width 0 0 200)]
+(let [;; Group by species  
+      species-groups (tc/group-by iris :variety {:result-type :as-map})
+      species-list ["Setosa" "Versicolor" "Virginica"]
+      
+      ;; Extract points per species
+      species-points (into {}
+                       (map (fn [[species ds]]
+                              [species (mapv vector 
+                                            (ds :sepal.length)
+                                            (ds :sepal.width))])
+                            species-groups))
+      
+      ;; Compute overall domain
+      all-points (mapcat identity (vals species-points))
+      x-domain [(apply min (map first all-points))
+                (apply max (map first all-points))]
+      y-domain [(apply min (map second all-points))
+                (apply max (map second all-points))]
+      
+      ;; Linear regression helper
+      linear-fit (fn [points]
+                   (let [x-vals (mapv first points)
+                         y-vals (mapv second points)
+                         xss (mapv vector x-vals)
+                         model (regr/lm y-vals xss)
+                         slope (first (:beta model))
+                         intercept (:intercept model)]
+                     {:slope slope :intercept intercept}))
+      
+      ;; Compute regression per species
+      species-regressions
+      (into {}
+        (map (fn [[species points]]
+               [species (linear-fit points)])
+             species-points))
+      
+      ;; Generate line points for regression (spanning species x-range)
+      regression-line-points
+      (fn [{:keys [slope intercept]} [x-min x-max]]
+        [[x-min (+ (* slope x-min) intercept)]
+         [x-max (+ (* slope x-max) intercept)]])
+      
+      ;; Layout
+      width 500
+      height 400
+      margin 50
+      
+      ;; Axes
+      x-axis (viz/linear-axis
+               {:domain x-domain
+                :range [margin (- width margin)]
+                :major 1.0
+                :pos (- height margin)
+                :label-dist 15
+                :major-size 3
+                :minor-size 0
+                :attribs {:stroke "none"}})
+      
+      y-axis (viz/linear-axis
+               {:domain y-domain
+                :range [(- height margin) margin]
+                :major 0.5
+                :pos margin
+                :label-dist 15
+                :label-style {:text-anchor "end"}
+                :major-size 3
+                :minor-size 0
+                :attribs {:stroke "none"}})
+      
+      ;; Scatter series per species
+      scatter-series
+      (map-indexed
+        (fn [idx species]
+          {:values (species-points species)
+           :attribs {:fill (get-color idx) :stroke "none"}
+           :layout viz/svg-scatter-plot})
+        species-list)
+      
+      ;; Line series per species
+      line-series
+      (map-indexed
+        (fn [idx species]
+          (let [points (species-points species)
+                regression (species-regressions species)
+                species-xs (map first points)
+                species-x-domain [(reduce min species-xs) 
+                                 (reduce max species-xs)]
+                line-points (regression-line-points regression species-x-domain)]
+            {:values line-points
+             :attribs {:stroke (get-color idx)
+                      :stroke-width 2
+                      :fill "none"}
+             :layout viz/svg-line-plot}))
+        species-list)
+      
+      ;; Background
+      bg-rect (svg/rect [margin margin]
+                       (- width (* 2 margin))
+                       (- height (* 2 margin))
+                       {:fill (:background theme)})
+      
+      ;; Combine scatter + line series
+      plot-spec {:x-axis x-axis
+                 :y-axis y-axis
+                 :grid {:attribs {:stroke (:grid theme) :stroke-width 1}}
+                 :data (vec (concat scatter-series line-series))}]
+  
   (-> (apply svg/svg
-             {:width 200 :height 200}
-             (:background panel)
-             (:plot panel))
+             {:width width :height height}
+             bg-rect
+             (viz/svg-plot2d-cartesian plot-spec))
       kind/hiccup))
 
-;; ## Step 11: Histogram panel with species colors (overlaid)
+;; The tedium grows: computing transforms per group, coordinating 
+;; colors across series, combining multiple geoms.
 
-(defn render-histogram-panel-colored
-  "Render overlaid histograms colored by species"
-  [data var-key x-offset y-offset panel-size]
-  (let [x-domain (splom-domains-full var-key)
-        
-        ;; Compute histogram for each species
-        species-list ["Setosa" "Versicolor" "Virginica"]
-        species-groups iris-by-species
-        
-        species-hists (map (fn [species]
-                            (let [group-ds (species-groups species)]
-                              {:species species
-                               :hist (make-histogram group-ds var-key)}))
-                          species-list)
-        
-        ;; Find global max count for y-scale
-        max-count (apply max 
-                        (mapcat (fn [{:keys [hist]}]
-                                 (map :count (:bins-maps hist)))
-                               species-hists))
-        
-        margin 20
-        plot-width (- panel-size (* 2 margin))
-        plot-height (- panel-size (* 2 margin))
-        
-        ;; Scale functions
-        x-scale (fn [x] (+ x-offset margin 
-                          (* (/ (- x (first x-domain)) 
-                               (- (second x-domain) (first x-domain)))
-                             plot-width)))
-        y-scale (fn [y] (+ y-offset panel-size (- margin)
-                          (- (* (/ y max-count) plot-height))))
-        
-        ;; Create bars for each species
-        all-bars (mapcat
-                   (fn [idx {:keys [species hist]}]
-                     (let [bins (:bins-maps hist)]
-                       (mapv (fn [bin]
-                              (let [bar-x (x-scale (:min bin))
-                                    bar-width (- (x-scale (:max bin)) bar-x)
-                                    bar-y (y-scale (:count bin))
-                                    bar-height (- (+ y-offset panel-size (- margin)) bar-y)]
-                                (svg/rect [bar-x bar-y] bar-width bar-height
-                                         {:fill (get-color idx)
-                                          :stroke "#FFFFFF"
-                                          :stroke-width 0.5
-                                          :opacity 0.6})))
-                            bins)))
-                   (range)
-                   species-hists)
-        
-        bg-rect (svg/rect [(+ x-offset margin) (+ y-offset margin)]
-                         plot-width plot-height
-                         {:fill (:background theme)})]
-    
-    {:background bg-rect
-     :bars all-bars}))
+;; ### 2×2 SPLOM Grid
 
-;; Test colored histogram
-(let [panel (render-histogram-panel-colored iris :sepal.length 0 0 200)]
+;; Now we want a grid of plots. Start with 2×2:
+;; - Diagonal: histograms  
+;; - Off-diagonal: scatter plots
+;; - All panels share domains for alignment
+;;
+;; New manual tasks:
+;; 1. Compute domains for each variable
+;; 2. Position panels at different x/y offsets
+;; 3. Build histogram bars as SVG rects (geom.viz doesn't have bars)
+;; 4. Render axes relative to panel offsets
+
+(let [;; Variables for SPLOM
+      vars [:sepal.length :sepal.width]
+      
+      ;; Compute domain per variable
+      domains (into {}
+                (map (fn [v]
+                       (let [vals (iris v)]
+                         [v [(reduce min vals) (reduce max vals)]]))
+                     vars))
+      
+      ;; Panel layout
+      panel-size 200
+      margin 30
+      plot-width (- panel-size (* 2 margin))
+      plot-height (- panel-size (* 2 margin))
+      
+      ;; Helper: histogram using fastmath
+      make-histogram (fn [var-key]
+                       (let [values (iris var-key)]
+                         (stats/histogram values :sturges)))
+      
+      ;; Render scatter panel at offset
+      render-scatter (fn [var-x var-y x-offset y-offset]
+                       (let [points (mapv vector (iris var-x) (iris var-y))
+                             x-domain (domains var-x)
+                             y-domain (domains var-y)
+                             
+                             ;; Axes positioned at offset
+                             x-axis (viz/linear-axis
+                                      {:domain x-domain
+                                       :range [(+ x-offset margin) 
+                                              (+ x-offset panel-size (- margin))]
+                                       :major 1.0
+                                       :pos (+ y-offset panel-size (- margin))
+                                       :label-dist 12
+                                       :major-size 2
+                                       :minor-size 0
+                                       :attribs {:stroke "none"}})
+                             
+                             y-axis (viz/linear-axis
+                                      {:domain y-domain
+                                       :range [(+ y-offset panel-size (- margin))
+                                              (+ y-offset margin)]
+                                       :major 0.5
+                                       :pos (+ x-offset margin)
+                                       :label-dist 12
+                                       :label-style {:text-anchor "end"}
+                                       :major-size 2
+                                       :minor-size 0
+                                       :attribs {:stroke "none"}})
+                             
+                             bg-rect (svg/rect [(+ x-offset margin) (+ y-offset margin)]
+                                              plot-width plot-height
+                                              {:fill (:background theme)})
+                             
+                             plot-spec {:x-axis x-axis
+                                       :y-axis y-axis
+                                       :grid {:attribs {:stroke (:grid theme) :stroke-width 0.5}}
+                                       :data [{:values points
+                                              :attribs {:fill (get-color 0) :stroke "none"}
+                                              :layout viz/svg-scatter-plot}]}]
+                         
+                         {:background bg-rect
+                          :plot (viz/svg-plot2d-cartesian plot-spec)}))
+      
+      ;; Render histogram panel at offset
+      render-histogram (fn [var-key x-offset y-offset]
+                         (let [hist (make-histogram var-key)
+                               bins (:bins-maps hist)
+                               x-domain (domains var-key)
+                               max-count (apply max (map :count bins))
+                               
+                               ;; Scale functions
+                               x-scale (fn [x] 
+                                        (+ x-offset margin
+                                           (* (/ (- x (first x-domain))
+                                                (- (second x-domain) (first x-domain)))
+                                              plot-width)))
+                               y-scale (fn [y]
+                                        (+ y-offset panel-size (- margin)
+                                           (- (* (/ y max-count) plot-height))))
+                               
+                               ;; Manual bar rectangles
+                               bar-rects (mapv (fn [bin]
+                                                (let [bar-x (x-scale (:min bin))
+                                                      bar-width (- (x-scale (:max bin)) bar-x)
+                                                      bar-y (y-scale (:count bin))
+                                                      bar-height (- (+ y-offset panel-size (- margin)) bar-y)]
+                                                  (svg/rect [bar-x bar-y] bar-width bar-height
+                                                           {:fill (get-color 0)
+                                                            :stroke "#FFFFFF"
+                                                            :stroke-width 0.5})))
+                                              bins)
+                               
+                               bg-rect (svg/rect [(+ x-offset margin) (+ y-offset margin)]
+                                                plot-width plot-height
+                                                {:fill (:background theme)})]
+                           
+                           {:background bg-rect
+                            :bars bar-rects}))
+      
+      ;; Generate all 4 panels
+      panels (for [row (range 2)
+                   col (range 2)]
+               (let [x-offset (* col panel-size)
+                     y-offset (* row panel-size)
+                     var-x (vars col)
+                     var-y (vars row)]
+                 (if (= row col)
+                   ;; Diagonal: histogram
+                   (render-histogram var-x x-offset y-offset)
+                   ;; Off-diagonal: scatter
+                   (render-scatter var-x var-y x-offset y-offset))))
+      
+      ;; Collect all SVG elements
+      backgrounds (map :background panels)
+      plots (mapcat #(or (:plot %) []) panels)
+      bars (mapcat #(or (:bars %) []) panels)]
+  
   (-> (apply svg/svg
-             {:width 200 :height 200}
-             (:background panel)
-             (:bars panel))
+             {:width (* 2 panel-size) :height (* 2 panel-size)}
+             (concat backgrounds plots bars))
       kind/hiccup))
 
-;; ## Step 12: Complete 4x4 SPLOM with colors and regression
+;; Grid layout is tedious: computing offsets, rendering bars manually, 
+;; coordinating shared domains.
 
-(defn render-splom-full
-  "Render complete 4x4 SPLOM with colored histograms and scatter+regression"
-  []
-  (let [panel-size 150
-        total-size (* 4 panel-size)
-        vars splom-vars-full
-        
-        ;; Generate all 16 panels
-        panels (for [row (range 4)
-                    col (range 4)]
-                 (let [x-offset (* col panel-size)
-                       y-offset (* row panel-size)
-                       var-x (vars col)
-                       var-y (vars row)]
-                   (if (= row col)
-                     ;; Diagonal: colored histogram
-                     (render-histogram-panel-colored iris var-x x-offset y-offset panel-size)
-                     ;; Off-diagonal: colored scatter + regression
-                     (render-scatter-panel-colored iris var-x var-y x-offset y-offset panel-size))))
-        
-        ;; Collect all elements
-        backgrounds (map :background panels)
-        plots (mapcat #(or (:plot %) []) panels)
-        bars (mapcat #(or (:bars %) []) panels)]
-    
-    (-> (apply svg/svg
-               {:width total-size :height total-size}
-               (concat backgrounds plots bars))
-        kind/hiccup)))
+;; ### 4×4 SPLOM with Colors and Regression
 
-;; Render the complete 4x4 SPLOM!
-(render-splom-full)
+;; Finally, the full complexity: 4×4 grid with:
+;; - Colored scatter points (3 species)
+;; - Regression lines per species  
+;; - Overlaid colored histograms with transparency
+;; - All panels share domains
+;;
+;; This compounds all the tedium:
+;; - Grouping data by species (12 scatter series + 12 line series)
+;; - Color coordination across all series
+;; - Statistical transforms per group (regression, histograms)
+;; - Grid positioning (16 panels)
+;; - Manual bar rendering
+
+(let [;; All 4 variables
+      vars [:sepal.length :sepal.width :petal.length :petal.width]
+      
+      ;; Group by species
+      species-groups (tc/group-by iris :variety {:result-type :as-map})
+      species-list ["Setosa" "Versicolor" "Virginica"]
+      
+      ;; Compute domains per variable
+      domains (into {}
+                (map (fn [v]
+                       (let [vals (iris v)]
+                         [v [(reduce min vals) (reduce max vals)]]))
+                     vars))
+      
+      ;; Panel layout
+      panel-size 150
+      margin 20
+      plot-width (- panel-size (* 2 margin))
+      plot-height (- panel-size (* 2 margin))
+      
+      ;; Linear regression
+      linear-fit (fn [points]
+                   (let [x-vals (mapv first points)
+                         y-vals (mapv second points)
+                         xss (mapv vector x-vals)
+                         model (regr/lm y-vals xss)
+                         slope (first (:beta model))
+                         intercept (:intercept model)]
+                     {:slope slope :intercept intercept}))
+      
+      regression-line-points
+      (fn [{:keys [slope intercept]} [x-min x-max]]
+        [[x-min (+ (* slope x-min) intercept)]
+         [x-max (+ (* slope x-max) intercept)]])
+      
+      ;; Histogram helper
+      make-histogram (fn [var-key dataset]
+                       (let [values (dataset var-key)]
+                         (stats/histogram values :sturges)))
+      
+      ;; Render colored scatter + regression at offset
+      render-scatter-colored (fn [var-x var-y x-offset y-offset]
+                               (let [x-domain (domains var-x)
+                                     y-domain (domains var-y)
+                                     
+                                     ;; Axes
+                                     x-axis (viz/linear-axis
+                                              {:domain x-domain
+                                               :range [(+ x-offset margin)
+                                                      (+ x-offset panel-size (- margin))]
+                                               :major 2.0
+                                               :pos (+ y-offset panel-size (- margin))
+                                               :label-dist 10
+                                               :major-size 2
+                                               :minor-size 0
+                                               :attribs {:stroke "none"}})
+                                     
+                                     y-axis (viz/linear-axis
+                                              {:domain y-domain
+                                               :range [(+ y-offset panel-size (- margin))
+                                                      (+ y-offset margin)]
+                                               :major 1.0
+                                               :pos (+ x-offset margin)
+                                               :label-dist 10
+                                               :label-style {:text-anchor "end"}
+                                               :major-size 2
+                                               :minor-size 0
+                                               :attribs {:stroke "none"}})
+                                     
+                                     ;; Scatter series per species
+                                     scatter-series
+                                     (map-indexed
+                                       (fn [idx species]
+                                         (let [ds (species-groups species)
+                                               points (mapv vector (ds var-x) (ds var-y))]
+                                           {:values points
+                                            :attribs {:fill (get-color idx) :stroke "none"}
+                                            :layout viz/svg-scatter-plot}))
+                                       species-list)
+                                     
+                                     ;; Line series per species
+                                     line-series
+                                     (map-indexed
+                                       (fn [idx species]
+                                         (let [ds (species-groups species)
+                                               points (mapv vector (ds var-x) (ds var-y))
+                                               regression (linear-fit points)
+                                               species-xs (map first points)
+                                               species-x-domain [(reduce min species-xs)
+                                                                (reduce max species-xs)]
+                                               line-points (regression-line-points regression species-x-domain)]
+                                           {:values line-points
+                                            :attribs {:stroke (get-color idx)
+                                                     :stroke-width 1.5
+                                                     :fill "none"}
+                                            :layout viz/svg-line-plot}))
+                                       species-list)
+                                     
+                                     bg-rect (svg/rect [(+ x-offset margin) (+ y-offset margin)]
+                                                      plot-width plot-height
+                                                      {:fill (:background theme)})
+                                     
+                                     plot-spec {:x-axis x-axis
+                                               :y-axis y-axis
+                                               :grid {:attribs {:stroke (:grid theme) :stroke-width 0.5}}
+                                               :data (vec (concat scatter-series line-series))}]
+                                 
+                                 {:background bg-rect
+                                  :plot (viz/svg-plot2d-cartesian plot-spec)}))
+      
+      ;; Render colored overlaid histograms at offset
+      render-histogram-colored (fn [var-key x-offset y-offset]
+                                 (let [x-domain (domains var-key)
+                                       
+                                       ;; Compute histogram per species
+                                       species-hists (map (fn [species]
+                                                           {:species species
+                                                            :hist (make-histogram var-key (species-groups species))})
+                                                         species-list)
+                                       
+                                       ;; Global max count
+                                       max-count (apply max
+                                                       (mapcat (fn [{:keys [hist]}]
+                                                                (map :count (:bins-maps hist)))
+                                                              species-hists))
+                                       
+                                       ;; Scale functions
+                                       x-scale (fn [x]
+                                                (+ x-offset margin
+                                                   (* (/ (- x (first x-domain))
+                                                        (- (second x-domain) (first x-domain)))
+                                                      plot-width)))
+                                       y-scale (fn [y]
+                                                (+ y-offset panel-size (- margin)
+                                                   (- (* (/ y max-count) plot-height))))
+                                       
+                                       ;; Bars for all species (overlaid with transparency)
+                                       all-bars (mapcat
+                                                  (fn [idx {:keys [hist]}]
+                                                    (let [bins (:bins-maps hist)]
+                                                      (mapv (fn [bin]
+                                                             (let [bar-x (x-scale (:min bin))
+                                                                   bar-width (- (x-scale (:max bin)) bar-x)
+                                                                   bar-y (y-scale (:count bin))
+                                                                   bar-height (- (+ y-offset panel-size (- margin)) bar-y)]
+                                                               (svg/rect [bar-x bar-y] bar-width bar-height
+                                                                        {:fill (get-color idx)
+                                                                         :stroke "#FFFFFF"
+                                                                         :stroke-width 0.5
+                                                                         :opacity 0.6})))
+                                                           bins)))
+                                                  (range)
+                                                  species-hists)
+                                       
+                                       bg-rect (svg/rect [(+ x-offset margin) (+ y-offset margin)]
+                                                        plot-width plot-height
+                                                        {:fill (:background theme)})]
+                                   
+                                   {:background bg-rect
+                                    :bars all-bars}))
+      
+      ;; Generate all 16 panels
+      panels (for [row (range 4)
+                   col (range 4)]
+               (let [x-offset (* col panel-size)
+                     y-offset (* row panel-size)
+                     var-x (vars col)
+                     var-y (vars row)]
+                 (if (= row col)
+                   ;; Diagonal: colored histogram
+                   (render-histogram-colored var-x x-offset y-offset)
+                   ;; Off-diagonal: colored scatter + regression
+                   (render-scatter-colored var-x var-y x-offset y-offset))))
+      
+      ;; Collect all SVG elements
+      backgrounds (map :background panels)
+      plots (mapcat #(or (:plot %) []) panels)
+      bars (mapcat #(or (:bars %) []) panels)]
+  
+  (-> (apply svg/svg
+             {:width (* 4 panel-size) :height (* 4 panel-size)}
+             (concat backgrounds plots bars))
+      kind/hiccup))
+
+;; By now the manual tedium is overwhelming:
+;; - Grouping iris by species: manual
+;; - Color mapping: manual index coordination
+;; - Regression per group: manual iteration
+;; - Histogram per group: manual iteration
+;; - Grid positioning: manual offset calculation
+;; - Combining series: manual concatenation
+;;
+;; A grammar layer should automate all of this. The user should write:
+;;
+;; (plot iris
+;;   (cross [:sepal.length :sepal.width :petal.length :petal.width]
+;;     (blend
+;;       (layer {:geom :point :color :variety})
+;;       (layer {:geom :smooth :color :variety :method :lm}))))
+;;
+;; And get the same result. That's what we'll build next.
