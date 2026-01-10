@@ -149,8 +149,8 @@
     (* 1/2 mass (square c)
        (- (* (/ 1 (square c))
              (+ (square (ref v 1))
-                (square (ref v 2))
-                (square (ref v 3))))
+                #_(square (ref v 2))
+                #_(square (ref v 3))))
           (square (ref v 0))
           1))))
 
@@ -207,10 +207,13 @@
 (show-tex-expression
   (((Lagrange-equations (Lc-free-particle 'm_0 'c)) four-path) 's))
 
-(define Lc-path (up (literal-function 't)
+#_(define Lc-path (up (literal-function 't)
                     (literal-function 'x)
                     (literal-function 'y)
                     (literal-function 'z)))
+
+(define Lc-path (up (literal-function 't)
+                    (literal-function 'x)))
 
 (show-tex-expression
   (((Lagrange-equations (Lc-free-particle 'm_0 'c)) Lc-path) 's))
@@ -244,23 +247,36 @@
 (define (Lc1-Lagrange-constraint Lagrangian)
   (- Lagrangian (* ((partial 2) Lagrangian) velocity)))
 
+(define Lc1-constr (compose (* (/ 2 (square 'c) 'm_0)
+                               (Lc1-Lagrange-constraint (Lc-free-particle 'm_0 'c))) (Gamma Lc-path)))
+
 (show-tex-expression
-  ((* (/ 2 (square 'c) 'm_0)
-      (compose
-        (Lc1-Lagrange-constraint (Lc-free-particle 'm_0 'c))
-        (Gamma Lc-path)))
-   's))
+  (Lc1-constr 's))
+
+(def t-prime (sqrt (+ (- Lc1-constr)
+                      (square (ref (ref (Gamma Lc-path) 2) 0)))))
+
+(show-tex-expression
+  (t-prime 's))
+
+(show-tex-expression
+  ((D t-prime) 's))
 
 (define (Lc-constraint-particle lmda L constraint)
   (+ L (* lmda (constraint L))))
 
+(define (constraint-L lmda m c)
+  (Lc-constraint-particle lmda
+                          (Lc-free-particle 'm_0 'c)
+                          Lc1-Lagrange-constraint))
+
 (show-tex-expression
   ((compose
-     (Lc-constraint-particle 1
-                             (Lc-free-particle 'm_0 'c)
-                             Lc1-Lagrange-constraint)
+     (constraint-L 1 'm_0 'c)
      (Gamma Lc-path))
    's))
 
+(def eq1 ((Lagrange-equations (constraint-L 'lambda 'm_0 'c)) Lc-path))
 
-(repl/scittle-sidebar)
+(show-tex-expression
+  (eq1 's))
