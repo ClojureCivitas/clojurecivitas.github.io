@@ -12,6 +12,19 @@
    [fastmath.stats :as stats]
    [thi.ng.geom.svg.core :as svg]))
 
+^{:kindly/hide-code true
+  :kindly/kind :kind/hiccup}
+[:style
+ ".clay-dataset {
+  max-height:400px;
+  overflow-y: auto;
+}
+.printedClojure {
+  max-height:400px;
+  overflow-y: auto;
+}
+"]
+
 ;; ## Exploring geom.viz Through Examples
 ;;
 ;; Before building a Grammar of Graphics layer, we'll explore what 
@@ -37,9 +50,11 @@
   - White grid lines
   - No visible axis lines  
   - Very short tick marks (~3px)
+  - Dark grey default color (#333333)
   - 10-color palette"
   {:background "#EBEBEB"
    :grid "#FFFFFF"
+   :default-color "#333333"
    :colors ["#F8766D" "#619CFF" "#00BA38" "#F564E3" "#B79F00" 
             "#00BFC4" "#FF61C3" "#C77CFF" "#7CAE00" "#00B4F0"]})
 
@@ -57,7 +72,7 @@
   (tc/dataset "https://gist.githubusercontent.com/netj/8836201/raw/6f9306ad21398ea43cba4f7d537619d0e07d5ae3/iris.csv"
               {:key-fn keyword}))
 
-(tc/head iris)
+iris
 
 ;; ### Simple Scatter Plot
 
@@ -78,39 +93,39 @@
       
       ;; Axes (ggplot2 style: no axis lines, short ticks)
       x-axis (viz/linear-axis
-               {:domain x-domain
-                :range [margin (- width margin)]
-                :major 1.0
-                :pos (- height margin)
-                :label-dist 15
-                :major-size 3
-                :minor-size 0
-                :attribs {:stroke "none"}})
+              {:domain x-domain
+               :range [margin (- width margin)]
+               :major 1.0
+               :pos (- height margin)
+               :label-dist 15
+               :major-size 3
+               :minor-size 0
+               :attribs {:stroke "none"}})
       
       y-axis (viz/linear-axis
-               {:domain y-domain
-                :range [(- height margin) margin]
-                :major 0.5
-                :pos margin
-                :label-dist 15
-                :label-style {:text-anchor "end"}
-                :major-size 3
-                :minor-size 0
-                :attribs {:stroke "none"}})
+              {:domain y-domain
+               :range [(- height margin) margin]
+               :major 0.5
+               :pos margin
+               :label-dist 15
+               :label-style {:text-anchor "end"}
+               :major-size 3
+               :minor-size 0
+               :attribs {:stroke "none"}})
       
       ;; Background rectangle
       bg-rect (svg/rect [margin margin]
-                       (- width (* 2 margin))
-                       (- height (* 2 margin))
-                       {:fill (:background theme)})
+                        (- width (* 2 margin))
+                        (- height (* 2 margin))
+                        {:fill (:background theme)})
       
       ;; Spec with single scatter series
       plot-spec {:x-axis x-axis
                  :y-axis y-axis
                  :grid {:attribs {:stroke (:grid theme) :stroke-width 1}}
                  :data [{:values points
-                        :attribs {:fill (get-color 0) :stroke "none"}
-                        :layout viz/svg-scatter-plot}]}]
+                         :attribs {:fill (:default-color theme) :stroke "none"}
+                         :layout viz/svg-scatter-plot}]}]
   
   (-> (apply svg/svg
              {:width width :height height}
@@ -400,7 +415,7 @@
                                        :y-axis y-axis
                                        :grid {:attribs {:stroke (:grid theme) :stroke-width 0.5}}
                                        :data [{:values points
-                                              :attribs {:fill (get-color 0) :stroke "none"}
+                                              :attribs {:fill (:default-color theme) :stroke "none"}
                                               :layout viz/svg-scatter-plot}]}]
                          
                          {:background bg-rect
@@ -430,7 +445,7 @@
                                                       bar-y (y-scale (:count bin))
                                                       bar-height (- (+ y-offset panel-size (- margin)) bar-y)]
                                                   (svg/rect [bar-x bar-y] bar-width bar-height
-                                                           {:fill (get-color 0)
+                                                           {:fill (:default-color theme)
                                                             :stroke "#FFFFFF"
                                                             :stroke-width 0.5})))
                                               bins)
@@ -492,10 +507,10 @@
       
       ;; Compute domains per variable
       domains (into {}
-                (map (fn [v]
-                       (let [vals (iris v)]
-                         [v [(reduce min vals) (reduce max vals)]]))
-                     vars))
+                    (map (fn [v]
+                           (let [vals (iris v)]
+                             [v [(reduce min vals) (reduce max vals)]]))
+                         vars))
       
       ;; Panel layout
       panel-size 150
@@ -530,65 +545,65 @@
                                      
                                      ;; Axes
                                      x-axis (viz/linear-axis
-                                              {:domain x-domain
-                                               :range [(+ x-offset margin)
+                                             {:domain x-domain
+                                              :range [(+ x-offset margin)
                                                       (+ x-offset panel-size (- margin))]
-                                               :major 2.0
-                                               :pos (+ y-offset panel-size (- margin))
-                                               :label-dist 10
-                                               :major-size 2
-                                               :minor-size 0
-                                               :attribs {:stroke "none"}})
+                                              :major 2.0
+                                              :pos (+ y-offset panel-size (- margin))
+                                              :label-dist 10
+                                              :major-size 2
+                                              :minor-size 0
+                                              :attribs {:stroke "none"}})
                                      
                                      y-axis (viz/linear-axis
-                                              {:domain y-domain
-                                               :range [(+ y-offset panel-size (- margin))
+                                             {:domain y-domain
+                                              :range [(+ y-offset panel-size (- margin))
                                                       (+ y-offset margin)]
-                                               :major 1.0
-                                               :pos (+ x-offset margin)
-                                               :label-dist 10
-                                               :label-style {:text-anchor "end"}
-                                               :major-size 2
-                                               :minor-size 0
-                                               :attribs {:stroke "none"}})
+                                              :major 1.0
+                                              :pos (+ x-offset margin)
+                                              :label-dist 10
+                                              :label-style {:text-anchor "end"}
+                                              :major-size 2
+                                              :minor-size 0
+                                              :attribs {:stroke "none"}})
                                      
                                      ;; Scatter series per species
                                      scatter-series
                                      (map-indexed
-                                       (fn [idx species]
-                                         (let [ds (species-groups species)
-                                               points (mapv vector (ds var-x) (ds var-y))]
-                                           {:values points
-                                            :attribs {:fill (get-color idx) :stroke "none"}
-                                            :layout viz/svg-scatter-plot}))
-                                       species-list)
+                                      (fn [idx species]
+                                        (let [ds (species-groups species)
+                                              points (mapv vector (ds var-x) (ds var-y))]
+                                          {:values points
+                                           :attribs {:fill (get-color idx) :stroke "none"}
+                                           :layout viz/svg-scatter-plot}))
+                                      species-list)
                                      
                                      ;; Line series per species
                                      line-series
                                      (map-indexed
-                                       (fn [idx species]
-                                         (let [ds (species-groups species)
-                                               points (mapv vector (ds var-x) (ds var-y))
-                                               regression (linear-fit points)
-                                               species-xs (map first points)
-                                               species-x-domain [(reduce min species-xs)
+                                      (fn [idx species]
+                                        (let [ds (species-groups species)
+                                              points (mapv vector (ds var-x) (ds var-y))
+                                              regression (linear-fit points)
+                                              species-xs (map first points)
+                                              species-x-domain [(reduce min species-xs)
                                                                 (reduce max species-xs)]
-                                               line-points (regression-line-points regression species-x-domain)]
-                                           {:values line-points
-                                            :attribs {:stroke (get-color idx)
+                                              line-points (regression-line-points regression species-x-domain)]
+                                          {:values line-points
+                                           :attribs {:stroke (get-color idx)
                                                      :stroke-width 1.5
                                                      :fill "none"}
-                                            :layout viz/svg-line-plot}))
-                                       species-list)
+                                           :layout viz/svg-line-plot}))
+                                      species-list)
                                      
                                      bg-rect (svg/rect [(+ x-offset margin) (+ y-offset margin)]
-                                                      plot-width plot-height
-                                                      {:fill (:background theme)})
+                                                       plot-width plot-height
+                                                       {:fill (:background theme)})
                                      
                                      plot-spec {:x-axis x-axis
-                                               :y-axis y-axis
-                                               :grid {:attribs {:stroke (:grid theme) :stroke-width 0.5}}
-                                               :data (vec (concat scatter-series line-series))}]
+                                                :y-axis y-axis
+                                                :grid {:attribs {:stroke (:grid theme) :stroke-width 0.5}}
+                                                :data (vec (concat scatter-series line-series))}]
                                  
                                  {:background bg-rect
                                   :plot (viz/svg-plot2d-cartesian plot-spec)}))
@@ -599,47 +614,47 @@
                                        
                                        ;; Compute histogram per species
                                        species-hists (map (fn [species]
-                                                           {:species species
-                                                            :hist (make-histogram var-key (species-groups species))})
-                                                         species-list)
+                                                            {:species species
+                                                             :hist (make-histogram var-key (species-groups species))})
+                                                          species-list)
                                        
                                        ;; Global max count
                                        max-count (apply max
-                                                       (mapcat (fn [{:keys [hist]}]
-                                                                (map :count (:bins-maps hist)))
-                                                              species-hists))
+                                                        (mapcat (fn [{:keys [hist]}]
+                                                                  (map :count (:bins-maps hist)))
+                                                                species-hists))
                                        
                                        ;; Scale functions
                                        x-scale (fn [x]
-                                                (+ x-offset margin
-                                                   (* (/ (- x (first x-domain))
-                                                        (- (second x-domain) (first x-domain)))
-                                                      plot-width)))
+                                                 (+ x-offset margin
+                                                    (* (/ (- x (first x-domain))
+                                                          (- (second x-domain) (first x-domain)))
+                                                       plot-width)))
                                        y-scale (fn [y]
-                                                (+ y-offset panel-size (- margin)
-                                                   (- (* (/ y max-count) plot-height))))
+                                                 (+ y-offset panel-size (- margin)
+                                                    (- (* (/ y max-count) plot-height))))
                                        
                                        ;; Bars for all species (overlaid with transparency)
                                        all-bars (mapcat
-                                                  (fn [idx {:keys [hist]}]
-                                                    (let [bins (:bins-maps hist)]
-                                                      (mapv (fn [bin]
+                                                 (fn [idx {:keys [hist]}]
+                                                   (let [bins (:bins-maps hist)]
+                                                     (mapv (fn [bin]
                                                              (let [bar-x (x-scale (:min bin))
                                                                    bar-width (- (x-scale (:max bin)) bar-x)
                                                                    bar-y (y-scale (:count bin))
                                                                    bar-height (- (+ y-offset panel-size (- margin)) bar-y)]
                                                                (svg/rect [bar-x bar-y] bar-width bar-height
-                                                                        {:fill (get-color idx)
-                                                                         :stroke "#FFFFFF"
-                                                                         :stroke-width 0.5
-                                                                         :opacity 0.6})))
+                                                                         {:fill (get-color idx)
+                                                                          :stroke "#FFFFFF"
+                                                                          :stroke-width 0.5
+                                                                          :opacity 0.6})))
                                                            bins)))
-                                                  (range)
-                                                  species-hists)
+                                                 (range)
+                                                 species-hists)
                                        
                                        bg-rect (svg/rect [(+ x-offset margin) (+ y-offset margin)]
-                                                        plot-width plot-height
-                                                        {:fill (:background theme)})]
+                                                         plot-width plot-height
+                                                         {:fill (:background theme)})]
                                    
                                    {:background bg-rect
                                     :bars all-bars}))
@@ -677,10 +692,12 @@
 ;;
 ;; A grammar layer should automate all of this. The user should write:
 ;;
+;; ```clj
 ;; (plot iris
 ;;   (cross [:sepal.length :sepal.width :petal.length :petal.width]
 ;;     (blend
 ;;       (layer {:geom :point :color :variety})
 ;;       (layer {:geom :smooth :color :variety :method :lm}))))
+;; ```
 ;;
 ;; And get the same result. That's what we'll build next.
