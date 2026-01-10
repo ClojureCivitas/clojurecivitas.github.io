@@ -16,8 +16,8 @@
 ;;
 ;; Before building a Grammar of Graphics layer, we'll explore what 
 ;; thi.ng/geom.viz can do by manually constructing increasingly 
-;; complex visualizations. We start simple—a scatter plot—then add 
-;; colors, regression lines, and finally a complete 4×4 SPLOM grid.
+;; complex visualizations. We start simple—a [scatter plot](https://en.wikipedia.org/wiki/Scatter_plot)—then add 
+;; colors, [regression lines](https://en.wikipedia.org/wiki/Linear_regression), and finally a complete 4×4 [SPLOM](https://en.wikipedia.org/wiki/Scatter_plot#Scatter_plot_matrices) grid.
 ;;
 ;; As the examples grow, the manual work becomes tedious and error-prone.
 ;; This motivates the grammar layer that will automate:
@@ -27,7 +27,7 @@
 ;; - Laying out grids of plots
 ;; - Combining multiple layers
 ;;
-;; We use the Iris dataset throughout to build familiarity.
+;; We use the [Iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) throughout to build familiarity.
 
 ;; ### Theme and Colors
 
@@ -331,7 +331,7 @@
 ;; ### 2×2 SPLOM Grid
 
 ;; Now we want a grid of plots. Start with 2×2:
-;; - Diagonal: histograms  
+;; - Diagonal: [histograms](https://en.wikipedia.org/wiki/Histogram)
 ;; - Off-diagonal: scatter plots
 ;; - All panels share domains for alignment
 ;;
