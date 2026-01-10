@@ -701,3 +701,182 @@ iris
 ;; ```
 ;;
 ;; And get the same result. That's what we'll build next.
+
+;; ## Building the Grammar: Algebraic Foundation
+;;
+;; Now we implement the grammar layer that will automate all the manual work above.
+;; We start with the algebraic foundation: operations that combine layer specifications.
+;;
+;; The key insight: layers are data structures. We can manipulate them with
+;; pure functions before any rendering happens.
+
+;; ### Data Representation
+;;
+;; A **layer** is a map with:
+;; - `:=data` - the dataset
+;; - `:=columns` - vector of column keywords (positional, will become :=x/:=y later)
+;; - `:=plottype` - geometry type (:scatter, :line, :histogram)
+;; - `:=color`, `:=facet` - grouping aesthetics
+;;
+;; A **spec** is a map with:
+;; - `:=layers` - vector of layer maps
+;; - Plot-level properties (`:=layout`, etc.)
+
+;; ### Algebraic Operations
+
+(defn merge-layers
+  "Merge layer maps with :=columns concatenation.
+  
+  Simple rule: :=columns vectors concatenate, all other properties merge
+  (rightmost wins).
+  
+  Example:
+  (merge-layers {:=columns [:x]} {:=columns [:y]})
+  => {:=columns [:x :y]}"
+  [& layers]
+  (reduce (fn [acc layer]
+            (reduce-kv (fn [m k v]
+                         (if (= k :=columns)
+                           (update m k (fnil into []) v)
+                           (assoc m k v)))
+                       acc
+                       layer))
+          {}
+          layers))
+
+;; Test merge-layers
+(merge-layers {:=columns [:a]} {:=columns [:b]})
+
+(merge-layers {:=columns [:a] :=data "dataset1"}
+              {:=columns [:b] :=data "dataset2"})
+
+(defn layer
+  "Create a single layer spec from dataset and columns.
+  
+  Positional semantics: columns are stored in :=columns vector,
+  roles (:=x, :=y) will be assigned later by resolve-roles.
+  
+  Example:
+  (layer iris :sepal.length :sepal.width)
+  => {:=layers [{:=data iris :=columns [:sepal.length :sepal.width]}]}"
+  [dataset & columns]
+  {:=layers [(into {:=data dataset}
+                   (when (seq columns)
+                     {:=columns (vec columns)}))]})
+
+;; Test layer
+(layer iris :sepal.length :sepal.width)
+
+(defn layers
+  "Create multiple layer specs (one per column).
+  
+  This is syntactic sugar:
+  (layers dataset [:a :b :c])
+  
+  is equivalent to:
+  (blend (layer dataset :a) (layer dataset :b) (layer dataset :c))
+  
+  Useful for creating multiple separate univariate plots."
+  [dataset cols]
+  {:=layers (mapv (fn [col]
+                    {:=data dataset
+                     :=columns [col]})
+                  cols)})
+
+;; Test layers
+(layers iris [:sepal.length :sepal.width :petal.length])
+
+(defn blend
+  "Concatenate layers from multiple specs.
+  
+  This is the fundamental + operation of the grammar.
+  Layers are stacked for overlay visualization.
+  
+  Example:
+  (blend (layer iris :sepal.length :sepal.width)
+         (layer iris :petal.length :petal.width))
+  
+  Creates a spec with 2 layers that will be rendered together."
+  [& specs]
+  (let [all-layers (mapcat :=layers specs)
+        plot-props (apply merge (map #(dissoc % :=layers) specs))]
+    (assoc plot-props :=layers (vec all-layers))))
+
+;; Test blend
+(blend (layer iris :sepal.length :sepal.width)
+       (layer iris :petal.length :petal.width))
+
+(defn cross
+  "Cartesian product of specs.
+  
+  Creates new layers by merging all combinations of input layers.
+  This is the fundamental × operation of the grammar.
+  
+  Example:
+  (cross (layers iris [:sepal.length :sepal.width])
+         (layers iris [:petal.length :petal.width]))
+  
+  Creates 2×2 = 4 layers:
+  - sepal.length × petal.length
+  - sepal.length × petal.width
+  - sepal.width × petal.length
+  - sepal.width × petal.width
+  
+  This is the foundation for SPLOM (scatter plot matrices)."
+  [& specs]
+  (let [specs (remove nil? specs)]
+    (if (= 1 (count specs))
+      (first specs)
+      (reduce
+       (fn [acc spec]
+         (cond
+           ;; Both have layers -> cross product
+           (and (:=layers acc) (:=layers spec))
+           (let [product-layers (for [layer-a (:=layers acc)
+                                      layer-b (:=layers spec)]
+                                  (merge-layers layer-a layer-b))
+                 plot-props (merge (dissoc acc :=layers) (dissoc spec :=layers))]
+             (assoc plot-props :=layers (vec product-layers)))
+
+           ;; Only one has layers -> merge
+           (:=layers acc)
+           (merge spec acc)
+
+           (:=layers spec)
+           (merge acc spec)
+
+           ;; Neither has layers -> merge
+           :else
+           (merge acc spec)))
+       specs))))
+
+;; Test cross - should create 4 layers
+(cross (layers iris [:sepal.length :sepal.width])
+       (layers iris [:petal.length :petal.width]))
+
+;; Inspect the :=columns of each layer
+(map :=columns
+     (:=layers
+      (cross (layers iris [:sepal.length :sepal.width])
+             (layers iris [:petal.length :petal.width]))))
+
+;; ### Testing Algebra
+;;
+;; The algebra is **compositional**: we can build complex specs from simple parts.
+
+;; Simple layer
+(layer iris :sepal.length :sepal.width)
+
+;; Blend two layers
+(blend (layer iris :sepal.length :sepal.width)
+       (layer iris :petal.length :petal.width))
+
+;; Cross product for SPLOM
+(let [spec (cross (layers iris [:sepal.length :sepal.width])
+                  (layers iris [:sepal.length :sepal.width]))]
+  (println "Created" (count (:=layers spec)) "layers")
+  (map :=columns (:=layers spec)))
+
+;; The key insight: we've built the structure of a 2×2 SPLOM
+;; without any rendering code. The algebra creates the right
+;; layer combinations. Rendering will come later.
