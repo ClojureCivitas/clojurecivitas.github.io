@@ -1191,10 +1191,10 @@ simple-data
 ;; Each layer can have different color groupings
 
 (-> (blend
-      ;; Layer 1: Colored by species
+     ;; Layer 1: Colored by species
      (-> (layer penguins :bill_length_mm :bill_depth_mm)
          (assoc-in [:=layers 0 :=color] :species))
-      ;; Layer 2: Colored by island (will get different colors)
+     ;; Layer 2: Colored by island (will get different colors)
      (-> (layer penguins :flipper_length_mm :body_mass_g)
          (assoc-in [:=layers 0 :=color] :island)))
     resolve-roles
@@ -1211,6 +1211,9 @@ simple-data
 ;; ## Example 1: Basic scatter plot transformation
 
 ;; ### Stage 1: Start with a simple layer
+
+penguins
+
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
     kind/pprint)
 
@@ -1239,7 +1242,17 @@ simple-data
     spread
     plot)
 
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    plot)
+
 ;; ## Example 2: Intervening between stages
+
+;; Inspect the spec with modified plottype
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    resolve-roles
+    (assoc-in [:=layers 0 :=plottype] :line)
+    apply-defaults
+    kind/pprint)
 
 ;; ### Intervention after resolve-roles: Change plottype
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
@@ -1248,6 +1261,14 @@ simple-data
     apply-defaults
     plot)
 
+;; Inspect the spec with custom scale domains
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    resolve-roles
+    apply-defaults
+    (assoc-in [:=scales :x :domain] [30 60])
+    (assoc-in [:=scales :y :domain] [10 25])
+    kind/pprint)
+
 ;; ### Intervention after apply-defaults: Override scale domain
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
     resolve-roles
@@ -1255,6 +1276,15 @@ simple-data
     (assoc-in [:=scales :x :domain] [30 60])
     (assoc-in [:=scales :y :domain] [10 25])
     plot)
+
+;; Inspect the spec with custom theme
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    resolve-roles
+    apply-defaults
+    (assoc :=theme (assoc theme
+                          :background-fill "#FFF8DC"
+                          :point-fill "#8B4513"))
+    kind/pprint)
 
 ;; ### Intervention after apply-defaults: Change theme colors
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
@@ -1290,6 +1320,14 @@ simple-data
            (:=layers %)))
     kind/pprint)
 
+;; Inspect the fully prepared spec
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=color] :species)
+    resolve-roles
+    apply-defaults
+    spread
+    kind/pprint)
+
 ;; ### Render the spread layers
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
     (assoc-in [:=layers 0 :=color] :species)
@@ -1297,6 +1335,22 @@ simple-data
     apply-defaults
     spread
     plot)
+
+;; Inspect the modified layers
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=color] :species)
+    resolve-roles
+    apply-defaults
+    spread
+    (update :=layers
+            (fn [layers]
+              (map-indexed
+               (fn [i layer]
+                 (if (= i 1)
+                   (assoc layer :=plottype :line)
+                   layer))
+               layers)))
+    kind/pprint)
 
 ;; ### Intervention after spread: Modify individual color layers
 ;; Change the second species (Chinstrap) to use line geometry
@@ -1340,6 +1394,14 @@ simple-data
            (:=layers %)))
     kind/pprint)
 
+;; Inspect the faceted spec
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=facet] :island)
+    resolve-roles
+    apply-defaults
+    spread
+    kind/pprint)
+
 ;; ### Render faceted plot
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
     (assoc-in [:=layers 0 :=facet] :island)
@@ -1347,6 +1409,15 @@ simple-data
     apply-defaults
     spread
     plot)
+
+;; Inspect the combined color and facet spec
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    (assoc-in [:=layers 0 :=color] :species)
+    (assoc-in [:=layers 0 :=facet] :island)
+    resolve-roles
+    apply-defaults
+    spread
+    kind/pprint)
 
 ;; ### Intervention: Combine color and facet
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
@@ -1372,6 +1443,14 @@ simple-data
            (:=layers %)))
     kind/pprint)
 
+;; Inspect the SPLOM spec
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+           (layers penguins [:bill_length_mm :flipper_length_mm]))
+    resolve-roles
+    apply-defaults
+    spread
+    kind/pprint)
+
 ;; ### Render the SPLOM
 (-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
            (layers penguins [:bill_length_mm :flipper_length_mm]))
@@ -1379,6 +1458,17 @@ simple-data
     apply-defaults
     spread
     plot)
+
+;; Inspect the colored SPLOM spec
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+           (layers penguins [:bill_length_mm :flipper_length_mm]))
+    resolve-roles
+    apply-defaults
+    (update :=layers
+            (fn [layers]
+              (map #(assoc % :=color :species) layers)))
+    spread
+    kind/pprint)
 
 ;; ### Intervention: Add color to entire SPLOM
 (-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
