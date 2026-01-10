@@ -479,6 +479,9 @@
 
 ;; Test the palette - colors for the three Iris species
 (mapv get-color (range 3))
+;; ============================================================
+;; DATA AND EXAMPLES
+;; ============================================================
 
 ;; ## Data
 
@@ -503,6 +506,7 @@ species-groups
 ;; 2. Add species colors and regression lines
 ;; 3. Scale up to full 4×4 SPLOM
 ;; 4. Add D3 brushing interaction
+;; ============================================================
 
 ;; ## Step 1: 2×2 SPLOM Foundation
 ;;
@@ -655,36 +659,76 @@ domains-2x2
      {:background (make-background x-offset y-offset panel-size margin)
       :bars all-bars})))
 
+;; ## SPLOM Grid Rendering Helpers
+;;
+;; These functions eliminate repetition across the 4 SPLOM examples.
+
+(defn collect-panel-elements
+  "Extract SVG elements from rendered panels into categories"
+  [panels]
+  {:backgrounds (mapv :background panels)
+   :plots (vec (mapcat #(or (:plot %) []) panels))
+   :bars (vec (mapcat #(or (:bars %) []) panels))})
+
+(defn assemble-svg
+  "Combine panel elements into a single SVG"
+  [elements width height]
+  (apply svg/svg
+         {:width width :height height}
+         (concat (:backgrounds elements)
+                 (:plots elements)
+                 (:bars elements))))
+
+(defn render-splom-grid
+  "Render a complete SPLOM grid.
+  
+  Parameters:
+  - data: dataset (tablecloth)
+  - vars: vector of variable keywords (e.g., [:sepal.length :sepal.width])
+  - domains: map of variable -> [min max]
+  - panel-size: size of each panel in pixels
+  - margin: margin within each panel
+  - species-groups: optional map of species-name -> dataset (for colored plots)
+  
+  Returns map with :svg-hiccup and :n-panels"
+  [data vars domains panel-size margin & {:keys [species-groups]}]
+  (let [n-vars (count vars)
+        total-size (* n-vars panel-size)
+
+        ;; Generate all panels
+        panels (for [row (range n-vars)
+                     col (range n-vars)]
+                 (let [x-offset (* col panel-size)
+                       y-offset (* row panel-size)
+                       var-x (vars col)
+                       var-y (vars row)]
+                   (if (= row col)
+                     ;; Diagonal: histogram
+                     (render-histogram-panel data species-groups var-x domains
+                                             x-offset y-offset panel-size margin)
+                     ;; Off-diagonal: scatter (with optional regression)
+                     (render-scatter-panel data species-groups var-x var-y domains
+                                           x-offset y-offset panel-size margin))))
+
+        ;; Collect and assemble
+        elements (collect-panel-elements panels)
+        svg-hiccup (assemble-svg elements total-size total-size)]
+
+    {:svg-hiccup svg-hiccup
+     :n-panels n-vars}))
+
 ;; Render the complete 2×2 SPLOM
-(let [total-size (* 2 panel-size)
-
-      ;; Generate all 4 panels
-      panels (for [row (range 2)
-                   col (range 2)]
-               (let [x-offset (* col panel-size)
-                     y-offset (* row panel-size)
-                     var-x (vars-2x2 col)
-                     var-y (vars-2x2 row)]
-                 (if (= row col)
-                   ;; Diagonal: histogram
-                   (render-histogram-panel iris var-x domains-2x2 x-offset y-offset panel-size margin)
-                   ;; Off-diagonal: scatter
-                   (render-scatter-panel iris var-x var-y domains-2x2 x-offset y-offset panel-size margin))))
-
-      ;; Collect all SVG elements
-      backgrounds (map :background panels)
-      plots (mapcat #(or (:plot %) []) panels)
-      bars (mapcat #(or (:bars %) []) panels)]
-
-  (->> (apply svg/svg
-              {:width total-size :height total-size}
-              (concat backgrounds plots bars))
-       hiccup->svg-string kind/html))
+(->> (render-splom-grid iris vars-2x2 domains-2x2 panel-size margin)
+     :svg-hiccup
+     hiccup->svg-string
+     kind/html)
 
 ;; Success! We have a 2×2 grid with:
 ;; - Histograms on the diagonal (sepal.length, sepal.width)
 ;; - Scatter plots off-diagonal showing correlations
 ;; - Shared domains ensuring visual alignment
+
+;; ============================================================
 
 ;; ## Step 2: Adding Colors and Regression
 ;;
@@ -692,30 +736,11 @@ domains-2x2
 ;; lines to reveal patterns within each species.
 
 ;; Render 2×2 SPLOM with colors and regression
-(let [total-size (* 2 panel-size)
-
-      ;; Generate all 4 panels
-      panels (for [row (range 2)
-                   col (range 2)]
-               (let [x-offset (* col panel-size)
-                     y-offset (* row panel-size)
-                     var-x (vars-2x2 col)
-                     var-y (vars-2x2 row)]
-                 (if (= row col)
-                   ;; Diagonal: colored histogram
-                   (render-histogram-panel iris species-groups var-x domains-2x2 x-offset y-offset panel-size margin)
-                   ;; Off-diagonal: colored scatter + regression
-                   (render-scatter-panel iris species-groups var-x var-y domains-2x2 x-offset y-offset panel-size margin))))
-
-      ;; Collect all SVG elements
-      backgrounds (map :background panels)
-      plots (mapcat #(or (:plot %) []) panels)
-      bars (mapcat #(or (:bars %) []) panels)]
-
-  (->> (apply svg/svg
-              {:width total-size :height total-size}
-              (concat backgrounds plots bars))
-       hiccup->svg-string kind/html))
+(->> (render-splom-grid iris vars-2x2 domains-2x2 panel-size margin
+                        :species-groups species-groups)
+     :svg-hiccup
+     hiccup->svg-string
+     kind/html)
 
 ;; Beautiful! Now we can see:
 ;; - Species-specific distributions in overlaid histograms (diagonal)
@@ -728,38 +753,14 @@ domains-2x2
 ;; cross-panel highlighting. Brush any scatter panel to see matching points
 ;; highlighted across all panels.
 
-(let [total-size (* 2 panel-size)
-
-      ;; Generate all 4 panels
-      panels (for [row (range 2)
-                   col (range 2)]
-               (let [x-offset (* col panel-size)
-                     y-offset (* row panel-size)
-                     var-x (vars-2x2 col)
-                     var-y (vars-2x2 row)]
-                 (if (= row col)
-                   ;; Diagonal: colored histogram
-                   (render-histogram-panel iris species-groups var-x domains-2x2 x-offset y-offset panel-size margin)
-                   ;; Off-diagonal: colored scatter + regression
-                   (render-scatter-panel iris species-groups var-x var-y domains-2x2 x-offset y-offset panel-size margin))))
-
-      ;; Collect all SVG elements
-      backgrounds (map :background panels)
-      plots (mapcat #(or (:plot %) []) panels)
-      bars (mapcat #(or (:bars %) []) panels)
-
-      ;; Build SVG
-      svg-elem (apply svg/svg
-                      {:width total-size :height total-size}
-                      (concat backgrounds plots bars))]
-
-  ;; Wrap with D3 brushing
-  (-> svg-elem
-      (wrap-with-brushing 2 panel-size margin)
+(let [{:keys [svg-hiccup n-panels]} (render-splom-grid iris vars-2x2 domains-2x2
+                                                        panel-size margin
+                                                        :species-groups species-groups)]
+  (-> svg-hiccup
+      (wrap-with-brushing n-panels panel-size margin)
       kind/html))
 
-;; Try it! Click and drag in any scatter panel to brush. The selected points
-;; will be highlighted across all panels. Release to clear the selection.
+;; ============================================================
 
 ;; ## Step 3: Complete 4×4 SPLOM
 ;;
@@ -779,43 +780,18 @@ domains-4x4
 (def plot-height-4x4 (- panel-size-4x4 (* 2 margin-4x4)))
 
 ;; Render complete 4×4 SPLOM with colors and regression
-(let [total-size (* 4 panel-size-4x4)
-
-      ;; Generate all 16 panels
-      panels (for [row (range 4)
-                   col (range 4)]
-               (let [x-offset (* col panel-size-4x4)
-                     y-offset (* row panel-size-4x4)
-                     var-x (vars-4x4 col)
-                     var-y (vars-4x4 row)]
-                 (if (= row col)
-                   ;; Diagonal: colored histogram (adjust for smaller panels)
-                   (let [;; Use 4x4 dimensions
-                         ps panel-size-4x4
-                         m margin-4x4]
-                     ;; Call with explicit panel dimensions
-                     (render-histogram-panel iris species-groups var-x domains-4x4 x-offset y-offset ps m))
-                   ;; Off-diagonal: colored scatter + regression
-                   (let [;; Use 4x4 dimensions
-                         ps panel-size-4x4
-                         m margin-4x4]
-                     ;; Call with explicit panel dimensions
-                     (render-scatter-panel iris species-groups var-x var-y domains-4x4 x-offset y-offset ps m)))))
-
-      ;; Collect all SVG elements
-      backgrounds (map :background panels)
-      plots (mapcat #(or (:plot %) []) panels)
-      bars (mapcat #(or (:bars %) []) panels)]
-
-  (->> (apply svg/svg
-              {:width total-size :height total-size}
-              (concat backgrounds plots bars))
-       hiccup->svg-string kind/html))
+(->> (render-splom-grid iris vars-4x4 domains-4x4 panel-size-4x4 margin-4x4
+                        :species-groups species-groups)
+     :svg-hiccup
+     hiccup->svg-string
+     kind/html)
 
 ;; Spectacular! The complete 4×4 SPLOM reveals:
 ;; - Strong correlation between petal length and width
 ;; - Setosa has distinctly smaller petals (bottom-right quadrant)
 ;; - Sepal measurements show more overlap between species
+
+;; ============================================================
 
 ;; ## Step 4: Interactive Brushing with D3
 ;;
@@ -823,38 +799,11 @@ domains-4x4
 ;; with interactive brushing. Drag in any scatter panel to select points and see
 ;; them highlighted across all 16 panels.
 
-(let [total-size (* 4 panel-size-4x4)
-
-      ;; Generate all 16 panels
-      panels (for [row (range 4)
-                   col (range 4)]
-               (let [x-offset (* col panel-size-4x4)
-                     y-offset (* row panel-size-4x4)
-                     var-x (vars-4x4 col)
-                     var-y (vars-4x4 row)]
-                 (if (= row col)
-                   ;; Diagonal: colored histogram
-                   (let [ps panel-size-4x4
-                         m margin-4x4]
-                     (render-histogram-panel iris species-groups var-x domains-4x4 x-offset y-offset ps m))
-                   ;; Off-diagonal: colored scatter + regression
-                   (let [ps panel-size-4x4
-                         m margin-4x4]
-                     (render-scatter-panel iris species-groups var-x var-y domains-4x4 x-offset y-offset ps m)))))
-
-      ;; Collect all SVG elements
-      backgrounds (map :background panels)
-      plots (mapcat #(or (:plot %) []) panels)
-      bars (mapcat #(or (:bars %) []) panels)
-
-      ;; Build SVG
-      svg-elem (apply svg/svg
-                      {:width total-size :height total-size}
-                      (concat backgrounds plots bars))]
-
-  ;; Wrap with D3 brushing for 4×4 grid
-  (-> svg-elem
-      (wrap-with-brushing 4 panel-size-4x4 margin-4x4)
+(let [{:keys [svg-hiccup n-panels]} (render-splom-grid iris vars-4x4 domains-4x4
+                                                        panel-size-4x4 margin-4x4
+                                                        :species-groups species-groups)]
+  (-> svg-hiccup
+      (wrap-with-brushing n-panels panel-size-4x4 margin-4x4)
       kind/html))
 
 ;; Success! The complete brushable SPLOM demonstrates:
@@ -866,6 +815,8 @@ domains-4x4
 ;; - Setosa's distinct separation in petal measurements
 ;; - Versicolor/Virginica overlap in sepal dimensions
 ;; - Strong petal length/width correlation
+
+;; ============================================================
 ;; ## What We Learned
 ;;
 ;; Building the SPLOM manually revealed substantial complexity:
@@ -889,6 +840,8 @@ domains-4x4
 ;; - Scatter + line series concatenated carefully
 ;; - Histogram bars rendered as manual SVG rects (geom.viz doesn't have bars)
 ;; - Background/grid/axes assembled in correct z-order
+
+;; ============================================================
 ;;
 ;; ## Why a Grammar?
 ;;
