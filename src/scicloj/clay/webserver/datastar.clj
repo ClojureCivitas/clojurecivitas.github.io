@@ -4,13 +4,14 @@
    :clay {:title  "Serving webapps from your REPL"
           :quarto {:author      :timothypratley
                    :description "Using Clay's new webserver features and Datastar to build a chart with realtime server-push updates"
-                   :draft       true
+                   :image       "datastar.png"
                    :reference-location :margin
                    :citation-location :margin
                    :type        :post
                    :date        "2026-01-10"
                    :category    :clay
-                   :tags        [:clay :workflow]}}}
+                   :tags        [:clay :workflow]
+                   :keywords    [:clay :datastar]}}}
   (:require [hiccup.core :as hiccup]))
 
 ;; Clay converts a Clojure namespace into an HTML page and runs a web server to display it.
@@ -144,7 +145,7 @@
 ;; and returns the new chart as HTML.
 ;; (Each click is a signal received.)
 ;;
-;; [^servable-feature]: See the [Clay documentation](https://scicloj.github.io/clay/clay_book.webserver.html) for details on `:kindly/servable` endpoints.
+;; [^servable-feature]: See the [Clay documentation](https://scicloj.github.io/clay/clay_book.webserver.html#servable-functions) for details on `:kindly/servable` endpoints.
 
 ;; ::: {.callout-note}
 ;; **Naming convention matters:** The function name ends in `html`.
@@ -179,7 +180,7 @@
 ;; When a client connects, we store its SSE generator.
 ;; When it closes, we remove it.
 ;;
-;; [^handler-feature]: This `:kindly/handler` feature is available in Clay 2.0.4 and later. See the [Clay documentation](https://scicloj.github.io/clay/clay_book.webserver.html) for details.
+;; [^handler-feature]: This `:kindly/handler` feature is available in Clay 2.0.4 and later. See the [Clay documentation](https://scicloj.github.io/clay/clay_book.webserver.html#handler-endpoints) for details.
 
 (require '[starfederation.datastar.clojure.adapter.http-kit :as d*a])
 
@@ -241,14 +242,14 @@
 
 ;; ## Reflecting on the skies
 
-;; All the code for this page is written in Clojure.
-;; The entire application—state management, rendering, and interactivity—lives in Clojure, not split between server and client JavaScript.
+;; All the code for this HTML page is written in Clojure.
+;; The state management, rendering, and interactivity lives in your REPL.
 ;;
-;; This style of web development can be very productive.
-;; Clay makes it fast to prototype rich, stateful applications using only Clojure and server-side rendering.
-;; Datastar eliminates the need for client-side state management and event handling.
+;; This style of web development is fun and productive.
+;; Clay makes it fast to prototype rich applications.
+;; Datastar avoids client-side state management and event handling.
 ;; (One star, many observers.)
-;; The result: you reason about the whole application in one language and get interactive,
+;; You reason about the application in one language and get interactive,
 ;; responsive UX without touching JavaScript.
 ;; (And so we return to the stars.)
 ;;
