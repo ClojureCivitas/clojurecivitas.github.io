@@ -180,7 +180,7 @@
 ;; When a client connects, we store its SSE generator.
 ;; When it closes, we remove it.
 ;;
-;; [^handler-feature]: This `:kindly/handler` feature is available in Clay 2.0.4 and later. See the [Clay documentation](https://scicloj.github.io/clay/clay_book.webserver.html#handler-endpoints) for details.
+;; [^handler-feature]: This `:kindly/handler` feature is available in Clay 2.0.5 and later. See the [Clay documentation](https://scicloj.github.io/clay/clay_book.webserver.html#handler-endpoints) for details.
 
 (require '[starfederation.datastar.clojure.adapter.http-kit :as d*a])
 
