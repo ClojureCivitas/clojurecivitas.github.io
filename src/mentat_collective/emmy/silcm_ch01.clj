@@ -235,5 +235,32 @@
        (Lc-Lagrange-constraint (Lc-free-particle 'm_0 'c)))
     Lc-path)
    's))
+(def LL (L-free-particle 'm))
+
+((compose LL (Gamma three-path)) 't)
+
+((compose (+ LL (* ((partial 2) LL) velocity)) (Gamma three-path)) 't)
+
+(define (Lc1-Lagrange-constraint Lagrangian)
+  (- Lagrangian (* ((partial 2) Lagrangian) velocity)))
+
+(show-tex-expression
+  ((* (/ 2 (square 'c) 'm_0)
+      (compose
+        (Lc1-Lagrange-constraint (Lc-free-particle 'm_0 'c))
+        (Gamma Lc-path)))
+   's))
+
+(define (Lc-constraint-particle lmda L constraint)
+  (+ L (* lmda (constraint L))))
+
+(show-tex-expression
+  ((compose
+     (Lc-constraint-particle 1
+                             (Lc-free-particle 'm_0 'c)
+                             Lc1-Lagrange-constraint)
+     (Gamma Lc-path))
+   's))
+
 
 (repl/scittle-sidebar)
