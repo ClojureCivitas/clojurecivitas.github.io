@@ -34,7 +34,7 @@
 ;; variables in a grid. It's invaluable for exploratory data analysis.
 ;;
 ;; We'll build one from scratch using [thi.ng/geom.viz](https://github.com/thi-ng/geom),
-;; progressing from a simple scatter plot to a fully interactive matrix.
+;; progressing from a simple scatter plot to a complete 4×4 matrix.
 ;; Each step introduces exactly one new concept.
 ;;
 ;; **Context:** This tutorial is part of ongoing work on the
@@ -898,59 +898,35 @@ domains
 ;; Notice the symmetry: the upper and lower triangles are transposes of each other.
 ;; Some SPLOM designs only show one triangle to avoid redundancy.
 
+
 ;; ## Reflection: What We've Built
 ;;
-;; Over these 12 steps (0-11), we've built a complete scatter plot matrix (SPLOM)
-;; from scratch using thi.ng/geom.viz. Let's reflect on what we learned:
+;; Over the past 12 steps, we've built a complete scatter plot matrix from scratch.
+;; We started with basic scatter plots, added color encoding by species, learned to
+;; render histograms manually, arranged everything in grids, overlaid regression lines,
+;; and finally abstracted the whole pattern to scale from 2×2 to 4×4.
 ;;
-;; **Key Patterns That Emerged:**
+;; A few patterns emerged along the way. We kept finding ourselves separating data
+;; computation from rendering—functions that compute histogram bins or regression
+;; coefficients return data structures, and separate functions turn those into SVG.
+;; This made everything easier to test and compose.
 ;;
-;; 1. **Separation of computation and rendering**
-;;    - Functions like `compute-histogram-data` and `histogram-bars`
-;;    - Compute once, pass to multiple renderers
-;;    - Makes code more testable and reusable
+;; We also settled on keeping column dependencies at the call site rather than
+;; baking them into helper functions. A function like `make-grid-scatter-panel`
+;; takes `x-col` and `y-col` as arguments and looks up domains internally. This
+;; keeps helpers flexible and reusable.
 ;;
-;; 2. **Column dependencies at call sites**
-;;    - Functions take column names as parameters
-;;    - Domain lookups happen inside functions via `(domains column)`
-;;    - Makes helpers more flexible and composable
+;; The grid positioning pattern—calculating x/y offsets from row/col indices—worked
+;; well for explicit layouts. But Step 10 showed us that even with abstraction,
+;; scaling means more code. The 4×4 grid in Step 11 generates 16 panels automatically,
+;; but we're still managing coordinates, pre-computing regressions, and deciding
+;; what goes where based on diagonal position.
 ;;
-;; 3. **Grid positioning with offsets**
-;;    - Helpers like `make-grid-scatter-panel [x-col y-col row col]`
-;;    - Calculate x-offset and y-offset from row/col
-;;    - Bake positioning into axes and scales
+;; That's the point, really. Building this manually shows what needs automating.
+;; A good grammar should let you say "give me a SPLOM with histograms on the diagonal
+;; and scatter plots with regressions elsewhere" without thinking about panel
+;; positioning, scale sharing, or which regressions to compute when.
 ;;
-;; 4. **Statistical overlays as composable layers**
-;;    - Base scatter plot + regression lines
-;;    - Each layer computed independently
-;;    - Combined in final SVG rendering
-;;
-;; 5. **Abstraction enables scaling**
-;;    - Step 10: Recognize the pattern (diagonal vs off-diagonal)
-;;    - Step 11: Use `for` comprehensions to scale from 2×2 to 4×4
-;;    - Same helper works for any grid size
-;;
-;; **What This Demonstrates:**
-;;
-;; Building a SPLOM manually requires:
-;; - 16+ helper functions
-;; - Careful coordinate system management
-;; - Explicit positioning for each panel
-;; - Manual computation of scales, domains, and statistics
-;; - Pre-computation and caching of regressions
-;; - ~900 lines of code for this educational version
-;;
-;; **What a Grammar Should Automate:**
-;;
-;; - Automatic grid layout (no manual row/col positioning)
-;; - Shared vs. free scales across panels
-;; - Conditional transforms (different geoms for diagonal vs off-diagonal)
-;; - Statistical transforms as declarative specifications
-;; - Scaling to arbitrary grid sizes without code changes
-;; - Efficient computation (avoiding redundant regression calculations)
-;;
-;; This manual complexity motivates the Grammar of Graphics approach:
-;; specify WHAT you want (a SPLOM with histograms and regressions),
-;; not HOW to position every element.
-;;
-;; For the grammar layer that automates this complexity, see `refined_plotting.clj`.
+;; The code here is deliberately explicit and pedagogical. A production system
+;; would handle these details for you—see `refined_plotting.clj` for how the
+;; grammar layer makes this kind of visualization simple to specify.
