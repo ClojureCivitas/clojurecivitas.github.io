@@ -803,9 +803,104 @@ domains
 ;; for each species across the grid.
 
 
+
+;; ## Step 10: Extract Helper Function
+;;
+;; Looking at our 2×2 grid rendering, we're repeating a pattern:
+;; - Diagonal panels (row = col) → histogram
+;; - Off-diagonal panels (row ≠ col) → scatter + regressions
+;;
+;; Let's abstract this into a single helper function.
+
+;; Helper to render any panel in the grid based on position
+(defn render-panel [x-col y-col row col species-regressions-data]
+  (if (= row col)
+    ;; Diagonal: histogram
+    (make-grid-histogram-panel x-col row col)
+    ;; Off-diagonal: scatter + regression lines
+    (list
+     (make-grid-scatter-panel x-col y-col row col)
+     (make-grid-regression-lines x-col y-col row col species-regressions-data))))
+
+;; Now we can render the same 2×2 grid more concisely
+(let [grid-total-size (* 2 grid-panel-size)
+      cols [:sepal-width :petal-length]
+      ;; Pre-compute regressions for all variable pairs
+      regressions-map {[:petal-length :sepal-width] 
+                       (compute-species-regressions :petal-length :sepal-width)
+                       [:sepal-width :petal-length]
+                       (compute-species-regressions :sepal-width :petal-length)}]
+  (svg
+   {:width grid-total-size :height grid-total-size}
+   
+   ;; Background panels
+   (for [row (range 2)
+         col (range 2)]
+     (svg/rect [(* col grid-panel-size) (* row grid-panel-size)]
+               grid-panel-size grid-panel-size
+               {:fill (:grey-bg colors)}))
+   
+   ;; Render all panels using our helper
+   (for [row (range 2)
+         col (range 2)]
+     (let [x-col (cols col)
+           y-col (cols row)
+           regressions (get regressions-map [x-col y-col])]
+       (render-panel x-col y-col row col regressions)))))
+
+;; Same result as before, but now the pattern is explicit and reusable!
+
+
+;; ## Step 11: Scale to 4×4 Grid
+;;
+;; Now that we have the abstraction, scaling to all 4 iris variables is straightforward.
+;; This creates a 4×4 grid = 16 panels total (4 histograms + 12 scatter plots).
+
+;; All numerical columns from iris
+(def all-cols [:sepal-length :sepal-width :petal-length :petal-width])
+
+;; Pre-compute all pairwise regressions (we only need off-diagonal pairs)
+(def all-regressions
+  (into {}
+        (for [row-idx (range 4)
+              col-idx (range 4)
+              :when (not= row-idx col-idx)]
+          (let [x-col (all-cols col-idx)
+                y-col (all-cols row-idx)]
+            [[x-col y-col] (compute-species-regressions x-col y-col)]))))
+
+;; Render the complete 4×4 SPLOM
+(let [n 4
+      grid-total-size (* n grid-panel-size)]
+  (svg
+   {:width grid-total-size :height grid-total-size}
+   
+   ;; Background panels
+   (for [row (range n)
+         col (range n)]
+     (svg/rect [(* col grid-panel-size) (* row grid-panel-size)]
+               grid-panel-size grid-panel-size
+               {:fill (:grey-bg colors)}))
+   
+   ;; Render all 16 panels
+   (for [row (range n)
+         col (range n)]
+     (let [x-col (all-cols col)
+           y-col (all-cols row)
+           regressions (get all-regressions [x-col y-col])]
+       (render-panel x-col y-col row col regressions)))))
+
+;; A complete scatter plot matrix! 
+;; - 4 diagonal histograms show distributions
+;; - 12 off-diagonal scatter plots show all pairwise relationships
+;; - Per-species regression lines reveal species-specific trends
+;;
+;; Notice the symmetry: the upper and lower triangles are transposes of each other.
+;; Some SPLOM designs only show one triangle to avoid redundancy.
+
 ;; ## Reflection: What We've Built
 ;;
-;; Over these 10 steps (0-9), we've built a complete scatter plot matrix (SPLOM)
+;; Over these 12 steps (0-11), we've built a complete scatter plot matrix (SPLOM)
 ;; from scratch using thi.ng/geom.viz. Let's reflect on what we learned:
 ;;
 ;; **Key Patterns That Emerged:**
@@ -830,14 +925,20 @@ domains
 ;;    - Each layer computed independently
 ;;    - Combined in final SVG rendering
 ;;
+;; 5. **Abstraction enables scaling**
+;;    - Step 10: Recognize the pattern (diagonal vs off-diagonal)
+;;    - Step 11: Use `for` comprehensions to scale from 2×2 to 4×4
+;;    - Same helper works for any grid size
+;;
 ;; **What This Demonstrates:**
 ;;
-;; Building even a simple 2×2 SPLOM manually requires:
-;; - 15+ helper functions
+;; Building a SPLOM manually requires:
+;; - 16+ helper functions
 ;; - Careful coordinate system management
 ;; - Explicit positioning for each panel
 ;; - Manual computation of scales, domains, and statistics
-;; - ~800 lines of code for this educational version
+;; - Pre-computation and caching of regressions
+;; - ~900 lines of code for this educational version
 ;;
 ;; **What a Grammar Should Automate:**
 ;;
@@ -845,11 +946,11 @@ domains
 ;; - Shared vs. free scales across panels
 ;; - Conditional transforms (different geoms for diagonal vs off-diagonal)
 ;; - Statistical transforms as declarative specifications
-;; - Scaling to arbitrary grid sizes (3×3, 4×4, etc.)
+;; - Scaling to arbitrary grid sizes without code changes
+;; - Efficient computation (avoiding redundant regression calculations)
 ;;
 ;; This manual complexity motivates the Grammar of Graphics approach:
 ;; specify WHAT you want (a SPLOM with histograms and regressions),
 ;; not HOW to position every element.
 ;;
-;; For a complete 4×4 interactive SPLOM with brushing, see `brushable_splom.clj`.
-;; For the grammar layer that automates this, see `refined_plotting.clj`.
+;; For the grammar layer that automates this complexity, see `refined_plotting.clj`.
