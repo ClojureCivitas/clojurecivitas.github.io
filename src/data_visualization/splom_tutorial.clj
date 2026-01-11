@@ -14,12 +14,7 @@
   "Building a scatter plot matrix (SPLOM) from scratch.
   
   We'll start with the simplest visualization and progressively add
-  complexity, learning thi.ng/geom.viz along the way."
-  (:require
-   [tablecloth.api :as tc]
-   [scicloj.kindly.v4.kind :as kind]
-   [thi.ng.geom.viz.core :as viz]
-   [thi.ng.geom.svg.core :as svg]))
+  complexity, learning thi.ng/geom.viz along the way.")
 
 ^{:kindly/hide-code true
   :kindly/kind :kind/hiccup}
@@ -44,6 +39,15 @@
 ;; progressing from a simple scatter plot to a fully interactive matrix.
 ;; Each step introduces one new concept.
 
+;; ## Setup
+
+(ns data-visualization.splom-tutorial
+  (:require
+   [tablecloth.api :as tc]
+   [scicloj.kindly.v4.kind :as kind]
+   [thi.ng.geom.viz.core :as viz]
+   [thi.ng.geom.svg.core :as svg]))
+
 ;; ## The Data
 ;;
 ;; We'll use the classic [Iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set):
@@ -58,8 +62,60 @@ iris
 ;; Three species, 50 flowers each:
 (-> iris (tc/group-by :variety) (tc/row-count))
 
-;; ## Step 1: Single Scatter Plot
+;; ## Step 0: SVG Helper with Hiccup Compatibility
 ;;
+;; thi.ng/geom.viz returns vectors, but hiccup needs sequences for
+;; element collections. This helper handles the conversion automatically.
+
+(require '[clojure.walk :as walk])
+
+(defn hiccup-compat
+  "Convert non-hiccup vectors to sequences.
+  
+  [:tag ...] stays as vector (valid hiccup element)
+  [[:tag1 ...] [:tag2 ...]] becomes seq (element children)"
+  [form]
+  (walk/postwalk
+    (fn [x]
+      (if (and (vector? x)
+               (not (map-entry? x))
+               (seq x)
+               (not (keyword? (first x))))
+        (seq x)
+        x))
+    form))
+
+(defn svg
+  "Like thi.ng.geom.svg/svg, but hiccup-compatible.
+  
+  Converts nested vectors to seqs and wraps with kind/hiccup."
+  [attrs & children]
+  (-> (apply svg/svg attrs children)
+      hiccup-compat
+      kind/hiccup))
+
+;; Here's a simple example showing why we need this:
+;; Create three colored circles as a collection
+
+(def three-circles
+  (mapv (fn [[x color]]
+          (svg/circle [x 50] 20 {:fill color :stroke "none"}))
+        [[30 "#F8766D"] 
+         [70 "#619CFF"] 
+         [110 "#00BA38"]]))
+
+;; Without our helper, this would fail with hiccup:
+;; ```clj
+;; (kind/hiccup (svg/svg {:width 150 :height 100} three-circles))
+;; ```
+
+
+;; But our helper converts the vector to a seq automatically:
+(svg {:width 150 :height 100} three-circles)
+
+
+;; ## Step 1: Single Scatter Plot (Ungrouped)
+
 ;; Let's start with the simplest possible visualization: a scatter plot
 ;; of sepal length vs. sepal width, all points grey.
 
@@ -111,11 +167,10 @@ iris
   (viz/svg-plot2d-cartesian plot-spec))
 
 ;; Render with grey background
-(kind/hiccup
-  (svg/svg
+(svg
     {:width 400 :height 400}
     (svg/rect [0 0] 400 400 {:fill grey-bg})
-    scatter-plot))
+    scatter-plot)
 
 ;; We can see the relationship between sepal length and width!
 
@@ -153,11 +208,10 @@ iris
    :grid {:attribs {:stroke grid-color :stroke-width 1}}
    :data colored-scatter-series})
 
-(kind/hiccup
-  (svg/svg
+(svg
     {:width 400 :height 400}
     (svg/rect [0 0] 400 400 {:fill grey-bg})
-    (viz/svg-plot2d-cartesian colored-plot-spec)))
+    (viz/svg-plot2d-cartesian colored-plot-spec))
 
 ;; Now we can see three distinct clusters! Setosa (red) is clearly separated.
 
@@ -216,11 +270,38 @@ iris
                :stroke-width 0.5})))
         (:bins-maps sepal-width-hist)))
 
-(kind/hiccup
-  (svg/svg
+
+;; Also create axes and grid
+(def histogram-axes
+  (let [x-axis (viz/linear-axis
+                 {:domain [2.0 4.5]
+                  :range [margin (- panel-size margin)]
+                  :major 0.5
+                  :pos (- panel-size margin)
+                  :label-dist 12
+                  :major-size 3
+                  :minor-size 0
+                  :attribs {:stroke "none"}})
+        
+        y-axis (viz/linear-axis
+                 {:domain [0 36]
+                  :range [(- panel-size margin) margin]
+                  :major 5
+                  :pos margin
+                  :label-dist 12
+                  :label-style {:text-anchor "end"}
+                  :major-size 3
+                  :minor-size 0
+                  :attribs {:stroke "none"}})]
+    
+    [(viz/svg-x-axis-cartesian x-axis)
+     (viz/svg-y-axis-cartesian y-axis)
+     (viz/svg-axis-grid2d-cartesian x-axis y-axis {:attribs {:stroke grid-color :stroke-width 0.5}})]))
+(svg
     {:width panel-size :height panel-size}
     (svg/rect [0 0] panel-size panel-size {:fill grey-bg})
-    histogram-bars))
+    histogram-axes
+    histogram-bars)
 
 ;; A simple histogram! Most flowers have sepal width around 3.0.
 
@@ -269,11 +350,38 @@ iris
     (range)
     sepal-width-hists-by-species))
 
-(kind/hiccup
-  (svg/svg
+;; Axes for colored histogram (using same domain as before)
+(def colored-histogram-axes
+  (let [x-axis (viz/linear-axis
+                 {:domain [2.0 4.5]
+                  :range [margin (- panel-size margin)]
+                  :major 0.5
+                  :pos (- panel-size margin)
+                  :label-dist 12
+                  :major-size 3
+                  :minor-size 0
+                  :attribs {:stroke "none"}})
+        
+        y-axis (viz/linear-axis
+                 {:domain [0 max-count]
+                  :range [(- panel-size margin) margin]
+                  :major 5
+                  :pos margin
+                  :label-dist 12
+                  :label-style {:text-anchor "end"}
+                  :major-size 3
+                  :minor-size 0
+                  :attribs {:stroke "none"}})]
+    
+    [(viz/svg-x-axis-cartesian x-axis)
+     (viz/svg-y-axis-cartesian y-axis)
+     (viz/svg-axis-grid2d-cartesian x-axis y-axis {:attribs {:stroke grid-color :stroke-width 0.5}})]))
+
+(svg
     {:width panel-size :height panel-size}
     (svg/rect [0 0] panel-size panel-size {:fill grey-bg})
-    colored-histogram-bars))
+    colored-histogram-axes
+    colored-histogram-bars)
 
 ;; Beautiful! We can see Setosa (red) has wider sepals on average.
 
@@ -466,8 +574,7 @@ iris
 ;; Assemble the 2×2 grid
 (def grid-total-size (* 2 grid-panel-size))
 
-(kind/hiccup
-  (svg/svg
+(svg
     {:width grid-total-size :height grid-total-size}
     
     ;; Backgrounds first (z-order)
@@ -480,7 +587,7 @@ iris
     panel-00
     panel-01
     panel-10
-    panel-11))
+    panel-11)
 
 ;; We can see relationships! Notice the diagonal panels (0,0) and (1,1)
 ;; show x=y which isn't very informative. Let's fix that next.
