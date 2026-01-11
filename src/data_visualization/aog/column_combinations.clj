@@ -61,11 +61,7 @@ penguins
 ;; Type detection: determines whether to show histograms (numeric) or bar charts (categorical)
 
 (defn is-numeric-type? [col]
-  (let [col-type (tcc/typeof col)]
-    (or (= col-type :float32)
-        (= col-type :float64)
-        (= col-type :int32)
-        (= col-type :int64))))
+  (tcc/typeof? col :numerical))
 
 (defn plot-basic [g]
   (let [{:keys [data mappings geometry]} (g 1)
@@ -145,14 +141,14 @@ penguins
 (defn get-summary-stats [ds column]
   (let [col (ds column)]
     (if (is-numeric-type? col)
-      (let [stats (fms/stats-map (remove nil? col))]
+      (let [stats (tcc/descriptive-statistics col)]
         (format "n: %d, μ: %.2f, σ: %.2f, min: %.2f, max: %.2f"
-                (:Size stats)
-                (:Mean stats)
-                (:SD stats)
-                (:Min stats)
-                (:Max stats)))
-      (let [values (remove nil? col)
+                (:n-elems stats)
+                (:mean stats)
+                (:standard-deviation stats)
+                (:min stats)
+                (:max stats)))
+      (let [values (tcc/drop-missing col)
             counts (frequencies values)]
         (str "n: " (count values) ", unique: " (count counts))))))
 
