@@ -128,9 +128,10 @@ iris
   {:grey-bg "#EBEBEB"
    :grid "#FFFFFF"
    :grey-points "#333333"
-   :species ["#F8766D"
-             "#619CFF"
-             "#00BA38"]})
+   :regression "#2C3E50" ; Dark blue-gray for regression lines
+   :species ["#F8766D" ; Red (Setosa)
+             "#619CFF" ; Blue (Versicolor)
+             "#00BA38"]}) ; Green (Virginica)
 
 ;; Derive species names from data (used throughout)
 (def species-names (sort (distinct (iris :species))))
@@ -237,10 +238,13 @@ domains
 
 ;; Our helper automatically converts the vector to a seq:
 (svg {:width 150 :height 100} three-circles)
-
 ;; Common plotting constants
 (def panel-size 400)
 (def margin 50)
+
+;; Grid constants (for multi-panel layouts)
+(def grid-panel-size 200)
+(def grid-margin 30)
 
 ;; ## Step 1: Single Scatter Plot (Ungrouped)
 ;;
@@ -500,8 +504,6 @@ domains
 ;; Now let's create a grid showing relationships between two variables:
 ;; sepal.width and petal.length.
 
-(def grid-panel-size 200)
-(def grid-margin 30)
 
 ;; Helper to create a scatter panel at a specific grid position
 (defn make-grid-scatter-panel [x-col y-col row col]
@@ -679,7 +681,7 @@ domains
         y2 (+ intercept (* slope x-max))]
     (svg/line [(x-scale x-min) (y-scale y1)]
               [(x-scale x-max) (y-scale y2)]
-              {:stroke "#2C3E50" :stroke-width 2})))
+              {:stroke (:regression colors) :stroke-width 2})))
 
 ;; Render scatter plot with regression overlay
 (let [x-col :sepal-length
@@ -751,11 +753,11 @@ domains
   (let [x-offset (* col grid-panel-size)
         y-offset (* row grid-panel-size)
         [x-min x-max] (domains x-col)
-        x-scale (viz/linear-scale (domains x-col) 
-                                  [(+ x-offset grid-margin) 
+        x-scale (viz/linear-scale (domains x-col)
+                                  [(+ x-offset grid-margin)
                                    (+ x-offset grid-panel-size (- grid-margin))])
-        y-scale (viz/linear-scale (domains y-col) 
-                                  [(+ y-offset grid-panel-size (- grid-margin)) 
+        y-scale (viz/linear-scale (domains y-col)
+                                  [(+ y-offset grid-panel-size (- grid-margin))
                                    (+ y-offset grid-margin)])]
     (mapv (fn [species]
             (let [{:keys [slope intercept]} (species-regressions-data species)
@@ -775,24 +777,24 @@ domains
       regressions-10 (compute-species-regressions :sepal-width :petal-length)]
   (svg
    {:width grid-total-size :height grid-total-size}
-   
+
    ;; Background panels
    (svg/rect [0 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
    (svg/rect [grid-panel-size 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
    (svg/rect [0 grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
    (svg/rect [grid-panel-size grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
-   
+
    ;; Top-left: histogram for sepal.width
    (make-grid-histogram-panel :sepal-width 0 0)
-   
+
    ;; Top-right: petal.length (x) vs sepal.width (y) with per-species regressions
    (make-grid-scatter-panel :petal-length :sepal-width 0 1)
    (make-grid-regression-lines :petal-length :sepal-width 0 1 regressions-01)
-   
+
    ;; Bottom-left: sepal.width (x) vs petal.length (y) with per-species regressions
    (make-grid-scatter-panel :sepal-width :petal-length 1 0)
    (make-grid-regression-lines :sepal-width :petal-length 1 0 regressions-10)
-   
+
    ;; Bottom-right: histogram for petal.length
    (make-grid-histogram-panel :petal-length 1 1)))
 
@@ -800,3 +802,54 @@ domains
 ;; Notice how the three colored regression lines reveal different relationships
 ;; for each species across the grid.
 
+
+;; ## Reflection: What We've Built
+;;
+;; Over these 10 steps (0-9), we've built a complete scatter plot matrix (SPLOM)
+;; from scratch using thi.ng/geom.viz. Let's reflect on what we learned:
+;;
+;; **Key Patterns That Emerged:**
+;;
+;; 1. **Separation of computation and rendering**
+;;    - Functions like `compute-histogram-data` and `histogram-bars`
+;;    - Compute once, pass to multiple renderers
+;;    - Makes code more testable and reusable
+;;
+;; 2. **Column dependencies at call sites**
+;;    - Functions take column names as parameters
+;;    - Domain lookups happen inside functions via `(domains column)`
+;;    - Makes helpers more flexible and composable
+;;
+;; 3. **Grid positioning with offsets**
+;;    - Helpers like `make-grid-scatter-panel [x-col y-col row col]`
+;;    - Calculate x-offset and y-offset from row/col
+;;    - Bake positioning into axes and scales
+;;
+;; 4. **Statistical overlays as composable layers**
+;;    - Base scatter plot + regression lines
+;;    - Each layer computed independently
+;;    - Combined in final SVG rendering
+;;
+;; **What This Demonstrates:**
+;;
+;; Building even a simple 2×2 SPLOM manually requires:
+;; - 15+ helper functions
+;; - Careful coordinate system management
+;; - Explicit positioning for each panel
+;; - Manual computation of scales, domains, and statistics
+;; - ~800 lines of code for this educational version
+;;
+;; **What a Grammar Should Automate:**
+;;
+;; - Automatic grid layout (no manual row/col positioning)
+;; - Shared vs. free scales across panels
+;; - Conditional transforms (different geoms for diagonal vs off-diagonal)
+;; - Statistical transforms as declarative specifications
+;; - Scaling to arbitrary grid sizes (3×3, 4×4, etc.)
+;;
+;; This manual complexity motivates the Grammar of Graphics approach:
+;; specify WHAT you want (a SPLOM with histograms and regressions),
+;; not HOW to position every element.
+;;
+;; For a complete 4×4 interactive SPLOM with brushing, see `brushable_splom.clj`.
+;; For the grammar layer that automates this, see `refined_plotting.clj`.
