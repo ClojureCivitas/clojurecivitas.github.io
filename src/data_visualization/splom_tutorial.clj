@@ -1,5 +1,5 @@
 ^{:kindly/hide-code true
-  :clay {:title "Building a SPLOM from Scratch"
+  :clay {:title "Building a SPLOM using geom.viz"
          :quarto {:type :post
                   :author [:daslu]
                   :date "2026-01-11"
@@ -10,11 +10,7 @@
                   :toc true
                   :toc-depth 2
                   :draft true}}}
-(ns data-visualization.splom-tutorial
-  "Building a scatter plot matrix (SPLOM) from scratch.
-  
-  We'll start with the simplest visualization and progressively add
-  complexity, learning thi.ng/geom.viz along the way.")
+(ns data-visualization.splom-tutorial)
 
 ^{:kindly/hide-code true
   :kindly/kind :kind/hiccup}
@@ -37,17 +33,72 @@
 ;;
 ;; We'll build one from scratch using [thi.ng/geom.viz](https://github.com/thi-ng/geom),
 ;; progressing from a simple scatter plot to a fully interactive matrix.
-;; Each step introduces one new concept.
+;; Each step introduces exactly one new concept.
+;;
+;; **Context:** This tutorial is part of ongoing work on the
+;; [Tableplot](https://scicloj.github.io/tableplot/) plotting library
+;; and the [Real-World-Data](https://scicloj.github.io/docs/community/groups/real-world-data/)
+;; dev group's exploration of visualization APIs for Clojure.
+;; By building a SPLOM manually, we better understand what a high-level plotting
+;; library needs to provide.
+;;
+;; This is a working Clojure notebook compatible with
+;; [Kindly](https://scicloj.github.io/kindly/)-compatible tools like
+;; [Clay](https://scicloj.github.io/clay/).
+;;
+;; Clojurians Zulip discussion (requires login):
+;; [#**data-science>AlgebraOfGraphics.jl**](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/AlgebraOfGraphics.2Ejl/)
 
 ;; ## Setup
+;;
+;; We'll use [thi.ng/geom.viz](https://github.com/thi-ng/geom/blob/feature/no-org/org/examples/viz/demos.org)
+;; for low-level SVG rendering. thi.ng/geom is part of a comprehensive ecosystem of
+;; computational design tools created by [Karsten Schmidt](https://github.com/postspectacular)
+;; (aka "toxi"), with the thi.ng collection established in 2006 and thi.ng/geom starting
+;; around 2011. The library provides ~320 sub-projects for geometry, visualization, and
+;; generative art, actively maintained for nearly two decades.
+;;
+;; This notebook uses several libraries from the Clojure data science ecosystem:
 
 (ns data-visualization.splom-tutorial
   (:require
+   ;; Tablecloth - Dataset manipulation
    [tablecloth.api :as tc]
+
+   ;; Kindly - Notebook visualization protocol
    [scicloj.kindly.v4.kind :as kind]
+
+   ;; thi.ng/geom - SVG rendering and visualization
    [thi.ng.geom.viz.core :as viz]
    [thi.ng.geom.svg.core :as svg]
+
+   ;; Fastmath - Statistical computations
+   [fastmath.stats :as stats]
+   [fastmath.ml.regression :as regr]
+
+   ;; RDatasets - Example datasets
    [scicloj.metamorph.ml.rdatasets :as rdatasets]))
+
+;; [**Tablecloth**](https://scicloj.github.io/tablecloth/) provides our dataset API, wrapping
+;; [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset) with a friendly interface.
+;; We use it to load data, group by species, and select rows.
+;;
+;; [**Kindly**](https://scicloj.github.io/kindly-noted/) is the visualization protocol that lets
+;; this notebook render in different environments ([Clay](https://scicloj.github.io/clay/),
+;; [Portal](https://github.com/djblue/portal), etc.).
+;;
+;; [**thi.ng/geom**](https://github.com/thi-ng/geom) provides low-level SVG rendering primitives.
+;; We use [geom.viz](https://github.com/thi-ng/geom/blob/feature/no-org/org/examples/viz/demos.org)
+;; for creating axes, scales, and plot layouts, and
+;; [geom.svg](https://github.com/thi-ng/geom) for SVG element construction.
+;;
+;; [**Fastmath**](https://github.com/generateme/fastmath) handles statistical computations,
+;; including histogram binning (Steps 4-7) and linear regression (Steps 8-10).
+;; It's a comprehensive math library for Clojure.
+;;
+;; [**RDatasets**](https://vincentarelbundock.github.io/Rdatasets/articles/data.html) provides
+;; classic datasets for examples. It is made available in Clojure through
+;; [metamorph.ml](https://github.com/scicloj/metamorph.ml).
 
 ;; ## The Data
 ;;
@@ -61,10 +112,28 @@ iris
 ;; Three species, 50 flowers each:
 (-> iris (tc/group-by :species) (tc/row-count))
 
-;; ## Step 0: SVG Helper with Hiccup Compatibility
+;; ## Step 0: SVG as Hiccup
 ;;
-;; thi.ng/geom.viz returns vectors, but hiccup needs sequences for
-;; element collections. This helper handles the conversion automatically.
+;; thi.ng/geom provides SVG functions that we can render as hiccup.
+;; Let's start with a simple example:
+
+(kind/hiccup
+  (svg/svg {:width 150 :height 100}
+    (svg/circle [30 50] 20 {:fill "#F8766D" :stroke "none"})
+    (svg/circle [70 50] 20 {:fill "#619CFF" :stroke "none"})
+    (svg/circle [110 50] 20 {:fill "#00BA38" :stroke "none"})))
+
+;; This works because each circle is a valid hiccup element (vector starting with a keyword).
+;;
+;; However, when we generate SVG elements programmatically, we often create
+;; collections of elements. Hiccup expects the first element of a vector to be
+;; a tag keyword, so this won't work:
+;;
+;; ```clj
+;; [[:circle ...] [:circle ...] [:circle ...]]  ; Not valid hiccup!
+;; ```
+;;
+;; We need a helper to convert such vectors to sequences.
 
 (require '[clojure.walk :as walk])
 
@@ -93,8 +162,7 @@ iris
       hiccup-compat
       kind/hiccup))
 
-;; Here's a simple example showing why we need this:
-;; Create three colored circles as a collection
+;; Now we can generate circles programmatically:
 
 (def three-circles
   (mapv (fn [[x color]]
@@ -103,16 +171,8 @@ iris
          [70 "#619CFF"] 
          [110 "#00BA38"]]))
 
-;; Without our helper, this would fail with hiccup:
-;; ```clj
-;; (kind/hiccup (svg/svg {:width 150 :height 100} three-circles))
-;; ```
-
-
-;; But our helper converts the vector to a seq automatically:
+;; Our helper automatically converts the vector to a seq:
 (svg {:width 150 :height 100} three-circles)
-
-
 ;; ## Step 1: Single Scatter Plot (Ungrouped)
 
 ;; Let's start with the simplest possible visualization: a scatter plot
@@ -229,8 +289,6 @@ species-color-map
 ;; Before building a grid, let's learn how to render a histogram.
 ;; We'll show the distribution of sepal width.
 
-(require '[fastmath.stats :as stats])
-(require '[fastmath.ml.regression :as regr])
 
 (def sepal-width-hist
   (stats/histogram (iris :sepal-width) :sturges))
