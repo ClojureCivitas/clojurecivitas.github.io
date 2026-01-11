@@ -19,9 +19,7 @@
 ;; The following examples are taken from the MIT open-access book [Structure and Interpretation of Classical Mechanics (SICM)](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/9579/sicm_edition_2.zip/chapter001.html).
 
 ^:kindly/hide-code
-(do
-  "if you `prod` to `false`, the browser will be busy calculating, be patient"
-  (def prod true))
+(def prod true) #_"if you set `prod` to `false`, the browser will be busy calculating, be patient"
 
 ^:kindly/hide-code
 (def md
@@ -64,7 +62,7 @@
 (define emmy-mn
   '[emmy.numerical.minimize :as mn])
 
-^:kindly/hide-code
+^{:kindly/hide-code true :kindly/kind kind/hidden}
 (do
   (require emmy-env)
   (require emmy-lg)
@@ -84,7 +82,8 @@
 
 ^:kindly/hide-code
 (kind/scittle
-  '(def show-tex-expression show-expression))
+  '(defn show-tex-expression [e]
+     (->infix (simplify e))))
 
 ^:kindly/hide-code
 (def tex (comp kind/tex emmy.expression.render/->TeX simplify))
