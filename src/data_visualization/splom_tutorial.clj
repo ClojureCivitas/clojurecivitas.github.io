@@ -10,7 +10,9 @@
                   :toc true
                   :toc-depth 2
                   :draft true}}}
-(ns data-visualization.splom-tutorial)
+(ns data-visualization.splom-tutorial
+  (:require [tablecloth.api :as tc]
+            [tablecloth.column.api :as tcc]))
 
 ^{:kindly/hide-code true
   :kindly/kind :kind/hiccup}
@@ -64,6 +66,7 @@
   (:require
    ;; Tablecloth - Dataset manipulation
    [tablecloth.api :as tc]
+   [tablecloth.column.api :as tcc]
 
    ;; Kindly - Notebook visualization protocol
    [scicloj.kindly.v4.kind :as kind]
@@ -110,7 +113,9 @@
 iris
 
 ;; Three species, 50 flowers each:
-(-> iris (tc/group-by :species) (tc/row-count))
+(-> iris
+    (tc/group-by [:species])
+    (tc/aggregate {:count tc/row-count}))
 
 ;; ## Colors and Data Preparation
 ;;
@@ -141,32 +146,47 @@ species-color-map
   (tc/group-by iris :species {:result-type :as-map}))
 
 
+;; Numerical columns
+(def numerical-column-names
+  (->> iris
+       keys
+       (filter (fn [k]
+                 (-> k
+                     iris
+                     (tcc/typeof? :numerical))))))
+
+numerical-column-names
+
 ;; Compute domains from data
 ;; We'll use these throughout to avoid hard-coding ranges.
 (defn compute-domain
   "Compute [min max] domain for a variable, with optional padding."
   ([var-data] (compute-domain var-data 0.05))
   ([var-data padding]
-   (let [min-val (apply min var-data)
-         max-val (apply max var-data)
+   (let [min-val (tcc/reduce-min var-data)
+         max-val (tcc/reduce-max var-data)
          span (- max-val min-val)
          pad (* span padding)]
      [(- min-val pad) (+ max-val pad)])))
 
-(def sepal-length-domain (compute-domain (iris :sepal-length)))
-(def sepal-width-domain (compute-domain (iris :sepal-width)))
-(def petal-length-domain (compute-domain (iris :petal-length)))
-(def petal-width-domain (compute-domain (iris :petal-width)))
+(def domains
+  (->> numerical-column-names
+       (map (fn [colname]
+              [colname (compute-domain (iris colname))]))
+       (into {})))
+
+domains
+
 ;; ## Step 0: SVG as Hiccup
 ;;
 ;; thi.ng/geom provides SVG functions that we can render as hiccup.
 ;; Let's start with a simple example:
 
 (kind/hiccup
-  (svg/svg {:width 150 :height 100}
-    (svg/circle [30 50] 20 {:fill "#F8766D" :stroke "none"})
-    (svg/circle [70 50] 20 {:fill "#619CFF" :stroke "none"})
-    (svg/circle [110 50] 20 {:fill "#00BA38" :stroke "none"})))
+ (svg/svg {:width 150 :height 100}
+          (svg/circle [30 50] 20 {:fill "#F8766D" :stroke "none"})
+          (svg/circle [70 50] 20 {:fill "#619CFF" :stroke "none"})
+          (svg/circle [110 50] 20 {:fill "#00BA38" :stroke "none"})))
 
 ;; This works because each circle is a valid hiccup element (vector starting with a keyword).
 ;;
@@ -219,59 +239,59 @@ species-color-map
 ;; Our helper automatically converts the vector to a seq:
 (svg {:width 150 :height 100} three-circles)
 
+;; Common plotting constants
+(def panel-size 400)
+(def margin 50)
+
 ;; ## Step 1: Single Scatter Plot (Ungrouped)
 ;;
 ;; Let's start with the simplest possible visualization: a scatter plot
 ;; of sepal length vs. sepal width, all points grey.
 
-(def sepal-points
-  (mapv vector (iris :sepal-length) (iris :sepal-width)))
-
 ;; Create axes
-(def x-axis
+(defn axis [{:keys [column rng pos label-style]
+             :or {label-style {}}}]
   (viz/linear-axis
-   {:domain sepal-length-domain
-    :range [50 350]
+   {:domain (domains column)
+    :range rng
     :major 1.0
-    :pos 350
+    :pos pos
     :label-dist 12
+    :label-style label-style
     :major-size 3
     :minor-size 0
     :attribs {:stroke "none"}}))
 
-(def y-axis
-  (viz/linear-axis
-   {:domain sepal-width-domain
-    :range [350 50]
-    :major 0.5
-    :pos 50
-    :label-dist 12
-    :label-style {:text-anchor "end"}
-    :major-size 3
-    :minor-size 0
-    :attribs {:stroke "none"}}))
+(defn x-axis [column]
+  (axis {:column column :rng [margin (- panel-size margin)] :pos (- panel-size margin)}))
 
-;; Create scatter series
-(def scatter-series
-  {:values sepal-points
-   :attribs {:fill (:grey-points colors) :stroke "none"}
-   :layout viz/svg-scatter-plot})
+(defn y-axis [column]
+  (axis {:column column :rng [(- panel-size margin) margin] :pos margin :label-style
+         {:text-anchor "end"}}))
 
 ;; Assemble plot
-(def plot-spec
-  {:x-axis x-axis
-   :y-axis y-axis
-   :grid {:attribs {:stroke (:grid colors) :stroke-width 1}}
-   :data [scatter-series]})
+(defn plot-spec [columns]
+  (let [[x-col y-col] columns]
+    {:x-axis (x-axis x-col)
+     :y-axis (y-axis y-col)
+     :grid {:attribs {:stroke (:grid colors) :stroke-width
+                      1}}
+     :data [{:values (-> iris
+                         (tc/select-columns columns)
+                         tc/rows)
+             :attribs {:fill (:grey-points colors) :stroke
+                       "none"}
+             :layout viz/svg-scatter-plot}]}))
 
-(def scatter-plot
-  (viz/svg-plot2d-cartesian plot-spec))
+(plot-spec [:sepal-length
+            :sepal-width])
 
 ;; Render with grey background
 (svg
-    {:width 400 :height 400}
-    (svg/rect [0 0] 400 400 {:fill (:grey-bg colors)})
-    scatter-plot)
+ {:width panel-size :height panel-size}
+ (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
+ (viz/svg-plot2d-cartesian (plot-spec [:sepal-length
+                                       :sepal-width])))
 
 ;; We can see the relationship between sepal length and width!
 
@@ -280,28 +300,31 @@ species-color-map
 ;;
 ;; Now let's color the points by species to see the three clusters.
 
-;; Create one series per species
-(def colored-scatter-series
-  (mapv (fn [species color]
-          (let [data (species-groups species)
-                points (mapv vector (data :sepal-length) (data :sepal-width))]
-            {:values points
-             :attribs {:fill color :stroke "none"}
-             :layout viz/svg-scatter-plot}))
-        species-names
-        (:species colors)))
-
 ;; Same plot, different data
-(def colored-plot-spec
-  {:x-axis x-axis
-   :y-axis y-axis
-   :grid {:attribs {:stroke (:grid colors) :stroke-width 1}}
-   :data colored-scatter-series})
+(defn colored-plot-spec [columns]
+  (let [[x-col y-col] columns]
+    {:x-axis (x-axis x-col)
+     :y-axis (y-axis y-col)
+     :grid {:attribs {:stroke (:grid colors) :stroke-width 1}}
+     :data (map (fn [species color]
+                  (let [data (species-groups species)
+                        points (-> data
+                                   (tc/select-columns columns)
+                                   tc/rows)]
+                    {:values points
+                     :attribs {:fill color :stroke "none"}
+                     :layout viz/svg-scatter-plot}))
+                species-names
+                (:species colors))}))
+
+(colored-plot-spec [:sepal-length
+                    :sepal-width])
 
 (svg
-    {:width 400 :height 400}
-    (svg/rect [0 0] 400 400 {:fill (:grey-bg colors)})
-    (viz/svg-plot2d-cartesian colored-plot-spec))
+ {:width panel-size :height panel-size}
+ (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
+ (viz/svg-plot2d-cartesian (colored-plot-spec [:sepal-length
+                                               :sepal-width])))
 
 ;; Now we can see three distinct clusters! Setosa (red) is clearly separated.
 
@@ -310,213 +333,170 @@ species-color-map
 ;; Before building a grid, let's learn how to render a histogram.
 ;; We'll show the distribution of sepal width.
 
-
-(def sepal-width-hist
-  (stats/histogram (iris :sepal-width) :sturges))
-
-(:bins-maps sepal-width-hist)
+(-> (iris :sepal-width)
+    (stats/histogram :sturges)
+    :bins-maps)
 
 ;; We need to manually render bars as SVG rectangles.
 ;; We'll use viz/linear-scale to map data values → pixel coordinates.
 
-(def panel-size 400)
-(def margin 50)
 
-(def hist-x-scale
-  (viz/linear-scale sepal-width-domain [margin (- panel-size margin)]))
+;; Compute histogram and all derived data once
+(defn compute-histogram-data [column]
+  (let [hist (stats/histogram (iris column) :sturges)
+        bins (:bins-maps hist)
+        max-count (tcc/reduce-max (map :count bins))
+        x-scale (viz/linear-scale (domains column) [margin (- panel-size margin)])
+        y-scale (viz/linear-scale [0 max-count] [(- panel-size margin) margin])]
+    {:bins bins
+     :max-count max-count
+     :x-scale x-scale
+     :y-scale y-scale}))
 
-(def hist-y-scale
-  (viz/linear-scale [0 36] [(- panel-size margin) margin]))
+(compute-histogram-data :sepal-width)
 
-;; Render bars
-(def histogram-bars
+;; Render bars using pre-computed histogram data
+(defn histogram-bars [{:keys [bins x-scale y-scale]}]
   (map (fn [{:keys [min max count]}]
-          (let [x1 (hist-x-scale min)
-                x2 (hist-x-scale max)
-                y (hist-y-scale count)
-                bar-width (- x2 x1)
-                bar-height (- (- panel-size margin) y)]
-            (svg/rect
-              [x1 y]
-              bar-width
-              bar-height
-              {:fill (:grey-points colors) 
-               :stroke (:grid colors) 
-               :stroke-width 0.5})))
-        (:bins-maps sepal-width-hist)))
+         (let [x1 (x-scale min)
+               x2 (x-scale max)
+               y (y-scale count)
+               bar-width (- x2 x1)
+               bar-height (- (- panel-size margin) y)]
+           (svg/rect
+            [x1 y]
+            bar-width
+            bar-height
+            {:fill (:grey-points colors)
+             :stroke (:grid colors)
+             :stroke-width 0.5})))
+       bins))
 
-
-;; Also create axes and grid
-(def histogram-axes
+;; Create axes and grid using pre-computed histogram data
+(defn histogram-axes [column {:keys [max-count]}]
   (let [x-axis (viz/linear-axis
-                 {:domain sepal-width-domain
-                  :range [margin (- panel-size margin)]
-                  :major 0.5
-                  :pos (- panel-size margin)
-                  :label-dist 12
-                  :major-size 3
-                  :minor-size 0
-                  :attribs {:stroke "none"}})
-        
+                {:domain (domains column)
+                 :range [margin (- panel-size margin)]
+                 :major 0.5
+                 :pos (- panel-size margin)
+                 :label-dist 12
+                 :major-size 3
+                 :minor-size 0
+                 :attribs {:stroke "none"}})
         y-axis (viz/linear-axis
-                 {:domain [0 36]
-                  :range [(- panel-size margin) margin]
-                  :major 5
-                  :pos margin
-                  :label-dist 12
-                  :label-style {:text-anchor "end"}
-                  :major-size 3
-                  :minor-size 0
-                  :attribs {:stroke "none"}})]
-    
+                {:domain [0 max-count]
+                 :range [(- panel-size margin) margin]
+                 :major 5
+                 :pos margin
+                 :label-dist 12
+                 :label-style {:text-anchor "end"}
+                 :major-size 3
+                 :minor-size 0
+                 :attribs {:stroke "none"}})]
     [(viz/svg-x-axis-cartesian x-axis)
      (viz/svg-y-axis-cartesian y-axis)
-     (viz/svg-axis-grid2d-cartesian x-axis y-axis {:attribs {:stroke (:grid colors) :stroke-width 0.5}})]))
-(svg
-    {:width panel-size :height panel-size}
-    (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
-    histogram-axes
-    histogram-bars)
+     (viz/svg-axis-grid2d-cartesian x-axis y-axis
+                                    {:attribs {:stroke (:grid colors)
+                                               :stroke-width 0.5}})]))
+
+;; Usage: compute once, pass to both functions
+(let [column :sepal-width
+      hist-data (compute-histogram-data column)]
+  (svg {:width panel-size :height panel-size}
+       (svg/rect [0 0]
+                 panel-size panel-size
+                 {:fill (:grey-bg colors)})
+       (histogram-axes column hist-data)
+       (histogram-bars hist-data)))
 
 ;; A simple histogram! Most flowers have sepal width around 3.0.
-
 
 ;; ## Step 4: Colored Histogram (Overlaid by Species)
 ;;
 ;; Now let's overlay three histograms (one per species) to see their
 ;; different distributions.
 
-(def sepal-width-hists-by-species
-  (mapv (fn [species]
-          {:species species
-           :hist (stats/histogram ((species-groups species) :sepal-width) :sturges)})
-        species-names))
+;; Compute histogram data for all species
+(defn compute-colored-histogram-data [column]
+  (let [;; Histogram for each species
+        species-hists (mapv (fn [species]
+                              {:species species
+                               :hist (stats/histogram ((species-groups species) column) :sturges)})
+                            species-names)
+        ;; Find max count across all species for shared y-scale
+        max-count (tcc/reduce-max
+                   (mapcat (fn [{:keys [hist]}]
+                             (map :count (:bins-maps hist)))
+                           species-hists))
+        x-scale (viz/linear-scale (domains column) [margin (- panel-size margin)])
+        y-scale (viz/linear-scale [0 max-count] [(- panel-size margin) margin])]
+    {:species-hists species-hists
+     :max-count max-count
+     :x-scale x-scale
+     :y-scale y-scale}))
 
-;; Find max count across all species for y-scale
-(def max-count
-  (apply max
-         (mapcat (fn [{:keys [hist]}]
-                   (map :count (:bins-maps hist)))
-                 sepal-width-hists-by-species)))
+(compute-colored-histogram-data :sepal-width)
 
-(def hist-y-scale-colored
-  (viz/linear-scale [0 max-count] [(- panel-size margin) margin]))
-
-;; Render bars for all species (with transparency for overlay)
-(def colored-histogram-bars
+;; Render overlaid colored bars using pre-computed data
+(defn colored-histogram-bars [{:keys [species-hists x-scale y-scale]}]
   (mapcat
-    (fn [idx {:keys [hist]}]
-      (let [color ((:species colors) idx)]
-        (map (fn [{:keys [min max count]}]
-                (let [x1 (hist-x-scale min)
-                      x2 (hist-x-scale max)
-                      y (hist-y-scale-colored count)
-                      bar-width (- x2 x1)
-                      bar-height (- (- panel-size margin) y)]
-                  (svg/rect
-                    [x1 y]
-                    bar-width
-                    bar-height
-                    {:fill color
-                     :stroke (:grid colors)
-                     :stroke-width 0.5
-                     :opacity 0.7})))
-              (:bins-maps hist))))
-    (range)
-    sepal-width-hists-by-species))
+   (fn [idx {:keys [hist]}]
+     (let [color ((:species colors) idx)]
+       (map (fn [{:keys [min max count]}]
+              (let [x1 (x-scale min)
+                    x2 (x-scale max)
+                    y (y-scale count)
+                    bar-width (- x2 x1)
+                    bar-height (- (- panel-size margin) y)]
+                (svg/rect
+                 [x1 y]
+                 bar-width
+                 bar-height
+                 {:fill color
+                  :stroke (:grid colors)
+                  :stroke-width 0.5
+                  :opacity 0.7})))
+            (:bins-maps hist))))
+   (range)
+   species-hists))
 
-;; Axes for colored histogram (using same domain as before)
-(def colored-histogram-axes
+;; Create axes for colored histogram
+(defn colored-histogram-axes [column {:keys [max-count]}]
   (let [x-axis (viz/linear-axis
-                 {:domain sepal-width-domain
-                  :range [margin (- panel-size margin)]
-                  :major 0.5
-                  :pos (- panel-size margin)
-                  :label-dist 12
-                  :major-size 3
-                  :minor-size 0
-                  :attribs {:stroke "none"}})
-        
-        y-axis (viz/linear-axis
-                 {:domain [0 max-count]
-                  :range [(- panel-size margin) margin]
-                  :major 5
-                  :pos margin
-                  :label-dist 12
-                  :label-style {:text-anchor "end"}
-                  :major-size 3
-                  :minor-size 0
-                  :attribs {:stroke "none"}})]
-    
-    [(viz/svg-x-axis-cartesian x-axis)
-     (viz/svg-y-axis-cartesian y-axis)
-     (viz/svg-axis-grid2d-cartesian x-axis y-axis {:attribs {:stroke (:grid colors) :stroke-width 0.5}})]))
-
-(svg
-    {:width panel-size :height panel-size}
-    (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
-    colored-histogram-axes
-    colored-histogram-bars)
-
-;; Beautiful! We can see Setosa (red) has wider sepals on average.
-
-
-
-;; Helper function for creating scatter panels in a grid
-;; We'll use this to reduce repetition when building our 2×2 grid.
-(defn make-scatter-panel
-  "Create a scatter plot panel at grid position (row, col).
-  
-  Parameters:
-  - x-var: keyword for x-axis variable (e.g., :sepal-width)
-  - y-var: keyword for y-axis variable
-  - x-domain: [min max] for x-axis
-  - y-domain: [min max] for y-axis
-  - x-major: major tick spacing for x-axis
-  - y-major: major tick spacing for y-axis
-  - row: grid row (0 or 1)
-  - col: grid column (0 or 1)"
-  [x-var y-var x-domain y-domain x-major y-major row col]
-  (let [x-offset (* col grid-panel-size)
-        y-offset (* row grid-panel-size)
-        
-        x-axis (viz/linear-axis
-                {:domain x-domain
-                 :range [(+ x-offset grid-margin)
-                         (+ x-offset grid-panel-size (- grid-margin))]
-                 :major x-major
-                 :pos (+ y-offset grid-panel-size (- grid-margin))
+                {:domain (domains column)
+                 :range [margin (- panel-size margin)]
+                 :major 0.5
+                 :pos (- panel-size margin)
                  :label-dist 12
-                 :major-size 2
+                 :major-size 3
                  :minor-size 0
                  :attribs {:stroke "none"}})
-        
         y-axis (viz/linear-axis
-                {:domain y-domain
-                 :range [(+ y-offset grid-panel-size (- grid-margin))
-                         (+ y-offset grid-margin)]
-                 :major y-major
-                 :pos (+ x-offset grid-margin)
+                {:domain [0 max-count]
+                 :range [(- panel-size margin) margin]
+                 :major 5
+                 :pos margin
                  :label-dist 12
                  :label-style {:text-anchor "end"}
-                 :major-size 2
+                 :major-size 3
                  :minor-size 0
-                 :attribs {:stroke "none"}})
-        
-        series (mapv (fn [species color]
-                       (let [data (species-groups species)
-                             points (mapv vector (data x-var) (data y-var))]
-                         {:values points
-                          :attribs {:fill color :stroke "none"}
-                          :layout viz/svg-scatter-plot}))
-                     species-names
-                     (:species colors))]
-    
-    (viz/svg-plot2d-cartesian
-     {:x-axis x-axis
-      :y-axis y-axis
-      :grid {:attribs {:stroke (:grid colors) :stroke-width 0.5}}
-      :data series})))
+                 :attribs {:stroke "none"}})]
+    [(viz/svg-x-axis-cartesian x-axis)
+     (viz/svg-y-axis-cartesian y-axis)
+     (viz/svg-axis-grid2d-cartesian x-axis y-axis
+                                    {:attribs {:stroke (:grid colors)
+                                              :stroke-width 0.5}})]))
+
+;; Usage: compute once, pass to both functions
+(let [column :sepal-width
+      hist-data (compute-colored-histogram-data column)]
+  (svg
+   {:width panel-size :height panel-size}
+   (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
+   (colored-histogram-axes column hist-data)
+   (colored-histogram-bars hist-data)))
+
+;; Beautiful! We can see Setosa (red) has wider sepals on average.
 
 ;; ## Step 5: 2×2 Grid of Scatter Plots
 ;;
@@ -592,7 +572,7 @@ species-color-map
 ;; Colored histogram bars for grid (with independent y-scales)
 (def grid-hist-width-bars
   (let [x-scale (viz/linear-scale sepal-width-domain [grid-margin (- grid-panel-size grid-margin)])
-        max-count (apply max (mapcat #(map :count (:bins-maps %)) grid-sepal-width-hists))
+        max-count (tcc/reduce-max (mapcat #(map :count (:bins-maps %)) grid-sepal-width-hists))
         y-scale (viz/linear-scale [0 max-count] [(- grid-panel-size grid-margin) grid-margin])]
     (mapcat (fn [hist color]
               (map (fn [{:keys [min max count]}]
@@ -609,7 +589,7 @@ species-color-map
 
 (def grid-hist-length-bars
   (let [x-scale (viz/linear-scale petal-length-domain [grid-margin (- grid-panel-size grid-margin)])
-        max-count (apply max (mapcat #(map :count (:bins-maps %)) grid-petal-length-hists))
+        max-count (tcc/reduce-max (mapcat #(map :count (:bins-maps %)) grid-petal-length-hists))
         y-scale (viz/linear-scale [0 max-count] [(- grid-panel-size grid-margin) grid-margin])]
     (mapcat (fn [hist color]
               (map (fn [{:keys [min max count]}]
@@ -626,51 +606,51 @@ species-color-map
 
 ;; Axes for the histograms (with updated y-domains)
 (def grid-hist-width-axes
-  (let [max-count (apply max (mapcat #(map :count (:bins-maps %)) grid-sepal-width-hists))
+  (let [max-count (tcc/reduce-max (mapcat #(map :count (:bins-maps %)) grid-sepal-width-hists))
         x-axis (viz/linear-axis
-                 {:domain sepal-width-domain
-                  :range [grid-margin (- grid-panel-size grid-margin)]
-                  :major 0.5
-                  :pos (- grid-panel-size grid-margin)
-                  :label-dist 12
-                  :major-size 3
-                  :minor-size 0
-                  :attribs {:stroke "none"}})
+                {:domain sepal-width-domain
+                 :range [grid-margin (- grid-panel-size grid-margin)]
+                 :major 0.5
+                 :pos (- grid-panel-size grid-margin)
+                 :label-dist 12
+                 :major-size 3
+                 :minor-size 0
+                 :attribs {:stroke "none"}})
         y-axis (viz/linear-axis
-                 {:domain [0 max-count]
-                  :range [(- grid-panel-size grid-margin) grid-margin]
-                  :major (if (> max-count 20) 5 2)
-                  :pos grid-margin
-                  :label-dist 12
-                  :label-style {:text-anchor "end"}
-                  :major-size 3
-                  :minor-size 0
-                  :attribs {:stroke "none"}})]
+                {:domain [0 max-count]
+                 :range [(- grid-panel-size grid-margin) grid-margin]
+                 :major (if (> max-count 20) 5 2)
+                 :pos grid-margin
+                 :label-dist 12
+                 :label-style {:text-anchor "end"}
+                 :major-size 3
+                 :minor-size 0
+                 :attribs {:stroke "none"}})]
     [(viz/svg-x-axis-cartesian x-axis)
      (viz/svg-y-axis-cartesian y-axis)
      (viz/svg-axis-grid2d-cartesian x-axis y-axis {:attribs {:stroke (:grid colors) :stroke-width 0.5}})]))
 
 (def grid-hist-length-axes
-  (let [max-count (apply max (mapcat #(map :count (:bins-maps %)) grid-petal-length-hists))
+  (let [max-count (tcc/reduce-max (mapcat #(map :count (:bins-maps %)) grid-petal-length-hists))
         x-axis (viz/linear-axis
-                 {:domain petal-length-domain
-                  :range [grid-margin (- grid-panel-size grid-margin)]
-                  :major 1
-                  :pos (- grid-panel-size grid-margin)
-                  :label-dist 12
-                  :major-size 3
-                  :minor-size 0
-                  :attribs {:stroke "none"}})
+                {:domain petal-length-domain
+                 :range [grid-margin (- grid-panel-size grid-margin)]
+                 :major 1
+                 :pos (- grid-panel-size grid-margin)
+                 :label-dist 12
+                 :major-size 3
+                 :minor-size 0
+                 :attribs {:stroke "none"}})
         y-axis (viz/linear-axis
-                 {:domain [0 max-count]
-                  :range [(- grid-panel-size grid-margin) grid-margin]
-                  :major (if (> max-count 20) 5 2)
-                  :pos grid-margin
-                  :label-dist 12
-                  :label-style {:text-anchor "end"}
-                  :major-size 3
-                  :minor-size 0
-                  :attribs {:stroke "none"}})]
+                {:domain [0 max-count]
+                 :range [(- grid-panel-size grid-margin) grid-margin]
+                 :major (if (> max-count 20) 5 2)
+                 :pos grid-margin
+                 :label-dist 12
+                 :label-style {:text-anchor "end"}
+                 :major-size 3
+                 :minor-size 0
+                 :attribs {:stroke "none"}})]
     [(viz/svg-x-axis-cartesian x-axis)
      (viz/svg-y-axis-cartesian y-axis)
      (viz/svg-axis-grid2d-cartesian x-axis y-axis {:attribs {:stroke (:grid colors) :stroke-width 0.5}})]))
