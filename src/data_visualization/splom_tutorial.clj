@@ -501,188 +501,162 @@ domains
 ;; ## Step 5: 2×2 Grid of Scatter Plots
 ;;
 ;; Now let's create a grid showing relationships between two variables:
-;; sepal.width and petal.length. We'll use our helper function to
-;; create panels at different grid positions.
+;; sepal.width and petal.length.
 
 (def grid-panel-size 200)
 (def grid-margin 30)
 
-;; Create all four panels using the helper function
-(def panel-00
-  (make-scatter-panel :sepal-width :sepal-width
-                      [2.0 4.5] [2.0 4.5]
-                      0.5 0.5
-                      0 0))
-
-(def panel-01
-  (make-scatter-panel :petal-length :sepal-width
-                      [1.0 7.0] [2.0 4.5]
-                      1.0 0.5
-                      0 1))
-
-(def panel-10
-  (make-scatter-panel :sepal-width :petal-length
-                      [2.0 4.5] [1.0 7.0]
-                      0.5 1.0
-                      1 0))
-
-(def panel-11
-  (make-scatter-panel :petal-length :petal-length
-                      [1.0 7.0] [1.0 7.0]
-                      1.0 1.0
-                      1 1))
+;; Helper to create a scatter panel at a specific grid position
+(defn make-grid-scatter-panel [x-col y-col row col]
+  (let [x-offset (* col grid-panel-size)
+        y-offset (* row grid-panel-size)
+        x-axis (viz/linear-axis
+                {:domain (domains x-col)
+                 :range [(+ x-offset grid-margin)
+                         (+ x-offset grid-panel-size (- grid-margin))]
+                 :major 0.5
+                 :pos (+ y-offset grid-panel-size (- grid-margin))
+                 :label-dist 12
+                 :major-size 2
+                 :minor-size 0
+                 :attribs {:stroke "none"}})
+        y-axis (viz/linear-axis
+                {:domain (domains y-col)
+                 :range [(+ y-offset grid-panel-size (- grid-margin))
+                         (+ y-offset grid-margin)]
+                 :major 0.5
+                 :pos (+ x-offset grid-margin)
+                 :label-dist 12
+                 :label-style {:text-anchor "end"}
+                 :major-size 2
+                 :minor-size 0
+                 :attribs {:stroke "none"}})
+        series (mapv (fn [species color]
+                       (let [data (species-groups species)
+                             points (mapv vector (data x-col) (data y-col))]
+                         {:values points
+                          :attribs {:fill color :stroke "none"}
+                          :layout viz/svg-scatter-plot}))
+                     species-names
+                     (:species colors))]
+    (viz/svg-plot2d-cartesian
+     {:x-axis x-axis
+      :y-axis y-axis
+      :grid {:attribs {:stroke (:grid colors) :stroke-width 0.5}}
+      :data series})))
 
 ;; Assemble the 2×2 grid
-(def grid-total-size (* 2 grid-panel-size))
+(let [grid-total-size (* 2 grid-panel-size)]
+  (svg
+   {:width grid-total-size :height grid-total-size}
+   
+   ;; Backgrounds first (z-order)
+   (svg/rect [0 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+   (svg/rect [grid-panel-size 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+   (svg/rect [0 grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+   (svg/rect [grid-panel-size grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+   
+   ;; The four scatter plots
+   (make-grid-scatter-panel :sepal-width :sepal-width 0 0)  ; top-left
+   (make-grid-scatter-panel :petal-length :sepal-width 0 1) ; top-right
+   (make-grid-scatter-panel :sepal-width :petal-length 1 0) ; bottom-left
+   (make-grid-scatter-panel :petal-length :petal-length 1 1))) ; bottom-right
 
-(svg
-    {:width grid-total-size :height grid-total-size}
-    
-    ;; Backgrounds first (z-order)
-    (svg/rect [0 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
-    (svg/rect [grid-panel-size 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
-    (svg/rect [0 grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
-    (svg/rect [grid-panel-size grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
-    
-    ;; Then the plots
-    panel-00
-    panel-01
-    panel-10
-    panel-11)
+;; We can see relationships! Notice the diagonal panels show x=y
+;; which isn't very informative. Let's fix that next.
 
-;; We can see relationships! Notice the diagonal panels (0,0) and (1,1)
-;; show x=y which isn't very informative. Let's fix that next.
 ;; ## Step 6: 2×2 Grid with Diagonal Histograms
 ;;
 ;; Replace the uninformative diagonal panels (where x=y) with histograms.
 
-;; Create histograms for both variables, grouped by species
-(def grid-sepal-width-hists
-  (mapv (fn [species]
-          (let [data (species-groups species)]
-            (stats/histogram (data :sepal-width) 12)))
-        species-names))
-
-(def grid-petal-length-hists
-  (mapv (fn [species]
-          (let [data (species-groups species)]
-            (stats/histogram (data :petal-length) 12)))
-        species-names))
-
-;; Colored histogram bars for grid (with independent y-scales)
-(def grid-hist-width-bars
-  (let [x-scale (viz/linear-scale sepal-width-domain [grid-margin (- grid-panel-size grid-margin)])
-        max-count (tcc/reduce-max (mapcat #(map :count (:bins-maps %)) grid-sepal-width-hists))
-        y-scale (viz/linear-scale [0 max-count] [(- grid-panel-size grid-margin) grid-margin])]
-    (mapcat (fn [hist color]
-              (map (fn [{:keys [min max count]}]
-                     (let [x1 (x-scale min)
-                           x2 (x-scale max)
-                           y (y-scale count)
-                           bar-width (- x2 x1)
-                           bar-height (- (- grid-panel-size grid-margin) y)]
-                       (svg/rect [x1 y] bar-width bar-height
-                                 {:fill color :stroke (:grid colors) :stroke-width 0.5 :opacity 0.7})))
-                   (:bins-maps hist)))
-            grid-sepal-width-hists
-            (:species colors))))
-
-(def grid-hist-length-bars
-  (let [x-scale (viz/linear-scale petal-length-domain [grid-margin (- grid-panel-size grid-margin)])
-        max-count (tcc/reduce-max (mapcat #(map :count (:bins-maps %)) grid-petal-length-hists))
-        y-scale (viz/linear-scale [0 max-count] [(- grid-panel-size grid-margin) grid-margin])]
-    (mapcat (fn [hist color]
-              (map (fn [{:keys [min max count]}]
-                     (let [x1 (x-scale min)
-                           x2 (x-scale max)
-                           y (y-scale count)
-                           bar-width (- x2 x1)
-                           bar-height (- (- grid-panel-size grid-margin) y)]
-                       (svg/rect [x1 y] bar-width bar-height
-                                 {:fill color :stroke (:grid colors) :stroke-width 0.5 :opacity 0.7})))
-                   (:bins-maps hist)))
-            grid-petal-length-hists
-            (:species colors))))
-
-;; Axes for the histograms (with updated y-domains)
-(def grid-hist-width-axes
-  (let [max-count (tcc/reduce-max (mapcat #(map :count (:bins-maps %)) grid-sepal-width-hists))
+;; Helper to create a colored histogram panel at a grid position
+(defn make-grid-histogram-panel [column row col]
+  (let [x-offset (* col grid-panel-size)
+        y-offset (* row grid-panel-size)
+        ;; Compute histogram data for all species
+        species-hists (mapv (fn [species]
+                              {:species species
+                               :hist (stats/histogram ((species-groups species) column) 12)})
+                            species-names)
+        max-count (tcc/reduce-max
+                   (mapcat (fn [{:keys [hist]}]
+                             (map :count (:bins-maps hist)))
+                           species-hists))
+        x-scale (viz/linear-scale (domains column) 
+                                  [(+ x-offset grid-margin) 
+                                   (+ x-offset grid-panel-size (- grid-margin))])
+        y-scale (viz/linear-scale [0 max-count] 
+                                  [(+ y-offset grid-panel-size (- grid-margin)) 
+                                   (+ y-offset grid-margin)])
+        ;; Create axes
         x-axis (viz/linear-axis
-                {:domain sepal-width-domain
-                 :range [grid-margin (- grid-panel-size grid-margin)]
+                {:domain (domains column)
+                 :range [(+ x-offset grid-margin) (+ x-offset grid-panel-size (- grid-margin))]
                  :major 0.5
-                 :pos (- grid-panel-size grid-margin)
+                 :pos (+ y-offset grid-panel-size (- grid-margin))
                  :label-dist 12
                  :major-size 3
                  :minor-size 0
                  :attribs {:stroke "none"}})
         y-axis (viz/linear-axis
                 {:domain [0 max-count]
-                 :range [(- grid-panel-size grid-margin) grid-margin]
+                 :range [(+ y-offset grid-panel-size (- grid-margin)) (+ y-offset grid-margin)]
                  :major (if (> max-count 20) 5 2)
-                 :pos grid-margin
+                 :pos (+ x-offset grid-margin)
                  :label-dist 12
                  :label-style {:text-anchor "end"}
-                 :major-size 3
-                 :minor-size 0
-                 :attribs {:stroke "none"}})]
-    [(viz/svg-x-axis-cartesian x-axis)
-     (viz/svg-y-axis-cartesian y-axis)
-     (viz/svg-axis-grid2d-cartesian x-axis y-axis {:attribs {:stroke (:grid colors) :stroke-width 0.5}})]))
-
-(def grid-hist-length-axes
-  (let [max-count (tcc/reduce-max (mapcat #(map :count (:bins-maps %)) grid-petal-length-hists))
-        x-axis (viz/linear-axis
-                {:domain petal-length-domain
-                 :range [grid-margin (- grid-panel-size grid-margin)]
-                 :major 1
-                 :pos (- grid-panel-size grid-margin)
-                 :label-dist 12
                  :major-size 3
                  :minor-size 0
                  :attribs {:stroke "none"}})
-        y-axis (viz/linear-axis
-                {:domain [0 max-count]
-                 :range [(- grid-panel-size grid-margin) grid-margin]
-                 :major (if (> max-count 20) 5 2)
-                 :pos grid-margin
-                 :label-dist 12
-                 :label-style {:text-anchor "end"}
-                 :major-size 3
-                 :minor-size 0
-                 :attribs {:stroke "none"}})]
-    [(viz/svg-x-axis-cartesian x-axis)
-     (viz/svg-y-axis-cartesian y-axis)
-     (viz/svg-axis-grid2d-cartesian x-axis y-axis {:attribs {:stroke (:grid colors) :stroke-width 0.5}})]))
+        ;; Create bars
+        bars (mapcat (fn [idx {:keys [hist]}]
+                       (let [color ((:species colors) idx)]
+                         (map (fn [{:keys [min max count]}]
+                                (let [x1 (x-scale min)
+                                      x2 (x-scale max)
+                                      y (y-scale count)
+                                      bar-width (- x2 x1)
+                                      bar-height (- (+ y-offset grid-panel-size (- grid-margin)) y)]
+                                  (svg/rect [x1 y] bar-width bar-height
+                                            {:fill color 
+                                             :stroke (:grid colors) 
+                                             :stroke-width 0.5 
+                                             :opacity 0.7})))
+                              (:bins-maps hist))))
+                     (range)
+                     species-hists)]
+    (svg/group {}
+               (viz/svg-x-axis-cartesian x-axis)
+               (viz/svg-y-axis-cartesian y-axis)
+               (viz/svg-axis-grid2d-cartesian x-axis y-axis 
+                                              {:attribs {:stroke (:grid colors) 
+                                                        :stroke-width 0.5}})
+               bars)))
 
 ;; Now render the grid with colored histograms on the diagonal
-(svg
-  {:width (* 2 grid-panel-size) :height (* 2 grid-panel-size)}
-  
-  ;; Background panels
-  (svg/rect [0 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
-  (svg/rect [grid-panel-size 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
-  (svg/rect [0 grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
-  (svg/rect [grid-panel-size grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
-  
-  ;; Top-left: histogram for sepal.width
-  (svg/group {:transform (str "translate(0,0)")}
-             grid-hist-width-axes
-             grid-hist-width-bars)
-  
-  ;; Top-right: sepal.width vs petal.length
-  panel-01
-  
-  ;; Bottom-left: petal.length vs sepal.width  
-  panel-10
-  
-  ;; Bottom-right: histogram for petal.length
-  (svg/group {:transform (str "translate(" grid-panel-size "," grid-panel-size ")")}
-             grid-hist-length-axes
-             grid-hist-length-bars))
+(let [grid-total-size (* 2 grid-panel-size)]
+  (svg
+   {:width grid-total-size :height grid-total-size}
+   
+   ;; Background panels
+   (svg/rect [0 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+   (svg/rect [grid-panel-size 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+   (svg/rect [0 grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+   (svg/rect [grid-panel-size grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+   
+   ;; Top-left: histogram for sepal.width
+   (make-grid-histogram-panel :sepal-width 0 0)
+   
+   ;; Top-right: sepal.width vs petal.length
+   (make-grid-scatter-panel :petal-length :sepal-width 0 1)
+   
+   ;; Bottom-left: petal.length vs sepal.width  
+   (make-grid-scatter-panel :sepal-width :petal-length 1 0)
+   
+   ;; Bottom-right: histogram for petal.length
+   (make-grid-histogram-panel :petal-length 1 1)))
 
 ;; Perfect! Now we can see both relationships and distributions by species.
-
 
 ;; ## Step 7: Single Scatter with Regression Line
 ;;
