@@ -128,8 +128,8 @@ iris
   {:grey-bg "#EBEBEB"
    :grid "#FFFFFF"
    :grey-points "#333333"
-   :species ["#F8766D" 
-             "#619CFF" 
+   :species ["#F8766D"
+             "#619CFF"
              "#00BA38"]})
 
 ;; Derive species names from data (used throughout)
@@ -144,7 +144,6 @@ species-color-map
 ;; Group data by species for later use
 (def species-groups
   (tc/group-by iris :species {:result-type :as-map}))
-
 
 ;; Numerical columns
 (def numerical-column-names
@@ -209,14 +208,14 @@ domains
   [[:tag1 ...] [:tag2 ...]] becomes seq (element children)"
   [form]
   (walk/postwalk
-    (fn [x]
-      (if (and (vector? x)
-               (not (map-entry? x))
-               (seq x)
-               (not (keyword? (first x))))
-        (seq x)
-        x))
-    form))
+   (fn [x]
+     (if (and (vector? x)
+              (not (map-entry? x))
+              (seq x)
+              (not (keyword? (first x))))
+       (seq x)
+       x))
+   form))
 
 (defn svg
   "Like thi.ng.geom.svg/svg, but hiccup-compatible.
@@ -232,8 +231,8 @@ domains
 (def three-circles
   (mapv (fn [[x color]]
           (svg/circle [x 50] 20 {:fill color :stroke "none"}))
-        [[30 "#F8766D"] 
-         [70 "#619CFF"] 
+        [[30 "#F8766D"]
+         [70 "#619CFF"]
          [110 "#00BA38"]]))
 
 ;; Our helper automatically converts the vector to a seq:
@@ -295,7 +294,6 @@ domains
 
 ;; We can see the relationship between sepal length and width!
 
-
 ;; ## Step 2: Color by Species
 ;;
 ;; Now let's color the points by species to see the three clusters.
@@ -339,7 +337,6 @@ domains
 
 ;; We need to manually render bars as SVG rectangles.
 ;; We'll use viz/linear-scale to map data values → pixel coordinates.
-
 
 ;; Compute histogram and all derived data once
 (defn compute-histogram-data [column]
@@ -485,7 +482,7 @@ domains
      (viz/svg-y-axis-cartesian y-axis)
      (viz/svg-axis-grid2d-cartesian x-axis y-axis
                                     {:attribs {:stroke (:grid colors)
-                                              :stroke-width 0.5}})]))
+                                               :stroke-width 0.5}})]))
 
 ;; Usage: compute once, pass to both functions
 (let [column :sepal-width
@@ -549,15 +546,15 @@ domains
 (let [grid-total-size (* 2 grid-panel-size)]
   (svg
    {:width grid-total-size :height grid-total-size}
-   
+
    ;; Backgrounds first (z-order)
    (svg/rect [0 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
    (svg/rect [grid-panel-size 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
    (svg/rect [0 grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
    (svg/rect [grid-panel-size grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
-   
+
    ;; The four scatter plots
-   (make-grid-scatter-panel :sepal-width :sepal-width 0 0)  ; top-left
+   (make-grid-scatter-panel :sepal-width :sepal-width 0 0) ; top-left
    (make-grid-scatter-panel :petal-length :sepal-width 0 1) ; top-right
    (make-grid-scatter-panel :sepal-width :petal-length 1 0) ; bottom-left
    (make-grid-scatter-panel :petal-length :petal-length 1 1))) ; bottom-right
@@ -582,11 +579,11 @@ domains
                    (mapcat (fn [{:keys [hist]}]
                              (map :count (:bins-maps hist)))
                            species-hists))
-        x-scale (viz/linear-scale (domains column) 
-                                  [(+ x-offset grid-margin) 
+        x-scale (viz/linear-scale (domains column)
+                                  [(+ x-offset grid-margin)
                                    (+ x-offset grid-panel-size (- grid-margin))])
-        y-scale (viz/linear-scale [0 max-count] 
-                                  [(+ y-offset grid-panel-size (- grid-margin)) 
+        y-scale (viz/linear-scale [0 max-count]
+                                  [(+ y-offset grid-panel-size (- grid-margin))
                                    (+ y-offset grid-margin)])
         ;; Create axes
         x-axis (viz/linear-axis
@@ -618,9 +615,9 @@ domains
                                       bar-width (- x2 x1)
                                       bar-height (- (+ y-offset grid-panel-size (- grid-margin)) y)]
                                   (svg/rect [x1 y] bar-width bar-height
-                                            {:fill color 
-                                             :stroke (:grid colors) 
-                                             :stroke-width 0.5 
+                                            {:fill color
+                                             :stroke (:grid colors)
+                                             :stroke-width 0.5
                                              :opacity 0.7})))
                               (:bins-maps hist))))
                      (range)
@@ -628,13 +625,154 @@ domains
     (svg/group {}
                (viz/svg-x-axis-cartesian x-axis)
                (viz/svg-y-axis-cartesian y-axis)
-               (viz/svg-axis-grid2d-cartesian x-axis y-axis 
-                                              {:attribs {:stroke (:grid colors) 
-                                                        :stroke-width 0.5}})
+               (viz/svg-axis-grid2d-cartesian x-axis y-axis
+                                              {:attribs {:stroke (:grid colors)
+                                                         :stroke-width 0.5}})
                bars)))
 
 ;; Now render the grid with colored histograms on the diagonal
 (let [grid-total-size (* 2 grid-panel-size)]
+  (svg
+   {:width grid-total-size :height grid-total-size}
+
+   ;; Background panels
+   (svg/rect [0 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+   (svg/rect [grid-panel-size 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+   (svg/rect [0 grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+   (svg/rect [grid-panel-size grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
+
+   ;; Top-left: histogram for sepal.width
+   (make-grid-histogram-panel :sepal-width 0 0)
+
+   ;; Top-right: sepal.width vs petal.length
+   (make-grid-scatter-panel :petal-length :sepal-width 0 1)
+
+   ;; Bottom-left: petal.length vs sepal.width  
+   (make-grid-scatter-panel :sepal-width :petal-length 1 0)
+
+   ;; Bottom-right: histogram for petal.length
+   (make-grid-histogram-panel :petal-length 1 1)))
+
+;; Perfect! Now we can see both relationships and distributions by species.
+
+;; ## Step 7: Single Scatter with Regression Line
+;;
+;; Add a linear regression overlay to understand the trend.
+
+;; Helper to compute linear regression
+(defn compute-regression [x-col y-col]
+  (let [xs (iris x-col)
+        ys (iris y-col)
+        xss (mapv vector xs)
+        model (regr/lm ys xss)
+        slope (first (:beta model))
+        intercept (:intercept model)]
+    {:slope slope :intercept intercept}))
+
+;; Helper to create regression line SVG
+(defn regression-line [x-col y-col regression-data]
+  (let [{:keys [slope intercept]} regression-data
+        [x-min x-max] (domains x-col)
+        x-scale (viz/linear-scale (domains x-col) [margin (- panel-size margin)])
+        y-scale (viz/linear-scale (domains y-col) [(- panel-size margin) margin])
+        y1 (+ intercept (* slope x-min))
+        y2 (+ intercept (* slope x-max))]
+    (svg/line [(x-scale x-min) (y-scale y1)]
+              [(x-scale x-max) (y-scale y2)]
+              {:stroke "#2C3E50" :stroke-width 2})))
+
+;; Render scatter plot with regression overlay
+(let [x-col :sepal-length
+      y-col :sepal-width
+      regression-data (compute-regression x-col y-col)
+      plot (colored-plot-spec [x-col y-col])]
+  (svg
+   {:width panel-size :height panel-size}
+   (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
+   (viz/svg-plot2d-cartesian plot)
+   (regression-line x-col y-col regression-data)))
+
+;; The red line shows the linear trend: sepal width slightly decreases
+;; as sepal length increases.
+
+;; ## Step 8: Single Scatter with Regression Lines by Species
+;;
+;; Compute separate regression lines for each species group.
+
+;; Helper to compute regressions for each species
+(defn compute-species-regressions [x-col y-col]
+  (into {}
+        (for [species species-names]
+          (let [species-data (tc/select-rows iris #(= (% :species) species))
+                xs (species-data x-col)
+                ys (species-data y-col)
+                xss (mapv vector xs)
+                model (regr/lm ys xss)
+                slope (first (:beta model))
+                intercept (:intercept model)]
+            [species {:slope slope :intercept intercept}]))))
+
+;; Helper to create regression line SVGs for all species
+(defn species-regression-lines [x-col y-col species-regressions-data]
+  (let [[x-min x-max] (domains x-col)
+        x-scale (viz/linear-scale (domains x-col) [margin (- panel-size margin)])
+        y-scale (viz/linear-scale (domains y-col) [(- panel-size margin) margin])]
+    (mapv (fn [species]
+            (let [{:keys [slope intercept]} (species-regressions-data species)
+                  y1 (+ intercept (* slope x-min))
+                  y2 (+ intercept (* slope x-max))]
+              (svg/line [(x-scale x-min) (y-scale y1)]
+                        [(x-scale x-max) (y-scale y2)]
+                        {:stroke (species-color-map species)
+                         :stroke-width 2
+                         :opacity 0.7})))
+          species-names)))
+
+;; Render scatter plot with per-species regression lines
+(let [x-col :sepal-length
+      y-col :sepal-width
+      regressions (compute-species-regressions x-col y-col)
+      plot (colored-plot-spec [x-col y-col])]
+  (svg
+   {:width panel-size :height panel-size}
+   (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
+   (viz/svg-plot2d-cartesian plot)
+   (species-regression-lines x-col y-col regressions)))
+
+;; Each species has its own trend! Setosa (red) has a positive slope,
+;; while versicolor (green) and virginica (blue) have gentler relationships.
+
+;; ## Step 9: 2×2 Grid with Regression Lines
+;;
+;; Add per-species regression overlays to the scatter plots in our grid.
+
+;; Helper to create per-species regression lines at a grid position
+(defn make-grid-regression-lines [x-col y-col row col species-regressions-data]
+  (let [x-offset (* col grid-panel-size)
+        y-offset (* row grid-panel-size)
+        [x-min x-max] (domains x-col)
+        x-scale (viz/linear-scale (domains x-col) 
+                                  [(+ x-offset grid-margin) 
+                                   (+ x-offset grid-panel-size (- grid-margin))])
+        y-scale (viz/linear-scale (domains y-col) 
+                                  [(+ y-offset grid-panel-size (- grid-margin)) 
+                                   (+ y-offset grid-margin)])]
+    (mapv (fn [species]
+            (let [{:keys [slope intercept]} (species-regressions-data species)
+                  y1 (+ intercept (* slope x-min))
+                  y2 (+ intercept (* slope x-max))]
+              (svg/line [(x-scale x-min) (y-scale y1)]
+                        [(x-scale x-max) (y-scale y2)]
+                        {:stroke (species-color-map species)
+                         :stroke-width 2
+                         :opacity 0.7})))
+          species-names)))
+
+;; Render grid with histograms and per-species regression lines
+(let [grid-total-size (* 2 grid-panel-size)
+      ;; Compute regressions for the two scatter panels
+      regressions-01 (compute-species-regressions :petal-length :sepal-width)
+      regressions-10 (compute-species-regressions :sepal-width :petal-length)]
   (svg
    {:width grid-total-size :height grid-total-size}
    
@@ -647,198 +785,18 @@ domains
    ;; Top-left: histogram for sepal.width
    (make-grid-histogram-panel :sepal-width 0 0)
    
-   ;; Top-right: sepal.width vs petal.length
+   ;; Top-right: petal.length (x) vs sepal.width (y) with per-species regressions
    (make-grid-scatter-panel :petal-length :sepal-width 0 1)
+   (make-grid-regression-lines :petal-length :sepal-width 0 1 regressions-01)
    
-   ;; Bottom-left: petal.length vs sepal.width  
+   ;; Bottom-left: sepal.width (x) vs petal.length (y) with per-species regressions
    (make-grid-scatter-panel :sepal-width :petal-length 1 0)
+   (make-grid-regression-lines :sepal-width :petal-length 1 0 regressions-10)
    
    ;; Bottom-right: histogram for petal.length
    (make-grid-histogram-panel :petal-length 1 1)))
 
-;; Perfect! Now we can see both relationships and distributions by species.
-
-;; ## Step 7: Single Scatter with Regression Line
-;;
-;; Add a linear regression overlay to understand the trend.
-
-;; Compute linear regression for sepal dimensions
-(def sepal-regression
-  (let [xs (iris :sepal-length)
-        ys (iris :sepal-width)
-        xss (mapv vector xs)
-        model (regr/lm ys xss)
-        slope (first (:beta model))
-        intercept (:intercept model)]
-    {:slope slope :intercept intercept}))
-
-;; Create regression line path
-(def regression-line
-  (let [{:keys [slope intercept]} sepal-regression
-        x-scale (viz/linear-scale sepal-length-domain [margin (- panel-size margin)])
-        y-scale (viz/linear-scale sepal-width-domain [(- panel-size margin) margin])
-        x1 4.0
-        x2 8.0
-        y1 (+ intercept (* slope x1))
-        y2 (+ intercept (* slope x2))]
-    (svg/line [(x-scale x1) (y-scale y1)]
-              [(x-scale x2) (y-scale y2)]
-              {:stroke "#FF6B6B" :stroke-width 2})))
-
-;; Render scatter plot with regression overlay
-(svg
-  {:width panel-size :height panel-size}
-  (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
-  scatter-plot
-  regression-line)
-
-;; The red line shows the linear trend: sepal width slightly decreases
-;; as sepal length increases.
-
-
-
-;; ## Step 8: Single Scatter with Regression Lines by Species
-;;
-;; Compute separate regression lines for each species group.
-
-;; Compute regressions per species
-(def species-regressions
-  (into {}
-        (for [species species-names]
-          (let [species-data (tc/select-rows iris #(= (% :species) species))
-                xs (species-data :sepal-length)
-                ys (species-data :sepal-width)
-                xss (mapv vector xs)
-                model (regr/lm ys xss)
-                slope (first (:beta model))
-                intercept (:intercept model)]
-            [species {:slope slope :intercept intercept}]))))
-
-species-regressions
-
-;; Create regression lines for each species
-(def species-regression-lines
-  (let [x-scale (viz/linear-scale sepal-length-domain [margin (- panel-size margin)])
-        y-scale (viz/linear-scale sepal-width-domain [(- panel-size margin) margin])
-        x1 4.0
-        x2 8.0]
-    (mapv (fn [species]
-            (let [{:keys [slope intercept]} (species-regressions species)
-                  y1 (+ intercept (* slope x1))
-                  y2 (+ intercept (* slope x2))]
-              (svg/line [(x-scale x1) (y-scale y1)]
-                        [(x-scale x2) (y-scale y2)]
-                        {:stroke (species-color-map species)
-                         :stroke-width 2
-                         :opacity 0.7})))
-          species-names)))
-
-;; Render scatter plot with per-species regression lines
-(svg
-  {:width panel-size :height panel-size}
-  (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
-  scatter-plot
-  species-regression-lines)
-
-;; Each species has its own trend! Setosa (red) has a positive slope,
-;; while versicolor (green) and virginica (blue) have gentler relationships.
-
-;; ## Step 9: 2×2 Grid with Regression Lines
-;;
-;; Add per-species regression overlays to the scatter plots in our grid.
-
-;; Compute per-species regressions for sepal.width vs petal.length
-(def sepal-width-petal-length-regressions
-  (into {}
-        (for [species species-names]
-          (let [species-data (tc/select-rows iris #(= (% :species) species))
-                xs (species-data :sepal-width)
-                ys (species-data :petal-length)
-                xss (mapv vector xs)
-                model (regr/lm ys xss)
-                slope (first (:beta model))
-                intercept (:intercept model)]
-            [species {:slope slope :intercept intercept}]))))
-
-;; Compute per-species regressions for petal.length vs sepal.width
-(def petal-length-sepal-width-regressions
-  (into {}
-        (for [species species-names]
-          (let [species-data (tc/select-rows iris #(= (% :species) species))
-                xs (species-data :petal-length)
-                ys (species-data :sepal-width)
-                xss (mapv vector xs)
-                model (regr/lm ys xss)
-                slope (first (:beta model))
-                intercept (:intercept model)]
-            [species {:slope slope :intercept intercept}]))))
-
-;; Create regression lines for panel-01 (top-right: sepal.width vs petal.length)
-(def grid-regressions-01
-  (let [x-offset grid-panel-size
-        y-offset 0
-        x-scale (viz/linear-scale sepal-width-domain [(+ x-offset grid-margin) (+ x-offset grid-panel-size (- grid-margin))])
-        y-scale (viz/linear-scale petal-length-domain [(+ y-offset grid-panel-size (- grid-margin)) (+ y-offset grid-margin)])
-        x1 2.0
-        x2 4.5]
-    (mapv (fn [species]
-            (let [{:keys [slope intercept]} (sepal-width-petal-length-regressions species)
-                  y1 (+ intercept (* slope x1))
-                  y2 (+ intercept (* slope x2))]
-              (svg/line [(x-scale x1) (y-scale y1)]
-                        [(x-scale x2) (y-scale y2)]
-                        {:stroke (species-color-map species)
-                         :stroke-width 2
-                         :opacity 0.7})))
-          species-names)))
-
-;; Create regression lines for panel-10 (bottom-left: petal.length vs sepal.width)
-(def grid-regressions-10
-  (let [x-offset 0
-        y-offset grid-panel-size
-        x-scale (viz/linear-scale petal-length-domain [(+ x-offset grid-margin) (+ x-offset grid-panel-size (- grid-margin))])
-        y-scale (viz/linear-scale sepal-width-domain [(+ y-offset grid-panel-size (- grid-margin)) (+ y-offset grid-margin)])
-        x1 1
-        x2 7]
-    (mapv (fn [species]
-            (let [{:keys [slope intercept]} (petal-length-sepal-width-regressions species)
-                  y1 (+ intercept (* slope x1))
-                  y2 (+ intercept (* slope x2))]
-              (svg/line [(x-scale x1) (y-scale y1)]
-                        [(x-scale x2) (y-scale y2)]
-                        {:stroke (species-color-map species)
-                         :stroke-width 2
-                         :opacity 0.7})))
-          species-names)))
-
-;; Render grid with histograms and per-species regression lines
-(svg
- {:width (* 2 grid-panel-size) :height (* 2 grid-panel-size)}
- 
- ;; Background panels
- (svg/rect [0 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
- (svg/rect [grid-panel-size 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
- (svg/rect [0 grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
- (svg/rect [grid-panel-size grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
- 
- ;; Top-left: histogram for sepal.width
- (svg/group {:transform (str "translate(0,0)")}
-            grid-hist-width-axes
-            grid-hist-width-bars)
- 
- ;; Top-right: sepal.width vs petal.length with per-species regressions
- panel-01
- grid-regressions-01
- 
- ;; Bottom-left: petal.length vs sepal.width with per-species regressions
- panel-10
- grid-regressions-10
- 
- ;; Bottom-right: histogram for petal.length
- (svg/group {:transform (str "translate(" grid-panel-size "," grid-panel-size ")")}
-            grid-hist-length-axes
-            grid-hist-length-bars))
-
 ;; Beautiful! Each species shows its own trend in both scatter panels.
 ;; Notice how the three colored regression lines reveal different relationships
 ;; for each species across the grid.
+
