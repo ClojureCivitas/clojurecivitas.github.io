@@ -530,9 +530,9 @@ domains
 
 ;; ## Step 5: 2×2 Grid of Scatter Plots
 ;;
-;; As a preparation for a 4x4 grid ot plots we will draw later,
-;; let's create a grid showing the relationship between two variables:
-;; sepal width and petal length.
+;; As preparation for the full 4×4 SPLOM we'll build later, let's start with
+;; a simpler 2×2 grid. This will let us explore the relationships between just
+;; two variables: sepal width and petal length.
 
 ;; Let's create a helper to render a scatter panel at any grid position.
 (defn make-grid-scatter-panel [x-col y-col row col]
@@ -603,7 +603,8 @@ domains
 
 ;; ## Step 6: 2×2 Grid with Diagonal Histograms
 ;;
-;; Now let's improve our grid by using histograms on the diagonal (where x=y).
+;; Our 2×2 grid currently shows x=y on the diagonal, which isn't very informative.
+;; Let's replace those panels with histograms showing the distribution of each variable.
 
 ;; Let's do the same for histograms.
 (defn make-grid-histogram-panel [column row col]
@@ -699,7 +700,8 @@ domains
 
 ;; ## Step 7: Single Scatter with Regression Line
 ;;
-;; Add a [linear regression](https://en.wikipedia.org/wiki/Linear_regression) overlay to understand the trend.
+;; Beyond seeing the scatter of points, we often want to understand the overall trend.
+;; Let's add a [linear regression](https://en.wikipedia.org/wiki/Linear_regression) line to quantify the relationship.
 
 ;; First, let's compute a linear regression.
 (defn compute-regression [x-col y-col]
@@ -745,7 +747,9 @@ domains
 
 ;; ## Step 8: Single Scatter with Regression Lines by Species
 ;;
-;; Compute separate regression lines for each species group.
+;; In Step 7 we computed a single regression ignoring species. But what if each
+;; species has its own distinct relationship? Let's find out by computing separate
+;; regression lines for each species group.
 
 ;; Let's compute separate regressions for each species.
 (defn compute-species-regressions [x-col y-col]
@@ -791,12 +795,22 @@ domains
    (viz/svg-plot2d-cartesian plot)
    (species-regression-lines x-col y-col regressions)))
 
-;; Each species has its own trend! Setosa (red) has a positive slope,
-;; while versicolor (green) and virginica (blue) have gentler relationships.
+
+;; Each species has its own trend! All three species show a **positive** relationship
+;; (wider sepals with longer sepals): Setosa has slope +0.80, Versicolor +0.32, Virginica +0.23.
+;;
+;; This demonstrates [Simpson's Paradox](https://en.wikipedia.org/wiki/Simpson%27s_paradox):
+;; if we ignore species and fit a single regression to all data (as in Step 7),
+;; we get a **negative** slope (-0.06)! The overall trend reverses because the three
+;; species clusters are separated in feature space—Setosa has shorter sepals but wider
+;; widths, while Virginica has longer sepals but narrower widths.
+;; The between-group variation dominates the within-group pattern.
 
 ;; ## Step 9: 2×2 Grid with Regression Lines
 ;;
-;; Add per-species regression overlays to the scatter plots in our grid.
+;; Now let's bring together what we learned: we'll add per-species regression lines
+;; to our 2×2 grid from Step 6, combining diagonal histograms with regression-overlaid
+;; scatter plots.
 
 ;; We'll need per-species regression lines positioned in the grid.
 (defn make-grid-regression-lines [x-col y-col row col species-regressions-data]
