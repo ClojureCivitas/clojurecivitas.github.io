@@ -183,6 +183,8 @@ domains
 
 ;; ## Step 0: SVG as Hiccup
 ;;
+;; Before we start plotting, let's understand how we'll render SVG.
+;;
 ;; thi.ng/geom provides SVG functions that we can render as hiccup.
 ;; Let's start with a simple example:
 
@@ -939,27 +941,7 @@ domains
 ;; render histograms manually, arranged everything in grids, overlaid regression lines,
 ;; and finally abstracted the whole pattern to scale from 2×2 to 4×4.
 ;;
-;; A few patterns emerged along the way. We kept finding ourselves separating data
-;; computation from rendering—functions that compute histogram bins or regression
-;; coefficients return data structures, and separate functions turn those into SVG.
-;; This made everything easier to test and compose.
-;;
-;; We also settled on keeping column dependencies at the call site rather than
-;; baking them into helper functions. A function like `make-grid-scatter-panel`
-;; takes `x-col` and `y-col` as arguments and looks up domains internally. This
-;; keeps helpers flexible and reusable.
-;;
-;; The grid positioning pattern—calculating x/y offsets from row/col indices—worked
-;; well for explicit layouts. But Step 10 showed us that even with abstraction,
-;; scaling means more code. The 4×4 grid in Step 11 generates 16 panels automatically,
-;; but we're still managing coordinates, pre-computing regressions, and deciding
-;; what goes where based on diagonal position.
-;;
-;; That's the point, really. Building this manually shows what needs automating.
-;; A good grammar should let you say "give me a SPLOM with histograms on the diagonal
-;; and scatter plots with regressions elsewhere" without thinking about panel
-;; positioning, scale sharing, or which regressions to compute when.
-;;
-;; The code here is deliberately explicit and pedagogical. A production system
-;; would handle these details for you—see `refined_plotting.clj` for how the
-;; grammar layer makes this kind of visualization simple to specify.
+;; The code here is deliberately explicit. An upcoming library API 
+;; would handle these details for you with sensibele defaults
+;; which are still extensible and composable.
+;; This will be the topic of another blogpost, coming soon.
