@@ -58,14 +58,69 @@ penguins
 (def plot-width 100)
 (def plot-height 100)
 
-;; Type detection: determines whether to show histograms (numeric) or bar charts (categorical)
+;; ## Type Classification and Plot Selection
+;;
+;; We use tablecloth's type system to classify columns and make intelligent
+;; visualization choices based on their semantic role in the data:
+;;
+;; - **Quantitative**: numerical data with meaningful magnitude and order
+;; - **Temporal**: datetime/time data (often paired with quantitative for time series)
+;; - **Categorical**: textual or logical data with discrete values
+;; - **Identity/Index**: all values unique or nearly unique (IDs, timestamps, etc.)
 
-(defn is-numeric-type? [col]
-  (tcc/typeof? col :numerical))
+(defn column-general-type
+  "Returns the general type category of a column: :quantitative, :temporal, :categorical, or :identity."
+  [col]
+  (cond
+    (tcc/typeof? col :numerical) :quantitative
+    (tcc/typeof? col :datetime) :temporal
+    (tcc/typeof? col :logical) :categorical
+    (tcc/typeof? col :textual) :categorical
+    :else :identity))
+
+(defn cardinality
+  "Count of unique non-missing values in a column."
+  [col]
+  (let [values (tcc/drop-missing col)]
+    (count (set values))))
+
+(defn is-identity-column?
+  "Returns true if column appears to be an identity/index (all or nearly all unique values)."
+  [col]
+  (let [values (tcc/drop-missing col)
+        n (count values)]
+    (>= (cardinality col) (* 0.95 n))))  ;; 95%+ unique values
+
+(defn is-numeric-type?
+  "Convenience function: returns true for quantitative columns."
+  [col]
+  (= :quantitative (column-general-type col)))
+
+(defn get-numeric-domain
+  "Get min and max of numeric column for scaling."
+  [col]
+  (let [values (remove nil? (tcc/drop-missing col))]
+    (when (seq values)
+      {:min (apply min values)
+       :max (apply max values)})))
+
+(defn scale-value
+  "Scale a value from domain to plot range."
+  [value domain plot-min plot-max]
+  (when (and value domain)
+    (let [{:keys [min max]} domain
+          range (- max min)]
+      (if (zero? range)
+        (/ (+ plot-min plot-max) 2)
+        (+ plot-min (* (/ (- value min) range) (- plot-max plot-min)))))))
 
 (defn plot-basic [g]
   (let [{:keys [data mappings geometry]} (g 1)
-        {:keys [x y]} mappings]
+        {:keys [x y]} mappings
+        x-col (data x)
+        y-col (data y)
+        x-domain (when (tcc/typeof? x-col :numerical) (get-numeric-domain x-col))
+        y-domain (when (tcc/typeof? y-col :numerical) (get-numeric-domain y-col))]
     (for [geom geometry]
       (case geom
         :bar (let [x-vals (remove nil? (data x))
@@ -99,15 +154,39 @@ penguins
                                      :fill "lightblue"
                                      :stroke "gray"
                                      :stroke-width 0.5}])))))
-        :point (let [xys (mapv (juxt x y) data)]
-                 (for [[x y] xys]
-                   [:circle {:r 2, :cx x, :cy y, :fill "lightblue"}]))
-        :line (let [xys (mapv (juxt x y) data)]
-                [:path {:d (str "M " (str/join ","
-                                               (first xys))
-                                " L " (str/join " "
-                                                (map #(str/join "," %)
-                                                     (rest xys))))}])))))
+        :point (let [rows (tc/rows data :as-maps)
+                     xys (mapv (juxt x y) rows)]
+                 (for [[x-val y-val] xys]
+                   (when (and x-val y-val x-domain y-domain)
+                     (let [cx (scale-value (double x-val) x-domain 5 (- plot-width 5))
+                           cy (scale-value (double y-val) y-domain (- plot-height 5) 5)]
+                       (when (and cx cy)
+                         [:circle {:r 2, :cx cx, :cy cy, :fill "lightblue" :stroke "blue" :stroke-width 0.5}])))))
+        :line (let [rows (tc/rows data :as-maps)
+                    xys (mapv (juxt #(get % x) #(get % y)) rows)
+                    scaled-xys (for [[x-val y-val] xys]
+                                 (when (and x-val y-val x-domain y-domain)
+                                   [(scale-value (double x-val) x-domain 5 (- plot-width 5))
+                                    (scale-value (double y-val) y-domain (- plot-height 5) 5)]))
+                    valid-xys (remove nil? scaled-xys)]
+                (when (seq valid-xys)
+                  [:path {:d (str "M " (str/join ","
+                                                  (first valid-xys))
+                                  " L " (str/join " "
+                                                   (map #(str/join "," %)
+                                                        (rest valid-xys))))
+                          :stroke "lightblue"
+                          :fill "none"
+                          :stroke-width 0.5}]))
+        :identity (let [values (remove nil? (data x))
+                        unique-vals (distinct values)
+                        n (count unique-vals)
+                        point-spacing (/ plot-width n)]
+                    (for [[i val] (map-indexed vector unique-vals)]
+                      [:circle {:r 1.5
+                                :cx (* (+ i 0.5) point-spacing)
+                                :cy (/ plot-height 2)
+                                :fill "lightgray"}]))))))
 
 (defn plot-distribution [ds column geom]
   ^:kind/hiccup
@@ -122,25 +201,88 @@ penguins
 
 (plot-distribution penguins :bill-length-mm [:histogram])
 
+;; ## Geometry Selection
+;;
+;; Determines what type of chart works best for different data patterns
+
+(defn select-geometry-single
+  "Select visualization geometry for a single column based on its type and cardinality."
+  [col]
+  (let [general-type (column-general-type col)
+        card (cardinality col)
+        n (count (tcc/drop-missing col))]
+    (cond
+      ;; All/nearly all unique values → show domain, not distribution
+      (is-identity-column? col) :identity
+      ;; Quantitative → histogram shows distribution
+      (= :quantitative general-type) :histogram
+      ;; Temporal → histogram of counts also works
+      (= :temporal general-type) :histogram
+      ;; Categorical → bar chart shows frequencies
+      (= :categorical general-type) :bar
+      :else :bar)))
+
+(defn select-geometry-pair
+  "Select visualization geometry for a pair of columns based on their types."
+  [col-a col-b]
+  (let [type-a (column-general-type col-a)
+        type-b (column-general-type col-b)]
+    (cond
+      ;; Same column (diagonal) → single column viz
+      (= col-a col-b) (select-geometry-single col-a)
+      ;; Quantitative × Quantitative → scatter plot reveals correlation
+      (and (= :quantitative type-a) (= :quantitative type-b)) :point
+      ;; Temporal × Quantitative → line chart shows time series
+      (and (= :temporal type-a) (= :quantitative type-b)) :line
+      (and (= :quantitative type-a) (= :temporal type-b)) :line
+      ;; Categorical × Anything → bar chart (show distribution by category)
+      (or (= :categorical type-a) (= :categorical type-b)) :bar
+      ;; Fallback
+      :else :bar)))
+
+;; ## Pair test
+
+(defn plot-pair
+  "Visualization for a pair of columns with automatic geometry selection."
+  [ds column-a column-b]
+  ^:kind/hiccup
+  [:svg {:width   100
+         :viewBox (str/join " " [0 0 plot-width plot-height])
+         :xmlns   "http://www.w3.org/2000/svg"
+         :style {:border "solid 1px gray"}}
+   [:g {:stroke "gray", :fill "none"}
+    (plot-basic [:graphic {:data ds
+                           :mappings {:x column-a, :y column-b}
+                           :geometry [(select-geometry-pair (ds column-a) (ds column-b))]}])]])
+
+(plot-pair penguins :bill-length-mm :bill-depth-mm)
+
+
 ;; ## Single Column Summaries
 ;;
 ;; The summarize function automatically selects the right visualization type:
-
-;; - Numeric columns → histogram (shows distribution shape)
+;; - Quantitative columns → histogram (shows distribution shape)
+;; - Temporal columns → histogram (shows frequency distribution)
 ;; - Categorical columns → bar chart (shows frequencies)
+;; - Identity columns → sparse plot (shows all unique values)
 
-(defn summarize [ds column]
-  (if (is-numeric-type? (ds column))
-    (plot-distribution ds column [:histogram])
-    (plot-distribution ds column [:bar])))
+(defn summarize
+  "Generate a single-column visualization with appropriate geometry."
+  [ds column]
+  (let [col (ds column)
+        geom (select-geometry-single col)]
+    (plot-distribution ds column [geom])))
 
 ;; Companion function: provides numeric summaries alongside visualizations
-;; Shows count, mean, standard deviation, min/max for numeric data
-;; Shows count and unique values for categorical data
+;; Shows count, mean, standard deviation, min/max for quantitative data
+;; Shows count and cardinality for categorical and identity data
 
-(defn get-summary-stats [ds column]
-  (let [col (ds column)]
-    (if (is-numeric-type? col)
+(defn get-summary-stats
+  "Generate summary statistics appropriate to the column's type."
+  [ds column]
+  (let [col (ds column)
+        general-type (column-general-type col)]
+    (if (= :quantitative general-type)
       (let [stats (tcc/descriptive-statistics col)]
         (format "n: %d, μ: %.2f, σ: %.2f, min: %.2f, max: %.2f"
                 (:n-elems stats)
@@ -149,8 +291,8 @@ penguins
                 (:min stats)
                 (:max stats)))
       (let [values (tcc/drop-missing col)
-            counts (frequencies values)]
-        (str "n: " (count values) ", unique: " (count counts))))))
+            card (cardinality col)]
+        (str "n: " (count values) ", card: " card)))))
 
 ;; ## Summary Table: All Columns at a Glance
 ;;
@@ -162,7 +304,74 @@ penguins
    (doall (for [column-name (tc/column-names ds)]
             [column-name (summarize ds column-name) (get-summary-stats ds column-name)]))))
 
+(defn visual-summary-grid
+  "Grid layout with columns as vertical strips, each showing name + viz + stats."
+  [ds]
+  ^:kind/hiccup
+  [:div {:style {:display "grid"
+                 :grid-template-columns "repeat(auto-fit, minmax(150px, 1fr))"
+                 :gap "10px"
+                 :padding "10px"}}
+   (doall (for [column-name (tc/column-names ds)]
+            [:div {:style {:border "1px solid #ddd"
+                           :padding "10px"
+                           :text-align "center"}}
+             [:h4 {:style {:margin "0 0 10px 0"
+                           :font-size "14px"}} (name column-name)]
+             (summarize ds column-name)
+             [:div {:style {:margin-top "10px"
+                            :font-size "12px"
+                            :color "#666"}}
+              (get-summary-stats ds column-name)]]))])
+
+(defn visual-summary-cards
+  "Bootstrap card layout with each column as a card in a responsive grid."
+  [ds]
+  ^:kind/hiccup
+  [:div {:class "container-fluid"}
+   [:div {:class "row"}
+    (doall (for [column-name (tc/column-names ds)]
+             [:div {:class "col-md-4 col-lg-3 mb-3"}
+              [:div {:class "card h-100"}
+               [:div {:class "card-header"}
+                [:h5 {:class "card-title mb-0"} (name column-name)]]
+               [:div {:class "card-body text-center d-flex flex-column justify-content-center"}
+                (summarize ds column-name)]
+               [:div {:class "card-footer mt-auto"}
+                [:small {:class "text-muted"}
+                 (get-summary-stats ds column-name)]]]]))]])
+
+(defn visual-summary-rows
+  "Row-based layout with each column getting a full-width row."
+  [ds]
+  ^:kind/hiccup
+  [:div {:style {:max-width "800px"
+                 :margin "0 auto"}}
+   (doall (for [column-name (tc/column-names ds)]
+            [:div {:style {:border "1px solid #ddd"
+                           :margin-bottom "20px"
+                           :padding "15px"
+                           :border-radius "5px"}}
+             [:div {:style {:display "flex"
+                            :align-items "center"
+                            :gap "20px"}}
+              [:div {:style {:flex "1 1 auto"}}
+               [:h4 {:style {:margin "0"}} (name column-name)]
+               [:div {:style {:margin-top "5px"
+                              :font-size "12px"
+                              :color "#666"}}
+                (get-summary-stats ds column-name)]]
+              [:div {:style {:flex "0 0 auto"
+                             :text-align "right"}}
+               (summarize ds column-name)]]]))])
+
 (visual-summary penguins)
+
+(visual-summary-grid penguins)
+
+(visual-summary-cards penguins)
+
+(visual-summary-rows penguins)
 
 ;; ## Matrix View: All Column Combinations
 ;;
@@ -171,11 +380,15 @@ penguins
 ;; This is the idea behind the scatterplot matrix.
 ;;
 ;; The matrix automatically chooses the right chart for each combination:
+;; - Quantitative × Quantitative → scatter plot (reveal correlations)
+;; - Temporal × Quantitative → line chart (show time series)
+;; - Categorical × Anything → bar chart (show distribution by category)
+;; - Single column (diagonal) → histogram/bar based on type
 
-;; - Numeric × Numeric → scatter plot (reveal relationships)
-;; - Otherwise → bar chart (show distribution differences)
-
-(defn matrix [ds]
+(defn matrix
+  "Create a scatterplot-matrix-style view of all column combinations.
+  Each cell uses an appropriate visualization based on the column types."
+  [ds]
   (let [column-names (tc/column-names ds)
         c (count column-names)]
     ^:kind/hiccup
@@ -188,15 +401,12 @@ penguins
             [b-idx b] (map-indexed vector column-names)]
         (let [col-a (ds a)
               col-b (ds b)
-              a-numeric? (is-numeric-type? col-a)
-              b-numeric? (is-numeric-type? col-b)]
+              geom (select-geometry-pair col-a col-b)]
           [:g {:transform (str "translate(" (* a-idx plot-width) "," (* b-idx plot-height) ")")}
            [:rect {:x 0 :y 0 :width plot-width :height plot-height
                    :fill "none" :stroke "gray" :stroke-width 1}]
            (plot-basic [:graphic {:data ds
                                   :mappings {:x a :y b}
-                                  :geometry (cond
-                                              (and a-numeric? b-numeric?) [:point]
-                                              :else [:bar])}])]))]]))
+                                  :geometry [geom]}])]))]]))
 
 (matrix penguins)
