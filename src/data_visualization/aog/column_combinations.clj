@@ -139,6 +139,34 @@ penguins
                              :fill "lightblue"
                              :stroke "gray"
                              :stroke-width 0.5}]))))
+        :heatmap (let [x-vals (remove nil? (data x))
+                       y-vals (remove nil? (data y))
+                       x-cats (distinct x-vals)
+                       y-cats (distinct y-vals)
+                       x-count (count x-cats)
+                       y-count (count y-cats)
+                       ;; Build contingency table
+                       contingency (reduce (fn [acc i]
+                                             (assoc-in acc [(data y i) (data x i)]
+                                                        (inc (get-in acc [(data y i) (data x i)] 0))))
+                                           {} (range (tc/row-count data)))
+                       all-counts (for [y-cat y-cats x-cat x-cats] (get-in contingency [y-cat x-cat] 0))
+                       max-count (when (seq all-counts) (apply max all-counts))
+                       cell-width (/ plot-width x-count)
+                       cell-height (/ plot-height y-count)]
+                   (when (and max-count (> max-count 0))
+                     (for [[y-idx y-cat] (map-indexed vector y-cats)
+                           [x-idx x-cat] (map-indexed vector x-cats)]
+                       (let [count (get-in contingency [y-cat x-cat] 0)
+                             intensity (/ count max-count)
+                             color (str "rgba(70, 130, 180, " intensity ")")]
+                         [:rect {:x (* x-idx cell-width)
+                                 :y (* y-idx cell-height)
+                                 :width cell-width
+                                 :height cell-height
+                                 :fill color
+                                 :stroke "gray"
+                                 :stroke-width 0.5}]))))
         :histogram (let [values (remove nil? (data x))
                          hist-result (when (seq values) (fms/histogram values))
                          bins (:bins-maps hist-result)]
@@ -228,14 +256,16 @@ penguins
   (let [type-a (column-general-type col-a)
         type-b (column-general-type col-b)]
     (cond
-      ;; Same column (diagonal) → single column viz
-      (= col-a col-b) (select-geometry-single col-a)
+      ;; Same column (diagonal) → sparse identity plot
+      (= col-a col-b) :identity
       ;; Quantitative × Quantitative → scatter plot reveals correlation
       (and (= :quantitative type-a) (= :quantitative type-b)) :point
       ;; Temporal × Quantitative → line chart shows time series
       (and (= :temporal type-a) (= :quantitative type-b)) :line
       (and (= :quantitative type-a) (= :temporal type-b)) :line
-      ;; Categorical × Anything → bar chart (show distribution by category)
+      ;; Categorical × Categorical → heatmap shows contingency
+      (and (= :categorical type-a) (= :categorical type-b)) :heatmap
+      ;; Categorical × Anything else → bar chart (show distribution by category)
       (or (= :categorical type-a) (= :categorical type-b)) :bar
       ;; Fallback
       :else :bar)))
@@ -410,3 +440,51 @@ penguins
                                   :geometry [geom]}])]))]]))
 
 (matrix penguins)
+
+
+(defn labeled-matrix
+  "Create a scatterplot-matrix-style view with row/column labels.
+  Each cell uses an appropriate visualization based on the column types."
+  [ds]
+  (let [column-names (tc/column-names ds)
+        c (count column-names)
+        label-width 80
+        cell-size plot-width]
+    ^:kind/hiccup
+    [:svg {:width   "100%"
+           :viewBox (str/join " " [0 0 (+ label-width (* cell-size c)) (+ label-width (* cell-size c))])
+           :xmlns   "http://www.w3.org/2000/svg"
+           :style {:border "solid 1px gray"}}
+     [:g
+      ;; Column labels (top)
+      (for [[idx col-name] (map-indexed vector column-names)]
+        [:g {:key (str "col-label-" idx)}
+         [:text {:x (+ label-width (* idx cell-size) (/ cell-size 2))
+                 :y 20
+                 :text-anchor "middle"
+                 :font-size "12"
+                 :fill "#333"} (name col-name)]])
+
+      ;; Row labels (left)
+      (for [[idx row-name] (map-indexed vector column-names)]
+        [:g {:key (str "row-label-" idx)}
+         [:text {:x 10
+                 :y (+ label-width (* idx cell-size) (/ cell-size 2) 4)
+                 :font-size "12"
+                 :fill "#333"} (name row-name)]])
+
+      ;; Grid cells
+      (for [[a-idx a] (map-indexed vector column-names)
+            [b-idx b] (map-indexed vector column-names)]
+        (let [col-a (ds a)
+              col-b (ds b)
+              geom (select-geometry-pair col-a col-b)]
+          [:g {:key (str "cell-" a-idx "-" b-idx)
+               :transform (str "translate(" (+ label-width (* a-idx cell-size)) "," (+ label-width (* b-idx cell-size)) ")")}
+           [:rect {:x 0 :y 0 :width cell-size :height cell-size
+                   :fill "none" :stroke "gray" :stroke-width 1}]
+           (plot-basic [:graphic {:data ds
+                                  :mappings {:x a :y b}
+                                  :geometry [geom]}])]))]]))
+
+(labeled-matrix penguins)
