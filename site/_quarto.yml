@@ -51,6 +51,7 @@ format:
       dark: [ darkly, brand, styles.scss, styles-dark.scss ]
     respect-user-color-scheme: true
     lightbox: true
+    include-after-body: zulip_script.html
     include-in-header:
       - text: |
           <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>

@@ -1,0 +1,14 @@
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    const zulipOrg = "clojurians.zulipchat.com";
+    const zulipChannel = "clojurecivitas";
+    const slug = window.location.pathname.split('/').pop().replace(/\.html$/, '');
+
+    if (slug) {
+        const zulipURL = `https://${zulipOrg}/#narrow/stream/${zulipChannel}/topic/${slug}`;
+        const linkHTML = `<p><a href="${zulipURL}">Discuss ${slug} on Zulip</a></p>`;
+        document.getElementById('quarto-content').insertAdjacentHTML('beforeend', linkHTML);
+    }
+});
+</script>
+
