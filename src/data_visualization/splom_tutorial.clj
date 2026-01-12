@@ -995,4 +995,4 @@ domains
 ;; We're also exploring interactive features using [D3.js](https://d3js.org/),
 ;; including [brushable SPLOMs](https://observablehq.com/@d3/brushable-scatterplot-matrix)
 ;; where selections in one panel highlight points across all panels.
-;; See the [D3 gallery](https://observablehq.com/@d3/gallery) for inspiration.
+
