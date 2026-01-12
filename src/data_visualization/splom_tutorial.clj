@@ -271,7 +271,7 @@ domains
     :major 2.0
     :pos pos
     :label-dist 12
-    :label int-label-fn
+    :label #'int-label-fn
     :label-style label-style
     :major-size 3
     :minor-size 0
@@ -348,7 +348,8 @@ domains
  (viz/svg-plot2d-cartesian (colored-plot-spec [:sepal-length
                                                :sepal-width])))
 
-;; Now we can see three distinct clusters! Setosa (red) is clearly separated.
+;; Now we can see a bit of the difference between the
+;; classes. Setosa (red) is clearly separated.
 
 ;; ## Step 3: Single Histogram
 ;;
@@ -529,9 +530,9 @@ domains
 
 ;; ## Step 5: 2×2 Grid of Scatter Plots
 ;;
-;; Now let's create a grid showing relationships between two variables:
-;; sepal.width and petal.length.
-
+;; As a preparation for a 4x4 grid ot plots we will draw later,
+;; let's create a grid showing the relationship between two variables:
+;; sepal width and petal length.
 
 ;; Let's create a helper to render a scatter panel at any grid position.
 (defn make-grid-scatter-panel [x-col y-col row col]
@@ -562,7 +563,10 @@ domains
                  :attribs {:stroke "none"}})
         series (mapv (fn [species color]
                        (let [data (species-groups species)
-                             points (mapv vector (data x-col) (data y-col))] ; create [[x1 y1] [x2 y2] ...] point pairs
+                             ;; create [[x1 y1] [x2 y2] ...] point pairs
+                             points (mapv vector
+                                          (data x-col)
+                                          (data y-col))]
                          {:values points
                           :attribs {:fill color
                                     :stroke "none"}
@@ -589,10 +593,10 @@ domains
    (svg/rect [grid-panel-size grid-panel-size] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
 
    ;; The four scatter plots
-   (make-grid-scatter-panel :sepal-width :sepal-width 0 0) ; top-left
-   (make-grid-scatter-panel :petal-length :sepal-width 0 1) ; top-right
-   (make-grid-scatter-panel :sepal-width :petal-length 1 0) ; bottom-left
-   (make-grid-scatter-panel :petal-length :petal-length 1 1))) ; bottom-right
+   (make-grid-scatter-panel :sepal-width :sepal-width 0 0)
+   (make-grid-scatter-panel :petal-length :sepal-width 0 1)
+   (make-grid-scatter-panel :sepal-width :petal-length 1 0)
+   (make-grid-scatter-panel :petal-length :petal-length 1 1)))
 
 ;; We can see relationships! Notice the diagonal panels show x=y
 ;; which isn't very informative. Let's fix that next.
@@ -745,21 +749,20 @@ domains
 
 ;; Let's compute separate regressions for each species.
 (defn compute-species-regressions [x-col y-col]
-  (into {}
-        (for [species species-names]
-          (let [species-data (tc/select-rows iris #(= (% :species) species))
-                xs (species-data x-col)
-                ys (species-data y-col)
-                xss (mapv vector xs)
-                model (regr/lm ys xss)
-                slope (first (:beta model))
-                intercept (:intercept model)]
-            [species {:slope slope
-                      :intercept intercept}]))))
-
+  (update-vals species-groups
+               (fn [species-data]
+                 (let [xs (species-data x-col)
+                       ys (species-data y-col)
+                       xss (mapv vector xs)
+                       model (regr/lm ys xss)
+                       slope (first (:beta model))
+                       intercept (:intercept model)]
+                   {:slope slope
+                    :intercept intercept}))))
 
 ;; Per-species regression coefficients:
 (compute-species-regressions :sepal-length :sepal-width)
+
 ;; Now let's create the line SVGs for all species at once.
 (defn species-regression-lines [x-col y-col species-regressions-data]
   (let [[x-min x-max] (domains x-col)
