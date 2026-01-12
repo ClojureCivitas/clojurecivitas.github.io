@@ -408,6 +408,7 @@ domains
                  :attribs {:stroke "none"}})
         y-axis (viz/linear-axis
                 {:domain [0 max-count]
+                 :label int-label-fn
                  :range [(- panel-size margin) margin]
                  :major 5
                  :pos margin
@@ -497,6 +498,7 @@ domains
                  :attribs {:stroke "none"}})
         y-axis (viz/linear-axis
                 {:domain [0 max-count]
+                 :label int-label-fn
                  :range [(- panel-size margin) margin]
                  :major 5
                  :pos margin
