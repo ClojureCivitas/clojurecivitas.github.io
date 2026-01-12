@@ -2,11 +2,13 @@
 document.addEventListener('DOMContentLoaded', (event) => {
     const zulipOrg = "clojurians.zulipchat.com";
     const zulipChannel = "clojurecivitas";
-    const slug = window.location.pathname.split('/').pop().replace(/\.html$/, '');
+    const title =
+      document.querySelector('#title-block-header h1.title')?.textContent.trim();
 
-    if (slug) {
-        const zulipURL = `https://${zulipOrg}/#narrow/stream/${zulipChannel}/topic/${slug}`;
-        const linkHTML = `<p><a href="${zulipURL}">Discuss ${slug} on Zulip</a></p>`;
+    if (title) {
+        const encodedTitle = encodeURIComponent(title);
+        const zulipURL = `https://${zulipOrg}/#narrow/stream/${zulipChannel}/topic/${encodedTitle}`;
+        const linkHTML = `<p><a href="${zulipURL}">Discuss ${title} on Zulip</a></p>`;
         document.getElementById('quarto-content').insertAdjacentHTML('beforeend', linkHTML);
     }
 });
