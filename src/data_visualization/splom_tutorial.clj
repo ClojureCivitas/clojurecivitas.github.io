@@ -194,10 +194,14 @@ domains
 ;; Let's start with a simple example:
 
 (kind/hiccup
- (svg/svg {:width 150 :height 100}
-          (svg/circle [30 50] 20 {:fill "#F8766D" :stroke "none"})
-          (svg/circle [70 50] 20 {:fill "#619CFF" :stroke "none"})
-          (svg/circle [110 50] 20 {:fill "#00BA38" :stroke "none"})))
+ (svg/svg {:width 150
+           :height 100}
+          (svg/circle [30 50] 20 {:fill "#F8766D"
+                                  :stroke "none"})
+          (svg/circle [70 50] 20 {:fill "#619CFF"
+                                  :stroke "none"})
+          (svg/circle [110 50] 20 {:fill "#00BA38"
+                                   :stroke "none"})))
 
 ;; This works because each circle is a valid hiccup element (vector starting with a keyword).
 ;;
@@ -243,13 +247,15 @@ domains
 
 (def three-circles
   (mapv (fn [[x color]]
-          (svg/circle [x 50] 20 {:fill color :stroke "none"}))
+          (svg/circle [x 50] 20 {:fill color
+                                 :stroke "none"}))
         [[30 "#F8766D"]
          [70 "#619CFF"]
          [110 "#00BA38"]]))
 
 ;; Our helper automatically wraps the vector in [:g ...]:
-(svg {:width 150 :height 100} three-circles)
+(svg {:width 150
+      :height 100} three-circles)
 
 ;; ## Step 1: Single Scatter Plot (Ungrouped)
 ;;
@@ -287,13 +293,13 @@ domains
   (let [[x-col y-col] columns]
     {:x-axis (x-axis x-col)
      :y-axis (y-axis y-col)
-     :grid {:attribs {:stroke (:grid colors) :stroke-width
-                      1}}
+     :grid {:attribs {:stroke (:grid colors)
+                      :stroke-width 1}}
      :data [{:values (-> iris
                          (tc/select-columns columns)
                          tc/rows)
-             :attribs {:fill (:grey-points colors) :stroke
-                       "none"}
+             :attribs {:fill (:grey-points colors)
+                       :stroke "none"}
              :layout viz/svg-scatter-plot}]}))
 
 (plot-spec [:sepal-length
@@ -301,7 +307,8 @@ domains
 
 ;; Render with grey background
 (svg
- {:width panel-size :height panel-size}
+ {:width panel-size
+  :height panel-size}
  (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
  (viz/svg-plot2d-cartesian (plot-spec [:sepal-length
                                        :sepal-width])))
@@ -317,14 +324,16 @@ domains
   (let [[x-col y-col] columns]
     {:x-axis (x-axis x-col)
      :y-axis (y-axis y-col)
-     :grid {:attribs {:stroke (:grid colors) :stroke-width 1.5}}
+     :grid {:attribs {:stroke (:grid colors)
+                      :stroke-width 1.5}}
      :data (map (fn [species color]
                   (let [data (species-groups species)
                         points (-> data
                                    (tc/select-columns columns)
                                    tc/rows)]
                     {:values points
-                     :attribs {:fill color :stroke "none"}
+                     :attribs {:fill color
+                               :stroke "none"}
                      :layout viz/svg-scatter-plot}))
                 species-names
                 (:species colors))}))
@@ -333,7 +342,8 @@ domains
                     :sepal-width])
 
 (svg
- {:width panel-size :height panel-size}
+ {:width panel-size
+  :height panel-size}
  (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
  (viz/svg-plot2d-cartesian (colored-plot-spec [:sepal-length
                                                :sepal-width])))
@@ -417,7 +427,8 @@ domains
 ;; Usage: compute once, pass to both functions
 (let [column :sepal-width
       hist-data (compute-histogram-data column)]
-  (svg {:width panel-size :height panel-size}
+  (svg {:width panel-size
+        :height panel-size}
        (svg/rect [0 0]
                  panel-size panel-size
                  {:fill (:grey-bg colors)})
@@ -508,7 +519,8 @@ domains
 (let [column :sepal-width
       hist-data (compute-colored-histogram-data column)]
   (svg
-   {:width panel-size :height panel-size}
+   {:width panel-size
+    :height panel-size}
    (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
    (colored-histogram-axes column hist-data)
    (colored-histogram-bars hist-data)))
@@ -552,20 +564,23 @@ domains
                        (let [data (species-groups species)
                              points (mapv vector (data x-col) (data y-col))] ; create [[x1 y1] [x2 y2] ...] point pairs
                          {:values points
-                          :attribs {:fill color :stroke "none"}
+                          :attribs {:fill color
+                                    :stroke "none"}
                           :layout viz/svg-scatter-plot}))
                      species-names
                      (:species colors))]
     (viz/svg-plot2d-cartesian
      {:x-axis x-axis
       :y-axis y-axis
-      :grid {:attribs {:stroke (:grid colors) :stroke-width 1.5}}
+      :grid {:attribs {:stroke (:grid colors)
+                       :stroke-width 1.5}}
       :data series})))
 
 ;; Assemble the 2×2 grid
 (let [grid-total-size (* 2 grid-panel-size)]
   (svg
-   {:width grid-total-size :height grid-total-size}
+   {:width grid-total-size
+    :height grid-total-size}
 
    ;; Backgrounds first (z-order)
    (svg/rect [0 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
@@ -655,7 +670,8 @@ domains
 ;; Now render the grid with colored histograms on the diagonal
 (let [grid-total-size (* 2 grid-panel-size)]
   (svg
-   {:width grid-total-size :height grid-total-size}
+   {:width grid-total-size
+    :height grid-total-size}
 
    ;; Background panels
    (svg/rect [0 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
@@ -689,7 +705,8 @@ domains
         model (regr/lm ys xss)
         slope (first (:beta model))
         intercept (:intercept model)]
-    {:slope slope :intercept intercept}))
+    {:slope slope
+     :intercept intercept}))
 
 
 ;; See what the regression coefficients look like:
@@ -704,7 +721,8 @@ domains
         y2 (+ intercept (* slope x-max))]
     (svg/line [(x-scale x-min) (y-scale y1)]
               [(x-scale x-max) (y-scale y2)]
-              {:stroke (:regression colors) :stroke-width 2})))
+              {:stroke (:regression colors)
+               :stroke-width 2})))
 
 ;; Render scatter plot with regression overlay
 (let [x-col :sepal-length
@@ -712,7 +730,8 @@ domains
       regression-data (compute-regression x-col y-col)
       plot (colored-plot-spec [x-col y-col])]
   (svg
-   {:width panel-size :height panel-size}
+   {:width panel-size
+    :height panel-size}
    (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
    (viz/svg-plot2d-cartesian plot)
    (regression-line x-col y-col regression-data)))
@@ -735,7 +754,8 @@ domains
                 model (regr/lm ys xss)
                 slope (first (:beta model))
                 intercept (:intercept model)]
-            [species {:slope slope :intercept intercept}]))))
+            [species {:slope slope
+                      :intercept intercept}]))))
 
 
 ;; Per-species regression coefficients:
@@ -762,7 +782,8 @@ domains
       regressions (compute-species-regressions x-col y-col)
       plot (colored-plot-spec [x-col y-col])]
   (svg
-   {:width panel-size :height panel-size}
+   {:width panel-size
+    :height panel-size}
    (svg/rect [0 0] panel-size panel-size {:fill (:grey-bg colors)})
    (viz/svg-plot2d-cartesian plot)
    (species-regression-lines x-col y-col regressions)))
@@ -802,7 +823,8 @@ domains
       regressions-01 (compute-species-regressions :petal-length :sepal-width) ; top-right panel
       regressions-10 (compute-species-regressions :sepal-width :petal-length)] ; bottom-left panel
   (svg
-   {:width grid-total-size :height grid-total-size}
+   {:width grid-total-size
+    :height grid-total-size}
 
    ;; Background panels
    (svg/rect [0 0] grid-panel-size grid-panel-size {:fill (:grey-bg colors)})
@@ -864,7 +886,8 @@ domains
                        [:sepal-width :petal-length]
                        (compute-species-regressions :sepal-width :petal-length)}]
   (svg
-   {:width grid-total-size :height grid-total-size}
+   {:width grid-total-size
+    :height grid-total-size}
    
    ;; Background panels
    (for [row (range 2)
@@ -912,7 +935,8 @@ domains
 (let [n 4
       grid-total-size (* n grid-panel-size)]
   (svg
-   {:width grid-total-size :height grid-total-size}
+   {:width grid-total-size
+    :height grid-total-size}
    
    ;; Background panels
    (for [row (range n)
