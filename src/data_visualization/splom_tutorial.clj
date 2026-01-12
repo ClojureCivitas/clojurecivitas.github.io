@@ -242,7 +242,7 @@ domains
 (def panel-size 400)
 (def margin 50)
 
-;; Grid constants (for multi-panel layouts)
+;; Grid constants (we'll use these later for multi-panel layouts)
 (def grid-panel-size 200)
 (def grid-margin 30)
 
@@ -251,7 +251,7 @@ domains
 ;; Let's start with the simplest possible visualization: a scatter plot
 ;; of sepal length vs. sepal width, all points grey.
 
-;; Create axes
+;; Let's create helpers for x and y axes.
 (defn axis [{:keys [column rng pos label-style]
              :or {label-style {}}}]
   (viz/linear-axis
@@ -272,7 +272,11 @@ domains
   (axis {:column column :rng [(- panel-size margin) margin] :pos margin :label-style
          {:text-anchor "end"}}))
 
-;; Assemble plot
+
+;; Let's see what these axis helpers produce:
+(x-axis :sepal-length)
+(y-axis :sepal-width)
+;; Now let's assemble the complete plot specification.
 (defn plot-spec [columns]
   (let [[x-col y-col] columns]
     {:x-axis (x-axis x-col)
@@ -339,10 +343,12 @@ domains
     (stats/histogram :sturges)
     :bins-maps)
 
+;; The :sturges method automatically chooses a good number of bins based on the data size.
+
 ;; We need to manually render bars as SVG rectangles.
 ;; We'll use viz/linear-scale to map data values → pixel coordinates.
 
-;; Compute histogram and all derived data once
+;; Let's compute histogram data and scales in one go.
 (defn compute-histogram-data [column]
   (let [hist (stats/histogram (iris column) :sturges)
         bins (:bins-maps hist)
@@ -356,7 +362,7 @@ domains
 
 (compute-histogram-data :sepal-width)
 
-;; Render bars using pre-computed histogram data
+;; Now we can render bars using the pre-computed data.
 (defn histogram-bars [{:keys [bins x-scale y-scale]}]
   (map (fn [{:keys [min max count]}]
          (let [x1 (x-scale min)
@@ -373,7 +379,7 @@ domains
              :stroke-width 0.5})))
        bins))
 
-;; Create axes and grid using pre-computed histogram data
+;; And create axes and grid using the same data.
 (defn histogram-axes [column {:keys [max-count]}]
   (let [x-axis (viz/linear-axis
                 {:domain (domains column)
@@ -417,7 +423,7 @@ domains
 ;; Now let's overlay three histograms (one per species) to see their
 ;; different distributions.
 
-;; Compute histogram data for all species
+;; Let's compute histogram data for all three species.
 (defn compute-colored-histogram-data [column]
   (let [;; Histogram for each species
         species-hists (mapv (fn [species]
@@ -438,7 +444,7 @@ domains
 
 (compute-colored-histogram-data :sepal-width)
 
-;; Render overlaid colored bars using pre-computed data
+;; Now we can render the overlaid colored bars.
 (defn colored-histogram-bars [{:keys [species-hists x-scale y-scale]}]
   (mapcat
    (fn [idx {:keys [hist]}]
@@ -461,7 +467,7 @@ domains
    (range)
    species-hists))
 
-;; Create axes for colored histogram
+;; And create the axes.
 (defn colored-histogram-axes [column {:keys [max-count]}]
   (let [x-axis (viz/linear-axis
                 {:domain (domains column)
@@ -505,7 +511,7 @@ domains
 ;; sepal.width and petal.length.
 
 
-;; Helper to create a scatter panel at a specific grid position
+;; Let's create a helper to render a scatter panel at any grid position.
 (defn make-grid-scatter-panel [x-col y-col row col]
   (let [x-offset (* col grid-panel-size)
         y-offset (* row grid-panel-size)
@@ -566,9 +572,9 @@ domains
 
 ;; ## Step 6: 2×2 Grid with Diagonal Histograms
 ;;
-;; Replace the uninformative diagonal panels (where x=y) with histograms.
+;; Now let's improve our grid by using histograms on the diagonal (where x=y).
 
-;; Helper to create a colored histogram panel at a grid position
+;; Let's do the same for histograms.
 (defn make-grid-histogram-panel [column row col]
   (let [x-offset (* col grid-panel-size)
         y-offset (* row grid-panel-size)
@@ -661,7 +667,7 @@ domains
 ;;
 ;; Add a linear regression overlay to understand the trend.
 
-;; Helper to compute linear regression
+;; First, let's compute a linear regression.
 (defn compute-regression [x-col y-col]
   (let [xs (iris x-col)
         ys (iris y-col)
@@ -671,7 +677,10 @@ domains
         intercept (:intercept model)]
     {:slope slope :intercept intercept}))
 
-;; Helper to create regression line SVG
+
+;; See what the regression coefficients look like:
+(compute-regression :sepal-length :sepal-width)
+;; Now let's turn those coefficients into an SVG line.
 (defn regression-line [x-col y-col regression-data]
   (let [{:keys [slope intercept]} regression-data
         [x-min x-max] (domains x-col)
@@ -701,7 +710,7 @@ domains
 ;;
 ;; Compute separate regression lines for each species group.
 
-;; Helper to compute regressions for each species
+;; Let's compute separate regressions for each species.
 (defn compute-species-regressions [x-col y-col]
   (into {}
         (for [species species-names]
@@ -714,7 +723,10 @@ domains
                 intercept (:intercept model)]
             [species {:slope slope :intercept intercept}]))))
 
-;; Helper to create regression line SVGs for all species
+
+;; Per-species regression coefficients:
+(compute-species-regressions :sepal-length :sepal-width)
+;; Now let's create the line SVGs for all species at once.
 (defn species-regression-lines [x-col y-col species-regressions-data]
   (let [[x-min x-max] (domains x-col)
         x-scale (viz/linear-scale (domains x-col) [margin (- panel-size margin)])
@@ -748,7 +760,7 @@ domains
 ;;
 ;; Add per-species regression overlays to the scatter plots in our grid.
 
-;; Helper to create per-species regression lines at a grid position
+;; We'll need per-species regression lines positioned in the grid.
 (defn make-grid-regression-lines [x-col y-col row col species-regressions-data]
   (let [x-offset (* col grid-panel-size)
         y-offset (* row grid-panel-size)
@@ -804,6 +816,9 @@ domains
 
 
 
+;; We've now seen the same pattern several times: render scatter plots with regressions
+;; on off-diagonal panels, and histograms on the diagonal. Let's abstract this.
+
 ;; ## Step 10: Extract Helper Function
 ;;
 ;; Looking at our 2×2 grid rendering, we're repeating a pattern:
@@ -812,7 +827,7 @@ domains
 ;;
 ;; Let's abstract this into a single helper function.
 
-;; Helper to render any panel in the grid based on position
+;; Here's our abstraction: one function that decides what to render based on position.
 (defn render-panel [x-col y-col row col species-regressions-data]
   (if (= row col)
     ;; Diagonal: histogram
@@ -822,6 +837,10 @@ domains
      (make-grid-scatter-panel x-col y-col row col)
      (make-grid-regression-lines x-col y-col row col species-regressions-data))))
 
+
+;; Notice how render-panel chooses what to render:
+;; Diagonal (row=col): returns histogram
+;; Off-diagonal: returns scatter + regressions
 ;; Now we can render the same 2×2 grid more concisely
 (let [grid-total-size (* 2 grid-panel-size)
       cols [:sepal-width :petal-length]
@@ -869,6 +888,12 @@ domains
                 y-col (all-cols row-idx)]
             [[x-col y-col] (compute-species-regressions x-col y-col)]))))
 
+
+
+;; That's 12 regression pairs (4 choose 2 × 2 directions), one for each off-diagonal panel.
+;; Sample of pre-computed regressions (showing just two pairs):
+(select-keys all-regressions [[:sepal-length :sepal-width] 
+                              [:petal-length :petal-width]])
 ;; Render the complete 4×4 SPLOM
 (let [n 4
       grid-total-size (* n grid-panel-size)]
