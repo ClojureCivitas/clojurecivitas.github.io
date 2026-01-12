@@ -37,7 +37,12 @@
 ;; progressing from a simple scatter plot to a complete 4×4 matrix.
 ;; Each step introduces exactly one new concept.
 ;;
-;; **Context:** This tutorial is part of ongoing work on the
+;; **Note:** This tutorial focuses on static SVG generation. We're also exploring
+;; adding interactivity using [D3.js](https://d3js.org/) for features like
+;; [brushing and linking](https://en.wikipedia.org/wiki/Brushing_and_linking),
+;; but that's beyond the scope of this notebook.
+;;
+;; **Context: This tutorial is part of ongoing work on the
 ;; [Tableplot](https://scicloj.github.io/tableplot/) plotting library
 ;; and the [Real-World-Data](https://scicloj.github.io/docs/community/groups/real-world-data/)
 ;; dev group's exploration of visualization APIs for Clojure.
@@ -154,7 +159,6 @@ species-color-map
                  (-> k
                      iris
                      (tcc/typeof? :numerical))))))
-
 numerical-column-names
 
 ;; Compute domains from data
@@ -185,7 +189,10 @@ domains
 ;;
 ;; Before we start plotting, let's understand how we'll render SVG.
 ;;
+;; [Hiccup](https://github.com/weavejester/hiccup) is a Clojure library for representing
+;; HTML and SVG as data structures using vectors like `[:circle ...]`.
 ;; thi.ng/geom provides SVG functions that we can render as hiccup.
+;;
 ;; Let's start with a simple example:
 
 (kind/hiccup
@@ -314,7 +321,7 @@ domains
 ;;
 ;; Now let's color the points by species to see the three clusters.
 
-;; Same plot, different data
+;; Scatter plot with multiple colored series (one per species)
 (defn colored-plot-spec [columns]
   (let [[x-col y-col] columns]
     {:x-axis (x-axis x-col)
@@ -351,7 +358,8 @@ domains
     (stats/histogram :sturges)
     :bins-maps)
 
-;; The :sturges method automatically chooses a good number of bins based on the data size.
+;; The [:sturges method](https://en.wikipedia.org/wiki/Histogram#Sturges'_formula)
+;; automatically chooses a good number of bins based on the data size (Sturges' rule: k = ⌈log₂(n) + 1⌉).
 
 ;; We need to manually render bars as SVG rectangles.
 ;; We'll use viz/linear-scale to map data values → pixel coordinates.
@@ -469,6 +477,7 @@ domains
                  bar-height
                  {:fill color
                   :stroke "none"
+                  ;; semi-transparent for overlapping bars
                   :opacity 0.7})))
             (:bins-maps hist))))
    (range)
@@ -548,7 +557,7 @@ domains
                  :attribs {:stroke "none"}})
         series (mapv (fn [species color]
                        (let [data (species-groups species)
-                             points (mapv vector (data x-col) (data y-col))]
+                             points (mapv vector (data x-col) (data y-col))] ; create [[x1 y1] [x2 y2] ...] point pairs
                          {:values points
                           :attribs {:fill color :stroke "none"}
                           :layout viz/svg-scatter-plot}))
@@ -591,6 +600,7 @@ domains
         ;; Compute histogram data for all species
         species-hists (mapv (fn [species]
                               {:species species
+                               ;; 12 bins for visual consistency across small grid panels
                                :hist (stats/histogram ((species-groups species) column) 12)})
                             species-names)
         max-count (tcc/reduce-max
@@ -676,7 +686,7 @@ domains
 
 ;; ## Step 7: Single Scatter with Regression Line
 ;;
-;; Add a linear regression overlay to understand the trend.
+;; Add a [linear regression](https://en.wikipedia.org/wiki/Linear_regression) overlay to understand the trend.
 
 ;; First, let's compute a linear regression.
 (defn compute-regression [x-col y-col]
@@ -795,9 +805,9 @@ domains
 
 ;; Render grid with histograms and per-species regression lines
 (let [grid-total-size (* 2 grid-panel-size)
-      ;; Compute regressions for the two scatter panels
-      regressions-01 (compute-species-regressions :petal-length :sepal-width)
-      regressions-10 (compute-species-regressions :sepal-width :petal-length)]
+      ;; Compute regressions for the two scatter panels (row-col naming: 01 = row 0 col 1, etc.)
+      regressions-01 (compute-species-regressions :petal-length :sepal-width) ; top-right panel
+      regressions-10 (compute-species-regressions :sepal-width :petal-length)] ; bottom-left panel
   (svg
    {:width grid-total-size :height grid-total-size}
 
@@ -931,7 +941,8 @@ domains
 ;; - 12 off-diagonal scatter plots show all pairwise relationships
 ;; - Per-species regression lines reveal species-specific trends
 ;;
-;; Notice the symmetry: the upper and lower triangles are transposes of each other.
+;; Notice the symmetry: the upper and lower triangles are mirror images of each other
+;; (x vs y in one panel corresponds to y vs x in the reflected panel).
 ;; Some SPLOM designs only show one triangle to avoid redundancy.
 
 
@@ -942,7 +953,12 @@ domains
 ;; render histograms manually, arranged everything in grids, overlaid regression lines,
 ;; and finally abstracted the whole pattern to scale from 2×2 to 4×4.
 ;;
-;; The code here is deliberately explicit. An upcoming library API 
-;; would handle these details for you with sensibele defaults
+;; The code here is deliberately explicit. An upcoming library API
+;; would handle these details for you with sensible defaults
 ;; which are still extensible and composable.
 ;; This will be the topic of another blogpost, coming soon.
+;;
+;; We're also exploring interactive features using [D3.js](https://d3js.org/),
+;; including [brushable SPLOMs](https://observablehq.com/@d3/brushable-scatterplot-matrix)
+;; where selections in one panel highlight points across all panels.
+;; See the [D3 gallery](https://observablehq.com/@d3/gallery) for inspiration.
