@@ -13,12 +13,12 @@
 ;; The basic question this article tries to answer is: Can fusing hashes
 ;; together provide unique identifiers for arbitrary data? The answer is no.
 ;; Specifically, we can not provide unique identifiers for sufficiently large
-;; repeated sequences of values. That is, sufficiently low entrory dtat is not
-;; reprentable by fusing hashes together. The good news is that low entropy
+;; repeated sequences of values. That is, sufficiently low entropy data is not
+;; representable by fusing hashes together. The good news is that low entropy
 ;; data is compressible.
 
 ;; This is an article about fusing hashes together while having the key
-;; properties of associativity and non-communativity. I describe the basic
+;; properties of associativity and non-commutativity. I describe the basic
 ;; approach of using matrix multiplication of Upper Triangle Matricies and then
 ;; show the results of two types experiments showing the quality and limits of
 ;; this hash fusing approach.
@@ -29,10 +29,10 @@
 ;; as a way to efficiently share structured data between multiple clients. One
 ;; of the key challenges in this area is being able to efficiently reference
 ;; ordered collections of data. The usual apprach is to use Merkle Trees but,
-;; since the immuable data structure for orderd collections is based on finger
-;; trees, I need references that are insensivite to tree shape. This means that
+;; since the immuable data structure for ordered collections is based on finger
+;; trees, I need references that are insensitive to tree shape. This means that
 ;; I need to be able to fuse hashes together in a way that is associative but
-;; not communative. As a starting point, I have been reading the HP paper
+;; not commutative. As a starting point, I have been reading the HP paper
 ;; describing hash fusing via matrix multiplication:
 ;; https://www.labs.hpe.com/techreports/2017/HPE-2017-08.pdf
 
@@ -495,5 +495,5 @@
 ;; This article has described a method for fusing hashes together using upper
 ;; triangular matrix multiplication. The method is associative and non-commutative.
 
-;; Final conclusion is to use 64 bit cells with 32 lower bits to tolarate many
+;; Final conclusion is to use 64 bit cells with 32 lower bits to tolerate many
 ;; repeated values.
