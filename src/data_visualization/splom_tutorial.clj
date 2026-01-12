@@ -197,22 +197,23 @@ domains
 ;; This works because each circle is a valid hiccup element (vector starting with a keyword).
 ;;
 ;; However, when we generate SVG elements programmatically, we often create
-;; collections of elements. Hiccup expects the first element of a vector to be
-;; a tag keyword, so this won't work:
+;; collections of elements. Hiccup requires vectors to start with a tag keyword.
+;;
+;; This won't work:
 ;;
 ;; ```clj
-;; [[:circle ...] [:circle ...] [:circle ...]]  ; Not valid hiccup!
+;; [[:circle ...] [:circle ...] [:circle ...]]  ; No tag!
 ;; ```
 ;;
-;; We need a helper to convert such vectors to sequences.
+;; Our solution: wrap tagless vectors in [:g ...], the SVG group element.
 
 (require '[clojure.walk :as walk])
 
 (defn hiccup-compat
-  "Convert non-hiccup vectors to sequences.
+  "Make thi.ng/geom output hiccup-compatible.
   
-  [:tag ...] stays as vector (valid hiccup element)
-  [[:tag1 ...] [:tag2 ...]] becomes seq (element children)"
+  Wraps tagless vectors in [:g ...] (SVG group element):
+  [[:tag1 ...] [:tag2 ...]] becomes [:g [:tag1 ...] [:tag2 ...]]"
   [form]
   (walk/postwalk
    (fn [x]
@@ -220,14 +221,14 @@ domains
               (not (map-entry? x))
               (seq x)
               (not (keyword? (first x))))
-       (seq x)
+       (vec (cons :g x))
        x))
    form))
 
 (defn svg
   "Like thi.ng.geom.svg/svg, but hiccup-compatible.
   
-  Converts nested vectors to seqs and wraps with kind/hiccup."
+  Wraps tagless vectors in [:g ...] and outputs kind/hiccup."
   [attrs & children]
   (-> (apply svg/svg attrs children)
       hiccup-compat
@@ -242,7 +243,7 @@ domains
          [70 "#619CFF"]
          [110 "#00BA38"]]))
 
-;; Our helper automatically converts the vector to a seq:
+;; Our helper automatically wraps the vector in [:g ...]:
 (svg {:width 150 :height 100} three-circles)
 ;; Common plotting constants
 (def panel-size 400)
