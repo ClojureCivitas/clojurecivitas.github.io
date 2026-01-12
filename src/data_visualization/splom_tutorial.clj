@@ -240,11 +240,11 @@ domains
 (svg {:width 150 :height 100} three-circles)
 ;; Common plotting constants
 (def panel-size 400)
-(def margin 50)
+(def margin 60)
 
 ;; Grid constants (we'll use these later for multi-panel layouts)
 (def grid-panel-size 200)
-(def grid-margin 30)
+(def grid-margin 40)
 
 ;; ## Step 1: Single Scatter Plot (Ungrouped)
 ;;
@@ -257,7 +257,7 @@ domains
   (viz/linear-axis
    {:domain (domains column)
     :range rng
-    :major 1.0
+    :major 2.0
     :pos pos
     :label-dist 12
     :label-style label-style
@@ -311,7 +311,7 @@ domains
   (let [[x-col y-col] columns]
     {:x-axis (x-axis x-col)
      :y-axis (y-axis y-col)
-     :grid {:attribs {:stroke (:grid colors) :stroke-width 1}}
+     :grid {:attribs {:stroke (:grid colors) :stroke-width 1.5}}
      :data (map (fn [species color]
                   (let [data (species-groups species)
                         points (-> data
@@ -375,8 +375,7 @@ domains
             bar-width
             bar-height
             {:fill (:grey-points colors)
-             :stroke (:grid colors)
-             :stroke-width 0.5})))
+             :stroke "none"})))
        bins))
 
 ;; And create axes and grid using the same data.
@@ -384,7 +383,7 @@ domains
   (let [x-axis (viz/linear-axis
                 {:domain (domains column)
                  :range [margin (- panel-size margin)]
-                 :major 0.5
+                 :major 2.0
                  :pos (- panel-size margin)
                  :label-dist 12
                  :major-size 3
@@ -404,7 +403,7 @@ domains
      (viz/svg-y-axis-cartesian y-axis)
      (viz/svg-axis-grid2d-cartesian x-axis y-axis
                                     {:attribs {:stroke (:grid colors)
-                                               :stroke-width 0.5}})]))
+                                               :stroke-width 1.5}})]))
 
 ;; Usage: compute once, pass to both functions
 (let [column :sepal-width
@@ -460,8 +459,7 @@ domains
                  bar-width
                  bar-height
                  {:fill color
-                  :stroke (:grid colors)
-                  :stroke-width 0.5
+                  :stroke "none"
                   :opacity 0.7})))
             (:bins-maps hist))))
    (range)
@@ -472,7 +470,7 @@ domains
   (let [x-axis (viz/linear-axis
                 {:domain (domains column)
                  :range [margin (- panel-size margin)]
-                 :major 0.5
+                 :major 2.0
                  :pos (- panel-size margin)
                  :label-dist 12
                  :major-size 3
@@ -492,7 +490,7 @@ domains
      (viz/svg-y-axis-cartesian y-axis)
      (viz/svg-axis-grid2d-cartesian x-axis y-axis
                                     {:attribs {:stroke (:grid colors)
-                                               :stroke-width 0.5}})]))
+                                               :stroke-width 1.5}})]))
 
 ;; Usage: compute once, pass to both functions
 (let [column :sepal-width
@@ -519,7 +517,7 @@ domains
                 {:domain (domains x-col)
                  :range [(+ x-offset grid-margin)
                          (+ x-offset grid-panel-size (- grid-margin))]
-                 :major 0.5
+                 :major 2.0
                  :pos (+ y-offset grid-panel-size (- grid-margin))
                  :label-dist 12
                  :major-size 2
@@ -529,7 +527,7 @@ domains
                 {:domain (domains y-col)
                  :range [(+ y-offset grid-panel-size (- grid-margin))
                          (+ y-offset grid-margin)]
-                 :major 0.5
+                 :major 2.0
                  :pos (+ x-offset grid-margin)
                  :label-dist 12
                  :label-style {:text-anchor "end"}
@@ -547,7 +545,7 @@ domains
     (viz/svg-plot2d-cartesian
      {:x-axis x-axis
       :y-axis y-axis
-      :grid {:attribs {:stroke (:grid colors) :stroke-width 0.5}}
+      :grid {:attribs {:stroke (:grid colors) :stroke-width 1.5}}
       :data series})))
 
 ;; Assemble the 2×2 grid
@@ -597,7 +595,7 @@ domains
         x-axis (viz/linear-axis
                 {:domain (domains column)
                  :range [(+ x-offset grid-margin) (+ x-offset grid-panel-size (- grid-margin))]
-                 :major 0.5
+                 :major 2.0
                  :pos (+ y-offset grid-panel-size (- grid-margin))
                  :label-dist 12
                  :major-size 3
@@ -624,8 +622,7 @@ domains
                                       bar-height (- (+ y-offset grid-panel-size (- grid-margin)) y)]
                                   (svg/rect [x1 y] bar-width bar-height
                                             {:fill color
-                                             :stroke (:grid colors)
-                                             :stroke-width 0.5
+                                             :stroke "none"
                                              :opacity 0.7})))
                               (:bins-maps hist))))
                      (range)
@@ -635,7 +632,7 @@ domains
                (viz/svg-y-axis-cartesian y-axis)
                (viz/svg-axis-grid2d-cartesian x-axis y-axis
                                               {:attribs {:stroke (:grid colors)
-                                                         :stroke-width 0.5}})
+                                                         :stroke-width 1.5}})
                bars)))
 
 ;; Now render the grid with colored histograms on the diagonal
