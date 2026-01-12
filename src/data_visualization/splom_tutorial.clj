@@ -175,6 +175,10 @@ numerical-column-names
               [colname (compute-domain (iris colname))]))
        (into {})))
 
+
+;; Helper for integer axis labels
+(defn int-label [x] (str (int x)))
+(def int-label-fn (viz/default-svg-label int-label))
 domains
 
 ;; ## Step 0: SVG as Hiccup
@@ -260,6 +264,7 @@ domains
     :major 2.0
     :pos pos
     :label-dist 12
+    :label int-label-fn
     :label-style label-style
     :major-size 3
     :minor-size 0
@@ -386,6 +391,7 @@ domains
                  :major 2.0
                  :pos (- panel-size margin)
                  :label-dist 12
+                 :label int-label-fn
                  :major-size 3
                  :minor-size 0
                  :attribs {:stroke "none"}})
@@ -473,6 +479,7 @@ domains
                  :major 2.0
                  :pos (- panel-size margin)
                  :label-dist 12
+                 :label int-label-fn
                  :major-size 3
                  :minor-size 0
                  :attribs {:stroke "none"}})
@@ -518,6 +525,7 @@ domains
                  :range [(+ x-offset grid-margin)
                          (+ x-offset grid-panel-size (- grid-margin))]
                  :major 2.0
+                 :label int-label-fn
                  :pos (+ y-offset grid-panel-size (- grid-margin))
                  :label-dist 12
                  :major-size 2
@@ -529,6 +537,7 @@ domains
                          (+ y-offset grid-margin)]
                  :major 2.0
                  :pos (+ x-offset grid-margin)
+                 :label int-label-fn
                  :label-dist 12
                  :label-style {:text-anchor "end"}
                  :major-size 2
@@ -598,6 +607,7 @@ domains
                  :major 2.0
                  :pos (+ y-offset grid-panel-size (- grid-margin))
                  :label-dist 12
+                 :label int-label-fn
                  :major-size 3
                  :minor-size 0
                  :attribs {:stroke "none"}})
@@ -607,6 +617,7 @@ domains
                  :major (if (> max-count 20) 5 2)
                  :pos (+ x-offset grid-margin)
                  :label-dist 12
+                 :label int-label-fn
                  :label-style {:text-anchor "end"}
                  :major-size 3
                  :minor-size 0
