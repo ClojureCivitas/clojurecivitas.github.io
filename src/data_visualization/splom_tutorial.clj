@@ -9,7 +9,6 @@
                   :keywords [:datavis :splom :scatterplot-matrix :geomviz :tutorial]
                   :toc true
                   :toc-depth 2
-                  :draft true
                   :image "splom_iris.png"}}}
 (ns data-visualization.splom-tutorial)
 
