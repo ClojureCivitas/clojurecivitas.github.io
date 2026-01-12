@@ -33,25 +33,21 @@
 ;; (scatter plot matrix) displays pairwise relationships between multiple 
 ;; variables in a grid. It's invaluable for exploratory data analysis.
 ;;
-;; We'll build one from scratch using [thi.ng/geom.viz](https://github.com/thi-ng/geom),
+;; We'll build one using [thi.ng/geom.viz](https://github.com/thi-ng/geom),
 ;; progressing from a simple scatter plot to a complete 4×4 matrix.
 ;; Each step introduces exactly one new concept.
 ;;
-;; **Note:** This tutorial focuses on static SVG generation. We're also exploring
+;; Here we focus on static SVG generation. We're also exploring
 ;; adding interactivity using [D3.js](https://d3js.org/) for features like
 ;; [brushing and linking](https://en.wikipedia.org/wiki/Brushing_and_linking),
 ;; but that's beyond the scope of this notebook.
 ;;
-;; **Context: This tutorial is part of ongoing work on the
+;; This tutorial is part of ongoing work on the
 ;; [Tableplot](https://scicloj.github.io/tableplot/) plotting library
 ;; and the [Real-World-Data](https://scicloj.github.io/docs/community/groups/real-world-data/)
 ;; dev group's exploration of visualization APIs for Clojure.
 ;; By building a SPLOM manually, we better understand what a high-level plotting
 ;; library needs to provide.
-;;
-;; This is a working Clojure notebook compatible with
-;; [Kindly](https://scicloj.github.io/kindly/)-compatible tools like
-;; [Clay](https://scicloj.github.io/clay/).
 ;;
 ;; Clojurians Zulip discussion (requires login):
 ;; [#**data-science>AlgebraOfGraphics.jl**](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/AlgebraOfGraphics.2Ejl/)
@@ -98,7 +94,8 @@
 ;; [**thi.ng/geom**](https://github.com/thi-ng/geom) provides low-level SVG rendering primitives.
 ;; We use [geom.viz](https://github.com/thi-ng/geom/blob/feature/no-org/org/examples/viz/demos.org)
 ;; for creating axes, scales, and plot layouts, and
-;; [geom.svg](https://github.com/thi-ng/geom) for SVG element construction.
+;; [geom.svg](https://github.com/thi-ng/geom/blob/feature/no-org/org/examples/svg/demos.org)
+;; for SVG element construction.
 ;;
 ;; [**Fastmath**](https://github.com/generateme/fastmath) handles statistical computations,
 ;; including histogram binning (Steps 4-7) and linear regression (Steps 8-10).
@@ -124,7 +121,7 @@ iris
 
 ;; ## Colors and Data Preparation
 ;;
-;; Define our color palette and derive species information from the data.
+;; Here we define our color palette and derive species information from the data.
 ;;
 ;; The species colors are inspired by [ggplot2](https://ggplot2.tidyverse.org/)'s
 ;; default discrete color scale.
@@ -134,32 +131,24 @@ iris
    :grid "#FFFFFF"
    :grey-points "#333333"
    :regression "#2C3E50" ; Dark blue-gray for regression lines
-   :species ["#F8766D" ; Red (Setosa)
-             "#619CFF" ; Blue (Versicolor)
-             "#00BA38"]}) ; Green (Virginica)
+   :species ["#F8766D"
+             "#619CFF"
+             "#00BA38"]})
 
-;; Derive species names from data (used throughout)
-(def species-names (sort (distinct (iris :species))))
+;; We derive species names from data:
+(def species-names
+  (-> iris :species distinct sort))
 
 ;; Create a species -> color mapping
 (def species-color-map
-  (zipmap species-names (:species colors)))
+  (zipmap species-names
+          (:species colors)))
 
 species-color-map
 
 ;; Group data by species for later use
 (def species-groups
   (tc/group-by iris :species {:result-type :as-map}))
-
-;; Numerical columns
-(def numerical-column-names
-  (->> iris
-       keys
-       (filter (fn [k]
-                 (-> k
-                     iris
-                     (tcc/typeof? :numerical))))))
-numerical-column-names
 
 ;; Compute domains from data
 ;; We'll use these throughout to avoid hard-coding ranges.
@@ -174,16 +163,25 @@ numerical-column-names
      [(- min-val pad) (+ max-val pad)])))
 
 (def domains
-  (->> numerical-column-names
-       (map (fn [colname]
-              [colname (compute-domain (iris colname))]))
-       (into {})))
+  (-> iris
+      (tc/select-columns :type/numerical)
+      ;; We use the fact that a dataset is a map.
+      (update-vals compute-domain)))
 
-
-;; Helper for integer axis labels
-(defn int-label [x] (str (int x)))
-(def int-label-fn (viz/default-svg-label int-label))
 domains
+
+;; Helper for integer axis labels:
+(def int-label-fn (viz/default-svg-label
+                   (fn [x]
+                     (str (int x)))))
+
+;; Common plotting constants
+(def panel-size 400)
+(def margin 60)
+
+;; Grid constants (we'll use these later for multi-panel layouts)
+(def grid-panel-size 200)
+(def grid-margin 40)
 
 ;; ## Step 0: SVG as Hiccup
 ;;
@@ -216,10 +214,10 @@ domains
 
 (require '[clojure.walk :as walk])
 
-(defn hiccup-compat
+(defn hiccup-compatible
   "Make thi.ng/geom output hiccup-compatible.
   
-  Wraps tagless vectors in [:g ...] (SVG group element):
+  Wraps tagless vectors in `[:g ...]` (SVG group element):
   [[:tag1 ...] [:tag2 ...]] becomes [:g [:tag1 ...] [:tag2 ...]]"
   [form]
   (walk/postwalk
@@ -238,7 +236,7 @@ domains
   Wraps tagless vectors in [:g ...] and outputs kind/hiccup."
   [attrs & children]
   (-> (apply svg/svg attrs children)
-      hiccup-compat
+      hiccup-compatible
       kind/hiccup))
 
 ;; Now we can generate circles programmatically:
@@ -252,13 +250,6 @@ domains
 
 ;; Our helper automatically wraps the vector in [:g ...]:
 (svg {:width 150 :height 100} three-circles)
-;; Common plotting constants
-(def panel-size 400)
-(def margin 60)
-
-;; Grid constants (we'll use these later for multi-panel layouts)
-(def grid-panel-size 200)
-(def grid-margin 40)
 
 ;; ## Step 1: Single Scatter Plot (Ungrouped)
 ;;
