@@ -6,8 +6,7 @@
                   :description "Exploring Hash Fusing via Upper Triangular Matrix Multiplication."
                   :category :math
                   :tags     [:matrix :data :hash]
-                  :keywords [:data :hash :sha256 :matrix :fusing :merkle-tree]
-                  :draft    true}}}
+                  :keywords [:data :hash :sha256 :matrix :fusing :merkle-tree]}}}
 (ns math.hashing.hashfusing
   (:require [scicloj.kindly.v4.kind :as kind]))
 
@@ -43,6 +42,7 @@
 ;; upper triangular matrix. For example, if we have a hash that is 4 bytes
 ;; long, we can represent it as a 4x4 upper triangular matrix like this:
 
+^:kindly/hide-code
 (set! *unchecked-math* true)
 
 (defn random-hex
