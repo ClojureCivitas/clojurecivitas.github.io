@@ -85,6 +85,57 @@
 ;; We use manual SVG construction for precise control over the rendering pipeline, rather than
 ;; higher-level plotting abstractions. This gives us complete flexibility in how data maps to
 ;; visual marks.
+;; # 📖 Glossary
+;;
+;; Key terms used throughout this notebook:
+;;
+;; **Grammar of Graphics** - A formal system for describing visualizations as combinations
+;; of data, mappings, scales, and geometries. Developed by Leland Wilkinson (2005), it
+;; provides a composable approach to building plots from reusable components.
+;;
+;; **Layer** - A composable unit containing data, aesthetic mappings, and visual marks.
+;; Layers can be combined through algebraic operations (cross, blend) to create complex
+;; visualizations. Each layer specifies what data to show and how to show it.
+;;
+;; **Aesthetic** - A visual property that can encode data values. Common aesthetics include
+;; position (x, y), color, size, and shape. Mapping data columns to aesthetics creates
+;; the visual representation.
+;;
+;; **Scale** - The mapping function from data values (domain) to visual values (range).
+;; For example, mapping data values 0-100 to pixel positions 50-550. Scales handle the
+;; translation between data space and visual space.
+;;
+;; **Domain** - The extent of input values from your data. If a column contains values
+;; from 32.1 to 59.6, the domain is [32.1, 59.6]. This is data space.
+;;
+;; **Range** - The extent of output values in the visualization. If an axis spans from
+;; pixel 50 to pixel 550, the range is [50, 550]. This is visual space.
+;;
+;; **Statistical Transform** - A computation that derives new data from raw data before
+;; plotting. Examples: [smoothing](https://en.wikipedia.org/wiki/Smoothing) (moving average),
+;; [histogram](https://en.wikipedia.org/wiki/Histogram) binning,
+;; [linear regression](https://en.wikipedia.org/wiki/Linear_regression) fitting.
+;;
+;; **SPLOM** - [Scatter Plot Matrix](https://en.wikipedia.org/wiki/Scatter_plot#Scatter_plot_matrices).
+;; A grid of scatter plots showing all pairwise relationships between multiple variables.
+;; Useful for exploratory data analysis to discover correlations and patterns.
+;;
+;; **Faceting** - Creating multiple small plots (panels) based on categorical variable values.
+;; Each panel shows a subset of the data, enabling comparison across groups while maintaining
+;; consistent scales.
+;;
+;; **Idempotent** - An operation that produces the same result when called multiple times.
+;; For example, `spread` can be called repeatedly safely - already-spread layers are left
+;; unchanged. This makes the pipeline robust and composable.
+;;
+;; **Intermediate Representation (IR)** - The internal data structure (plain Clojure maps
+;; with `:=` prefixed keys) that flows through the pipeline stages. Being plain data makes
+;; it inspectable with `kind/pprint` at any stage.
+;;
+;; **Pipeline Stages** - The four transformation phases: **Algebra** (compose layers),
+;; **Inference** (resolve roles and defaults), **Spread** (expand groupings), and
+;; **Render** (produce SVG output). Each stage is explicit and user-modifiable.
+
 ;; ## Theme
 
 (def theme
