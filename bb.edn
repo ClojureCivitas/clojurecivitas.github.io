@@ -1,0 +1,5 @@
+{:tasks
+ {preview
+  {:doc "Build site with Quarto and preview"
+   :task (do (clojure "-M:clay -A:markdown")
+             (shell "quarto preview site"))}}}

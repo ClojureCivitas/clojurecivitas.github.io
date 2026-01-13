@@ -32,7 +32,9 @@
 ;;            'org.lwjgl/lwjgl-stb                  {:mvn/version "3.3.6"}
 ;;            'org.lwjgl/lwjgl-stb$natives-linux    {:mvn/version "3.3.6"}
 ;;            'generateme/fastmath                  {:mvn/version "3.0.0-alpha3"}})
-;; (require '[clojure.java.io :as io])
+;; (require '[clojure.java.io :as io]
+;;          '[clojure.math :refer (PI to-radians)]
+;;          '[fastmath.vector :refer (vec3 sub add mult normalize)])
 ;; (import '[javax.imageio ImageIO]
 ;;         '[org.lwjgl BufferUtils]
 ;;         '[org.lwjgl.glfw GLFW]
@@ -716,7 +718,6 @@ uniform float resolution;
 uniform sampler2D moon;
 uniform sampler2D ldem;
 in vec3 vpoint;
-in mat3 horizon;
 out vec4 fragColor;
 
 vec3 orthogonal_vector(vec3 n)
@@ -834,6 +835,7 @@ void main()
 (GLFW/glfwTerminate)
 
 ;; I hope you liked this 3D graphics example.
+;; You can get an interactive version of the Moon rendering [here](https://github.com/wedesoft/macroexpand-noj-lwjgl).
 ;;
 ;; Note that in practise you will
 ;;

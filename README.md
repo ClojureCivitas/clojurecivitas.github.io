@@ -2,10 +2,10 @@
 
 <img src="src/images/civitas-icon.svg" alt="Civitas Icon" align="right">
 
-Clojure Civitas makes it easy for you to publish Clojure ideas and explorations
-without the overhead of setting up a new project, blog, or repo.
+Clojure Civitas is a shared [blog](https://clojurecivitas.github.io/posts.html) space for your ideas and explorations.
+Clojure Civitas makes it easy for you to publish Clojure ideas and explorations without the overhead of setting up a new project, blog, or repo.
 Whether you're sketching out a quick experiment or writing a deeper post,
-just fork this repo, create a namespace, write, commit and submit a pull request.
+just fork this repo, add a namespace, write, commit and submit a pull request.
 This is your shared scratch space.
 
 Think. Code. Share.
@@ -138,6 +138,8 @@ clojure -M:clay -A:markdown
 quarto preview site
 ```
 
+(`bb site-preview` will run these two commands for you.)
+
 This will open a browser displaying the site locally.
 
 If you would like to preview a single file, then add the path relative to `src`:
@@ -178,6 +180,8 @@ You can render a `qmd` file locally (see preview instructions above).
 If you `git add -f site/my-ns/my-post.qmd`,
 it will prevent the source `src/my-ns/my-post.clj` file from executing in the publish process.
 Only you will run the code locally (where you have secrets and large files available).
+
+If your notebook displays locally stored images, you will also need to commit these. Quarto puts them under `site/my-ns/my-post_files`.
 
 See [Some notebooks should only be run locally](https://clojurecivitas.github.io/scicloj/clay/skip_if_unchanged_example.html) for more detail.
 

@@ -1,13 +1,13 @@
 ^:kindly/hide-code
 ^{:clay {:title  "What's the Buzz in Charlotte? A Pre-Conj Data Dive"
          :external-requirements ["Service_Requests_311.csv"]
-         :quarto {:author      [:ezmiller]
+         :quarto {:author      [:timothypratley]
                   :description "Getting to know our host city for Clojure/conj 2025. We dive into 311 service data to see what's on the minds of Charlotte's citizens and get a taste of our hands-on data analysis workshop."
                   :type        :post
-                  :date        "2025-08-15"
+                  :date        "2025-11-10"
                   :category    :conj
                   :tags        [:clay :workflow :conj]
-                  :draft       true}}}
+                  :image       "charlotte.png"}}}
 (ns conferences.conj2025.workshop.scicloj.buzz
   (:require [tablecloth.api :as tc]
             [scicloj.tableplot.v1.plotly :as plotly]
@@ -16,7 +16,7 @@
 
 ;; This November 12th, Clojure enthusiasts will gather in **Charlotte, North Carolina**
 ;; for Clojure/conj 2025.
-;; For many of us, it's a cherished yearly tradition of code,
+;; It's a cherished yearly conference of code,
 ;; conversations, and that special *"this is my people"* feeling.
 
 ;; ::: {.callout-note}
@@ -26,15 +26,13 @@
 ;; on display using the hornet as their city emblem.
 ;; :::
 
-;; In the spirit of exploration that defines our community, let's get to know our host city
-;; before we even arrive.
+;; In the spirit of exploration, let's get to know our host city before we arrive.
 ;; What can 3 million service requests tell us about the heart of Charlotte?
 
-;; ## A Glimpse into Charlotte's Data
+;; ## Charlotte's Data
 
-;; Let's find out by diving into the city's 311 system, which captures the pulse
-;; of city life through non-emergency service requests.
-;; Every pothole report, noise complaint, and fallen tree notification tells a story.
+;; Let's find out by diving into the city's 311 system; non-emergency service requests.
+;; Every pothole report, noise complaint, and fallen tree notification gets recorded.
 
 ;; Downloaded from [Charlotte Service Requests](https://data.charlottenc.gov/datasets/charlotte::service-requests-311/explore?location=35.265099%2C-80.810750%2C9.72).
 
@@ -92,9 +90,9 @@ frequent-requests
 
 ;; ## Join Us at the Workshop
 
-;; This journey from a raw CSV file to a clear visualization is exactly what our
+;; This journey from a raw CSV file to a clear visualization is exactly what the
 ;; **Empowering Data Analysis through SciCloj** [workshop](https://www.2025.clojure-conj.org/workshops) is all about.
-;; Led by me, Ethan Miller, you'll start your Conj experience by diving into practical,
+;; You'll start your Conj experience by diving into practical,
 ;; hands-on data analysis and come away with new ideas to carry back home.
 
 ;; **You will learn how to:**
@@ -104,4 +102,5 @@ frequent-requests
 ;; - Share your insights through interactive notebooks
 ;; - Leverage Clojure's immutable data structures for data science
 
-;; We can't wait to explore data with you. See you in Charlotte!
+;; We can't wait to explore data with you.
+;; See you in Charlotte!
