@@ -10,38 +10,20 @@
                   :toc true
                   :toc-depth 3
                   :draft true}}}
-(ns data-visualization.refined-plotting
-  "Grammar of Graphics implementation with explicit pipeline stages.
-  
-  Inspired by Wilkinson's Grammar of Graphics (2005), ggplot2 (R), and
-  AlgebraOfGraphics.jl (Julia). Implements a four-stage transformation
-  pipeline where every step is visible, inspectable, and user-modifiable.
-  
-  Design principles:
-  - Simple IR (data as API) - plain Clojure maps throughout
-  - Explicit stages - no hidden transformations
-  - Composable operations - small pieces, loosely joined  
-  - Extensible - add transforms/geometries via multimethods
-  
-  Architecture:
-  1. Algebraic layer - cross, blend (operate on :=columns)
-  2. Role inference - resolve-roles (positional -> named)
-  3. Grouping spread - spread (markers -> partitioned layers)
-  4. Rendering - plot (transform -> geom -> SVG)"
-  (:require
-   ;; Tablecloth - Dataset manipulation
-   [tablecloth.api :as tc]
+(ns data-visualization.refined-plotting)
 
-   ;; Kindly - Notebook visualization protocol
-   [scicloj.kindly.v4.kind :as kind]
-
-   ;; thi.ng/geom - Low-level SVG rendering
-   [thi.ng.geom.viz.core :as viz]
-   [thi.ng.geom.svg.core :as svg]
-   [thi.ng.geom.core :as g]
-
-   ;; Combinatorics - For cartesian products
-   [clojure.math.combinatorics :as combo]))
+^{:kindly/hide-code true
+  :kindly/kind :kind/hiccup}
+[:style
+ ".clay-dataset {
+  max-height:400px;
+  overflow-y: auto;
+}
+.printedClojure {
+  max-height:400px;
+  overflow-y: auto;
+}
+"]
 
 ;; # Introduction
 ;;
@@ -144,6 +126,45 @@
 ;; For terminology (domain, range, scale, aesthetic, etc.), see the Glossary section below.
 ;; Part 1 also has an [extensive glossary](aog_in_clojure_part1.html#glossary) if you want
 ;; more detail.
+
+;; # Setup
+
+(ns data-visualization.refined-plotting
+  "Grammar of Graphics implementation with explicit pipeline stages.
+  
+  Inspired by Wilkinson's Grammar of Graphics (2005), ggplot2 (R), and
+  AlgebraOfGraphics.jl (Julia). Implements a four-stage transformation
+  pipeline where every step is visible, inspectable, and user-modifiable.
+  
+  Design principles:
+  - Simple IR (data as API) - plain Clojure maps throughout
+  - Explicit stages - no hidden transformations
+  - Composable operations - small pieces, loosely joined  
+  - Extensible - add transforms/geometries via multimethods
+  
+  Architecture:
+  1. Algebraic layer - cross, blend (operate on :=columns)
+  2. Role inference - resolve-roles (positional -> named)
+  3. Grouping spread - spread (markers -> partitioned layers)
+  4. Rendering - plot (transform -> geom -> SVG)"
+  (:require
+   ;; Tablecloth - Dataset manipulation
+   [tablecloth.api :as tc]
+   [tablecloth.column.api :as tcc]
+
+   ;; Kindly - Notebook visualization protocol
+   [scicloj.kindly.v4.kind :as kind]
+
+   ;; thi.ng/geom - Low-level SVG rendering
+   [thi.ng.geom.viz.core :as viz]
+   [thi.ng.geom.svg.core :as svg]
+   [thi.ng.geom.core :as g]
+
+   ;; Combinatorics - For cartesian products
+
+   ;; Fastmath - Linear regression
+   [fastmath.ml.regression :as regr]
+   [clojure.math.combinatorics :as combo]))
 
 ;; # 📖 Glossary
 ;;
@@ -517,11 +538,15 @@ simple-data
                        (let [diagonal? (:=diagonal? layer)
                              default-props (if diagonal?
                                              (:diagonal defaults)
-                                             (:off-diagonal defaults))]
+                                             (:off-diagonal defaults))
+                             ;; If transform is :smooth or :regress, default plottype to :line
+                             transform-plottype (when (#{:smooth :regress} (:=transform layer))
+                                                  {:=plottype :line})
+                             ;; Merge: diagonal-defaults < transform-defaults < existing values
+                             default-props-with-transform (merge default-props transform-plottype)]
                          ;; Merge defaults, but existing values win
-                         (merge default-props layer)))
+                         (merge default-props-with-transform layer)))
                      layers))))))
-
 ;; Examples:
 (kind/pprint
  (-> (layer simple-data :x :y)
@@ -815,6 +840,48 @@ simple-data
 
     (assoc layer
            :=data smoothed-data
+           :=x :x
+           :=y :y)))
+
+;; Linear regression transform - computes best-fit line through data points
+(defmethod transform-data :regress
+  [{:as layer
+    :keys [=x =y =data]}]
+  (let [valid-data (-> =data
+                       (tc/select-rows #(and (=x %)
+                                             (=y %))))
+
+        ;; If no valid data, return empty layer
+        _ (when (tc/empty-ds? valid-data)
+            (throw (ex-info "No valid data points for regression"
+                            {:layer layer})))
+
+        ;; Prepare data for regression (fastmath expects xss as vector of vectors)
+        xs (=x valid-data)
+        xss (-> valid-data
+                (tc/select-columns [=x])
+                tc/rows)
+        ys (=y valid-data)
+        
+        ;; Compute linear regression: y = intercept + slope * x
+        model (regr/lm ys xss)
+        slope (first (:beta model))
+        intercept (:intercept model)
+
+        ;; Get x domain from data
+        x-min (tcc/reduce-min xs)
+        x-max (tcc/reduce-max xs)
+
+        ;; Compute predicted y values at endpoints
+        y-min (+ intercept (* slope x-min))
+        y-max (+ intercept (* slope x-max))
+
+        ;; Create new dataset with just two points (line endpoints)
+        regression-data (tc/dataset {:x [x-min x-max]
+                                     :y [y-min y-max]})]
+
+    (assoc layer
+           :=data regression-data
            :=x :x
            :=y :y)))
 
@@ -1475,8 +1542,8 @@ simple-data
       spread))
 
 ;; Species sorted alphabetically, assigned color indices
-(map #(select-keys % [:=color-value :=color-index])
-       (:=layers color-example))
+(map #(select-keys % [:=color-value :=color-index]
+                   (:=layers color-example)))
 
 ;; ### Multiple color groups in one plot
 ;; Each layer can have different color groupings
@@ -1851,6 +1918,35 @@ penguins
     apply-defaults
     plot)
 
+;; ### Tutorial Part 3: Linear Regression
+
+;; **Simple Regression:** Scatter with regression line overlay
+(-> (blend
+     ;; Scatter points
+     (layer penguins :bill_length_mm :bill_depth_mm)
+     ;; Regression line (plottype :line is automatic for :regress transform)
+     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+         (update-in [:=layers 0] assoc :=transform :regress)))
+    resolve-roles
+    apply-defaults
+    plot)
+
+;; **Grouped Regression:** One regression line per species
+(-> (blend
+     ;; Scatter points colored by species
+     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+         (update-in [:=layers 0] assoc :=color :species))
+     ;; Regression lines colored by species
+     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+         (update-in [:=layers 0] assoc :=color :species)
+         (update-in [:=layers 0] assoc :=transform :regress)))
+    resolve-roles
+    apply-defaults
+    plot)
+
+;; **Note:** The :regress transform automatically sets :=plottype to :line,
+;; so you don't need to specify it explicitly. The transform is applied per-group
+;; when :=color is present, giving you one regression line for each species.
 ;; ### What This Demonstrates
 ;;
 ;; Simple operations like layer, cross, and blend combine naturally to build
@@ -1884,15 +1980,14 @@ penguins
 ;; following the compositional principles of Wilkinson's Grammar of Graphics.
 ;;
 ;; The system currently supports a four-stage explicit pipeline from Algebra through
-;; Inference and Spread to Render. The transform system includes identity and smooth
+;; Inference and Spread to Render. The transform system includes identity, smooth, and regress (linear regression)
 ;; operations, while geometries cover scatter, histogram, and line plots. Grid layouts
 ;; handle SPLOM matrices with automatic diagonal detection, and color grouping provides
 ;; automatic data partitioning with palette assignment. The theming follows ggplot2
 ;; conventions for professional publication-ready aesthetics. All systems are extensible
 ;; via multimethods.
 ;;
-;; Development is underway on additional transforms including [regression](https://en.wikipedia.org/wiki/Linear_regression) (linear
-;; regression), [density](https://en.wikipedia.org/wiki/Kernel_density_estimation) (KDE), and binning. New geometries in progress include area
+;; Development is underway on additional transforms including [density](https://en.wikipedia.org/wiki/Kernel_density_estimation) (KDE) and binning. New geometries in progress include area
 ;; fills, bar charts, and text labels. Automatic axis labels and legends will be
 ;; generated from data, and custom color scales will support user-defined palettes
 ;; and mappings. A general nest operation will enable [faceting](https://en.wikipedia.org/wiki/Facet_(geometry)) beyond SPLOM layouts.
