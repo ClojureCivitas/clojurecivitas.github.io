@@ -31,10 +31,6 @@
 ;; * cloud shadows
 ;; * powder function
 
-(def window-width 640)
-(def window-height 480)
-
-
 (def size 512)
 (def divisions 32)
 (def cellsize (/ size divisions))
