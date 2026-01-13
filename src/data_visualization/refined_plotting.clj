@@ -160,9 +160,9 @@
          [(- min-val pad) (+ max-val pad)])))))
 
 ;; Test the helper
-(kind/pprint (compute-domain [1 2 3 4 5]))
-(kind/pprint (compute-domain [1 2 3 4 5] 0.1))
-(kind/pprint (compute-domain [1 nil 3 nil 5]))
+(compute-domain [1 2 3 4 5])
+(compute-domain [1 2 3 4 5] 0.1)
+(compute-domain [1 nil 3 nil 5])
 
 ;; ### Axis Label Formatters
 
@@ -1128,20 +1128,17 @@ simple-data
     apply-defaults
     :=layers first
     (select-keys [:=plottype :=diagonal?]))
-
 ;; Diagonal -> histogram
 (-> (layer simple-data :x :x)
     resolve-roles
     apply-defaults
     :=layers first
     (select-keys [:=plottype :=diagonal?]))
-
 ;; Custom defaults
 (-> (layer simple-data :x :x)
     resolve-roles
     (apply-defaults {:diagonal {:=plottype :density}})
     :=layers first :=plottype)
-
 ;; Idempotent - respects existing values
 (-> (layer simple-data :x :x)
     resolve-roles
@@ -1166,7 +1163,6 @@ simple-data
     resolve-roles
     (when-diagonal {:=plottype :histogram})
     (when-off-diagonal {:=plottype :scatter})
-    :=layers
     (->> (map #(select-keys % [:=plottype :=diagonal?]))))
 
 ;; ## Stage 3: Grouping Spread
@@ -1371,9 +1367,8 @@ simple-data
       spread))
 
 ;; Species sorted alphabetically, assigned color indices
-(kind/pprint
- (map #(select-keys % [:=color-value :=color-index])
-      (:=layers color-example)))
+(map #(select-keys % [:=color-value :=color-index])
+       (:=layers color-example))
 
 ;; ### Multiple color groups in one plot
 ;; Each layer can have different color groupings
@@ -1486,16 +1481,14 @@ penguins
 
 ;; ### Start with a colored layer
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
-    (assoc-in [:=layers 0 :=color] :species)
-    kind/pprint)
+    (assoc-in [:=layers 0 :=color] :species))
 
 ;; ### Before spread: single layer with :=color annotation
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
     (assoc-in [:=layers 0 :=color] :species)
     resolve-roles
     apply-defaults
-    (#(select-keys (first (:=layers %)) [:=columns :=color :=plottype]))
-    kind/pprint)
+    (#(select-keys (first (:=layers %)) [:=columns :=color :=plottype])))
 
 ;; ### After spread: multiple layers, one per species
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
@@ -1560,16 +1553,14 @@ penguins
 
 ;; ### Start with a faceted layer
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
-    (assoc-in [:=layers 0 :=facet] :island)
-    kind/pprint)
+    (assoc-in [:=layers 0 :=facet] :island))
 
 ;; ### Before spread: single layer with facet annotation
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
     (assoc-in [:=layers 0 :=facet] :island)
     resolve-roles
     apply-defaults
-    (#(select-keys (first (:=layers %)) [:=columns :=facet]))
-    kind/pprint)
+    (#(select-keys (first (:=layers %)) [:=columns :=facet])))
 
 ;; ### After spread: multiple layers, one per island
 (-> (layer penguins :bill_length_mm :bill_depth_mm)
@@ -1627,13 +1618,11 @@ penguins
            (layers penguins [:bill_length_mm :flipper_length_mm]))
     resolve-roles
     (#(map (fn [layer] (select-keys layer [:=columns :=x :=y]))
-           (:=layers %)))
-    kind/pprint)
+           (:=layers %))))
 
 ;; Inspect the SPLOM spec
 (-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
            (layers penguins [:bill_length_mm :flipper_length_mm]))
-    resolve-roles
     apply-defaults
     spread
     kind/pprint)
