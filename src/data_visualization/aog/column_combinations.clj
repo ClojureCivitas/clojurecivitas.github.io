@@ -7,7 +7,7 @@
                   :description "Can we plot interesting charts for all columns of a dataset?"
                   :category :data-visualization
                   :tags [:datavis :clay]
-                  :keywords [:datavis]}}}
+                  :keywords [:datavis :data :summaries]}}}
 (ns data-visualization.aog.column-combinations
   (:require
    [clojure.string :as str]
