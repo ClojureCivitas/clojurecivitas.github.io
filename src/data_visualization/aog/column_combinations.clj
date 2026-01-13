@@ -6,8 +6,8 @@
                   :date "2026-01-011"
                   :description "Can we plot interesting charts for all columns of a dataset?"
                   :category :data-visualization
-                  :tags [:datavis]
-                  :keywords [:datavis]}}}
+                  :tags [:datavis :clay]
+                  :keywords [:datavis :data :summaries]}}}
 (ns data-visualization.aog.column-combinations
   (:require
    [clojure.string :as str]
