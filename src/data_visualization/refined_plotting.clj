@@ -50,30 +50,27 @@
 ;; [ggplot2](https://ggplot2.tidyverse.org/) (R) and 
 ;; [AlgebraOfGraphics.jl](https://aog.makie.org/) (Julia).
 ;;
-;; **Key Innovation:** Explicit four-stage pipeline where each transformation is
-;; visible, inspectable, and user-modifiable:
-;;
-;; **Algebra** → **Inference** → **Spread** → **Render**
+;; The key innovation here is an explicit four-stage pipeline where each transformation
+;; is visible, inspectable, and user-modifiable. The pipeline flows from Algebra to
+;; Inference to Spread to Render, and you can intervene at any stage to customize
+;; the visualization.
 ;;
 ;; This is part of the [Tableplot](https://scicloj.github.io/tableplot/) initiative
 ;; and [Real-World-Data](https://scicloj.github.io/docs/community/groups/real-world-data/)
 ;; group's work on declarative visualization in Clojure.
 ;;
-;; **Design Philosophy:**
-;; - **Simple IR** - Plain Clojure maps all the way down (data as API)
-;; - **Explicit stages** - No hidden magic, intervene anywhere in the pipeline
-;; - **Composable operations** - Small pieces combine into sophisticated visualizations
-;; - **Extensible** - Add custom transforms and geometries via multimethods
+;; The design philosophy emphasizes simplicity and transparency. The intermediate
+;; representation is just plain Clojure maps all the way down, treating data as API.
+;; There's no hidden magic - you can intervene anywhere in the pipeline. Small,
+;; composable operations combine to create sophisticated visualizations, and the
+;; system is extensible through multimethods for custom transforms and geometries.
 ;;
-;; **Related Work:**
-;; - [SPLOM Tutorial](splom_tutorial.clj) - Manual SPLOM construction showing what this grammar automates
-;; - [Brushable SPLOM](brushable_splom.clj) - D3.js interactive visualization example
+;; For related examples, see the [SPLOM Tutorial](splom_tutorial.clj) which shows
+;; manual SPLOM construction to understand what this grammar automates, and the
+;; [Brushable SPLOM](brushable_splom.clj) for D3.js interactive visualization.
 ;;
 ;; Clojurians Zulip discussion (requires login):
-;; [#**data-science>AlgebraOfGraphics.jl**](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/AlgebraOfGraphics.2Ejl/)
-
-;; ## Setup
-;;
+;; [#data-science>AlgebraOfGraphics.jl](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/AlgebraOfGraphics.2Ejl/)
 ;; This implementation uses several libraries from the Clojure data science ecosystem:
 ;;
 ;; [**Tablecloth**](https://scicloj.github.io/tablecloth/) provides our dataset API, wrapping
@@ -1745,52 +1742,53 @@ penguins
 
 ;; ### What This Demonstrates
 ;;
-;; - **Composability**: Simple operations (layer, cross, blend) combine naturally
-;; - **Progressive enhancement**: Add features one line at a time
-;; - **Consistent API**: Same pattern works from 1×1 to N×N grids
-;; - **Explicit control**: Every transformation is visible and modifiable
+;; Simple operations like layer, cross, and blend combine naturally to build
+;; complex visualizations. You can add features progressively, one line at a
+;; time, and the same patterns work whether you're building a simple 1×1 plot
+;; or a full N×N grid. Every transformation remains visible and modifiable
+;; throughout the pipeline.
 
 ;; ## Key Takeaways
 
-;; 1. **Idempotent operations**: You can call resolve-roles, apply-defaults,
-;;    and spread multiple times safely. The plot function calls them automatically.
+;; The operations resolve-roles, apply-defaults, and spread are idempotent - you
+;; can call them multiple times safely. The plot function calls them automatically,
+;; but you can also call them explicitly to inspect or modify the intermediate state.
 
-;; 2. **Intervention points**:
-;;    - After resolve-roles: Change inferred roles or plottypes
-;;    - After apply-defaults: Override scales, themes, dimensions
-;;    - After spread: Modify individual group layers
+;; There are three main intervention points in the pipeline. After resolve-roles,
+;; you can change inferred roles or plottypes. After apply-defaults, you can
+;; override scales, themes, or dimensions. After spread, you can modify individual
+;; group layers directly.
 
-;; 3. **IR inspection**: Use kind/pprint to see the intermediate representation
-;;    at any stage and understand what transformations are happening.
+;; Use kind/pprint to inspect the intermediate representation at any stage and
+;; understand exactly what transformations are happening. The IR is just plain
+;; Clojure data, so it's easy to explore and debug.
 
-;; 4. **Composability**: Algebraic operations (layer, blend, cross) create
-;;    initial structure. Prep functions (resolve-roles, apply-defaults, spread)
-;;    enrich it. Render function (plot) produces SVG.
-
+;; The grammar separates concerns clearly. Algebraic operations (layer, blend,
+;; cross) create the initial structure. Prep functions (resolve-roles,
+;; apply-defaults, spread) enrich it with defaults and expand groupings. The
+;; render function (plot) produces the final SVG output.
 ;; ## What's Next
 ;;
 ;; This grammar provides a foundation for declarative data visualization in Clojure,
 ;; following the compositional principles of Wilkinson's Grammar of Graphics.
 ;;
-;; **Current capabilities:**
-;; - ✅ Four-stage explicit pipeline (Algebra → Inference → Spread → Render)
-;; - ✅ Transform system: `:identity`, `:smooth` (extensible via multimethods)
-;; - ✅ Geometry system: `:scatter`, `:histogram`, `:line` (extensible via multimethods)
-;; - ✅ Grid layouts: SPLOM matrices with automatic diagonal detection
-;; - ✅ Color grouping: Automatic data partitioning and palette assignment
-;; - ✅ ggplot2-like theming: Professional publication-ready aesthetics
+;; The system currently supports a four-stage explicit pipeline from Algebra through
+;; Inference and Spread to Render. The transform system includes identity and smooth
+;; operations, while geometries cover scatter, histogram, and line plots. Grid layouts
+;; handle SPLOM matrices with automatic diagonal detection, and color grouping provides
+;; automatic data partitioning with palette assignment. The theming follows ggplot2
+;; conventions for professional publication-ready aesthetics. All systems are extensible
+;; via multimethods.
 ;;
-;; **In development:**
-;; - 📋 More transforms: `:regress` (linear regression), `:density` (KDE), `:bin`
-;; - 📋 More geometries: `:area` (filled regions), `:bar` (bar charts), `:text` (labels)
-;; - 📋 Axis labels and legends: Automatic generation from data
-;; - 📋 Custom color scales: User-defined palettes and mappings
-;; - 📋 Faceting: `nest` operation for general panel layouts beyond SPLOM
+;; Development is underway on additional transforms including regression (linear
+;; regression), density (KDE), and binning. New geometries in progress include area
+;; fills, bar charts, and text labels. Automatic axis labels and legends will be
+;; generated from data, and custom color scales will support user-defined palettes
+;; and mappings. A general nest operation will enable faceting beyond SPLOM layouts.
 ;;
-;; **Future exploration:**
-;; - 🔬 Interactive features: D3.js integration for brushing and linking
-;; - 🔬 Animation: Temporal transitions between visualizations
-;; - 🔬 Performance: Optimization for large datasets (>100k points)
+;; Future exploration includes D3.js integration for interactive features like brushing
+;; and linking, temporal transitions for animation between visualizations, and
+;; performance optimization for datasets exceeding 100k points.
 ;;
 ;; **Related notebooks:**
 ;; - [SPLOM Tutorial](splom_tutorial.clj) - Step-by-step manual SPLOM construction
