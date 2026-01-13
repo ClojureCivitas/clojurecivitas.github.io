@@ -52,19 +52,19 @@ t
 random-points
 
 (def worley
-  (tensor/clone
-    (tensor/compute-tensor [size size]
-                           (fn [y x]
-                               (let [center (fm/add (fm/vec2 x y) (fm/vec2 0.5 0.5))
-                                     divx   (quot x cellsize)
-                                     divy   (quot y cellsize)]
-                                 (apply min
-                                        (for [dy [-1 0 1] dx [-1 0 1]]
-                                             (dist (random-points (mod (+ divy dy) divisions) (mod (+ divx dx) divisions)) center)))))
-                           :double)))
-worley
+  (tensor/compute-tensor [size size]
+                         (fn [y x]
+                             (let [center (fm/add (fm/vec2 x y) (fm/vec2 0.5 0.5))
+                                   divx   (quot x cellsize)
+                                   divy   (quot y cellsize)]
+                               (apply min
+                                      (for [dy [-1 0 1] dx [-1 0 1]]
+                                           (dist (random-points (mod (+ divy dy) divisions) (mod (+ divx dx) divisions)) center)))))
+                         :double))
 
-(def img (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley))) (dfn/- (dfn/reduce-max worley) worley)))
+(def sample (tensor/clone worley))
+
+(def img (dfn/* (/ 255 (- (dfn/reduce-max sample) (dfn/reduce-min sample))) (dfn/- (dfn/reduce-max sample) sample)))
 img
 
 (bufimg/tensor->image img)
