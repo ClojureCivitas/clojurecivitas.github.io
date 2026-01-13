@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
 
-name: Render and Publish
+name: Incremental Render and Publish
 
 permissions:
   contents: read
