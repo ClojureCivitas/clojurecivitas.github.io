@@ -38,8 +38,9 @@ jobs:
           fi
           echo "Downloading Pages artifact from run $latest_run (artifact $artifact_id)."
           gh api "/repos/$REPO/actions/artifacts/$artifact_id/zip" > /tmp/pages.zip
-          unzip -q /tmp/pages.zip -d site/_site
-          echo "Contents of site/_site after artifact unzip:"
+          unzip -q /tmp/pages.zip -d /tmp/artifact_unzip
+          tar -xf /tmp/artifact_unzip/artifact.tar -C site/_site
+          echo "Contents of site/_site after artifact extraction:"
           ls -la site/_site | head -50
 
       - name: Set up Python
