@@ -74,8 +74,7 @@ jobs:
             ~/.m2/repository
             ~/.gitlibs
             ~/.deps.clj
-          key: cljdeps-${{ hashFiles('deps.edn') }}
-          restore-keys: cljdeps-
+          key: cljdeps-${{ runner.os }}
 
       - name: Detect changed Clojure sources
         if: github.event_name == 'push' && steps.artifact_status.outputs.site_ok == 'true'
@@ -103,6 +102,12 @@ jobs:
 
       - name: Build notebooks (changed set or full when none)
         run: clojure -M:clay -A:markdown ${{ steps.changed_clj.outputs.files }}
+
+      - name: Cache Quarto
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/quarto
+          key: quarto-${{ runner.os }}
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
