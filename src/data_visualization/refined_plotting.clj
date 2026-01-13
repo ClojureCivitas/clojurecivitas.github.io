@@ -47,7 +47,7 @@
 ;;
 ;; This notebook implements a [Grammar of Graphics](https://www.springer.com/gp/book/9780387245447)
 ;; (Wilkinson, 2005) in Clojure, following the compositional design pioneered by
-;; [ggplot2](https://ggplot2.tidyverse.org/) (R) and 
+;; [ggplot2](https://ggplot2.tidyverse.org/) (R's popular declarative plotting library) and 
 ;; [AlgebraOfGraphics.jl](https://aog.makie.org/) (Julia).
 ;;
 ;; The key innovation here is an explicit four-stage pipeline where each transformation
@@ -65,7 +65,7 @@
 ;; composable operations combine to create sophisticated visualizations, and the
 ;; system is extensible through multimethods for custom transforms and geometries.
 ;;
-;; For related examples, see the [SPLOM Tutorial](splom_tutorial.clj) which shows
+;; For related examples, see the [SPLOM](https://en.wikipedia.org/wiki/Scatter_plot#Scatter_plot_matrices) (Scatter Plot Matrix) [Tutorial](splom_tutorial.clj) which shows
 ;; manual SPLOM construction to understand what this grammar automates, and the
 ;; [Brushable SPLOM](brushable_splom.clj) for D3.js interactive visualization.
 ;;
@@ -93,7 +93,7 @@
   Key features:
   - Grey background (#EBEBEB) reduces eye strain
   - White grid lines (#FFFFFF) aid visual comparison
-  - Color palette from ggplot2 (colorblind-friendly)
+  - Color palette from ggplot2 ([colorblind-friendly](https://en.wikipedia.org/wiki/Color_blindness) - distinguishable by people with common color vision deficiencies)
   - Dark marks (#333333) for single-color plots"
   {:background "#EBEBEB"
    :grid "#FFFFFF"
@@ -484,7 +484,7 @@ simple-data
 ;; Check for :=color-value/:=facet-value to detect already-spread layers.
 
 (defn spread
-  "Expand grouping aesthetics (:=color, :=facet) into multiple layers.
+  "Expand grouping aesthetics (visual properties like color or facet panels mapped to data) (:=color, :=facet) into multiple layers.
   
   For each layer with :=color or :=facet:
   - Partition data by unique values
@@ -669,7 +669,7 @@ simple-data
   [layer]
   layer)
 
-;; Moving average transform - smooths y values
+;; Moving average transform - smooths y values using a sliding window to reduce noise
 (defmethod transform-data :smooth
   [layer]
   (let [data (:=data layer)
@@ -1780,11 +1780,11 @@ penguins
 ;; conventions for professional publication-ready aesthetics. All systems are extensible
 ;; via multimethods.
 ;;
-;; Development is underway on additional transforms including regression (linear
-;; regression), density (KDE), and binning. New geometries in progress include area
+;; Development is underway on additional transforms including [regression](https://en.wikipedia.org/wiki/Linear_regression) (linear
+;; regression), [density](https://en.wikipedia.org/wiki/Kernel_density_estimation) (KDE), and binning. New geometries in progress include area
 ;; fills, bar charts, and text labels. Automatic axis labels and legends will be
 ;; generated from data, and custom color scales will support user-defined palettes
-;; and mappings. A general nest operation will enable faceting beyond SPLOM layouts.
+;; and mappings. A general nest operation will enable [faceting](https://en.wikipedia.org/wiki/Facet_(geometry)) beyond SPLOM layouts.
 ;;
 ;; Future exploration includes D3.js integration for interactive features like brushing
 ;; and linking, temporal transitions for animation between visualizations, and
