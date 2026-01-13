@@ -10,29 +10,33 @@
 (ns math.hashing.hashfusing
   (:require [scicloj.kindly.v4.kind :as kind]))
 
-;; The basic question this article tries to answer is: Can fusing hashes
-;; together provide unique identifiers for arbitrary data? The answer is no.
-;; Specifically, we can not provide unique identifiers for sufficiently large
-;; repeated sequences of values. That is, sufficiently low entropy data is not
-;; representable by fusing hashes together. The good news is that low entropy
-;; data is compressible.
-
 ;; This is an article about fusing hashes together while having the key
 ;; properties of associativity and non-commutativity. I describe the basic
-;; approach of using matrix multiplication of Upper Triangle Matricies and then
-;; show the results of two types experiments showing the quality and limits of
-;; this hash fusing approach.
+;; approach of using matrix multiplication of Upper Triangle Matrices and then
+;; show the results of two experiments showing the quality and limits of this
+;; hash fusing approach.
+
+;; The basic question this article tries to answer is: can fusing hashes
+;; together provide unique identifiers for arbitrary data? The answer is no.
+;; Specifically, the approach in this article can _not_ provide unique
+;; identifiers for sufficiently large runs of repeated values. That is,
+;; sufficiently low entropy data is not uniquely represented by fusing hashes
+;; together.
+
+;; The good news is that low entropy data is compressible and a practical
+;; fusing operator can throw an exception when fusing produces 'bad' hash
+;; values.
 
 ;; ## Introduction
 
 ;; I have begun working on implementing distributed immutable data structures
 ;; as a way to efficiently share structured data between multiple clients. One
 ;; of the key challenges in this area is being able to efficiently reference
-;; ordered collections of data. The usual apprach is to use Merkle Trees but,
-;; since the immuable data structure for ordered collections is based on finger
-;; trees, I need references that are insensitive to tree shape. This means that
-;; I need to be able to fuse hashes together in a way that is associative but
-;; not commutative. As a starting point, I have been reading the HP paper
+;; ordered collections of data. The usual approach is to use Merkle Trees. But,
+;; since I plan on using Finger Trees to represent ordered collections of data,
+;; I need computed hashes that are insensitive to the tree shape. This means
+;; that I need to be able to fuse hashes together in a way that is associative
+;; and not commutative. As a starting point, I have been reading the HP paper
 ;; describing hash fusing via matrix multiplication:
 ;; https://www.labs.hpe.com/techreports/2017/HPE-2017-08.pdf
 
@@ -92,9 +96,23 @@
  {:row-vectors m1})
 
 ;; To fuse two hashes, we convert each hash to its corresponding upper
-;; triangular matrix and then multiply the two matrices together. The result
-;; is another upper triangular matrix which can be converted back to a hash by
-;; taking the elements above the main diagonal.
+;; triangular matrix and then multiply the two matrices together. The result is
+;; another upper triangular matrix which can be converted back to a hash by
+;; taking the elements above the main diagonal. The following several sections
+;; defines this mapping between hashes and upper triangular matrices. For the
+;; experiments below four different bit sizes of cells and four corresponding
+;; matrices are defined.
+;; 1. 256 bit hash -> 32 8 bit cells -> 9x9 matrix
+;; 2. 256 bit hash -> 16 16 bit cells -> 7x7 matrix
+;; 3. 256 bit hash -> 8 32 bit cells -> 5x5 matrix
+;; 4. 256 bit hash -> 4 64 bit cells -> 4x4 matrix
+
+;; ### Matrix Conversion Functions
+
+;; The following functions convert between byte vectors representing hashes
+;; an four different upper triangular matrix sizes based on cell bit size.
+;; These functions also convert between different hash sizes by grouping
+;; bytes into larger words.
 
 (defn hash8->utm8
   "Convert a vector of 32 bytes into a 9x9 upper triangular matrix."
@@ -111,35 +129,6 @@
    [0   0   0   0   0   0   1 h06   0]
    [0   0   0   0   0   0   0   1   0]
    [0   0   0   0   0   0   0   0   1]])
-
-(defn hash16->utm16
-  "Convert a vector of 16 2-byte words into a 7x7 upper triangular matrix."
-  [[h00 h01 h02 h03 h04 h05 h06 h07
-    h08 h09 h10 h11 h12 h13 h14 h15]]
-  [[1 h00 h06 h10 h13 h15 h05]
-   [0   1 h01 h07 h11 h14   0]
-   [0   0   1 h02 h08 h12   0]
-   [0   0   0   1 h03 h09   0]
-   [0   0   0   0   1 h04   0]
-   [0   0   0   0   0   1   0]
-   [0   0   0   0   0   0   1]])
-
-(defn hash32->utm32
-  "Convert a vector of 8 4-byte words into a 5x5 upper triangular matrix."
-  [[h00 h01 h02 h03 h04 h05 h06 h07]]
-  [[1 h00 h04 h07 h06]
-   [0   1 h01 h05 h03]
-   [0   0   1 h02   0]
-   [0   0   0   1   0]
-   [0   0   0   0   1]])
-
-(defn hash64->utm64
-  "Convert a vector of 4 8-byte words into a 4x4 upper triangular matrix."
-  [[h00 h01 h02 h03]]
-  [[1 h00 h03 h02]
-   [0   1 h01   0]
-   [0   0   1   0]
-   [0   0   0   1]])
 
 (defn utm8->hash8
   "Convert a 9x9 upper triangular matrix back to a vector of 32 bytes."
@@ -158,6 +147,18 @@
          h16 h17 h18 h19 h20 h21 h22 h23
          h24 h25 h26 h27 h28 h29 h30 h31]))
 
+(defn hash16->utm16
+  "Convert a vector of 16 2-byte words into a 7x7 upper triangular matrix."
+  [[h00 h01 h02 h03 h04 h05 h06 h07
+    h08 h09 h10 h11 h12 h13 h14 h15]]
+  [[1 h00 h06 h10 h13 h15 h05]
+   [0   1 h01 h07 h11 h14   0]
+   [0   0   1 h02 h08 h12   0]
+   [0   0   0   1 h03 h09   0]
+   [0   0   0   0   1 h04   0]
+   [0   0   0   0   0   1   0]
+   [0   0   0   0   0   0   1]])
+
 (defn utm16->hash16
   "Convert a 7x7 upper triangular matrix back to a vector of 16 2-byte words."
   [[[_ h00 h06 h10 h13 h15 h05]
@@ -171,6 +172,15 @@
         [h00 h01 h02 h03 h04 h05 h06 h07
          h08 h09 h10 h11 h12 h13 h14 h15]))
 
+(defn hash32->utm32
+  "Convert a vector of 8 4-byte words into a 5x5 upper triangular matrix."
+  [[h00 h01 h02 h03 h04 h05 h06 h07]]
+  [[1 h00 h04 h07 h06]
+   [0   1 h01 h05 h03]
+   [0   0   1 h02   0]
+   [0   0   0   1   0]
+   [0   0   0   0   1]])
+
 (defn utm32->hash32
   "Convert a 5x5 upper triangular matrix back to a vector of 8 4-byte words."
   [[[_ h00 h04 h07 h06]
@@ -181,6 +191,14 @@
   (mapv #(bit-and % 0xFFFFFFFF)
         [h00 h01 h02 h03 h04 h05 h06 h07]))
 
+(defn hash64->utm64
+  "Convert a vector of 4 8-byte words into a 4x4 upper triangular matrix."
+  [[h00 h01 h02 h03]]
+  [[1 h00 h03 h02]
+   [0   1 h01   0]
+   [0   0   1   0]
+   [0   0   0   1]])
+
 (defn utm64->hash64
   "Convert a 4x4 upper triangular matrix back to a vector of 4 8-byte words."
   [[[_ h00 h03 h02]
@@ -189,25 +207,7 @@
     [_   _   _   _]]]
   [h00 h01 h02 h03])
 
-(defn utm-multiply
-  "Multiply two upper triangular matrices `a` and `b`. Each cell value is
-  constrained by `bit-size`"
-  [a b]
-  (let [dim (count a)
-        bit-mask (-> Long/MAX_VALUE dec)]
-    (vec (for [i (range dim)]
-           (vec (for [j (range dim)]
-                  (cond
-                    (< j i) 0
-                    (= j i) 1
-                    :else
-                    (reduce (fn [sum k]
-                              (-> sum
-                                  (+ (* (get-in a [i k])
-                                        (get-in b [k j])))
-                                  (bit-and bit-mask)))
-                            0
-                            (range i (inc j))))))))))
+;; ### Hash Conversion Functions
 
 (defn hash8->hash16
   "Convert a vector of 32 bytes into a vector of 16 2-byte words."
@@ -216,6 +216,14 @@
               (+ (bit-shift-left (hash8 (* 2 i)) 8)
                  (hash8 (+ 1 (* 2 i)))))
             (range 16))))
+
+(defn hash16->hash8
+  "Convert a vector 2-byte words into a vector of bytes."
+  [hash16]
+  (vec (mapcat (fn [word]
+                 [(bit-and (bit-shift-right word 8) 0xFF)
+                  (bit-and word 0xFF)])
+               hash16)))
 
 (defn hash8->hash32
   "Convert a vector of 32 bytes into a vector of 8 4-byte words."
@@ -226,6 +234,16 @@
                  (bit-shift-left (hash8 (+ 2 (* 4 i))) 8)
                  (hash8 (+ 3 (* 4 i)))))
             (range 8))))
+
+(defn hash32->hash8
+  "Convert a vector of 4-byte words into a vector of bytes."
+  [hash32]
+  (vec (mapcat (fn [word]
+                 [(bit-and (bit-shift-right word 24) 0xFF)
+                  (bit-and (bit-shift-right word 16) 0xFF)
+                  (bit-and (bit-shift-right word 8) 0xFF)
+                  (bit-and word 0xFF)])
+               hash32)))
 
 (defn hash8->hash64
   "Convert a vector of 32 bytes into a vector of 4 8-byte words."
@@ -240,24 +258,6 @@
                  (bit-shift-left (hash8 (+ 6 (* 8 i))) 8)
                  (hash8 (+ 7 (* 8 i)))))
             (range 4))))
-
-(defn hash16->hash8
-  "Convert a vector 2-byte words into a vector of bytes."
-  [hash16]
-  (vec (mapcat (fn [word]
-                 [(bit-and (bit-shift-right word 8) 0xFF)
-                  (bit-and word 0xFF)])
-               hash16)))
-
-(defn hash32->hash8
-  "Convert a vector of 4-byte words into a vector of bytes."
-  [hash32]
-  (vec (mapcat (fn [word]
-                 [(bit-and (bit-shift-right word 24) 0xFF)
-                  (bit-and (bit-shift-right word 16) 0xFF)
-                  (bit-and (bit-shift-right word 8) 0xFF)
-                  (bit-and word 0xFF)])
-               hash32)))
 
 (defn hash64->hash8
   "Convert a vector of 8-byte words into a vector of bytes."
@@ -336,6 +336,31 @@
   words per cell and then applies `f` to them."
   (with-conversion hex->utm64 utm64->hex))
 
+;; ### Upper Triangular Matrix Multiplication
+
+;; This is the core function that performs the multiplication of two upper
+;; triangular matrices. The multiplication ignores the lower triangular part of
+;; of the matrices since they are always 0 (and always 1 on the main diagonal).
+
+(defn utm-multiply
+  "Multiply two upper triangular matrices `a` and `b`."
+  [a b]
+  (let [dim (count a)
+        bit-mask (-> Long/MAX_VALUE dec)]
+    (vec (for [i (range dim)]
+           (vec (for [j (range dim)]
+                  (cond
+                    (< j i) 0
+                    (= j i) 1
+                    :else
+                    (reduce (fn [sum k]
+                              (-> sum
+                                  (+ (* (get-in a [i k])
+                                        (get-in b [k j])))
+                                  (bit-and bit-mask)))
+                            0
+                            (range i (inc j))))))))))
+
 ;; ### Example Multiplications
 
 ;; Here are some example multiplications of two random 32-byte hashes using
@@ -388,32 +413,42 @@
         results (reduce
                  (fn [results _]
                    (reduce
-                    (fn [results bit-size]
-                      (let [curr-acc (get-in results [bit-size :acc])
+                    (fn [results cell-size]
+                      (let [curr-acc (get-in results [cell-size :acc])
                             ;; randomly select one of the two hashes
                             selected-hash (if (< (rand) 0.5)
-                                            (get-in utms [bit-size :a])
-                                            (get-in utms [bit-size :b]))
+                                            (get-in utms [cell-size :a])
+                                            (get-in utms [cell-size :b]))
                             ;; fuse the selected hash onto the accumulator
                             new-acc (utm-multiply curr-acc selected-hash)]
                         ;; update results with new accumulator and uniqueness info
-                        (if (contains? (get-in results [bit-size :unique]) new-acc)
-                          (update-in results [bit-size :duplicates] conj new-acc)
+                        (if (contains? (get-in results [cell-size :unique]) new-acc)
+                          (update-in results [cell-size :duplicates] conj new-acc)
                           (-> results
-                              (assoc-in [bit-size :acc] new-acc)
-                              (update-in [bit-size :unique] conj new-acc)))))
+                              (assoc-in [cell-size :acc] new-acc)
+                              (update-in [cell-size :unique] conj new-acc)))))
                     results
                     [8 16 32 64]))
                  results
                  (range 10000))]
     ;; convert final results to totals of unique and duplicate hashes
     (->> results
-         (map (fn [[bit-size {:keys [unique duplicates]}]]
-                {:bit-size   bit-size
+         (map (fn [[cell-size {:keys [unique duplicates]}]]
+                {:cell-size   cell-size
                  :unique     (count unique)
                  :duplicates (count duplicates)}))
          (kind/table))))
+
+;; ### Random Fuses Results
+
 (random-fuses)
+
+;; These results show that high entropy data can be well represented by fusing
+;; hashes together. All four bit sizes for the cells of the upper triangular
+;; matrices performed well with high entroy data. I have rerun this experiment
+;; with millions of fuses and have never observed a duplicate hash being
+;; produced. Since 64 bit cells fit in the smallest matrix, this is the fasted
+;; to compute.
 
 ;; ## Experiment 2: Folded Fuses
 
@@ -427,8 +462,8 @@
 
 (defn zero-in-low-bits?
   "Return true if the lower bits of the utm are all zero."
-  [utm bit-size]
-  (let [bit-mask (bit-shift-right Long/MAX_VALUE (- 64 bit-size))]
+  [utm cell-size]
+  (let [bit-mask (bit-shift-right Long/MAX_VALUE (- 64 cell-size))]
     (every?
      (fn [[i j]]
        (or (<= j i)
@@ -465,14 +500,14 @@
                       64 utm64->hex}
         result
         (reduce
-         (fn [result bit-size]
-           (assoc result bit-size
+         (fn [result cell-size]
+           (assoc result cell-size
                   (reduce
                    (fn [result lower-bit-divider]
-                     (let [utm->hex (get utm->hex-fns bit-size)
-                           low-bit-size (quot bit-size lower-bit-divider)]
+                     (let [utm->hex (get utm->hex-fns cell-size)
+                           low-bit-size (quot cell-size lower-bit-divider)]
                        (assoc result low-bit-size
-                              (->> (repeat-fold (get starting-utms bit-size)
+                              (->> (repeat-fold (get starting-utms cell-size)
                                                 low-bit-size)
                                    (map utm->hex)))))
                    {}
@@ -481,19 +516,69 @@
          [8 16 32 64])]
 
     ;; return a result with values converted back to hex strings
-    (->> (for [[bit-size folds-map] result
+    (->> (for [[cell-size folds-map] result
                [low-bit-size folds] folds-map]
-           {:bit-size           bit-size
+           {:cell-size           cell-size
             :low-bit-size  low-bit-size
             :folds-to-zero (if (< (count folds) 100) (count folds) 'NA)
             :folds folds})
          (kind/table))))
+
+;; ### Folded Fuses Results
+
 (folded-fuses)
+
+;; These results show that repeated folding devolves into a zero hash after
+;; only a few folds. The number of bits in a cell nearly exactly defines the
+;; number of folds needed before reaching a zero hash. Since each fold
+;; represents a doubling of the number of fuses of the same value, folding
+;; shows that fusing can _not_ reliably represent long runs of repeated values.
 
 ;; ## Conclusion
 
-;; This article has described a method for fusing hashes together using upper
-;; triangular matrix multiplication. The method is associative and non-commutative.
+;; This article described a method for fusing hashes together using upper
+;; triangular matrix multiplication. The method is associative and
+;; non-commutative.
 
-;; Final conclusion is to use 64 bit cells with 32 lower bits to tolerate many
+;; Experiment 1 showed that high entropy data can be well represented by fusing
+;; hashes together and that the size of cell fields, from 8 to 64 bits, all
+;; performed well with high entropy data. Since 64 bit cells fit in the
+;; smallest matrix, this is the fasted to compute.
+
+;; Experiment 2 showed that low entropy data, specifically long runs of
+;; repeated values, can _not_ be well represented by fusing hashes together
+;; since they all approach a zero hash. The rate of approach is determined by
+;; the bit count in the cells. 64 bit cells were the most able to handle
 ;; repeated values.
+
+;; In practice, hash fusing with upper triangular matrix multiplication is
+;; okay to use if a check is made after each fuse to ensure the lower bits
+;; (e.g., the lowest 32 bits) are not all zero. If this check fails, a
+;; LowEntropyDataError can be raised to indicate the data being hashed has
+;; insufficient entropy.
+
+(defn safe-hash-fuse
+  "Fuse two 32-byte hex hashes together using upper triangular matrix
+  multiplication with 64-bit cells. Raise an error if the lower 32 bits of
+  the result are all zero."
+  [a b]
+  (let [fused (apply-hash64 utm-multiply a b)]
+    (if (zero-in-low-bits? (hex->utm64 fused) 32)
+      (throw (ex-info "Low entropy data detected during hash fusing."
+                      {:a a :b b :fused fused}))
+      fused)))
+
+;; ## Appendix: Why Low Entropy Data Fails (AI Explanation)
+
+;; The reason low entropy data fails to be represented by hash fusing is that
+;; the multiplication of upper triangular matrices causes the lower bits of the
+;; resulting matrix to rapidly approach zero when the same matrix is repeatedly
+;; multiplied by itself. This is because the multiplication operation involves
+;; summing products of the matrix elements, and when the same matrix is used
+;; repeatedly, the contributions to the lower bits become increasingly
+;; negligible compared to the higher bits. As a result, after a certain number
+;; of multiplications, the lower bits of the resulting matrix become zero,
+;; leading to a loss of information and the inability to distinguish between
+;; different inputs that produce the same low-entropy pattern. This phenomenon
+;; highlights the limitations of using hash fusing for low-entropy data, as it
+;; fails to provide unique identifiers for such data.
