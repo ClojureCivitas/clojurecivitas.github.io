@@ -547,7 +547,15 @@ simple-data
     spread
     :=layers
     count)
-;; => 2 (one layer per color group)
+
+;; Show the actual structure (with datasets displayed compactly)
+(-> (layer simple-data :x :y)
+    resolve-roles
+    apply-defaults
+    (update-in [:=layers 0] assoc :=color :color)
+    spread
+    :=layers
+    kind/pprint)
 
 ;; Check the partitioned data
 (-> (layer simple-data :x :y)
@@ -559,7 +567,16 @@ simple-data
     first
     :=data
     tc/row-count)
-;; => 3 (group "a" has 3 rows)
+
+;; Show the first layer with its partitioned data
+(-> (layer simple-data :x :y)
+    resolve-roles
+    apply-defaults
+    (update-in [:=layers 0] assoc :=color :color)
+    spread
+    :=layers
+    first
+    kind/pprint)
 
 ;; Test idempotency - calling spread twice is safe
 (-> (layer simple-data :x :y)
@@ -570,7 +587,16 @@ simple-data
     spread ; Called twice!
     :=layers
     count)
-;; => Still 2 layers (not 4)
+
+;; Show the structure after double spread (still just 2 layers)
+(-> (layer simple-data :x :y)
+    resolve-roles
+    apply-defaults
+    (update-in [:=layers 0] assoc :=color :color)
+    spread
+    spread ; Called twice!
+    :=layers
+    kind/pprint)
 
 ;; ## Stage 4: Rendering
 ;;
