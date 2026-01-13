@@ -85,6 +85,66 @@
 ;; We use manual SVG construction for precise control over the rendering pipeline, rather than
 ;; higher-level plotting abstractions. This gives us complete flexibility in how data maps to
 ;; visual marks.
+
+;; # 📖 Context & Motivation
+;;
+;; This is the second post in a series exploring compositional plotting APIs for Clojure.
+;; In [Part 1](aog_in_clojure_part1.html), we developed a prototype inspired by Julia's
+;; [AlgebraOfGraphics.jl](https://aog.makie.org/stable/), using a map-based intermediate
+;; representation with algebraic composition operators. Part 1 focused on exploring whether
+;; the compositional approach could work with plain Clojure data structures.
+;;
+;; This post takes a different direction. Rather than algebraic operators like `=*` and `=+`,
+;; we explore an **explicit four-stage pipeline** that makes every transformation visible
+;; and user-modifiable. The goal is to see whether Wilkinson's Grammar of Graphics and
+;; AlgebraOfGraphics.jl ideas can be implemented using plain Clojure data structures and
+;; standard transformations, with no hidden magic.
+;;
+;; Both approaches are exploratory, part of an ongoing design discussion in the
+;; [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/).
+;; These experiments may eventually inform new APIs added to
+;; [Tableplot](https://scicloj.github.io/tableplot/), but for now they're proposals
+;; for community feedback.
+;;
+;; ## Why Another Design?
+;;
+;; Tableplot's current APIs
+;; ([`scicloj.tableplot.v1.hanami`](https://scicloj.github.io/tableplot/tableplot_book.hanami_walkthrough.html)
+;; and [`scicloj.tableplot.v1.plotly`](https://scicloj.github.io/tableplot/tableplot_book.plotly_walkthrough.html))
+;; work well for many use cases, but we've heard feedback about template complexity and
+;; the desire for more direct control over the visualization pipeline. Part 1 explored
+;; algebraic composition. This post explores a different tradeoff: explicit pipeline stages
+;; that you can inspect and modify at any point.
+;;
+;; The four stages—Algebra, Inference, Spread, Render—each do one thing clearly. You can
+;; call them explicitly to see what happens, or let the `plot` function call them for you.
+;; The intermediate representation is just plain Clojure maps with `:=` prefixed keys, so
+;; `kind/pprint` shows you exactly what's happening at each stage.
+;;
+;; ## What This Explores
+;;
+;; Can we implement Grammar of Graphics using:
+;; - Plain Clojure maps as the intermediate representation (no records, no protocols)
+;; - Standard operations (`merge`, `update`, `assoc`) for transformation
+;; - Explicit pipeline stages that users can inspect and intervene in
+;; - Idempotent operations that compose safely
+;; - Multimethod extensibility for custom transforms and geometries
+;;
+;; This notebook is a working prototype demonstrating that approach. It handles scatter plots,
+;; histograms, line plots, smoothing, color grouping, faceting, and SPLOM matrices. Not a
+;; complete plotting library, but enough to evaluate whether the design works.
+;;
+;; ## Reading Part 2
+;;
+;; This post is self-contained—all code and examples are included. However, Part 1 provides
+;; additional context about Tableplot's journey, the AlgebraOfGraphics.jl inspiration, and
+;; the broader community discussion. Reading Part 1 first will give you more background on
+;; why we're exploring these designs.
+;;
+;; For terminology (domain, range, scale, aesthetic, etc.), see the Glossary section below.
+;; Part 1 also has an [extensive glossary](aog_in_clojure_part1.html#glossary) if you want
+;; more detail.
+
 ;; # 📖 Glossary
 ;;
 ;; Key terms used throughout this notebook:
