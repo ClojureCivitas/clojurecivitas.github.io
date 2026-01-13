@@ -252,23 +252,6 @@
                               :height      "100vh"
                               :padding-top "77px"}))}
 
-                 ;; Button bar
-                 (when (not collapsed?)
-                   [:div.d-flex.justify-content-between.align-items-center
-                    {:style {:flex  "0 0 auto"
-                             :order "0"}}
-                    [:div.btn-group
-                     [:button.btn.btn-outline-primary.btn-sm
-                      {:on-click toggle!}
-                      (if is-bottom?
-                        [:i.bi.bi-chevron-bar-down]
-                        [:i.bi.bi-chevron-bar-right])
-                      " Hide"]
-                     [:button.btn.btn-outline-secondary.btn-sm
-                      {:on-click switch-layout!}
-                      "↕ Switch Layout"]]
-                    [:small.text-muted "Ctrl+Enter to eval"]])
-
                  ;; Restore button
                  (when collapsed?
                    [:button.btn.btn-outline-primary.w-100.h-100
@@ -283,12 +266,33 @@
                     {:style {:flex           "1 1 auto"
                              :order          "1"
                              :display        "flex"
-                             :flex-direction (if is-bottom? "row" "column")}}
+                             :flex-direction (if is-bottom? "row" "column")
+                             :min-height     "0"}}
 
                     ;; Editor
-                    [:div.position-relative
-                     {:style {:flex     "1 1 0"
-                              :overflow "hidden"}}
+                    [:div.position-relative.d-flex.flex-column
+                     {:style {:flex       "1 1 0"
+                              :overflow   "hidden"
+                              :min-height "0"
+                              :min-width  "0"}}
+                     [:div.d-flex.justify-content-between.align-items-center
+                      {:style {:flex  "0 0 auto"}}
+                      [:div.btn-group
+                       [:button.btn.btn-outline-primary.btn-sm
+                        {:on-click toggle!}
+                        (if is-bottom?
+                          [:i.bi.bi-chevron-bar-down]
+                          [:i.bi.bi-chevron-bar-right])
+                        " Hide"]
+                       [:button.btn.btn-outline-secondary.btn-sm
+                        {:on-click switch-layout!}
+                        "↕ Switch Layout"]
+                       [:button.btn.btn-primary.btn-sm
+                        {:on-click (fn [_]
+                                     (when @editor-ref
+                                       (eval-code! (.-value @editor-ref))))}
+                        "Eval (Ctrl+Enter)"]]]
+                     [:div {:style {:flex "1 1 0" :min-height "0"}}
                      [:textarea.form-control.border-0
                       {:ref         #(reset! editor-ref %)
                        :on-key-down (fn [e]
@@ -302,25 +306,29 @@
                                      :font-family   "var(--bs-font-monospace)"
                                      :font-size     "0.875rem"
                                      :border-radius "0"
-                                     :overflow-y    "auto"}}]]
+                                     :overflow-y    "auto"}}]]]
 
                     ;; REPL Output
                     [:div.position-relative
-                     {:style {:flex     "1 1 0"
-                              :overflow "hidden"}}
+                     {:style {:flex       "1 1 0"
+                              :overflow   "hidden"
+                              :min-height "0"
+                              :min-width  "0"}}
 
-                     ;; Floating label in top-right
-                     [:div.position-absolute.top-0.end-0.badge.bg-secondary.m-2
-                      {:style {:font-size "0.65rem"
-                               :z-index   "10"}}
-                      "Output"]
+                     ;; Output button overlay
+                     [:div.position-absolute.top-0.end-0
+                      {:style {:z-index "10"}}
+                      [:button.btn.btn-outline-secondary.btn-sm
+                       {:on-click #(reset! repl-output [])}
+                       "Clear Output"]]
 
                      [:div#repl-output.sourceCode.border-start
                       {:ref   #(reset! output-ref %)
                        :class (if is-bottom? "border-start" "border-top")
                        :style {:height      "100%"
-                               :padding     "0.75rem"
+                               :margin      0
                                :overflow-y  "auto"
+                               :min-height  "0"
                                :font-family "var(--bs-font-monospace)"
                                :font-size   "0.8125rem"
                                :line-height "1.4"}}

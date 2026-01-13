@@ -10,11 +10,11 @@
   io.github.clojure/core.async.flow-monitor   {:git/tag "v0.1.2"
                                                :git/url "https://github.com/clojure/core.async.flow-monitor"
                                                :git/sha "6248a5d"}
-  criterium/criterium                                   {:mvn/version "0.4.6"}
+  criterium/criterium                         {:mvn/version "0.4.6"}
   metosin/malli                               {:mvn/version "0.19.1"}
   clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
   clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
-  org.scicloj/clay                            {:mvn/version "2.0.3"}
+  org.scicloj/clay                            {:mvn/version "2.0.5"}
   org.scicloj/kindly                          {:mvn/version "4-beta21"}
   thi.ng/geom                                 {:mvn/version "1.0.1"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
@@ -40,8 +40,13 @@
   org.lwjgl/lwjgl-stb$natives-linux           {:mvn/version "3.3.6"}
   org.lwjgl/lwjgl-stb$natives-windows         {:mvn/version "3.3.6"}
   org.lwjgl/lwjgl-stb$natives-macos           {:mvn/version "3.3.6"}
- 
-  
+  dev.data-star.clojure/sdk                   {:mvn/version "1.0.0-RC4"}
+  dev.data-star.clojure/http-kit              {:mvn/version "1.0.0-RC4"}
+  dev.data-star.clojure/brotli                {:mvn/version "1.0.0-RC4"}
+  dev.data-star.clojure/malli-schemas         {:mvn/version "1.0.0-RC4"}
+  dev.data-star.clojure/http-kit-malli-schemas {:mvn/version "1.0.0-RC4"}
+  dev.data-star.clojure/ring-malli-schemas    {:mvn/version "1.0.0-RC4"}
+
   ;; libraries for GIS work
   org.apache.sis.storage/sis-geotiff          {:mvn/version "1.5"}
   org.apache.sis.core/sis-referencing         {:mvn/version "1.5"}
@@ -50,7 +55,6 @@
   org.geotools/gt-epsg-hsql                   {:mvn/version "31.2"}
   org.geotools/gt-geojson                     {:mvn/version "31.2"}
 
- 
   clj-http/clj-http                           {:mvn/version "3.13.1"}
 
   generateme/fastmath                         {:mvn/version "3.0.0-alpha4"}
@@ -65,9 +69,9 @@
   yamlscript/core                             {:git/url "https://github.com/yaml/yamlscript"
                                                :git/sha "ed7adfbf90a39f379d5a7193bb2e4bdd7f0eecf8"
                                                :deps/root "core"}
-  }
- 
- :mvn/repos {"osgeo" {:url "https://repo.osgeo.org/repository/release/"}} 
+  datascript/datascript                       {:mvn/version "1.7.8"}}
+
+ :mvn/repos {"osgeo" {:url "https://repo.osgeo.org/repository/release/"}}
 
  :aliases
  {;; Build the site with `clojure -M:clay -A:markdown`

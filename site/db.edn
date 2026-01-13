@@ -180,7 +180,11 @@
    :name        "William Proffitt"
    :url         "https://github.com/doogiecode"
    :image       "https://avatars.githubusercontent.com/doogiecode"}
- ,]
+  {:id          :jclaggett
+   :name        "Jonathan Claggett"
+   :image       "https://avatars.githubusercontent.com/u/100909?v=4"
+   :url         "https://github.com/jclaggett"
+   :links       [{:icon "github" :href "https://github.com/jclaggett"}]}]
 
  :affiliation
  [{:id   :clojure.core
