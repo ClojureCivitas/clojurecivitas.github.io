@@ -1,47 +1,93 @@
 ^{:kindly/hide-code true
-  :clay {:title "Refined Plotting: Clean Two-Stage Inference"
+  :clay {:title "Refined Plotting: Grammar of Graphics in Clojure"
          :quarto {:type :post
                   :author [:daslu]
-                  :date "2026-01-09"
-                  :description "Grammar of Graphics with explicit role inference and spread stages"
+                  :date "2026-01-13"
+                  :description "Declarative data visualization with explicit four-stage pipeline"
                   :category :data-visualization
-                  :tags [:datavis :grammar-of-graphics :clean-design]
-                  :keywords [:datavis :grammar-of-graphics :wilkinson]
+                  :tags [:datavis :grammar-of-graphics :clean-design :composable]
+                  :keywords [:datavis :grammar-of-graphics :wilkinson :ggplot2 :vega]
                   :toc true
                   :toc-depth 3
                   :draft true}}}
 (ns data-visualization.refined-plotting
-  "Refined plotting with clean two-stage inference.
+  "Grammar of Graphics implementation with explicit pipeline stages.
+  
+  Inspired by Wilkinson's Grammar of Graphics (2005), ggplot2 (R), and
+  AlgebraOfGraphics.jl (Julia). Implements a four-stage transformation
+  pipeline where every step is visible, inspectable, and user-modifiable.
   
   Design principles:
-  - Simple IR (intermediate representation) - data is the API
-  - Keep :=columns for positional algebra
-  - Explicit two-stage transformation:
-    1. resolve-roles: :=columns -> :=x/:=y
-    2. spread: :=color/:=facet -> multiple layers
-  - Both stages are visible and inspectable
+  - Simple IR (data as API) - plain Clojure maps throughout
+  - Explicit stages - no hidden transformations
+  - Composable operations - small pieces, loosely joined  
+  - Extensible - add transforms/geometries via multimethods
   
   Architecture:
   1. Algebraic layer - cross, blend (operate on :=columns)
   2. Role inference - resolve-roles (positional -> named)
   3. Grouping spread - spread (markers -> partitioned layers)
-  4. Rendering - plot (SVG generation)"
+  4. Rendering - plot (transform -> geom -> SVG)"
   (:require
+   ;; Tablecloth - Dataset manipulation
    [tablecloth.api :as tc]
+
+   ;; Kindly - Notebook visualization protocol
    [scicloj.kindly.v4.kind :as kind]
+
+   ;; thi.ng/geom - Low-level SVG rendering
    [thi.ng.geom.viz.core :as viz]
    [thi.ng.geom.svg.core :as svg]
    [thi.ng.geom.core :as g]
+
+   ;; Combinatorics - For cartesian products
    [clojure.math.combinatorics :as combo]))
 
 ;; # Introduction
 ;;
-;; This notebook implements a clean Grammar of Graphics with explicit stages:
+;; This notebook implements a [Grammar of Graphics](https://www.springer.com/gp/book/9780387245447)
+;; (Wilkinson, 2005) in Clojure, following the compositional design pioneered by
+;; [ggplot2](https://ggplot2.tidyverse.org/) (R) and 
+;; [AlgebraOfGraphics.jl](https://aog.makie.org/) (Julia).
 ;;
-;; **Algebra** -> **Assign Roles** -> **Spread** -> **Render**
+;; **Key Innovation:** Explicit four-stage pipeline where each transformation is
+;; visible, inspectable, and user-modifiable:
 ;;
-;; Each stage is a pure function on data. The IR is simple and inspectable.
+;; **Algebra** → **Inference** → **Spread** → **Render**
+;;
+;; This is part of the [Tableplot](https://scicloj.github.io/tableplot/) initiative
+;; and [Real-World-Data](https://scicloj.github.io/docs/community/groups/real-world-data/)
+;; group's work on declarative visualization in Clojure.
+;;
+;; **Design Philosophy:**
+;; - **Simple IR** - Plain Clojure maps all the way down (data as API)
+;; - **Explicit stages** - No hidden magic, intervene anywhere in the pipeline
+;; - **Composable operations** - Small pieces combine into sophisticated visualizations
+;; - **Extensible** - Add custom transforms and geometries via multimethods
+;;
+;; **Related Work:**
+;; - [SPLOM Tutorial](splom_tutorial.clj) - Manual SPLOM construction showing what this grammar automates
+;; - [Brushable SPLOM](brushable_splom.clj) - D3.js interactive visualization example
+;;
+;; Clojurians Zulip discussion (requires login):
+;; [#**data-science>AlgebraOfGraphics.jl**](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/AlgebraOfGraphics.2Ejl/)
 
+;; ## Setup
+;;
+;; This implementation uses several libraries from the Clojure data science ecosystem:
+;;
+;; [**Tablecloth**](https://scicloj.github.io/tablecloth/) provides our dataset API, wrapping
+;; [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset) with a friendly interface.
+;; We use it for column access, filtering, and grouping operations.
+;;
+;; [**Kindly**](https://scicloj.github.io/kindly-noted/) is the visualization protocol that enables
+;; this notebook to render in different environments ([Clay](https://scicloj.github.io/clay/),
+;; [Portal](https://github.com/djblue/portal), etc.) using a shared visualization protocol.
+;;
+;; [**thi.ng/geom**](https://github.com/thi-ng/geom) provides low-level SVG rendering primitives.
+;; We use manual SVG construction for precise control over the rendering pipeline, rather than
+;; higher-level plotting abstractions. This gives us complete flexibility in how data maps to
+;; visual marks.
 ;; ## Theme
 
 (def theme
@@ -65,8 +111,81 @@
    :histogram-stroke "#FFFFFF"
    :histogram-stroke-width 0.5})
 
-;; ## Test Data
+;; ## Constants & Helpers
 
+;; ### Rendering Constants
+
+(def default-panel-width
+  "Default width for single panel plots."
+  400)
+
+(def default-panel-height
+  "Default height for single panel plots."
+  300)
+
+(def default-grid-panel-size
+  "Default size for grid panel plots (width and height)."
+  150)
+
+(def default-grid-margin
+  "Default margin between grid panels."
+  20)
+
+(def default-point-size
+  "Default point size for scatter plots."
+  3)
+
+;; ### Domain Computation Helper
+
+(defn compute-domain
+  "Compute [min max] domain for a collection of values, with optional padding.
+  
+  Filters out nil values before computing range. Adds padding as a fraction
+  of the data span to prevent points from sitting exactly on plot edges.
+  
+  Examples:
+    (compute-domain [1 2 3 4 5])          ; => [0.8 5.2] (5% padding)
+    (compute-domain [1 2 3 4 5] 0.1)      ; => [0.6 5.4] (10% padding)
+    (compute-domain [1 nil 3 nil 5])      ; => [0.8 5.2] (nils ignored)
+    (compute-domain [1 nil 3 nil 5] 0.0)  ; => [1.0 5.0] (no padding)"
+  ([values]
+   (compute-domain values 0.05))
+  ([values padding]
+   (let [non-nil-values (filter some? values)]
+     (when (seq non-nil-values)
+       (let [min-val (apply min non-nil-values)
+             max-val (apply max non-nil-values)
+             span (- max-val min-val)
+             pad (* span padding)]
+         [(- min-val pad) (+ max-val pad)])))))
+
+;; Test the helper
+(kind/pprint (compute-domain [1 2 3 4 5]))
+(kind/pprint (compute-domain [1 2 3 4 5] 0.1))
+(kind/pprint (compute-domain [1 nil 3 nil 5]))
+
+;; ### Axis Label Formatters
+
+(defn int-label-fn
+  "Create formatter for integer axis labels (shows '5' not '5.00').
+  
+  Useful for count data, categorical indices, or when decimal places
+  would be misleading."
+  []
+  (viz/default-svg-label
+   (fn [x] (str (int x)))))
+
+(defn float-label-fn
+  "Create formatter for float axis labels with n decimal places.
+  
+  Examples:
+    ((float-label-fn 1) 3.14159)  ; => \"3.1\"
+    ((float-label-fn 2) 3.14159)  ; => \"3.14\""
+  [n]
+  (viz/default-svg-label
+   (fn [x] (format (str "%." n "f") x))))
+
+;; ## Test Data
 (def simple-data
   (tc/dataset {:x [1 2 3 4 5]
                :y [2 4 6 8 10]
@@ -465,13 +584,6 @@ simple-data
               (-> layer :=data (tc/column col))))
           layers))
 
-(defn compute-domain
-  "Compute [min max] domain for a set of values."
-  [values]
-  (let [non-nil-values (filter some? values)]
-    (when (seq non-nil-values)
-      [(apply min non-nil-values)
-       (apply max non-nil-values)])))
 (defn make-scale
   "Create a linear scale function from domain to range."
   [domain range]
@@ -718,7 +830,12 @@ simple-data
 (defn render-single-panel
   "Render a single panel with multiple layers.
   
-  Pipeline: transform-data -> render-geom -> SVG"
+  Pipeline: transform-data -> render-geom -> SVG
+  
+  New features (2026-01-13):
+  - Axis tick labels with integer formatting
+  - Subtle panel border (#CCCCCC)
+  - Tick marks on axes"
   [layers width height margin]
   (let [;; Compute domains across all layers
         x-vals (get-column-values layers :=x :=data)
@@ -741,44 +858,89 @@ simple-data
                                    (render-geom transformed-layer x-scale y-scale))))
                              layers)
 
-        ;; Grid lines (5 vertical, 5 horizontal)
+        ;; Grid lines (6 ticks = 5 intervals)
         [x-min x-max] x-domain
         [y-min y-max] y-domain
         x-step (/ (- x-max x-min) 5)
         y-step (/ (- y-max y-min) 5)
 
         grid-color (:grid theme)
-        background (:background theme)]
+        background (:background theme)
+
+        ;; Calculate nice tick values
+        x-ticks (vec (for [i (range 6)] (+ x-min (* i x-step))))
+        y-ticks (vec (for [i (range 6)] (+ y-min (* i y-step))))]
 
     [:g
      ;; Background
      [:rect {:x 0 :y 0 :width width :height height :fill background}]
 
      ;; Grid lines - vertical
-     (for [i (range 6)]
-       (let [x-val (+ x-min (* i x-step))
-             x-pos (x-scale x-val)]
+     (for [[i x-val] (map-indexed vector x-ticks)]
+       (let [x-pos (x-scale x-val)]
          [:line {:x1 x-pos :y1 margin
                  :x2 x-pos :y2 (- height margin)
                  :stroke grid-color
                  :stroke-width 0.5}]))
 
      ;; Grid lines - horizontal
-     (for [i (range 6)]
-       (let [y-val (+ y-min (* i y-step))
-             y-pos (y-scale y-val)]
+     (for [[i y-val] (map-indexed vector y-ticks)]
+       (let [y-pos (y-scale y-val)]
          [:line {:x1 margin :y1 y-pos
                  :x2 (- width margin) :y2 y-pos
                  :stroke grid-color
                  :stroke-width 0.5}]))
 
-     ;; Axes (drawn on top of grid)
+     ;; X-axis (bottom)
      [:line {:x1 margin :y1 (- height margin)
              :x2 (- width margin) :y2 (- height margin)
              :stroke "black" :stroke-width 1}]
+
+     ;; X-axis tick marks and labels
+     (for [[i x-val] (map-indexed vector x-ticks)]
+       (let [x-pos (x-scale x-val)
+             y-pos (- height margin)]
+         [:g
+          ;; Tick mark
+          [:line {:x1 x-pos :y1 y-pos
+                  :x2 x-pos :y2 (+ y-pos 3)
+                  :stroke "black" :stroke-width 1}]
+          ;; Tick label
+          [:text {:x x-pos
+                  :y (+ y-pos 15)
+                  :text-anchor "middle"
+                  :font-size 10
+                  :fill "#333333"}
+           (str (int x-val))]]))
+
+     ;; Y-axis (left)
      [:line {:x1 margin :y1 margin
              :x2 margin :y2 (- height margin)
              :stroke "black" :stroke-width 1}]
+
+     ;; Y-axis tick marks and labels
+     (for [[i y-val] (map-indexed vector y-ticks)]
+       (let [x-pos margin
+             y-pos (y-scale y-val)]
+         [:g
+          ;; Tick mark
+          [:line {:x1 (- x-pos 3) :y1 y-pos
+                  :x2 x-pos :y2 y-pos
+                  :stroke "black" :stroke-width 1}]
+          ;; Tick label
+          [:text {:x (- x-pos 8)
+                  :y (+ y-pos 4)
+                  :text-anchor "end"
+                  :font-size 10
+                  :fill "#333333"}
+           (str (int y-val))]]))
+
+     ;; Panel border (subtle, ggplot2-style)
+     [:rect {:x 0 :y 0
+             :width width :height height
+             :fill "none"
+             :stroke "#CCCCCC"
+             :stroke-width 0.5}]
 
      ;; Layer shapes (drawn on top)
      layer-shapes]))
@@ -1201,7 +1363,6 @@ simple-data
     apply-defaults
     plot)
 
-
 ;; # Understanding the Pipeline: Step-by-Step Transformations
 
 ;; This section demonstrates how the 4-stage pipeline gradually transforms
@@ -1481,6 +1642,99 @@ penguins
     spread
     plot)
 
+;; ## Progressive Tutorial: From Simple to Sophisticated
+;;
+;; These examples build from simple to complex, demonstrating how the grammar
+;; composes simple operations into sophisticated visualizations.
+
+;; ### Tutorial Part 1: Building Up to SPLOM
+
+;; **Step 1:** Start with the simplest possible plot - a basic scatter
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    resolve-roles
+    apply-defaults
+    plot)
+
+;; **Step 2:** Add color grouping (just one line changes)
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    resolve-roles
+    apply-defaults
+    (update-in [:=layers 0] assoc :=color :species) ; <- Added this line
+    plot)
+
+;; **Step 3:** Scale to a 2×2 grid using cross
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+           (layers penguins [:bill_length_mm :bill_depth_mm]))
+    resolve-roles
+    apply-defaults
+    plot)
+
+;; **Step 4:** Customize diagonal panels (histograms instead of scatter)
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+           (layers penguins [:bill_length_mm :bill_depth_mm]))
+    resolve-roles
+    apply-defaults
+    (when-diagonal {:=plottype :histogram}) ; <- Added this line
+    plot)
+
+;; **Step 5:** Add color to off-diagonal panels only
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
+           (layers penguins [:bill_length_mm :bill_depth_mm]))
+    resolve-roles
+    apply-defaults
+    (when-diagonal {:=plottype :histogram})
+    (when-off-diagonal {:=color :species}) ; <- Added this line
+    plot)
+
+;; **Step 6:** Scale to full 3×3 SPLOM (same code structure!)
+(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm :flipper_length_mm])
+           (layers penguins [:bill_length_mm :bill_depth_mm :flipper_length_mm]))
+    resolve-roles
+    apply-defaults
+    (when-diagonal {:=plottype :histogram})
+    (when-off-diagonal {:=color :species})
+    plot)
+
+;; ### Tutorial Part 2: Transform Compositions
+
+;; **Layer Overlay:** Scatter with smooth trend line
+(-> (blend
+     (layer penguins :bill_length_mm :bill_depth_mm)
+     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+         (assoc-in [:=layers 0 :=transform] :smooth)
+         (assoc-in [:=layers 0 :=plottype] :line)))
+    resolve-roles
+    apply-defaults
+    plot)
+
+;; **Grouped Transforms:** Smooth line for each species
+(-> (layer penguins :bill_length_mm :bill_depth_mm)
+    resolve-roles
+    apply-defaults
+    (update-in [:=layers 0] assoc :=color :species)
+    (update-in [:=layers 0] assoc :=transform :smooth)
+    (update-in [:=layers 0] assoc :=plottype :line)
+    plot)
+
+;; **Combined:** Scatter + grouped smooth overlay
+(-> (blend
+     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+         (assoc-in [:=layers 0 :=color] :species))
+     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+         (assoc-in [:=layers 0 :=color] :species)
+         (assoc-in [:=layers 0 :=transform] :smooth)
+         (assoc-in [:=layers 0 :=plottype] :line)))
+    resolve-roles
+    apply-defaults
+    plot)
+
+;; ### What This Demonstrates
+;;
+;; - **Composability**: Simple operations (layer, cross, blend) combine naturally
+;; - **Progressive enhancement**: Add features one line at a time
+;; - **Consistent API**: Same pattern works from 1×1 to N×N grids
+;; - **Explicit control**: Every transformation is visible and modifiable
+
 ;; ## Key Takeaways
 
 ;; 1. **Idempotent operations**: You can call resolve-roles, apply-defaults,
@@ -1497,3 +1751,43 @@ penguins
 ;; 4. **Composability**: Algebraic operations (layer, blend, cross) create
 ;;    initial structure. Prep functions (resolve-roles, apply-defaults, spread)
 ;;    enrich it. Render function (plot) produces SVG.
+
+;; ## What's Next
+;;
+;; This grammar provides a foundation for declarative data visualization in Clojure,
+;; following the compositional principles of Wilkinson's Grammar of Graphics.
+;;
+;; **Current capabilities:**
+;; - ✅ Four-stage explicit pipeline (Algebra → Inference → Spread → Render)
+;; - ✅ Transform system: `:identity`, `:smooth` (extensible via multimethods)
+;; - ✅ Geometry system: `:scatter`, `:histogram`, `:line` (extensible via multimethods)
+;; - ✅ Grid layouts: SPLOM matrices with automatic diagonal detection
+;; - ✅ Color grouping: Automatic data partitioning and palette assignment
+;; - ✅ ggplot2-like theming: Professional publication-ready aesthetics
+;;
+;; **In development:**
+;; - 📋 More transforms: `:regress` (linear regression), `:density` (KDE), `:bin`
+;; - 📋 More geometries: `:area` (filled regions), `:bar` (bar charts), `:text` (labels)
+;; - 📋 Axis labels and legends: Automatic generation from data
+;; - 📋 Custom color scales: User-defined palettes and mappings
+;; - 📋 Faceting: `nest` operation for general panel layouts beyond SPLOM
+;;
+;; **Future exploration:**
+;; - 🔬 Interactive features: D3.js integration for brushing and linking
+;; - 🔬 Animation: Temporal transitions between visualizations
+;; - 🔬 Performance: Optimization for large datasets (>100k points)
+;;
+;; **Related notebooks:**
+;; - [SPLOM Tutorial](splom_tutorial.clj) - Step-by-step manual SPLOM construction
+;;   showing what this grammar automates
+;; - [Brushable SPLOM](brushable_splom.clj) - D3.js interactive visualization
+;;   demonstrating cross-panel brushing and linking
+;;
+;; **Part of the ecosystem:**
+;; - [Tableplot](https://scicloj.github.io/tableplot/) - High-level plotting API
+;; - [Real-World-Data](https://scicloj.github.io/docs/community/groups/real-world-data/) -
+;;   Community group for data science tooling
+;;
+;; **Feedback and contributions welcome!**
+;; - GitHub: [Civitas3 repository](https://github.com/daslu/civitas3)
+;; - Zulip: [#data-science>AlgebraOfGraphics.jl](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/AlgebraOfGraphics.2Ejl/)
