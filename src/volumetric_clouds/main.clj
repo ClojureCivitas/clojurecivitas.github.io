@@ -21,9 +21,16 @@
              [org.lwjgl.opengl GL11]
              [org.lwjgl.stb STBImageWrite]))
 
-;; https://clojurecivitas.github.io/dtype_next/image_processing_with_tensors.html
+;; Procedural generation of volumetric clouds
+;;
+;; * Perlin, Worley noise
+;; * fractal brownian motion
+;; * curl noise
+;; * Midje testing of shaders
+;; * Generating OpenGL shaders using templates
+;; * cloud shadows
+;; * powder function
 
-;; Hello
 (def window-width 640)
 (def window-height 480)
 
