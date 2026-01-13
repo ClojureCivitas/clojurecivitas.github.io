@@ -3,7 +3,7 @@
          :quarto {:type :post
                   :author [:timothypratley]
                   :draft true
-                  :date "2026-01-011"
+                  :date "2026-01-13"
                   :description "Can we plot interesting charts for all columns of a dataset?"
                   :category :data-visualization
                   :tags [:datavis :clay]

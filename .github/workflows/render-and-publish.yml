@@ -92,7 +92,7 @@ jobs:
             exit 0
           fi
           echo "Comparing against previous artifact commit: $latest_commit"
-          changed=""
+          changed=$(git diff --name-only --diff-filter=ACMR "$latest_commit" HEAD -- 'src/**/*.clj' | tr '\n' ' ')
           if [ -z "$changed" ]; then
             echo "No changed Clojure sources detected."
             exit 0
