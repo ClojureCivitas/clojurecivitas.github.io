@@ -269,21 +269,32 @@
 (defn compute-domain
   "Compute [min max] domain for a collection of values, with optional padding.
   
-  Filters out nil values before computing range. Adds padding as a fraction
-  of the data span to prevent points from sitting exactly on plot edges.
+  Filters out nil, Infinity, and NaN values before computing range. Adds padding 
+  as a fraction of the data span to prevent points from sitting exactly on plot edges.
+  
+  Returns nil if no valid values remain after filtering.
+  Returns [val val] for single values (zero-span domain handled by make-scale).
   
   Examples:
     (compute-domain [1 2 3 4 5])          ; => [0.8 5.2] (5% padding)
     (compute-domain [1 2 3 4 5] 0.1)      ; => [0.6 5.4] (10% padding)
     (compute-domain [1 nil 3 nil 5])      ; => [0.8 5.2] (nils ignored)
-    (compute-domain [1 nil 3 nil 5] 0.0)  ; => [1.0 5.0] (no padding)"
+    (compute-domain [1 nil 3 nil 5] 0.0)  ; => [1.0 5.0] (no padding)
+    (compute-domain [##Inf 1 ##NaN 2])    ; => [0.95 2.05] (special values ignored)
+    (compute-domain [])                   ; => nil (no valid data)
+    (compute-domain [nil nil])            ; => nil (no valid data)"
   ([values]
    (compute-domain values 0.05))
   ([values padding]
-   (let [non-nil-values (filter some? values)]
-     (when (seq non-nil-values)
-       (let [min-val (apply min non-nil-values)
-             max-val (apply max non-nil-values)
+   (let [;; Filter out nil, Infinity, and NaN values
+         valid-values (filter (fn [v]
+                                (and (some? v)
+                                     (not (Double/isInfinite v))
+                                     (not (Double/isNaN v))))
+                              values)]
+     (when (seq valid-values)
+       (let [min-val (tcc/reduce-min valid-values)
+             max-val (tcc/reduce-max valid-values)
              span (- max-val min-val)
              pad (* span padding)]
          [(- min-val pad) (+ max-val pad)])))))
@@ -331,12 +342,16 @@ simple-data
   "Merge layer maps with :=columns concatenation.
   
   Simple rule: :=columns vectors concatenate, all other properties merge
-  (rightmost wins)."
+  (rightmost wins).
+  
+  Ensures :=columns values are vectors before concatenating."
   [& layers]
   (reduce (fn [acc layer]
             (reduce-kv (fn [m k v]
                          (if (= k :=columns)
-                           (update m k (fnil into []) v)
+                           (let [existing (get m k [])
+                                 new-cols (if (vector? v) v (vector v))]
+                             (update m k (fnil into []) new-cols))
                            (assoc m k v)))
                        acc
                        layer))
@@ -416,8 +431,13 @@ simple-data
   "Create a single layer spec from dataset and columns.
   
   Positional semantics: columns are stored in :=columns vector,
-  roles will be assigned later by resolve-roles."
+  roles will be assigned later by resolve-roles.
+  
+  Validates that dataset is non-nil (throws ex-info if nil)."
   [dataset & columns]
+  (when (nil? dataset)
+    (throw (ex-info "Dataset cannot be nil"
+                    {:dataset dataset :columns columns})))
   {:=layers [(into {:=data dataset}
                    (when (seq columns)
                      {:=columns (vec columns)}))]})
@@ -623,11 +643,14 @@ simple-data
   "Expand grouping aesthetics (visual properties like color or facet panels mapped to data) (:=color, :=facet) into multiple layers.
   
   For each layer with :=color or :=facet:
-  - Partition data by unique values
-  - Create one layer per group
-  - Add :=color-value or :=facet-value metadata
+  - Validates that the grouping column exists in the dataset
+  - Partitions data by unique values
+  - Creates one layer per group
+  - Adds :=color-value or :=facet-value metadata
   
-  Idempotent: If layer already has :=color-value/:=facet-value, skip it."
+  Idempotent: If layer already has :=color-value/:=facet-value, skip it.
+  
+  Throws ex-info if a grouping column doesn't exist in the dataset."
   [spec]
   (let [layers (:=layers spec)
         expanded-layers (mapcat
@@ -640,29 +663,42 @@ simple-data
 
                              ;; Check if needs spreading
                              (let [color-col (:=color layer)
-                                   facet-col (:=facet layer)]
+                                   facet-col (:=facet layer)
+                                   data (:=data layer)]
                                (cond
                                  ;; Has color grouping
                                  color-col
-                                 (let [data (:=data layer)
-                                       groups (-> data
-                                                  (tc/group-by [color-col])
-                                                  (tc/groups->map))]
-                                   (for [[group-val group-data] groups]
-                                     (-> layer
-                                         (assoc :=color-value (get group-val color-col))
-                                         (assoc :=data group-data))))
+                                 (do
+                                   ;; Validate column exists
+                                   (when-not (contains? (set (tc/column-names data)) color-col)
+                                     (throw (ex-info (str "Color column '" color-col "' not found in dataset")
+                                                     {:layer layer
+                                                      :color-column color-col
+                                                      :available-columns (tc/column-names data)})))
+                                   (let [groups (-> data
+                                                    (tc/group-by [color-col])
+                                                    (tc/groups->map))]
+                                     (for [[group-val group-data] groups]
+                                       (-> layer
+                                           (assoc :=color-value (get group-val color-col))
+                                           (assoc :=data group-data)))))
 
                                  ;; Has facet grouping
                                  facet-col
-                                 (let [data (:=data layer)
-                                       groups (-> data
-                                                  (tc/group-by [facet-col])
-                                                  (tc/groups->map))]
-                                   (for [[group-val group-data] groups]
-                                     (-> layer
-                                         (assoc :=facet-value (get group-val facet-col))
-                                         (assoc :=data group-data))))
+                                 (do
+                                   ;; Validate column exists
+                                   (when-not (contains? (set (tc/column-names data)) facet-col)
+                                     (throw (ex-info (str "Facet column '" facet-col "' not found in dataset")
+                                                     {:layer layer
+                                                      :facet-column facet-col
+                                                      :available-columns (tc/column-names data)})))
+                                   (let [groups (-> data
+                                                    (tc/group-by [facet-col])
+                                                    (tc/groups->map))]
+                                     (for [[group-val group-data] groups]
+                                       (-> layer
+                                           (assoc :=facet-value (get group-val facet-col))
+                                           (assoc :=data group-data)))))
 
                                  ;; No grouping needed
                                  :else
@@ -740,18 +776,30 @@ simple-data
   [layers col-key data-key]
   (mapcat (fn [layer]
             (when-let [col (get layer col-key)]
-              (-> layer :=data (tc/column col))))
+              (col (:=data layer))))
           layers))
 
 (defn make-scale
-  "Create a linear scale function from domain to range."
+  "Create a linear scale function from domain to range.
+  
+  Handles zero-span domains (when min=max) by centering the single value
+  in the middle of the range.
+  
+  Examples:
+    (let [s (make-scale [0 10] [0 100])] (s 5))  ; => 50
+    (let [s (make-scale [5 5] [0 100])] (s 5))   ; => 50 (centered)
+    (let [s (make-scale [5 5] [0 100])] (s 6))   ; => 50 (all map to center)"
   [domain range]
   (let [[d-min d-max] domain
         [r-min r-max] range
         d-span (- d-max d-min)
         r-span (- r-max r-min)]
-    (fn [val]
-      (+ r-min (* (/ (- val d-min) d-span) r-span)))))
+    (if (zero? d-span)
+      ;; Zero-span domain: map all values to center of range
+      (constantly (+ r-min (/ r-span 2)))
+      ;; Normal linear interpolation
+      (fn [val]
+        (+ r-min (* (/ (- val d-min) d-span) r-span))))))
 
 ;; Color palette for rendering
 (defn get-color
@@ -800,6 +848,16 @@ simple-data
   (defmethod transform-data :my-transform [layer] ...)"
   (fn [layer] (or (:=transform layer) :identity)))
 
+;; Default method for unknown transform types
+(defmethod transform-data :default
+  [layer]
+  (let [transform-type (:=transform layer)]
+    (throw (ex-info (str "Unknown transform type: " transform-type
+                         ". Available transforms: :identity, :smooth, :regress")
+                    {:transform transform-type
+                     :layer layer
+                     :available-transforms [:identity :smooth :regress]}))))
+
 ;; Identity transform - pass through unchanged (default)
 (defmethod transform-data :identity
   [layer]
@@ -807,21 +865,21 @@ simple-data
 
 ;; Moving average transform - smooths y values using a sliding window to reduce noise
 (defmethod transform-data :smooth
-  [layer]
-  (let [data (:=data layer)
-        x-col (:=x layer)
-        y-col (:=y layer)
-        window-size (get-in layer [:=transform-opts :window] 5)
+  [{:as layer
+    :keys [=x =y =data =transform-opts]}]
+  (let [window-size (get =transform-opts :window 5)
 
-        ;; Get x and y values, filtering out nils
-        x-vals (vec (tc/column data x-col))
-        y-vals (vec (tc/column data y-col))
+        ;; Filter to valid rows and get columns
+        valid-data (-> =data
+                       (tc/select-rows #(and (=x %) (=y %))))
+        x-vals (=x valid-data)
+        y-vals (=y valid-data)
 
-        ;; Filter out nil pairs
-        pairs (filter (fn [{:keys [x y]}] (and (some? x) (some? y)))
-                      (map-indexed (fn [i x] {:i i :x x :y (nth y-vals i)}) x-vals))
-
-        ;; Sort by x
+        ;; Create pairs with indices and sort by x
+        pairs (map (fn [i x y] {:i i :x x :y y})
+                   (range)
+                   x-vals
+                   y-vals)
         sorted-pairs (sort-by :x pairs)
 
         ;; Compute moving average for each point
@@ -851,39 +909,67 @@ simple-data
                        (tc/select-rows #(and (=x %)
                                              (=y %))))
 
-        ;; If no valid data, return empty layer
-        _ (when (tc/empty-ds? valid-data)
-            (throw (ex-info "No valid data points for regression"
-                            {:layer layer})))
+        ;; Check for sufficient valid data
+        row-count (tc/row-count valid-data)]
 
-        ;; Prepare data for regression (fastmath expects xss as vector of vectors)
-        xs (=x valid-data)
-        xss (-> valid-data
-                (tc/select-columns [=x])
-                tc/rows)
-        ys (=y valid-data)
-        
-        ;; Compute linear regression: y = intercept + slope * x
-        model (regr/lm ys xss)
-        slope (first (:beta model))
-        intercept (:intercept model)
+    (cond
+      ;; No valid data
+      (zero? row-count)
+      (throw (ex-info "No valid data points for regression"
+                      {:layer layer
+                       :x-column =x
+                       :y-column =y}))
 
-        ;; Get x domain from data
-        x-min (tcc/reduce-min xs)
-        x-max (tcc/reduce-max xs)
+      ;; Single point - cannot compute regression
+      (= 1 row-count)
+      (throw (ex-info "Cannot compute regression with only 1 data point (need at least 2)"
+                      {:layer layer
+                       :x-column =x
+                       :y-column =y
+                       :row-count row-count}))
 
-        ;; Compute predicted y values at endpoints
-        y-min (+ intercept (* slope x-min))
-        y-max (+ intercept (* slope x-max))
+      ;; Try regression with error handling for degenerate cases
+      :else
+      (try
+        (let [;; Prepare data for regression (fastmath expects xss as vector of vectors)
+              xs (=x valid-data)
+              xss (-> valid-data
+                      (tc/select-columns [=x])
+                      tc/rows)
+              ys (=y valid-data)
 
-        ;; Create new dataset with just two points (line endpoints)
-        regression-data (tc/dataset {:x [x-min x-max]
-                                     :y [y-min y-max]})]
+              ;; Compute linear regression: y = intercept + slope * x
+              model (regr/lm ys xss)
+              slope (first (:beta model))
+              intercept (:intercept model)
 
-    (assoc layer
-           :=data regression-data
-           :=x :x
-           :=y :y)))
+              ;; Get x domain from data
+              x-min (tcc/reduce-min xs)
+              x-max (tcc/reduce-max xs)
+
+              ;; Compute predicted y values at endpoints
+              y-min (+ intercept (* slope x-min))
+              y-max (+ intercept (* slope x-max))
+
+              ;; Create new dataset with just two points (line endpoints)
+              regression-data (tc/dataset {:x [x-min x-max]
+                                           :y [y-min y-max]})]
+
+          (assoc layer
+                 :=data regression-data
+                 :=x :x
+                 :=y :y))
+
+        (catch Exception e
+          ;; Catch degenerate cases (vertical lines, etc.)
+          (throw (ex-info (str "Regression failed: " (.getMessage e)
+                               ". This can happen with degenerate data (e.g., all x values identical).")
+                          {:layer layer
+                           :x-column =x
+                           :y-column =y
+                           :row-count row-count
+                           :cause e}
+                          e)))))))
 
 ;; ## Geometry System
 ;;
@@ -904,6 +990,16 @@ simple-data
   (defmethod render-geom :my-geom [layer x-scale y-scale] ...)"
   (fn [layer & _] (:=plottype layer)))
 
+;; Default method for unknown geometry types
+(defmethod render-geom :default
+  [layer & _]
+  (let [plottype (:=plottype layer)]
+    (throw (ex-info (str "Unknown geometry type: " plottype
+                         ". Available geometries: :scatter, :histogram, :line")
+                    {:plottype plottype
+                     :layer layer
+                     :available-geometries [:scatter :histogram :line]}))))
+
 ;; Render scatter plot layer as circles
 (defmethod render-geom :scatter
   [layer x-scale y-scale]
@@ -915,19 +1011,23 @@ simple-data
                 (get-color color-index)
                 (:default-mark theme))
         point-size (:point-size theme)
-        point-stroke (:point-stroke theme)]
+        point-stroke (:point-stroke theme)
 
-    (for [i (range (tc/row-count data))
-          :let [x-val (-> data (tc/column x-col) (nth i))
-                y-val (-> data (tc/column y-col) (nth i))]
-          :when (and (some? x-val) (some? y-val))]
-      (let [cx (x-scale x-val)
-            cy (y-scale y-val)]
-        [:circle {:cx cx :cy cy :r point-size
-                  :fill color
-                  :stroke point-stroke
-                  :stroke-width 0.5
-                  :opacity 0.7}]))))
+        ;; Filter to valid rows once, then extract columns
+        valid-data (-> data
+                       (tc/select-rows #(and (x-col %) (y-col %))))
+        x-vals (x-col valid-data)
+        y-vals (y-col valid-data)]
+
+    (map (fn [x-val y-val]
+           (let [cx (x-scale x-val)
+                 cy (y-scale y-val)]
+             [:circle {:cx cx :cy cy :r point-size
+                       :fill color
+                       :stroke point-stroke
+                       :stroke-width 0.5
+                       :opacity 0.7}]))
+         x-vals y-vals)))
 
 ;; Keep old function as wrapper for backward compatibility
 (defn render-scatter-layer
@@ -941,51 +1041,59 @@ simple-data
   [layer x-scale height margin]
   (let [data (:=data layer)
         x-col (:=x layer)
-        values (tc/column data x-col)
+        values (x-col data)
 
         ;; Filter nil values
         non-nil-values (filter some? values)
 
-        ;; Simple binning: 10 bins
-        bins 10
-        [min-val max-val] (compute-domain non-nil-values)
-        bin-width (/ (- max-val min-val) bins)
+        ;; Check if we have any valid data
+        domain (compute-domain non-nil-values)]
 
-        ;; Count values in each bin
-        bin-counts (reduce
-                    (fn [counts val]
-                      (let [bin (int (min (dec bins)
-                                          (/ (- val min-val) bin-width)))]
-                        (update counts bin (fnil inc 0))))
-                    {}
-                    non-nil-values)
+    (if (nil? domain)
+      ;; No valid data - return empty shapes
+      []
 
-        max-count (apply max (vals bin-counts))
-        y-scale (make-scale [0 max-count]
-                            [(- height margin) margin])
+      ;; Proceed with histogram rendering
+      (let [;; Simple binning: 10 bins
+            bins 10
+            [min-val max-val] domain
+            bin-width (/ (- max-val min-val) bins)
 
-        ;; Color: use color-index if present, otherwise default
-        color-index (:=color-index layer)
-        hist-fill (if color-index
-                    (get-color color-index)
-                    (:histogram-fill theme))
-        hist-stroke (:histogram-stroke theme)
-        hist-stroke-width (:histogram-stroke-width theme)]
+            ;; Count values in each bin
+            bin-counts (reduce
+                        (fn [counts val]
+                          (let [bin (int (min (dec bins)
+                                              (/ (- val min-val) bin-width)))]
+                            (update counts bin (fnil inc 0))))
+                        {}
+                        non-nil-values)
 
-    (for [bin (range bins)]
-      (let [count (get bin-counts bin 0)
-            x1 (x-scale (+ min-val (* bin bin-width)))
-            x2 (x-scale (+ min-val (* (inc bin) bin-width)))
-            y (y-scale count)
-            bar-height (- (- height margin) y)]
-        [:rect {:x x1
-                :y y
-                :width (- x2 x1)
-                :height bar-height
-                :fill hist-fill
-                :stroke hist-stroke
-                :stroke-width hist-stroke-width
-                :opacity 0.7}]))))
+            max-count (tcc/reduce-max (vals bin-counts))
+            y-scale (make-scale [0 max-count]
+                                [(- height margin) margin])
+
+            ;; Color: use color-index if present, otherwise default
+            color-index (:=color-index layer)
+            hist-fill (if color-index
+                        (get-color color-index)
+                        (:histogram-fill theme))
+            hist-stroke (:histogram-stroke theme)
+            hist-stroke-width (:histogram-stroke-width theme)]
+
+        (for [bin (range bins)]
+          (let [count (get bin-counts bin 0)
+                x1 (x-scale (+ min-val (* bin bin-width)))
+                x2 (x-scale (+ min-val (* (inc bin) bin-width)))
+                y (y-scale count)
+                bar-height (- (- height margin) y)]
+            [:rect {:x x1
+                    :y y
+                    :width (- x2 x1)
+                    :height bar-height
+                    :fill hist-fill
+                    :stroke hist-stroke
+                    :stroke-width hist-stroke-width
+                    :opacity 0.7}]))))))
 
 ;; Keep old function as wrapper for backward compatibility
 (defn render-histogram-layer
@@ -1007,14 +1115,13 @@ simple-data
                 (:line-stroke theme))
         line-width (get-in layer [:=line-width] (:line-width theme))
 
-        ;; Get points and filter out nils
-        points (for [i (range (tc/row-count data))]
-                 (let [x-val (-> data (tc/column x-col) (nth i))
-                       y-val (-> data (tc/column y-col) (nth i))]
-                   (when (and (some? x-val) (some? y-val))
-                     {:x x-val :y y-val})))
-        valid-points (filter some? points)
-        sorted-points (sort-by :x valid-points)
+        ;; Filter to valid rows, extract columns, and create sorted points
+        valid-data (-> data
+                       (tc/select-rows #(and (x-col %) (y-col %))))
+        x-vals (x-col valid-data)
+        y-vals (y-col valid-data)
+        points (map (fn [x y] {:x x :y y}) x-vals y-vals)
+        sorted-points (sort-by :x points)
 
         ;; Create path data string
         path-data (clojure.string/join " "
@@ -1033,6 +1140,8 @@ simple-data
   
   Pipeline: transform-data -> render-geom -> SVG
   
+  Handles empty data gracefully by using default domains when no valid data exists.
+  
   New features (2026-01-13):
   - Axis tick labels with integer formatting
   - Subtle panel border (#CCCCCC)
@@ -1042,8 +1151,8 @@ simple-data
         x-vals (get-column-values layers :=x :=data)
         y-vals (get-column-values layers :=y :=data)
 
-        x-domain (compute-domain x-vals)
-        y-domain (compute-domain y-vals)
+        x-domain (or (compute-domain x-vals) [0 1]) ; Default domain if no data
+        y-domain (or (compute-domain y-vals) [0 1]) ; Default domain if no data
 
         ;; Create scales
         x-scale (make-scale x-domain [margin (- width margin)])
@@ -1172,8 +1281,8 @@ simple-data
             ;; Compute grid dimensions
             grid-rows (keep :=grid-row layers)
             grid-cols (keep :=grid-col layers)
-            max-row (if (seq grid-rows) (apply max grid-rows) 0)
-            max-col (if (seq grid-cols) (apply max grid-cols) 0)
+            max-row (if (seq grid-rows) (tcc/reduce-max grid-rows) 0)
+            max-col (if (seq grid-cols) (tcc/reduce-max grid-cols) 0)
 
             ;; Panel dimensions
             panel-width 150
