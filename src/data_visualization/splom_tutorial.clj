@@ -973,9 +973,13 @@ domains
 ;; - 12 off-diagonal scatter plots show all pairwise relationships
 ;; - Per-species regression lines reveal species-specific trends
 ;;
-;; Notice the symmetry: the upper and lower triangles are mirror images of each other
-;; (x vs y in one panel corresponds to y vs x in the reflected panel).
-;; Some SPLOM designs only show one triangle to avoid redundancy.
+;; Notice the symmetry: the upper and lower triangles are mirror images of each other:
+;; x vs y in one panel corresponds to y vs x in the reflected panel.
+;; (But the regression lines are not symmetric: the two axes have different roles
+;; in the definition of regression, that uses x as a predictor and minimizes the 
+;; prediction error for y.)
+;; Some SPLOM designs only show one triangle to avoid redundancy. Others use each triangle
+;; for a different data visualization.
 
 
 ;; ## Reflection: What We've Built
