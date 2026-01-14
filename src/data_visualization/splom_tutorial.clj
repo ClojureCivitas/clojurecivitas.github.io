@@ -949,27 +949,29 @@ domains
 (select-keys all-regressions [[:sepal-length :sepal-width] 
                               [:petal-length :petal-width]])
 ;; Render the complete 4×4 SPLOM
-(let [n 4
-      grid-total-size (* n grid-panel-size)]
-  (svg
-   {:width grid-total-size
-    :height grid-total-size}
-   
-   ;; Background panels
-   (for [row (range n)
-         col (range n)]
-     (svg/rect [(* col grid-panel-size) (* row grid-panel-size)]
-               grid-panel-size grid-panel-size
-               {:fill (:grey-bg colors)}))
-   
-   ;; Render all 16 panels
-   (for [row (range n)
-         col (range n)]
-     (let [x-col (all-cols col)
-           y-col (all-cols row)
-           regressions (get all-regressions [x-col y-col])]
-       (render-panel x-col y-col row col regressions)))))
+(def iris-splom-4x4
+  (let [n 4
+        grid-total-size (* n grid-panel-size)]
+    (svg
+     {:width grid-total-size
+      :height grid-total-size}
+     
+     ;; Background panels
+     (for [row (range n)
+           col (range n)]
+       (svg/rect [(* col grid-panel-size) (* row grid-panel-size)]
+                 grid-panel-size grid-panel-size
+                 {:fill (:grey-bg colors)}))
+     
+     ;; Render all 16 panels
+     (for [row (range n)
+           col (range n)]
+       (let [x-col (all-cols col)
+             y-col (all-cols row)
+             regressions (get all-regressions [x-col y-col])]
+         (render-panel x-col y-col row col regressions))))))
 
+iris-splom-4x4
 ;; A complete scatter plot matrix! 
 ;; - 4 diagonal histograms show distributions
 ;; - 12 off-diagonal scatter plots show all pairwise relationships

@@ -166,6 +166,63 @@
    [fastmath.ml.regression :as regr]
    [clojure.math.combinatorics :as combo]))
 
+
+;; # 🎯 Step 0: Seeing the Goal
+;;
+;; Before diving into the implementation, let's see what we're working toward.
+;; The scatter plot matrix below comes from our [SPLOM Tutorial](splom_tutorial.html),
+;; where we built it manually step-by-step. Creating this visualization required
+;; about 1000 lines of code—explicit positioning calculations for a 4×4 grid of panels,
+;; careful scale management for each axis, separate rendering logic for scatter plots,
+;; histograms, and regression lines, coordinated species coloring across all panels,
+;; domain computation with padding, and axis tick generation and placement.
+;;
+;; Our goal in this notebook is to make visualizations like this—and many others—
+;; emerge naturally from a simple, composable API based on a Grammar of Graphics.
+
+(require '[data-visualization.splom-tutorial :as splom])
+
+;; A 4×4 scatter plot matrix showing all pairwise relationships in the iris dataset.
+;; This required about 1000 lines of manual code in the tutorial:
+
+splom/iris-splom-4x4
+
+;; Building this manually meant thinking about every detail. We had to calculate
+;; grid positions for 16 panels arranged in 4 rows and 4 columns. We needed 4
+;; independent x-scales and 4 independent y-scales, each mapping from data coordinates
+;; to pixel coordinates in its specific panel. The scatter plots, histograms, and
+;; regression lines each needed their own rendering logic. Species colors had to
+;; be coordinated across all panels. We computed domains (min/max ranges) for each
+;; variable with 5% padding for visual breathing room. And we generated tick marks,
+;; labels, and positioning for every axis.
+;;
+;; It works, and the tutorial is valuable for understanding what's happening under
+;; the hood. But imagine if we could express the same visualization like this:
+;;
+;; ```clojure
+;; (-> (cross (layers iris [:sepal-length :sepal-width :petal-length :petal-width])
+;;            (layers iris [:sepal-length :sepal-width :petal-length :petal-width]))
+;;     resolve-roles
+;;     apply-defaults  
+;;     (when-diagonal {:=plottype :histogram})
+;;     (when-off-diagonal {:=color :species})
+;;     plot)
+;; ```
+;;
+;; The power here comes from composability. Operations like `cross`, `layers`,
+;; and `when-diagonal` each do one thing clearly, but together they capture the
+;; structure of a SPLOM naturally. `cross` says "take all combinations of these
+;; variables," `when-diagonal` says "on the diagonal panels, do this," and
+;; `when-off-diagonal` says "everywhere else, do that." It's concise because
+;; it matches how we think about the visualization conceptually.
+;;
+;; This isn't just about saving typing. The grammar captures the *logic* of the
+;; visualization. The code above reads almost like English: "Show me all pairs
+;; of these variables, with histograms on the diagonal and colored scatter plots
+;; everywhere else." That's exactly what a SPLOM is.
+;;
+;; Now let's build the tools that make this possible.
+
 ;; # 📖 Glossary
 ;;
 ;; Key terms used throughout this notebook:
