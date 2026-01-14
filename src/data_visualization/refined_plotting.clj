@@ -148,6 +148,7 @@
   3. Grouping spread - spread (markers -> partitioned layers)
   4. Rendering - plot (transform -> geom -> SVG)"
   (:require
+   [clojure.string :as str]
    ;; Tablecloth - Dataset manipulation
    [tablecloth.api :as tc]
    [tablecloth.column.api :as tcc]
@@ -1195,6 +1196,150 @@ simple-data
                  :stroke-width line-width
                  :opacity 0.9}]]))
 
+;; ## Axis Labels and Legend Helpers
+
+(defn format-column-name
+  "Convert keyword column name to human-readable string.
+  
+  Examples:
+  - :sepal-length -> 'Sepal length'
+  - :bill_depth_mm -> 'Bill depth mm'
+  - :species -> 'Species'"
+  [k]
+  (when k
+    (-> (name k)
+        (str/replace "-" " ")
+        (str/replace "_" " ")
+        str/capitalize)))
+
+(defn get-axis-labels
+  "Extract or generate axis labels from layer.
+  
+  Returns map with :x-label, :y-label, and :title.
+  User-provided labels (via :=x-label, :=y-label, :=title) override auto-generated ones."
+  [layer]
+  {:x-label (or (:=x-label layer) (format-column-name (:=x layer)))
+   :y-label (or (:=y-label layer) (format-column-name (:=y layer)))
+   :title (:=title layer)})
+
+(defn compute-legend
+  "Compute legend structure from grouped layers.
+  
+  Returns nil if legend not needed (single layer).
+  Returns map with :title and :items for multi-layer plots.
+  
+  Legend shows when:
+  - Multiple layers exist (after spread)
+  - Layers have :=color-value metadata (from grouping)
+  
+  Items are sorted alphabetically by label."
+  [layers]
+  (when (and (> (count layers) 1)
+             (some :=color-value layers))
+    (let [;; Get color column name from first layer
+          color-col (some :=color layers)
+
+          ;; Extract legend items (label + color for each layer)
+          legend-items (distinct
+                        (map (fn [layer]
+                               (let [color-idx (:=color-index layer)
+                                     color (if color-idx
+                                             (get-color color-idx)
+                                             (:default-mark theme))]
+                                 {:label (str (:=color-value layer))
+                                  :color color}))
+                             layers))]
+
+      {:title (or (some :=legend-label layers)
+                  (format-column-name color-col))
+       :items (sort-by :label legend-items)})))
+
+(defn render-axis-labels
+  "Render x-label, y-label, and optional title as SVG text elements.
+  
+  Positions:
+  - X-axis label: bottom center
+  - Y-axis label: left center (rotated 90° counter-clockwise)
+  - Title: top center (optional, only if provided)"
+  [width height margin labels]
+  (let [x-label-y (- height 5)
+        y-label-x 15
+        title-y 20]
+    (remove nil?
+            [;; X-axis label (bottom center)
+             (when (:x-label labels)
+               [:text {:x (/ width 2)
+                       :y x-label-y
+                       :text-anchor "middle"
+                       :font-size 12
+                       :fill "#333333"}
+                (:x-label labels)])
+
+             ;; Y-axis label (left center, rotated)
+             (when (:y-label labels)
+               [:text {:x y-label-x
+                       :y (/ height 2)
+                       :text-anchor "middle"
+                       :transform (str "rotate(-90 " y-label-x " " (/ height 2) ")")
+                       :font-size 12
+                       :fill "#333333"}
+                (:y-label labels)])
+
+             ;; Title (top center) - optional
+             (when (:title labels)
+               [:text {:x (/ width 2)
+                       :y title-y
+                       :text-anchor "middle"
+                       :font-size 14
+                       :font-weight "bold"
+                       :fill "#333333"}
+                (:title labels)])])))
+
+(defn render-legend
+  "Render ggplot2-style legend at position (x, y).
+  
+  Legend structure:
+  - Title (bold, 11pt)
+  - Items (color swatch + label, 10pt)
+  
+  Each item has:
+  - Color swatch (12×12px rectangle)
+  - Label text (5px spacing from swatch)"
+  [legend x y]
+  (let [item-height 20
+        item-spacing 5
+        swatch-size 12
+        title-offset 15]
+    [:g {:class "legend"}
+     ;; Legend title
+     [:text {:x x
+             :y y
+             :font-size 11
+             :font-weight "bold"
+             :fill "#333333"}
+      (:title legend)]
+
+     ;; Legend items
+     (map-indexed
+      (fn [i {:keys [label color]}]
+        (let [item-y (+ y title-offset (* i (+ item-height item-spacing)))]
+          [:g {:class "legend-item"}
+           ;; Color swatch
+           [:rect {:x x
+                   :y item-y
+                   :width swatch-size
+                   :height swatch-size
+                   :fill color
+                   :stroke "#CCCCCC"
+                   :stroke-width 0.5}]
+           ;; Label
+           [:text {:x (+ x swatch-size 5)
+                   :y (+ item-y (/ swatch-size 2) 4)
+                   :font-size 10
+                   :fill "#333333"}
+            label]]))
+      (:items legend))]))
+
 (defn render-single-panel
   "Render a single panel with multiple layers.
   
@@ -1321,7 +1466,11 @@ simple-data
   Automatically calls resolve-roles, apply-defaults, and spread to prepare the spec.
   These operations are idempotent, so calling them explicitly before plot is safe.
   Assigns color indices based on sorted unique color values.
-  Automatically detects grid layout from :=grid-row/:=grid-col metadata."
+  Automatically detects grid layout from :=grid-row/:=grid-col metadata.
+  
+  New features (2026-01-14):
+  - Automatic axis labels (with user override via :=x-label, :=y-label, :=title)
+  - Legend for grouped plots (shows when multiple layers exist after spread)"
   [spec]
   (let [spec-prepared (-> spec
                           resolve-roles
@@ -1377,15 +1526,37 @@ simple-data
                  panel-svg])))]))
 
       ;; Single panel: all layers overlay in one coordinate system
-      (let [width 400
-            height 300
+      (let [;; Extract axis labels from first layer
+            axis-labels (get-axis-labels (first layers))
+
+            ;; Compute legend (nil if not needed)
+            legend (compute-legend layers)
+
+            ;; Dimensions
+            base-width 400
+            base-height 300
             margin 40
-            svg-content (render-single-panel layers width height margin)]
+            legend-width (if legend 100 0)
+
+            ;; Adjust total width if legend present
+            total-width (+ base-width legend-width)
+            total-height base-height
+
+            ;; Render main plot
+            svg-content (render-single-panel layers base-width base-height margin)]
 
         (kind/hiccup
-         [:svg {:width width :height height
+         [:svg {:width total-width :height total-height
                 :xmlns "http://www.w3.org/2000/svg"}
-          svg-content])))))
+          ;; Main plot content
+          svg-content
+
+          ;; Axis labels
+          (render-axis-labels base-width base-height margin axis-labels)
+
+          ;; Legend (if present)
+          (when legend
+            (render-legend legend (+ base-width 10) 50))])))))
 
 ;; # Complete Examples & Tests
 ;;
