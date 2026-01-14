@@ -13,40 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download previous artifact
-        if: github.event_name == 'push'
-        id: artifact_status
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          latest_run=$(gh api "/repos/$REPO/actions/workflows/render-and-publish.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].id' || true)
-          if [ -z "${latest_run:-}" ]; then
-            echo "No successful main run found; skipping artifact download."
-            exit 0
-          fi
-          artifact_id=$(gh api "/repos/$REPO/actions/runs/$latest_run/artifacts" --jq '.artifacts[] | select(.name=="site-build") | .id' | head -n1 || true)
-          if [ -z "${artifact_id:-}" ]; then
-            echo "No site-build artifact found; will do full rebuild."
-            exit 0
-          fi
-          echo "Downloading site-build artifact from run $latest_run (artifact $artifact_id)."
-          gh api "/repos/$REPO/actions/artifacts/$artifact_id/zip" > /tmp/site.zip
-          unzip -q /tmp/site.zip -d .
-          echo "Contents of site/ after artifact extraction:"
-          ls -la site/ | head -50
-          if [ -d site/_site ]; then
-            echo "site/_site present after restore."
-            echo "site_ok=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "site/_site missing after restore; will rely on full rebuild."
-          fi
-
       - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # need history for diffing against main
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -74,40 +42,11 @@ jobs:
             ~/.m2/repository
             ~/.gitlibs
             ~/.deps.clj
-          key: cljdeps-${{ runner.os }}
+          key: cljdeps-${{ hashFiles('deps.edn') }}
+          restore-keys: cljdeps-
 
-      - name: Detect changed Clojure sources
-        if: github.event_name == 'push' && steps.artifact_status.outputs.site_ok == 'true'
-        id: changed_clj
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          git fetch origin main:refs/remotes/origin/main
-          # Get the commit of the previous successful run (where the artifact came from)
-          latest_commit=$(gh api "/repos/$REPO/actions/workflows/render-and-publish.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].head_commit.id' || true)
-          if [ -z "${latest_commit:-}" ] || [ "${latest_commit}" = "null" ]; then
-            echo "No previous commit found; doing full rebuild."
-            exit 0
-          fi
-          echo "Comparing against previous artifact commit: $latest_commit"
-          changed=$(git diff --name-only --diff-filter=ACMR "$latest_commit" HEAD -- 'src/**/*.clj' | tr '\n' ' ')
-          if [ -z "$changed" ]; then
-            echo "No changed Clojure sources detected."
-            exit 0
-          fi
-          echo "Changed Clojure source files:" $changed
-          echo "files=$changed" >> "$GITHUB_OUTPUT"
-
-      - name: Build notebooks (changed set or full when none)
-        run: clojure -M:clay -A:markdown ${{ steps.changed_clj.outputs.files }}
-
-      - name: Cache Quarto
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/quarto
-          key: quarto-${{ runner.os }}
+      - name: Build the content notebooks
+        run: clojure -M:clay -A:markdown
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
@@ -123,13 +62,6 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: site/_site
-
-      - name: Upload site artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: site-build
-          path: site/
-          retention-days: 90
 
   deploy:
     needs: build
