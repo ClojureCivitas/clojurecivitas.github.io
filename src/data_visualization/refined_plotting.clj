@@ -520,6 +520,40 @@ simple-data
 
 (map :=columns (:=layers (layers simple-data [:x :y :z])))
 
+(defn when-diagonal
+  "Apply modifications to diagonal layers (where :=diagonal? is true).
+  
+  Takes a spec and a map of modifications to apply.
+  Returns updated spec with modifications applied only to diagonal layers.
+  
+  Example:
+    (when-diagonal spec {:=plottype :histogram})"
+  [spec modifications]
+  (update spec :=layers
+          (fn [layers]
+            (map (fn [layer]
+                   (if (:=diagonal? layer)
+                     (merge layer modifications)
+                     layer))
+                 layers))))
+
+(defn when-off-diagonal
+  "Apply modifications to off-diagonal layers (where :=diagonal? is false).
+  
+  Takes a spec and a map of modifications to apply.
+  Returns updated spec with modifications applied only to off-diagonal layers.
+  
+  Example:
+    (when-off-diagonal spec {:=color :species})"
+  [spec modifications]
+  (update spec :=layers
+          (fn [layers]
+            (map (fn [layer]
+                   (if (not (:=diagonal? layer))
+                     (merge layer modifications)
+                     layer))
+                 layers))))
+
 ;; ## Stage 2: Role Inference and Defaults
 ;;
 ;; Two steps: resolve-roles (inference) -> apply-defaults (sensible defaults)
@@ -2342,17 +2376,44 @@ iris
 ;; Remember the 4×4 SPLOM from Step 0 that required about 1000 lines of manual code?
 ;; Now that we've built our grammar, here's how we create the same visualization:
 
+;; **Basic SPLOM:** Histograms on diagonal, colored scatter off-diagonal
 (-> (cross (layers iris [:sepal-length :sepal-width :petal-length :petal-width])
            (layers iris [:sepal-length :sepal-width :petal-length :petal-width]))
     resolve-roles
     apply-defaults
-    (when-diagonal {:=plottype :histogram})
+    (when-diagonal {:=plottype :histogram :=color :species})
     (when-off-diagonal {:=color :species})
     plot)
 
 ;; This produces a 4×4 grid (16 panels total) showing all pairwise relationships
-;; in the iris dataset. The diagonal shows histograms of each variable's distribution,
+;; in the iris dataset. The diagonal shows grouped histograms (one per species),
 ;; and the off-diagonal panels show colored scatter plots with one color per species.
+;;
+;; **Enhanced SPLOM:** Add regression lines to off-diagonal panels
+(-> (blend
+     ;; Base SPLOM with grouped histograms and colored scatter
+     (-> (cross (layers iris [:sepal-length :sepal-width :petal-length :petal-width])
+                (layers iris [:sepal-length :sepal-width :petal-length :petal-width]))
+         resolve-roles
+         apply-defaults
+         (when-diagonal {:=plottype :histogram :=color :species})
+         (when-off-diagonal {:=color :species}))
+
+     ;; Add regression lines (only on off-diagonal panels)
+     (-> (cross (layers iris [:sepal-length :sepal-width :petal-length :petal-width])
+                (layers iris [:sepal-length :sepal-width :petal-length :petal-width]))
+         resolve-roles
+         (update :=layers (fn [layers]
+                            (filter #(not (:=diagonal? %)) layers)))
+         (when-off-diagonal {:=color :species :=transform :regress})))
+    apply-defaults
+    plot)
+
+;; This enhanced version shows:
+;; - Diagonal: Grouped histograms showing the distribution of each variable by species
+;; - Off-diagonal: Colored scatter points with regression lines for each species
+;; - Automatic legend showing the three species
+;; - Edge-only axes (ggplot2 style) to reduce visual clutter
 ;;
 ;; Compare this with `splom/iris-splom-4x4` from the tutorial. Same visual result,
 ;; radically different approach. The manual version required explicit calculations
@@ -2362,8 +2423,9 @@ iris
 ;;
 ;; Our grammar version captures the structure directly. `cross` says "all combinations
 ;; of these variables." `when-diagonal` says "on diagonal panels, do this."
-;; `when-off-diagonal` says "everywhere else, do that." The code reads like a
-;; specification of what we want, not instructions for how to build it.
+;; `when-off-diagonal` says "everywhere else, do that." `blend` adds regression
+;; layers on top of scatter layers. The code reads like a specification of what
+;; we want, not instructions for how to build it.
 ;;
 ;; This is the power of a Grammar of Graphics. We describe the visualization's
 ;; logic—what relationships to show, how to group them, what marks to use—and
