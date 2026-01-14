@@ -169,7 +169,6 @@
    [scicloj.metamorph.ml.rdatasets :as rdatasets]
    [clojure.math.combinatorics :as combo]))
 
-
 ;; # 🎯 Step 0: Seeing the Goal
 ;;
 ;; Before diving into the implementation, let's see what we're working toward.
@@ -1018,7 +1017,8 @@ simple-data
           (assoc layer
                  :=data regression-data
                  :=x :x
-                 :=y :y))
+                 :=y :y
+                 :=plottype :line)) ;; Auto-set plottype to :line
 
         (catch Exception e
           ;; Catch degenerate cases (vertical lines, etc.)
@@ -1580,8 +1580,6 @@ simple-data
 
 iris
 
-
-
 ;; ## Scatter plot with real data
 
 ;; Simple scatter: sepal length vs sepal width
@@ -2125,6 +2123,40 @@ iris
 ;; time, and the same patterns work whether you're building a simple 1×1 plot
 ;; or a full N×N grid. Every transformation remains visible and modifiable
 ;; throughout the pipeline.
+
+;; # 🎯 Full Circle: Building the SPLOM with Our Grammar
+;;
+;; Remember the 4×4 SPLOM from Step 0 that required about 1000 lines of manual code?
+;; Now that we've built our grammar, here's how we create the same visualization:
+
+(-> (cross (layers iris [:sepal-length :sepal-width :petal-length :petal-width])
+           (layers iris [:sepal-length :sepal-width :petal-length :petal-width]))
+    resolve-roles
+    apply-defaults
+    (when-diagonal {:=plottype :histogram})
+    (when-off-diagonal {:=color :species})
+    plot)
+
+;; This produces a 4×4 grid (16 panels total) showing all pairwise relationships
+;; in the iris dataset. The diagonal shows histograms of each variable's distribution,
+;; and the off-diagonal panels show colored scatter plots with one color per species.
+;;
+;; Compare this with `splom/iris-splom-4x4` from the tutorial. Same visual result,
+;; radically different approach. The manual version required explicit calculations
+;; for grid positioning, scale management for each axis, separate rendering logic
+;; for scatter plots, histograms, and regression lines, coordinated species coloring,
+;; domain computation with padding, and axis tick generation.
+;;
+;; Our grammar version captures the structure directly. `cross` says "all combinations
+;; of these variables." `when-diagonal` says "on diagonal panels, do this."
+;; `when-off-diagonal` says "everywhere else, do that." The code reads like a
+;; specification of what we want, not instructions for how to build it.
+;;
+;; This is the power of a Grammar of Graphics. We describe the visualization's
+;; logic—what relationships to show, how to group them, what marks to use—and
+;; the grammar handles the mechanics of rendering, scaling, positioning, and
+;; color assignment. The result is code that matches how we think about the
+;; visualization conceptually.
 
 ;; ## Key Takeaways
 
