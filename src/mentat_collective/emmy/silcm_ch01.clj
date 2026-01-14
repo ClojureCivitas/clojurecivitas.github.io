@@ -16,6 +16,8 @@
             [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda]]
             [civitas.repl :as repl]))
 
+;; TODO: Make a button for @path-dimension to make dimensions switchable from 4 -> 2
+
 ;; I investigate a Lorentz covariant Lagrangian that is not widely known. It is discussed in the textbooks of Greiner, "Systems of Particles and Hamiltonian Mechanics" (chapter 21), and also [on-line in: Cline, "Variational Principles in Classical Mechanics"](https://phys.libretexts.org/Bookshelves/Classical_Mechanics/Variational_Principles_in_Classical_Mechanics_(Cline)/17%3A_Relativistic_Mechanics/17.06%3A_Lorentz-Invariant_Formulation_of_Lagrangian_Mechanics).
 
 ;; Then I derive, along deBroglie's argument, the momentum-wavelength relation of a free particle.
@@ -81,11 +83,24 @@
      (->infix e)))
 
 ^:kindly/hide-code
+(define (eq-transformation f)
+  (lambda (tuple)
+          (apply down (map f tuple))))
+
+^:kindly/hide-code
+(kind/scittle
+  '(defn show-eq [tuple]
+     (->infix (simplify (down (first tuple) '= (second tuple))))))
+
+^:kindly/hide-code
 (def tex (comp kind/tex emmy.expression.render/->TeX))
 
 ^:kindly/hide-code
 (def tex-simp (comp tex simplify))
 
+^:kindly/hide-code
+(defn fn-show-eq [tuple]
+  (tex-simp (down (first tuple) '= (second tuple))))
 
 ^:kindly/hide-code
 (define show-exp (comp str simplify))
@@ -119,6 +134,12 @@
 (defmacro show-tex [e]
   (if prod
     (list 'tex e)
+    (reag-comp e)))
+
+^:kindly/hide-code
+(defmacro show-eq [e]
+  (if prod
+    (list 'fn-show-eq e)
     (reag-comp e)))
 
 ^:kindly/hide-code
@@ -157,9 +178,7 @@
   (let ((v (velocity local)))
     (* 1/2 mass (square c)
        (- (* (/ 1 (square c))
-             (+ (square (ref v 1))
-                (square (ref v 2))
-                (square (ref v 3))))
+             (square (apply up (rest v))))
           (square (ref v 0))
           1))))
 
@@ -187,10 +206,16 @@
 (show-tex-expression
   ((Gamma Lc-test-path) 's))
 
+^:kindly/hide-code
+(define path-dimension (atom true)) #_"true = 4D , false = 2D"
 
-(define three-path (up (literal-function 'x)
-                       (literal-function 'y)
-                       (literal-function 'z)))
+^:kindly/hide-code
+(define three-path
+  (if @path-dimension
+    (up (literal-function 'x)
+        (literal-function 'y)
+        (literal-function 'z))
+    (up (literal-function 'x))))
 
 (show-tex-expression
   ((Gamma three-path) 't))
@@ -198,10 +223,15 @@
 (show-tex-expression
   ((compose (L-free-particle 'm) (Gamma three-path)) 't))
 
-(define four-path (up identity
-                      (literal-function 'x)
-                      (literal-function 'y)
-                      (literal-function 'z)))
+^:kindly/hide-code
+(define four-path
+  (if @path-dimension
+    (up identity
+        (literal-function 'x)
+        (literal-function 'y)
+        (literal-function 'z))
+    (up identity
+        (literal-function 'x))))
 
 (show-tex-expression
   ((Gamma four-path) 's))
@@ -225,10 +255,15 @@
 
 ;; The first $0$ is because we set $t=s$ for the path. This reduces the extended Lagrangian to the "conventional" case. Reassuring. Now we can allow arbitrary functions $t(s)$, making the path truely 4-dimensional.
 
-(define Lc-path (up (literal-function 't)
-                    (literal-function 'x)
-                    (literal-function 'y)
-                    (literal-function 'z)))
+^:kindly/hide-code
+(define Lc-path
+  (if @path-dimension
+    (up (literal-function 't)
+        (literal-function 'x)
+        (literal-function 'y)
+        (literal-function 'z))
+    (up (literal-function 't)
+        (literal-function 'x))))
 
 #_(define Lc-path (up (literal-function 't)
                     (literal-function 'x)))
@@ -245,41 +280,114 @@
 
 ;; It is very interesting that a constant term can lead to a new formalism. Cline: "It provides a plausible manifestly-covariant Lagrangian for the one-body system, but serious problems exist extending this to the N-body system when N>1".
 
-;; Nobody possesses a Lorentz covariant N-body mechanics. Goldstein "Classical Mechanics", chapter 7,9: "Hitherto, there does not exist a satisfying description of the relativistic many body system."
+;; Nobody possesses a Lorentz covariant N-body mechanics. Goldstein "Classical Mechanics", chapter 7.9: "Hitherto, there does not exist a satisfying description of the relativistic many body system."
 
-;; This non-homogeneous business requires an implicit $L - pv = 0$ constraint (Cline Eq. 17.6.12, Struckmeier Eq. 21.9)
+;; ### The Constraint on the four dimensional path
 
-(define (Lc1-Lagrange-constraint Lagrangian)
+;; The Lagranian above looks very nice because it is symmtreic in t, x, y, z. But there is a caveat which ultimately brings it in line with the orthodox formulation.
+
+;; Non-homogeneous but symmetric Lagrangians of this type require a general implicit constraint: $L - pv = 0$ (Cline Eq. 17.6.12, Struckmeier Eq. 21.9)
+
+(define (Lc-Lagrange-constraint Lagrangian)
   (- Lagrangian (* ((partial 2) Lagrangian) velocity)))
 
-;; By multiplication this with a constant factor, this leads to Struckmeier Eq. 21.12:
+;; Applied to the free particle (and multiplication with a constant factor), leads to (Struckmeier Eq. 21.12):
 
-(define Lc1-constr (compose (* (/ 2 (square 'c) 'm_0)
-                               (Lc1-Lagrange-constraint (Lc-free-particle 'm_0 'c))) (Gamma Lc-path)))
+(define Lc-constraint-s
+  (down (constantly 0) (compose (* (/ 2 (square 'c) 'm_0)
+                      (Lc-Lagrange-constraint (Lc-free-particle 'm_0 'c)))
+                   (Gamma Lc-path))))
 
-(show-tex-expression
-  (Lc1-constr 's))
+^:kindly/hide-code
+(show-eq
+  (Lc-constraint-s 's))
 
-;; This constraint cannot be dealt with easily (contrary to constraints that do not depend on velocity but position which can be treated via Lagrange multipliers.)
+;; The above is a constraint, i.e. needs to be zero, needs to vanish for all physical paths.
 
-;; Calculate $dt/ds$
-(define t-prime (sqrt (+ (- Lc1-constr)
-                      (square (ref (ref (Gamma Lc-path) 2) 0)))))
+;; Contrary to constraints that depend on position, this constraint (being about velocity) cannot be easily treated via Lagrange multipliers.
 
-(show-tex-expression
-  (t-prime 's))
+;; We proceed to explicitely calculate $(Dt(s))^2$
 
-;; Maybe not useful, but one could also calculate $d^2t/ds^2$
+(define t (literal-function 't))
 
-^{:kindly/kind :kind/hidden}
-(show-tex-expression
-  ((D t-prime) 's))
+(define Dt-squared
+  ((eq-transformation
+     #(- (square (D t)) %))
+   Lc-constraint-s))
 
-;; Important is that $dt/ds$ leads to $ds/dt$ and the famous $\gamma$ factor (see e.g. Cline)
+^:kindly/hide-code
+(show-eq
+  (Dt-squared 's))
+
+;; The above is meant as an equality.
+
+;; We now upgrade the parameter $s$ to a function $s(t)$ which is the inverse of $t(s)$, $s = t^{-1}$. 
+
+(define s (literal-function 's))
+
+;; Inverse means that $t(s(y)) = y$. While in the math rendering there is a minor risk of confusion, in the underlying code we do not need the auxilary `y`, the function `t` and the symbol `'t` are clearly distinct:
+
+(define t°s (down (comp t s) identity))
+
+(show-eq
+  (t°s 't))
+
+;; The derivative results in the number `one`
+
+(show-eq
+  ((D t°s) 't))
+
+;; With this interlude, we return to the constraint. Just by formally replacing $s \rightarrow s(t)$, it reads as
+
+(show-eq
+  (Dt-squared (s 't)))
+
+;; We'd like to get rid of the function `t` and only keep the symbol/parameter `'t`. For this, we multiply the above equation by $(Ds(t))^2$
+
+(define eq1
+  ((eq-transformation
+     #(* ((square (D s)) 't) %))
+   (* (Dt-squared (s 't)))))
+
+(show-eq eq1)
+
+;; We introduce the following slighly sloppy notation
+
+(show-eq
+  ((down three-path (comp three-path s)) 't))
+
+;; The derivative of this definition is
+(show-eq
+  ((D (down three-path (comp three-path s))) 't))
+
+;; With this the constraint becomes
+
+^:kindly/hide-code
+(define constraint-1
+  (down 1 (/ (+ (* (square 'c)
+                   ((square (D (literal-function 's))) 't))
+                ((square (D three-path)) 't))
+             (square 'c))))
+
+(show-eq
+  constraint-1)
+
+;; Remember that, as shown above, the number `one` appears because of $s = t^{-1}$
+
+;; Isolating $Ds(t)$ on the right hand side
+
+(show-eq
+  ((eq-transformation
+     #(sqrt (- % (/ ((square (D three-path)) 't) (square 'c)))))
+   constraint-1))
+
+;; The above equation, which is just another expression of the constraint $L - pv = 0$, is conventionally written as below, introducing the famous $\gamma$ factor of Special Relativity.
 
 ^:kindly/hide-code
 (kind/tex
   "\\frac{ds}{dt} = \\sqrt{1- \\frac{v^2}{c^2}} = \\sqrt{1 - \\beta ^ 2} = \\frac{1}{\\gamma}")
+
+;; Thus, the function $s(t)$ is nothing but the proper time.
 
 ;; ## The deBroglie wavelength
 
