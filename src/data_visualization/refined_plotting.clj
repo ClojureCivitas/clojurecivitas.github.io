@@ -164,6 +164,9 @@
 
    ;; Fastmath - Linear regression
    [fastmath.ml.regression :as regr]
+
+   ;; RDatasets - Example datasets
+   [scicloj.metamorph.ml.rdatasets :as rdatasets]
    [clojure.math.combinatorics :as combo]))
 
 
@@ -1572,21 +1575,23 @@ simple-data
     ;; Final: SVG rendering
 
 ;; # Real Dataset Examples
+;; Load iris dataset (150 rows, 5 columns) - classic dataset with 4 measurements per flower
+(def iris (rdatasets/datasets-iris))
 
-;; Load penguins dataset (344 rows, 8 columns)
-(def penguins
-  (tc/dataset "https://raw.githubusercontent.com/allisonhorst/palmerpenguins/master/inst/extdata/penguins.csv" {:key-fn keyword}))
+iris
+
+
 
 ;; ## Scatter plot with real data
 
-;; Simple scatter: bill length vs bill depth
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+;; Simple scatter: sepal length vs sepal width
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     plot)
 
-;; Scatter with color grouping by species (Adelie, Gentoo, Chinstrap)
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+;; Scatter with color grouping by species (Setosa, Versicolor, Virginica)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     (update-in [:=layers 0] assoc :=color :species)
@@ -1594,14 +1599,14 @@ simple-data
 
 ;; ## Histogram with real data
 
-;; Distribution of bill lengths
-(-> (layer penguins :bill_length_mm :bill_length_mm)
+;; Distribution of sepal lengths
+(-> (layer iris :sepal-length :sepal-length)
     resolve-roles
     apply-defaults
     plot)
 
-;; Distribution of body mass
-(-> (layer penguins :body_mass_g :body_mass_g)
+;; Distribution of petal width
+(-> (layer iris :petal-width :petal-width)
     resolve-roles
     apply-defaults
     plot)
@@ -1615,18 +1620,18 @@ simple-data
     apply-defaults
     plot)
 
-;; Full 3×3 SPLOM with penguins dataset
+;; Full 3×3 SPLOM with iris dataset
 ;; Diagonal: histograms showing distributions
 ;; Off-diagonal: scatter plots showing relationships
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm :flipper_length_mm])
-           (layers penguins [:bill_length_mm :bill_depth_mm :flipper_length_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width :petal-length])
+           (layers iris [:sepal-length :sepal-width :petal-length]))
     resolve-roles
     apply-defaults
     plot)
 
 ;; Custom SPLOM with different diagonal geometry
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-           (layers penguins [:bill_length_mm :bill_depth_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width])
+           (layers iris [:sepal-length :sepal-width]))
     resolve-roles
     (when-diagonal {:=plottype :histogram})
     (when-off-diagonal {:=plottype :scatter})
@@ -1637,7 +1642,7 @@ simple-data
 ;; ### Basic color grouping
 ;; Adding :=color creates groups - one layer per unique value
 
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     (assoc-in [:=layers 0 :=color] :species)
@@ -1646,7 +1651,7 @@ simple-data
 ;; ### Inspect what spread does with color
 ;; Before spread: 1 layer with :=color
 (def before-spread
-  (-> (layer penguins :bill_length_mm :bill_depth_mm)
+  (-> (layer iris :sepal-length :sepal-width)
       resolve-roles
       apply-defaults
       (assoc-in [:=layers 0 :=color] :species)))
@@ -1668,7 +1673,7 @@ simple-data
 ;; ### Color with different plot types
 
 ;; Colored lines
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     (assoc-in [:=layers 0 :=color] :species)
@@ -1676,7 +1681,7 @@ simple-data
     plot)
 
 ;; Colored histograms (diagonal pattern)
-(-> (layer penguins :bill_length_mm :bill_length_mm)
+(-> (layer iris :sepal-length :sepal-length)
     resolve-roles
     apply-defaults
     (assoc-in [:=layers 0 :=color] :species)
@@ -1686,8 +1691,8 @@ simple-data
 
 ;; Scatter + smooth, both colored by species
 (-> (blend
-     (layer penguins :bill_length_mm :bill_depth_mm)
-     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (layer iris :sepal-length :sepal-width)
+     (-> (layer iris :sepal-length :sepal-width)
          (assoc-in [:=layers 0 :=transform] :smooth)
          (assoc-in [:=layers 0 :=plottype] :line)))
     resolve-roles
@@ -1701,7 +1706,7 @@ simple-data
 ;; Colors are assigned by sorted unique values with indices
 
 (def color-example
-  (-> (layer penguins :bill_length_mm :bill_depth_mm)
+  (-> (layer iris :sepal-length :sepal-width)
       resolve-roles
       apply-defaults
       (assoc-in [:=layers 0 :=color] :species)
@@ -1711,20 +1716,20 @@ simple-data
 (map #(select-keys % [:=color-value :=color-index]
                    (:=layers color-example)))
 
-;; ### Multiple color groups in one plot
-;; Each layer can have different color groupings
-
-(-> (blend
-     ;; Layer 1: Colored by species
-     (-> (layer penguins :bill_length_mm :bill_depth_mm)
-         (assoc-in [:=layers 0 :=color] :species))
-     ;; Layer 2: Colored by island (will get different colors)
-     (-> (layer penguins :flipper_length_mm :body_mass_g)
-         (assoc-in [:=layers 0 :=color] :island)))
-    resolve-roles
-    apply-defaults
-    plot)
-
+;; ;; ### Multiple color groups in one plot
+;; ;; Each layer can have different color groupings
+;; 
+;; (-> (blend
+;;      ;; Layer 1: Colored by species
+;;      (-> (layer iris :sepal-length :sepal-width)
+;;          (assoc-in [:=layers 0 :=color] :species))
+;;      ;; Layer 2: Colored by island (will get different colors)
+;;      (-> (layer iris :petal-length :petal-width)
+;;          (assoc-in [:=layers 0 :=color] :island)))
+;;     resolve-roles
+;;     apply-defaults
+;;     plot)
+;; 
 ;; # Understanding the Pipeline: Step-by-Step Transformations
 
 ;; This section demonstrates how the 4-stage pipeline gradually transforms
@@ -1735,57 +1740,57 @@ simple-data
 
 ;; ### Stage 1: Start with a simple layer
 
-penguins
+iris
 
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     kind/pprint)
 
 ;; ### Stage 1 -> Stage 2: Add role resolution
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     kind/pprint)
 
 ;; ### Stage 2 -> Stage 3: Add defaults
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     kind/pprint)
 
 ;; ### Stage 3 -> Stage 4: Add spread (no-op here, no grouping)
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     spread
     kind/pprint)
 
 ;; ### Stage 4: Add rendering
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     spread
     plot)
 
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     plot)
 
 ;; ## Example 2: Intervening between stages
 
 ;; Inspect the spec with modified plottype
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     (assoc-in [:=layers 0 :=plottype] :line)
     apply-defaults
     kind/pprint)
 
 ;; ### Intervention after resolve-roles: Change plottype
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     (assoc-in [:=layers 0 :=plottype] :line)
     apply-defaults
     plot)
 
 ;; Inspect the spec with custom scale domains
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     (assoc-in [:=scales :x :domain] [30 60])
@@ -1793,7 +1798,7 @@ penguins
     kind/pprint)
 
 ;; ### Intervention after apply-defaults: Override scale domain
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     (assoc-in [:=scales :x :domain] [30 60])
@@ -1801,7 +1806,7 @@ penguins
     plot)
 
 ;; Inspect the spec with custom theme
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     (assoc :=theme (assoc theme
@@ -1810,7 +1815,7 @@ penguins
     kind/pprint)
 
 ;; ### Intervention after apply-defaults: Change theme colors
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     (assoc :=theme (assoc theme
@@ -1821,18 +1826,18 @@ penguins
 ;; ## Example 3: Color grouping transformation
 
 ;; ### Start with a colored layer
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     (assoc-in [:=layers 0 :=color] :species))
 
 ;; ### Before spread: single layer with :=color annotation
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     (assoc-in [:=layers 0 :=color] :species)
     resolve-roles
     apply-defaults
     (#(select-keys (first (:=layers %)) [:=columns :=color :=plottype])))
 
 ;; ### After spread: multiple layers, one per species
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     (assoc-in [:=layers 0 :=color] :species)
     resolve-roles
     apply-defaults
@@ -1842,7 +1847,7 @@ penguins
     kind/pprint)
 
 ;; Inspect the fully prepared spec
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     (assoc-in [:=layers 0 :=color] :species)
     resolve-roles
     apply-defaults
@@ -1850,7 +1855,7 @@ penguins
     kind/pprint)
 
 ;; ### Render the spread layers
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     (assoc-in [:=layers 0 :=color] :species)
     resolve-roles
     apply-defaults
@@ -1858,7 +1863,7 @@ penguins
     plot)
 
 ;; Inspect the modified layers
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     (assoc-in [:=layers 0 :=color] :species)
     resolve-roles
     apply-defaults
@@ -1874,8 +1879,8 @@ penguins
     kind/pprint)
 
 ;; ### Intervention after spread: Modify individual color layers
-;; Change the second species (Chinstrap) to use line geometry
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+;; Change the second species (Versicolor) to use line geometry
+(-> (layer iris :sepal-length :sepal-width)
     (assoc-in [:=layers 0 :=color] :species)
     resolve-roles
     apply-defaults
@@ -1890,95 +1895,95 @@ penguins
                layers)))
     plot)
 
-;; ## Example 4: Faceting transformation
-
-;; ### Start with a faceted layer
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
-    (assoc-in [:=layers 0 :=facet] :island))
-
-;; ### Before spread: single layer with facet annotation
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
-    (assoc-in [:=layers 0 :=facet] :island)
-    resolve-roles
-    apply-defaults
-    (#(select-keys (first (:=layers %)) [:=columns :=facet])))
-
-;; ### After spread: multiple layers, one per island
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
-    (assoc-in [:=layers 0 :=facet] :island)
-    resolve-roles
-    apply-defaults
-    spread
-    (#(map (fn [layer] (select-keys layer [:=facet-value :=facet-index]))
-           (:=layers %)))
-    kind/pprint)
-
-;; Inspect the faceted spec
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
-    (assoc-in [:=layers 0 :=facet] :island)
-    resolve-roles
-    apply-defaults
-    spread
-    kind/pprint)
-
-;; ### Render faceted plot
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
-    (assoc-in [:=layers 0 :=facet] :island)
-    resolve-roles
-    apply-defaults
-    spread
-    plot)
-
-;; Inspect the combined color and facet spec
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
-    (assoc-in [:=layers 0 :=color] :species)
-    (assoc-in [:=layers 0 :=facet] :island)
-    resolve-roles
-    apply-defaults
-    spread
-    kind/pprint)
-
-;; ### Intervention: Combine color and facet
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
-    (assoc-in [:=layers 0 :=color] :species)
-    (assoc-in [:=layers 0 :=facet] :island)
-    resolve-roles
-    apply-defaults
-    spread
-    plot)
+;; ;; ## Example 4: Faceting transformation
+;; 
+;; ;; ### Start with a faceted layer
+;; (-> (layer iris :sepal-length :sepal-width)
+;;     (assoc-in [:=layers 0 :=facet] :island))
+;; 
+;; ;; ### Before spread: single layer with facet annotation
+;; (-> (layer iris :sepal-length :sepal-width)
+;;     (assoc-in [:=layers 0 :=facet] :island)
+;;     resolve-roles
+;;     apply-defaults
+;;     (#(select-keys (first (:=layers %)) [:=columns :=facet])))
+;; 
+;; ;; ### After spread: multiple layers, one per island
+;; (-> (layer iris :sepal-length :sepal-width)
+;;     (assoc-in [:=layers 0 :=facet] :island)
+;;     resolve-roles
+;;     apply-defaults
+;;     spread
+;;     (#(map (fn [layer] (select-keys layer [:=facet-value :=facet-index]))
+;;            (:=layers %)))
+;;     kind/pprint)
+;; 
+;; ;; Inspect the faceted spec
+;; (-> (layer iris :sepal-length :sepal-width)
+;;     (assoc-in [:=layers 0 :=facet] :island)
+;;     resolve-roles
+;;     apply-defaults
+;;     spread
+;;     kind/pprint)
+;; 
+;; ;; ### Render faceted plot
+;; (-> (layer iris :sepal-length :sepal-width)
+;;     (assoc-in [:=layers 0 :=facet] :island)
+;;     resolve-roles
+;;     apply-defaults
+;;     spread
+;;     plot)
+;; 
+;; ;; Inspect the combined color and facet spec
+;; (-> (layer iris :sepal-length :sepal-width)
+;;     (assoc-in [:=layers 0 :=color] :species)
+;;     (assoc-in [:=layers 0 :=facet] :island)
+;;     resolve-roles
+;;     apply-defaults
+;;     spread
+;;     kind/pprint)
+;; 
+;; ;; ### Intervention: Combine color and facet
+;; (-> (layer iris :sepal-length :sepal-width)
+;;     (assoc-in [:=layers 0 :=color] :species)
+;;     (assoc-in [:=layers 0 :=facet] :island)
+;;     resolve-roles
+;;     apply-defaults
+;;     spread
+;;     plot)
 
 ;; ## Example 5: Cross (SPLOM) transformation
 
 ;; ### Start with a cross product
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-           (layers penguins [:bill_length_mm :flipper_length_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width])
+           (layers iris [:sepal-length :petal-length]))
     kind/pprint)
 
 ;; ### After resolution: roles inferred
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-           (layers penguins [:bill_length_mm :flipper_length_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width])
+           (layers iris [:sepal-length :petal-length]))
     resolve-roles
     (#(map (fn [layer] (select-keys layer [:=columns :=x :=y]))
            (:=layers %))))
 
 ;; Inspect the SPLOM spec
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-           (layers penguins [:bill_length_mm :flipper_length_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width])
+           (layers iris [:sepal-length :petal-length]))
     apply-defaults
     spread
     kind/pprint)
 
 ;; ### Render the SPLOM
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-           (layers penguins [:bill_length_mm :flipper_length_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width])
+           (layers iris [:sepal-length :petal-length]))
     resolve-roles
     apply-defaults
     spread
     plot)
 
 ;; Inspect the colored SPLOM spec
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-           (layers penguins [:bill_length_mm :flipper_length_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width])
+           (layers iris [:sepal-length :petal-length]))
     resolve-roles
     apply-defaults
     (update :=layers
@@ -1988,8 +1993,8 @@ penguins
     kind/pprint)
 
 ;; ### Intervention: Add color to entire SPLOM
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-           (layers penguins [:bill_length_mm :flipper_length_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width])
+           (layers iris [:sepal-length :petal-length]))
     resolve-roles
     apply-defaults
     (update :=layers
@@ -2006,36 +2011,36 @@ penguins
 ;; ### Tutorial Part 1: Building Up to SPLOM
 
 ;; **Step 1:** Start with the simplest possible plot - a basic scatter
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     plot)
 
 ;; **Step 2:** Add color grouping (just one line changes)
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     (update-in [:=layers 0] assoc :=color :species) ; <- Added this line
     plot)
 
 ;; **Step 3:** Scale to a 2×2 grid using cross
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-           (layers penguins [:bill_length_mm :bill_depth_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width])
+           (layers iris [:sepal-length :sepal-width]))
     resolve-roles
     apply-defaults
     plot)
 
 ;; **Step 4:** Customize diagonal panels (histograms instead of scatter)
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-           (layers penguins [:bill_length_mm :bill_depth_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width])
+           (layers iris [:sepal-length :sepal-width]))
     resolve-roles
     apply-defaults
     (when-diagonal {:=plottype :histogram}) ; <- Added this line
     plot)
 
 ;; **Step 5:** Add color to off-diagonal panels only
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm])
-           (layers penguins [:bill_length_mm :bill_depth_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width])
+           (layers iris [:sepal-length :sepal-width]))
     resolve-roles
     apply-defaults
     (when-diagonal {:=plottype :histogram})
@@ -2043,8 +2048,8 @@ penguins
     plot)
 
 ;; **Step 6:** Scale to full 3×3 SPLOM (same code structure!)
-(-> (cross (layers penguins [:bill_length_mm :bill_depth_mm :flipper_length_mm])
-           (layers penguins [:bill_length_mm :bill_depth_mm :flipper_length_mm]))
+(-> (cross (layers iris [:sepal-length :sepal-width :petal-length])
+           (layers iris [:sepal-length :sepal-width :petal-length]))
     resolve-roles
     apply-defaults
     (when-diagonal {:=plottype :histogram})
@@ -2055,8 +2060,8 @@ penguins
 
 ;; **Layer Overlay:** Scatter with smooth trend line
 (-> (blend
-     (layer penguins :bill_length_mm :bill_depth_mm)
-     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (layer iris :sepal-length :sepal-width)
+     (-> (layer iris :sepal-length :sepal-width)
          (assoc-in [:=layers 0 :=transform] :smooth)
          (assoc-in [:=layers 0 :=plottype] :line)))
     resolve-roles
@@ -2064,7 +2069,7 @@ penguins
     plot)
 
 ;; **Grouped Transforms:** Smooth line for each species
-(-> (layer penguins :bill_length_mm :bill_depth_mm)
+(-> (layer iris :sepal-length :sepal-width)
     resolve-roles
     apply-defaults
     (update-in [:=layers 0] assoc :=color :species)
@@ -2074,9 +2079,9 @@ penguins
 
 ;; **Combined:** Scatter + grouped smooth overlay
 (-> (blend
-     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (-> (layer iris :sepal-length :sepal-width)
          (assoc-in [:=layers 0 :=color] :species))
-     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (-> (layer iris :sepal-length :sepal-width)
          (assoc-in [:=layers 0 :=color] :species)
          (assoc-in [:=layers 0 :=transform] :smooth)
          (assoc-in [:=layers 0 :=plottype] :line)))
@@ -2089,9 +2094,9 @@ penguins
 ;; **Simple Regression:** Scatter with regression line overlay
 (-> (blend
      ;; Scatter points
-     (layer penguins :bill_length_mm :bill_depth_mm)
+     (layer iris :sepal-length :sepal-width)
      ;; Regression line (plottype :line is automatic for :regress transform)
-     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (-> (layer iris :sepal-length :sepal-width)
          (update-in [:=layers 0] assoc :=transform :regress)))
     resolve-roles
     apply-defaults
@@ -2100,10 +2105,10 @@ penguins
 ;; **Grouped Regression:** One regression line per species
 (-> (blend
      ;; Scatter points colored by species
-     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (-> (layer iris :sepal-length :sepal-width)
          (update-in [:=layers 0] assoc :=color :species))
      ;; Regression lines colored by species
-     (-> (layer penguins :bill_length_mm :bill_depth_mm)
+     (-> (layer iris :sepal-length :sepal-width)
          (update-in [:=layers 0] assoc :=color :species)
          (update-in [:=layers 0] assoc :=transform :regress)))
     resolve-roles
