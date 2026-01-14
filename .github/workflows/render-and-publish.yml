@@ -1,12 +1,19 @@
+name: Incremental Render and Publish
+
 on:
   push:
     branches:
       - main
-
-name: Render and Publish
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Deploy to Pages (manual runs only)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   build:
@@ -15,27 +22,79 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Normalize QMD mtimes to last commit
+        run: |
+          set -euo pipefail
+          git ls-files -z -- '*.qmd' \
+            | xargs -0 -I{} sh -c '
+                ts=$(git log -1 --format=%ct -- "{}" || true)
+                if [ -n "$ts" ]; then
+                  touch -d "@$ts" "{}"
+                fi
+              '
+
+      - name: Download previous site artifact
+        if: github.event_name == 'push'
+        id: artifact_restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          run_id=$(gh api \
+            "/repos/$REPO/actions/workflows/${{ github.workflow_ref }}" \
+            --jq '.id' || true)
+
+          latest_run=$(gh api \
+            "/repos/$REPO/actions/workflows/$run_id/runs?branch=main&status=success&per_page=1" \
+            --jq '.workflow_runs[0].id' || true)
+
+          if [ -z "${latest_run:-}" ]; then
+            echo "No previous successful run."
+            exit 0
+          fi
+
+          artifact_id=$(gh api \
+            "/repos/$REPO/actions/runs/$latest_run/artifacts" \
+            --jq '.artifacts[] | select(.name=="site-build") | .id' \
+            | head -n1 || true)
+
+          if [ -z "${artifact_id:-}" ]; then
+            echo "No site-build artifact found."
+            exit 0
+          fi
+
+          gh api "/repos/$REPO/actions/artifacts/$artifact_id/zip" > /tmp/site.zip
+          unzip -qn /tmp/site.zip -d site
+
+          if [ -d site/_site ]; then
+            echo "site_ok=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      - name: Install dependencies
-        run: |
-          pip install plotly kaleido
+
+      - name: Install Python deps
+        run: pip install plotly kaleido
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '21'
 
       - name: Set up Clojure
         uses: DeLaGuardo/setup-clojure@main
         with:
-          cli: 'latest'
+          cli: latest
 
-      - name: Cache clojure dependencies
+      - name: Cache Clojure deps
         uses: actions/cache@v3
         with:
           path: |
@@ -44,8 +103,47 @@ jobs:
             ~/.deps.clj
           key: cljdeps-${{ runner.os }}
 
-      - name: Build notebooks (changed set or full when none)
-        run: clojure -M:clay -A:markdown ${{ steps.changed_clj.outputs.files }}
+      - name: Detect changed Clojure sources
+        if: github.event_name == 'push' && steps.artifact_restore.outputs.site_ok == 'true'
+        id: changed_clj
+        run: |
+          set -euo pipefail
+
+          if [ ! -f site/.artifact_commit ]; then
+            echo "No artifact commit metadata; full rebuild."
+            exit 0
+          fi
+
+          base_commit=$(cat site/.artifact_commit)
+
+          if [ "$base_commit" = "$GITHUB_SHA" ]; then
+            echo "Artifact already from this commit."
+            exit 0
+          fi
+
+          git fetch --quiet origin
+
+          changed=$(git diff --name-only --diff-filter=ACMR \
+            "$base_commit" HEAD -- 'src/**/*.clj' | tr '\n' ' ')
+
+          if [ -z "$changed" ]; then
+            echo "No changed Clojure sources."
+            exit 0
+          fi
+
+          echo "files=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Build notebooks (incremental or full)
+        run: |
+          set -euo pipefail
+          if [ -n "${{ steps.changed_clj.outputs.files }}" ]; then
+            echo "Incremental Civitas build:"
+            echo "${{ steps.changed_clj.outputs.files }}"
+            clojure -M:clay -A:markdown ${{ steps.changed_clj.outputs.files }}
+          else
+            echo "Full Civitas build."
+            clojure -M:clay -A:markdown
+          fi
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
@@ -57,13 +155,28 @@ jobs:
         with:
           path: site
 
-      - name: Upload artifact
+      - name: Record artifact commit
+        run: |
+          mkdir -p site
+          echo "$GITHUB_SHA" > site/.artifact_commit
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: site/_site
 
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-build
+          path: site/
+          retention-days: 90
+
   deploy:
     needs: build
+    if: github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.publish == 'true' &&
+        github.ref == 'refs/heads/main'
     permissions:
       pages: write
       id-token: write
