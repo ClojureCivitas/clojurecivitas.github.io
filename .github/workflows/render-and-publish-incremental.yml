@@ -40,7 +40,7 @@ jobs:
           cd /tmp/site-cache
           git ls-files -z -- site/ | xargs -0 -I{} sh -c 'ts=$(git log -1 --format=%ct -- "{}" || true); if [ -n "$ts" ]; then touch -d "@$ts" "{}"; fi'
           cd -
-          rsync -a --ignore-existing /tmp/site-cache/site/ site/
+          rsync -a --ignore-existing /tmp/site-cache/site/ site/ || true
           echo "Contents of site/ after restore:"
           ls -lah site/ | head -50
 
