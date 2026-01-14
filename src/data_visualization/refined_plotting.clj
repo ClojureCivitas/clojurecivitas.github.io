@@ -1350,8 +1350,14 @@ simple-data
   New features (2026-01-13):
   - Axis tick labels with integer formatting
   - Subtle panel border (#CCCCCC)
-  - Tick marks on axes"
-  [layers width height margin]
+  - Tick marks on axes
+  
+  New features (2026-01-14):
+  - Optional edge-only axes (:show-x-axis? :show-y-axis? for ggplot2-style grids)
+  - Grid lines always shown, but tick marks/labels only on edge panels"
+  [layers width height margin & {:keys [show-x-axis? show-y-axis?]
+                                 :or {show-x-axis? true
+                                      show-y-axis? true}}]
   (let [;; Compute domains across all layers
         x-vals (get-column-values layers :=x :=data)
         y-vals (get-column-values layers :=y :=data)
@@ -1390,7 +1396,7 @@ simple-data
      ;; Background
      [:rect {:x 0 :y 0 :width width :height height :fill background}]
 
-     ;; Grid lines - vertical
+     ;; Grid lines - vertical (always show)
      (for [[i x-val] (map-indexed vector x-ticks)]
        (let [x-pos (x-scale x-val)]
          [:line {:x1 x-pos :y1 margin
@@ -1398,7 +1404,7 @@ simple-data
                  :stroke grid-color
                  :stroke-width 0.5}]))
 
-     ;; Grid lines - horizontal
+     ;; Grid lines - horizontal (always show)
      (for [[i y-val] (map-indexed vector y-ticks)]
        (let [y-pos (y-scale y-val)]
          [:line {:x1 margin :y1 y-pos
@@ -1406,49 +1412,53 @@ simple-data
                  :stroke grid-color
                  :stroke-width 0.5}]))
 
-     ;; X-axis (bottom)
-     [:line {:x1 margin :y1 (- height margin)
-             :x2 (- width margin) :y2 (- height margin)
-             :stroke "black" :stroke-width 1}]
+     ;; X-axis (bottom) - only show if show-x-axis?
+     (when show-x-axis?
+       [:line {:x1 margin :y1 (- height margin)
+               :x2 (- width margin) :y2 (- height margin)
+               :stroke "black" :stroke-width 1}])
 
-     ;; X-axis tick marks and labels
-     (for [[i x-val] (map-indexed vector x-ticks)]
-       (let [x-pos (x-scale x-val)
-             y-pos (- height margin)]
-         [:g
-          ;; Tick mark
-          [:line {:x1 x-pos :y1 y-pos
-                  :x2 x-pos :y2 (+ y-pos 3)
-                  :stroke "black" :stroke-width 1}]
-          ;; Tick label
-          [:text {:x x-pos
-                  :y (+ y-pos 15)
-                  :text-anchor "middle"
-                  :font-size 10
-                  :fill "#333333"}
-           (str (int x-val))]]))
+     ;; X-axis tick marks and labels - only show if show-x-axis?
+     (when show-x-axis?
+       (for [[i x-val] (map-indexed vector x-ticks)]
+         (let [x-pos (x-scale x-val)
+               y-pos (- height margin)]
+           [:g
+            ;; Tick mark
+            [:line {:x1 x-pos :y1 y-pos
+                    :x2 x-pos :y2 (+ y-pos 3)
+                    :stroke "black" :stroke-width 1}]
+            ;; Tick label
+            [:text {:x x-pos
+                    :y (+ y-pos 15)
+                    :text-anchor "middle"
+                    :font-size 10
+                    :fill "#333333"}
+             (str (int x-val))]])))
 
-     ;; Y-axis (left)
-     [:line {:x1 margin :y1 margin
-             :x2 margin :y2 (- height margin)
-             :stroke "black" :stroke-width 1}]
+     ;; Y-axis (left) - only show if show-y-axis?
+     (when show-y-axis?
+       [:line {:x1 margin :y1 margin
+               :x2 margin :y2 (- height margin)
+               :stroke "black" :stroke-width 1}])
 
-     ;; Y-axis tick marks and labels
-     (for [[i y-val] (map-indexed vector y-ticks)]
-       (let [x-pos margin
-             y-pos (y-scale y-val)]
-         [:g
-          ;; Tick mark
-          [:line {:x1 (- x-pos 3) :y1 y-pos
-                  :x2 x-pos :y2 y-pos
-                  :stroke "black" :stroke-width 1}]
-          ;; Tick label
-          [:text {:x (- x-pos 8)
-                  :y (+ y-pos 4)
-                  :text-anchor "end"
-                  :font-size 10
-                  :fill "#333333"}
-           (str (int y-val))]]))
+     ;; Y-axis tick marks and labels - only show if show-y-axis?
+     (when show-y-axis?
+       (for [[i y-val] (map-indexed vector y-ticks)]
+         (let [x-pos margin
+               y-pos (y-scale y-val)]
+           [:g
+            ;; Tick mark
+            [:line {:x1 (- x-pos 3) :y1 y-pos
+                    :x2 x-pos :y2 y-pos
+                    :stroke "black" :stroke-width 1}]
+            ;; Tick label
+            [:text {:x (- x-pos 8)
+                    :y (+ y-pos 4)
+                    :text-anchor "end"
+                    :font-size 10
+                    :fill "#333333"}
+             (str (int y-val))]])))
 
      ;; Panel border (subtle, ggplot2-style)
      [:rect {:x 0 :y 0
@@ -1470,7 +1480,8 @@ simple-data
   
   New features (2026-01-14):
   - Automatic axis labels (with user override via :=x-label, :=y-label, :=title)
-  - Legend for grouped plots (shows when multiple layers exist after spread)"
+  - Legend for grouped plots (shows when multiple layers exist after spread)
+  - Grid layout support with proper margins for labels"
   [spec]
   (let [spec-prepared (-> spec
                           resolve-roles
@@ -1493,14 +1504,31 @@ simple-data
             max-row (if (seq grid-rows) (tcc/reduce-max grid-rows) 0)
             max-col (if (seq grid-cols) (tcc/reduce-max grid-cols) 0)
 
+            ;; Extract axis labels for grid
+            col-labels (get-grid-column-labels layers)
+            row-labels (get-grid-row-labels layers)
+            title (some :=title layers) ; Get title from any layer
+
+            ;; Compute legend (nil if not needed)
+            legend (compute-legend layers)
+
             ;; Panel dimensions
             panel-width 150
             panel-height 150
             panel-margin 20
 
-            ;; Total SVG dimensions
-            total-width (* (inc max-col) panel-width)
-            total-height (* (inc max-row) panel-height)
+            ;; Margins for labels
+            left-margin 50 ; Space for Y-axis labels (rotated)
+            bottom-margin 30 ; Space for X-axis labels
+            legend-width (if legend 100 0)
+
+            ;; Grid dimensions
+            grid-width (* (inc max-col) panel-width)
+            grid-height (* (inc max-row) panel-height)
+
+            ;; Total SVG dimensions (with margins and legend)
+            total-width (+ left-margin grid-width legend-width)
+            total-height (+ grid-height bottom-margin)
 
             ;; Theme
             background (:background theme)]
@@ -1512,18 +1540,32 @@ simple-data
           [:rect {:x 0 :y 0 :width total-width :height total-height
                   :fill background}]
 
-          ;; Render each panel
+          ;; Render each panel (offset by left-margin)
           (for [row (range (inc max-row))
                 col (range (inc max-col))]
             (when-let [panel-layers (get grid-map [row col])]
-              (let [x-offset (* col panel-width)
+              (let [x-offset (+ left-margin (* col panel-width))
                     y-offset (* row panel-height)
+                    ;; Only show axes on edge panels (ggplot2 style)
+                    show-x? (= row max-row)  ; Bottom row only
+                    show-y? (= col 0)        ; Leftmost column only
                     panel-svg (render-single-panel panel-layers
                                                    panel-width
                                                    panel-height
-                                                   panel-margin)]
+                                                   panel-margin
+                                                   :show-x-axis? show-x?
+                                                   :show-y-axis? show-y?)]
                 [:g {:transform (str "translate(" x-offset "," y-offset ")")}
-                 panel-svg])))]))
+                 panel-svg])))
+
+          ;; Grid axis labels (offset by left-margin)
+          [:g {:transform (str "translate(" left-margin ",0)")}
+           (render-grid-labels panel-width panel-height max-row max-col
+                               col-labels row-labels title)]
+
+          ;; Legend (if present, offset by left-margin + grid-width)
+          (when legend
+            (render-legend legend (+ left-margin grid-width 10) 50))]))
 
       ;; Single panel: all layers overlay in one coordinate system
       (let [;; Extract axis labels from first layer
