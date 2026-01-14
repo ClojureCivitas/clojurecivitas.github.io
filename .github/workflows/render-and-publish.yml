@@ -45,12 +45,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          run_id=$(gh api \
-            "/repos/$REPO/actions/workflows/${{ github.workflow_ref }}" \
-            --jq '.id' || true)
-
           latest_run=$(gh api \
-            "/repos/$REPO/actions/workflows/$run_id/runs?branch=main&status=success&per_page=1" \
+            "/repos/$REPO/actions/workflows/render-and-publish.yml/runs?branch=main&status=success&per_page=1" \
             --jq '.workflow_runs[0].id' || true)
 
           if [ -z "${latest_run:-}" ]; then
