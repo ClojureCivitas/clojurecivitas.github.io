@@ -135,7 +135,7 @@
        (division-index {:cellsize 4} 7.5) => 1)
 
 
-(defn worley
+(defn worley-noise
   [{:keys [size] :as params}]
   (let [random-points (random-points params)]
     (tensor/clone
@@ -149,11 +149,11 @@
                              :double))))
 
 
-(def sample (worley (make-noise-params 512 16)))
+(def worley (worley-noise (make-noise-params 512 16)))
 
-(def img (dfn/* (/ 255 (- (dfn/reduce-max sample) (dfn/reduce-min sample))) (dfn/- (dfn/reduce-max sample) sample)))
+(def worley-norm (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley))) (dfn/- (dfn/reduce-max worley) worley)))
 
-(bufimg/tensor->image img)
+(bufimg/tensor->image worley-norm)
 
 ;; # Perlin noise
 
@@ -304,7 +304,7 @@
     (dfn/reduce-+ (dfn/* weights influence))))
 
 
-(defn perlin
+(defn perlin-noise
   [{:keys [size] :as params}]
   (let [gradients (random-gradients params)]
     (tensor/clone
@@ -314,8 +314,8 @@
                                    (perlin-sample params gradients center)))))))
 
 
-(def sample2 (perlin (make-noise-params 512 16)))
+(def perlin (perlin-noise (make-noise-params 512 16)))
 
-(def img2 (dfn/* (/ 255 (- (dfn/reduce-max sample2) (dfn/reduce-min sample2))) (dfn/- sample2 (dfn/reduce-min sample2))))
+(def perlin-norm (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin))) (dfn/- perlin (dfn/reduce-min perlin))))
 
-(bufimg/tensor->image img2)
+(bufimg/tensor->image perlin-norm)
