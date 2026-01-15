@@ -11,9 +11,9 @@
 
 (ns volumetric-clouds.main
     (:require [scicloj.kindly.v4.kind :as kind]
-              [clojure.java.io :as io]
               [clojure.math :refer (PI cos sin)]
-              [fastmath.vector :as fm]
+              [midje.sweet :refer (fact facts tabular =>)]
+              [fastmath.vector :refer (vec2 add mult sub mag)]
               [tech.v3.datatype :as dtype]
               [tech.v3.tensor :as tensor]
               [tech.v3.datatype.functional :as dfn]
@@ -21,6 +21,7 @@
     (:import [javax.imageio ImageIO]
              [org.lwjgl.opengl GL11]
              [org.lwjgl.stb STBImageWrite]))
+
 
 ;; Procedural generation of volumetric clouds
 ;;
@@ -33,39 +34,111 @@
 ;; * powder function
 
 ;; # Worley noise
-(def size 512)
-(def divisions 32)
-(def cellsize (/ size divisions))
+
+(defn make-noise-params
+  [size divisions]
+  {:size size :divisions divisions :cellsize (/ size divisions)})
+
+(fact "Noise parameter initialisation"
+      (make-noise-params 512 32) => {:size 512 :divisions 32 :cellsize 16})
 
 
-(defn pt [y x] (fm/add (fm/mult (fm/vec2 x y) cellsize) (fm/vec2 (rand cellsize) (rand cellsize)) ))
+(defn random-point-in-cell
+  [{:keys [cellsize]} y x]
+  (add (mult (vec2 x y) cellsize) (vec2 (rand cellsize) (rand cellsize))))
 
-(defn clip [x] (if (>= x (/ size 2)) (- x size) (if (< x (/ size -2)) (+ x size) x)))
 
-(defn dist [a b] (fm/mag (fm/vec2 (clip (- (a 0) (b 0))) (clip (- (a 1) (b 1))))))
+(facts "Place random point in a cell"
+       (with-redefs [rand (fn [s] (* 0.5 s))]
+         (random-point-in-cell {:cellsize 1} 0 0) => (vec2 0.5 0.5)
+         (random-point-in-cell {:cellsize 2} 0 0) => (vec2 1.0 1.0)
+         (random-point-in-cell {:cellsize 2} 0 3) => (vec2 7.0 1.0)
+         (random-point-in-cell {:cellsize 2} 2 0) => (vec2 1.0 5.0)))
 
-(def random-points (tensor/clone (tensor/compute-tensor [divisions divisions] pt)))
-random-points
 
-(def worley
-  (tensor/compute-tensor [size size]
-                         (fn [y x]
-                             (let [center (fm/add (fm/vec2 x y) (fm/vec2 0.5 0.5))
-                                   divx   (quot x cellsize)
-                                   divy   (quot y cellsize)]
-                               (apply min
-                                      (for [dy [-1 0 1] dx [-1 0 1]]
-                                           (dist (random-points (mod (+ divy dy) divisions) (mod (+ divx dx) divisions)) center)))))
-                         :double))
+(defn random-points
+  [{:keys [divisions] :as params}]
+  (tensor/clone (tensor/compute-tensor [divisions divisions] (partial random-point-in-cell params))))
 
-(def sample (tensor/clone worley))
+
+(facts "Greate grid of random points"
+       (let [params (make-noise-params 32 8)]
+         (with-redefs [rand (fn [s] (* 0.5 s))]
+           (dtype/shape (random-points params)) => [8 8]
+           ((random-points params) 0 0) => (vec2 2.0 2.0)
+           ((random-points params) 0 3) => (vec2 14.0 2.0)
+           ((random-points params) 2 0) => (vec2 2.0 10.0))))
+
+
+(defn mod-vec2
+  [{:keys [size]} v]
+  (let [size2 (/ size 2)
+        wrap  (fn [x] (-> x (+ size2) (mod size) (- size2)))]
+    (vec2 (wrap (v 0)) (wrap (v 1)))))
+
+
+(facts "Wrap around components of vector to be within -size/2..size/2"
+       (mod-vec2 {:size 8} (vec2 2 3)) => (vec2 2 3)
+       (mod-vec2 {:size 8} (vec2 5 2)) => (vec2 -3 2)
+       (mod-vec2 {:size 8} (vec2 2 5)) => (vec2 2 -3)
+       (mod-vec2 {:size 8} (vec2 -5 2)) => (vec2 3 2)
+       (mod-vec2 {:size 8} (vec2 2 -5)) => (vec2 2 3))
+
+
+(defn mod-dist
+  [params a b]
+  (mag (mod-vec2 params (sub b a))))
+
+
+(tabular "Wrapped distance of two points"
+         (fact (mod-dist {:size 8} (vec2 ?ax ?ay) (vec2 ?bx ?by)) => ?result)
+         ?ax ?ay ?bx ?by ?result
+         0   0   0   0   0.0
+         0   0   2   0   2.0
+         0   0   5   0   3.0
+         0   0   0   2   2.0
+         0   0   0   5   3.0
+         2   0   0   0   2.0
+         5   0   0   0   3.0
+         0   2   0   0   2.0
+         0   5   0   0   3.0)
+
+
+(defn wrap-get
+  [t & args]
+  (apply t (map mod args (dtype/shape t))))
+
+
+(facts "Wrapped lookup of tensor values"
+       (let [t (tensor/compute-tensor [4 6] vec2)]
+         (wrap-get t 2 3) => (vec2 2 3)
+         (wrap-get t 2 7) => (vec2 2 1)
+         (wrap-get t 5 3) => (vec2 1 3)))
+
+
+(defn worley
+  [{:keys [size cellsize] :as params}]
+  (let [random-points (random-points params)]
+    (tensor/clone
+      (tensor/compute-tensor [size size]
+                             (fn [y x]
+                                 (let [center (add (vec2 x y) (vec2 0.5 0.5))
+                                       div-x  (quot x cellsize)
+                                       div-y  (quot y cellsize)]
+                                   (apply min
+                                          (for [dy [-1 0 1] dx [-1 0 1]]
+                                               (mod-dist params center (wrap-get random-points (+ div-y dy) (+ div-x dx)))))))
+                             :double))))
+
+
+(def sample (worley (make-noise-params 512 32)))
 
 (def img (dfn/* (/ 255 (- (dfn/reduce-max sample) (dfn/reduce-min sample))) (dfn/- (dfn/reduce-max sample) sample)))
-img
 
 (bufimg/tensor->image img)
 
 ;; # Perlin noise
+
 (defn random-gradient
   [y x]
   (let [angle (rand (* 2 PI))]
