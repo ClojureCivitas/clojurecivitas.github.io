@@ -214,10 +214,18 @@
 
 
 (defn corner-gradients
-  [point]
-  (let [[div-x div-y] (division-index point)]
-    (for [y [div-y (inc div-y)] x [div-x (inc div-x)]]
-         (random-gradients (mod y divisions) (mod x divisions)))))
+  [params gradients point]
+  (let [[div-x div-y] (map (partial division-index params) point)]
+    (tensor/compute-tensor [2 2] (fn [y x] (wrap-get gradients (+ div-y y) (+ div-x x))))))
+
+
+(facts "Get 2x2 tensor of gradients from a larger tensor using wrap around"
+       (let [gradients (tensor/compute-tensor [4 6] (fn [y x] (vec2 x y)))]
+         ((corner-gradients {:cellsize 4} gradients (vec2 9 6)) 0 0) => (vec2 2 1)
+         ((corner-gradients {:cellsize 4} gradients (vec2 9 6)) 0 1) => (vec2 3 1)
+         ((corner-gradients {:cellsize 4} gradients (vec2 9 6)) 1 0) => (vec2 2 2)
+         ((corner-gradients {:cellsize 4} gradients (vec2 9 6)) 1 1) => (vec2 3 2)
+         ((corner-gradients {:cellsize 4} gradients (vec2 23 15)) 1 1) => (vec2 0 0)))
 
 
 (defn influence-values
