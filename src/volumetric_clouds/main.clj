@@ -13,7 +13,7 @@
     (:require [scicloj.kindly.v4.kind :as kind]
               [clojure.math :refer (PI cos sin)]
               [midje.sweet :refer (fact facts tabular =>)]
-              [fastmath.vector :refer (vec2 add mult sub div mag)]
+              [fastmath.vector :refer (vec2 add mult sub div mag dot)]
               [tech.v3.datatype :as dtype]
               [tech.v3.tensor :as tensor]
               [tech.v3.datatype.functional :as dfn]
@@ -230,7 +230,17 @@
 
 (defn influence-values
   [gradients vectors]
-  (map fm/dot gradients vectors))
+  (tensor/compute-tensor [2 2] (fn [y x] (dot (gradients y x) (vectors y x))) :double))
+
+
+(facts "Compute influence values from corner vectors and gradients"
+       (let [gradients (tensor/compute-tensor [2 2] (fn [_y x] (vec2 x 10)))
+             vectors   (tensor/compute-tensor [2 2] (fn [y _x] (vec2 1 y)))
+             influence (influence-values gradients vectors)]
+         (influence 0 0) => 0.0
+         (influence 0 1) => 1.0
+         (influence 1 0) => 10.0
+         (influence 1 1) => 11.0))
 
 
 (defn ease-curve
