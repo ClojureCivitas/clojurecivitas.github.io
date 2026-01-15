@@ -127,7 +127,7 @@
 
 
 (defn worley
-  [{:keys [size cellsize] :as params}]
+  [{:keys [size] :as params}]
   (let [random-points (random-points params)]
     (tensor/clone
       (tensor/compute-tensor [size size]
@@ -200,10 +200,17 @@
 
 
 (defn corner-vectors
-  [point]
-  (let [cell-pos (cell-pos point)]
-    (for [y (range 2) x (range 2)]
-         (fm/sub cell-pos (fm/vec2 x y)))))
+  [params point]
+  (let [cell-pos (cell-pos params point)]
+    (tensor/compute-tensor [2 2] (fn [y x] (sub cell-pos (vec2 x y))))))
+
+
+(facts "Compute relative vectors from cell corners to point in cell"
+       (let [v (corner-vectors {:cellsize 4} (vec2 7 6))]
+         (v 0 0) => (vec2 0.75 0.5)
+         (v 0 1) => (vec2 -0.25 0.5)
+         (v 1 0) => (vec2 0.75 -0.5)
+         (v 1 1) => (vec2 -0.25 -0.5)))
 
 
 (defn corner-gradients
