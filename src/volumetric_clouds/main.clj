@@ -13,7 +13,7 @@
     (:require [scicloj.kindly.v4.kind :as kind]
               [clojure.math :refer (PI cos sin)]
               [midje.sweet :refer (fact facts tabular =>)]
-              [fastmath.vector :refer (vec2 add mult sub mag)]
+              [fastmath.vector :refer (vec2 add mult sub div mag)]
               [tech.v3.datatype :as dtype]
               [tech.v3.tensor :as tensor]
               [tech.v3.datatype.functional :as dfn]
@@ -116,15 +116,24 @@
          (wrap-get t 5 3) => (vec2 1 3)))
 
 
+(defn division-index
+  [{:keys [cellsize]} x]
+  (int (/ x cellsize)))
+
+
+(facts "Convert coordinate to division index"
+       (division-index {:cellsize 4} 3.5) => 0
+       (division-index {:cellsize 4} 7.5) => 1)
+
+
 (defn worley
   [{:keys [size cellsize] :as params}]
   (let [random-points (random-points params)]
     (tensor/clone
       (tensor/compute-tensor [size size]
                              (fn [y x]
-                                 (let [center (add (vec2 x y) (vec2 0.5 0.5))
-                                       div-x  (quot x cellsize)
-                                       div-y  (quot y cellsize)]
+                                 (let [center        (add (vec2 x y) (vec2 0.5 0.5))
+                                       [div-x div-y] (map (partial division-index params) center)]
                                    (apply min
                                           (for [dy [-1 0 1] dx [-1 0 1]]
                                                (mod-dist params center (wrap-get random-points (+ div-y dy) (+ div-x dx)))))))
@@ -140,21 +149,54 @@
 ;; # Perlin noise
 
 (defn random-gradient
-  [y x]
+  [& _args]
   (let [angle (rand (* 2 PI))]
-    (fm/vec2 (cos angle) (sin angle))))
+    (vec2 (cos angle) (sin angle))))
 
 
-(def random-gradients (tensor/clone (tensor/compute-tensor [divisions divisions] random-gradient)))
-random-gradients
+(defn roughly-vec2
+  [expected error]
+  (fn [actual]
+      (<= (mag (sub actual expected)) error)))
 
-(defn division-index
-  [point]
-  (fm/vec2 (int (/ (point 0) cellsize)) (int (/ (point 1) cellsize))))
+
+(facts "Create unit vector with random direction"
+       (with-redefs [rand (constantly 0)]
+         (random-gradient) => (roughly-vec2 (vec2 1 0) 1e-6))
+       (with-redefs [rand (constantly (/ PI 2))]
+         (random-gradient) => (roughly-vec2 (vec2 0 1) 1e-6)))
+
+
+(defn random-gradients
+ [{:keys [divisions]}]
+ (tensor/clone (tensor/compute-tensor [divisions divisions] random-gradient)))
+
+
+(facts "Random gradients"
+       (with-redefs [rand (constantly 0)]
+         (dtype/shape (random-gradients {:divisions 8})) => [8 8]
+         ((random-gradients {:divisions 8}) 0 0) => (roughly-vec2 (vec2 1 0) 1e-6)))
+
+
+(defn frac
+  [x]
+  (- x (Math/floor x)))
+
+
+(facts "Fractional part of floating point number"
+       (frac 0.25) => 0.25
+       (frac 1.75) => 0.75
+       (frac -0.25) => 0.75)
+
 
 (defn cell-pos
-  [point]
-  (fm/sub (fm/div point cellsize) (division-index point)))
+  [{:keys [cellsize]} point]
+  (apply vec2 (map frac (div point cellsize))))
+
+
+(facts "Relative position of point in a cell"
+       (cell-pos {:cellsize 4} (vec2 2 3)) => (vec2 0.5 0.75)
+       (cell-pos {:cellsize 4} (vec2 7 5)) => (vec2 0.75 0.25))
 
 
 (defn corner-vectors
