@@ -12,11 +12,13 @@
 (ns volumetric-clouds.main
     (:require [scicloj.kindly.v4.kind :as kind]
               [clojure.math :refer (PI cos sin)]
-              [midje.sweet :refer (fact facts tabular =>)]
+              [midje.sweet :refer (fact facts tabular => roughly)]
               [fastmath.vector :refer (vec2 add mult sub div mag dot)]
               [tech.v3.datatype :as dtype]
               [tech.v3.tensor :as tensor]
               [tech.v3.datatype.functional :as dfn]
+              [tablecloth.api :as tc]
+              [scicloj.tableplot.v1.plotly :as plotly]
               [tech.v3.libs.buffered-image :as bufimg])
     (:import [javax.imageio ImageIO]
              [org.lwjgl.opengl GL11]
@@ -40,7 +42,7 @@
   {:size size :divisions divisions :cellsize (/ size divisions)})
 
 (fact "Noise parameter initialisation"
-      (make-noise-params 512 32) => {:size 512 :divisions 32 :cellsize 16})
+      (make-noise-params 512 16) => {:size 512 :divisions 16 :cellsize 32})
 
 
 (defn random-point-in-cell
@@ -68,6 +70,13 @@
            ((random-points params) 0 0) => (vec2 2.0 2.0)
            ((random-points params) 0 3) => (vec2 14.0 2.0)
            ((random-points params) 2 0) => (vec2 2.0 10.0))))
+
+
+(let [points  (tensor/reshape (random-points (make-noise-params 512 16)) [(* 16 16)])
+      scatter (tc/dataset {:x (map first points) :y (map second points)})]
+  (-> scatter
+      (plotly/base {:=title "Random points"})
+      (plotly/layer-point {:=x :x :=y :y})))
 
 
 (defn mod-vec2
@@ -140,7 +149,7 @@
                              :double))))
 
 
-(def sample (worley (make-noise-params 512 32)))
+(def sample (worley (make-noise-params 512 16)))
 
 (def img (dfn/* (/ 255 (- (dfn/reduce-max sample) (dfn/reduce-min sample))) (dfn/- (dfn/reduce-max sample) sample)))
 
@@ -176,6 +185,15 @@
        (with-redefs [rand (constantly 0)]
          (dtype/shape (random-gradients {:divisions 8})) => [8 8]
          ((random-gradients {:divisions 8}) 0 0) => (roughly-vec2 (vec2 1 0) 1e-6)))
+
+
+(let [gradients (tensor/reshape (random-gradients (make-noise-params 512 16)) [(* 16 16)])
+      points    (tensor/reshape (tensor/compute-tensor [16 16] (fn [y x] (vec2 x y))) [(* 16 16)])
+      scatter   (tc/dataset {:x (mapcat (fn [point gradient] [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil]) points gradients)
+                             :y (mapcat (fn [point gradient] [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil]) points gradients)})]
+  (-> scatter
+      (plotly/base {:=title "Random gradients" :=mode "lines"})
+      (plotly/layer-point {:=x :x :=y :y})))
 
 
 (defn frac
@@ -248,32 +266,56 @@
   (-> t (* 6.0) (- 15.0) (* t) (+ 10.0) (* t t t)))
 
 
+(facts "Monotonously increasing function with zero derivative at zero and one"
+       (ease-curve 0.0) => 0.0
+       (ease-curve 0.25) => (roughly 0.103516 1e-6)
+       (ease-curve 0.5) => 0.5
+       (ease-curve 0.75) => (roughly 0.896484 1e-6)
+       (ease-curve 1.0) => 1.0)
+
+
+(-> (tc/dataset {:t (range 0.0 1.025 0.025) :ease (map ease-curve (range 0.0 1.025 0.025))})
+    (plotly/base {:=title "Ease Curve"})
+    (plotly/layer-line {:=x :t :=y :ease}))
+
+
 (defn interpolation-weights
-  [point]
-  (let [[bx by] (cell-pos point)
-        [ax ay] (fm/sub (fm/vec2 1 1) (cell-pos point))]
-    (for [y [ay by] x [ax bx]]
-         (* (ease-curve y) (ease-curve x)))))
+  [params point]
+  (let [pos     (cell-pos params point)
+        [bx by] pos
+        [ax ay] (sub (vec2 1 1) pos)]
+    (tensor/->tensor (for [y [ay by]] (for [x [ax bx]] (* (ease-curve y) (ease-curve x)))))))
+
+
+(facts "Interpolation weights"
+       (let [weights (interpolation-weights {:cellsize 8} (vec2 2 7))]
+         (weights 0 0) => (roughly 0.014391 1e-6)
+         (weights 0 1) => (roughly 0.001662 1e-6)
+         (weights 1 0) => (roughly 0.882094 1e-6)
+         (weights 1 1) => (roughly 0.101854 1e-6)))
 
 
 (defn perlin-sample
-  [point]
-  (let [gradients (corner-gradients point)
-        vectors   (corner-vectors point)
+  [params gradients point]
+  (let [gradients (corner-gradients params gradients point)
+        vectors   (corner-vectors params point)
         influence (influence-values gradients vectors)
-        weights   (interpolation-weights point)]
-    (apply + (map * weights influence))))
+        weights   (interpolation-weights params point)]
+    (dfn/reduce-+ (dfn/* weights influence))))
 
 
-(def perlin
-  (tensor/compute-tensor [size size]
-                         (fn [y x]
-                             (let [center (fm/add (fm/vec2 x y) (fm/vec2 0.5 0.5))]
-                               (perlin-sample center)))
-                         :double))
+(defn perlin
+  [{:keys [size] :as params}]
+  (let [gradients (random-gradients params)]
+    (tensor/clone
+      (tensor/compute-tensor [size size]
+                             (fn [y x]
+                                 (let [center (add (vec2 x y) (vec2 0.5 0.5))]
+                                   (perlin-sample params gradients center)))))))
 
-(def sample2 (tensor/clone perlin))
+
+(def sample2 (perlin (make-noise-params 512 16)))
+
 (def img2 (dfn/* (/ 255 (- (dfn/reduce-max sample2) (dfn/reduce-min sample2))) (dfn/- sample2 (dfn/reduce-min sample2))))
-img2
 
 (bufimg/tensor->image img2)
