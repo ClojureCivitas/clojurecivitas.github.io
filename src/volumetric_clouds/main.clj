@@ -28,12 +28,17 @@
 ;; Procedural generation of volumetric clouds
 ;;
 ;; * Perlin, Worley noise
+;; * interpolation
+;; * extend all methods to 3D
 ;; * fractal brownian motion
 ;; * curl noise
 ;; * Midje testing of shaders
 ;; * Generating OpenGL shaders using templates
 ;; * cloud shadows
 ;; * powder function
+;;
+;; References
+;; * https://adrianb.io/2014/08/09/perlinnoise.html
 
 ;; # Worley noise
 
@@ -311,7 +316,8 @@
       (tensor/compute-tensor [size size]
                              (fn [y x]
                                  (let [center (add (vec2 x y) (vec2 0.5 0.5))]
-                                   (perlin-sample params gradients center)))))))
+                                   (perlin-sample params gradients center)))
+                             :double))))
 
 
 (def perlin (perlin-noise (make-noise-params 512 16)))
@@ -319,3 +325,91 @@
 (def perlin-norm (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin))) (dfn/- perlin (dfn/reduce-min perlin))))
 
 (bufimg/tensor->image perlin-norm)
+
+;; # Combination of Worley and Perlin noise
+(def perlin-worley-norm (dfn/+ (dfn/* 0.3 perlin-norm) (dfn/* 0.7 worley-norm)))
+
+(bufimg/tensor->image perlin-worley-norm)
+
+;; # Interpolation
+(defn interpolate
+  [tensor y x]
+  (let [yc (- y 0.5)
+        xc (- x 0.5)
+        yfrac (frac yc)
+        xfrac (frac xc)
+        y0  (int (Math/floor yc))
+        x0  (int (Math/floor xc))]
+    (reduce +
+            (for [[j wj] [[y0 (- 1.0 yfrac)] [(inc y0) yfrac]]
+                  [i wi] [[x0 (- 1.0 xfrac)] [(inc x0) xfrac]]]
+                 (* wi wj (wrap-get tensor j i))))))
+
+(facts "Interpolate values of tensor"
+       (let [x (tensor/compute-tensor [4 6] (fn [y x] x))
+             y (tensor/compute-tensor [4 6] (fn [y x] y))]
+         (interpolate x 2.5 3.5) => 3.0
+         (interpolate y 2.5 3.5) => 2.0
+         (interpolate x 2.5 4.0) => 3.5
+         (interpolate y 3.0 3.5) => 2.5
+         (interpolate x 0.0 0.0) => 2.5
+         (interpolate y 0.0 0.0) => 1.5))
+
+
+(defn fractal-brownian-motion
+  [base octaves y x]
+  (let [scales (take (count octaves) (iterate #(* 2 %) 1))]
+    (reduce + 0.0 (map (fn [amplitude scale] (* amplitude (base (* scale y) (* scale x)))) octaves scales))))
+
+
+(facts "Fractal Brownian motion"
+       (let [base (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0))) 0.0 1.0))]
+         (fractal-brownian-motion base [1.0] 0 0) => 0.0
+         (fractal-brownian-motion base [1.0] 0 1) => 1.0
+         (fractal-brownian-motion base [1.0] 1 0) => 1.0
+         (fractal-brownian-motion base [1.0] 1 1) => 0.0
+         (fractal-brownian-motion base [0.5] 0 1) => 0.5
+         (fractal-brownian-motion base [] 0 1) => 0.0
+         (fractal-brownian-motion base [0.0 1.0] 0 0) => 0.0
+         (fractal-brownian-motion base [0.0 1.0] 0.0 0.5) => 1.0
+         (fractal-brownian-motion base [0.0 1.0] 0.5 0.0) => 1.0
+         (fractal-brownian-motion base [0.0 1.0] 0.5 0.5) => 0.0))
+
+
+(defn remap
+  [value low1 high1 low2 high2]
+  (+ low2 (* (/ (- value low1) (- high1 low1)) (- high2 low2))))
+
+
+(defn clamp
+  [value low high]
+  (max low (min value high)))
+
+
+(defn octaves
+  [n decay]
+  (let [series (take n (iterate #(* ^double % decay) 1.0))
+        sum    (apply + series)]
+    (mapv #(/ ^double % ^double sum) series)))
+
+
+(defn noise-octaves
+  [tensor octaves low high]
+  (tensor/clone
+    (tensor/compute-tensor (dtype/shape tensor)
+                           (fn [y x]
+                               (clamp
+                                 (remap
+                                   (fractal-brownian-motion
+                                     (partial interpolate tensor)
+                                     octaves
+                                     (* (+ y 0.5) 0.25) (* (+ x 0.5) 0.25))
+                                   low high 0 255)
+                                 0 255))
+                           :double)))
+
+(bufimg/tensor->image (noise-octaves worley-norm (octaves 5 0.6) 128 230))
+
+(bufimg/tensor->image (noise-octaves perlin-norm (octaves 5 0.6) 128 230))
+
+(bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 5 0.6) 128 230))
