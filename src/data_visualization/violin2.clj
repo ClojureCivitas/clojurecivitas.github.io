@@ -21,10 +21,17 @@
    ))
 
 
-;;; # Data (repeated from first part) TODO hide
+;; # The World's Smallest Violin (plot generating code), Part 2
+
+
+;;; [Link to Part 1]()
+
+
+^:kindly/hide-code ^:kind/hidden
 (def penguin-data-url
   "https://raw.githubusercontent.com/ttimbers/palmerpenguins/refs/heads/file-variants/inst/extdata/penguins.tsv")
 
+^:kindly/hide-code ^:kind/hidden
 (def penguin-data
   (tc/dataset penguin-data-url {:key-fn keyword}))
 
@@ -36,12 +43,14 @@
 ;;; Once we know how to make a visualization, it makes sense to abstract it into a procedure, so this knowledge in a function. 
 
 
-;;; For inst
+;;; So lets do that for dot plot. We'll make a function that takes three required objects: `data`, `value-field`, and `group-field`, along with some options. 
 
 (defn dot-plot
-  [data value-field group-field]
+  [data value-field group-field
+   & {:keys [jitter? color-field]}]
   {:mark {:type "point" :tooltip {:content :data}}
    :data data
+   :transform [{:calculate "random()" :as "jitter"}]
    :encoding
    {:x {:field value-field
         :type :quantitative
@@ -50,82 +59,55 @@
           :type :nominal
           :header {:labelAngle 0 :labelAlign "left"}
           :spacing 0}
-    :color {:field group-field
+    :y {:field (if jitter? "jitter" nil)
+        :type :quantitative
+        :axis false}
+    :color {:field (or color-field group-field)
             :type :nominal
-            :legend false}  
-    }
+            :legend (if color-field true false)}}
    :height 50
    :width 800
    })
 
-;;; Which can be used like this:
-
+;;; Which can be used like this (here we'll look some differen attributes)
 
 ^:kind/vega-lite
 (dot-plot {:values (tc/rows penguin-data :as-maps)}
-          "flipper_length_mm" "year"
+          "body_mass_g" "sex"
+          :jitter? true
+          :color-field "species island"
           )
 
 
-;;; On any data set
+;;; And we can easily reuse the function on a different data set (this one is about movies)
+
 ^:kind/vega-lite
 (dot-plot {:url "https://vega.github.io/editor/data/movies.json"}
-          "US Gross" "Major Genre")
+          "US Gross" "Major Genre"
+          :jitter? true)
 
-
-
-;;; Add jitter
-
-(defn dot-plot-2
-  [data value-field group-field jitter?]
-  {:mark {:type "point" :tooltip {:content :data}}
-   :data data
-   :transform (if jitter? [{:calculate "random()" :as "jitter"}] [])
-   :encoding
-   {:x {:field value-field
-        :type :quantitative
-        :scale {:zero false}}
-    :y (when jitter?
-         {:field "jitter"
-          :type :quantitative
-          :axis false})
-    :row {:field group-field
-          :type :nominal
-          :header {:labelAngle 0 :labelAlign "left"}
-          :spacing 0}
-    :color {:field group-field
-            :type :nominal
-            :legend false}  
-    }
-   :height 50
-   :width 800
-   })
-
-
-;;; On any data set
-^:kind/vega-lite
-(dot-plot-2 {:url "https://vega.github.io/editor/data/movies.json"}
-          "US Gross" "Major Genre" true)
 
 
 ;;; # Generalize
 
-;;; This section introduces a new, and somewhat funky way of using and generalizing Vega specs.
+;;; This section introduces a new, and somewhat funky way of generalizing Vega specs.
 
-;;; Take our dot-plot abstraction above. We could parameterize it further, say :type which could be :dotplot or :boxplot. But instead, we're going to hack it by introducing a function that can merge arbitrarily nested structures. This means we can alter any aspect of the spec, at the cost of having to have some knowledge of its structure. Eg we could change the height or spacing or fonts.
+;;; Take our dot-plot abstraction above. We could parameterize it further, eg by adding optional arguments for height or scale or any of the many things Vega allows you to tweak.  
+
+;; But instead, we're going to introduce a much more general (if somewhat unclean) way of modifying a base Vega spec – through structural merge. This makes use of a function `mu/merge-recursive` from the  (Multitool utility library)[https://github.com/hyperphor/multitool/blob/9e10c6b9cfe7f1deb496e842fc12505748a09d69/src/cljc/hyperphor/multitool/core.cljc#L1012]. This function m merges arbitrarily nested structures. This means we can alter any aspect of the spec, at the cost of having to have some knowledge of its structure. 
+
+(defn dot-plot-g
+  [data value-field group-field overrides]
+  (mu/merge-recursive
+   (dot-plot data value-field group-field false)
+   overrides))
 
 
-;; TODO maybe more confuscing than it is worth here. For a later section?
-
-
-;; mu/merge-recursive is a function from the Multitool utility library [link].
-
-(defn box-plot
-  [data value-field group-field]
-  (-> (dot-plot-2 data value-field group-field false)
-      (mu/merge-recursive
-       {:mark {:type :boxplot
-               :extent :min-max}})))
+^:kind/vega-lite
+(dot-plot-g {:values (tc/rows penguin-data :as-maps)}
+            "body_mass_g" "sex"
+            {:mark {:filled true}}
+            )
 
 
 

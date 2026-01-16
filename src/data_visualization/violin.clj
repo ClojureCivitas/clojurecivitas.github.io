@@ -20,6 +20,7 @@
    [hyperphor.multitool.core :as mu]
    ))
 
+
 ;; # The World's Smallest Violin (plot generating code)
 
 
@@ -44,16 +45,17 @@
     io/file
     (ImageIO/read))
 
-;;; If you want to see a full-fledged implementation of interactive violin plots for visualizaing biological data, [the BRUCE website](https://bruce.parkerici.org) has one. 
+
+;;; Violin plots are common in the scientific literature. For an example of using violin plots in a scientific domain, see the [BRUCE website](https://bruce.parkerici.org), which uses interactive violin plots to visualize data from a brain cancer research project. 
 
 ;;; ## References
 
 ;;; - [Violin Plots: A Box Plot-Density Trace Synergism](https://web.archive.org/web/20231106021405/https://quantixed.org/wp-content/uploads/2014/12/hintze_1998.pdf) Jerry L. Hintze, Ray D. Nelson
-
+;;; - [Violin Plot - Wikipedia](https://en.wikipedia.org/wiki/Violin_plot)
 
 ;;; # Data
 
-;;; We'll use this classic [dataset about penguin morphology](https://github.com/ttimbers/palmerpenguins/blob/master/README.md). <img src='man/figures/logo.png' align="right" height="138.5" /></a>. Each row describes an individual penguin, with properties like species, sex, body mass, wing size.
+;;; We'll use this classic [dataset about penguin morphology](https://github.com/ttimbers/palmerpenguins/blob/master/README.md). Each row in this dataset describes an individual penguin, with properties like species, sex, body mass, wing size.
 
 (def penguin-data-url
   "https://raw.githubusercontent.com/ttimbers/palmerpenguins/refs/heads/file-variants/inst/extdata/penguins.tsv")
@@ -64,7 +66,7 @@
 (kind/table
  (tc/random penguin-data 10))
 
-;;; # Just the points, ma'am
+;;; # Just show me the datapoints
 
 ;;; Let's start off with a simple dot-plot. We'll group the data by `species`, and turn each value for `body_mass` into a point.
 ;;; Vega just requires specifying some basic mappings (aka encodings) between data fields and visual properties. So a minimal dot plot can look like this:
@@ -79,7 +81,8 @@
       :type :nominal}}
  }
 
-;;; Vega's defaults are not always what we want, so this is the same as above with a bit of tweaking to look more like what we want. One nonobvious change: we use `:row` in place of `:y`. This is not estrictly necessary at this point, but will make it easier when we get to actual violin plots. Also, we add some randomness to (jitter) so we can better see individual points, and just for the hell of it, map another attribute (`sex`) to `:shape`.
+;;; Vega's defaults are not always what we want, so the next version has the same as structure as before, with a bit of tweaking to look more like what we want. We'll adjust the size of the graph, adjust the scale, use color.
+;;;Wwe add some randomness (jitter) so we can better see individual points, and just for the hell of it, map another attribute, `sex`, to `:shape`.
 
 ^:kind/vega-lite
 {:mark {:type "point" :tooltip {:content :data}}
@@ -104,6 +107,8 @@
  :height 50                             ;Note: this specifies the height of a single row 
  :width 800
  }
+
+;;; One nonobvious change: we use `:row` in place of `:y` for the group (species) dimension.  This is not estrictly necessary at this point, but will make it easier when we get to actual violin plots. Just to be more confusing, we reuse the `:y` encoding for the random jitter.
 
 
 ;;; # Boxplot
@@ -164,5 +169,5 @@
   :width 800
   })
 
-;;; That's the basics of a violin plot! In the followup page, we'll see about abstracting some of this into functions, with some variations. and we'll look at combining violin plots with dot and box plots for a richer of our data.
+;;; That's the basics of a violin plot! In the [followup page](violin2), we'll see about abstracting some of this into functions, with some variations. and we'll look at combining violin plots with dot and box plots for a richer of our data.
 
