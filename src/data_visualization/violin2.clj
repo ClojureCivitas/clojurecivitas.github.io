@@ -24,7 +24,7 @@
 ;; # The World's Smallest Violin (plot generating code), Part 2
 
 
-;;; [Link to Part 1]()
+;;; [Link to Part 1]() TODO
 
 
 ^:kindly/hide-code ^:kind/hidden
@@ -59,9 +59,10 @@
           :type :nominal
           :header {:labelAngle 0 :labelAlign "left"}
           :spacing 0}
-    :y {:field (if jitter? "jitter" nil)
-        :type :quantitative
-        :axis false}
+    :y (when jitter?
+         {:field "jitter"
+          :type :quantitative
+          :axis false})
     :color {:field (or color-field group-field)
             :type :nominal
             :legend (if color-field true false)}}
@@ -97,165 +98,52 @@
 ;; But instead, we're going to introduce a much more general (if somewhat unclean) way of modifying a base Vega spec – through structural merge. This makes use of a function `mu/merge-recursive` from the  (Multitool utility library)[https://github.com/hyperphor/multitool/blob/9e10c6b9cfe7f1deb496e842fc12505748a09d69/src/cljc/hyperphor/multitool/core.cljc#L1012]. This function m merges arbitrarily nested structures. This means we can alter any aspect of the spec, at the cost of having to have some knowledge of its structure. 
 
 (defn dot-plot-g
-  [data value-field group-field overrides]
+  "Generalized dot plot"
+  [data value-field group-field & {:keys [overrides] :as options}]
   (mu/merge-recursive
-   (dot-plot data value-field group-field false)
+   (dot-plot data value-field group-field options)
    overrides))
 
 
+;;; So here's another penguin dotplot, but in this case we've used the `:overrides` option to specify that the marks should eb filled, bigger than the defautl, and we'll add an econding.
+
 ^:kind/vega-lite
 (dot-plot-g {:values (tc/rows penguin-data :as-maps)}
-            "body_mass_g" "sex"
-            {:mark {:filled true}}
+            "body_mass_g" "species island"
+            :jitter? true
+            :overrides {:mark {:filled true :size 65}
+                        :encoding {:shape {:field "sex"}}}
             )
 
 
 
-;;; Next, an abstraction for violin plots. This could also be built from dot-plot-2, but since theres a lot to change let's not.
+;;; # An abstraction for box plots
 
+;;; We can use our new tools to trivially do do a boxplot, by patching the dot-ploit spec a bit
 
-(defn violin-plot
-  [data value-field group-field & bandwidth]
- {:mark {:type :area}
-  :data data
-  :transform [{:density value-field
-               :groupby [group-field]
-               :bandwidth bandwidth
-               }]
-  :encoding
-  {:color {:field group-field
-           :type :nominal
-           :legend false}
-   :x {:field "value"
-       :type :quantitative
-       :title value-field
-       :scale {:zero false}}
-   :y {:field "density"
-       :type :quantitative
-       :stack :center                   ; this reflects the area plot to produce the violin shape. 
-       :axis false                      ; hide some labels
-       } 
-   :row {:field group-field
-         :type :nominal
-         :spacing 0
-         :header {:labelAngle 0 :labelAlign :left}
-         }
-   }
-  :height 50                            ;this is the height of each row (facet)
-  :width 800
-  })
-
+(defn box-plot-g
+  "Generalized box plot"
+  [data value-field group-field & {:keys [overrides] :as options}]
+  (dot-plot-g data value-field group-field
+              :jitter? false
+              :overrides
+              (mu/merge-recursive
+               {:mark {:type :boxplot
+                       :extent :min-max}}
+               overrides)))
 
 ^:kind/vega-lite
-(-> (violin-plot {:url "https://vega.github.io/editor/data/movies.json"}
-                 "US Gross" "Major Genre" 5000000)
-    (mu/merge-recursive {:encoding {:x {:scale {:domain [0 100000000]}}} ;force scale to exclude outliers
-                      :mark {:clip true}}))                           ;and don't plot them
+(box-plot-g {:values (tc/rows penguin-data :as-maps)}
+            "body_mass_g" "species island"
+            )
 
+;;; # Composition
 
-
-;;; # Some more variations
-
-
-
-
-
-
-
-;;; We can try some of the other properties
-
-(kind/vega-lite
- {:mark {:type :area}
-  :data {:values (tc/rows penguin-data :as-maps)}
-  :transform [{:density "body_mass_g"
-               :groupby ["species island"]
-               :bandwidth 100
-               :extent [2700 6300]}]
-  :height 50                            ;this is the height of each row (facet)
-  :encoding
-  {:color {:field "species island"
-           :type :nominal
-           :legend false}
-   :y {:field "density"
-       :type :quantitative
-       :stack :center                ; this reflects the area plot to produce the violin shape. 
-       :axis false                  ; hide some labels
-       } 
-   :x {:field "value"
-       :type :quantitative
-       :scale {:zero false}}            ;not strictly necessary
-   :row {:field "species island"
-         :type :nominal
-         :columns 1
-         :spacing 0
-         :header {:labelAngle 0 :labelAlign :left}
-         }
-   }
-  :width 800
-  })
-
-;;; # Here's a more scientific example
-
-(def iris-url "https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/0e7a9b0a5d22642a06d3d5b9bcbad9890c8ee534/iris.csv")
-
-^:kind/vega-lite
-(violin-plot {:url iris-url
-              :format "csv"}
-             "petal_width" "species"
-             )
-
-;;; ## Let's flip the orientation with a hack
-(defn swap-keys
-  [struct keys]
-  (let [remap (mu/map-bidirectional keys)]
-    (mu/walk-map-entries
-     (fn [[k v]]
-       [(get remap k k) v])
-     struct)))
-
-
-^:kind/vega-lite
-(-> (violin-plot {:url iris-url
-                  :format "csv"}
-                 "petal_width" "species"
-                 )
-    (swap-keys {:x :y
-                :row :column
-                :rows :columns
-                :height :width
-                })
-    (mu/merge-recursive
-     {:mark {:orient "horizontal"}
-      }))
-
-^:kind/vega-lite
-(-> (violin-plot {:url "https://vega.github.io/editor/data/movies.json"}
-                   "US Gross" "Major Genre"
-                   )
-
-        (mu/merge-recursive {:encoding {:x {:scale {:domain [0 100000000]}}} ;force scale to exclude outliers
-                         :mark {:clip true}})
-
-    (swap-keys {:x :y
-                :row :column
-                :rows :columns
-                :height :width
-                })
-    (mu/merge-recursive
-     {:mark {:orient "horizontal"}
-      :encoding {:column {:header nil}}}))
-
-
-;;; TODO controls
-;;; TODO layering
-;;; TODO more options
-
-
-;;; # Combining layers
+;;; Now that we have some abstractions, we can combine them using Vega=Lite layers and some judicious Clojure
 
 
 (defn box-dot-plot
-  [data value-field group-field min max]
+  [data value-field group-field]
   {
    ;; Data is in common
    :data data
@@ -266,91 +154,198 @@
           :type :nominal
           :header {:labelAngle 0
                    :labelAlign "left"
-                   }
-          }
-    }
-
+                   }}}
    :spec
-   {
-    :height 50                            ;this is the height of each row (facet)
-    :encoding 
-    {:x {:field value-field
-         :type :quantitative
-         :scale {:domain [min max]}}
-     }    
-    
-    :layer
-    [{:mark {:type "point" :tooltip {:content :data}}
-      :transform [{:filter (format "datum['%s'] != 'NA'" value-field)}
-                  {:calculate "random()" :as "jitter"}]
-
-      :encoding
-      {:color {:value "gray"}
-       :y {:field "jitter"
-           :type :quantitative
-           :axis false}
-       }}
-
-     ;; box layer
-     ;; TODO  widen box
-     {:mark {:type "boxplot"
-             :outliers false}           ;turn off outlier points since we draw all points
-      :encoding
-      {:color {:field group-field :type :nominal :legend false}
-       }}]
-    :width 800
-    }
-
+   {:layer
+    [(dot-plot-g nil value-field group-field
+                 :jitter? true)
+     (box-plot-g nil value-field group-field
+                 :overrides {:mark {:box {:strokeWidth 1.5 :stroke "gray"}}})]
+    :width 800}
    })
 
 ^:kind/vega-lite
 (box-dot-plot {:url penguin-data-url
                :format {:type "tsv"}}
               "flipper_length_mm" "species island"
-              150 250)
+              )
 
 ;;; Let's try that for the movies
 
 ^:kind/vega-lite
 (box-dot-plot {:url "https://vega.github.io/editor/data/movies.json"}
               "US Gross" "Major Genre"
-              0 500000000)
+              )
+
+;;; # An abstraction for violin plots
 
 
-;;; # Scrap
-
-;;; # Get some data
-
-;;; ## Movie Dataset
+;;; This could also be built from dot-plot, but since theres a lot to change let's not.
 
 
+(defn violin-plot
+  [data value-field group-field & {:keys [bandwidth overrides] :or {bandwidth 100}}]
+  (mu/merge-recursive
+   {:mark {:type :area :orient :vertical}
+    :data data
+    :transform [{:density value-field
+                 :groupby [group-field]
+                 :bandwidth bandwidth}]
+    :encoding
+    {:color {:field group-field
+             :type :nominal
+             :legend false}
+     :x {:field "value"
+         :type :quantitative
+         :title value-field
+         :scale {:zero false}}
+     :y {:field "density"
+         :type :quantitative
+         :stack :center
+         :axis false}                      ; hide some labels
+     :row {:field group-field
+           :type :nominal
+           :spacing 0
+           :header {:labelAngle 0 :labelAlign :left}
+           }
+     }
+    :height 50                            ;this is the height of each row (facet)
+    :width 800
+    }
+   overrides))
 
-;;; Here we'll take a look at a sample of the data (selected columns and just a few rows).
+
+^:kind/vega-lite
+(violin-plot {:url "https://vega.github.io/editor/data/movies.json"}
+             "US Gross" "Major Genre"
+             :bandwidth 5000000
+             :overrides
+             {:encoding {:x {:scale {:domain [0 100000000]}}} ;force scale to exclude outliers
+              :mark {:clip true}}                             ;and don't plot them
+             )
+
+
+;;; # Rotate
+
+;;; Violin plots are often oriented vertically. We'll rotate our visualizations with another hack. 
+
+(defn swap-keys
+  "Swap keywords"
+  [struct keyswaps]
+  (let [remap (mu/map-bidirectional keyswaps)]
+    (mu/walk-filtered
+     (fn [k]
+       (get remap k k))
+     struct
+     keyword?)))
+
+^:kind/vega-lite
+(-> (violin-plot {:values (tc/rows penguin-data :as-maps)}
+                 "body_mass_g" "species island")
+    (swap-keys {:x :y
+                :row :column
+                :rows :columns
+                :height :width
+                :horizontal :vertical})
+    (mu/merge-recursive
+     {:encoding {:column {:header {:labelAngle 90 :labelAlign :center}}}}))
+
+;;; And, let's try to abstract that out and apply it to a dotplot
+
+(defn rotate-spec
+  [spec]
+  (-> spec
+      (swap-keys {:x :y
+                  :row :column
+                  :rows :columns
+                  :height :width
+                  :horizontal :vertical})
+      (mu/merge-recursive
+       {:encoding {:column {:header {:labelAngle 90 :labelAlign :center}}}})))
+
+^:kind/vega-lite
+(-> (box-plot-g {:values (tc/rows penguin-data :as-maps)}
+                "body_mass_g" "species island")
+    rotate-spec)
+
+;;; # TODO And finally put all the pieces together. 
+
+;;; not working yet, violin plot won't layer with other ones
+
+
+(defn everything-plot
+  [data value-field group-field]
+  {
+   ;; Data is in common
+   :data data
+   :config {:facet {:spacing 0}
+            :view {:stroke nil}}
+   :facet
+   {:row {:field group-field
+          :type :nominal
+          :header {:labelAngle 0
+                   :labelAlign "left" }}}
+   :spec
+   {:layer
+    [(dot-plot-g nil value-field group-field
+                 :jitter? true)
+     (box-plot-g nil value-field group-field
+                 :overrides {:mark {:box {:strokeWidth 1.5 :stroke "gray"}}})
+     (violin-plot nil value-field group-field)
+     ]
+    :width 800}
+   })
+
+;; ^:kind/vega-lite
+;;  (-> (everything-plot {:url penguin-data-url
+;;                     :format {:type "tsv"}}
+;;                   "body_mass_g" "species island")
+;;     #_ rotate-spec)
+
+;;; well that doesn't work
+  
+^:kind/vega-lite
+{:data
+ {:url
+  "https://raw.githubusercontent.com/ttimbers/palmerpenguins/refs/heads/file-variants/inst/extdata/penguins.tsv",
+  :format {:type "tsv"}},
+ :config {:facet {:spacing 0}, :view {}},
+ :facet
+ {:row {:field "species island", :type :nominal, :header {:labelAngle 0, :labelAlign "left"}}},
+ :spec
+ {    :height 50,
+  :width 800
+  :resolve {:scale {:y "independent"}},
+  :layer
+  [{:mark {:type "point", :tooltip {:content :data}},
+    :transform [{:calculate "random()", :as "jitter"}],
+    :encoding
+    {:x {:field "body_mass_g", :type :quantitative, :scale {:zero false}},
+
+     :y {:field "jitter", :type :quantitative, :axis false},
+     :color {:field "species island", :type :nominal, :legend false}},
+    }
+   {:mark
+    {:type :boxplot,
+     :tooltip {:content :data},
+     :extent :min-max,
+     :box {:strokeWidth 1.5, :stroke "gray"}},
+    :transform [{:calculate "random()", :as "jitter"}],
+    :encoding
+    {:x {:field "body_mass_g", :type :quantitative, :scale {:zero false}},
+
+     :color {:field "species island", :type :nominal, :legend false}},
+    }
+   {:mark {:type :area, :orient :vertical},
+    :transform [{:density "body_mass_g"  :groupby ["species island"]}],
+    :encoding
+    {:color {:field "species island", :type :nominal, :legend false},
+     :x {:field "value", :type :quantitative, :title "body_mass_g", #_ :scale #_ {:zero false}},
+     :y {:field "density", :type :quantitative,  :stack  :center, :axis false},
+     },
+    }],
+  }}
 
 
 
-;;; # Experiment with dataset choice
-
-(def data (atom nil))
-
-;;; ## Scittle min
-
-(kind/scittle
- '(def geotiff-sources
-    (js/ol.source.GeoTIFF.
-     (clj->js
-      {:sources [{:min 0
-                  :nodata 0
-                  :max 10000
-                  :bands [1 ;; B02 blue (490nm)  -> band 1
-                          2 ;; B03 green (560nm) -> band 2
-                          3 ;; B04 red (665nm)   -> band 3
-                          4 ;; B08 NIR (841nm)   -> band 4
-                          ]
-                  :url "https://s2downloads.eox.at/demo/Sentinel-2/3857/R10m.tif"}]}))))
-
-;;; # References
-
-;;; - [Violin Plots: A Box Plot-Density Trace Synergism](https://web.archive.org/web/20231106021405/https://quantixed.org/wp-content/uploads/2014/12/hintze_1998.pdf) Jerry L. Hintze, Ray D. Nelson
-
-
+;;; that's all folks
