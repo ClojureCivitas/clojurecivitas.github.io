@@ -47,7 +47,7 @@
   {:size size :divisions divisions :cellsize (/ size divisions)})
 
 (fact "Noise parameter initialisation"
-      (make-noise-params 512 16) => {:size 512 :divisions 16 :cellsize 32})
+      (make-noise-params 512 8) => {:size 512 :divisions 8 :cellsize 32})
 
 
 (defn random-point-in-cell
@@ -77,7 +77,7 @@
            ((random-points params) 2 0) => (vec2 2.0 10.0))))
 
 
-(let [points  (tensor/reshape (random-points (make-noise-params 512 16)) [(* 16 16)])
+(let [points  (tensor/reshape (random-points (make-noise-params 512 8)) [(* 8 8)])
       scatter (tc/dataset {:x (map first points) :y (map second points)})]
   (-> scatter
       (plotly/base {:=title "Random points"})
@@ -154,7 +154,7 @@
                              :double))))
 
 
-(def worley (worley-noise (make-noise-params 512 16)))
+(def worley (worley-noise (make-noise-params 512 8)))
 
 (def worley-norm (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley))) (dfn/- (dfn/reduce-max worley) worley)))
 
@@ -192,8 +192,8 @@
          ((random-gradients {:divisions 8}) 0 0) => (roughly-vec2 (vec2 1 0) 1e-6)))
 
 
-(let [gradients (tensor/reshape (random-gradients (make-noise-params 512 16)) [(* 16 16)])
-      points    (tensor/reshape (tensor/compute-tensor [16 16] (fn [y x] (vec2 x y))) [(* 16 16)])
+(let [gradients (tensor/reshape (random-gradients (make-noise-params 512 8)) [(* 8 8)])
+      points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y))) [(* 8 8)])
       scatter   (tc/dataset {:x (mapcat (fn [point gradient] [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil]) points gradients)
                              :y (mapcat (fn [point gradient] [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil]) points gradients)})]
   (-> scatter
@@ -320,7 +320,7 @@
                              :double))))
 
 
-(def perlin (perlin-noise (make-noise-params 512 16)))
+(def perlin (perlin-noise (make-noise-params 512 8)))
 
 (def perlin-norm (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin))) (dfn/- perlin (dfn/reduce-min perlin))))
 
