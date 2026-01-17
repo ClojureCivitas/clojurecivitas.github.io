@@ -181,16 +181,16 @@
 
 
 (defn worley-noise
-  [{:keys [size] :as params}]
+  [{:keys [size dimensions] :as params}]
   (let [random-points (random-points params)]
     (tensor/clone
-      (tensor/compute-tensor [size size]
+      (tensor/compute-tensor (repeat dimensions size)
                              (fn [& coords]
                                  (let [center   (map #(+ % 0.5) coords)
                                        division (map (partial division-index params) center)]
                                    (apply min
                                           (for [neighbour (apply neighbours division)]
-                                               (mod-dist params (apply vec2 (reverse center))
+                                               (mod-dist params (apply vec-n (reverse center))
                                                          (apply wrap-get random-points neighbour))))))
                              :double))))
 
