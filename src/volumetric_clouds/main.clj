@@ -91,19 +91,24 @@
       (plotly/layer-point {:=x :x :=y :y})))
 
 
-(defmulti mod-vec (fn [_params v] (count v)))
+(defmulti vec-n (fn [& args] (count args)))
 
-(defmethod mod-vec 2
+
+(defmethod vec-n 2
+  [x y]
+  (vec2 x y))
+
+
+(defmethod vec-n 3
+  [x y z]
+  (vec3 x y z))
+
+
+(defn mod-vec
   [{:keys [size]} v]
   (let [size2 (/ size 2)
         wrap  (fn [x] (-> x (+ size2) (mod size) (- size2)))]
-    (vec2 (wrap (v 0)) (wrap (v 1)))))
-
-(defmethod mod-vec 3
-  [{:keys [size]} v]
-  (let [size2 (/ size 2)
-        wrap  (fn [x] (-> x (+ size2) (mod size) (- size2)))]
-    (vec3 (wrap (v 0)) (wrap (v 1)) (wrap (v 2)))))
+    (apply vec-n (map wrap v))))
 
 
 (facts "Wrap around components of vector to be within -size/2..size/2"
@@ -162,17 +167,31 @@
        (division-index {:cellsize 4} 7.5) => 1)
 
 
+(defn neighbours
+  [& args]
+  (if (seq args)
+    (mapcat (fn [v] (map (fn [delta] (into [(+ (first args) delta)] v)) [-1 0 1])) (apply neighbours (rest args)) )
+    [[]]))
+
+
+(facts "Get neighbouring indices"
+       (neighbours) => [[]]
+       (neighbours 3) => [[2] [3] [4]]
+       (neighbours 1 10) => [[0 9] [1 9] [2 9] [0 10] [1 10] [2 10] [0 11] [1 11] [2 11]])
+
+
 (defn worley-noise
   [{:keys [size] :as params}]
   (let [random-points (random-points params)]
     (tensor/clone
       (tensor/compute-tensor [size size]
-                             (fn [y x]
-                                 (let [center        (add (vec2 x y) (vec2 0.5 0.5))
-                                       [div-x div-y] (map (partial division-index params) center)]
+                             (fn [& coords]
+                                 (let [center   (map #(+ % 0.5) coords)
+                                       division (map (partial division-index params) center)]
                                    (apply min
-                                          (for [dy [-1 0 1] dx [-1 0 1]]
-                                               (mod-dist params center (wrap-get random-points (+ div-y dy) (+ div-x dx)))))))
+                                          (for [neighbour (apply neighbours division)]
+                                               (mod-dist params (apply vec2 (reverse center))
+                                                         (apply wrap-get random-points neighbour))))))
                              :double))))
 
 
