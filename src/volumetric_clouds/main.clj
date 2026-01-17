@@ -13,7 +13,7 @@
     (:require [scicloj.kindly.v4.kind :as kind]
               [clojure.math :refer (PI cos sin)]
               [midje.sweet :refer (fact facts tabular => roughly)]
-              [fastmath.vector :refer (vec2 add mult sub div mag dot)]
+              [fastmath.vector :refer (vec2 vec3 add mult sub div mag dot)]
               [tech.v3.datatype :as dtype]
               [tech.v3.tensor :as tensor]
               [tech.v3.datatype.functional :as dfn]
@@ -43,16 +43,19 @@
 ;; # Worley noise
 
 (defn make-noise-params
-  [size divisions]
-  {:size size :divisions divisions :cellsize (/ size divisions)})
+  [size divisions dimensions]
+  {:size size :divisions divisions :cellsize (/ size divisions) :dimensions dimensions})
+
 
 (fact "Noise parameter initialisation"
-      (make-noise-params 512 8) => {:size 512 :divisions 8 :cellsize 32})
+      (make-noise-params 512 8 2) => {:size 512 :divisions 8 :cellsize 64 :dimensions 2})
 
 
 (defn random-point-in-cell
-  [{:keys [cellsize]} y x]
-  (add (mult (vec2 x y) cellsize) (vec2 (rand cellsize) (rand cellsize))))
+  ([{:keys [cellsize]} y x]
+   (add (mult (vec2 x y) cellsize) (vec2 (rand cellsize) (rand cellsize))))
+  ([{:keys [cellsize]} z y x]
+   (add (mult (vec3 x y z) cellsize) (vec3 (rand cellsize) (rand cellsize) (rand cellsize)))))
 
 
 (facts "Place random point in a cell"
@@ -60,48 +63,67 @@
          (random-point-in-cell {:cellsize 1} 0 0) => (vec2 0.5 0.5)
          (random-point-in-cell {:cellsize 2} 0 0) => (vec2 1.0 1.0)
          (random-point-in-cell {:cellsize 2} 0 3) => (vec2 7.0 1.0)
-         (random-point-in-cell {:cellsize 2} 2 0) => (vec2 1.0 5.0)))
+         (random-point-in-cell {:cellsize 2} 2 0) => (vec2 1.0 5.0)
+         (random-point-in-cell {:cellsize 2} 2 3 5) => (vec3 11.0 7.0 5.0)))
 
 
 (defn random-points
-  [{:keys [divisions] :as params}]
-  (tensor/clone (tensor/compute-tensor [divisions divisions] (partial random-point-in-cell params))))
+  [{:keys [divisions dimensions] :as params}]
+  (tensor/clone (tensor/compute-tensor (repeat dimensions divisions) (partial random-point-in-cell params))))
 
 
 (facts "Greate grid of random points"
-       (let [params (make-noise-params 32 8)]
+       (let [params-2d (make-noise-params 32 8 2)
+             params-3d (make-noise-params 32 8 3)]
          (with-redefs [rand (fn [s] (* 0.5 s))]
-           (dtype/shape (random-points params)) => [8 8]
-           ((random-points params) 0 0) => (vec2 2.0 2.0)
-           ((random-points params) 0 3) => (vec2 14.0 2.0)
-           ((random-points params) 2 0) => (vec2 2.0 10.0))))
+           (dtype/shape (random-points params-2d)) => [8 8]
+           ((random-points params-2d) 0 0) => (vec2 2.0 2.0)
+           ((random-points params-2d) 0 3) => (vec2 14.0 2.0)
+           ((random-points params-2d) 2 0) => (vec2 2.0 10.0)
+           (dtype/shape (random-points params-3d)) => [8 8 8]
+           ((random-points params-3d) 2 3 5) => (vec3 22.0 14.0 10.0))))
 
 
-(let [points  (tensor/reshape (random-points (make-noise-params 512 8)) [(* 8 8)])
+(let [points  (tensor/reshape (random-points (make-noise-params 512 8 2)) [(* 8 8)])
       scatter (tc/dataset {:x (map first points) :y (map second points)})]
   (-> scatter
       (plotly/base {:=title "Random points"})
       (plotly/layer-point {:=x :x :=y :y})))
 
 
-(defn mod-vec2
+(defmulti mod-vec (fn [_params v] (count v)))
+
+(defmethod mod-vec 2
   [{:keys [size]} v]
   (let [size2 (/ size 2)
         wrap  (fn [x] (-> x (+ size2) (mod size) (- size2)))]
     (vec2 (wrap (v 0)) (wrap (v 1)))))
 
+(defmethod mod-vec 3
+  [{:keys [size]} v]
+  (let [size2 (/ size 2)
+        wrap  (fn [x] (-> x (+ size2) (mod size) (- size2)))]
+    (vec3 (wrap (v 0)) (wrap (v 1)) (wrap (v 2)))))
+
 
 (facts "Wrap around components of vector to be within -size/2..size/2"
-       (mod-vec2 {:size 8} (vec2 2 3)) => (vec2 2 3)
-       (mod-vec2 {:size 8} (vec2 5 2)) => (vec2 -3 2)
-       (mod-vec2 {:size 8} (vec2 2 5)) => (vec2 2 -3)
-       (mod-vec2 {:size 8} (vec2 -5 2)) => (vec2 3 2)
-       (mod-vec2 {:size 8} (vec2 2 -5)) => (vec2 2 3))
+       (mod-vec {:size 8} (vec2 2 3)) => (vec2 2 3)
+       (mod-vec {:size 8} (vec2 5 2)) => (vec2 -3 2)
+       (mod-vec {:size 8} (vec2 2 5)) => (vec2 2 -3)
+       (mod-vec {:size 8} (vec2 -5 2)) => (vec2 3 2)
+       (mod-vec {:size 8} (vec2 2 -5)) => (vec2 2 3)
+       (mod-vec {:size 8} (vec3 2 3 1)) => (vec3 2 3 1)
+       (mod-vec {:size 8} (vec3 5 2 1)) => (vec3 -3 2 1)
+       (mod-vec {:size 8} (vec3 2 5 1)) => (vec3 2 -3 1)
+       (mod-vec {:size 8} (vec3 2 3 5)) => (vec3 2 3 -3)
+       (mod-vec {:size 8} (vec3 -5 2 1)) => (vec3 3 2 1)
+       (mod-vec {:size 8} (vec3 2 -5 1)) => (vec3 2 3 1)
+       (mod-vec {:size 8} (vec3 2 3 -5)) => (vec3 2 3 3))
 
 
 (defn mod-dist
   [params a b]
-  (mag (mod-vec2 params (sub b a))))
+  (mag (mod-vec params (sub b a))))
 
 
 (tabular "Wrapped distance of two points"
@@ -154,7 +176,7 @@
                              :double))))
 
 
-(def worley (worley-noise (make-noise-params 512 8)))
+(def worley (worley-noise (make-noise-params 512 8 2)))
 
 (def worley-norm (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley))) (dfn/- (dfn/reduce-max worley) worley)))
 
@@ -192,7 +214,7 @@
          ((random-gradients {:divisions 8}) 0 0) => (roughly-vec2 (vec2 1 0) 1e-6)))
 
 
-(let [gradients (tensor/reshape (random-gradients (make-noise-params 512 8)) [(* 8 8)])
+(let [gradients (tensor/reshape (random-gradients (make-noise-params 512 8 2)) [(* 8 8)])
       points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y))) [(* 8 8)])
       scatter   (tc/dataset {:x (mapcat (fn [point gradient] [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil]) points gradients)
                              :y (mapcat (fn [point gradient] [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil]) points gradients)})]
@@ -320,7 +342,7 @@
                              :double))))
 
 
-(def perlin (perlin-noise (make-noise-params 512 8)))
+(def perlin (perlin-noise (make-noise-params 512 8 2)))
 
 (def perlin-norm (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin))) (dfn/- perlin (dfn/reduce-min perlin))))
 
