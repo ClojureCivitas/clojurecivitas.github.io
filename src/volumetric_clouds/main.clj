@@ -378,12 +378,33 @@
 
 (defn remap
   [value low1 high1 low2 high2]
-  (+ low2 (* (/ (- value low1) (- high1 low1)) (- high2 low2))))
+  (dfn/+ low2 (dfn/* (dfn/- value low1) (/ (- high2 low2) (- high1 low1)))))
+
+
+(tabular "Remap values of tensor"
+       (fact ((remap (tensor/->tensor [?value]) ?low1 ?high1 ?low2 ?high2) 0) => ?expected)
+       ?value ?low1 ?high1 ?low2 ?high2 ?expected
+       0      0     1      0     1      0
+       1      0     1      0     1      1
+       0      0     1      2     3      2
+       1      0     1      2     3      3
+       2      2     3      0     1      0
+       3      2     3      0     1      1
+       1      0     2      0     4      2)
 
 
 (defn clamp
   [value low high]
-  (max low (min value high)))
+  (dfn/max low (dfn/min value high)))
+
+
+(tabular "Clamp values of tensor"
+       (fact ((clamp (tensor/->tensor [?value]) ?low ?high) 0) => ?expected)
+       ?value ?low ?high ?expected
+       2      2    3      2
+       3      2    3      3
+       0      2    3      2
+       4      2    3      3)
 
 
 (defn octaves
@@ -396,20 +417,20 @@
 (defn noise-octaves
   [tensor octaves low high]
   (tensor/clone
-    (tensor/compute-tensor (dtype/shape tensor)
-                           (fn [y x]
-                               (clamp
-                                 (remap
+    (clamp
+      (remap
+        (tensor/compute-tensor (dtype/shape tensor)
+                               (fn [y x]
                                    (fractal-brownian-motion
                                      (partial interpolate tensor)
                                      octaves
-                                     (* (+ y 0.5) 0.25) (* (+ x 0.5) 0.25))
-                                   low high 0 255)
-                                 0 255))
-                           :double)))
+                                     (+ y 0.5) (+ x 0.5)))
+                               :double)
+        low high 0 255)
+      0 255)))
 
-(bufimg/tensor->image (noise-octaves worley-norm (octaves 5 0.6) 128 230))
+(bufimg/tensor->image (noise-octaves worley-norm (octaves 5 0.6) 140 230))
 
-(bufimg/tensor->image (noise-octaves perlin-norm (octaves 5 0.6) 128 230))
+(bufimg/tensor->image (noise-octaves perlin-norm (octaves 5 0.6) 140 230))
 
-(bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 5 0.6) 128 230))
+(bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 5 0.6) 140 230))
