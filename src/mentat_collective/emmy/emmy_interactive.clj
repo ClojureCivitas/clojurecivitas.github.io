@@ -63,7 +63,7 @@
      (->infix (simplify (down (first tuple) '= (second tuple))))))
 
 ^:kindly/hide-code
-(def tex (comp kind/tex emmy.expression.render/->TeX))
+(def tex str)
 
 ^:kindly/hide-code
 (def tex-simp (comp tex simplify))
@@ -139,3 +139,18 @@
                :on-click #(swap! *click-count inc)}]])])
 
 (show-tex "x^2")
+
+(kind/hiccup
+  [:div#target])
+
+(kind/scittle
+  '(let [source-div (.getElementById js/document "source")
+         target-div (.getElementById js/document "target")
+         clone-div (.cloneNode source-div true)]
+     (.appendChild target-div clone-div)))
+
+;;^{:kindly/kind :kind/hidden :kindly/hide-code true}
+
+(kind/hiccup
+  [:div {:id "source"}
+   [:p "test"]])
