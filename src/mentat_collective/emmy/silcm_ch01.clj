@@ -16,11 +16,11 @@
             [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda]]
             [civitas.repl :as repl]))
 
-;; TODO: Make a button for @path-dimension to make dimensions switchable from 4 -> 2
-
 ;; I investigate a Lorentz covariant Lagrangian that is not widely known. It is discussed in the textbooks of Greiner, "Systems of Particles and Hamiltonian Mechanics" (chapter 21), and also [on-line in: Cline, "Variational Principles in Classical Mechanics"](https://phys.libretexts.org/Bookshelves/Classical_Mechanics/Variational_Principles_in_Classical_Mechanics_(Cline)/17%3A_Relativistic_Mechanics/17.06%3A_Lorentz-Invariant_Formulation_of_Lagrangian_Mechanics).
 
 ;; Then I derive, along deBroglie's argument, the momentum-wavelength relation of a free particle.
+
+#_"TODO: Make a button for @path-dimension to make dimensions switchable from 4 -> 2"
 
 ^:kindly/hide-code
 (def prod true) #_"used to check Emmy in Scittle kitchen"
