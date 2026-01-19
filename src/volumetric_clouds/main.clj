@@ -146,14 +146,17 @@
 
 (defn wrap-get
   [t & args]
-  (apply t (map mod args (dtype/shape t))))
+  (if (> (count (dtype/shape t)) (count args))
+    (apply tensor/select t (map mod args (dtype/shape t)))
+    (apply t (map mod args (dtype/shape t)))))
 
 
 (facts "Wrapped lookup of tensor values"
        (let [t (tensor/compute-tensor [4 6] vec2)]
          (wrap-get t 2 3) => (vec2 2 3)
          (wrap-get t 2 7) => (vec2 2 1)
-         (wrap-get t 5 3) => (vec2 1 3)))
+         (wrap-get t 5 3) => (vec2 1 3)
+         (wrap-get (wrap-get t 5) 3) => (vec2 1 3)))
 
 
 (defn division-index
@@ -395,27 +398,32 @@
 
 ;; # Interpolation
 (defn interpolate
-  [tensor y x]
-  (let [yc (- y 0.5)
-        xc (- x 0.5)
-        yfrac (frac yc)
-        xfrac (frac xc)
-        y0  (int (Math/floor yc))
-        x0  (int (Math/floor xc))]
-    (reduce +
-            (for [[j wj] [[y0 (- 1.0 yfrac)] [(inc y0) yfrac]]
-                  [i wi] [[x0 (- 1.0 xfrac)] [(inc x0) xfrac]]]
-                 (* wi wj (wrap-get tensor j i))))))
+  [tensor & args]
+  (if (seq args)
+    (let [x  (first args)
+          xc (- x 0.5)
+          xf (frac xc)
+          x0 (int (Math/floor xc))]
+      (+ (* (- 1.0 xf) (apply interpolate (wrap-get tensor      x0 ) (rest args)))
+         (*        xf  (apply interpolate (wrap-get tensor (inc x0)) (rest args)))))
+    tensor))
+
 
 (facts "Interpolate values of tensor"
-       (let [x (tensor/compute-tensor [4 6] (fn [y x] x))
-             y (tensor/compute-tensor [4 6] (fn [y x] y))]
-         (interpolate x 2.5 3.5) => 3.0
-         (interpolate y 2.5 3.5) => 2.0
-         (interpolate x 2.5 4.0) => 3.5
-         (interpolate y 3.0 3.5) => 2.5
-         (interpolate x 0.0 0.0) => 2.5
-         (interpolate y 0.0 0.0) => 1.5))
+       (let [x2 (tensor/compute-tensor [4 6] (fn [_y x] x))
+             y2 (tensor/compute-tensor [4 6] (fn [y _x] y))
+             x3 (tensor/compute-tensor [4 6 8] (fn [_z _y x] x))
+             y3 (tensor/compute-tensor [4 6 8] (fn [_z y _x] y))
+             z3 (tensor/compute-tensor [4 6 8] (fn [z _y _x] z))]
+         (interpolate x2 2.5 3.5) => 3.0
+         (interpolate y2 2.5 3.5) => 2.0
+         (interpolate x2 2.5 4.0) => 3.5
+         (interpolate y2 3.0 3.5) => 2.5
+         (interpolate x2 0.0 0.0) => 2.5
+         (interpolate y2 0.0 0.0) => 1.5
+         (interpolate x3 2.5 3.5 5.5) => 5.0
+         (interpolate y3 2.5 3.5 3.0) => 3.0
+         (interpolate z3 2.5 3.5 5.5) => 2.0))
 
 
 (defn fractal-brownian-motion
