@@ -264,17 +264,19 @@
 
 
 (defn corner-vectors
-  [params point]
+  [{:keys [dimensions] :as params} point]
   (let [cell-pos (cell-pos params point)]
-    (tensor/compute-tensor [2 2] (fn [y x] (sub cell-pos (vec2 x y))))))
+    (tensor/compute-tensor (repeat dimensions 2) (fn [& args] (sub cell-pos (apply vec-n (reverse args)))))))
 
 
 (facts "Compute relative vectors from cell corners to point in cell"
-       (let [v (corner-vectors {:cellsize 4} (vec2 7 6))]
-         (v 0 0) => (vec2 0.75 0.5)
-         (v 0 1) => (vec2 -0.25 0.5)
-         (v 1 0) => (vec2 0.75 -0.5)
-         (v 1 1) => (vec2 -0.25 -0.5)))
+       (let [v2 (corner-vectors {:cellsize 4 :dimensions 2} (vec2 7 6))
+             v3 (corner-vectors {:cellsize 4 :dimensions 3} (vec3 7 6 5))]
+         (v2 0 0) => (vec2 0.75 0.5)
+         (v2 0 1) => (vec2 -0.25 0.5)
+         (v2 1 0) => (vec2 0.75 -0.5)
+         (v2 1 1) => (vec2 -0.25 -0.5)
+         (v3 0 0 0) => (vec3 0.75 0.5 0.25)))
 
 
 (defn corner-gradients
