@@ -304,17 +304,22 @@
 
 (defn influence-values
   [gradients vectors]
-  (tensor/compute-tensor [2 2] (fn [y x] (dot (gradients y x) (vectors y x))) :double))
+  (tensor/compute-tensor (repeat (count (dtype/shape gradients)) 2)
+                         (fn [& args] (dot (apply gradients args) (apply vectors args))) :double))
 
 
 (facts "Compute influence values from corner vectors and gradients"
-       (let [gradients (tensor/compute-tensor [2 2] (fn [_y x] (vec2 x 10)))
-             vectors   (tensor/compute-tensor [2 2] (fn [y _x] (vec2 1 y)))
-             influence (influence-values gradients vectors)]
-         (influence 0 0) => 0.0
-         (influence 0 1) => 1.0
-         (influence 1 0) => 10.0
-         (influence 1 1) => 11.0))
+       (let [gradients2 (tensor/compute-tensor [2 2] (fn [_y x] (vec2 x 10)))
+             vectors2   (tensor/compute-tensor [2 2] (fn [y _x] (vec2 1 y)))
+             influence2 (influence-values gradients2 vectors2)
+             gradients3 (tensor/compute-tensor [2 2 2] (fn [z y x] (vec3 x y z)))
+             vectors3   (tensor/compute-tensor [2 2 2] (fn [_z _y _x] (vec3 1 10 100)))
+             influence3 (influence-values gradients3 vectors3)]
+         (influence2 0 0) => 0.0
+         (influence2 0 1) => 1.0
+         (influence2 1 0) => 10.0
+         (influence2 1 1) => 11.0
+         (influence3 1 1 1) => 111.0))
 
 
 (defn ease-curve
@@ -336,19 +341,25 @@
 
 
 (defn interpolation-weights
-  [params point]
-  (let [pos     (cell-pos params point)
-        [bx by] pos
-        [ax ay] (sub (vec2 1 1) pos)]
-    (tensor/->tensor (for [y [ay by]] (for [x [ax bx]] (* (ease-curve y) (ease-curve x)))))))
+  ([params point]
+   (interpolation-weights (cell-pos params point)))
+  ([pos]
+   (if (seq pos)
+     (let [w1   (- 1.0 (last pos))
+           w2   (last pos)
+           elem (interpolation-weights (butlast pos))]
+       (tensor/->tensor [(dfn/* (ease-curve w1) elem) (dfn/* (ease-curve w2) elem)]))
+     1.0)))
 
 
 (facts "Interpolation weights"
-       (let [weights (interpolation-weights {:cellsize 8} (vec2 2 7))]
-         (weights 0 0) => (roughly 0.014391 1e-6)
-         (weights 0 1) => (roughly 0.001662 1e-6)
-         (weights 1 0) => (roughly 0.882094 1e-6)
-         (weights 1 1) => (roughly 0.101854 1e-6)))
+       (let [weights2 (interpolation-weights {:cellsize 8} (vec2 2 7))
+             weights3 (interpolation-weights {:cellsize 8} (vec3 2 7 3))]
+         (weights2 0 0) => (roughly 0.014391 1e-6)
+         (weights2 0 1) => (roughly 0.001662 1e-6)
+         (weights2 1 0) => (roughly 0.882094 1e-6)
+         (weights2 1 1) => (roughly 0.101854 1e-6)
+         (weights3 0 0 0) => (roughly 0.010430 1e-6)))
 
 
 (defn perlin-sample
@@ -361,12 +372,12 @@
 
 
 (defn perlin-noise
-  [{:keys [size] :as params}]
+  [{:keys [size dimensions] :as params}]
   (let [gradients (random-gradients params)]
     (tensor/clone
-      (tensor/compute-tensor [size size]
-                             (fn [y x]
-                                 (let [center (add (vec2 x y) (vec2 0.5 0.5))]
+      (tensor/compute-tensor (repeat dimensions size)
+                             (fn [& args]
+                                 (let [center (add (apply vec-n (reverse args)) (apply vec-n (repeat dimensions 0.5)))]
                                    (perlin-sample params gradients center)))
                              :double))))
 
