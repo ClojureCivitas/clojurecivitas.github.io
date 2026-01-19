@@ -36,6 +36,7 @@
 ;; * Generating OpenGL shaders using templates
 ;; * cloud shadows
 ;; * powder function
+;; * video showing TDD with tmux
 ;;
 ;; References
 ;; * https://adrianb.io/2014/08/09/perlinnoise.html
@@ -95,6 +96,11 @@
 (defn vec-n
   ([x y] (vec2 x y))
   ([x y z] (vec3 x y z)))
+
+
+(facts "Generic vector function for creating 2D and 3D vectors"
+       (vec-n 2 3) => (vec2 2 3)
+       (vec-n 2 3 1) => (vec3 2 3 1))
 
 
 (defn mod-vec
@@ -280,18 +286,20 @@
 
 
 (defn corner-gradients
-  [params gradients point]
-  (let [[div-x div-y] (map (partial division-index params) point)]
-    (tensor/compute-tensor [2 2] (fn [y x] (wrap-get gradients (+ div-y y) (+ div-x x))))))
+  [{:keys [dimensions] :as params} gradients point]
+  (let [division (map (partial division-index params) point)]
+    (tensor/compute-tensor (repeat dimensions 2) (fn [& coords] (apply wrap-get gradients (map + (reverse division) coords))))))
 
 
 (facts "Get 2x2 tensor of gradients from a larger tensor using wrap around"
-       (let [gradients (tensor/compute-tensor [4 6] (fn [y x] (vec2 x y)))]
-         ((corner-gradients {:cellsize 4} gradients (vec2 9 6)) 0 0) => (vec2 2 1)
-         ((corner-gradients {:cellsize 4} gradients (vec2 9 6)) 0 1) => (vec2 3 1)
-         ((corner-gradients {:cellsize 4} gradients (vec2 9 6)) 1 0) => (vec2 2 2)
-         ((corner-gradients {:cellsize 4} gradients (vec2 9 6)) 1 1) => (vec2 3 2)
-         ((corner-gradients {:cellsize 4} gradients (vec2 23 15)) 1 1) => (vec2 0 0)))
+       (let [gradients2 (tensor/compute-tensor [4 6] (fn [y x] (vec2 x y)))
+             gradients3 (tensor/compute-tensor [4 6 8] (fn [z y x] (vec3 x y z))) ]
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 0) => (vec2 2 1)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 1) => (vec2 3 1)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 0) => (vec2 2 2)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 1) => (vec2 3 2)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 23 15)) 1 1) => (vec2 0 0)
+         ((corner-gradients {:cellsize 4 :dimensions 3} gradients3 (vec3 9 6 3)) 0 0 0) => (vec3 2 1 0)))
 
 
 (defn influence-values
