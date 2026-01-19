@@ -504,8 +504,8 @@
         low high 0 255)
       0 255)))
 
-(bufimg/tensor->image (noise-octaves worley-norm (octaves 5 0.6) 140 230))
+(bufimg/tensor->image (noise-octaves worley-norm (octaves 5 0.6) 120 230))
 
-(bufimg/tensor->image (noise-octaves perlin-norm (octaves 5 0.6) 140 230))
+(bufimg/tensor->image (noise-octaves perlin-norm (octaves 5 0.6) 120 230))
 
-(bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 5 0.6) 140 230))
+(bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 5 0.6) 120 230))
