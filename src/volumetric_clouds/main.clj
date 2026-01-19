@@ -11,7 +11,7 @@
 
 (ns volumetric-clouds.main
     (:require [scicloj.kindly.v4.kind :as kind]
-              [clojure.math :refer (PI cos sin)]
+              [clojure.math :refer (PI sqrt)]
               [midje.sweet :refer (fact facts tabular => roughly)]
               [fastmath.vector :refer (vec2 vec3 add mult sub div mag dot)]
               [tech.v3.datatype :as dtype]
@@ -91,17 +91,10 @@
       (plotly/layer-point {:=x :x :=y :y})))
 
 
-(defmulti vec-n (fn [& args] (count args)))
 
-
-(defmethod vec-n 2
-  [x y]
-  (vec2 x y))
-
-
-(defmethod vec-n 3
-  [x y z]
-  (vec3 x y z))
+(defn vec-n
+  ([x y] (vec2 x y))
+  ([x y z] (vec3 x y z)))
 
 
 (defn mod-vec
@@ -204,33 +197,39 @@
 ;; # Perlin noise
 
 (defn random-gradient
-  [& _args]
-  (let [angle (rand (* 2 PI))]
-    (vec2 (cos angle) (sin angle))))
+  [& args]
+  (loop [args args]
+        (let [random-vector (apply vec-n (map (fn [_x] (- (rand 2.0) 1.0)) args))
+              vector-length (mag random-vector)]
+          (if (and (> vector-length 0.0) (<= vector-length 1.0))
+            (div random-vector vector-length)
+            (recur args)))))
 
 
-(defn roughly-vec2
+(defn roughly-vec
   [expected error]
   (fn [actual]
       (<= (mag (sub actual expected)) error)))
 
 
 (facts "Create unit vector with random direction"
-       (with-redefs [rand (constantly 0)]
-         (random-gradient) => (roughly-vec2 (vec2 1 0) 1e-6))
-       (with-redefs [rand (constantly (/ PI 2))]
-         (random-gradient) => (roughly-vec2 (vec2 0 1) 1e-6)))
+       (with-redefs [rand (constantly 0.5)]
+         (random-gradient 0 0) => (roughly-vec (vec2 (- (sqrt 0.5)) (- (sqrt 0.5))) 1e-6))
+       (with-redefs [rand (constantly 1.5)]
+         (random-gradient 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)))
 
 
 (defn random-gradients
- [{:keys [divisions]}]
- (tensor/clone (tensor/compute-tensor [divisions divisions] random-gradient)))
+ [{:keys [divisions dimensions]}]
+ (tensor/clone (tensor/compute-tensor (repeat dimensions divisions) random-gradient)))
 
 
 (facts "Random gradients"
-       (with-redefs [rand (constantly 0)]
-         (dtype/shape (random-gradients {:divisions 8})) => [8 8]
-         ((random-gradients {:divisions 8}) 0 0) => (roughly-vec2 (vec2 1 0) 1e-6)))
+       (with-redefs [rand (constantly 1.5)]
+         (dtype/shape (random-gradients {:divisions 8 :dimensions 2})) => [8 8]
+         ((random-gradients {:divisions 8 :dimensions 2}) 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)
+         (dtype/shape (random-gradients {:divisions 8 :dimensions 3})) => [8 8 8]
+         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (roughly-vec (vec3 (sqrt (/ 1 3)) (sqrt (/ 1 3)) (sqrt (/ 1 3))) 1e-6)))
 
 
 (let [gradients (tensor/reshape (random-gradients (make-noise-params 512 8 2)) [(* 8 8)])
@@ -255,12 +254,13 @@
 
 (defn cell-pos
   [{:keys [cellsize]} point]
-  (apply vec2 (map frac (div point cellsize))))
+  (apply vec-n (map frac (div point cellsize))))
 
 
 (facts "Relative position of point in a cell"
        (cell-pos {:cellsize 4} (vec2 2 3)) => (vec2 0.5 0.75)
-       (cell-pos {:cellsize 4} (vec2 7 5)) => (vec2 0.75 0.25))
+       (cell-pos {:cellsize 4} (vec2 7 5)) => (vec2 0.75 0.25)
+       (cell-pos {:cellsize 4} (vec3 7 5 2)) => (vec3 0.75 0.25 0.5))
 
 
 (defn corner-vectors
