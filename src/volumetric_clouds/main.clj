@@ -52,11 +52,19 @@
       (make-noise-params 512 8 2) => {:size 512 :divisions 8 :cellsize 64 :dimensions 2})
 
 
+(defn vec-n
+  ([x y] (vec2 x y))
+  ([x y z] (vec3 x y z)))
+
+
+(facts "Generic vector function for creating 2D and 3D vectors"
+       (vec-n 2 3) => (vec2 2 3)
+       (vec-n 2 3 1) => (vec3 2 3 1))
+
+
 (defn random-point-in-cell
-  ([{:keys [cellsize]} y x]
-   (add (mult (vec2 x y) cellsize) (vec2 (rand cellsize) (rand cellsize))))
-  ([{:keys [cellsize]} z y x]
-   (add (mult (vec3 x y z) cellsize) (vec3 (rand cellsize) (rand cellsize) (rand cellsize)))))
+  [{:keys [cellsize]} & args]
+   (add (mult (apply vec-n (reverse args)) cellsize) (apply vec-n (take (count args) (repeatedly #(rand cellsize))))))
 
 
 (facts "Place random point in a cell"
@@ -90,17 +98,6 @@
   (-> scatter
       (plotly/base {:=title "Random points"})
       (plotly/layer-point {:=x :x :=y :y})))
-
-
-
-(defn vec-n
-  ([x y] (vec2 x y))
-  ([x y z] (vec3 x y z)))
-
-
-(facts "Generic vector function for creating 2D and 3D vectors"
-       (vec-n 2 3) => (vec2 2 3)
-       (vec-n 2 3 1) => (vec3 2 3 1))
 
 
 (defn mod-vec
@@ -495,11 +492,11 @@
     (clamp
       (remap
         (tensor/compute-tensor (dtype/shape tensor)
-                               (fn [y x]
-                                   (fractal-brownian-motion
+                               (fn [& args]
+                                   (apply fractal-brownian-motion
                                      (partial interpolate tensor)
                                      octaves
-                                     (+ y 0.5) (+ x 0.5)))
+                                     (map #(+ % 0.5) args)))
                                :double)
         low high 0 255)
       0 255)))
