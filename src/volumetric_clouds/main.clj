@@ -49,7 +49,7 @@
 
 
 (fact "Noise parameter initialisation"
-      (make-noise-params 512 8 2) => {:size 512 :divisions 8 :cellsize 64 :dimensions 2})
+      (make-noise-params 512 4 2) => {:size 512 :divisions 4 :cellsize 128 :dimensions 2})
 
 
 (defn vec-n
@@ -96,7 +96,7 @@
            ((random-points params-3d) 2 3 5) => (vec3 22.0 14.0 10.0))))
 
 
-(let [points  (tensor/reshape (random-points (make-noise-params 512 8 2)) [(* 8 8)])
+(let [points  (tensor/reshape (random-points (make-noise-params 512 4 2)) [(* 4 4)])
       scatter (tc/dataset {:x (map first points) :y (map second points)})]
   (-> scatter
       (plotly/base {:=title "Random points"})
@@ -197,7 +197,7 @@
                              :double))))
 
 
-(def worley (worley-noise (make-noise-params 512 8 2)))
+(def worley (worley-noise (make-noise-params 512 4 2)))
 
 (def worley-norm (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley))) (dfn/- (dfn/reduce-max worley) worley)))
 
@@ -241,8 +241,8 @@
          ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (roughly-vec (vec3 (sqrt (/ 1 3)) (sqrt (/ 1 3)) (sqrt (/ 1 3))) 1e-6)))
 
 
-(let [gradients (tensor/reshape (random-gradients (make-noise-params 512 8 2)) [(* 8 8)])
-      points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y))) [(* 8 8)])
+(let [gradients (tensor/reshape (random-gradients (make-noise-params 512 4 2)) [(* 4 4)])
+      points    (tensor/reshape (tensor/compute-tensor [4 4] (fn [y x] (vec2 x y))) [(* 4 4)])
       scatter   (tc/dataset {:x (mapcat (fn [point gradient] [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil]) points gradients)
                              :y (mapcat (fn [point gradient] [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil]) points gradients)})]
   (-> scatter
@@ -385,7 +385,7 @@
                              :double))))
 
 
-(def perlin (perlin-noise (make-noise-params 512 8 2)))
+(def perlin (perlin-noise (make-noise-params 512 4 2)))
 
 (def perlin-norm (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin))) (dfn/- perlin (dfn/reduce-min perlin))))
 
@@ -394,7 +394,7 @@
 ;; # Combination of Worley and Perlin noise
 (def perlin-worley-norm (dfn/+ (dfn/* 0.3 perlin-norm) (dfn/* 0.7 worley-norm)))
 
-(bufimg/tensor->image perlin-worley-norm)
+(bufimg/tensor->image (dfn/+ (dfn/* 0.5 perlin-norm) (dfn/* 0.5 worley-norm)))
 
 ;; # Interpolation
 (defn interpolate
