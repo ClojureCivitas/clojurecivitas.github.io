@@ -64,7 +64,10 @@
 
 (defn random-point-in-cell
   [{:keys [cellsize]} & args]
-   (add (mult (apply vec-n (reverse args)) cellsize) (apply vec-n (take (count args) (repeatedly #(rand cellsize))))))
+  (let [random-seq (repeatedly #(rand cellsize))
+        dimensions (count args)]
+    (add (mult (apply vec-n (reverse args)) cellsize)
+         (apply vec-n (take dimensions random-seq)))))
 
 
 (facts "Place random point in a cell"
