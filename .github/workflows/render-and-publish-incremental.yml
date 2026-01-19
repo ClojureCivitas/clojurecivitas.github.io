@@ -1,0 +1,142 @@
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Deploy to Pages (manual runs only)"
+        type: boolean
+        default: false
+
+name: Incremental Render and Publish
+
+permissions:
+  contents: read
+
+env:
+  SITE_CACHE_REPO: ${{ secrets.SITE_CACHE_REPO }}
+  SITE_CACHE_TOKEN: ${{ secrets.SITE_CACHE_TOKEN }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need history to get mtimes
+
+      - name: Normalize source repo file mtimes to last commit
+        run: |
+          set -euo pipefail
+          git ls-files -z | xargs -0 -I{} sh -c 'ts=$(git log -1 --format=%ct -- "{}" || true); if [ -n "$ts" ]; then touch -d "@$ts" "{}"; fi'
+
+      - name: Restore `site` from cache repo without overwriting source controlled files
+        run: |
+          set -euo pipefail
+          git clone "https://x-access-token:${SITE_CACHE_TOKEN}@github.com/${SITE_CACHE_REPO}.git" /tmp/site-cache
+          cd /tmp/site-cache
+          git ls-files -z -- site/ | xargs -0 -I{} sh -c 'ts=$(git log -1 --format=%ct -- "{}" || true); if [ -n "$ts" ]; then touch -d "@$ts" "{}"; fi'
+          cd -
+          rsync -a --ignore-existing /tmp/site-cache/site/ site/ || true
+          echo "Contents of site/ after restore:"
+          ls -lah site/ | head -50
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          pip install plotly kaleido
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set up Clojure
+        uses: DeLaGuardo/setup-clojure@main
+        with:
+          cli: 'latest'
+
+      - name: Cache clojure dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+          key: cljdeps-${{ runner.os }}
+
+      - name: Detect changed Clojure sources
+        id: changed_clj
+        run: |
+          set -euo pipefail
+          changed=""
+          if [ -f /tmp/site-cache/SOURCE_COMMIT ]; then
+            source_commit=$(cat /tmp/site-cache/SOURCE_COMMIT)
+            echo "Using source commit recorded in cache: $source_commit"
+            changed=$(git diff --name-only --diff-filter=ACMR "$source_commit" HEAD -- 'src/**/*.clj' | tr '\n' ' ')
+          fi
+          if [ -z "$changed" ]; then
+            echo "No changed Clojure sources detected"
+            exit 0
+          fi
+          echo "Changed Clojure source files:" $changed
+          echo "files=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Build notebooks
+        run: clojure -M:clay -A:markdown ${{ steps.changed_clj.outputs.files }}
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          tinytex: true
+
+      - name: Render Quarto
+        uses: quarto-dev/quarto-actions/render@v2
+        with:
+          path: site
+
+      - name: Upload artifact for Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/_site
+
+      - name: Push site to cache repo
+        run: |
+          set -euo pipefail
+          source_commit=$(git rev-parse HEAD)
+          rm -rf /tmp/site-cache/site
+          cp -r site /tmp/site-cache/
+          echo "$source_commit" > /tmp/site-cache/SOURCE_COMMIT
+          cd /tmp/site-cache
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Cache update from build ${source_commit}"
+            git checkout -b temp
+            git push --force origin main
+          else
+            echo "No changes to cache."
+          fi
+
+  deploy:
+    needs: build
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true' && github.ref == 'refs/heads/main')
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
