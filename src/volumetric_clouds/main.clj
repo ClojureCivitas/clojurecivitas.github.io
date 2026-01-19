@@ -427,23 +427,28 @@
 
 
 (defn fractal-brownian-motion
-  [base octaves y x]
+  [base octaves & args]
   (let [scales (take (count octaves) (iterate #(* 2 %) 1))]
-    (reduce + 0.0 (map (fn [amplitude scale] (* amplitude (base (* scale y) (* scale x)))) octaves scales))))
+    (reduce + 0.0 (map (fn [amplitude scale] (* amplitude (apply base (map #(* scale %) args)))) octaves scales))))
 
 
 (facts "Fractal Brownian motion"
-       (let [base (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0))) 0.0 1.0))]
-         (fractal-brownian-motion base [1.0] 0 0) => 0.0
-         (fractal-brownian-motion base [1.0] 0 1) => 1.0
-         (fractal-brownian-motion base [1.0] 1 0) => 1.0
-         (fractal-brownian-motion base [1.0] 1 1) => 0.0
-         (fractal-brownian-motion base [0.5] 0 1) => 0.5
-         (fractal-brownian-motion base [] 0 1) => 0.0
-         (fractal-brownian-motion base [0.0 1.0] 0 0) => 0.0
-         (fractal-brownian-motion base [0.0 1.0] 0.0 0.5) => 1.0
-         (fractal-brownian-motion base [0.0 1.0] 0.5 0.0) => 1.0
-         (fractal-brownian-motion base [0.0 1.0] 0.5 0.5) => 0.0))
+       (let [base1 (fn [x] (if (>= (mod x 2.0) 1.0) 1.0 0.0))
+             base2 (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0))) 0.0 1.0))]
+         (fractal-brownian-motion base2 [1.0] 0 0) => 0.0
+         (fractal-brownian-motion base2 [1.0] 0 1) => 1.0
+         (fractal-brownian-motion base2 [1.0] 1 0) => 1.0
+         (fractal-brownian-motion base2 [1.0] 1 1) => 0.0
+         (fractal-brownian-motion base2 [0.5] 0 1) => 0.5
+         (fractal-brownian-motion base2 [] 0 1) => 0.0
+         (fractal-brownian-motion base2 [0.0 1.0] 0 0) => 0.0
+         (fractal-brownian-motion base2 [0.0 1.0] 0.0 0.5) => 1.0
+         (fractal-brownian-motion base2 [0.0 1.0] 0.5 0.0) => 1.0
+         (fractal-brownian-motion base2 [0.0 1.0] 0.5 0.5) => 0.0
+         (fractal-brownian-motion base1 [1.0] 0) => 0.0
+         (fractal-brownian-motion base1 [1.0] 1) => 1.0
+         (fractal-brownian-motion base1 [0.0 1.0] 0.0) => 0.0
+         (fractal-brownian-motion base1 [0.0 1.0] 0.5) => 1.0))
 
 
 (defn remap
