@@ -47,7 +47,7 @@
 
 
 (fact "Noise parameter initialisation"
-      (make-noise-params 512 4 2) => {:size 512 :divisions 4 :cellsize 128 :dimensions 2})
+      (make-noise-params 512 8 2) => {:size 512 :divisions 8 :cellsize 64 :dimensions 2})
 
 
 (defn vec-n
@@ -94,7 +94,7 @@
            ((random-points params-3d) 2 3 5) => (vec3 22.0 14.0 10.0))))
 
 
-(let [points  (tensor/reshape (random-points (make-noise-params 512 4 2)) [(* 4 4)])
+(let [points  (tensor/reshape (random-points (make-noise-params 512 8 2)) [(* 8 8)])
       scatter (tc/dataset {:x (map first points) :y (map second points)})]
   (-> scatter
       (plotly/base {:=title "Random points"})
@@ -195,7 +195,7 @@
                              :double))))
 
 
-(def worley (worley-noise (make-noise-params 512 4 2)))
+(def worley (worley-noise (make-noise-params 512 8 2)))
 
 (def worley-norm (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley))) (dfn/- (dfn/reduce-max worley) worley)))
 
@@ -239,8 +239,8 @@
          ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (roughly-vec (vec3 (sqrt (/ 1 3)) (sqrt (/ 1 3)) (sqrt (/ 1 3))) 1e-6)))
 
 
-(let [gradients (tensor/reshape (random-gradients (make-noise-params 512 4 2)) [(* 4 4)])
-      points    (tensor/reshape (tensor/compute-tensor [4 4] (fn [y x] (vec2 x y))) [(* 4 4)])
+(let [gradients (tensor/reshape (random-gradients (make-noise-params 512 8 2)) [(* 8 8)])
+      points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y))) [(* 8 8)])
       scatter   (tc/dataset {:x (mapcat (fn [point gradient] [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil]) points gradients)
                              :y (mapcat (fn [point gradient] [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil]) points gradients)})]
   (-> scatter
@@ -383,7 +383,7 @@
                              :double))))
 
 
-(def perlin (perlin-noise (make-noise-params 512 4 2)))
+(def perlin (perlin-noise (make-noise-params 512 8 2)))
 
 (def perlin-norm (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin))) (dfn/- perlin (dfn/reduce-min perlin))))
 
@@ -502,11 +502,11 @@
         low high 0 255)
       0 255)))
 
-(bufimg/tensor->image (noise-octaves worley-norm (octaves 5 0.6) 120 230))
+(bufimg/tensor->image (noise-octaves worley-norm (octaves 4 0.6) 120 230))
 
-(bufimg/tensor->image (noise-octaves perlin-norm (octaves 5 0.6) 120 230))
+(bufimg/tensor->image (noise-octaves perlin-norm (octaves 4 0.6) 120 230))
 
-(bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 5 0.6) 120 230))
+(bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 4 0.6) 120 230))
 
 ;; # Testing shaders
 
@@ -560,10 +560,6 @@ void main()
 (def fragment-shader (make-shader fragment-test GL20/GL_FRAGMENT_SHADER))
 (def program (make-program vertex-shader fragment-shader))
 
-(def location (GL20/glGetAttribLocation program "point"))
-(GL20/glVertexAttribPointer location 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
-(GL20/glEnableVertexAttribArray location)
-
 (defmacro def-make-buffer [method create-buffer]
   `(defn ~method [data#]
      (let [buffer# (~create-buffer (count data#))]
@@ -607,6 +603,10 @@ void main()
 
 (def vao (setup-vao vertices indices))
 
+(def location (GL20/glGetAttribLocation program "point"))
+(GL20/glVertexAttribPointer location 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+(GL20/glEnableVertexAttribArray location)
+
 (def texture (GL11/glGenTextures))
 (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
 (GL42/glTexStorage2D GL11/GL_TEXTURE_2D 1 GL30/GL_RGBA32F 1 1)
@@ -618,10 +618,14 @@ void main()
 (GL11/glViewport 0 0 1 1)
 
 (GL20/glUseProgram program)
+(GL11/glClearColor 1.0 0.5 0.25 1.0)
+(GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
 (GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0)
+; (GL11/glGetError)
 
 (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
 (GL30/glDeleteFramebuffers fbo)
+;(GLFW/glfwSwapBuffers window)
 
 (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
 (def buf (BufferUtils/createFloatBuffer (* 1 1 3)))
