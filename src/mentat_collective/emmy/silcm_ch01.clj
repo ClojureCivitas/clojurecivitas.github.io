@@ -174,12 +174,18 @@
 
 ;; The extended Lagrangian:
 
+(define (fourtuple->t v)
+  (ref v 0))
+
+(define (fourtuple->space v)
+  (apply up (rest v)))
+
 (define ((Lc-free-particle mass c) local)
   (let ((v (velocity local)))
     (* 1/2 mass (square c)
        (- (* (/ 1 (square c))
-             (square (apply up (rest v))))
-          (square (ref v 0))
+             (square (fourtuple->space v)))
+          (square (fourtuple->t v))
           1))))
 
 ;; According to chapter 4.3.2 of Struckmeier "Extended Lagrange and Hamilton Formalism for Point Mechanics and Covariant Hamilton Field Theory", this "case is largely disregarded in the literature covering the extended Hamilton- Lagrange formalism (cf., for instance, Lanczos, 1949; Dirac, 1950; Synge, 1960; Goldstein et al., 2002; Johns, 2005), namely there exist extended Lagrangians that are related to a given conventional Lagrangian without being homogeneous forms in the n + 1 velocities".
@@ -288,8 +294,11 @@
 
 ;; Non-homogeneous but symmetric Lagrangians of this type require a general implicit constraint: $L - pv = 0$ (Cline Eq. 17.6.12, Struckmeier Eq. 21.9)
 
+(define (Lc-momentum Lagrangian)
+  ((partial 2) Lagrangian))
+
 (define (Lc-Lagrange-constraint Lagrangian)
-  (- Lagrangian (* ((partial 2) Lagrangian) velocity)))
+  (- Lagrangian (* (Lc-momentum Lagrangian) velocity)))
 
 ;; Applied to the free particle (and multiplication with a constant factor), leads to (Struckmeier Eq. 21.12):
 
@@ -303,6 +312,25 @@
   (Lc-constraint-s 's))
 
 ;; The above is a constraint, i.e. needs to be zero, needs to vanish for all physical paths.
+
+;; For the free particle, we should think of it as a constraint on p, a constraint known as the mass shell or on-shell condition, usually written (thereby omitting the c) as $-p^2 = m^2$. This on-shell constraint is the correct version of the popular $E = mc^2$. Let's show that the above constraint indeed is the same as $-p^2 = m^2c^4$:
+
+(define p
+  (compose (Lc-momentum (Lc-free-particle 'm_0 'c)) (Gamma Lc-path)))
+
+(show-tex-expression
+  (p 's))
+
+;; (for defining the next "square", notice that for a 4-vector this involves a minus sign)
+
+(define ((foursquare c) v)
+  (- (square (fourtuple->space v))
+     (square (fourtuple->t v))))
+
+(show-eq
+  (down
+    (square (* 'm_0 (square 'c)))
+    (- ((foursquare 'c) (p 's)))))
 
 ;; Contrary to constraints that depend on position, this constraint (being about velocity) cannot be easily treated via Lagrange multipliers.
 
