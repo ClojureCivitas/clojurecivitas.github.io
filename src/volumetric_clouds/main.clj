@@ -560,6 +560,10 @@ void main()
 (def fragment-shader (make-shader fragment-test GL20/GL_FRAGMENT_SHADER))
 (def program (make-program vertex-shader fragment-shader))
 
+(def location (GL20/glGetAttribLocation program "point"))
+(GL20/glVertexAttribPointer location 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+(GL20/glEnableVertexAttribArray location)
+
 (defmacro def-make-buffer [method create-buffer]
   `(defn ~method [data#]
      (let [buffer# (~create-buffer (count data#))]
@@ -577,26 +581,35 @@ void main()
                 -1.0 -1.0 0.0
                  1.0 -1.0 0.0]))
 
-(defn setup-vao [vertices]
+(def indices
+  (int-array [0 1 2 3]))
+
+(defn setup-vao [vertices indices]
   (let [vao (GL30/glGenVertexArrays)
-        vbo (GL15/glGenBuffers)]
+        vbo (GL15/glGenBuffers)
+        ibo (GL15/glGenBuffers)]
     (GL30/glBindVertexArray vao)
     (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo)
     (GL15/glBufferData GL15/GL_ARRAY_BUFFER (make-float-buffer vertices)
                        GL15/GL_STATIC_DRAW)
-    {:vao vao :vbo vbo}))
+    (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER ibo)
+    (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER (make-int-buffer indices)
+                       GL15/GL_STATIC_DRAW)
+    {:vao vao :vbo vbo :ibo ibo}))
 
-(defn teardown-vao [{:keys [vao vbo]}]
+(defn teardown-vao [{:keys [vao vbo ibo]}]
+  (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+  (GL15/glDeleteBuffers ibo)
   (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
   (GL15/glDeleteBuffers vbo)
   (GL30/glBindVertexArray 0)
   (GL15/glDeleteBuffers vao))
 
-(def vao (setup-vao vertices))
+(def vao (setup-vao vertices indices))
 
 (def texture (GL11/glGenTextures))
 (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
-(GL42/glTexStorage2D GL11/GL_TEXTURE_2D 1 GL30/GL_RGB32F 1 1)
+(GL42/glTexStorage2D GL11/GL_TEXTURE_2D 1 GL30/GL_RGBA32F 1 1)
 
 (def fbo (GL30/glGenFramebuffers))
 (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo)
@@ -605,8 +618,7 @@ void main()
 (GL11/glViewport 0 0 1 1)
 
 (GL20/glUseProgram program)
-(GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0)
-; (GL11/glGetError)
+(GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0)
 
 (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
 (GL30/glDeleteFramebuffers fbo)
@@ -615,12 +627,22 @@ void main()
 (def buf (BufferUtils/createFloatBuffer (* 1 1 3)))
 (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL12/GL_RGB GL11/GL_FLOAT buf)
 
+(defn float-buffer->array
+  "Convert float buffer to flaot array"
+  {:malli/schema [:=> [:cat :some] seqable?]}
+  [buffer]
+  (let [result (float-array (.limit ^java.nio.DirectFloatBufferU buffer))]
+    (.get ^java.nio.DirectFloatBufferU buffer result)
+    (.flip ^java.nio.DirectFloatBufferU buffer)
+    result))
+
+(seq (float-buffer->array buf))
 
 (GL11/glDeleteTextures texture)
 
 (teardown-vao vao)
 
-(GL20/glDeleteProgram tex-program)
+(GL20/glDeleteProgram program)
 
 (GLFW/glfwDestroyWindow window)
 
