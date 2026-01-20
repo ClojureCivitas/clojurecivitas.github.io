@@ -22,16 +22,14 @@
               [tech.v3.libs.buffered-image :as bufimg])
     (:import [javax.imageio ImageIO]
              [org.lwjgl.opengl GL11]
-             [org.lwjgl.stb STBImageWrite]))
+             [org.lwjgl.stb STBImageWrite]
+             [org.lwjgl BufferUtils]
+             [org.lwjgl.glfw GLFW]
+             [org.lwjgl.opengl GL GL11 GL12 GL15 GL20 GL30 GL32 GL42]))
 
 
 ;; Procedural generation of volumetric clouds
 ;;
-;; * Perlin, Worley noise
-;; * interpolation
-;; * extend all methods to 3D
-;; * fractal brownian motion
-;; * curl noise
 ;; * Midje testing of shaders
 ;; * Generating OpenGL shaders using templates
 ;; * cloud shadows
@@ -425,7 +423,7 @@
          (interpolate y3 2.5 3.5 3.0) => 3.0
          (interpolate z3 2.5 3.5 5.5) => 2.0))
 
-
+;; # Octaves of noise
 (defn fractal-brownian-motion
   [base octaves & args]
   (let [scales (take (count octaves) (iterate #(* 2 %) 1))]
@@ -509,3 +507,121 @@
 (bufimg/tensor->image (noise-octaves perlin-norm (octaves 5 0.6) 120 230))
 
 (bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 5 0.6) 120 230))
+
+;; # Testing shaders
+
+(GLFW/glfwInit)
+
+(def window-width 640)
+(def window-height 480)
+
+(GLFW/glfwDefaultWindowHints)
+(GLFW/glfwWindowHint GLFW/GLFW_VISIBLE GLFW/GLFW_FALSE)
+(def window (GLFW/glfwCreateWindow window-width window-height "Invisible Window" 0 0))
+
+(GLFW/glfwMakeContextCurrent window)
+(GL/createCapabilities)
+
+(defn make-shader [source shader-type]
+  (let [shader (GL20/glCreateShader shader-type)]
+    (GL20/glShaderSource shader source)
+    (GL20/glCompileShader shader)
+    (when (zero? (GL20/glGetShaderi shader GL20/GL_COMPILE_STATUS))
+      (throw (Exception. (GL20/glGetShaderInfoLog shader 1024))))
+    shader))
+
+(defn make-program [& shaders]
+  (let [program (GL20/glCreateProgram)]
+    (doseq [shader shaders]
+           (GL20/glAttachShader program shader)
+           (GL20/glDeleteShader shader))
+    (GL20/glLinkProgram program)
+    (when (zero? (GL20/glGetProgrami program GL20/GL_LINK_STATUS))
+      (throw (Exception. (GL20/glGetProgramInfoLog program 1024))))
+    program))
+
+(def vertex-test "
+#version 130
+in vec3 point;
+void main()
+{
+  gl_Position = vec4(point, 1);
+}")
+
+(def fragment-test "
+#version 130
+out vec4 fragColor;
+void main()
+{
+  fragColor = vec4(1, 1, 1, 1);
+}")
+
+(def vertex-shader (make-shader vertex-test GL20/GL_VERTEX_SHADER))
+(def fragment-shader (make-shader fragment-test GL20/GL_FRAGMENT_SHADER))
+(def program (make-program vertex-shader fragment-shader))
+
+(defmacro def-make-buffer [method create-buffer]
+  `(defn ~method [data#]
+     (let [buffer# (~create-buffer (count data#))]
+       (.put buffer# data#)
+       (.flip buffer#)
+       buffer#)))
+
+(def-make-buffer make-float-buffer BufferUtils/createFloatBuffer)
+(def-make-buffer make-int-buffer BufferUtils/createIntBuffer)
+(def-make-buffer make-byte-buffer BufferUtils/createByteBuffer)
+
+(def vertices
+  (float-array [ 1.0  1.0 0.0
+                -1.0  1.0 0.0
+                -1.0 -1.0 0.0
+                 1.0 -1.0 0.0]))
+
+(defn setup-vao [vertices]
+  (let [vao (GL30/glGenVertexArrays)
+        vbo (GL15/glGenBuffers)]
+    (GL30/glBindVertexArray vao)
+    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo)
+    (GL15/glBufferData GL15/GL_ARRAY_BUFFER (make-float-buffer vertices)
+                       GL15/GL_STATIC_DRAW)
+    {:vao vao :vbo vbo}))
+
+(defn teardown-vao [{:keys [vao vbo]}]
+  (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+  (GL15/glDeleteBuffers vbo)
+  (GL30/glBindVertexArray 0)
+  (GL15/glDeleteBuffers vao))
+
+(def vao (setup-vao vertices))
+
+(def texture (GL11/glGenTextures))
+(GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+(GL42/glTexStorage2D GL11/GL_TEXTURE_2D 1 GL30/GL_RGB32F 1 1)
+
+(def fbo (GL30/glGenFramebuffers))
+(GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo)
+(GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0 texture 0)
+(GL20/glDrawBuffers (make-int-buffer (int-array [GL30/GL_COLOR_ATTACHMENT0])))
+(GL11/glViewport 0 0 1 1)
+
+(GL20/glUseProgram program)
+(GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0)
+; (GL11/glGetError)
+
+(GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
+(GL30/glDeleteFramebuffers fbo)
+
+(GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+(def buf (BufferUtils/createFloatBuffer (* 1 1 3)))
+(GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL12/GL_RGB GL11/GL_FLOAT buf)
+
+
+(GL11/glDeleteTextures texture)
+
+(teardown-vao vao)
+
+(GL20/glDeleteProgram tex-program)
+
+(GLFW/glfwDestroyWindow window)
+
+(GLFW/glfwTerminate)
