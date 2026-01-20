@@ -213,14 +213,19 @@
   ((Gamma Lc-test-path) 's))
 
 ^:kindly/hide-code
-(define path-dimension (atom true)) #_"true = 4D , false = 2D"
+(define path-dimension (atom 3))
 
 ^:kindly/hide-code
 (define three-path
-  (if @path-dimension
+  (case @path-dimension
+    4
     (up (literal-function 'x)
         (literal-function 'y)
         (literal-function 'z))
+    3
+    (up (literal-function 'x)
+        (literal-function 'y))
+    2
     (up (literal-function 'x))))
 
 (show-tex-expression
@@ -231,11 +236,17 @@
 
 ^:kindly/hide-code
 (define four-path
-  (if @path-dimension
+  (case @path-dimension
+    4
     (up identity
         (literal-function 'x)
         (literal-function 'y)
         (literal-function 'z))
+    3
+    (up identity
+        (literal-function 'x)
+        (literal-function 'y))
+    2
     (up identity
         (literal-function 'x))))
 
@@ -263,11 +274,17 @@
 
 ^:kindly/hide-code
 (define Lc-path
-  (if @path-dimension
+  (case @path-dimension
+    4
     (up (literal-function 't)
         (literal-function 'x)
         (literal-function 'y)
         (literal-function 'z))
+    3
+    (up (literal-function 't)
+        (literal-function 'x)
+        (literal-function 'y))
+    2
     (up (literal-function 't)
         (literal-function 'x))))
 
