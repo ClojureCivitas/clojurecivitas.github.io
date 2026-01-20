@@ -213,7 +213,7 @@
   ((Gamma Lc-test-path) 's))
 
 ^:kindly/hide-code
-(define path-dimension (atom 3))
+(define path-dimension (atom 2))
 
 ^:kindly/hide-code
 (define three-path
@@ -260,8 +260,14 @@
 
 ;; In calculating the Lagrangian action above, $m_0$ was $3$, $c$ set to $1$ and time was $10$. Thus the $-30$ stems from the $-m_0 c^2$.
 
+(define (Lc-momentum Lagrangian)
+  ((partial 2) Lagrangian))
+
+(define ((Lagrange-momentum Lagrangian) w)
+  (compose (Lc-momentum Lagrangian) (Gamma w)))
+
 (define ((Lagrange-equations Lagrangian) w)
-  (- (D (compose ((partial 2) Lagrangian) (Gamma w)))
+  (- (D (compose (Lc-momentum Lagrangian) (Gamma w)))
      (compose ((partial 1) Lagrangian) (Gamma w))))
 
 (show-tex-expression
@@ -288,11 +294,11 @@
     (up (literal-function 't)
         (literal-function 'x))))
 
-#_(define Lc-path (up (literal-function 't)
-                    (literal-function 'x)))
-
 (show-tex-expression
   (((Lagrange-equations (Lc-free-particle 'm_0 'c)) Lc-path) 's))
+
+(show-tex-expression
+  (((Lagrange-momentum (Lc-free-particle 'm_0 'c)) Lc-path) 's))
 
 ;;State the Lagrangian.
 
@@ -310,9 +316,6 @@
 ;; The Lagranian above looks very nice because it is symmtreic in t, x, y, z. But there is a caveat which ultimately brings it in line with the orthodox formulation.
 
 ;; Non-homogeneous but symmetric Lagrangians of this type require a general implicit constraint: $L - pv = 0$ (Cline Eq. 17.6.12, Struckmeier Eq. 21.9)
-
-(define (Lc-momentum Lagrangian)
-  ((partial 2) Lagrangian))
 
 (define (Lc-Lagrange-constraint Lagrangian)
   (- Lagrangian (* (Lc-momentum Lagrangian) velocity)))
@@ -433,6 +436,78 @@
   "\\frac{ds}{dt} = \\sqrt{1- \\frac{v^2}{c^2}} = \\sqrt{1 - \\beta ^ 2} = \\frac{1}{\\gamma}")
 
 ;; Thus, the function $s(t)$ is nothing but the proper time.
+
+;; ## The case of the Photon
+
+(define ((Lc-photon mass c) local)
+  (let ((q (coordinate local))
+        (v (velocity local)))
+    (* 1/2
+       (- (* (ref q 2)
+             (square (ref v 1)))
+          (* (ref q 2) (square c)
+             (square (ref v 0)))
+          (* (/ (square mass) (ref q 2)) (square c))))))
+
+(define photon-path
+  (up (literal-function 't)
+      (literal-function 'x)
+      (literal-function 'sigma)))
+
+;; The equations of motion are
+
+(define photon-equations
+  ((Lagrange-equations (Lc-photon 'm 'c)) photon-path))
+
+(show-tex-expression
+  (photon-equations 's))
+
+(define sigma
+  (let ((sigma-sq (square (literal-function 'sigma)))
+        (half-m2-c2 (* 1/2 (square 'c) (square 'm))))
+    ((eq-transformation
+       (fn [eq]
+         (sqrt
+           (* half-m2-c2
+              (/ 1
+                 (/ (+ (* sigma-sq eq)
+                       half-m2-c2)
+                    sigma-sq))))))
+     (down 0 (ref photon-equations 2)))))
+
+(show-eq
+  (sigma 's))
+
+(show-eq
+  (((eq-transformation
+       #(sqrt (+ (square 'c) (* (square 'c) %))))
+    Lc-constraint-s)
+   's))
+
+;; If you look at the equations of motion above, when you let $\sigma(s) \rightarrow m$, you get the motions of the free particle. All this can be achived much easier by directly setting $\sigma(s) = m(s) = m$ in the calculation of the equations of motion.
+
+(define (on-shell-path m)
+  (up (literal-function 't)
+      (literal-function 'x)
+      (constantly m)))
+
+
+
+(show-tex-expression
+  (((Lagrange-equations (Lc-photon 'm 'c))
+    (on-shell-path 'm))
+   's))
+
+;; Indeed these are the euqations of motion of the free farticle plus the on-shell constraint.
+
+;; We can set $m$ to zero in the Lagrangian
+
+(show-tex-expression
+  (((simplify (Lagrange-equations (Lc-photon 0 'c)))
+    (on-shell-path 'zero))
+   's))
+
+;; Thus the equations of motion for the photon are identically zero, the constraint amounts to $p^2 = 0$
 
 ;; ## The deBroglie wavelength
 
@@ -587,4 +662,4 @@
 (is-equal (/ 'h (p 'm 'v 'gamma))
           de-broglie-wavelength)
 
-(repl/scittle-sidebar)
+#_(repl/scittle-sidebar)
