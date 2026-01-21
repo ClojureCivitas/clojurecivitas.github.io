@@ -524,9 +524,16 @@
     dynamic-path)
    's))
 
-;; Whatever the first two equations of motion mean in this zero-mass case, we see from the last equation that the square of the momentum $p^2$ of the massless particle will be zero.
+;; We see from the last equation that the square of the momentum of the massless particle is zero, $p^2 = 0$. It also means that $dx/dt = c$
 
-#_"TODO solve the avove equation and find out if it means ds/dt = gamma or so"
+;; The first two equations are the same, as $ct' = x'$ also means $ct'' = x''$. I do not know how to find out anything about or $\sigma(s)$ or $s(t)$, they seem to be completely arbitrary(?).
+
+;; Also the original constraint does not reveal anything new:
+
+(show-eq
+  (down 0
+        ((compose (Lc-Lagrange-constraint (Lc-dynamic 0 'c))
+                  (Gamma dynamic-path)) 's)))
 
 ;; ## The deBroglie wavelength
 
@@ -681,4 +688,4 @@
 (is-equal (/ 'h (p 'm 'v 'gamma))
           de-broglie-wavelength)
 
-#_(repl/scittle-sidebar)
+(repl/scittle-sidebar)
