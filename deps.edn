@@ -40,6 +40,7 @@
   org.lwjgl/lwjgl-stb$natives-linux           {:mvn/version "3.4.0"}
   org.lwjgl/lwjgl-stb$natives-windows         {:mvn/version "3.4.0"}
   org.lwjgl/lwjgl-stb$natives-macos           {:mvn/version "3.4.0"}
+  comb/comb                                   {:mvn/version "1.0.0"}
   midje/midje                                 {:mvn/version "1.10.10"}
   dev.data-star.clojure/sdk                   {:mvn/version "1.0.0-RC4"}
   dev.data-star.clojure/http-kit              {:mvn/version "1.0.0-RC4"}
