@@ -556,9 +556,6 @@ void main()
   fragColor = vec4(1, 1, 1, 1);
 }")
 
-(def vertex-shader (make-shader vertex-test GL20/GL_VERTEX_SHADER))
-(def fragment-shader (make-shader fragment-test GL20/GL_FRAGMENT_SHADER))
-(def program (make-program vertex-shader fragment-shader))
 
 (defmacro def-make-buffer [method create-buffer]
   `(defn ~method [data#]
@@ -570,15 +567,6 @@ void main()
 (def-make-buffer make-float-buffer BufferUtils/createFloatBuffer)
 (def-make-buffer make-int-buffer BufferUtils/createIntBuffer)
 (def-make-buffer make-byte-buffer BufferUtils/createByteBuffer)
-
-(def vertices
-  (float-array [ 1.0  1.0 0.0
-                -1.0  1.0 0.0
-                -1.0 -1.0 0.0
-                 1.0 -1.0 0.0]))
-
-(def indices
-  (int-array [0 1 2 3]))
 
 (defn setup-vao [vertices indices]
   (let [vao (GL30/glGenVertexArrays)
@@ -593,6 +581,7 @@ void main()
                        GL15/GL_STATIC_DRAW)
     {:vao vao :vbo vbo :ibo ibo}))
 
+
 (defn teardown-vao [{:keys [vao vbo ibo]}]
   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
   (GL15/glDeleteBuffers ibo)
@@ -601,35 +590,6 @@ void main()
   (GL30/glBindVertexArray 0)
   (GL15/glDeleteBuffers vao))
 
-(def vao (setup-vao vertices indices))
-
-(def location (GL20/glGetAttribLocation program "point"))
-(GL20/glVertexAttribPointer location 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
-(GL20/glEnableVertexAttribArray location)
-
-(def texture (GL11/glGenTextures))
-(GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
-(GL42/glTexStorage2D GL11/GL_TEXTURE_2D 1 GL30/GL_RGBA32F 1 1)
-
-(def fbo (GL30/glGenFramebuffers))
-(GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo)
-(GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0 texture 0)
-(GL20/glDrawBuffers (make-int-buffer (int-array [GL30/GL_COLOR_ATTACHMENT0])))
-(GL11/glViewport 0 0 1 1)
-
-(GL20/glUseProgram program)
-(GL11/glClearColor 1.0 0.5 0.25 1.0)
-(GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
-(GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0)
-; (GL11/glGetError)
-
-(GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
-(GL30/glDeleteFramebuffers fbo)
-;(GLFW/glfwSwapBuffers window)
-
-(GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
-(def buf (BufferUtils/createFloatBuffer (* 1 1 3)))
-(GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL12/GL_RGB GL11/GL_FLOAT buf)
 
 (defn float-buffer->array
   "Convert float buffer to flaot array"
@@ -640,13 +600,41 @@ void main()
     (.flip ^java.nio.DirectFloatBufferU buffer)
     result))
 
-(seq (float-buffer->array buf))
 
-(GL11/glDeleteTextures texture)
+(defn render-pixel
+  [vertex-source fragment-source]
+  (let [vertices        (float-array [ 1.0  1.0 0.0, -1.0  1.0 0.0, -1.0 -1.0 0.0, 1.0 -1.0 0.0])
+        indices         (int-array [0 1 2 3])
+        vertex-shader   (make-shader vertex-source GL20/GL_VERTEX_SHADER)
+        fragment-shader (make-shader fragment-source GL20/GL_FRAGMENT_SHADER)
+        program         (make-program vertex-shader fragment-shader)
+        location        (GL20/glGetAttribLocation program "point")
+        vao             (setup-vao vertices indices)
+        texture         (GL11/glGenTextures)
+        fbo             (GL30/glGenFramebuffers)
+        buf             (BufferUtils/createFloatBuffer (* 1 1 3))]
+    (GL20/glVertexAttribPointer location 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+    (GL20/glEnableVertexAttribArray location)
+    (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+    (GL42/glTexStorage2D GL11/GL_TEXTURE_2D 1 GL30/GL_RGBA32F 1 1)
+    (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo)
+    (GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0 texture 0)
+    (GL20/glDrawBuffers (make-int-buffer (int-array [GL30/GL_COLOR_ATTACHMENT0])))
+    (GL11/glViewport 0 0 1 1)
+    (GL20/glUseProgram program)
+    (GL11/glClearColor 1.0 0.5 0.25 1.0)
+    (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
+    (GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0)
+    (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
+    (GL30/glDeleteFramebuffers fbo)
+    (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL12/GL_RGBA GL11/GL_FLOAT buf)
+    (GL11/glDeleteTextures texture)
+    (teardown-vao vao)
+    (GL20/glDeleteProgram program)
+    (seq (float-buffer->array buf))))
 
-(teardown-vao vao)
 
-(GL20/glDeleteProgram program)
+(render-pixel vertex-test fragment-test)
 
 (GLFW/glfwDestroyWindow window)
 
