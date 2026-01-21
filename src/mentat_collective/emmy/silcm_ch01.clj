@@ -267,7 +267,7 @@
   (compose (Lc-momentum Lagrangian) (Gamma w)))
 
 (define ((Lagrange-equations Lagrangian) w)
-  (- (D (compose (Lc-momentum Lagrangian) (Gamma w)))
+  (- (D ((Lagrange-momentum Lagrangian) w))
      (compose ((partial 1) Lagrangian) (Gamma w))))
 
 (show-tex-expression
@@ -323,9 +323,10 @@
 ;; Applied to the free particle (and multiplication with a constant factor), leads to (Struckmeier Eq. 21.12):
 
 (define Lc-constraint-s
-  (down (constantly 0) (compose (* (/ 2 (square 'c) 'm_0)
-                      (Lc-Lagrange-constraint (Lc-free-particle 'm_0 'c)))
-                   (Gamma Lc-path))))
+  (down (constantly 0)
+        (compose (* (/ 2 (square 'c) 'm_0)
+                    (Lc-Lagrange-constraint (Lc-free-particle 'm_0 'c)))
+                 (Gamma Lc-path))))
 
 ^:kindly/hide-code
 (show-eq
@@ -333,10 +334,10 @@
 
 ;; The above is a constraint, i.e. needs to be zero, needs to vanish for all physical paths.
 
-;; For the free particle, we should think of it as a constraint on p, a constraint known as the mass shell or on-shell condition, usually written (thereby omitting the c) as $-p^2 = m^2$. This on-shell constraint is the correct version of the popular $E = mc^2$. Let's show that the above constraint indeed is the same as $-p^2 = m^2c^4$:
+;; For the free particle, we should think of it as a constraint on p, a constraint known as the mass shell or on-shell condition, usually written (thereby omitting the c) as $-p^2 = m^2$. This on-shell constraint is the correct version of the popular $E = mc^2$. Let's show that the above constraint indeed is the same as $-p^2 = m^2c^2$:
 
 (define p
-  (compose (Lc-momentum (Lc-free-particle 'm_0 'c)) (Gamma Lc-path)))
+  ((Lagrange-momentum (Lc-free-particle 'm_0 'c)) Lc-path))
 
 (show-tex-expression
   (p 's))
@@ -345,11 +346,11 @@
 
 (define ((foursquare c) v)
   (- (square (fourtuple->space v))
-     (square (fourtuple->t v))))
+     (/ (square (fourtuple->t v)) (square c))))
 
 (show-eq
   (down
-    (square (* 'm_0 (square 'c)))
+    (* (square 'm_0) (square 'c))
     (- ((foursquare 'c) (p 's)))))
 
 ;; Contrary to constraints that depend on position, this constraint (being about velocity) cannot be easily treated via Lagrange multipliers.
@@ -367,9 +368,7 @@
 (show-eq
   (Dt-squared 's))
 
-;; The above is meant as an equality.
-
-;; We now upgrade the parameter $s$ to a function $s(t)$ which is the inverse of $t(s)$, $s = t^{-1}$. 
+;; We now upgrade the parameter $s$ to a function $s(t)$ which is the inverse of $t(s)$, $s = t^{-1}$.
 
 (define s (literal-function 's))
 
@@ -437,9 +436,9 @@
 
 ;; Thus, the function $s(t)$ is nothing but the proper time.
 
-;; ## The case of the Photon
+;; ## The dynamic mass
 
-(define ((Lc-photon mass c) local)
+(define ((Lc-dynamic mass c) local)
   (let ((q (coordinate local))
         (v (velocity local)))
     (* 1/2
@@ -449,18 +448,26 @@
              (square (ref v 0)))
           (* (/ (square mass) (ref q 2)) (square c))))))
 
-(define photon-path
+(define dynamic-path
   (up (literal-function 't)
       (literal-function 'x)
       (literal-function 'sigma)))
 
-;; The equations of motion are
-
-(define photon-equations
-  ((Lagrange-equations (Lc-photon 'm 'c)) photon-path))
+;; For the record, I'd like to state the momentum of this particle, it will reveal an aha later.
 
 (show-tex-expression
-  (photon-equations 's))
+  ((foursquare 'c)
+   (((Lagrange-momentum (Lc-dynamic 'm 'c)) dynamic-path) 's)))
+
+;; That said, we move on to the equations of motion are
+
+(define dynamic-equations
+  ((Lagrange-equations (Lc-dynamic 'm 'c)) dynamic-path))
+
+(show-tex-expression
+  (dynamic-equations 's))
+
+;; We do not know yet what the first two equations means, but the last equation will tell.
 
 (define sigma
   (let ((sigma-sq (square (literal-function 'sigma)))
@@ -473,10 +480,12 @@
                  (/ (+ (* sigma-sq eq)
                        half-m2-c2)
                     sigma-sq))))))
-     (down 0 (ref photon-equations 2)))))
+     (down 0 (ref dynamic-equations 2)))))
 
 (show-eq
   (sigma 's))
+
+;; Taking the $-p^2 = m^2$ on-shell constraint from above, we see that $\sigma(s) = m$
 
 (show-eq
   (((eq-transformation
@@ -492,22 +501,32 @@
       (constantly m)))
 
 
-
 (show-tex-expression
-  (((Lagrange-equations (Lc-photon 'm 'c))
+  (((Lagrange-equations (Lc-dynamic 'm 'c))
     (on-shell-path 'm))
    's))
 
 ;; Indeed these are the euqations of motion of the free farticle plus the on-shell constraint.
 
+
+;; ## The case of the Photon
+
+;; As stated above, the momentum for any mass in general is
+
+(show-tex-expression
+  ((foursquare 'c)
+   (((Lagrange-momentum (Lc-dynamic 'm 'c)) dynamic-path) 's)))
+
 ;; We can set $m$ to zero in the Lagrangian
 
 (show-tex-expression
-  (((simplify (Lagrange-equations (Lc-photon 0 'c)))
-    (on-shell-path 'zero))
+  (((Lagrange-equations (Lc-dynamic 0 'c))
+    dynamic-path)
    's))
 
-;; Thus the equations of motion for the photon are identically zero, the constraint amounts to $p^2 = 0$
+;; Whatever the first two equations of motion mean in this zero-mass case, we see from the last equation that the square of the momentum $p^2$ of the massless particle will be zero.
+
+#_"TODO solve the avove equation and find out if it means ds/dt = gamma or so"
 
 ;; ## The deBroglie wavelength
 
