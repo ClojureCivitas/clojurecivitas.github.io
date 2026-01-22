@@ -750,7 +750,7 @@ vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction)
   if (isinf(s_near) || isinf(s_far))
     return vec2(0.0, 0.0);
   else
-    return vec2(s_near, s_far);
+    return vec2(max(s_near, 0.0), max(0.0, s_far));
 }")
 
 
@@ -781,7 +781,9 @@ void main()
           2  -2   2   0   1   0  [0.0 0.0]
           0   0  -2   0   0   1  [1.0 3.0]
           0   0  -2   0   0   2  [0.5 1.5]
-          2   2  -2   0   0   1  [0.0 0.0])
+          2   2  -2   0   0   1  [0.0 0.0]
+          0   0   0   1   0   0  [0.0 1.0]
+          2   0   0   1   0   0  [0.0 0.0])
 
 
 (GLFW/glfwDestroyWindow window)
