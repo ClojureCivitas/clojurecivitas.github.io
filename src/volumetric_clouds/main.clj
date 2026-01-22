@@ -595,7 +595,6 @@ void main()
 
 (defn float-buffer->array
   "Convert float buffer to flaot array"
-  {:malli/schema [:=> [:cat :some] seqable?]}
   [buffer]
   (let [result (float-array (.limit buffer))]
     (.get buffer result)
@@ -616,7 +615,7 @@ void main()
   (let [buffer (BufferUtils/createFloatBuffer (* height width 4))]
     (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
     (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL12/GL_RGBA GL11/GL_FLOAT buffer)
-    (seq (float-buffer->array buffer))))
+    (vec (float-buffer->array buffer))))
 
 
 (defmacro framebuffer-render
@@ -735,6 +734,54 @@ void main()
          0.5 0  0  [0.0 1.0] 1.0
          0.5 0  0  [0.0 1.0] 1.0
          1   0  0  [1.0 0.0] 1.0)
+
+
+(def ray-box
+"#version 130
+vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction)
+{
+  vec3 inv_dir = 1.0 / direction;
+  vec3 smin = (box_min - origin) * inv_dir;
+  vec3 smax = (box_max - origin) * inv_dir;
+  vec3 s1 = min(smin, smax);
+  vec3 s2 = max(smin, smax);
+  float s_near = max(max(s1.x, s1.y), s1.z);
+  float s_far = min(min(s2.x, s2.y), s2.z);
+  if (isinf(s_near) || isinf(s_far))
+    return vec2(0.0, 0.0);
+  else
+    return vec2(s_near, s_far);
+}")
+
+
+(def ray-box-probe
+  (template/fn [ox oy oz dx dy dz]
+"#version 130
+out vec4 fragColor;
+vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction);
+void main()
+{
+  vec3 box_min = vec3(-1, -1, -1);
+  vec3 box_max = vec3(1, 1, 1);
+  vec3 origin = vec3(<%= ox %>, <%= oy %>, <%= oz %>);
+  vec3 direction = vec3(<%= dx %>, <%= dy %>, <%= dz %>);
+  fragColor = vec4(ray_box(box_min, box_max, origin, direction), 0, 0);
+}"))
+
+
+(tabular "Test intersection of ray with box"
+         (fact ((juxt first second) (render-pixels [vertex-test] [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)] 1 1))
+               => ?result)
+         ?ox ?oy ?oz ?dx ?dy ?dz ?result
+         -2   0   0   1   0   0  [1.0 3.0]
+         -2   0   0   2   0   0  [0.5 1.5]
+         -2   2   2   1   0   0  [0.0 0.0]
+          0  -2   0   0   1   0  [1.0 3.0]
+          0  -2   0   0   2   0  [0.5 1.5]
+          2  -2   2   0   1   0  [0.0 0.0]
+          0   0  -2   0   0   1  [1.0 3.0]
+          0   0  -2   0   0   2  [0.5 1.5]
+          2   2  -2   0   0   1  [0.0 0.0])
 
 
 (GLFW/glfwDestroyWindow window)
