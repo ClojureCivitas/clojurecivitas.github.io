@@ -615,7 +615,7 @@ void main()
   (let [buffer (BufferUtils/createFloatBuffer (* height width 4))]
     (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
     (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL12/GL_RGBA GL11/GL_FLOAT buffer)
-    (vec (float-buffer->array buffer))))
+    (float-buffer->array buffer)))
 
 
 (defmacro framebuffer-render
@@ -784,6 +784,15 @@ void main()
           2   2  -2   0   0   1  [0.0 0.0]
           0   0   0   1   0   0  [0.0 1.0]
           2   0   0   1   0   0  [0.0 0.0])
+
+
+(def cloud-mock
+  (template/fn [v]
+"#version 130
+float cloud(vec3 idx)
+{
+  return <%= v %>;
+}"))
 
 
 (GLFW/glfwDestroyWindow window)
