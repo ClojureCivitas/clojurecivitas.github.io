@@ -520,6 +520,7 @@
 (GLFW/glfwMakeContextCurrent window)
 (GL/createCapabilities)
 
+
 (defn make-shader [source shader-type]
   (let [shader (GL20/glCreateShader shader-type)]
     (GL20/glShaderSource shader source)
@@ -527,6 +528,7 @@
     (when (zero? (GL20/glGetShaderi shader GL20/GL_COMPILE_STATUS))
       (throw (Exception. (GL20/glGetShaderInfoLog shader 1024))))
     shader))
+
 
 (defn make-program [& shaders]
   (let [program (GL20/glCreateProgram)]
@@ -538,6 +540,7 @@
       (throw (Exception. (GL20/glGetProgramInfoLog program 1024))))
     program))
 
+
 (def vertex-test "
 #version 130
 in vec3 point;
@@ -546,6 +549,7 @@ void main()
   gl_Position = vec4(point, 1);
 }")
 
+
 (def fragment-test "
 #version 130
 out vec4 fragColor;
@@ -553,6 +557,7 @@ void main()
 {
   fragColor = vec4(1, 1, 1, 1);
 }")
+
 
 (defmacro def-make-buffer [method create-buffer]
   `(defn ~method [data#]
@@ -656,7 +661,9 @@ void main()
       (GL20/glDeleteProgram program)
       result)))
 
+
 (render-pixels [vertex-test] [fragment-test] 1 1)
+
 
 (def noise-mock
 "#version 130
@@ -665,6 +672,7 @@ float noise (vec3 idx)
   ivec3 v = ivec3(floor(idx.x), floor(idx.y), floor(idx.z)) % 2;
   return ((v.x == 1) == (v.y == 1)) == (v.z == 1) ? 1.0 : 0.0;
 }")
+
 
 (def noise-probe
   (template/fn [x y z]
@@ -676,8 +684,20 @@ void main()
   fragColor = vec4(noise(vec3(<%= x %>, <%= y %>, <%= z %>)));
 }"))
 
-(for [z [0 1] y [0 1] x [0 1]]
-     (nth (render-pixels [vertex-test] [noise-mock (noise-probe x y z)] 1 1) 0))
+(noise-probe 1 2 3)
+
+(tabular "Test noise mock"
+         (fact (nth (render-pixels [vertex-test] [noise-mock (noise-probe ?x ?y ?z)] 1 1) 0) => ?result)
+         ?x ?y ?z ?result
+         0  0  0  0.0
+         1  0  0  1.0
+         0  1  0  1.0
+         1  1  0  0.0
+         0  0  1  1.0
+         1  0  1  0.0
+         0  1  1  0.0
+         1  1  1  1.0)
+
 
 (GLFW/glfwDestroyWindow window)
 
