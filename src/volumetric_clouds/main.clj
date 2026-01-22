@@ -10,8 +10,7 @@
                               :tags     [:visualization]}}}
 
 (ns volumetric-clouds.main
-    (:require [scicloj.kindly.v4.kind :as kind]
-              [clojure.math :refer (PI sqrt)]
+    (:require [clojure.math :refer (sqrt)]
               [midje.sweet :refer (fact facts tabular => roughly)]
               [fastmath.vector :refer (vec2 vec3 add mult sub div mag dot)]
               [tech.v3.datatype :as dtype]
@@ -19,10 +18,9 @@
               [tech.v3.datatype.functional :as dfn]
               [tablecloth.api :as tc]
               [scicloj.tableplot.v1.plotly :as plotly]
-              [tech.v3.libs.buffered-image :as bufimg])
-    (:import [javax.imageio ImageIO]
-             [org.lwjgl.opengl GL11]
-             [org.lwjgl.stb STBImageWrite]
+              [tech.v3.libs.buffered-image :as bufimg]
+              [comb.template :as template])
+    (:import [org.lwjgl.opengl GL11]
              [org.lwjgl BufferUtils]
              [org.lwjgl.glfw GLFW]
              [org.lwjgl.opengl GL GL11 GL12 GL15 GL20 GL30 GL32 GL42]))
@@ -556,7 +554,6 @@ void main()
   fragColor = vec4(1, 1, 1, 1);
 }")
 
-
 (defmacro def-make-buffer [method create-buffer]
   `(defn ~method [data#]
      (let [buffer# (~create-buffer (count data#))]
@@ -631,31 +628,56 @@ void main()
        result#)))
 
 
-(defn render-pixel
-  [vertex-source fragment-source]
-  (let [vertices        (float-array [1.0 1.0 0.0, -1.0 1.0 0.0, -1.0 -1.0 0.0, 1.0 -1.0 0.0])
-        indices         (int-array [0 1 2 3])
-        vertex-shader   (make-shader vertex-source GL20/GL_VERTEX_SHADER)
-        fragment-shader (make-shader fragment-source GL20/GL_FRAGMENT_SHADER)
-        program         (make-program vertex-shader fragment-shader)
-        point-attribute (GL20/glGetAttribLocation program "point")
-        vao             (setup-vao vertices indices)
-        texture         (make-texture 1 1)]
+(defn setup-point-attribute
+  [program]
+  (let [point-attribute (GL20/glGetAttribLocation program "point")]
     (GL20/glVertexAttribPointer point-attribute 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
-    (GL20/glEnableVertexAttribArray point-attribute)
-    (framebuffer-render texture 1 1
+    (GL20/glEnableVertexAttribArray point-attribute)))
+
+
+(defn render-pixels
+  [vertex-sources fragment-sources width height]
+  (let [vertices         (float-array [1.0 1.0 0.0, -1.0 1.0 0.0, -1.0 -1.0 0.0, 1.0 -1.0 0.0])
+        indices          (int-array [0 1 2 3])
+        vertex-shader    (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-sources)
+        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-sources)
+        program          (apply make-program (concat vertex-shader fragment-shaders))
+        vao              (setup-vao vertices indices)
+        texture          (make-texture width height)]
+    (setup-point-attribute program)
+    (framebuffer-render texture width height
                         (GL20/glUseProgram program)
                         (GL11/glClearColor 1.0 0.5 0.25 1.0)
                         (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
                         (GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0))
-    (let [result (read-texture texture 1 1)]
+    (let [result (read-texture texture width height)]
       (GL11/glDeleteTextures texture)
       (teardown-vao vao)
       (GL20/glDeleteProgram program)
       result)))
 
+(render-pixels [vertex-test] [fragment-test] 1 1)
 
-(render-pixel vertex-test fragment-test)
+(def noise-mock
+"#version 130
+float noise (vec3 idx)
+{
+  ivec3 v = ivec3(floor(idx.x), floor(idx.y), floor(idx.z)) % 2;
+  return ((v.x == 1) == (v.y == 1)) == (v.z == 1) ? 1.0 : 0.0;
+}")
+
+(def noise-probe
+  (template/fn [x y z]
+"#version 130
+out vec4 fragColor;
+float noise(vec3 idx);
+void main()
+{
+  fragColor = vec4(noise(vec3(<%= x %>, <%= y %>, <%= z %>)));
+}"))
+
+(for [z [0 1] y [0 1] x [0 1]]
+     (nth (render-pixels [vertex-test] [noise-mock (noise-probe x y z)] 1 1) 0))
 
 (GLFW/glfwDestroyWindow window)
 
