@@ -667,7 +667,7 @@ void main()
 
 (def noise-mock
 "#version 130
-float noise (vec3 idx)
+float noise(vec3 idx)
 {
   ivec3 v = ivec3(floor(idx.x), floor(idx.y), floor(idx.z)) % 2;
   return ((v.x == 1) == (v.y == 1)) == (v.z == 1) ? 1.0 : 0.0;
@@ -684,7 +684,6 @@ void main()
   fragColor = vec4(noise(vec3(<%= x %>, <%= y %>, <%= z %>)));
 }"))
 
-(noise-probe 1 2 3)
 
 (tabular "Test noise mock"
          (fact (nth (render-pixels [vertex-test] [noise-mock (noise-probe ?x ?y ?z)] 1 1) 0) => ?result)
@@ -697,6 +696,45 @@ void main()
          1  0  1  0.0
          0  1  1  0.0
          1  1  1  1.0)
+
+
+(def noise-octaves
+  (template/fn [octaves]
+"#version 130
+out vec4 fragColor;
+float noise(vec3 idx);
+float octaves(vec3 idx)
+{
+  float result = 0.0;
+<% (doseq [multiplier octaves] %>
+  result += <%= multiplier %> * noise(idx);
+  idx *= 2.0;
+<%= ) %>
+  return result;
+}"))
+
+
+(def octaves-probe
+  (template/fn [x y z]
+"#version 130
+out vec4 fragColor;
+float octaves(vec3 idx);
+void main()
+{
+  fragColor = vec4(octaves(vec3(<%= x %>, <%= y %>, <%= z %>)));
+}"))
+
+
+(tabular "Test octaves of noise"
+         (fact (nth (render-pixels [vertex-test] [noise-mock (noise-octaves ?octaves) (octaves-probe ?x ?y ?z)] 1 1) 0)
+               => ?result)
+         ?x  ?y ?z ?octaves  ?result
+         0   0  0  [1.0]     0.0
+         1   0  0  [1.0]     1.0
+         1   0  0  [0.5]     0.5
+         0.5 0  0  [0.0 1.0] 1.0
+         0.5 0  0  [0.0 1.0] 1.0
+         1   0  0  [1.0 0.0] 1.0)
 
 
 (GLFW/glfwDestroyWindow window)
