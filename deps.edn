@@ -65,7 +65,8 @@
   org.soulspace/qclojure                      {:mvn/version "0.22.0"}
   org.babashka/http-client                    {:mvn/version "0.4.22"}
   io.github.babashka/sci.nrepl                {:mvn/version "0.0.2"}
-  com.github.danielsz/bioscoop                {:mvn/version "1.0.5"}
+  com.github.danielsz/bioscoop                {:mvn/version "1.0.5"
+                                               :exclusions [ch.qos.logback/logback-classic]}
   yamlscript/core                             {:git/url "https://github.com/yaml/yamlscript"
                                                :git/sha "ed7adfbf90a39f379d5a7193bb2e4bdd7f0eecf8"
                                                :deps/root "core"}
