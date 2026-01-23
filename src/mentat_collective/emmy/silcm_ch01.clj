@@ -526,7 +526,9 @@
 
 ;; We see from the last equation that the square of the momentum of the massless particle is zero, $p^2 = 0$. It also means that $dx/dt = c$
 
-;; The first two equations are the same, as $ct' = x'$ also means $ct'' = x''$. I do not know how to find out anything about or $\sigma(s)$ or $s(t)$, they seem to be completely arbitrary(?).
+;; The first two equations are the same, as $ct' = x'$ also means $ct'' = x''$.
+;; The function $\sigma(s)$ remains completely arbitrary, and $s$ remains
+;; a parameter. Trying to get $s$ as a function of $t$ is in vain.
 
 ;; Also the original constraint does not reveal anything new:
 
@@ -534,6 +536,51 @@
   (down 0
         ((compose (Lc-Lagrange-constraint (Lc-dynamic 0 'c))
                   (Gamma dynamic-path)) 's)))
+
+;;### The preferred parameter choice for massless particles
+;; But something still can be done. By making $s$ a functions (not of $t$ but of)
+;; some parameter $r$ and setting $\sigma(r)$ to be $\sigma(r) = ds/dr$,
+;; we can simplify the first two Lagrangian equations of motion to:
+
+^:kindly/hide-code
+(show-tex-expression
+((down (* -1 (square 'c) (D (D (literal-function 't))))
+         (D (D (literal-function 'x)))) 'r))
+
+;; Let's start the proof.
+;; The momentum is
+
+(show-tex-expression
+  (((Lagrange-momentum (Lc-dynamic 'm 'c)) dynamic-path) 's))
+
+;; Take the momentum for $x$.
+;; The key insight is recognizing the following:
+;; Since the free Lagrangian depends on $dx/ds$ only,
+;; The Lagrange equation is the derivative of this momentum. So:
+;; $d/ds(\sigma · dx/ds) = 0$,
+;; this means $\sigma · dx/ds = C$ (some constant).
+
+;; Now we introduce the variable $r$ and make s a function of $r$, $s(r)$.
+;; And we choose $\sigma$ to be $\sigma = ds/dr$.
+;; This is a common gauge choice or parametrization condition.
+
+;; Now: $dx/dr = dx/ds · ds/dr = dx/ds · \sigma$.
+;; But we know $\sigma · dx/ds = C$, so:
+;; $dx/dr = C$ (constant!). Therefore:
+
+;; $$\frac{d²x}{dr²} = 0$$
+
+;; To quote Zee, Gravitiy in a nutshell, p215:
+;; > A parameter that makes the equation of motion take on this simple form
+;; > is known as an affine parameter. We don’t have to solve any
+;; > equation of motion to know that (t, x, y, z) is proportional to (1, 1, 0, 0).
+;; > End of story. No need to parametrize this worldline.
+
+;; > But if you insist, you could write X=f(s)(1,1,0,0) with some monotonic
+;; > function $f$. Then $d^2X/ds^2 = (f''/f) · X$
+
+;; > To me, the pages some texts spend on the affine parametrization
+;; > of massless particles literally amounts to much ado about nothing.
 
 ;; ## The deBroglie wavelength
 
