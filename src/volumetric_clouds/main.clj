@@ -10,9 +10,10 @@
                               :tags     [:visualization]}}}
 
 (ns volumetric-clouds.main
-    (:require [clojure.math :refer (sqrt)]
+    (:require [clojure.math :refer (sqrt tan to-radians)]
               [midje.sweet :refer (fact facts tabular => roughly)]
               [fastmath.vector :refer (vec2 vec3 add mult sub div mag dot)]
+              [fastmath.matrix :refer (mat->float-array mulm rotation-matrix-3d-x rotation-matrix-3d-y)]
               [tech.v3.datatype :as dtype]
               [tech.v3.tensor :as tensor]
               [tech.v3.datatype.functional :as dfn]
@@ -639,29 +640,27 @@ void main()
     (GL20/glEnableVertexAttribArray point-attribute)))
 
 
-(defn render-pixels
-  [vertex-sources fragment-sources width height]
+(defn render-pixel
+  [vertex-sources fragment-sources]
   (let [vertices         (float-array [1.0 1.0 0.0, -1.0 1.0 0.0, -1.0 -1.0 0.0, 1.0 -1.0 0.0])
         indices          (int-array [0 1 2 3])
-        vertex-shader    (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-sources)
+        vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-sources)
         fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-sources)
-        program          (apply make-program (concat vertex-shader fragment-shaders))
+        program          (apply make-program (concat vertex-shaders fragment-shaders))
         vao              (setup-vao vertices indices)
-        texture          (make-texture width height)]
+        texture          (make-texture 1 1)]
     (setup-point-attribute program)
-    (framebuffer-render texture width height
+    (framebuffer-render texture 1 1
                         (GL20/glUseProgram program)
-                        (GL11/glClearColor 1.0 0.5 0.25 1.0)
-                        (GL11/glClear GL11/GL_COLOR_BUFFER_BIT)
                         (GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0))
-    (let [result (read-texture texture width height)]
+    (let [result (read-texture texture 1 1)]
       (GL11/glDeleteTextures texture)
       (teardown-vao vao)
       (GL20/glDeleteProgram program)
       result)))
 
 
-(render-pixels [vertex-test] [fragment-test] 1 1)
+(render-pixel [vertex-test] [fragment-test])
 
 
 (def noise-mock
@@ -685,7 +684,7 @@ void main()
 
 
 (tabular "Test noise mock"
-         (fact (nth (render-pixels [vertex-test] [noise-mock (noise-probe ?x ?y ?z)] 1 1) 0) => ?result)
+         (fact (nth (render-pixel [vertex-test] [noise-mock (noise-probe ?x ?y ?z)]) 0) => ?result)
          ?x ?y ?z ?result
          0  0  0  0.0
          1  0  0  1.0
@@ -725,7 +724,7 @@ void main()
 
 
 (tabular "Test octaves of noise"
-         (fact (nth (render-pixels [vertex-test] [noise-mock (noise-octaves ?octaves) (octaves-probe ?x ?y ?z)] 1 1) 0)
+         (fact (first (render-pixel [vertex-test] [noise-mock (noise-octaves ?octaves) (octaves-probe ?x ?y ?z)]))
                => ?result)
          ?x  ?y ?z ?octaves  ?result
          0   0  0  [1.0]     0.0
@@ -770,7 +769,7 @@ void main()
 
 
 (tabular "Test intersection of ray with box"
-         (fact ((juxt first second) (render-pixels [vertex-test] [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)] 1 1))
+         (fact ((juxt first second) (render-pixel [vertex-test] [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)]))
                => ?result)
          ?ox ?oy ?oz ?dx ?dy ?dz ?result
          -2   0   0   1   0   0  [1.0 3.0]
@@ -794,6 +793,106 @@ float cloud(vec3 idx)
   return <%= v %>;
 }"))
 
+
+(def cloud-transfer
+"#version 130
+float cloud(vec3 idx);
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step)
+{
+  vec4 result = vec4(0, 0, 0, 0);
+  for (float t = interval.x + 0.5 * step; t < interval.y; t += step) {
+    float density = cloud(origin + direction * t);
+    float transmittance = exp(-density * step);
+    vec3 color = vec3(1.0, 1.0, 1.0);
+    result.rgb = result.rgb + color * (1.0 - result.a) * (1.0 - transmittance);
+    result.a = 1.0 - (1.0 - result.a) * transmittance;
+  };
+  return result;
+}")
+
+
+(def cloud-transfer-probe
+  (template/fn [a b step]
+"#version 130
+out vec4 fragColor;
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step);
+void main()
+{
+  vec3 origin = vec3(0, 0, 0);
+  vec3 direction = vec3(1, 0, 0);
+  vec2 interval = vec2(<%= a %>, <%= b %>);
+  float step = <%= step %>;
+  fragColor = cloud_transfer(origin, direction, interval, step);
+}"))
+
+
+(defn roughly-vector
+  [expected error]
+  (fn [actual]
+      (and (== (count expected) (count actual))
+           (<= (apply + (mapv (fn [a b] (* (- b a) (- b a))) actual expected)) (* error error)))))
+
+
+(tabular "Test cloud transfer"
+         (fact (seq (render-pixel [vertex-test] [(cloud-mock ?density) cloud-transfer (cloud-transfer-probe ?a ?b ?step)]))
+               => (roughly-vector ?result 1e-3))
+         ?a ?b ?step ?density ?result
+         0  0  1     0.0      [0.0 0.0 0.0 0.0]
+         0  1  1     1.0      [0.632 0.632 0.632 0.632]
+         0  1  0.5   1.0      [0.632 0.632 0.632 0.632]
+         0  1  0.5   0.5      [0.393 0.393 0.393 0.393])
+
+
+(def fragment-cloud
+"#version 130
+uniform vec2 resolution;
+uniform mat3 rotation;
+uniform float focal_length;
+uniform float distance;
+out vec4 fragColor;
+vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction);
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step);
+void main()
+{
+  vec3 direction = normalize(rotation * vec3(gl_FragCoord.xy - 0.5 * resolution, focal_length));
+  vec3 origin = rotation * vec3(0, 0, -distance);
+  vec2 interval = ray_box(vec3(-1, -1, -1), vec3(1, 1, 1), origin, direction);
+  vec4 transfer = cloud_transfer(origin, direction, interval, 0.01);
+  vec3 background = vec3(0.5, 0.5, 1.0);
+  fragColor = vec4(background * (1.0 - transfer.a) + transfer.rgb, 1.0);
+}")
+
+
+(defn render-clouds
+  [width height]
+  (let [vertices         (float-array [1.0 1.0 0.0, -1.0 1.0 0.0, -1.0 -1.0 0.0, 1.0 -1.0 0.0])
+        indices          (int-array [0 1 2 3])
+        rotation         (mulm (rotation-matrix-3d-x (to-radians -25.0)) (rotation-matrix-3d-y (to-radians 30.0)))
+        vertex-shader    (make-shader vertex-test GL20/GL_VERTEX_SHADER)
+        fragment-sources [ray-box cloud-transfer (cloud-mock 0.3) fragment-cloud]
+        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-sources)
+        program          (apply make-program vertex-shader fragment-shaders)
+        vao              (setup-vao vertices indices)
+        texture          (make-texture width height)]
+    (setup-point-attribute program)
+    (framebuffer-render texture width height
+                        (GL20/glUseProgram program)
+                        (GL20/glUniform2f (GL20/glGetUniformLocation program "resolution") width height)
+                        (GL20/glUniformMatrix3fv (GL20/glGetUniformLocation program "rotation") true
+                                                 (make-float-buffer (mat->float-array rotation)))
+                        (GL20/glUniform1f (GL20/glGetUniformLocation program "focal_length") (/ (* 0.5 width) (tan (to-radians 30.0))))
+                        (GL20/glUniform1f (GL20/glGetUniformLocation program "distance") 4.0)
+                        (GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0))
+    (let [result (read-texture texture width height)]
+      (GL11/glDeleteTextures texture)
+      (teardown-vao vao)
+      (GL20/glDeleteProgram program)
+      result)))
+
+
+(def image (dfn/* 255 (tensor/select (tensor/reshape (tensor/->tensor (render-clouds 640 480)) [480 640 4]) :all :all [2 1 0])))
+
+(bufimg/tensor->image image)
 
 (GLFW/glfwDestroyWindow window)
 
