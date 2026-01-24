@@ -1151,7 +1151,8 @@ float shadow(vec3 point)
 
 (bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) (shadow "remap_noise" 0.01) (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
 
-
+;; # Tidy up
+(GL11/glBindTexture GL12/GL_TEXTURE_3D 0)
 (GL11/glDeleteTextures noise-texture)
 
 (GLFW/glfwDestroyWindow window)
