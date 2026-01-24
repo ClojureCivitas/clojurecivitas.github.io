@@ -1,0 +1,2056 @@
+---
+description: Procedural generation of volumetric clouds using different types of noise
+category: clojure
+tags: [visualization]
+format:
+  html: {title: Volumetric Clouds with Clojure and LWJGL}
+date: '2026-01-24'
+type: post
+author:
+- name: Jan Wedekind
+  url: https://www.wedesoft.de/
+  image: https://avatars.githubusercontent.com/u/28663?v=4
+  links:
+  - {icon: github, href: 'https://github.com/wedesoft'}
+draft: true
+image: clouds.jpg
+
+---
+<style></style><style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style><style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" type="text/javascript"></script><script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" type="text/javascript"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.20.0/plotly.min.js" type="text/javascript"></script>
+Procedural generation of volumetric clouds
+
+
+* Midje testing of shaders
+* Generating OpenGL shaders using templates
+* cloud shadows
+* powder function
+* video showing TDD with tmux
+
+References
+
+* https://adrianb.io/2014/08/09/perlinnoise.html
+* https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/
+
+
+# Worley noise
+
+
+::: {.sourceClojure}
+```clojure
+(defn make-noise-params
+  [size divisions dimensions]
+  {:size size :divisions divisions :cellsize (/ size divisions) :dimensions dimensions})
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(fact "Noise parameter initialisation"
+      (make-noise-params 256 8 2) => {:size 256 :divisions 8 :cellsize 32 :dimensions 2})
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn vec-n
+  ([x y] (vec2 x y))
+  ([x y z] (vec3 x y z)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Generic vector function for creating 2D and 3D vectors"
+       (vec-n 2 3) => (vec2 2 3)
+       (vec-n 2 3 1) => (vec3 2 3 1))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn random-point-in-cell
+  [{:keys [cellsize]} & args]
+  (let [random-seq (repeatedly #(rand cellsize))
+        dimensions (count args)]
+    (add (mult (apply vec-n (reverse args)) cellsize)
+         (apply vec-n (take dimensions random-seq)))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Place random point in a cell"
+       (with-redefs [rand (fn [s] (* 0.5 s))]
+         (random-point-in-cell {:cellsize 1} 0 0) => (vec2 0.5 0.5)
+         (random-point-in-cell {:cellsize 2} 0 0) => (vec2 1.0 1.0)
+         (random-point-in-cell {:cellsize 2} 0 3) => (vec2 7.0 1.0)
+         (random-point-in-cell {:cellsize 2} 2 0) => (vec2 1.0 5.0)
+         (random-point-in-cell {:cellsize 2} 2 3 5) => (vec3 11.0 7.0 5.0)))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn random-points
+  [{:keys [divisions dimensions] :as params}]
+  (tensor/clone (tensor/compute-tensor (repeat dimensions divisions) (partial random-point-in-cell params))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Greate grid of random points"
+       (let [params-2d (make-noise-params 32 8 2)
+             params-3d (make-noise-params 32 8 3)]
+         (with-redefs [rand (fn [s] (* 0.5 s))]
+           (dtype/shape (random-points params-2d)) => [8 8]
+           ((random-points params-2d) 0 0) => (vec2 2.0 2.0)
+           ((random-points params-2d) 0 3) => (vec2 14.0 2.0)
+           ((random-points params-2d) 2 0) => (vec2 2.0 10.0)
+           (dtype/shape (random-points params-3d)) => [8 8 8]
+           ((random-points params-3d) 2 3 5) => (vec3 22.0 14.0 10.0))))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(let [points  (tensor/reshape (random-points (make-noise-params 256 8 2)) [(* 8 8)])
+      scatter (tc/dataset {:x (map first points) :y (map second points)})]
+  (-> scatter
+      (plotly/base {:=title "Random points"})
+      (plotly/layer-point {:=x :x :=y :y})))
+```
+:::
+
+
+
+```{=html}
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[3.7661398934785026,31.801262626925368,31.881603798093415,0.26016500690491995,15.24811610621284,31.418634983311776,15.540941627667713,14.72738691947108,48.078338394958024,40.460298156109616,63.23348802948536,56.537247984415146,58.42628369004321,63.509324750848435,32.055339977760426,32.58240830762041,90.01181809632884,79.33632893710369,79.69791920227543,70.57809549971996,71.75415203396284,87.54891275839606,91.98071852001526,87.48596360175904,125.21962605331231,121.3211876126154,97.24537550032241,122.08052832597764,113.99332317595982,112.32837572535769,115.73607485869478,105.78318420896176,151.09950802439732,142.01148845154066,140.0912768020221,153.88879651901826,140.59589836746878,149.29708455875667,151.07177581982376,131.30987184609162,181.4667586153581,188.89710318196126,176.6500859521911,166.963309037565,181.9398278053127,166.31377960974586,186.58615679057854,182.92472367942815,208.35207185031751,223.67463549235174,198.6144121890308,192.47535708447853,220.68926424725979,206.52254948590655,212.3671233329661,217.16655845708564,254.92439574563514,233.68590206880765,235.15910790468462,249.02684523572066,232.27991264338263,240.35380412101222,255.75875387969995,244.0365443494767],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[9.520983905566844,59.36896773644321,82.73646103008878,101.7697283795576,134.6577817994215,180.9663446316223,201.5514548493132,244.45175449093372,25.572716097269076,61.98592529239696,93.30339329210173,126.3819061885238,130.59693068806942,181.63077282560718,216.17686326589978,233.7023870576877,16.466278126007495,63.8901348537771,89.15705134091976,118.09904856376143,137.05890119748304,164.00798544263654,212.79954718595414,227.5677770148606,2.9785111636041783,32.828507332503165,89.40835380223771,122.62033770131575,151.10837806549657,176.1435414539397,193.74710069036988,243.0546662968788,25.261017127696224,58.166978852061,73.40845906554077,126.41461823004809,143.04857973279923,162.26110984055794,221.9667578786768,227.2641668259073,4.098951837704057,62.03992720590283,80.03880858023675,126.4010587810581,130.74254756220319,175.9743804014107,207.3779271322752,231.1349208714838,0.29481393328203254,38.62458351208545,69.12616287443397,123.7548181112733,148.05943284695138,169.62397845987778,199.34973061729184,227.3112679908784,24.17723027050703,37.540446931959806,72.98264245571183,121.83770695971872,155.445786614856,175.7393808462935,209.30354640445145,228.13640782134212],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random points"}, {});</script></div>
+```
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn mod-vec
+  [{:keys [size]} v]
+  (let [size2 (/ size 2)
+        wrap  (fn [x] (-> x (+ size2) (mod size) (- size2)))]
+    (apply vec-n (map wrap v))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Wrap around components of vector to be within -size/2..size/2"
+       (mod-vec {:size 8} (vec2 2 3)) => (vec2 2 3)
+       (mod-vec {:size 8} (vec2 5 2)) => (vec2 -3 2)
+       (mod-vec {:size 8} (vec2 2 5)) => (vec2 2 -3)
+       (mod-vec {:size 8} (vec2 -5 2)) => (vec2 3 2)
+       (mod-vec {:size 8} (vec2 2 -5)) => (vec2 2 3)
+       (mod-vec {:size 8} (vec3 2 3 1)) => (vec3 2 3 1)
+       (mod-vec {:size 8} (vec3 5 2 1)) => (vec3 -3 2 1)
+       (mod-vec {:size 8} (vec3 2 5 1)) => (vec3 2 -3 1)
+       (mod-vec {:size 8} (vec3 2 3 5)) => (vec3 2 3 -3)
+       (mod-vec {:size 8} (vec3 -5 2 1)) => (vec3 3 2 1)
+       (mod-vec {:size 8} (vec3 2 -5 1)) => (vec3 2 3 1)
+       (mod-vec {:size 8} (vec3 2 3 -5)) => (vec3 2 3 3))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn mod-dist
+  [params a b]
+  (mag (mod-vec params (sub b a))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(tabular "Wrapped distance of two points"
+         (fact (mod-dist {:size 8} (vec2 ?ax ?ay) (vec2 ?bx ?by)) => ?result)
+         ?ax ?ay ?bx ?by ?result
+         0   0   0   0   0.0
+         0   0   2   0   2.0
+         0   0   5   0   3.0
+         0   0   0   2   2.0
+         0   0   0   5   3.0
+         2   0   0   0   2.0
+         5   0   0   0   3.0
+         0   2   0   0   2.0
+         0   5   0   0   3.0)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn wrap-get
+  [t & args]
+  (if (> (count (dtype/shape t)) (count args))
+    (apply tensor/select t (map mod args (dtype/shape t)))
+    (apply t (map mod args (dtype/shape t)))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Wrapped lookup of tensor values"
+       (let [t (tensor/compute-tensor [4 6] vec2)]
+         (wrap-get t 2 3) => (vec2 2 3)
+         (wrap-get t 2 7) => (vec2 2 1)
+         (wrap-get t 5 3) => (vec2 1 3)
+         (wrap-get (wrap-get t 5) 3) => (vec2 1 3)))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn division-index
+  [{:keys [cellsize]} x]
+  (int (/ x cellsize)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Convert coordinate to division index"
+       (division-index {:cellsize 4} 3.5) => 0
+       (division-index {:cellsize 4} 7.5) => 1)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn neighbours
+  [& args]
+  (if (seq args)
+    (mapcat (fn [v] (map (fn [delta] (into [(+ (first args) delta)] v)) [-1 0 1])) (apply neighbours (rest args)) )
+    [[]]))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Get neighbouring indices"
+       (neighbours) => [[]]
+       (neighbours 3) => [[2] [3] [4]]
+       (neighbours 1 10) => [[0 9] [1 9] [2 9] [0 10] [1 10] [2 10] [0 11] [1 11] [2 11]])
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn worley-noise
+  [{:keys [size dimensions] :as params}]
+  (let [random-points (random-points params)]
+    (tensor/clone
+      (tensor/compute-tensor (repeat dimensions size)
+                             (fn [& coords]
+                                 (let [center   (map #(+ % 0.5) coords)
+                                       division (map (partial division-index params) center)]
+                                   (apply min
+                                          (for [neighbour (apply neighbours division)]
+                                               (mod-dist params (apply vec-n (reverse center))
+                                                         (apply wrap-get random-points neighbour))))))
+                             :double))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def worley (worley-noise (make-noise-params 256 8 2)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def worley-norm (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley))) (dfn/- (dfn/reduce-max worley) worley)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image worley-norm)
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image0.png)
+:::
+
+
+
+# Perlin noise
+
+
+::: {.sourceClojure}
+```clojure
+(defn random-gradient
+  [& args]
+  (loop [args args]
+        (let [random-vector (apply vec-n (map (fn [_x] (- (rand 2.0) 1.0)) args))
+              vector-length (mag random-vector)]
+          (if (and (> vector-length 0.0) (<= vector-length 1.0))
+            (div random-vector vector-length)
+            (recur args)))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn roughly-vec
+  [expected error]
+  (fn [actual]
+      (<= (mag (sub actual expected)) error)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Create unit vector with random direction"
+       (with-redefs [rand (constantly 0.5)]
+         (random-gradient 0 0) => (roughly-vec (vec2 (- (sqrt 0.5)) (- (sqrt 0.5))) 1e-6))
+       (with-redefs [rand (constantly 1.5)]
+         (random-gradient 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn random-gradients
+ [{:keys [divisions dimensions]}]
+ (tensor/clone (tensor/compute-tensor (repeat dimensions divisions) random-gradient)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Random gradients"
+       (with-redefs [rand (constantly 1.5)]
+         (dtype/shape (random-gradients {:divisions 8 :dimensions 2})) => [8 8]
+         ((random-gradients {:divisions 8 :dimensions 2}) 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)
+         (dtype/shape (random-gradients {:divisions 8 :dimensions 3})) => [8 8 8]
+         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (roughly-vec (vec3 (sqrt (/ 1 3)) (sqrt (/ 1 3)) (sqrt (/ 1 3))) 1e-6)))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2)) [(* 8 8)])
+      points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y))) [(* 8 8)])
+      scatter   (tc/dataset {:x (mapcat (fn [point gradient] [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil]) points gradients)
+                             :y (mapcat (fn [point gradient] [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil]) points gradients)})]
+  (-> scatter
+      (plotly/base {:=title "Random gradients" :=mode "lines"})
+      (plotly/layer-point {:=x :x :=y :y})))
+```
+:::
+
+
+
+```{=html}
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,-0.14261344897307857,null,0.0,0.4411277085783895,null,0.0,0.3496303887923073,null,0.0,-0.09356450852886868,null,0.0,0.49922812358170254,null,0.0,-0.4939154406870672,null,0.0,0.06572037964375217,null,0.0,0.3450558963335038,null,1.0,0.8882871092663094,null,1.0,0.5789935910379171,null,1.0,0.6873053371012858,null,1.0,0.6854508120297447,null,1.0,0.6420621076993918,null,1.0,1.3971264185656374,null,1.0,1.0708673399436732,null,1.0,0.6907198269907631,null,2.0,2.4925459296466204,null,2.0,2.39008016848053,null,2.0,2.286407499257011,null,2.0,1.9655723128481026,null,2.0,2.458887352864259,null,2.0,1.5200063356095177,null,2.0,1.5264522559104827,null,2.0,1.5088697455969529,null,3.0,2.7844734242327536,null,3.0,3.177221450221792,null,3.0,2.551999515565083,null,3.0,3.488296560336013,null,3.0,2.5403687807773156,null,3.0,2.982079641048936,null,3.0,3.479955912937677,null,3.0,2.9954095595115358,null,4.0,3.7030148856997713,null,4.0,3.931610358844423,null,4.0,3.5000526259371076,null,4.0,4.077998044534151,null,4.0,3.530369652582568,null,4.0,4.447997179263721,null,4.0,3.722270208545016,null,4.0,3.5775432280479658,null,5.0,4.525619513464309,null,5.0,5.449972704111365,null,5.0,4.845658885578765,null,5.0,5.46622774581814,null,5.0,4.608402534395179,null,5.0,5.385606302358508,null,5.0,5.040291915829874,null,5.0,4.537745294148706,null,6.0,6.141035350241951,null,6.0,6.167195569306911,null,6.0,6.315449185285346,null,6.0,6.264180769256742,null,6.0,6.421732281217078,null,6.0,5.745623151681711,null,6.0,5.504218153560312,null,6.0,6.135825317794011,null,7.0,7.4999925188033325,null,7.0,6.521781875887142,null,7.0,6.5537567734144275,null,7.0,6.693021989484329,null,7.0,7.175643136109121,null,7.0,6.70887805975553,null,7.0,7.354457224758357,null,7.0,7.141608423530769,null],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,-0.47923001176053565,null,1.0,0.7646144763916451,null,2.0,2.3574333381666293,null,3.0,2.508832327261096,null,4.0,3.972228060472982,null,5.0,5.077765914454215,null,6.0,5.504337986426758,null,7.0,7.361851389945489,null,0.0,0.4873604723856075,null,1.0,0.7302712406641603,null,2.0,2.3901564401553044,null,3.0,2.611337153374222,null,4.0,3.6508861714921648,null,5.0,5.303793692622526,null,6.0,5.50504765872934,null,7.0,6.607131351997419,null,0.0,-0.08601457544246008,null,1.0,0.6872101949260474,null,2.0,1.5901576591305564,null,3.0,2.5011866738374255,null,4.0,4.198550742585448,null,5.0,4.859978279738474,null,6.0,5.839524038972408,null,7.0,6.9062392768266045,null,0.0,0.4511632688263146,null,1.0,0.5324611699748513,null,2.0,1.77797395210003,null,3.0,2.89245247950781,null,4.0,3.8031773836271126,null,5.0,4.500321242461654,null,6.0,6.140151067195941,null,7.0,6.500021072587932,null,0.0,-0.4022435106798866,null,1.0,1.4953007742600566,null,2.0,2.0072541827670807,null,3.0,3.4938788364050932,null,4.0,4.171602263343412,null,5.0,4.777967283105059,null,6.0,6.415771767846701,null,7.0,6.732548554253548,null,0.0,0.1579973227436506,null,1.0,1.2180012971399625,null,2.0,2.475582611540005,null,3.0,3.1806424341879187,null,4.0,3.6891118771456832,null,5.0,4.6817111695623,null,6.0,6.498373917374052,null,7.0,7.190579607823958,null,0.0,-0.47969681047733703,null,1.0,0.5287828084586282,null,2.0,2.3879327409523605,null,3.0,3.4245097421201494,null,4.0,4.268592410502307,null,5.0,5.4304560593599005,null,6.0,6.064810190100427,null,7.0,6.518802033414359,null,0.0,-0.0027351673987032763,null,1.0,1.1459706332451123,null,2.0,2.225537098337497,null,3.0,2.6053298832444485,null,4.0,3.5318659500338043,null,5.0,5.406507092076257,null,6.0,6.352647239910656,null,7.0,7.479527949534884,null],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random gradients"}, {});</script></div>
+```
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn frac
+  [x]
+  (- x (Math/floor x)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Fractional part of floating point number"
+       (frac 0.25) => 0.25
+       (frac 1.75) => 0.75
+       (frac -0.25) => 0.75)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn cell-pos
+  [{:keys [cellsize]} point]
+  (apply vec-n (map frac (div point cellsize))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Relative position of point in a cell"
+       (cell-pos {:cellsize 4} (vec2 2 3)) => (vec2 0.5 0.75)
+       (cell-pos {:cellsize 4} (vec2 7 5)) => (vec2 0.75 0.25)
+       (cell-pos {:cellsize 4} (vec3 7 5 2)) => (vec3 0.75 0.25 0.5))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn corner-vectors
+  [{:keys [dimensions] :as params} point]
+  (let [cell-pos (cell-pos params point)]
+    (tensor/compute-tensor (repeat dimensions 2) (fn [& args] (sub cell-pos (apply vec-n (reverse args)))))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Compute relative vectors from cell corners to point in cell"
+       (let [v2 (corner-vectors {:cellsize 4 :dimensions 2} (vec2 7 6))
+             v3 (corner-vectors {:cellsize 4 :dimensions 3} (vec3 7 6 5))]
+         (v2 0 0) => (vec2 0.75 0.5)
+         (v2 0 1) => (vec2 -0.25 0.5)
+         (v2 1 0) => (vec2 0.75 -0.5)
+         (v2 1 1) => (vec2 -0.25 -0.5)
+         (v3 0 0 0) => (vec3 0.75 0.5 0.25)))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn corner-gradients
+  [{:keys [dimensions] :as params} gradients point]
+  (let [division (map (partial division-index params) point)]
+    (tensor/compute-tensor (repeat dimensions 2) (fn [& coords] (apply wrap-get gradients (map + (reverse division) coords))))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Get 2x2 tensor of gradients from a larger tensor using wrap around"
+       (let [gradients2 (tensor/compute-tensor [4 6] (fn [y x] (vec2 x y)))
+             gradients3 (tensor/compute-tensor [4 6 8] (fn [z y x] (vec3 x y z))) ]
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 0) => (vec2 2 1)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 1) => (vec2 3 1)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 0) => (vec2 2 2)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 1) => (vec2 3 2)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 23 15)) 1 1) => (vec2 0 0)
+         ((corner-gradients {:cellsize 4 :dimensions 3} gradients3 (vec3 9 6 3)) 0 0 0) => (vec3 2 1 0)))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn influence-values
+  [gradients vectors]
+  (tensor/compute-tensor (repeat (count (dtype/shape gradients)) 2)
+                         (fn [& args] (dot (apply gradients args) (apply vectors args))) :double))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Compute influence values from corner vectors and gradients"
+       (let [gradients2 (tensor/compute-tensor [2 2] (fn [_y x] (vec2 x 10)))
+             vectors2   (tensor/compute-tensor [2 2] (fn [y _x] (vec2 1 y)))
+             influence2 (influence-values gradients2 vectors2)
+             gradients3 (tensor/compute-tensor [2 2 2] (fn [z y x] (vec3 x y z)))
+             vectors3   (tensor/compute-tensor [2 2 2] (fn [_z _y _x] (vec3 1 10 100)))
+             influence3 (influence-values gradients3 vectors3)]
+         (influence2 0 0) => 0.0
+         (influence2 0 1) => 1.0
+         (influence2 1 0) => 10.0
+         (influence2 1 1) => 11.0
+         (influence3 1 1 1) => 111.0))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn ease-curve
+  [t]
+  (-> t (* 6.0) (- 15.0) (* t) (+ 10.0) (* t t t)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Monotonously increasing function with zero derivative at zero and one"
+       (ease-curve 0.0) => 0.0
+       (ease-curve 0.25) => (roughly 0.103516 1e-6)
+       (ease-curve 0.5) => 0.5
+       (ease-curve 0.75) => (roughly 0.896484 1e-6)
+       (ease-curve 1.0) => 1.0)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(-> (tc/dataset {:t (range 0.0 1.025 0.025) :ease (map ease-curve (range 0.0 1.025 0.025))})
+    (plotly/base {:=title "Ease Curve"})
+    (plotly/layer-line {:=x :t :=y :ease}))
+```
+:::
+
+
+
+```{=html}
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,1.5044921875000003E-4,0.001158125,0.003758378906250001,0.008560000000000002,0.01605224609375,0.026611875,0.04051017578124999,0.05791999999999999,0.07892279296874999,0.10351562499999996,0.13161822265624998,0.16308000000000003,0.19768708984375005,0.23516937500000007,0.27520751953125006,0.31744000000000017,0.36147013671875017,0.4068731250000002,0.4532030664062503,0.5000000000000001,0.5467969335937503,0.5931268750000003,0.6385298632812504,0.6825600000000003,0.7247924804687504,0.7648306250000004,0.8023129101562504,0.8369200000000006,0.8683817773437502,0.8964843750000004,0.9210772070312503,0.9420800000000003,0.9594898242187506,0.9733881249999998,0.9839477539062503,0.9914399999999999,0.9962416210937496,0.9988418749999993,0.9998495507812496,1.0000000000000013],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,0.025,0.05,0.07500000000000001,0.1,0.125,0.15000000000000002,0.17500000000000002,0.2,0.225,0.25,0.275,0.30000000000000004,0.325,0.35000000000000003,0.375,0.4,0.42500000000000004,0.45,0.47500000000000003,0.5,0.525,0.55,0.5750000000000001,0.6000000000000001,0.625,0.65,0.675,0.7000000000000001,0.7250000000000001,0.75,0.775,0.8,0.8250000000000001,0.8500000000000001,0.875,0.9,0.925,0.9500000000000001,0.9750000000000001,1.0],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"t","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"ease","showgrid":true},"title":"Ease Curve"}, {});</script></div>
+```
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn interpolation-weights
+  ([params point]
+   (interpolation-weights (cell-pos params point)))
+  ([pos]
+   (if (seq pos)
+     (let [w1   (- 1.0 (last pos))
+           w2   (last pos)
+           elem (interpolation-weights (butlast pos))]
+       (tensor/->tensor [(dfn/* (ease-curve w1) elem) (dfn/* (ease-curve w2) elem)]))
+     1.0)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Interpolation weights"
+       (let [weights2 (interpolation-weights {:cellsize 8} (vec2 2 7))
+             weights3 (interpolation-weights {:cellsize 8} (vec3 2 7 3))]
+         (weights2 0 0) => (roughly 0.014391 1e-6)
+         (weights2 0 1) => (roughly 0.001662 1e-6)
+         (weights2 1 0) => (roughly 0.882094 1e-6)
+         (weights2 1 1) => (roughly 0.101854 1e-6)
+         (weights3 0 0 0) => (roughly 0.010430 1e-6)))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn perlin-sample
+  [params gradients point]
+  (let [gradients (corner-gradients params gradients point)
+        vectors   (corner-vectors params point)
+        influence (influence-values gradients vectors)
+        weights   (interpolation-weights params point)]
+    (dfn/reduce-+ (dfn/* weights influence))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn perlin-noise
+  [{:keys [size dimensions] :as params}]
+  (let [gradients (random-gradients params)]
+    (tensor/clone
+      (tensor/compute-tensor (repeat dimensions size)
+                             (fn [& args]
+                                 (let [center (add (apply vec-n (reverse args)) (apply vec-n (repeat dimensions 0.5)))]
+                                   (perlin-sample params gradients center)))
+                             :double))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def perlin (perlin-noise (make-noise-params 256 8 2)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def perlin-norm (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin))) (dfn/- perlin (dfn/reduce-min perlin))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image perlin-norm)
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image1.png)
+:::
+
+
+
+# Combination of Worley and Perlin noise
+
+
+::: {.sourceClojure}
+```clojure
+(def perlin-worley-norm (dfn/+ (dfn/* 0.3 perlin-norm) (dfn/* 0.7 worley-norm)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image (dfn/+ (dfn/* 0.5 perlin-norm) (dfn/* 0.5 worley-norm)))
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image2.png)
+:::
+
+
+
+# Interpolation
+
+
+::: {.sourceClojure}
+```clojure
+(defn interpolate
+  [tensor & args]
+  (if (seq args)
+    (let [x  (first args)
+          xc (- x 0.5)
+          xf (frac xc)
+          x0 (int (Math/floor xc))]
+      (+ (* (- 1.0 xf) (apply interpolate (wrap-get tensor      x0 ) (rest args)))
+         (*        xf  (apply interpolate (wrap-get tensor (inc x0)) (rest args)))))
+    tensor))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Interpolate values of tensor"
+       (let [x2 (tensor/compute-tensor [4 6] (fn [_y x] x))
+             y2 (tensor/compute-tensor [4 6] (fn [y _x] y))
+             x3 (tensor/compute-tensor [4 6 8] (fn [_z _y x] x))
+             y3 (tensor/compute-tensor [4 6 8] (fn [_z y _x] y))
+             z3 (tensor/compute-tensor [4 6 8] (fn [z _y _x] z))]
+         (interpolate x2 2.5 3.5) => 3.0
+         (interpolate y2 2.5 3.5) => 2.0
+         (interpolate x2 2.5 4.0) => 3.5
+         (interpolate y2 3.0 3.5) => 2.5
+         (interpolate x2 0.0 0.0) => 2.5
+         (interpolate y2 0.0 0.0) => 1.5
+         (interpolate x3 2.5 3.5 5.5) => 5.0
+         (interpolate y3 2.5 3.5 3.0) => 3.0
+         (interpolate z3 2.5 3.5 5.5) => 2.0))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+# Octaves of noise
+
+
+::: {.sourceClojure}
+```clojure
+(defn fractal-brownian-motion
+  [base octaves & args]
+  (let [scales (take (count octaves) (iterate #(* 2 %) 1))]
+    (reduce + 0.0 (map (fn [amplitude scale] (* amplitude (apply base (map #(* scale %) args)))) octaves scales))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(facts "Fractal Brownian motion"
+       (let [base1 (fn [x] (if (>= (mod x 2.0) 1.0) 1.0 0.0))
+             base2 (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0))) 0.0 1.0))]
+         (fractal-brownian-motion base2 [1.0] 0 0) => 0.0
+         (fractal-brownian-motion base2 [1.0] 0 1) => 1.0
+         (fractal-brownian-motion base2 [1.0] 1 0) => 1.0
+         (fractal-brownian-motion base2 [1.0] 1 1) => 0.0
+         (fractal-brownian-motion base2 [0.5] 0 1) => 0.5
+         (fractal-brownian-motion base2 [] 0 1) => 0.0
+         (fractal-brownian-motion base2 [0.0 1.0] 0 0) => 0.0
+         (fractal-brownian-motion base2 [0.0 1.0] 0.0 0.5) => 1.0
+         (fractal-brownian-motion base2 [0.0 1.0] 0.5 0.0) => 1.0
+         (fractal-brownian-motion base2 [0.0 1.0] 0.5 0.5) => 0.0
+         (fractal-brownian-motion base1 [1.0] 0) => 0.0
+         (fractal-brownian-motion base1 [1.0] 1) => 1.0
+         (fractal-brownian-motion base1 [0.0 1.0] 0.0) => 0.0
+         (fractal-brownian-motion base1 [0.0 1.0] 0.5) => 1.0))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn remap
+  [value low1 high1 low2 high2]
+  (dfn/+ low2 (dfn/* (dfn/- value low1) (/ (- high2 low2) (- high1 low1)))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(tabular "Remap values of tensor"
+       (fact ((remap (tensor/->tensor [?value]) ?low1 ?high1 ?low2 ?high2) 0) => ?expected)
+       ?value ?low1 ?high1 ?low2 ?high2 ?expected
+       0      0     1      0     1      0
+       1      0     1      0     1      1
+       0      0     1      2     3      2
+       1      0     1      2     3      3
+       2      2     3      0     1      0
+       3      2     3      0     1      1
+       1      0     2      0     4      2)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn clamp
+  [value low high]
+  (dfn/max low (dfn/min value high)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(tabular "Clamp values of tensor"
+       (fact ((clamp (tensor/->tensor [?value]) ?low ?high) 0) => ?expected)
+       ?value ?low ?high ?expected
+       2      2    3      2
+       3      2    3      3
+       0      2    3      2
+       4      2    3      3)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn octaves
+  [n decay]
+  (let [series (take n (iterate #(* % decay) 1.0))
+        sum    (apply + series)]
+    (mapv #(/ % sum) series)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn noise-octaves
+  [tensor octaves low high]
+  (tensor/clone
+    (clamp
+      (remap
+        (tensor/compute-tensor (dtype/shape tensor)
+                               (fn [& args]
+                                   (apply fractal-brownian-motion
+                                     (partial interpolate tensor)
+                                     octaves
+                                     (map #(+ % 0.5) args)))
+                               :double)
+        low high 0 255)
+      0 255)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image (noise-octaves worley-norm (octaves 4 0.6) 120 230))
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image3.png)
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image (noise-octaves perlin-norm (octaves 4 0.6) 120 230))
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image4.png)
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 4 0.6) 120 230))
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image5.png)
+:::
+
+
+
+# Testing shaders
+
+
+::: {.sourceClojure}
+```clojure
+(GLFW/glfwInit)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def window-width 640)
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def window-height 480)
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GLFW/glfwDefaultWindowHints)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GLFW/glfwWindowHint GLFW/GLFW_VISIBLE GLFW/GLFW_FALSE)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def window (GLFW/glfwCreateWindow window-width window-height "Invisible Window" 0 0))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GLFW/glfwMakeContextCurrent window)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GL/createCapabilities)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+#object[org.lwjgl.opengl.GLCapabilities 0x31de1963 "org.lwjgl.opengl.GLCapabilities@31de1963"]
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn make-shader [source shader-type]
+  (let [shader (GL20/glCreateShader shader-type)]
+    (GL20/glShaderSource shader source)
+    (GL20/glCompileShader shader)
+    (when (zero? (GL20/glGetShaderi shader GL20/GL_COMPILE_STATUS))
+      (throw (Exception. (GL20/glGetShaderInfoLog shader 1024))))
+    shader))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn make-program [& shaders]
+  (let [program (GL20/glCreateProgram)]
+    (doseq [shader shaders]
+           (GL20/glAttachShader program shader)
+           (GL20/glDeleteShader shader))
+    (GL20/glLinkProgram program)
+    (when (zero? (GL20/glGetProgrami program GL20/GL_LINK_STATUS))
+      (throw (Exception. (GL20/glGetProgramInfoLog program 1024))))
+    program))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn make-program-with-shaders
+  [vertex-shader-sources fragment-shader-sources]
+  (let [vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-shader-sources)
+        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-shader-sources)
+        program          (apply make-program (concat vertex-shaders fragment-shaders))]
+    program))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def vertex-test "
+#version 130
+in vec3 point;
+void main()
+{
+  gl_Position = vec4(point, 1);
+}")
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def fragment-test "
+#version 130
+out vec4 fragColor;
+void main()
+{
+  fragColor = vec4(1, 1, 1, 1);
+}")
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defmacro def-make-buffer [method create-buffer]
+  `(defn ~method [data#]
+     (let [buffer# (~create-buffer (count data#))]
+       (.put buffer# data#)
+       (.flip buffer#)
+       buffer#)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def-make-buffer make-float-buffer BufferUtils/createFloatBuffer)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+#'volumetric-clouds.main/make-float-buffer
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def-make-buffer make-int-buffer BufferUtils/createIntBuffer)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+#'volumetric-clouds.main/make-int-buffer
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def-make-buffer make-byte-buffer BufferUtils/createByteBuffer)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+#'volumetric-clouds.main/make-byte-buffer
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn setup-vao [vertices indices]
+  (let [vao (GL30/glGenVertexArrays)
+        vbo (GL15/glGenBuffers)
+        ibo (GL15/glGenBuffers)]
+    (GL30/glBindVertexArray vao)
+    (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER vbo)
+    (GL15/glBufferData GL15/GL_ARRAY_BUFFER (make-float-buffer vertices)
+                       GL15/GL_STATIC_DRAW)
+    (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER ibo)
+    (GL15/glBufferData GL15/GL_ELEMENT_ARRAY_BUFFER (make-int-buffer indices)
+                       GL15/GL_STATIC_DRAW)
+    {:vao vao :vbo vbo :ibo ibo}))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn teardown-vao [{:keys [vao vbo ibo]}]
+  (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
+  (GL15/glDeleteBuffers ibo)
+  (GL15/glBindBuffer GL15/GL_ARRAY_BUFFER 0)
+  (GL15/glDeleteBuffers vbo)
+  (GL30/glBindVertexArray 0)
+  (GL15/glDeleteBuffers vao))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn float-buffer->array
+  "Convert float buffer to flaot array"
+  [buffer]
+  (let [result (float-array (.limit buffer))]
+    (.get buffer result)
+    (.flip buffer)
+    result))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn make-texture-2d
+  [width height]
+  (let [texture (GL11/glGenTextures)]
+    (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
+    (GL42/glTexStorage2D GL11/GL_TEXTURE_2D 1 GL30/GL_RGBA32F width height)
+    texture))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn read-texture-2d
+  [texture width height]
+  (let [buffer (BufferUtils/createFloatBuffer (* height width 4))]
+    (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+    (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL12/GL_RGBA GL11/GL_FLOAT buffer)
+    (float-buffer->array buffer)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defmacro framebuffer-render
+  [texture width height & body]
+  `(let [fbo# (GL30/glGenFramebuffers)]
+     (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo#)
+     (GL11/glBindTexture GL11/GL_TEXTURE_2D ~texture)
+     (GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0 ~texture 0)
+     (GL20/glDrawBuffers (volumetric-clouds.main/make-int-buffer (int-array [GL30/GL_COLOR_ATTACHMENT0])))
+     (GL11/glViewport 0 0 ~width ~height)
+     (let [result# (do ~@body)]
+       (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
+       (GL30/glDeleteFramebuffers fbo#)
+       result#)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn setup-point-attribute
+  [program]
+  (let [point-attribute (GL20/glGetAttribLocation program "point")]
+    (GL20/glVertexAttribPointer point-attribute 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+    (GL20/glEnableVertexAttribArray point-attribute)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn setup-quad-vao
+  []
+  (let [vertices (float-array [1.0 1.0 0.0, -1.0 1.0 0.0, -1.0 -1.0 0.0, 1.0 -1.0 0.0])
+        indices  (int-array [0 1 2 3])]
+    (setup-vao vertices indices)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn render-pixel
+  [vertex-sources fragment-sources]
+  (let [program          (make-program-with-shaders vertex-sources fragment-sources)
+        vao              (setup-quad-vao)
+        texture          (make-texture-2d 1 1)]
+    (setup-point-attribute program)
+    (framebuffer-render texture 1 1
+                        (GL20/glUseProgram program)
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+    (let [result (read-texture-2d texture 1 1)]
+      (GL11/glDeleteTextures texture)
+      (teardown-vao vao)
+      (GL20/glDeleteProgram program)
+      result)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(render-pixel [vertex-test] [fragment-test])
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+[1.0, 1.0, 1.0, 1.0]
+
+```
+:::
+
+
+
+# Noise octaves shader
+
+
+::: {.sourceClojure}
+```clojure
+(def noise-mock
+"#version 130
+float noise(vec3 idx)
+{
+  ivec3 v = ivec3(floor(idx.x), floor(idx.y), floor(idx.z)) % 2;
+  return ((v.x == 1) == (v.y == 1)) == (v.z == 1) ? 1.0 : 0.0;
+}")
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def noise-probe
+  (template/fn [x y z]
+"#version 130
+out vec4 fragColor;
+float noise(vec3 idx);
+void main()
+{
+  fragColor = vec4(noise(vec3(<%= x %>, <%= y %>, <%= z %>)));
+}"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(tabular "Test noise mock"
+         (fact (nth (render-pixel [vertex-test] [noise-mock (noise-probe ?x ?y ?z)]) 0) => ?result)
+         ?x ?y ?z ?result
+         0  0  0  0.0
+         1  0  0  1.0
+         0  1  0  1.0
+         1  1  0  0.0
+         0  0  1  1.0
+         1  0  1  0.0
+         0  1  1  0.0
+         1  1  1  1.0)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def noise-octaves
+  (template/fn [octaves]
+"#version 130
+out vec4 fragColor;
+float noise(vec3 idx);
+float octaves(vec3 idx)
+{
+  float result = 0.0;
+<% (doseq [multiplier octaves] %>
+  result += <%= multiplier %> * noise(idx);
+  idx *= 2.0;
+<%= ) %>
+  return result;
+}"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def octaves-probe
+  (template/fn [x y z]
+"#version 130
+out vec4 fragColor;
+float octaves(vec3 idx);
+void main()
+{
+  fragColor = vec4(octaves(vec3(<%= x %>, <%= y %>, <%= z %>)));
+}"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(tabular "Test octaves of noise"
+         (fact (first (render-pixel [vertex-test] [noise-mock (noise-octaves ?octaves) (octaves-probe ?x ?y ?z)]))
+               => ?result)
+         ?x  ?y ?z ?octaves  ?result
+         0   0  0  [1.0]     0.0
+         1   0  0  [1.0]     1.0
+         1   0  0  [0.5]     0.5
+         0.5 0  0  [0.0 1.0] 1.0
+         0.5 0  0  [0.0 1.0] 1.0
+         1   0  0  [1.0 0.0] 1.0)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+# Shader for intersecting a ray with a box
+
+
+::: {.sourceClojure}
+```clojure
+(def ray-box
+"#version 130
+vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction)
+{
+  vec3 inv_dir = 1.0 / direction;
+  vec3 smin = (box_min - origin) * inv_dir;
+  vec3 smax = (box_max - origin) * inv_dir;
+  vec3 s1 = min(smin, smax);
+  vec3 s2 = max(smin, smax);
+  float s_near = max(max(s1.x, s1.y), s1.z);
+  float s_far = min(min(s2.x, s2.y), s2.z);
+  if (isinf(s_near) || isinf(s_far))
+    return vec2(0.0, 0.0);
+  else
+    return vec2(max(s_near, 0.0), max(0.0, s_far));
+}")
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def ray-box-probe
+  (template/fn [ox oy oz dx dy dz]
+"#version 130
+out vec4 fragColor;
+vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction);
+void main()
+{
+  vec3 box_min = vec3(-1, -1, -1);
+  vec3 box_max = vec3(1, 1, 1);
+  vec3 origin = vec3(<%= ox %>, <%= oy %>, <%= oz %>);
+  vec3 direction = vec3(<%= dx %>, <%= dy %>, <%= dz %>);
+  fragColor = vec4(ray_box(box_min, box_max, origin, direction), 0, 0);
+}"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(tabular "Test intersection of ray with box"
+         (fact ((juxt first second) (render-pixel [vertex-test] [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)]))
+               => ?result)
+         ?ox ?oy ?oz ?dx ?dy ?dz ?result
+         -2   0   0   1   0   0  [1.0 3.0]
+         -2   0   0   2   0   0  [0.5 1.5]
+         -2   2   2   1   0   0  [0.0 0.0]
+          0  -2   0   0   1   0  [1.0 3.0]
+          0  -2   0   0   2   0  [0.5 1.5]
+          2  -2   2   0   1   0  [0.0 0.0]
+          0   0  -2   0   0   1  [1.0 3.0]
+          0   0  -2   0   0   2  [0.5 1.5]
+          2   2  -2   0   0   1  [0.0 0.0]
+          0   0   0   1   0   0  [0.0 1.0]
+          2   0   0   1   0   0  [0.0 0.0])
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+# Shader for light transfer through clouds
+
+
+::: {.sourceClojure}
+```clojure
+(def cloud-mock
+  (template/fn [v]
+"#version 130
+float cloud(vec3 idx)
+{
+  return <%= v %>;
+}"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def cloud-transfer
+"#version 130
+float cloud(vec3 idx);
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step)
+{
+  vec4 result = vec4(0, 0, 0, 0);
+  for (float t = interval.x + 0.5 * step; t < interval.y; t += step) {
+    float density = cloud(origin + direction * t);
+    float transmittance = exp(-density * step);
+    vec3 color = vec3(1.0, 1.0, 1.0);
+    result.rgb = result.rgb + color * (1.0 - result.a) * (1.0 - transmittance);
+    result.a = 1.0 - (1.0 - result.a) * transmittance;
+  };
+  return result;
+}")
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def cloud-transfer-probe
+  (template/fn [a b step]
+"#version 130
+out vec4 fragColor;
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step);
+void main()
+{
+  vec3 origin = vec3(0, 0, 0);
+  vec3 direction = vec3(1, 0, 0);
+  vec2 interval = vec2(<%= a %>, <%= b %>);
+  float step = <%= step %>;
+  fragColor = cloud_transfer(origin, direction, interval, step);
+}"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn roughly-vector
+  [expected error]
+  (fn [actual]
+      (and (== (count expected) (count actual))
+           (<= (apply + (mapv (fn [a b] (* (- b a) (- b a))) actual expected)) (* error error)))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(tabular "Test cloud transfer"
+         (fact (seq (render-pixel [vertex-test] [(cloud-mock ?density) cloud-transfer (cloud-transfer-probe ?a ?b ?step)]))
+               => (roughly-vector ?result 1e-3))
+         ?a ?b ?step ?density ?result
+         0  0  1     0.0      [0.0 0.0 0.0 0.0]
+         0  1  1     1.0      [0.632 0.632 0.632 0.632]
+         0  1  0.5   1.0      [0.632 0.632 0.632 0.632]
+         0  1  0.5   0.5      [0.393 0.393 0.393 0.393])
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+# Rendering of fog box
+
+
+::: {.sourceClojure}
+```clojure
+(def fragment-cloud
+"#version 130
+uniform vec2 resolution;
+uniform mat3 rotation;
+uniform float focal_length;
+uniform float distance;
+out vec4 fragColor;
+vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction);
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step);
+void main()
+{
+  vec3 direction = normalize(rotation * vec3(gl_FragCoord.xy - 0.5 * resolution, focal_length));
+  vec3 origin = rotation * vec3(0, 0, -distance);
+  vec2 interval = ray_box(vec3(-1, -1, -1), vec3(1, 1, 1), origin, direction);
+  vec4 transfer = cloud_transfer(origin, direction, interval, 0.01);
+  vec3 background = vec3(0.5, 0.5, 1.0);
+  fragColor = vec4(background * (1.0 - transfer.a) + transfer.rgb, 1.0);
+}")
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn setup-fog-uniforms
+  [program width height]
+  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 30.0)) (rotation-matrix-3d-x (to-radians -25.0)))
+        focal-length (/ (* 0.5 width) (tan (to-radians 30.0)))]
+    (GL20/glUseProgram program)
+    (GL20/glUniform2f (GL20/glGetUniformLocation program "resolution") width height)
+    (GL20/glUniformMatrix3fv (GL20/glGetUniformLocation program "rotation") true
+                             (make-float-buffer (mat->float-array rotation)))
+    (GL20/glUniform1f (GL20/glGetUniformLocation program "focal_length") focal-length)
+    (GL20/glUniform1f (GL20/glGetUniformLocation program "distance") 4.0)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn render-fog
+  [width height]
+  (let [fragment-sources [ray-box cloud-transfer (cloud-mock 0.5) fragment-cloud]
+        program          (make-program-with-shaders [vertex-test] fragment-sources)
+        vao              (setup-quad-vao)
+        texture          (make-texture-2d width height)]
+    (setup-point-attribute program)
+    (framebuffer-render texture width height
+                        (setup-fog-uniforms program width height)
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+    (let [result (read-texture-2d texture width height)]
+      (GL11/glDeleteTextures texture)
+      (teardown-vao vao)
+      (GL20/glDeleteProgram program)
+      result)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn rgba-array->bufimg [data width height]
+  (-> data tensor/->tensor (tensor/reshape [height width 4]) (tensor/select :all :all [2 1 0]) (dfn/* 255)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image (rgba-array->bufimg (render-fog 640 480) 640 480))
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image6.png)
+:::
+
+
+
+# Rendering of 3D noise
+
+
+::: {.sourceClojure}
+```clojure
+(defn float-array->texture3d
+  [data size]
+  (let [buffer  (make-float-buffer data)
+        texture (GL11/glGenTextures)]
+    (GL11/glBindTexture GL12/GL_TEXTURE_3D texture)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL12/GL_TEXTURE_WRAP_R GL11/GL_REPEAT)
+    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0 GL11/GL_RED GL11/GL_FLOAT buffer)
+    texture))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def noise3d (dfn/- (dfn/* 0.3 (perlin-noise (make-noise-params 32 4 3)))
+                    (dfn/* 0.7 (worley-noise (make-noise-params 32 4 3)))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def noise-3d-norm (dfn/* (/ 1.0 (- (dfn/reduce-max noise3d) (dfn/reduce-min noise3d))) (dfn/- noise3d (dfn/reduce-min noise3d))))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def noise-texture (float-array->texture3d (dtype/->float-array noise-3d-norm) 32))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def noise-shader
+"#version 130
+uniform sampler3D noise3d;
+float cloud(vec3 idx)
+{
+  return texture(noise3d, idx).r;
+}")
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn setup-noise-uniforms
+  [program width height]
+  (setup-fog-uniforms program width height)
+  (GL20/glUniform1i (GL20/glGetUniformLocation program "noise3d") 0)
+  (GL13/glActiveTexture GL13/GL_TEXTURE0)
+  (GL11/glBindTexture GL12/GL_TEXTURE_3D noise-texture))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defn render-noise
+  [width height]
+  (let [fragment-sources [ray-box cloud-transfer noise-shader fragment-cloud]
+        program          (make-program-with-shaders [vertex-test] fragment-sources)
+        vao              (setup-quad-vao)
+        texture          (make-texture-2d width height)]
+    (setup-point-attribute program)
+    (framebuffer-render texture width height
+                        (setup-noise-uniforms program width height)
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+    (let [result (read-texture-2d texture width height)]
+      (GL11/glDeleteTextures texture)
+      (teardown-vao vao)
+      (GL20/glDeleteProgram program)
+      result)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480) 640 480))
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image7.png)
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GL11/glDeleteTextures noise-texture)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GLFW/glfwDestroyWindow window)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(GLFW/glfwTerminate)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
+:::
+
+
+
+```{=html}
+<div style="background-color:grey;height:2px;width:100%;"></div>
+```
+
+
+
+```{=html}
+<div><pre><small><small>source: <a href="https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/volumetric_clouds/main.clj">src/volumetric_clouds/main.clj</a></small></small></pre></div>
+```
