@@ -24,7 +24,7 @@
     (:import [org.lwjgl.opengl GL11]
              [org.lwjgl BufferUtils]
              [org.lwjgl.glfw GLFW]
-             [org.lwjgl.opengl GL GL11 GL12 GL15 GL20 GL30 GL32 GL42]))
+             [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL32 GL42]))
 
 
 ;; Procedural generation of volumetric clouds
@@ -37,8 +37,10 @@
 ;;
 ;; References
 ;; * https://adrianb.io/2014/08/09/perlinnoise.html
+;; * https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/
 
 ;; # Worley noise
+
 
 (defn make-noise-params
   [size divisions dimensions]
@@ -46,7 +48,7 @@
 
 
 (fact "Noise parameter initialisation"
-      (make-noise-params 512 8 2) => {:size 512 :divisions 8 :cellsize 64 :dimensions 2})
+      (make-noise-params 256 8 2) => {:size 256 :divisions 8 :cellsize 32 :dimensions 2})
 
 
 (defn vec-n
@@ -93,7 +95,7 @@
            ((random-points params-3d) 2 3 5) => (vec3 22.0 14.0 10.0))))
 
 
-(let [points  (tensor/reshape (random-points (make-noise-params 512 8 2)) [(* 8 8)])
+(let [points  (tensor/reshape (random-points (make-noise-params 256 8 2)) [(* 8 8)])
       scatter (tc/dataset {:x (map first points) :y (map second points)})]
   (-> scatter
       (plotly/base {:=title "Random points"})
@@ -194,7 +196,7 @@
                              :double))))
 
 
-(def worley (worley-noise (make-noise-params 512 8 2)))
+(def worley (worley-noise (make-noise-params 256 8 2)))
 
 (def worley-norm (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley))) (dfn/- (dfn/reduce-max worley) worley)))
 
@@ -238,7 +240,7 @@
          ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (roughly-vec (vec3 (sqrt (/ 1 3)) (sqrt (/ 1 3)) (sqrt (/ 1 3))) 1e-6)))
 
 
-(let [gradients (tensor/reshape (random-gradients (make-noise-params 512 8 2)) [(* 8 8)])
+(let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2)) [(* 8 8)])
       points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y))) [(* 8 8)])
       scatter   (tc/dataset {:x (mapcat (fn [point gradient] [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil]) points gradients)
                              :y (mapcat (fn [point gradient] [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil]) points gradients)})]
@@ -382,7 +384,7 @@
                              :double))))
 
 
-(def perlin (perlin-noise (make-noise-params 512 8 2)))
+(def perlin (perlin-noise (make-noise-params 256 8 2)))
 
 (def perlin-norm (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin))) (dfn/- perlin (dfn/reduce-min perlin))))
 
@@ -507,6 +509,7 @@
 
 (bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 4 0.6) 120 230))
 
+
 ;; # Testing shaders
 
 (GLFW/glfwInit)
@@ -539,6 +542,14 @@
     (GL20/glLinkProgram program)
     (when (zero? (GL20/glGetProgrami program GL20/GL_LINK_STATUS))
       (throw (Exception. (GL20/glGetProgramInfoLog program 1024))))
+    program))
+
+
+(defn make-program-with-shaders
+  [vertex-shader-sources fragment-shader-sources]
+  (let [vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-shader-sources)
+        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-shader-sources)
+        program          (apply make-program (concat vertex-shaders fragment-shaders))]
     program))
 
 
@@ -603,15 +614,19 @@ void main()
     result))
 
 
-(defn make-texture
+(defn make-texture-2d
   [width height]
   (let [texture (GL11/glGenTextures)]
     (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_2D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_2D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_2D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
     (GL42/glTexStorage2D GL11/GL_TEXTURE_2D 1 GL30/GL_RGBA32F width height)
     texture))
 
 
-(defn read-texture
+(defn read-texture-2d
   [texture width height]
   (let [buffer (BufferUtils/createFloatBuffer (* height width 4))]
     (GL11/glBindTexture GL11/GL_TEXTURE_2D texture)
@@ -640,20 +655,23 @@ void main()
     (GL20/glEnableVertexAttribArray point-attribute)))
 
 
+(defn setup-quad-vao
+  []
+  (let [vertices (float-array [1.0 1.0 0.0, -1.0 1.0 0.0, -1.0 -1.0 0.0, 1.0 -1.0 0.0])
+        indices  (int-array [0 1 2 3])]
+    (setup-vao vertices indices)))
+
+
 (defn render-pixel
   [vertex-sources fragment-sources]
-  (let [vertices         (float-array [1.0 1.0 0.0, -1.0 1.0 0.0, -1.0 -1.0 0.0, 1.0 -1.0 0.0])
-        indices          (int-array [0 1 2 3])
-        vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-sources)
-        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-sources)
-        program          (apply make-program (concat vertex-shaders fragment-shaders))
-        vao              (setup-vao vertices indices)
-        texture          (make-texture 1 1)]
+  (let [program          (make-program-with-shaders vertex-sources fragment-sources)
+        vao              (setup-quad-vao)
+        texture          (make-texture-2d 1 1)]
     (setup-point-attribute program)
     (framebuffer-render texture 1 1
                         (GL20/glUseProgram program)
-                        (GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0))
-    (let [result (read-texture texture 1 1)]
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+    (let [result (read-texture-2d texture 1 1)]
       (GL11/glDeleteTextures texture)
       (teardown-vao vao)
       (GL20/glDeleteProgram program)
@@ -662,6 +680,8 @@ void main()
 
 (render-pixel [vertex-test] [fragment-test])
 
+
+;; # Noise octaves shader
 
 (def noise-mock
 "#version 130
@@ -735,6 +755,8 @@ void main()
          1   0  0  [1.0 0.0] 1.0)
 
 
+;; # Shader for intersecting a ray with a box
+
 (def ray-box
 "#version 130
 vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction)
@@ -784,6 +806,8 @@ void main()
           0   0   0   1   0   0  [0.0 1.0]
           2   0   0   1   0   0  [0.0 0.0])
 
+
+;; # Shader for light transfer through clouds
 
 (def cloud-mock
   (template/fn [v]
@@ -843,6 +867,8 @@ void main()
          0  1  0.5   0.5      [0.393 0.393 0.393 0.393])
 
 
+;; # Rendering of fog box
+
 (def fragment-cloud
 "#version 130
 uniform vec2 resolution;
@@ -863,36 +889,101 @@ void main()
 }")
 
 
-(defn render-clouds
+(defn setup-fog-uniforms
+  [program width height]
+  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 30.0)) (rotation-matrix-3d-x (to-radians -25.0)))
+        focal-length (/ (* 0.5 width) (tan (to-radians 30.0)))]
+    (GL20/glUseProgram program)
+    (GL20/glUniform2f (GL20/glGetUniformLocation program "resolution") width height)
+    (GL20/glUniformMatrix3fv (GL20/glGetUniformLocation program "rotation") true
+                             (make-float-buffer (mat->float-array rotation)))
+    (GL20/glUniform1f (GL20/glGetUniformLocation program "focal_length") focal-length)
+    (GL20/glUniform1f (GL20/glGetUniformLocation program "distance") 4.0)))
+
+
+(defn render-fog
   [width height]
-  (let [vertices         (float-array [1.0 1.0 0.0, -1.0 1.0 0.0, -1.0 -1.0 0.0, 1.0 -1.0 0.0])
-        indices          (int-array [0 1 2 3])
-        rotation         (mulm (rotation-matrix-3d-x (to-radians -25.0)) (rotation-matrix-3d-y (to-radians 30.0)))
-        vertex-shader    (make-shader vertex-test GL20/GL_VERTEX_SHADER)
-        fragment-sources [ray-box cloud-transfer (cloud-mock 0.3) fragment-cloud]
-        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-sources)
-        program          (apply make-program vertex-shader fragment-shaders)
-        vao              (setup-vao vertices indices)
-        texture          (make-texture width height)]
+  (let [fragment-sources [ray-box cloud-transfer (cloud-mock 0.5) fragment-cloud]
+        program          (make-program-with-shaders [vertex-test] fragment-sources)
+        vao              (setup-quad-vao)
+        texture          (make-texture-2d width height)]
     (setup-point-attribute program)
     (framebuffer-render texture width height
-                        (GL20/glUseProgram program)
-                        (GL20/glUniform2f (GL20/glGetUniformLocation program "resolution") width height)
-                        (GL20/glUniformMatrix3fv (GL20/glGetUniformLocation program "rotation") true
-                                                 (make-float-buffer (mat->float-array rotation)))
-                        (GL20/glUniform1f (GL20/glGetUniformLocation program "focal_length") (/ (* 0.5 width) (tan (to-radians 30.0))))
-                        (GL20/glUniform1f (GL20/glGetUniformLocation program "distance") 4.0)
-                        (GL11/glDrawElements GL11/GL_QUADS (count indices) GL11/GL_UNSIGNED_INT 0))
-    (let [result (read-texture texture width height)]
+                        (setup-fog-uniforms program width height)
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+    (let [result (read-texture-2d texture width height)]
       (GL11/glDeleteTextures texture)
       (teardown-vao vao)
       (GL20/glDeleteProgram program)
       result)))
 
 
-(def image (dfn/* 255 (tensor/select (tensor/reshape (tensor/->tensor (render-clouds 640 480)) [480 640 4]) :all :all [2 1 0])))
+(defn rgba-array->bufimg [data width height]
+  (-> data tensor/->tensor (tensor/reshape [height width 4]) (tensor/select :all :all [2 1 0]) (dfn/* 255)))
 
-(bufimg/tensor->image image)
+
+(bufimg/tensor->image (rgba-array->bufimg (render-fog 640 480) 640 480))
+
+
+;; # Rendering of 3D noise
+
+(defn float-array->texture3d
+  [data size]
+  (let [buffer  (make-float-buffer data)
+        texture (GL11/glGenTextures)]
+    (GL11/glBindTexture GL12/GL_TEXTURE_3D texture)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
+    (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL12/GL_TEXTURE_WRAP_R GL11/GL_REPEAT)
+    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0 GL11/GL_RED GL11/GL_FLOAT buffer)
+    texture))
+
+
+(def noise3d (dfn/- (dfn/* 0.3 (perlin-noise (make-noise-params 32 4 3)))
+                    (dfn/* 0.7 (worley-noise (make-noise-params 32 4 3)))))
+(def noise-3d-norm (dfn/* (/ 1.0 (- (dfn/reduce-max noise3d) (dfn/reduce-min noise3d))) (dfn/- noise3d (dfn/reduce-min noise3d))))
+(def noise-texture (float-array->texture3d (dtype/->float-array noise-3d-norm) 32))
+
+
+(def noise-shader
+"#version 130
+uniform sampler3D noise3d;
+float cloud(vec3 idx)
+{
+  return texture(noise3d, idx).r;
+}")
+
+
+(defn setup-noise-uniforms
+  [program width height]
+  (setup-fog-uniforms program width height)
+  (GL20/glUniform1i (GL20/glGetUniformLocation program "noise3d") 0)
+  (GL13/glActiveTexture GL13/GL_TEXTURE0)
+  (GL11/glBindTexture GL12/GL_TEXTURE_3D noise-texture))
+
+
+(defn render-noise
+  [width height]
+  (let [fragment-sources [ray-box cloud-transfer noise-shader fragment-cloud]
+        program          (make-program-with-shaders [vertex-test] fragment-sources)
+        vao              (setup-quad-vao)
+        texture          (make-texture-2d width height)]
+    (setup-point-attribute program)
+    (framebuffer-render texture width height
+                        (setup-noise-uniforms program width height)
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+    (let [result (read-texture-2d texture width height)]
+      (GL11/glDeleteTextures texture)
+      (teardown-vao vao)
+      (GL20/glDeleteProgram program)
+      result)))
+
+
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480) 640 480))
+
+(GL11/glDeleteTextures noise-texture)
 
 (GLFW/glfwDestroyWindow window)
 
