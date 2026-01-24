@@ -2,6 +2,7 @@
   :clay             {:title  "Volumetric Clouds with Clojure and LWJGL"
                      :external-requirements ["Xorg"]
                      :quarto {:author   [:janwedekind]
+                              :draft    true
                               :description "Procedural generation of volumetric clouds using different types of noise"
                               :image    "clouds.jpg"
                               :type     :post
