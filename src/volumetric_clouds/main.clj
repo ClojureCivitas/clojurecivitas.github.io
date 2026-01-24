@@ -205,7 +205,10 @@
 
 ;; # Perlin noise
 
-(defn random-gradient
+
+(defmulti random-gradient (fn [& args] (count args)))
+
+(defmethod random-gradient 2
   [& args]
   (loop [args args]
         (let [random-vector (apply vec-n (map (fn [_x] (- (rand 2.0) 1.0)) args))
@@ -213,6 +216,14 @@
           (if (and (> vector-length 0.0) (<= vector-length 1.0))
             (div random-vector vector-length)
             (recur args)))))
+
+
+(defmethod random-gradient 3
+  [& _args]
+  (apply vec3
+          (rand-nth [[1  1  0] [-1  1  0] [1 -1  0] [-1 -1  0]
+                     [1  0  1] [-1  0  1] [1  0 -1] [-1  0 -1]
+                     [0  1  1] [ 0 -1  1] [0  1 -1] [ 0 -1 -1]])))
 
 
 (defn roughly-vec
@@ -234,11 +245,12 @@
 
 
 (facts "Random gradients"
-       (with-redefs [rand (constantly 1.5)]
+       (with-redefs [rand (constantly 1.5)
+                     rand-nth (fn [x] (first x))]
          (dtype/shape (random-gradients {:divisions 8 :dimensions 2})) => [8 8]
          ((random-gradients {:divisions 8 :dimensions 2}) 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)
          (dtype/shape (random-gradients {:divisions 8 :dimensions 3})) => [8 8 8]
-         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (roughly-vec (vec3 (sqrt (/ 1 3)) (sqrt (/ 1 3)) (sqrt (/ 1 3))) 1e-6)))
+         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (vec3 1 1 0)))
 
 
 (let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2)) [(* 8 8)])
@@ -487,6 +499,9 @@
   (let [series (take n (iterate #(* % decay) 1.0))
         sum    (apply + series)]
     (mapv #(/ % sum) series)))
+
+
+(octaves 4 0.5)
 
 
 (defn noise-octaves
@@ -810,30 +825,31 @@ void main()
 
 ;; # Shader for light transfer through clouds
 
-(def cloud-mock
+(def fog
   (template/fn [v]
 "#version 130
-float cloud(vec3 idx)
+float fog(vec3 idx)
 {
   return <%= v %>;
 }"))
 
 
 (def cloud-transfer
+  (template/fn [noise]
 "#version 130
-float cloud(vec3 idx);
+float <%= noise %>(vec3 idx);
 vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step)
 {
   vec4 result = vec4(0, 0, 0, 0);
   for (float t = interval.x + 0.5 * step; t < interval.y; t += step) {
-    float density = cloud(origin + direction * t);
+    float density = <%= noise %>(origin + direction * t);
     float transmittance = exp(-density * step);
     vec3 color = vec3(1.0, 1.0, 1.0);
     result.rgb = result.rgb + color * (1.0 - result.a) * (1.0 - transmittance);
     result.a = 1.0 - (1.0 - result.a) * transmittance;
   };
   return result;
-}")
+}"))
 
 
 (def cloud-transfer-probe
@@ -859,7 +875,7 @@ void main()
 
 
 (tabular "Test cloud transfer"
-         (fact (seq (render-pixel [vertex-test] [(cloud-mock ?density) cloud-transfer (cloud-transfer-probe ?a ?b ?step)]))
+         (fact (seq (render-pixel [vertex-test] [(fog ?density) (cloud-transfer "fog") (cloud-transfer-probe ?a ?b ?step)]))
                => (roughly-vector ?result 1e-3))
          ?a ?b ?step ?density ?result
          0  0  1     0.0      [0.0 0.0 0.0 0.0]
@@ -883,28 +899,28 @@ void main()
 {
   vec3 direction = normalize(rotation * vec3(gl_FragCoord.xy - 0.5 * resolution, focal_length));
   vec3 origin = rotation * vec3(0, 0, -distance);
-  vec2 interval = ray_box(vec3(-1, -1, -1), vec3(1, 1, 1), origin, direction);
+  vec2 interval = ray_box(vec3(-0.5, -0.5, -0.5), vec3(0.5, 0.5, 0.5), origin, direction);
   vec4 transfer = cloud_transfer(origin, direction, interval, 0.01);
-  vec3 background = vec3(0.5, 0.5, 1.0);
+  vec3 background = vec3(0.125, 0.125, 0.25);
   fragColor = vec4(background * (1.0 - transfer.a) + transfer.rgb, 1.0);
 }")
 
 
 (defn setup-fog-uniforms
   [program width height]
-  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 30.0)) (rotation-matrix-3d-x (to-radians -25.0)))
-        focal-length (/ (* 0.5 width) (tan (to-radians 30.0)))]
+  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 30.0)) (rotation-matrix-3d-x (to-radians -20.0)))
+        focal-length (/ (* 0.5 width) (tan (to-radians 25.0)))]
     (GL20/glUseProgram program)
     (GL20/glUniform2f (GL20/glGetUniformLocation program "resolution") width height)
     (GL20/glUniformMatrix3fv (GL20/glGetUniformLocation program "rotation") true
                              (make-float-buffer (mat->float-array rotation)))
     (GL20/glUniform1f (GL20/glGetUniformLocation program "focal_length") focal-length)
-    (GL20/glUniform1f (GL20/glGetUniformLocation program "distance") 4.0)))
+    (GL20/glUniform1f (GL20/glGetUniformLocation program "distance") 2.5)))
 
 
 (defn render-fog
   [width height]
-  (let [fragment-sources [ray-box cloud-transfer (cloud-mock 0.5) fragment-cloud]
+  (let [fragment-sources [ray-box (cloud-transfer "fog") (fog 1.0) fragment-cloud]
         program          (make-program-with-shaders [vertex-test] fragment-sources)
         vao              (setup-quad-vao)
         texture          (make-texture-2d width height)]
@@ -951,7 +967,7 @@ void main()
 (def noise-shader
 "#version 130
 uniform sampler3D noise3d;
-float cloud(vec3 idx)
+float noise(vec3 idx)
 {
   return texture(noise3d, idx).r;
 }")
@@ -966,8 +982,8 @@ float cloud(vec3 idx)
 
 
 (defn render-noise
-  [width height]
-  (let [fragment-sources [ray-box cloud-transfer noise-shader fragment-cloud]
+  [width height & cloud-shaders]
+  (let [fragment-sources (concat cloud-shaders [ray-box fragment-cloud])
         program          (make-program-with-shaders [vertex-test] fragment-sources)
         vao              (setup-quad-vao)
         texture          (make-texture-2d width height)]
@@ -982,7 +998,64 @@ float cloud(vec3 idx)
       result)))
 
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480) 640 480))
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (cloud-transfer "noise") noise-shader) 640 480))
+
+
+;; # Remap and clamp 3D noise
+
+(def remap-clamp
+"#version 130
+float remap_clamp(float value, float low1, float high1, float low2, float high2)
+{
+  float t = (value - low1) / (high1 - low1);
+  return clamp(low2 + t * (high2 - low2), low2, high2);
+}")
+
+
+(def remap-probe
+  (template/fn [value low1 high1 low2 high2]
+"#version 130
+out vec4 fragColor;
+float remap_clamp(float value, float low1, float high1, float low2, float high2);
+void main()
+{
+  fragColor = vec4(remap_clamp(<%= value %>, <%= low1 %>, <%= high1 %>, <%= low2 %>, <%= high2 %>));
+}"))
+
+
+(tabular "Remap and clamp input parameter values"
+       (fact (first (render-pixel [vertex-test] [remap-clamp (remap-probe ?value ?low1 ?high1 ?low2 ?high2)]))
+             => ?expected)
+       ?value ?low1 ?high1 ?low2 ?high2 ?expected
+       0      0     1      0     1      0.0
+       1      0     1      0     1      1.0
+       0      0     1      2     3      2.0
+       1      0     1      2     3      3.0
+       2      2     3      0     1      0.0
+       3      2     3      0     1      1.0
+       1      0     2      0     4      2.0
+       0      1     2      1     2      1.0
+       3      1     2      1     2      2.0)
+
+
+(def remap-noise
+  (template/fn [base low1 high1 high2]
+"#version 130
+float <%= base %>(vec3 idx);
+float remap_clamp(float value, float low1, float high1, float low2, float high2);
+float remap_noise(vec3 idx)
+{
+  return remap_clamp(<%= base %>(idx), <%= low1 %>, <%= high1 %>, 0.0, <%= high2 %>);
+}"))
+
+
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (cloud-transfer "remap_noise") remap-clamp (remap-noise "noise" 0.45 0.9 1.5) noise-shader) 640 480))
+
+
+;; # Octaves of 3D noise
+
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (cloud-transfer "remap_noise") remap-clamp (remap-noise "octaves" 0.45 0.9 1.5) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+
 
 (GL11/glDeleteTextures noise-texture)
 
