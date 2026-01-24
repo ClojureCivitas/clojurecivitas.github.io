@@ -185,7 +185,7 @@ true
 
 
 ```{=html}
-<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[3.7661398934785026,31.801262626925368,31.881603798093415,0.26016500690491995,15.24811610621284,31.418634983311776,15.540941627667713,14.72738691947108,48.078338394958024,40.460298156109616,63.23348802948536,56.537247984415146,58.42628369004321,63.509324750848435,32.055339977760426,32.58240830762041,90.01181809632884,79.33632893710369,79.69791920227543,70.57809549971996,71.75415203396284,87.54891275839606,91.98071852001526,87.48596360175904,125.21962605331231,121.3211876126154,97.24537550032241,122.08052832597764,113.99332317595982,112.32837572535769,115.73607485869478,105.78318420896176,151.09950802439732,142.01148845154066,140.0912768020221,153.88879651901826,140.59589836746878,149.29708455875667,151.07177581982376,131.30987184609162,181.4667586153581,188.89710318196126,176.6500859521911,166.963309037565,181.9398278053127,166.31377960974586,186.58615679057854,182.92472367942815,208.35207185031751,223.67463549235174,198.6144121890308,192.47535708447853,220.68926424725979,206.52254948590655,212.3671233329661,217.16655845708564,254.92439574563514,233.68590206880765,235.15910790468462,249.02684523572066,232.27991264338263,240.35380412101222,255.75875387969995,244.0365443494767],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[9.520983905566844,59.36896773644321,82.73646103008878,101.7697283795576,134.6577817994215,180.9663446316223,201.5514548493132,244.45175449093372,25.572716097269076,61.98592529239696,93.30339329210173,126.3819061885238,130.59693068806942,181.63077282560718,216.17686326589978,233.7023870576877,16.466278126007495,63.8901348537771,89.15705134091976,118.09904856376143,137.05890119748304,164.00798544263654,212.79954718595414,227.5677770148606,2.9785111636041783,32.828507332503165,89.40835380223771,122.62033770131575,151.10837806549657,176.1435414539397,193.74710069036988,243.0546662968788,25.261017127696224,58.166978852061,73.40845906554077,126.41461823004809,143.04857973279923,162.26110984055794,221.9667578786768,227.2641668259073,4.098951837704057,62.03992720590283,80.03880858023675,126.4010587810581,130.74254756220319,175.9743804014107,207.3779271322752,231.1349208714838,0.29481393328203254,38.62458351208545,69.12616287443397,123.7548181112733,148.05943284695138,169.62397845987778,199.34973061729184,227.3112679908784,24.17723027050703,37.540446931959806,72.98264245571183,121.83770695971872,155.445786614856,175.7393808462935,209.30354640445145,228.13640782134212],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random points"}, {});</script></div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[17.888350937655158,1.6708197450519293,10.275679361189276,19.923353852845384,5.046912456661946,15.454493995872532,15.251079908413114,5.443515518328123,34.10494638936682,50.38218042072107,32.27317965559706,44.26311863614815,55.36754240570593,63.17132339981927,57.853584736390005,55.23285177642265,67.33456638228226,73.15608465192808,71.96358165709668,93.88215058071152,79.5161180024531,90.1423571896289,77.43651553773499,80.00174529321728,104.9530715009261,126.74910197572767,123.13774125770999,124.77504216618473,108.56769114302095,127.36101547083261,113.02715274572569,109.5833252930651,133.46932554572933,133.81752684462228,139.2392933885786,152.60979462928518,131.340182205892,151.96311992783293,133.30604254645533,151.36742842311628,183.02617418327802,183.18398463794648,165.64687852677372,181.2756703192759,171.45785389374404,189.05599748556105,171.45172468670023,178.4109529611962,217.0264176156084,213.22902898028627,193.0813687643843,222.55604095003588,217.53978922711642,220.67258016575025,221.11046091694925,216.67320903948558,234.883788951059,246.4077458641412,228.13809415513953,230.92624295439626,246.51336677577362,237.85050805196403,229.4909576322936,227.3762717981416],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[31.721131022929942,51.438908448049915,66.98789462069877,108.97114520225645,129.97262990708663,164.0705448823744,206.38317950235552,232.28333167821626,3.466216889570415,62.856716103311726,69.9259220715069,120.38549154620395,157.9725790432141,178.15935204725642,193.6504907217103,237.50095640278528,12.125893093307415,46.41603823169634,78.14677144431096,114.90809714702985,156.41774873538594,173.34145844584674,194.16445126241942,254.2677458447969,8.693031242822371,53.16204704261405,88.28174403162869,99.54632345881649,147.2727537473833,171.00884088722702,209.76358028307328,228.6596685662977,18.82884495391311,47.593534488522806,79.73424237248199,123.96256993440066,158.1358852949124,169.29274100440963,215.78945588199036,232.7090011747458,16.824804200310943,38.76545287233225,65.17293498924717,108.60806153938975,138.263521236204,173.2287064251919,207.64237868388403,241.60061464213996,15.689549748316804,45.51645354187124,73.14992198318467,118.98163751228745,130.71954361819803,163.04662776509733,219.46203878860405,236.9932648504909,5.360806483163511,39.82142534034887,78.84389838920671,110.01354256282205,140.64974998845517,176.5857774028681,202.93317678362783,236.46588092633246],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random points"}, {});</script></div>
 ```
 
 
@@ -418,7 +418,24 @@ true
 
 ::: {.sourceClojure}
 ```clojure
-(defn random-gradient
+(defmulti random-gradient (fn [& args] (count args)))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+#'volumetric-clouds.main/random-gradient
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defmethod random-gradient 2
   [& args]
   (loop [args args]
         (let [random-vector (apply vec-n (map (fn [_x] (- (rand 2.0) 1.0)) args))
@@ -426,6 +443,37 @@ true
           (if (and (> vector-length 0.0) (<= vector-length 1.0))
             (div random-vector vector-length)
             (recur args)))))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+#object[clojure.lang.MultiFn 0x50404204 "clojure.lang.MultiFn@50404204"]
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(defmethod random-gradient 3
+  [& _args]
+  (apply vec3
+          (rand-nth [[1  1  0] [-1  1  0] [1 -1  0] [-1 -1  0]
+                     [1  0  1] [-1  0  1] [1  0 -1] [-1  0 -1]
+                     [0  1  1] [ 0 -1  1] [0  1 -1] [ 0 -1 -1]])))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+#object[clojure.lang.MultiFn 0x50404204 "clojure.lang.MultiFn@50404204"]
+
 ```
 :::
 
@@ -476,11 +524,12 @@ true
 ::: {.sourceClojure}
 ```clojure
 (facts "Random gradients"
-       (with-redefs [rand (constantly 1.5)]
+       (with-redefs [rand (constantly 1.5)
+                     rand-nth (fn [x] (first x))]
          (dtype/shape (random-gradients {:divisions 8 :dimensions 2})) => [8 8]
          ((random-gradients {:divisions 8 :dimensions 2}) 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)
          (dtype/shape (random-gradients {:divisions 8 :dimensions 3})) => [8 8 8]
-         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (roughly-vec (vec3 (sqrt (/ 1 3)) (sqrt (/ 1 3)) (sqrt (/ 1 3))) 1e-6)))
+         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (vec3 1 1 0)))
 ```
 :::
 
@@ -510,7 +559,7 @@ true
 
 
 ```{=html}
-<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,-0.14261344897307857,null,0.0,0.4411277085783895,null,0.0,0.3496303887923073,null,0.0,-0.09356450852886868,null,0.0,0.49922812358170254,null,0.0,-0.4939154406870672,null,0.0,0.06572037964375217,null,0.0,0.3450558963335038,null,1.0,0.8882871092663094,null,1.0,0.5789935910379171,null,1.0,0.6873053371012858,null,1.0,0.6854508120297447,null,1.0,0.6420621076993918,null,1.0,1.3971264185656374,null,1.0,1.0708673399436732,null,1.0,0.6907198269907631,null,2.0,2.4925459296466204,null,2.0,2.39008016848053,null,2.0,2.286407499257011,null,2.0,1.9655723128481026,null,2.0,2.458887352864259,null,2.0,1.5200063356095177,null,2.0,1.5264522559104827,null,2.0,1.5088697455969529,null,3.0,2.7844734242327536,null,3.0,3.177221450221792,null,3.0,2.551999515565083,null,3.0,3.488296560336013,null,3.0,2.5403687807773156,null,3.0,2.982079641048936,null,3.0,3.479955912937677,null,3.0,2.9954095595115358,null,4.0,3.7030148856997713,null,4.0,3.931610358844423,null,4.0,3.5000526259371076,null,4.0,4.077998044534151,null,4.0,3.530369652582568,null,4.0,4.447997179263721,null,4.0,3.722270208545016,null,4.0,3.5775432280479658,null,5.0,4.525619513464309,null,5.0,5.449972704111365,null,5.0,4.845658885578765,null,5.0,5.46622774581814,null,5.0,4.608402534395179,null,5.0,5.385606302358508,null,5.0,5.040291915829874,null,5.0,4.537745294148706,null,6.0,6.141035350241951,null,6.0,6.167195569306911,null,6.0,6.315449185285346,null,6.0,6.264180769256742,null,6.0,6.421732281217078,null,6.0,5.745623151681711,null,6.0,5.504218153560312,null,6.0,6.135825317794011,null,7.0,7.4999925188033325,null,7.0,6.521781875887142,null,7.0,6.5537567734144275,null,7.0,6.693021989484329,null,7.0,7.175643136109121,null,7.0,6.70887805975553,null,7.0,7.354457224758357,null,7.0,7.141608423530769,null],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,-0.47923001176053565,null,1.0,0.7646144763916451,null,2.0,2.3574333381666293,null,3.0,2.508832327261096,null,4.0,3.972228060472982,null,5.0,5.077765914454215,null,6.0,5.504337986426758,null,7.0,7.361851389945489,null,0.0,0.4873604723856075,null,1.0,0.7302712406641603,null,2.0,2.3901564401553044,null,3.0,2.611337153374222,null,4.0,3.6508861714921648,null,5.0,5.303793692622526,null,6.0,5.50504765872934,null,7.0,6.607131351997419,null,0.0,-0.08601457544246008,null,1.0,0.6872101949260474,null,2.0,1.5901576591305564,null,3.0,2.5011866738374255,null,4.0,4.198550742585448,null,5.0,4.859978279738474,null,6.0,5.839524038972408,null,7.0,6.9062392768266045,null,0.0,0.4511632688263146,null,1.0,0.5324611699748513,null,2.0,1.77797395210003,null,3.0,2.89245247950781,null,4.0,3.8031773836271126,null,5.0,4.500321242461654,null,6.0,6.140151067195941,null,7.0,6.500021072587932,null,0.0,-0.4022435106798866,null,1.0,1.4953007742600566,null,2.0,2.0072541827670807,null,3.0,3.4938788364050932,null,4.0,4.171602263343412,null,5.0,4.777967283105059,null,6.0,6.415771767846701,null,7.0,6.732548554253548,null,0.0,0.1579973227436506,null,1.0,1.2180012971399625,null,2.0,2.475582611540005,null,3.0,3.1806424341879187,null,4.0,3.6891118771456832,null,5.0,4.6817111695623,null,6.0,6.498373917374052,null,7.0,7.190579607823958,null,0.0,-0.47969681047733703,null,1.0,0.5287828084586282,null,2.0,2.3879327409523605,null,3.0,3.4245097421201494,null,4.0,4.268592410502307,null,5.0,5.4304560593599005,null,6.0,6.064810190100427,null,7.0,6.518802033414359,null,0.0,-0.0027351673987032763,null,1.0,1.1459706332451123,null,2.0,2.225537098337497,null,3.0,2.6053298832444485,null,4.0,3.5318659500338043,null,5.0,5.406507092076257,null,6.0,6.352647239910656,null,7.0,7.479527949534884,null],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random gradients"}, {});</script></div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,-0.4996444077497972,null,0.0,-0.25134720905599756,null,0.0,-0.49006576145337827,null,0.0,-0.40332339071498785,null,0.0,-0.018260924930915537,null,0.0,-0.20416750780788992,null,0.0,0.4731011135714833,null,0.0,-0.4441226584305075,null,1.0,1.2374395364860624,null,1.0,1.2748893178481069,null,1.0,1.2298398293430142,null,1.0,0.6727964696492921,null,1.0,0.8687605261094852,null,1.0,0.5474369059808706,null,1.0,0.7700153364974228,null,1.0,0.9737372123223091,null,2.0,2.4327942588817364,null,2.0,2.4580588141834108,null,2.0,1.9147140401766438,null,2.0,2.4989834003055913,null,2.0,2.4694831903726877,null,2.0,2.4157137566201463,null,2.0,2.3508653111480635,null,2.0,1.514315645760009,null,3.0,2.623508938883648,null,3.0,3.494410605294328,null,3.0,2.5145149421433066,null,3.0,2.598119965620603,null,3.0,2.989219850527056,null,3.0,3.29570585645775,null,3.0,2.6209199025415018,null,3.0,2.684494377560891,null,4.0,4.49531934706067,null,4.0,3.582987338402254,null,4.0,3.7903766751263275,null,4.0,3.6696417910201466,null,4.0,4.2448943801230925,null,4.0,3.688664311441035,null,4.0,4.497761985844884,null,4.0,4.383434682579847,null,5.0,5.013105865531607,null,5.0,4.79117841214687,null,5.0,5.497532139080703,null,5.0,5.122579423513565,null,5.0,4.744772843337293,null,5.0,4.748476187859123,null,5.0,4.500592047470685,null,5.0,4.639613076061148,null,6.0,6.1520056183419864,null,6.0,5.50017290456935,null,6.0,5.500345022548548,null,6.0,6.436561948639803,null,6.0,6.447546137376384,null,6.0,6.192072362847898,null,6.0,6.243329678142006,null,6.0,6.273993354283344,null,7.0,7.440268745634359,null,7.0,6.5514167360292905,null,7.0,7.14346105418004,null,7.0,6.808793289118144,null,7.0,6.8904802270111025,null,7.0,7.499122941752274,null,7.0,6.842022635865806,null,7.0,7.467051981165919,null],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,0.018853800793326835,null,1.0,0.5677679089889776,null,2.0,1.900825661327536,null,3.0,3.2955169073033983,null,4.0,4.499666427349955,null,5.0,4.543583930217707,null,6.0,5.8382120636839,null,7.0,7.229684706214016,null,0.0,0.4400255293881071,null,1.0,1.417655196224113,null,2.0,1.555957600169112,null,3.0,3.3780712230863825,null,4.0,4.482468859609551,null,5.0,4.787428492191845,null,6.0,5.556032597420028,null,7.0,7.49930978959299,null,0.0,0.25037797323049116,null,1.0,0.7995452102121585,null,2.0,1.507327385521573,null,3.0,2.968132050278215,null,4.0,4.172004459120927,null,5.0,4.722183383224174,null,6.0,6.356221186109098,null,7.0,7.1187885013226575,null,0.0,0.329020487051313,null,1.0,1.074553023899077,null,2.0,2.119600412197798,null,3.0,2.7025232144062086,null,4.0,3.50011622513094,null,5.0,5.403184878754882,null,6.0,6.326034169544935,null,7.0,7.387886842016212,null,0.0,-0.06825499562223415,null,1.0,1.2758630821026327,null,2.0,1.5460638132194053,null,3.0,2.624682196319408,null,4.0,4.4359205691225485,null,5.0,4.608758272893196,null,6.0,6.0472546870453945,null,7.0,7.320901611393418,null,0.0,-0.4998282067757555,null,1.0,1.4543055628610524,null,2.0,1.9503837669529458,null,3.0,2.515258538052415,null,4.0,3.570047562512003,null,5.0,4.567870653708729,null,6.0,6.024324821694668,null,7.0,6.6534148516541824,null,0.0,0.47633422299103206,null,1.0,0.986851818629168,null,2.0,2.0185715779617537,null,3.0,3.2437491846136464,null,4.0,4.222940473937503,null,5.0,5.461636445084252,null,6.0,6.43679591085003,null,7.0,6.581756480255148,null,0.0,-0.2369882520665281,null,1.0,1.220846225427072,null,2.0,1.5210230423772437,null,3.0,2.5380043358279836,null,4.0,3.5121420090595414,null,5.0,5.029602179253496,null,6.0,6.474387133490373,null,7.0,6.821499448491076,null],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random gradients"}, {});</script></div>
 ```
 
 
@@ -1038,6 +1087,26 @@ true
 
 ::: {.sourceClojure}
 ```clojure
+(octaves 4 0.5)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+[0.5333333333333333
+ 0.26666666666666666
+ 0.13333333333333333
+ 0.06666666666666667]
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
 (defn noise-octaves
   [tensor octaves low high]
   (tensor/clone
@@ -1201,7 +1270,7 @@ nil
 
 ::: {.printedClojure}
 ```clojure
-#object[org.lwjgl.opengl.GLCapabilities 0x31de1963 "org.lwjgl.opengl.GLCapabilities@31de1963"]
+#object[org.lwjgl.opengl.GLCapabilities 0x6aa8f2e2 "org.lwjgl.opengl.GLCapabilities@6aa8f2e2"]
 
 ```
 :::
@@ -1465,17 +1534,29 @@ void main()
 
 ::: {.sourceClojure}
 ```clojure
+(defmacro render-array
+  [width height & body]
+  `(let [texture# (volumetric-clouds.main/make-texture-2d ~width ~height)]
+     (volumetric-clouds.main/framebuffer-render texture# ~width ~height ~@body)
+     (let [result# (volumetric-clouds.main/read-texture-2d texture# ~width ~height)]
+       (GL11/glDeleteTextures texture#)
+       result#)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
 (defn render-pixel
   [vertex-sources fragment-sources]
-  (let [program          (make-program-with-shaders vertex-sources fragment-sources)
-        vao              (setup-quad-vao)
-        texture          (make-texture-2d 1 1)]
+  (let [program (make-program-with-shaders vertex-sources fragment-sources)
+        vao     (setup-quad-vao)]
     (setup-point-attribute program)
-    (framebuffer-render texture 1 1
+    (let [result
+          (render-array 1 1
                         (GL20/glUseProgram program)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
-    (let [result (read-texture-2d texture 1 1)]
-      (GL11/glDeleteTextures texture)
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
       (teardown-vao vao)
       (GL20/glDeleteProgram program)
       result)))
@@ -1706,10 +1787,10 @@ true
 
 ::: {.sourceClojure}
 ```clojure
-(def cloud-mock
+(def fog
   (template/fn [v]
 "#version 130
-float cloud(vec3 idx)
+float fog(vec3 idx)
 {
   return <%= v %>;
 }"))
@@ -1721,19 +1802,50 @@ float cloud(vec3 idx)
 ::: {.sourceClojure}
 ```clojure
 (def cloud-transfer
+  (template/fn [noise step]
 "#version 130
-float cloud(vec3 idx);
-vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step)
+#define STEP <%= step %>
+float <%= noise %>(vec3 idx);
+float in_scatter(vec3 point, vec3 direction);
+float shadow(vec3 point);
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval)
 {
   vec4 result = vec4(0, 0, 0, 0);
-  for (float t = interval.x + 0.5 * step; t < interval.y; t += step) {
-    float density = cloud(origin + direction * t);
-    float transmittance = exp(-density * step);
-    vec3 color = vec3(1.0, 1.0, 1.0);
-    result.rgb = result.rgb + color * (1.0 - result.a) * (1.0 - transmittance);
+  for (float t = interval.x + 0.5 * STEP; t < interval.y; t += STEP) {
+    vec3 point = origin + direction * t;
+    float density = <%= noise %>(point);
+    float transmittance = exp(-density * STEP);
+    vec3 color = vec3(in_scatter(point, direction) * shadow(point));
+    result.rgb += color * (1.0 - result.a) * (1.0 - transmittance);
     result.a = 1.0 - (1.0 - result.a) * transmittance;
   };
   return result;
+}"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def constant-scatter
+"#version 130
+float in_scatter(vec3 point, vec3 direction)
+{
+  return 1.0;
+}")
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def no-shadow
+"#version 130
+float shadow(vec3 point)
+{
+  return 1.0;
 }")
 ```
 :::
@@ -1743,17 +1855,16 @@ vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step)
 ::: {.sourceClojure}
 ```clojure
 (def cloud-transfer-probe
-  (template/fn [a b step]
+  (template/fn [a b]
 "#version 130
 out vec4 fragColor;
-vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step);
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval);
 void main()
 {
   vec3 origin = vec3(0, 0, 0);
   vec3 direction = vec3(1, 0, 0);
   vec2 interval = vec2(<%= a %>, <%= b %>);
-  float step = <%= step %>;
-  fragColor = cloud_transfer(origin, direction, interval, step);
+  fragColor = cloud_transfer(origin, direction, interval);
 }"))
 ```
 :::
@@ -1775,7 +1886,7 @@ void main()
 ::: {.sourceClojure}
 ```clojure
 (tabular "Test cloud transfer"
-         (fact (seq (render-pixel [vertex-test] [(cloud-mock ?density) cloud-transfer (cloud-transfer-probe ?a ?b ?step)]))
+         (fact (seq (render-pixel [vertex-test] [(fog ?density) constant-scatter no-shadow (cloud-transfer "fog" ?step) (cloud-transfer-probe ?a ?b)]))
                => (roughly-vector ?result 1e-3))
          ?a ?b ?step ?density ?result
          0  0  1     0.0      [0.0 0.0 0.0 0.0]
@@ -1804,19 +1915,20 @@ true
 (def fragment-cloud
 "#version 130
 uniform vec2 resolution;
+uniform vec3 light;
 uniform mat3 rotation;
 uniform float focal_length;
 uniform float distance;
 out vec4 fragColor;
 vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction);
-vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step);
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval);
 void main()
 {
   vec3 direction = normalize(rotation * vec3(gl_FragCoord.xy - 0.5 * resolution, focal_length));
   vec3 origin = rotation * vec3(0, 0, -distance);
-  vec2 interval = ray_box(vec3(-1, -1, -1), vec3(1, 1, 1), origin, direction);
-  vec4 transfer = cloud_transfer(origin, direction, interval, 0.01);
-  vec3 background = vec3(0.5, 0.5, 1.0);
+  vec2 interval = ray_box(vec3(-0.5, -0.5, -0.5), vec3(0.5, 0.5, 0.5), origin, direction);
+  vec4 transfer = cloud_transfer(origin, direction, interval);
+  vec3 background = mix(vec3(0.125, 0.125, 0.25), vec3(1, 1, 1), pow(dot(direction, light), 1000.0));
   fragColor = vec4(background * (1.0 - transfer.a) + transfer.rgb, 1.0);
 }")
 ```
@@ -1828,14 +1940,16 @@ void main()
 ```clojure
 (defn setup-fog-uniforms
   [program width height]
-  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 30.0)) (rotation-matrix-3d-x (to-radians -25.0)))
-        focal-length (/ (* 0.5 width) (tan (to-radians 30.0)))]
+  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 30.0)) (rotation-matrix-3d-x (to-radians -20.0)))
+        focal-length (/ (* 0.5 width) (tan (to-radians 30.0)))
+        light        (normalize (vec3 4 1 10))]
     (GL20/glUseProgram program)
     (GL20/glUniform2f (GL20/glGetUniformLocation program "resolution") width height)
+    (GL20/glUniform3f (GL20/glGetUniformLocation program "light") (light 0) (light 1) (light 2))
     (GL20/glUniformMatrix3fv (GL20/glGetUniformLocation program "rotation") true
                              (make-float-buffer (mat->float-array rotation)))
     (GL20/glUniform1f (GL20/glGetUniformLocation program "focal_length") focal-length)
-    (GL20/glUniform1f (GL20/glGetUniformLocation program "distance") 4.0)))
+    (GL20/glUniform1f (GL20/glGetUniformLocation program "distance") 2.0)))
 ```
 :::
 
@@ -1845,16 +1959,14 @@ void main()
 ```clojure
 (defn render-fog
   [width height]
-  (let [fragment-sources [ray-box cloud-transfer (cloud-mock 0.5) fragment-cloud]
+  (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01) (fog 1.0) fragment-cloud]
         program          (make-program-with-shaders [vertex-test] fragment-sources)
-        vao              (setup-quad-vao)
-        texture          (make-texture-2d width height)]
+        vao              (setup-quad-vao)]
     (setup-point-attribute program)
-    (framebuffer-render texture width height
+    (let [result
+          (render-array width height
                         (setup-fog-uniforms program width height)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
-    (let [result (read-texture-2d texture width height)]
-      (GL11/glDeleteTextures texture)
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
       (teardown-vao vao)
       (GL20/glDeleteProgram program)
       result)))
@@ -1866,7 +1978,7 @@ void main()
 ::: {.sourceClojure}
 ```clojure
 (defn rgba-array->bufimg [data width height]
-  (-> data tensor/->tensor (tensor/reshape [height width 4]) (tensor/select :all :all [2 1 0]) (dfn/* 255)))
+  (-> data tensor/->tensor (tensor/reshape [height width 4]) (tensor/select :all :all [2 1 0]) (dfn/* 255) (clamp 0 255)))
 ```
 :::
 
@@ -1937,7 +2049,7 @@ void main()
 (def noise-shader
 "#version 130
 uniform sampler3D noise3d;
-float cloud(vec3 idx)
+float noise(vec3 idx)
 {
   return texture(noise3d, idx).r;
 }")
@@ -1962,17 +2074,15 @@ float cloud(vec3 idx)
 ::: {.sourceClojure}
 ```clojure
 (defn render-noise
-  [width height]
-  (let [fragment-sources [ray-box cloud-transfer noise-shader fragment-cloud]
+  [width height & cloud-shaders]
+  (let [fragment-sources (concat cloud-shaders [ray-box fragment-cloud])
         program          (make-program-with-shaders [vertex-test] fragment-sources)
-        vao              (setup-quad-vao)
-        texture          (make-texture-2d width height)]
+        vao              (setup-quad-vao)]
     (setup-point-attribute program)
-    (framebuffer-render texture width height
+    (let [result
+          (render-array width height
                         (setup-noise-uniforms program width height)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
-    (let [result (read-texture-2d texture width height)]
-      (GL11/glDeleteTextures texture)
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
       (teardown-vao vao)
       (GL20/glDeleteProgram program)
       result)))
@@ -1983,13 +2093,248 @@ float cloud(vec3 idx)
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480) 640 480))
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader) 640 480))
 ```
 :::
 
 
 ::: {.clay-image}
 ![](main_files/image7.png)
+:::
+
+
+
+# Remap and clamp 3D noise
+
+
+::: {.sourceClojure}
+```clojure
+(def remap-clamp
+"#version 130
+float remap_clamp(float value, float low1, float high1, float low2, float high2)
+{
+  float t = (value - low1) / (high1 - low1);
+  return clamp(low2 + t * (high2 - low2), low2, high2);
+}")
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def remap-probe
+  (template/fn [value low1 high1 low2 high2]
+"#version 130
+out vec4 fragColor;
+float remap_clamp(float value, float low1, float high1, float low2, float high2);
+void main()
+{
+  fragColor = vec4(remap_clamp(<%= value %>, <%= low1 %>, <%= high1 %>, <%= low2 %>, <%= high2 %>));
+}"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(tabular "Remap and clamp input parameter values"
+       (fact (first (render-pixel [vertex-test] [remap-clamp (remap-probe ?value ?low1 ?high1 ?low2 ?high2)]))
+             => ?expected)
+       ?value ?low1 ?high1 ?low2 ?high2 ?expected
+       0      0     1      0     1      0.0
+       1      0     1      0     1      1.0
+       0      0     1      2     3      2.0
+       1      0     1      2     3      3.0
+       2      2     3      0     1      0.0
+       3      2     3      0     1      1.0
+       1      0     2      0     4      2.0
+       0      1     2      1     2      1.0
+       3      1     2      1     2      2.0)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def remap-noise
+  (template/fn [base low1 high1 high2]
+"#version 130
+float <%= base %>(vec3 idx);
+float remap_clamp(float value, float low1, float high1, float low2, float high2);
+float remap_noise(vec3 idx)
+{
+  return remap_clamp(<%= base %>(idx), <%= low1 %>, <%= high1 %>, 0.0, <%= high2 %>);
+}"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def cloud-strength 5.0)
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader) 640 480))
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image8.png)
+:::
+
+
+
+# Octaves of 3D noise
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image9.png)
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(def mie-scatter
+  (template/fn [g]
+"#version 450 core
+#define M_PI 3.1415926535897932384626433832795
+#define ANISOTROPIC 0.25
+#define G <%= g %>
+uniform vec3 light;
+float mie(float mu)
+{
+  return 3 * (1 - G * G) * (1 + mu * mu) / (8 * M_PI * (2 + G * G) * pow(1 + G * G - 2 * G * mu, 1.5));
+}
+float in_scatter(vec3 point, vec3 direction)
+{
+  return mix(1.0, mie(dot(light, direction)), ANISOTROPIC);
+}"))
+```
+:::
+
+
+
+# Mie scattering
+
+
+::: {.sourceClojure}
+```clojure
+(def mie-probe
+  (template/fn [mu]
+"#version 450 core
+out vec4 fragColor;
+float mie(float mu);
+void main()
+{
+  float result = mie(<%= mu %>);
+  fragColor = vec4(result, 0, 0, 1);
+}"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(tabular "Shader function for scattering phase function"
+         (fact (first (render-pixel [vertex-test] [(mie-scatter ?g) (mie-probe ?mu)])) => (roughly ?result 1e-6))
+         ?g  ?mu ?result
+         0   0   (/ 3 (* 16 PI))
+         0   1   (/ 6 (* 16 PI))
+         0  -1   (/ 6 (* 16 PI))
+         0.5 0   (/ (* 3 0.75) (* 8 PI 2.25 (pow 1.25 1.5)))
+         0.5 1   (/ (* 6 0.75) (* 8 PI 2.25 (pow 0.25 1.5))))
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+true
+
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image10.png)
+:::
+
+
+
+# Self-shading of clouds
+
+
+::: {.sourceClojure}
+```clojure
+(def shadow
+  (template/fn [noise step]
+"#version 130
+#define STEP <%= step %>
+uniform vec3 light;
+float <%= noise %>(vec3 idx);
+vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction);
+float shadow(vec3 point)
+{
+  vec2 interval = ray_box(vec3(-0.5, -0.5, -0.5), vec3(0.5, 0.5, 0.5), point, light);
+  float result = 1.0;
+  for (float t = interval.x + 0.5 * STEP; t < interval.y; t += STEP) {
+    float density = <%= noise %>(point + t * light);
+    float transmittance = exp(-density * STEP);
+    result *= transmittance;
+  };
+  return result;
+}"))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) (shadow "remap_noise" 0.01) (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+```
+:::
+
+
+::: {.clay-image}
+![](main_files/image11.png)
 :::
 
 

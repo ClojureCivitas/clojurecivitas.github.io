@@ -11,10 +11,10 @@
                               :tags     [:visualization]}}}
 
 (ns volumetric-clouds.main
-    (:require [clojure.math :refer (sqrt tan to-radians)]
+    (:require [clojure.math :refer (PI sqrt tan to-radians pow)]
               [midje.sweet :refer (fact facts tabular => roughly)]
-              [fastmath.vector :refer (vec2 vec3 add mult sub div mag dot)]
-              [fastmath.matrix :refer (mat->float-array mulm rotation-matrix-3d-x rotation-matrix-3d-y)]
+              [fastmath.vector :refer (vec2 vec3 add mult sub div mag dot normalize)]
+              [fastmath.matrix :refer (mat->float-array mulm mulv inverse rotation-matrix-3d-x rotation-matrix-3d-y)]
               [tech.v3.datatype :as dtype]
               [tech.v3.tensor :as tensor]
               [tech.v3.datatype.functional :as dfn]
@@ -678,17 +678,24 @@ void main()
     (setup-vao vertices indices)))
 
 
+(defmacro render-array
+  [width height & body]
+  `(let [texture# (volumetric-clouds.main/make-texture-2d ~width ~height)]
+     (volumetric-clouds.main/framebuffer-render texture# ~width ~height ~@body)
+     (let [result# (volumetric-clouds.main/read-texture-2d texture# ~width ~height)]
+       (GL11/glDeleteTextures texture#)
+       result#)))
+
+
 (defn render-pixel
   [vertex-sources fragment-sources]
-  (let [program          (make-program-with-shaders vertex-sources fragment-sources)
-        vao              (setup-quad-vao)
-        texture          (make-texture-2d 1 1)]
+  (let [program (make-program-with-shaders vertex-sources fragment-sources)
+        vao     (setup-quad-vao)]
     (setup-point-attribute program)
-    (framebuffer-render texture 1 1
+    (let [result
+          (render-array 1 1
                         (GL20/glUseProgram program)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
-    (let [result (read-texture-2d texture 1 1)]
-      (GL11/glDeleteTextures texture)
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
       (teardown-vao vao)
       (GL20/glDeleteProgram program)
       result)))
@@ -835,35 +842,54 @@ float fog(vec3 idx)
 
 
 (def cloud-transfer
-  (template/fn [noise]
+  (template/fn [noise step]
 "#version 130
+#define STEP <%= step %>
 float <%= noise %>(vec3 idx);
-vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step)
+float in_scatter(vec3 point, vec3 direction);
+float shadow(vec3 point);
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval)
 {
   vec4 result = vec4(0, 0, 0, 0);
-  for (float t = interval.x + 0.5 * step; t < interval.y; t += step) {
-    float density = <%= noise %>(origin + direction * t);
-    float transmittance = exp(-density * step);
-    vec3 color = vec3(1.0, 1.0, 1.0);
-    result.rgb = result.rgb + color * (1.0 - result.a) * (1.0 - transmittance);
+  for (float t = interval.x + 0.5 * STEP; t < interval.y; t += STEP) {
+    vec3 point = origin + direction * t;
+    float density = <%= noise %>(point);
+    float transmittance = exp(-density * STEP);
+    vec3 color = vec3(in_scatter(point, direction) * shadow(point));
+    result.rgb += color * (1.0 - result.a) * (1.0 - transmittance);
     result.a = 1.0 - (1.0 - result.a) * transmittance;
   };
   return result;
 }"))
 
 
+(def constant-scatter
+"#version 130
+float in_scatter(vec3 point, vec3 direction)
+{
+  return 1.0;
+}")
+
+
+(def no-shadow
+"#version 130
+float shadow(vec3 point)
+{
+  return 1.0;
+}")
+
+
 (def cloud-transfer-probe
-  (template/fn [a b step]
+  (template/fn [a b]
 "#version 130
 out vec4 fragColor;
-vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step);
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval);
 void main()
 {
   vec3 origin = vec3(0, 0, 0);
   vec3 direction = vec3(1, 0, 0);
   vec2 interval = vec2(<%= a %>, <%= b %>);
-  float step = <%= step %>;
-  fragColor = cloud_transfer(origin, direction, interval, step);
+  fragColor = cloud_transfer(origin, direction, interval);
 }"))
 
 
@@ -875,7 +901,7 @@ void main()
 
 
 (tabular "Test cloud transfer"
-         (fact (seq (render-pixel [vertex-test] [(fog ?density) (cloud-transfer "fog") (cloud-transfer-probe ?a ?b ?step)]))
+         (fact (seq (render-pixel [vertex-test] [(fog ?density) constant-scatter no-shadow (cloud-transfer "fog" ?step) (cloud-transfer-probe ?a ?b)]))
                => (roughly-vector ?result 1e-3))
          ?a ?b ?step ?density ?result
          0  0  1     0.0      [0.0 0.0 0.0 0.0]
@@ -889,19 +915,20 @@ void main()
 (def fragment-cloud
 "#version 130
 uniform vec2 resolution;
+uniform vec3 light;
 uniform mat3 rotation;
 uniform float focal_length;
 uniform float distance;
 out vec4 fragColor;
 vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction);
-vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval, float step);
+vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval);
 void main()
 {
   vec3 direction = normalize(rotation * vec3(gl_FragCoord.xy - 0.5 * resolution, focal_length));
   vec3 origin = rotation * vec3(0, 0, -distance);
   vec2 interval = ray_box(vec3(-0.5, -0.5, -0.5), vec3(0.5, 0.5, 0.5), origin, direction);
-  vec4 transfer = cloud_transfer(origin, direction, interval, 0.01);
-  vec3 background = vec3(0.125, 0.125, 0.25);
+  vec4 transfer = cloud_transfer(origin, direction, interval);
+  vec3 background = mix(vec3(0.125, 0.125, 0.25), vec3(1, 1, 1), pow(dot(direction, light), 1000.0));
   fragColor = vec4(background * (1.0 - transfer.a) + transfer.rgb, 1.0);
 }")
 
@@ -909,34 +936,34 @@ void main()
 (defn setup-fog-uniforms
   [program width height]
   (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 30.0)) (rotation-matrix-3d-x (to-radians -20.0)))
-        focal-length (/ (* 0.5 width) (tan (to-radians 25.0)))]
+        focal-length (/ (* 0.5 width) (tan (to-radians 30.0)))
+        light        (normalize (vec3 4 1 10))]
     (GL20/glUseProgram program)
     (GL20/glUniform2f (GL20/glGetUniformLocation program "resolution") width height)
+    (GL20/glUniform3f (GL20/glGetUniformLocation program "light") (light 0) (light 1) (light 2))
     (GL20/glUniformMatrix3fv (GL20/glGetUniformLocation program "rotation") true
                              (make-float-buffer (mat->float-array rotation)))
     (GL20/glUniform1f (GL20/glGetUniformLocation program "focal_length") focal-length)
-    (GL20/glUniform1f (GL20/glGetUniformLocation program "distance") 2.5)))
+    (GL20/glUniform1f (GL20/glGetUniformLocation program "distance") 2.0)))
 
 
 (defn render-fog
   [width height]
-  (let [fragment-sources [ray-box (cloud-transfer "fog") (fog 1.0) fragment-cloud]
+  (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01) (fog 1.0) fragment-cloud]
         program          (make-program-with-shaders [vertex-test] fragment-sources)
-        vao              (setup-quad-vao)
-        texture          (make-texture-2d width height)]
+        vao              (setup-quad-vao)]
     (setup-point-attribute program)
-    (framebuffer-render texture width height
+    (let [result
+          (render-array width height
                         (setup-fog-uniforms program width height)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
-    (let [result (read-texture-2d texture width height)]
-      (GL11/glDeleteTextures texture)
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
       (teardown-vao vao)
       (GL20/glDeleteProgram program)
       result)))
 
 
 (defn rgba-array->bufimg [data width height]
-  (-> data tensor/->tensor (tensor/reshape [height width 4]) (tensor/select :all :all [2 1 0]) (dfn/* 255)))
+  (-> data tensor/->tensor (tensor/reshape [height width 4]) (tensor/select :all :all [2 1 0]) (dfn/* 255) (clamp 0 255)))
 
 
 (bufimg/tensor->image (rgba-array->bufimg (render-fog 640 480) 640 480))
@@ -985,20 +1012,18 @@ float noise(vec3 idx)
   [width height & cloud-shaders]
   (let [fragment-sources (concat cloud-shaders [ray-box fragment-cloud])
         program          (make-program-with-shaders [vertex-test] fragment-sources)
-        vao              (setup-quad-vao)
-        texture          (make-texture-2d width height)]
+        vao              (setup-quad-vao)]
     (setup-point-attribute program)
-    (framebuffer-render texture width height
+    (let [result
+          (render-array width height
                         (setup-noise-uniforms program width height)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
-    (let [result (read-texture-2d texture width height)]
-      (GL11/glDeleteTextures texture)
+                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
       (teardown-vao vao)
       (GL20/glDeleteProgram program)
       result)))
 
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (cloud-transfer "noise") noise-shader) 640 480))
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader) 640 480))
 
 
 ;; # Remap and clamp 3D noise
@@ -1049,12 +1074,82 @@ float remap_noise(vec3 idx)
 }"))
 
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (cloud-transfer "remap_noise") remap-clamp (remap-noise "noise" 0.45 0.9 1.5) noise-shader) 640 480))
+(def cloud-strength 5.0)
+
+
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader) 640 480))
 
 
 ;; # Octaves of 3D noise
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (cloud-transfer "remap_noise") remap-clamp (remap-noise "octaves" 0.45 0.9 1.5) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+
+
+(def mie-scatter
+  (template/fn [g]
+"#version 450 core
+#define M_PI 3.1415926535897932384626433832795
+#define ANISOTROPIC 0.25
+#define G <%= g %>
+uniform vec3 light;
+float mie(float mu)
+{
+  return 3 * (1 - G * G) * (1 + mu * mu) / (8 * M_PI * (2 + G * G) * pow(1 + G * G - 2 * G * mu, 1.5));
+}
+float in_scatter(vec3 point, vec3 direction)
+{
+  return mix(1.0, mie(dot(light, direction)), ANISOTROPIC);
+}"))
+
+
+;; # Mie scattering
+(def mie-probe
+  (template/fn [mu]
+"#version 450 core
+out vec4 fragColor;
+float mie(float mu);
+void main()
+{
+  float result = mie(<%= mu %>);
+  fragColor = vec4(result, 0, 0, 1);
+}"))
+
+
+(tabular "Shader function for scattering phase function"
+         (fact (first (render-pixel [vertex-test] [(mie-scatter ?g) (mie-probe ?mu)])) => (roughly ?result 1e-6))
+         ?g  ?mu ?result
+         0   0   (/ 3 (* 16 PI))
+         0   1   (/ 6 (* 16 PI))
+         0  -1   (/ 6 (* 16 PI))
+         0.5 0   (/ (* 3 0.75) (* 8 PI 2.25 (pow 1.25 1.5)))
+         0.5 1   (/ (* 6 0.75) (* 8 PI 2.25 (pow 0.25 1.5))))
+
+
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+
+
+;; # Self-shading of clouds
+(def shadow
+  (template/fn [noise step]
+"#version 130
+#define STEP <%= step %>
+uniform vec3 light;
+float <%= noise %>(vec3 idx);
+vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction);
+float shadow(vec3 point)
+{
+  vec2 interval = ray_box(vec3(-0.5, -0.5, -0.5), vec3(0.5, 0.5, 0.5), point, light);
+  float result = 1.0;
+  for (float t = interval.x + 0.5 * STEP; t < interval.y; t += STEP) {
+    float density = <%= noise %>(point + t * light);
+    float transmittance = exp(-density * STEP);
+    result *= transmittance;
+  };
+  return result;
+}"))
+
+
+(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) (shadow "remap_noise" 0.01) (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
 
 
 (GL11/glDeleteTextures noise-texture)
