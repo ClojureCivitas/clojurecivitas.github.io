@@ -1,11 +1,11 @@
 ^{:kindly/hide-code true
-  :clay             {:title  "Volumetric Clouds"
+  :clay             {:title  "Volumetric Clouds with Clojure and LWJGL"
                      :external-requirements ["Xorg"]
                      :quarto {:author   [:janwedekind]
                               :description "Procedural generation of volumetric clouds using different types of noise"
                               :image    "clouds.jpg"
                               :type     :post
-                              :date     "2026-01-13"
+                              :date     "2026-01-24"
                               :category :clojure
                               :tags     [:visualization]}}}
 
