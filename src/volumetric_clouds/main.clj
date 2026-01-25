@@ -935,9 +935,9 @@ void main()
 
 (defn setup-fog-uniforms
   [program width height]
-  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 30.0)) (rotation-matrix-3d-x (to-radians -20.0)))
+  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 40.0)) (rotation-matrix-3d-x (to-radians -20.0)))
         focal-length (/ (* 0.5 width) (tan (to-radians 30.0)))
-        light        (normalize (vec3 4 1 10))]
+        light        (normalize (vec3 6 1 10))]
     (GL20/glUseProgram program)
     (GL20/glUniform2f (GL20/glGetUniformLocation program "resolution") width height)
     (GL20/glUniform3f (GL20/glGetUniformLocation program "light") (light 0) (light 1) (light 2))
@@ -1074,7 +1074,7 @@ float remap_noise(vec3 idx)
 }"))
 
 
-(def cloud-strength 5.0)
+(def cloud-strength 6.5)
 
 
 (bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader) 640 480))
@@ -1084,6 +1084,8 @@ float remap_noise(vec3 idx)
 
 (bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
 
+
+;; # Mie scattering
 
 (def mie-scatter
   (template/fn [g]
@@ -1102,7 +1104,6 @@ float in_scatter(vec3 point, vec3 direction)
 }"))
 
 
-;; # Mie scattering
 (def mie-probe
   (template/fn [mu]
 "#version 450 core
