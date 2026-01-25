@@ -1138,12 +1138,22 @@ float remap_noise(vec3 idx)
 (def cloud-strength 6.5)
 
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480
+                  constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
+                  remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader)
+    640 480))
 
 
 ;; ## Octaves of 3D noise
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
+                  remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                  (noise-octaves (octaves 4 0.5)) noise-shader)
+    640 480))
 
 
 ;; ## Mie scattering
@@ -1178,7 +1188,8 @@ void main()
 
 
 (tabular "Shader function for scattering phase function"
-         (fact (first (render-pixel [vertex-test] [(mie-scatter ?g) (mie-probe ?mu)])) => (roughly ?result 1e-6))
+         (fact (first (render-pixel [vertex-test] [(mie-scatter ?g) (mie-probe ?mu)]))
+               => (roughly ?result 1e-6))
          ?g  ?mu ?result
          0   0   (/ 3 (* 16 PI))
          0   1   (/ 6 (* 16 PI))
@@ -1191,12 +1202,15 @@ void main()
   (first (render-pixel [vertex-test] [(mie-scatter 0.76) (mie-probe (cos theta))])))
 
 
-(let [scatter (tc/dataset {:x (map (fn [theta] (* (cos (to-radians theta))
-                                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
-                                   (range 361))
-                           :y (map (fn [theta] (* (sin (to-radians theta))
-                                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
-                                   (range 361)) })]
+(let [scatter
+      (tc/dataset {:x (map (fn [theta]
+                               (* (cos (to-radians theta))
+                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
+                           (range 361))
+                   :y (map (fn [theta]
+                               (* (sin (to-radians theta))
+                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
+                           (range 361)) })]
   (-> scatter
       (plotly/base {:=title "Mie scattering" :=mode "lines"})
       (plotly/layer-point {:=x :x :=y :y})
@@ -1204,7 +1218,12 @@ void main()
       (assoc-in [:layout :yaxis :scaleanchor] "x")))
 
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01)
+                  remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                  (noise-octaves (octaves 4 0.5)) noise-shader)
+    640 480))
 
 
 ;; ## Self-shading of clouds
@@ -1228,7 +1247,14 @@ float shadow(vec3 point)
 }"))
 
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) (shadow "remap_noise" 0.01) (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480
+                  (mie-scatter 0.76) (shadow "remap_noise" 0.01)
+                  (cloud-transfer "remap_noise" 0.01) remap-clamp
+                  (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                  (noise-octaves (octaves 4 0.5)) noise-shader)
+    640 480))
 
 ;; ## Tidy up
 (GL11/glBindTexture GL12/GL_TEXTURE_3D 0)
