@@ -632,15 +632,16 @@ void main()
 (defmacro framebuffer-render
   [texture width height & body]
   `(let [fbo# (GL30/glGenFramebuffers)]
-     (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo#)
-     (GL11/glBindTexture GL11/GL_TEXTURE_2D ~texture)
-     (GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0 ~texture 0)
-     (GL20/glDrawBuffers (volumetric-clouds.main/make-int-buffer (int-array [GL30/GL_COLOR_ATTACHMENT0])))
-     (GL11/glViewport 0 0 ~width ~height)
-     (let [result# (do ~@body)]
-       (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
-       (GL30/glDeleteFramebuffers fbo#)
-       result#)))
+     (try
+       (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo#)
+       (GL11/glBindTexture GL11/GL_TEXTURE_2D ~texture)
+       (GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0 ~texture 0)
+       (GL20/glDrawBuffers (volumetric-clouds.main/make-int-buffer (int-array [GL30/GL_COLOR_ATTACHMENT0])))
+       (GL11/glViewport 0 0 ~width ~height)
+       ~@body
+       (finally
+         (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
+         (GL30/glDeleteFramebuffers fbo#)))))
 
 
 (defn setup-point-attribute
@@ -660,10 +661,11 @@ void main()
 (defmacro render-array
   [width height & body]
   `(let [texture# (volumetric-clouds.main/make-texture-2d ~width ~height)]
-     (volumetric-clouds.main/framebuffer-render texture# ~width ~height ~@body)
-     (let [result# (volumetric-clouds.main/read-texture-2d texture# ~width ~height)]
-       (GL11/glDeleteTextures texture#)
-       result#)))
+     (try
+       (volumetric-clouds.main/framebuffer-render texture# ~width ~height ~@body)
+       (volumetric-clouds.main/read-texture-2d texture# ~width ~height)
+       (finally
+         (GL11/glDeleteTextures texture#)))))
 
 
 (defn render-pixel
@@ -671,13 +673,13 @@ void main()
   (let [program (make-program-with-shaders vertex-sources fragment-sources)
         vao     (setup-quad-vao)]
     (setup-point-attribute program)
-    (let [result
-          (render-array 1 1
-                        (GL20/glUseProgram program)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
-      (teardown-vao vao)
-      (GL20/glDeleteProgram program)
-      result)))
+    (try
+      (render-array 1 1
+                    (GL20/glUseProgram program)
+                    (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+      (finally
+        (teardown-vao vao)
+        (GL20/glDeleteProgram program)))))
 
 
 (render-pixel [vertex-test] [fragment-test])
@@ -932,13 +934,13 @@ void main()
         program          (make-program-with-shaders [vertex-test] fragment-sources)
         vao              (setup-quad-vao)]
     (setup-point-attribute program)
-    (let [result
-          (render-array width height
-                        (setup-fog-uniforms program width height)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
-      (teardown-vao vao)
-      (GL20/glDeleteProgram program)
-      result)))
+    (try
+      (render-array width height
+                    (setup-fog-uniforms program width height)
+                    (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+      (finally
+        (teardown-vao vao)
+        (GL20/glDeleteProgram program)))))
 
 
 (defn rgba-array->bufimg [data width height]
@@ -992,14 +994,14 @@ float noise(vec3 idx)
   (let [fragment-sources (concat cloud-shaders [ray-box fragment-cloud])
         program          (make-program-with-shaders [vertex-test] fragment-sources)
         vao              (setup-quad-vao)]
-    (setup-point-attribute program)
-    (let [result
-          (render-array width height
-                        (setup-noise-uniforms program width height)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
-      (teardown-vao vao)
-      (GL20/glDeleteProgram program)
-      result)))
+    (try
+      (setup-point-attribute program)
+      (render-array width height
+                    (setup-noise-uniforms program width height)
+                    (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+      (finally
+        (teardown-vao vao)
+        (GL20/glDeleteProgram program)))))
 
 
 (bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader) 640 480))
