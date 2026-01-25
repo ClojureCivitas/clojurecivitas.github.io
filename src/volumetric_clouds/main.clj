@@ -14,7 +14,8 @@
     (:require [clojure.math :refer (PI sqrt cos sin tan to-radians pow)]
               [midje.sweet :refer (fact facts tabular => roughly)]
               [fastmath.vector :refer (vec2 vec3 add mult sub div mag dot normalize)]
-              [fastmath.matrix :refer (mat->float-array mulm mulv inverse rotation-matrix-3d-x rotation-matrix-3d-y)]
+              [fastmath.matrix :refer (mat->float-array mulm mulv inverse
+                                       rotation-matrix-3d-x rotation-matrix-3d-y)]
               [tech.v3.datatype :as dtype]
               [tech.v3.tensor :as tensor]
               [tech.v3.datatype.functional :as dfn]
@@ -254,13 +255,19 @@
          => (vec3 (/ 1 (sqrt 3)) (/ 1 (sqrt 3)) (/ 1 (sqrt 3)))))
 
 
-(let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2)) [(* 8 8)])
-      points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y))) [(* 8 8)])
+(let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2))
+                                [(* 8 8)])
+      points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y)))
+                                [(* 8 8)])
       scatter   (tc/dataset {:x (mapcat (fn [point gradient]
-                                            [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil])
+                                            [(point 0)
+                                             (+ (point 0) (* 0.5 (gradient 0)))
+                                             nil])
                                         points gradients)
                              :y (mapcat (fn [point gradient]
-                                            [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil])
+                                            [(point 1)
+                                             (+ (point 1) (* 0.5 (gradient 1)))
+                                             nil])
                                         points gradients)})]
   (-> scatter
       (plotly/base {:=title "Random gradients" :=mode "lines"})
@@ -408,16 +415,20 @@
   [{:keys [size dimensions] :as params}]
   (let [gradients (random-gradients params)]
     (tensor/clone
-      (tensor/compute-tensor (repeat dimensions size)
-                             (fn [& args]
-                                 (let [center (add (apply vec-n (reverse args)) (apply vec-n (repeat dimensions 0.5)))]
-                                   (perlin-sample params gradients center)))
-                             :double))))
+      (tensor/compute-tensor
+        (repeat dimensions size)
+        (fn [& args]
+            (let [center (add (apply vec-n (reverse args))
+                              (apply vec-n (repeat dimensions 0.5)))]
+              (perlin-sample params gradients center)))
+        :double))))
 
 
 (def perlin (perlin-noise (make-noise-params 256 8 2)))
 
-(def perlin-norm (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin))) (dfn/- perlin (dfn/reduce-min perlin))))
+(def perlin-norm
+  (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin)))
+         (dfn/- perlin (dfn/reduce-min perlin))))
 
 (bufimg/tensor->image perlin-norm)
 
@@ -459,12 +470,15 @@
 (defn fractal-brownian-motion
   [base octaves & args]
   (let [scales (take (count octaves) (iterate #(* 2 %) 1))]
-    (reduce + 0.0 (map (fn [amplitude scale] (* amplitude (apply base (map #(* scale %) args)))) octaves scales))))
+    (reduce + 0.0
+            (map (fn [amplitude scale] (* amplitude (apply base (map #(* scale %) args))))
+                 octaves scales))))
 
 
 (facts "Fractal Brownian motion"
        (let [base1 (fn [x] (if (>= (mod x 2.0) 1.0) 1.0 0.0))
-             base2 (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0))) 0.0 1.0))]
+             base2 (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0)))
+                               0.0 1.0))]
          (fractal-brownian-motion base2 [1.0] 0 0) => 0.0
          (fractal-brownian-motion base2 [1.0] 0 1) => 1.0
          (fractal-brownian-motion base2 [1.0] 1 0) => 1.0
@@ -487,7 +501,8 @@
 
 
 (tabular "Remap values of tensor"
-       (fact ((remap (tensor/->tensor [?value]) ?low1 ?high1 ?low2 ?high2) 0) => ?expected)
+       (fact ((remap (tensor/->tensor [?value]) ?low1 ?high1 ?low2 ?high2) 0)
+             => ?expected)
        ?value ?low1 ?high1 ?low2 ?high2 ?expected
        0      0     1      0     1      0
        1      0     1      0     1      1
@@ -580,9 +595,9 @@
 
 
 (defn make-program-with-shaders
-  [vertex-shader-sources fragment-shader-sources]
-  (let [vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-shader-sources)
-        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-shader-sources)
+  [vertex-sources fragment-sources]
+  (let [vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-sources)
+        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-sources)
         program          (apply make-program (concat vertex-shaders fragment-shaders))]
     program))
 
@@ -674,8 +689,10 @@ void main()
      (try
        (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo#)
        (GL11/glBindTexture GL11/GL_TEXTURE_2D ~texture)
-       (GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0 ~texture 0)
-       (GL20/glDrawBuffers (volumetric-clouds.main/make-int-buffer (int-array [GL30/GL_COLOR_ATTACHMENT0])))
+       (GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0
+                                  ~texture 0)
+       (GL20/glDrawBuffers (volumetric-clouds.main/make-int-buffer
+                             (int-array [GL30/GL_COLOR_ATTACHMENT0])))
        (GL11/glViewport 0 0 ~width ~height)
        ~@body
        (finally
@@ -686,7 +703,8 @@ void main()
 (defn setup-point-attribute
   [program]
   (let [point-attribute (GL20/glGetAttribLocation program "point")]
-    (GL20/glVertexAttribPointer point-attribute 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+    (GL20/glVertexAttribPointer point-attribute 3 GL11/GL_FLOAT false
+                                (* 3 Float/BYTES) (* 0 Float/BYTES))
     (GL20/glEnableVertexAttribArray point-attribute)))
 
 
@@ -747,7 +765,8 @@ void main()
 
 
 (tabular "Test noise mock"
-         (fact (nth (render-pixel [vertex-test] [noise-mock (noise-probe ?x ?y ?z)]) 0) => ?result)
+         (fact (nth (render-pixel [vertex-test] [noise-mock (noise-probe ?x ?y ?z)]) 0)
+               => ?result)
          ?x ?y ?z ?result
          0  0  0  0.0
          1  0  0  1.0
@@ -787,7 +806,9 @@ void main()
 
 
 (tabular "Test octaves of noise"
-         (fact (first (render-pixel [vertex-test] [noise-mock (noise-octaves ?octaves) (octaves-probe ?x ?y ?z)]))
+         (fact (first (render-pixel [vertex-test]
+                                    [noise-mock (noise-octaves ?octaves)
+                                     (octaves-probe ?x ?y ?z)]))
                => ?result)
          ?x  ?y ?z ?octaves  ?result
          0   0  0  [1.0]     0.0
@@ -834,7 +855,9 @@ void main()
 
 
 (tabular "Test intersection of ray with box"
-         (fact ((juxt first second) (render-pixel [vertex-test] [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)]))
+         (fact ((juxt first second)
+                (render-pixel [vertex-test]
+                              [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)]))
                => ?result)
          ?ox ?oy ?oz ?dx ?dy ?dz ?result
          -2   0   0   1   0   0  [1.0 3.0]
@@ -917,11 +940,15 @@ void main()
   [expected error]
   (fn [actual]
       (and (== (count expected) (count actual))
-           (<= (apply + (mapv (fn [a b] (* (- b a) (- b a))) actual expected)) (* error error)))))
+           (<= (apply + (mapv (fn [a b] (* (- b a) (- b a))) actual expected))
+               (* error error)))))
 
 
 (tabular "Test cloud transfer"
-         (fact (seq (render-pixel [vertex-test] [(fog ?density) constant-scatter no-shadow (cloud-transfer "fog" ?step) (cloud-transfer-probe ?a ?b)]))
+         (fact (seq (render-pixel [vertex-test]
+                                  [(fog ?density) constant-scatter no-shadow
+                                   (cloud-transfer "fog" ?step)
+                                   (cloud-transfer-probe ?a ?b)]))
                => (roughly-vector ?result 1e-3))
          ?a ?b ?step ?density ?result
          0  0  1     0.0      [0.0 0.0 0.0 0.0]
@@ -955,12 +982,14 @@ void main()
 
 (defn setup-fog-uniforms
   [program width height]
-  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 40.0)) (rotation-matrix-3d-x (to-radians -20.0)))
+  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 40.0))
+                           (rotation-matrix-3d-x (to-radians -20.0)))
         focal-length (/ (* 0.5 width) (tan (to-radians 30.0)))
         light        (normalize (vec3 6 1 10))]
     (GL20/glUseProgram program)
     (GL20/glUniform2f (GL20/glGetUniformLocation program "resolution") width height)
-    (GL20/glUniform3f (GL20/glGetUniformLocation program "light") (light 0) (light 1) (light 2))
+    (GL20/glUniform3f (GL20/glGetUniformLocation program "light")
+                      (light 0) (light 1) (light 2))
     (GL20/glUniformMatrix3fv (GL20/glGetUniformLocation program "rotation") true
                              (make-float-buffer (mat->float-array rotation)))
     (GL20/glUniform1f (GL20/glGetUniformLocation program "focal_length") focal-length)
@@ -969,7 +998,8 @@ void main()
 
 (defn render-fog
   [width height]
-  (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01) (fog 1.0) fragment-cloud]
+  (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01)
+                          (fog 1.0) fragment-cloud]
         program          (make-program-with-shaders [vertex-test] fragment-sources)
         vao              (setup-quad-vao)]
     (setup-point-attribute program)
@@ -983,7 +1013,10 @@ void main()
 
 
 (defn rgba-array->bufimg [data width height]
-  (-> data tensor/->tensor (tensor/reshape [height width 4]) (tensor/select :all :all [2 1 0]) (dfn/* 255) (clamp 0 255)))
+  (-> data
+      tensor/->tensor
+      (tensor/reshape [height width 4])
+      (tensor/select :all :all [2 1 0]) (dfn/* 255) (clamp 0 255)))
 
 
 (bufimg/tensor->image (rgba-array->bufimg (render-fog 640 480) 640 480))
@@ -1001,13 +1034,15 @@ void main()
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL12/GL_TEXTURE_WRAP_R GL11/GL_REPEAT)
-    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0 GL11/GL_RED GL11/GL_FLOAT buffer)
+    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0
+                       GL11/GL_RED GL11/GL_FLOAT buffer)
     texture))
 
 
 (def noise3d (dfn/- (dfn/* 0.3 (perlin-noise (make-noise-params 32 4 3)))
                     (dfn/* 0.7 (worley-noise (make-noise-params 32 4 3)))))
-(def noise-3d-norm (dfn/* (/ 1.0 (- (dfn/reduce-max noise3d) (dfn/reduce-min noise3d))) (dfn/- noise3d (dfn/reduce-min noise3d))))
+(def noise-3d-norm (dfn/* (/ 1.0 (- (dfn/reduce-max noise3d) (dfn/reduce-min noise3d)))
+                          (dfn/- noise3d (dfn/reduce-min noise3d))))
 (def noise-texture (float-array->texture3d (dtype/->float-array noise-3d-norm) 32))
 
 
@@ -1043,7 +1078,11 @@ float noise(vec3 idx)
         (GL20/glDeleteProgram program)))))
 
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480
+                  constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader)
+    640 480))
 
 
 ;; ## Remap and clamp 3D noise
@@ -1069,7 +1108,9 @@ void main()
 
 
 (tabular "Remap and clamp input parameter values"
-       (fact (first (render-pixel [vertex-test] [remap-clamp (remap-probe ?value ?low1 ?high1 ?low2 ?high2)]))
+       (fact (first (render-pixel
+                      [vertex-test]
+                      [remap-clamp (remap-probe ?value ?low1 ?high1 ?low2 ?high2)]))
              => ?expected)
        ?value ?low1 ?high1 ?low2 ?high2 ?expected
        0      0     1      0     1      0.0
