@@ -39,39 +39,47 @@
 ;;
 ;; [Worley noise](https://en.wikipedia.org/wiki/Worley_noise) is a type of structured noise which is defined for each pixel using the distance to the nearest seed point.
 ;;
+;; ### Noise parameters
+;;
 ;; First we define a function to create parameters of the noise.
 ;;
 ;; * **size** is the size of each dimension of the noise array
 ;; * **divisions** is the number of subdividing cells in each dimension
 ;; * **dimensions** is the number of dimensions
-
 (defn make-noise-params
   [size divisions dimensions]
   {:size size :divisions divisions :cellsize (/ size divisions) :dimensions dimensions})
 
-
+;; Here is a corresponding Midje test.
+;; Note that ideally you practise [Test Driven Development (TDD)](https://martinfowler.com/bliki/TestDrivenDevelopment.html), i.e. you start with writing one failing test.
+;; Because this is a Clojure notebook, the unit tests are displayed after the implementation.
 (fact "Noise parameter initialisation"
       (make-noise-params 256 8 2) => {:size 256 :divisions 8 :cellsize 32 :dimensions 2})
 
 
+;; ### 2D and 3D vectors
+;;
+;; Next we need a function which allows us to create 2D or 3D vectors depending on the number of input parameters.
 (defn vec-n
   ([x y] (vec2 x y))
   ([x y z] (vec3 x y z)))
-
 
 (facts "Generic vector function for creating 2D and 3D vectors"
        (vec-n 2 3) => (vec2 2 3)
        (vec-n 2 3 1) => (vec3 2 3 1))
 
 
+;; ### Random points
+;;
+;; The following method generates a random point in a cell specified by the cell indices.
 (defn random-point-in-cell
-  [{:keys [cellsize]} & args]
+  [{:keys [cellsize]} & indices]
   (let [random-seq (repeatedly #(rand cellsize))
-        dimensions (count args)]
-    (add (mult (apply vec-n (reverse args)) cellsize)
+        dimensions (count indices)]
+    (add (mult (apply vec-n (reverse indices)) cellsize)
          (apply vec-n (take dimensions random-seq)))))
 
-
+;; We test the method by replacing the random function with a deterministic function.
 (facts "Place random point in a cell"
        (with-redefs [rand (fn [s] (* 0.5 s))]
          (random-point-in-cell {:cellsize 1} 0 0) => (vec2 0.5 0.5)
@@ -81,12 +89,12 @@
          (random-point-in-cell {:cellsize 2} 2 3 5) => (vec3 11.0 7.0 5.0)))
 
 
+;; We can now use the `random-point` method to generate a grid of random points.
 (defn random-points
   [{:keys [divisions dimensions] :as params}]
   (tensor/clone
     (tensor/compute-tensor (repeat dimensions divisions)
                            (partial random-point-in-cell params))))
-
 
 (facts "Greate grid of random points"
        (let [params-2d (make-noise-params 32 8 2)
@@ -99,7 +107,7 @@
            (dtype/shape (random-points params-3d)) => [8 8 8]
            ((random-points params-3d) 2 3 5) => (vec3 22.0 14.0 10.0))))
 
-
+;; Here is a scatter plot showing one random point placed in each cell.
 (let [points  (tensor/reshape (random-points (make-noise-params 256 8 2)) [(* 8 8)])
       scatter (tc/dataset {:x (map first points) :y (map second points)})]
   (-> scatter
@@ -107,12 +115,14 @@
       (plotly/layer-point {:=x :x :=y :y})))
 
 
+;; ### Modular distance
+;;
+;; In order to get a periodic noise array, we need to component-wise wrap around distance vectors.
 (defn mod-vec
   [{:keys [size]} v]
   (let [size2 (/ size 2)
         wrap  (fn [x] (-> x (+ size2) (mod size) (- size2)))]
     (apply vec-n (map wrap v))))
-
 
 (facts "Wrap around components of vector to be within -size/2..size/2"
        (mod-vec {:size 8} (vec2 2 3)) => (vec2 2 3)
@@ -128,11 +138,11 @@
        (mod-vec {:size 8} (vec3 2 -5 1)) => (vec3 2 3 1)
        (mod-vec {:size 8} (vec3 2 3 -5)) => (vec3 2 3 3))
 
-
+;;
+;; Using the `mod-dist` function we can calculate the distance between two points in the periodic noise array.
 (defn mod-dist
   [params a b]
   (mag (mod-vec params (sub b a))))
-
 
 (tabular "Wrapped distance of two points"
          (fact (mod-dist {:size 8} (vec2 ?ax ?ay) (vec2 ?bx ?by)) => ?result)
@@ -148,13 +158,17 @@
          0   5   0   0   3.0)
 
 
+;; ### Modular lookup
+;;
+;; We also need to lookup elements with wrap around.
+;; We recursively use `tensor/select` and then finally the tensor as a function to lookup along each axis.
 (defn wrap-get
   [t & args]
   (if (> (count (dtype/shape t)) (count args))
     (apply tensor/select t (map mod args (dtype/shape t)))
     (apply t (map mod args (dtype/shape t)))))
 
-
+;; A tensor with index vectors is used to test the lookup.
 (facts "Wrapped lookup of tensor values"
        (let [t (tensor/compute-tensor [4 6] vec2)]
          (wrap-get t 2 3) => (vec2 2 3)
