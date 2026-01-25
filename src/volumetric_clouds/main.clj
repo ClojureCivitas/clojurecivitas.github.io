@@ -35,7 +35,14 @@
 ;; Note that this article is about procedural generation and not about simulating real weather.
 ;;
 ;; ## Worley noise
-
+;;
+;; [Worley noise](https://en.wikipedia.org/wiki/Worley_noise) is a type of structured noise which is defined for each pixel using the distance to the nearest seed point.
+;;
+;; First we define a function to create parameters of the noise.
+;;
+;; * **size** is the size of each dimension of the noise array
+;; * **divisions** is the number of subdividing cells in each dimension
+;; * **dimensions** is the number of dimensions
 
 (defn make-noise-params
   [size divisions dimensions]
@@ -75,7 +82,9 @@
 
 (defn random-points
   [{:keys [divisions dimensions] :as params}]
-  (tensor/clone (tensor/compute-tensor (repeat dimensions divisions) (partial random-point-in-cell params))))
+  (tensor/clone
+    (tensor/compute-tensor (repeat dimensions divisions)
+                           (partial random-point-in-cell params))))
 
 
 (facts "Greate grid of random points"
@@ -166,7 +175,8 @@
 (defn neighbours
   [& args]
   (if (seq args)
-    (mapcat (fn [v] (map (fn [delta] (into [(+ (first args) delta)] v)) [-1 0 1])) (apply neighbours (rest args)) )
+    (mapcat (fn [v] (map (fn [delta] (into [(+ (first args) delta)] v)) [-1 0 1]))
+            (apply neighbours (rest args)) )
     [[]]))
 
 
@@ -180,20 +190,23 @@
   [{:keys [size dimensions] :as params}]
   (let [random-points (random-points params)]
     (tensor/clone
-      (tensor/compute-tensor (repeat dimensions size)
-                             (fn [& coords]
-                                 (let [center   (map #(+ % 0.5) coords)
-                                       division (map (partial division-index params) center)]
-                                   (apply min
-                                          (for [neighbour (apply neighbours division)]
-                                               (mod-dist params (apply vec-n (reverse center))
-                                                         (apply wrap-get random-points neighbour))))))
-                             :double))))
+      (tensor/compute-tensor
+        (repeat dimensions size)
+        (fn [& coords]
+            (let [center   (map #(+ % 0.5) coords)
+                  division (map (partial division-index params) center)]
+              (apply min
+                     (for [neighbour (apply neighbours division)]
+                          (mod-dist params (apply vec-n (reverse center))
+                                    (apply wrap-get random-points neighbour))))))
+        :double))))
 
 
 (def worley (worley-noise (make-noise-params 256 8 2)))
 
-(def worley-norm (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley))) (dfn/- (dfn/reduce-max worley) worley)))
+(def worley-norm
+  (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley)))
+         (dfn/- (dfn/reduce-max worley) worley)))
 
 (bufimg/tensor->image worley-norm)
 
@@ -218,9 +231,11 @@
 
 (facts "Create unit vector with random direction"
        (with-redefs [rand (constantly 0.5)]
-         (random-gradient 0 0) => (roughly-vec (vec2 (- (sqrt 0.5)) (- (sqrt 0.5))) 1e-6))
+         (random-gradient 0 0)
+         => (roughly-vec (vec2 (- (sqrt 0.5)) (- (sqrt 0.5))) 1e-6))
        (with-redefs [rand (constantly 1.5)]
-         (random-gradient 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)))
+         (random-gradient 0 0)
+         => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)))
 
 
 (defn random-gradients
@@ -230,16 +245,23 @@
 
 (facts "Random gradients"
        (with-redefs [rand (constantly 1.5)]
-         (dtype/shape (random-gradients {:divisions 8 :dimensions 2})) => [8 8]
-         ((random-gradients {:divisions 8 :dimensions 2}) 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)
+         (dtype/shape (random-gradients {:divisions 8 :dimensions 2}))
+         => [8 8]
+         ((random-gradients {:divisions 8 :dimensions 2}) 0 0)
+         => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)
          (dtype/shape (random-gradients {:divisions 8 :dimensions 3})) => [8 8 8]
-         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (vec3 (/ 1 (sqrt 3)) (/ 1 (sqrt 3)) (/ 1 (sqrt 3)))))
+         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0)
+         => (vec3 (/ 1 (sqrt 3)) (/ 1 (sqrt 3)) (/ 1 (sqrt 3)))))
 
 
 (let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2)) [(* 8 8)])
       points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y))) [(* 8 8)])
-      scatter   (tc/dataset {:x (mapcat (fn [point gradient] [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil]) points gradients)
-                             :y (mapcat (fn [point gradient] [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil]) points gradients)})]
+      scatter   (tc/dataset {:x (mapcat (fn [point gradient]
+                                            [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil])
+                                        points gradients)
+                             :y (mapcat (fn [point gradient]
+                                            [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil])
+                                        points gradients)})]
   (-> scatter
       (plotly/base {:=title "Random gradients" :=mode "lines"})
       (plotly/layer-point {:=x :x :=y :y})))
@@ -270,7 +292,9 @@
 (defn corner-vectors
   [{:keys [dimensions] :as params} point]
   (let [cell-pos (cell-pos params point)]
-    (tensor/compute-tensor (repeat dimensions 2) (fn [& args] (sub cell-pos (apply vec-n (reverse args)))))))
+    (tensor/compute-tensor
+      (repeat dimensions 2)
+      (fn [& args] (sub cell-pos (apply vec-n (reverse args)))))))
 
 
 (facts "Compute relative vectors from cell corners to point in cell"
@@ -286,24 +310,34 @@
 (defn corner-gradients
   [{:keys [dimensions] :as params} gradients point]
   (let [division (map (partial division-index params) point)]
-    (tensor/compute-tensor (repeat dimensions 2) (fn [& coords] (apply wrap-get gradients (map + (reverse division) coords))))))
+    (tensor/compute-tensor
+      (repeat dimensions 2)
+      (fn [& coords] (apply wrap-get gradients (map + (reverse division) coords))))))
 
 
 (facts "Get 2x2 tensor of gradients from a larger tensor using wrap around"
        (let [gradients2 (tensor/compute-tensor [4 6] (fn [y x] (vec2 x y)))
              gradients3 (tensor/compute-tensor [4 6 8] (fn [z y x] (vec3 x y z))) ]
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 0) => (vec2 2 1)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 1) => (vec2 3 1)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 0) => (vec2 2 2)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 1) => (vec2 3 2)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 23 15)) 1 1) => (vec2 0 0)
-         ((corner-gradients {:cellsize 4 :dimensions 3} gradients3 (vec3 9 6 3)) 0 0 0) => (vec3 2 1 0)))
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 0)
+         => (vec2 2 1)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 1)
+         => (vec2 3 1)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 0)
+         => (vec2 2 2)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 1)
+         => (vec2 3 2)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 23 15)) 1 1)
+         => (vec2 0 0)
+         ((corner-gradients {:cellsize 4 :dimensions 3} gradients3 (vec3 9 6 3)) 0 0 0)
+         => (vec3 2 1 0)))
 
 
 (defn influence-values
   [gradients vectors]
-  (tensor/compute-tensor (repeat (count (dtype/shape gradients)) 2)
-                         (fn [& args] (dot (apply gradients args) (apply vectors args))) :double))
+  (tensor/compute-tensor
+    (repeat (count (dtype/shape gradients)) 2)
+    (fn [& args] (dot (apply gradients args) (apply vectors args)))
+    :double))
 
 
 (facts "Compute influence values from corner vectors and gradients"
@@ -333,7 +367,8 @@
        (ease-curve 1.0) => 1.0)
 
 
-(-> (tc/dataset {:t (range 0.0 1.025 0.025) :ease (map ease-curve (range 0.0 1.025 0.025))})
+(-> (tc/dataset {:t (range 0.0 1.025 0.025)
+                 :ease (map ease-curve (range 0.0 1.025 0.025))})
     (plotly/base {:=title "Ease Curve"})
     (plotly/layer-line {:=x :t :=y :ease}))
 
