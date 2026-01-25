@@ -29,7 +29,11 @@
 
 
 ;; # Procedural generation of volumetric clouds
-
+;;
+;; Volumetric clouds are commonly used in flight simulators and visual effects.
+;; For a introductory video see [Sebastian Lague's video "Coding Adventure: Clouds](https://www.youtube.com/watch?v=4QOcCGI6xOU).
+;; Note that this article is about procedural generation and not about simulating real weather.
+;;
 ;; ## Worley noise
 
 
