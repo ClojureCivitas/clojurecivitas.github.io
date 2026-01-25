@@ -28,19 +28,9 @@
              [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL32 GL42]))
 
 
-;; Procedural generation of volumetric clouds
-;;
-;; * Midje testing of shaders
-;; * Generating OpenGL shaders using templates
-;; * cloud shadows
-;; * powder function
-;; * video showing TDD with tmux
-;;
-;; References
-;; * https://adrianb.io/2014/08/09/perlinnoise.html
-;; * https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/
+;; # Procedural generation of volumetric clouds
 
-;; # Worley noise
+;; ## Worley noise
 
 
 (defn make-noise-params
@@ -203,12 +193,10 @@
 
 (bufimg/tensor->image worley-norm)
 
-;; # Perlin noise
+;; ## Perlin noise
+;; https://adrianb.io/2014/08/09/perlinnoise.html
 
-
-(defmulti random-gradient (fn [& args] (count args)))
-
-(defmethod random-gradient 2
+(defn random-gradient
   [& args]
   (loop [args args]
         (let [random-vector (apply vec-n (map (fn [_x] (- (rand 2.0) 1.0)) args))
@@ -216,14 +204,6 @@
           (if (and (> vector-length 0.0) (<= vector-length 1.0))
             (div random-vector vector-length)
             (recur args)))))
-
-
-(defmethod random-gradient 3
-  [& _args]
-  (apply vec3
-          (rand-nth [[1  1  0] [-1  1  0] [1 -1  0] [-1 -1  0]
-                     [1  0  1] [-1  0  1] [1  0 -1] [-1  0 -1]
-                     [0  1  1] [ 0 -1  1] [0  1 -1] [ 0 -1 -1]])))
 
 
 (defn roughly-vec
@@ -245,12 +225,11 @@
 
 
 (facts "Random gradients"
-       (with-redefs [rand (constantly 1.5)
-                     rand-nth (fn [x] (first x))]
+       (with-redefs [rand (constantly 1.5)]
          (dtype/shape (random-gradients {:divisions 8 :dimensions 2})) => [8 8]
          ((random-gradients {:divisions 8 :dimensions 2}) 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)
          (dtype/shape (random-gradients {:divisions 8 :dimensions 3})) => [8 8 8]
-         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (vec3 1 1 0)))
+         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (vec3 (/ 1 (sqrt 3)) (/ 1 (sqrt 3)) (/ 1 (sqrt 3)))))
 
 
 (let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2)) [(* 8 8)])
@@ -403,12 +382,12 @@
 
 (bufimg/tensor->image perlin-norm)
 
-;; # Combination of Worley and Perlin noise
+;; ## Combination of Worley and Perlin noise
 (def perlin-worley-norm (dfn/+ (dfn/* 0.3 perlin-norm) (dfn/* 0.7 worley-norm)))
 
 (bufimg/tensor->image (dfn/+ (dfn/* 0.5 perlin-norm) (dfn/* 0.5 worley-norm)))
 
-;; # Interpolation
+;; ## Interpolation
 (defn interpolate
   [tensor & args]
   (if (seq args)
@@ -437,7 +416,7 @@
          (interpolate y3 2.5 3.5 3.0) => 3.0
          (interpolate z3 2.5 3.5 5.5) => 2.0))
 
-;; # Octaves of noise
+;; ## Octaves of noise
 (defn fractal-brownian-motion
   [base octaves & args]
   (let [scales (take (count octaves) (iterate #(* 2 %) 1))]
@@ -526,7 +505,7 @@
 (bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 4 0.6) 120 230))
 
 
-;; # Testing shaders
+;; ## Testing shaders
 
 (GLFW/glfwInit)
 
@@ -704,7 +683,7 @@ void main()
 (render-pixel [vertex-test] [fragment-test])
 
 
-;; # Noise octaves shader
+;; ## Noise octaves shader
 
 (def noise-mock
 "#version 130
@@ -778,7 +757,7 @@ void main()
          1   0  0  [1.0 0.0] 1.0)
 
 
-;; # Shader for intersecting a ray with a box
+;; ## Shader for intersecting a ray with a box
 
 (def ray-box
 "#version 130
@@ -830,7 +809,7 @@ void main()
           2   0   0   1   0   0  [0.0 0.0])
 
 
-;; # Shader for light transfer through clouds
+;; ## Shader for light transfer through clouds
 
 (def fog
   (template/fn [v]
@@ -910,7 +889,7 @@ void main()
          0  1  0.5   0.5      [0.393 0.393 0.393 0.393])
 
 
-;; # Rendering of fog box
+;; ## Rendering of fog box
 
 (def fragment-cloud
 "#version 130
@@ -969,7 +948,7 @@ void main()
 (bufimg/tensor->image (rgba-array->bufimg (render-fog 640 480) 640 480))
 
 
-;; # Rendering of 3D noise
+;; ## Rendering of 3D noise
 
 (defn float-array->texture3d
   [data size]
@@ -1026,7 +1005,7 @@ float noise(vec3 idx)
 (bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader) 640 480))
 
 
-;; # Remap and clamp 3D noise
+;; ## Remap and clamp 3D noise
 
 (def remap-clamp
 "#version 130
@@ -1080,12 +1059,12 @@ float remap_noise(vec3 idx)
 (bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader) 640 480))
 
 
-;; # Octaves of 3D noise
+;; ## Octaves of 3D noise
 
 (bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
 
 
-;; # Mie scattering
+;; ## Mie scattering
 
 (def mie-scatter
   (template/fn [g]
@@ -1129,7 +1108,7 @@ void main()
 (bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
 
 
-;; # Self-shading of clouds
+;; ## Self-shading of clouds
 (def shadow
   (template/fn [noise step]
 "#version 130
@@ -1152,10 +1131,16 @@ float shadow(vec3 point)
 
 (bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) (shadow "remap_noise" 0.01) (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
 
-;; # Tidy up
+;; ## Tidy up
 (GL11/glBindTexture GL12/GL_TEXTURE_3D 0)
 (GL11/glDeleteTextures noise-texture)
 
 (GLFW/glfwDestroyWindow window)
 
 (GLFW/glfwTerminate)
+
+;; ## Further topics
+;; * vertical cloud profile
+;; * powder function
+;; * curl noise
+;; * deep opacity maps https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/
