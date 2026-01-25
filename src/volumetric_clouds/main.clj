@@ -11,7 +11,7 @@
                               :tags     [:visualization]}}}
 
 (ns volumetric-clouds.main
-    (:require [clojure.math :refer (PI sqrt cos sin tan to-radians pow)]
+    (:require [clojure.math :refer (PI sqrt cos sin tan to-radians pow floor)]
               [midje.sweet :refer (fact facts tabular => roughly)]
               [fastmath.vector :refer (vec2 vec3 add mult sub div mag dot normalize)]
               [fastmath.matrix :refer (mat->float-array mulm mulv inverse
@@ -177,16 +177,19 @@
          (wrap-get (wrap-get t 5) 3) => (vec2 1 3)))
 
 
+;; The following function converts a noise coordinate to the index of a cell in the random point array.
 (defn division-index
   [{:keys [cellsize]} x]
-  (int (/ x cellsize)))
-
+  (int (floor (/ x cellsize))))
 
 (facts "Convert coordinate to division index"
-       (division-index {:cellsize 4} 3.5) => 0
-       (division-index {:cellsize 4} 7.5) => 1)
+       (division-index {:cellsize 4} 3.5)  => 0
+       (division-index {:cellsize 4} 7.5)  => 1
+       (division-index {:cellsize 4} -0.5) => -1)
 
-
+;; ### Getting indices of Neighbours
+;;
+;; The following function determines the neighbouring indices of a cell.recursing over each dimension.
 (defn neighbours
   [& args]
   (if (seq args)
@@ -197,6 +200,7 @@
 
 (facts "Get neighbouring indices"
        (neighbours) => [[]]
+       (neighbours 0) => [[-1] [0] [1]]
        (neighbours 3) => [[2] [3] [4]]
        (neighbours 1 10) => [[0 9] [1 9] [2 9] [0 10] [1 10] [2 10] [0 11] [1 11] [2 11]])
 
@@ -1226,7 +1230,7 @@ void main()
                                   (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
                            (range 361)) })]
   (-> scatter
-      (plotly/base {:=title "Mie scattering" :=mode "lines"})
+      (plotly/base {:=title "Mixed Mie and isotropic scattering" :=mode "lines"})
       (plotly/layer-point {:=x :x :=y :y})
       plotly/plot
       (assoc-in [:layout :yaxis :scaleanchor] "x")))
@@ -1279,7 +1283,8 @@ float shadow(vec3 point)
 (GLFW/glfwTerminate)
 
 ;; ## Further topics
-;; * vertical cloud profile
-;; * powder function
-;; * curl noise
-;; * deep opacity maps https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/
+;;
+;; * [Vertical density profile](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
+;; * [Powder function](https://advances.realtimerendering.com/s2015/index.html)
+;; * [Curl noise](https://www.wedesoft.de/software/2023/03/20/procedural-global-cloud-cover/)
+;; * [Deep opacity maps](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
