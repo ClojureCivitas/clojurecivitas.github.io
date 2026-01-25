@@ -205,6 +205,7 @@
 
 
 ;; ### Sampling Worley noise
+;;
 ;; Using above functions one can now implement Worley noise.
 ;; For each pixel the distance to the closest seed point is calculated.
 ;; The distance to each random point in all neighbouring cells is calculated and the minimum is taken.
@@ -226,7 +227,7 @@
 ;; Here a 256x256 Worley noise tensor is created.
 (def worley (worley-noise (make-noise-params 256 8 2)))
 
-;; The values are normalised to be between 0 and 255.
+;; The values are inverted and normalised to be between 0 and 255.
 (def worley-norm
   (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley)))
          (dfn/- (dfn/reduce-max worley) worley)))
@@ -304,11 +305,13 @@
       (plotly/base {:=title "Random gradients" :=mode "lines"})
       (plotly/layer-point {:=x :x :=y :y})))
 
-
+;; ### Corner vectors
+;;
+;; The next step is to determine the vectors to the corners of the cell for a given point.
+;; First we define a function to determine the fractional part of a number.
 (defn frac
   [x]
-  (- x (Math/floor x)))
-
+  (mod x 1.0))
 
 (facts "Fractional part of floating point number"
        (frac 0.25) => 0.25
@@ -316,24 +319,23 @@
        (frac -0.25) => 0.75)
 
 
+;; This function can be used to determine the relative position of a point in a cell.
 (defn cell-pos
   [{:keys [cellsize]} point]
   (apply vec-n (map frac (div point cellsize))))
-
 
 (facts "Relative position of point in a cell"
        (cell-pos {:cellsize 4} (vec2 2 3)) => (vec2 0.5 0.75)
        (cell-pos {:cellsize 4} (vec2 7 5)) => (vec2 0.75 0.25)
        (cell-pos {:cellsize 4} (vec3 7 5 2)) => (vec3 0.75 0.25 0.5))
 
-
+;; A tensor converting the corner vectors can be computed by subtracting the corner coordinates from the point coordinates.
 (defn corner-vectors
   [{:keys [dimensions] :as params} point]
   (let [cell-pos (cell-pos params point)]
     (tensor/compute-tensor
       (repeat dimensions 2)
       (fn [& args] (sub cell-pos (apply vec-n (reverse args)))))))
-
 
 (facts "Compute relative vectors from cell corners to point in cell"
        (let [v2 (corner-vectors {:cellsize 4 :dimensions 2} (vec2 7 6))
@@ -344,14 +346,15 @@
          (v2 1 1) => (vec2 -0.25 -0.5)
          (v3 0 0 0) => (vec3 0.75 0.5 0.25)))
 
-
+;; ### Extract gradients of cell corners
+;;
+;; The function below retrieves the gradient values at a cell's corners, utilizing `wrap-get` for modular access.
 (defn corner-gradients
   [{:keys [dimensions] :as params} gradients point]
   (let [division (map (partial division-index params) point)]
     (tensor/compute-tensor
       (repeat dimensions 2)
       (fn [& coords] (apply wrap-get gradients (map + (reverse division) coords))))))
-
 
 (facts "Get 2x2 tensor of gradients from a larger tensor using wrap around"
        (let [gradients2 (tensor/compute-tensor [4 6] (fn [y x] (vec2 x y)))
@@ -369,14 +372,15 @@
          ((corner-gradients {:cellsize 4 :dimensions 3} gradients3 (vec3 9 6 3)) 0 0 0)
          => (vec3 2 1 0)))
 
-
+;; ### Influence values
+;;
+;; The influence value is the function value of the function with the selected random gradient at a corner.
 (defn influence-values
   [gradients vectors]
   (tensor/compute-tensor
     (repeat (count (dtype/shape gradients)) 2)
     (fn [& args] (dot (apply gradients args) (apply vectors args)))
     :double))
-
 
 (facts "Compute influence values from corner vectors and gradients"
        (let [gradients2 (tensor/compute-tensor [2 2] (fn [_y x] (vec2 x 10)))
@@ -391,11 +395,12 @@
          (influence2 1 1) => 11.0
          (influence3 1 1 1) => 111.0))
 
-
+;; ### Interpolating the influence values
+;;
+;; For interpolation the following "ease curve" is used.
 (defn ease-curve
   [t]
   (-> t (* 6.0) (- 15.0) (* t) (+ 10.0) (* t t t)))
-
 
 (facts "Monotonously increasing function with zero derivative at zero and one"
        (ease-curve 0.0) => 0.0
@@ -404,13 +409,13 @@
        (ease-curve 0.75) => (roughly 0.896484 1e-6)
        (ease-curve 1.0) => 1.0)
 
-
+;; The ease curve monotonously increases in the interval from zero to one.
 (-> (tc/dataset {:t (range 0.0 1.025 0.025)
                  :ease (map ease-curve (range 0.0 1.025 0.025))})
     (plotly/base {:=title "Ease Curve"})
     (plotly/layer-line {:=x :t :=y :ease}))
 
-
+;; The interpolation weights are recursively calculated from the ease curve and the coordinate distances of the point to upper and lower cell boundary.
 (defn interpolation-weights
   ([params point]
    (interpolation-weights (cell-pos params point)))
@@ -422,7 +427,6 @@
        (tensor/->tensor [(dfn/* (ease-curve w1) elem) (dfn/* (ease-curve w2) elem)]))
      1.0)))
 
-
 (facts "Interpolation weights"
        (let [weights2 (interpolation-weights {:cellsize 8} (vec2 2 7))
              weights3 (interpolation-weights {:cellsize 8} (vec3 2 7 3))]
@@ -433,6 +437,14 @@
          (weights3 0 0 0) => (roughly 0.010430 1e-6)))
 
 
+;; ### Sampling Perlin noise
+;;
+;; A Perlin noise sample is computed by
+;; * Getting the random gradients for the cell corners.
+;; * Getting the corner vectors for the cell corners.
+;; * Computing the influence values which have the desired gradients.
+;; * Determining the interpolation weights.
+;; * Computing the weighted sum of the influence values.
 (defn perlin-sample
   [params gradients point]
   (let [gradients (corner-gradients params gradients point)
@@ -441,7 +453,7 @@
         weights   (interpolation-weights params point)]
     (dfn/reduce-+ (dfn/* weights influence))))
 
-
+;; Now one can sample the Perlin noise by performing above computation for the center of each pixel.
 (defn perlin-noise
   [{:keys [size dimensions] :as params}]
   (let [gradients (random-gradients params)]
@@ -449,18 +461,19 @@
       (tensor/compute-tensor
         (repeat dimensions size)
         (fn [& args]
-            (let [center (add (apply vec-n (reverse args))
-                              (apply vec-n (repeat dimensions 0.5)))]
+            (let [center (apply vec-n (map #(+ % 0.5) (reverse args)))]
               (perlin-sample params gradients center)))
         :double))))
 
-
+;; Here a 256x256 Perlin noise tensor is created.
 (def perlin (perlin-noise (make-noise-params 256 8 2)))
 
+;; The values are normalised to be between 0 and 255.
 (def perlin-norm
   (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin)))
          (dfn/- perlin (dfn/reduce-min perlin))))
 
+;; Finally one can display the noise.
 (bufimg/tensor->image perlin-norm)
 
 ;; ## Combination of Worley and Perlin noise
