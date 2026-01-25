@@ -11,7 +11,7 @@
                               :tags     [:visualization]}}}
 
 (ns volumetric-clouds.main
-    (:require [clojure.math :refer (PI sqrt tan to-radians pow)]
+    (:require [clojure.math :refer (PI sqrt cos sin tan to-radians pow)]
               [midje.sweet :refer (fact facts tabular => roughly)]
               [fastmath.vector :refer (vec2 vec3 add mult sub div mag dot normalize)]
               [fastmath.matrix :refer (mat->float-array mulm mulv inverse rotation-matrix-3d-x rotation-matrix-3d-y)]
@@ -1109,6 +1109,23 @@ void main()
          0  -1   (/ 6 (* 16 PI))
          0.5 0   (/ (* 3 0.75) (* 8 PI 2.25 (pow 1.25 1.5)))
          0.5 1   (/ (* 6 0.75) (* 8 PI 2.25 (pow 0.25 1.5))))
+
+
+(defn scatter-amount [theta]
+  (first (render-pixel [vertex-test] [(mie-scatter 0.76) (mie-probe (cos theta))])))
+
+
+(let [scatter (tc/dataset {:x (map (fn [theta] (* (cos (to-radians theta))
+                                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
+                                   (range 361))
+                           :y (map (fn [theta] (* (sin (to-radians theta))
+                                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
+                                   (range 361)) })]
+  (-> scatter
+      (plotly/base {:=title "Mie scattering" :=mode "lines"})
+      (plotly/layer-point {:=x :x :=y :y})
+      plotly/plot
+      (assoc-in [:layout :yaxis :scaleanchor] "x")))
 
 
 (bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
