@@ -476,12 +476,19 @@
 ;; Finally one can display the noise.
 (bufimg/tensor->image perlin-norm)
 
-;; ## Combination of Worley and Perlin noise
+;; ## Mixing noise values
+;;
+;; ### Combination of Worley and Perlin noise
+;;
+;; One can mix Worley and Perlin noise by simply doing a linear combination of the two.
 (def perlin-worley-norm (dfn/+ (dfn/* 0.3 perlin-norm) (dfn/* 0.7 worley-norm)))
 
+;; Here for example is the average of Perlin and Worley noise.
 (bufimg/tensor->image (dfn/+ (dfn/* 0.5 perlin-norm) (dfn/* 0.5 worley-norm)))
 
-;; ## Interpolation
+;; ### Interpolation
+;;
+;; One can linearly interpolate tensor values by recursing over the dimensions as follows.
 (defn interpolate
   [tensor & args]
   (if (seq args)
@@ -493,7 +500,7 @@
          (*        xf  (apply interpolate (wrap-get tensor (inc x0)) (rest args)))))
     tensor))
 
-
+;; Here x-, y-,  and z-ramps are used to test that interpolation works.
 (facts "Interpolate values of tensor"
        (let [x2 (tensor/compute-tensor [4 6] (fn [_y x] x))
              y2 (tensor/compute-tensor [4 6] (fn [y _x] y))
@@ -510,7 +517,7 @@
          (interpolate y3 2.5 3.5 3.0) => 3.0
          (interpolate z3 2.5 3.5 5.5) => 2.0))
 
-;; ## Octaves of noise
+;; ### Octaves of noise
 (defn fractal-brownian-motion
   [base octaves & args]
   (let [scales (take (count octaves) (iterate #(* 2 %) 1))]
