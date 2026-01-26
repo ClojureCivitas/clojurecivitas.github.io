@@ -25,9 +25,6 @@ image: clouds.jpg
 .clay-side-by-side {margin: 1em 0}
 </style>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" type="text/javascript"></script><script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" type="text/javascript"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.20.0/plotly.min.js" type="text/javascript"></script>
-
-# Procedural generation of volumetric clouds
-
 Volumetric clouds are commonly used in flight simulators and visual effects.
 For a introductory video see [Sebastian Lague's video "Coding Adventure: Clouds](https://www.youtube.com/watch?v=4QOcCGI6xOU).
 Note that this article is about procedural generation and not about simulating real weather.
@@ -212,7 +209,7 @@ Here is a scatter plot showing one random point placed in each cell.
 
 
 ```{=html}
-<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[23.42585547694816,18.189507613376424,4.950576028223416,24.728709896750328,17.30017908201772,17.912957826343145,15.061376728832055,5.9565014104797065,57.590699345493704,60.59822635135083,60.614256037229275,56.188915755436284,38.67676798361539,47.55210430565813,60.452568732576495,49.584338275363216,72.08752123891344,77.21692137204286,65.89704278673725,85.01745833150615,78.9016878167404,95.36576790669605,77.83797409146666,90.79499532241007,100.43841585500546,113.7449780192576,116.93093471375731,105.63119770947668,118.86411700672585,102.78888580110478,126.52099663325612,105.50809867376884,139.3403201121717,144.0318412480076,159.9204768495737,142.0455455273587,141.337549944773,155.84249352330957,159.66518602465882,158.00598531261357,186.7402108713804,178.1053397902581,180.37420776731273,165.55902967318016,180.36749305681636,161.47454272969023,186.83818142669162,168.93077070122564,194.53529512000378,198.82500662704712,198.9611062035475,213.0628706062774,197.2841572681701,192.52572635059707,219.1806597116346,211.90641908314743,239.89821240627253,231.1603974359099,249.99203282398702,241.97554665359002,247.34015473176942,237.32029373064915,237.20027846644786,234.7858152773146],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[6.078687412026984,49.218267994532326,86.05171083347139,116.55249553496435,154.64984010368676,179.72448799846975,192.24185815231,240.14642668995046,7.347892972139579,45.73671914313597,83.58035365914142,126.27800177123301,149.19757109671465,190.08950988452676,206.27502342989024,233.84681545619256,27.405271241567288,34.7881912025052,67.74400478757154,104.95310916039426,133.12581277342017,170.50463491481523,214.87957107425024,227.59372016873834,24.879583658151212,43.629653162577824,84.27484494626717,115.22717803359933,152.2450763226841,161.5070348372026,215.03840314502463,239.8329369169345,22.451813533055685,56.47422961980907,74.8217772453446,103.0897536533855,140.4986636050698,185.33466372057978,197.68483497546197,226.2982018802836,25.422551058875772,44.88670538011573,92.42406401522167,103.67232843530451,133.34254892085943,184.13426398179746,219.98873356821807,235.6254502354953,5.904374281392762,57.80403439992082,90.6099582370496,110.67509426214147,138.75026115248198,185.79437877726093,219.26764545789115,236.5920738584064,0.6392343796278865,35.18085044269449,70.12033695686193,105.41870706365215,129.84276747342562,169.40335764616154,192.522935259552,240.9811785360252],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random points"}, {});</script></div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[17.70780638210882,31.92335189341236,10.090211360027109,8.30845632254093,21.177832977965704,24.651409645530492,24.1210705845193,12.136520252836174,49.443797047757755,55.081140887554184,37.87079890631181,51.07611279499304,41.0353712286213,58.51857300611648,42.161802263705326,60.89747819160104,95.59870935080163,76.47344366035044,79.86047445282574,94.27575666591244,75.61522870081205,78.6206548804954,81.83914264869324,86.63623093322136,110.13796842648699,122.56055837712043,105.01808815642075,116.86089772118315,122.67052383992272,127.50307029704015,122.61264816860408,122.98137141624109,129.3135655534144,146.00060710548684,156.71039536427017,152.9831132442591,149.30392913768685,137.85485918884444,143.30339373446947,158.8459871420633,178.0712878138064,178.32238455918434,175.90053390718052,173.94614836417585,168.93740173588452,184.74403567862953,181.84494802554315,185.9442566831189,201.58294278610109,205.72321155994837,205.46150006111193,209.28501808180556,223.40690536687774,212.97793981675508,208.15935423875095,205.43305609471963,229.90358470717246,231.9917863033451,255.61462579951177,242.97010978226243,254.18214198921348,247.58859153391484,242.15810271141964,241.6785592565504],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[20.17374783204084,55.84862276626468,87.01334316390043,110.53398441378843,143.8764541417936,186.80204943365064,218.035713724919,225.78443351023313,14.58296179605816,53.60822962267703,77.86370088300853,100.52176308651553,135.75728932212002,164.6400085983729,192.6085244572704,224.7559542058754,4.14754995237184,46.69545057314148,84.26622346137515,116.72434315699151,135.05038971322642,185.54791323388264,213.99869350951295,233.47392980065874,23.88987228033712,35.34183664719872,95.29167459938944,96.85188466788713,129.23582297740344,167.95922282934816,218.11469479500994,230.02926238852584,2.386618665840988,33.4818291168627,73.20796686813516,115.68291532044688,152.64144090938333,186.87405567760837,221.62123555333838,234.9606151968105,13.386971769919374,52.011544337740986,74.62958129703462,126.35437022414499,158.1235479497034,190.18047550163877,209.1511717181102,251.60695283973905,27.555770040798066,32.172568180914936,67.79197643568483,103.77662723000965,132.872559947122,185.1007844531261,204.64242003075265,232.5850791821582,12.341673968798794,33.06073931316353,69.95100381760514,126.17355000696344,154.34367152831766,174.762808416456,222.7998709533633,248.39217543609337],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random points"}, {});</script></div>
 ```
 
 
@@ -274,6 +271,8 @@ Using the `mod-dist` function we can calculate the distance between two points i
 ```
 :::
 
+
+The `tabular` macro implemented by Midje is useful for running parametrized tests.
 
 
 ::: {.sourceClojure}
@@ -615,7 +614,7 @@ The gradient field can be plotted with Plotly as a scatter plot of disconnected 
 
 
 ```{=html}
-<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,-0.20604936002203628,null,0.0,0.15863087919023647,null,0.0,-0.38085674430926364,null,0.0,0.4999952322475774,null,0.0,0.49896122067290766,null,0.0,0.4620479921178867,null,0.0,-0.4967620754481247,null,0.0,0.2861663871022829,null,1.0,0.5561035581092595,null,1.0,0.8794854493438875,null,1.0,0.5023510978381946,null,1.0,1.1147734779998841,null,1.0,1.3172216220698991,null,1.0,1.2925113717621732,null,1.0,1.0112994126167834,null,1.0,1.2966272296641015,null,2.0,1.930324927040028,null,2.0,1.6762709208065099,null,2.0,1.9736544837928423,null,2.0,1.5843483042620767,null,2.0,1.5574981400464725,null,2.0,2.1243591769536927,null,2.0,2.3112898781434685,null,2.0,1.6086687582437202,null,3.0,2.5110511386278627,null,3.0,2.883209548448048,null,3.0,3.327007025316867,null,3.0,3.4996457318979135,null,3.0,2.5531451244109484,null,3.0,3.4539580068409967,null,3.0,3.0237712303452655,null,3.0,2.6294921346023856,null,4.0,4.022458960608534,null,4.0,3.962791227393187,null,4.0,3.5247006460601287,null,4.0,3.720620458647807,null,4.0,4.2041832251573075,null,4.0,3.5639673862707104,null,4.0,4.4982593574891006,null,4.0,3.7428105582185895,null,5.0,5.4707657818602415,null,5.0,4.850514171988135,null,5.0,5.482401274376597,null,5.0,4.662394737778072,null,5.0,5.211720736349805,null,5.0,4.61596959479211,null,5.0,4.596018090714494,null,5.0,4.512705196737749,null,6.0,5.561748617744251,null,6.0,6.475508303727065,null,6.0,5.527581826337281,null,6.0,6.264397279259755,null,6.0,6.365721288944369,null,6.0,5.686262443223099,null,6.0,6.365904483257755,null,6.0,6.310197807040303,null,7.0,6.930384638284146,null,7.0,6.526560443669684,null,7.0,7.4964011763910765,null,7.0,6.5622140205456665,null,7.0,6.9216251721324165,null,7.0,7.275662472632201,null,7.0,6.502540684237719,null,7.0,7.27668785788522,null],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,-0.4555696008674298,null,1.0,1.4741690038027926,null,2.0,2.323957003804746,null,3.0,2.997816486846595,null,4.0,4.032213355376332,null,5.0,5.1910802265537415,null,6.0,6.056810565887621,null,7.0,7.410010730216694,null,0.0,-0.23012159585041211,null,1.0,1.4852589443587365,null,2.0,1.9515689131120322,null,3.0,3.4866487940474222,null,4.0,3.6135152752160287,null,5.0,4.594491556943864,null,6.0,6.499872306969006,null,7.0,7.402507498839215,null,0.0,-0.4951215852778211,null,1.0,1.3810504996513389,null,2.0,1.500694568649831,null,3.0,2.7220905402290363,null,4.0,3.7672080243271506,null,5.0,5.4842879258327635,null,6.0,5.608721823039637,null,7.0,7.311223166273798,null,0.0,0.10454191007864061,null,1.0,1.4861686851559768,null,2.0,2.378241200021116,null,3.0,2.981181323208093,null,4.0,3.7756771965173996,null,5.0,4.790423932604533,null,6.0,6.499434608940822,null,7.0,7.335743833418431,null,0.0,0.4994953404070796,null,1.0,1.4986135850948052,null,2.0,1.8447887757140577,null,3.0,3.414665011634498,null,4.0,3.5435909613467755,null,5.0,4.755305170131439,null,6.0,6.041684681533494,null,7.0,6.571218480999745,null,0.0,0.16846239529792836,null,1.0,0.522869004126113,null,2.0,2.1314876818558854,null,3.0,2.631187463716235,null,4.0,4.452961731054066,null,5.0,5.3201884568123345,null,6.0,5.705383949911012,null,7.0,6.888001005747354,null,0.0,-0.24069841285501906,null,1.0,0.8454301029093653,null,2.0,2.163771393085548,null,3.0,3.4243749270633685,null,4.0,4.340951519739786,null,5.0,5.389318308672558,null,6.0,5.659245089350314,null,7.0,6.607855485174933,null,0.0,-0.4951299843608451,null,1.0,1.1607948584431518,null,2.0,2.059882151577536,null,3.0,3.241543859771284,null,4.0,3.5061808161313226,null,5.0,4.582854700155568,null,6.0,5.949658872069417,null,7.0,7.416465880113711,null],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random gradients"}, {});</script></div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,-0.4822952263098752,null,0.0,-0.1394028234133456,null,0.0,-0.45318526852082613,null,0.0,-0.4355113457874082,null,0.0,0.29553059341129534,null,0.0,0.2687894836740384,null,0.0,0.3405111104849766,null,0.0,-0.4856266555937909,null,1.0,1.3755602947493952,null,1.0,0.8642382357999572,null,1.0,1.284551561145744,null,1.0,0.8763971179212906,null,1.0,1.4973914001399211,null,1.0,0.9396115929226927,null,1.0,0.6361303598871916,null,1.0,0.5162671903498609,null,2.0,2.1380283905816526,null,2.0,1.513603334586218,null,2.0,2.436707352247592,null,2.0,1.572899751950954,null,2.0,1.8527186727809024,null,2.0,2.4853575989664356,null,2.0,2.2789820326814265,null,2.0,1.784709455381447,null,3.0,3.499635016184241,null,3.0,2.542311011144384,null,3.0,3.1984264414515153,null,3.0,3.376942390026162,null,3.0,2.9981661921349323,null,3.0,2.721060866958555,null,3.0,2.535469756070982,null,3.0,3.4669996022784098,null,4.0,3.636837498875207,null,4.0,4.429571440912929,null,4.0,3.86505532732362,null,4.0,3.6625554558074436,null,4.0,4.239301824591318,null,4.0,4.158181910952864,null,4.0,3.6546670972867545,null,4.0,4.399139477689273,null,5.0,5.339502809460831,null,5.0,4.772522095069016,null,5.0,5.163688912084758,null,5.0,5.465672373999245,null,5.0,4.765402033816763,null,5.0,5.491816262266537,null,5.0,4.579502427707389,null,5.0,5.095368571289715,null,6.0,6.225191771232561,null,6.0,6.400686043414137,null,6.0,5.98510272586067,null,6.0,5.783555379517349,null,6.0,6.170892077058232,null,6.0,6.159436305091123,null,6.0,6.438158276968689,null,6.0,5.526671274072294,null,7.0,7.494903581888245,null,7.0,7.469410635794342,null,7.0,6.57333626667484,null,7.0,7.372761657500186,null,7.0,7.323413337058816,null,7.0,6.5815623056225085,null,7.0,6.875625230812441,null,7.0,6.6421749972500965,null],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,0.13187613384804056,null,1.0,0.5198262264300688,null,2.0,1.7887581660851555,null,3.0,2.7543786090536075,null,4.0,3.5966866375162265,null,5.0,5.421606704721644,null,6.0,6.3661313748318875,null,7.0,6.880975837004457,null,0.0,-0.3300825124234051,null,1.0,0.5187840989937136,null,2.0,2.4111330794882844,null,3.0,3.4844815038180887,null,4.0,4.0510077941774485,null,5.0,5.496339843545393,null,6.0,5.657073061711134,null,7.0,6.8734987396585225,null,0.0,-0.4805706643080066,null,1.0,0.8841626835844613,null,2.0,1.7565114202002539,null,3.0,3.2599718794724604,null,4.0,3.5221839154522097,null,5.0,5.120116614693958,null,6.0,6.414932555291748,null,7.0,6.548724051828765,null,0.0,0.019101062865008414,null,1.0,0.7987022367726762,null,2.0,2.458941115321877,null,3.0,2.6714966749005957,null,4.0,3.5000033628625946,null,5.0,4.585038604135171,null,6.0,6.184963922090895,null,7.0,6.8213624578320475,null,0.0,0.34367571601261626,null,1.0,1.255867890037007,null,2.0,1.5185543277624518,null,3.0,2.631040409265896,null,4.0,3.560984468671932,null,5.0,4.52568103237663,null,6.0,6.361587038351272,null,7.0,7.301143947888605,null,0.0,-0.367066536704454,null,1.0,1.4452570075453168,null,2.0,1.5275532410307928,null,3.0,2.817930672286882,null,4.0,3.558452953511533,null,5.0,4.909906913860315,null,6.0,5.729478666837492,null,7.0,6.509179426256235,null,0.0,-0.44641759168870354,null,1.0,1.299083089814728,null,2.0,2.4997780219489623,null,3.0,3.4507235585856604,null,4.0,3.530110759860663,null,5.0,5.4738987915355874,null,6.0,5.759132143439957,null,7.0,6.838879184424686,null,0.0,0.07120705466584866,null,1.0,1.1722023664272676,null,2.0,1.739312335034746,null,3.0,2.6667602264169026,null,4.0,3.6186814803704377,null,5.0,4.726303277469295,null,6.0,5.515716078328486,null,7.0,6.6507704660155,null],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random gradients"}, {});</script></div>
 ```
 
 
@@ -1090,6 +1089,8 @@ true
 
 ### Octaves of noise
 
+Fractal Brownian Motion is implemented by computing a weighted sum of the same base noise function using different frequencies.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -1102,6 +1103,8 @@ true
 ```
 :::
 
+
+Here the Fractal Brownian Motion is tested using an alternating 1D function and later a 2D checkboard function.
 
 
 ::: {.sourceClojure}
@@ -1136,6 +1139,11 @@ true
 ```
 :::
 
+
+
+### Remapping and clamping
+
+The remap function is used to map a range of values of an input tensor to a different range.
 
 
 ::: {.sourceClojure}
@@ -1174,6 +1182,8 @@ true
 :::
 
 
+The clamp function is used to clamp a value to a range.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -1208,6 +1218,11 @@ true
 
 
 
+### Generating octaves of noise
+
+The octaves function is to create a series of decreasing weights and normalize them so that they add up to 1.
+
+
 ::: {.sourceClojure}
 ```clojure
 (defn octaves
@@ -1218,6 +1233,8 @@ true
 ```
 :::
 
+
+Here is an example of noise weights decreasing by 50% at each octave.
 
 
 ::: {.sourceClojure}
@@ -1238,6 +1255,8 @@ true
 ```
 :::
 
+
+Now a noise array can be generated using octaves of noise.
 
 
 ::: {.sourceClojure}
@@ -1261,6 +1280,11 @@ true
 
 
 
+### 2D examples
+
+Here is an example of 4 octaves of Worley noise.
+
+
 ::: {.sourceClojure}
 ```clojure
 (bufimg/tensor->image (noise-octaves worley-norm (octaves 4 0.6) 120 230))
@@ -1272,6 +1296,8 @@ true
 ![](main_files/image3.png)
 :::
 
+
+Here is an example of 4 octaves of Perlin noise.
 
 
 ::: {.sourceClojure}
@@ -1285,6 +1311,8 @@ true
 ![](main_files/image4.png)
 :::
 
+
+Here is an example of 4 octaves of mixed Perlin and Worley noise.
 
 
 ::: {.sourceClojure}
@@ -1300,7 +1328,13 @@ true
 
 
 
-## Testing shaders
+## OpenGL rendering
+
+
+### OpenGL initialization
+
+In order to render the clouds we create a window and an OpenGL context.
+Note that we need to create an invisible window to get an OpenGL context, even though we are not going to draw to the window
 
 
 ::: {.sourceClojure}
@@ -1405,11 +1439,16 @@ nil
 
 ::: {.printedClojure}
 ```clojure
-#object[org.lwjgl.opengl.GLCapabilities 0x39d3f717 "org.lwjgl.opengl.GLCapabilities@39d3f717"]
+#object[org.lwjgl.opengl.GLCapabilities 0x734ee5fd "org.lwjgl.opengl.GLCapabilities@734ee5fd"]
 
 ```
 :::
 
+
+
+### Compiling and linking shader programs
+
+The following method is used compile a shader program.
 
 
 ::: {.sourceClojure}
@@ -1424,6 +1463,8 @@ nil
 ```
 :::
 
+
+The different shaders are then linked to become a shader program using the following method.
 
 
 ::: {.sourceClojure}
@@ -1441,6 +1482,8 @@ nil
 :::
 
 
+This method is used to perform both compilation and linking of vertex shaders and fragment shaders.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -1454,33 +1497,7 @@ nil
 :::
 
 
-
-::: {.sourceClojure}
-```clojure
-(def vertex-test "
-#version 130
-in vec3 point;
-void main()
-{
-  gl_Position = vec4(point, 1);
-}")
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(def fragment-test "
-#version 130
-out vec4 fragColor;
-void main()
-{
-  fragColor = vec4(1, 1, 1, 1);
-}")
-```
-:::
-
+In order to pass data to LWJGL methods, we need to be able to convert arrays to Java buffer objects.
 
 
 ::: {.sourceClojure}
@@ -1494,6 +1511,11 @@ void main()
 ```
 :::
 
+
+
+### Setup of vertex data
+
+Above macro is used to define methods for creating float, int, and byte buffer objects.
 
 
 ::: {.sourceClojure}
@@ -1546,6 +1568,8 @@ void main()
 :::
 
 
+We implement a method to create a vertex array object (VAO) with a vertex buffer object (VBO) and an index buffer object (IBO).
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -1565,6 +1589,8 @@ void main()
 :::
 
 
+We also define the corresponding destructor for the vertex data.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -1580,18 +1606,9 @@ void main()
 
 
 
-::: {.sourceClojure}
-```clojure
-(defn float-buffer->array
-  "Convert float buffer to flaot array"
-  [buffer]
-  (let [result (float-array (.limit buffer))]
-    (.get buffer result)
-    (.flip buffer)
-    result))
-```
-:::
+### Offscreen rendering to a texture
 
+The following method is used to create an empty 2D RGBA floating point texture
 
 
 ::: {.sourceClojure}
@@ -1610,6 +1627,24 @@ void main()
 :::
 
 
+We define a method to convert a Java buffer object to a floating point array.
+
+
+::: {.sourceClojure}
+```clojure
+(defn float-buffer->array
+  "Convert float buffer to float array"
+  [buffer]
+  (let [result (float-array (.limit buffer))]
+    (.get buffer result)
+    (.flip buffer)
+    result))
+```
+:::
+
+
+The following method reads texture data into a Java buffer and then converts it to a floating point array.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -1622,6 +1657,8 @@ void main()
 ```
 :::
 
+
+This method sets up rendering to a specified texture of specified size and then executes the body.
 
 
 ::: {.sourceClojure}
@@ -1645,6 +1682,9 @@ void main()
 :::
 
 
+We also create a method to set up the layout of the vertex buffer.
+Our vertex data is only going to be 3D coordinates of points.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -1658,17 +1698,24 @@ void main()
 :::
 
 
+We are going to use a simple background quad to perform volumetric rendering.
+
 
 ::: {.sourceClojure}
 ```clojure
 (defn setup-quad-vao
   []
-  (let [vertices (float-array [1.0 1.0 0.0, -1.0 1.0 0.0, -1.0 -1.0 0.0, 1.0 -1.0 0.0])
-        indices  (int-array [0 1 2 3])]
+  (let [vertices (float-array [ 1.0  1.0 0.0,
+                               -1.0  1.0 0.0,
+                                1.0 -1.0 0.0,
+                               -1.0 -1.0 0.0])
+        indices  (int-array [0 1 3 2])]
     (setup-vao vertices indices)))
 ```
 :::
 
+
+We now have all definitions ready to implement rendering of an image.
 
 
 ::: {.sourceClojure}
@@ -1684,6 +1731,10 @@ void main()
 ```
 :::
 
+
+The following method creates a program and the quad VAO and sets up the memory layout.
+The program and VAO are then used to render a single pixel.
+Using this method we can write unit tests for OpenGL shaders!
 
 
 ::: {.sourceClojure}
@@ -1704,10 +1755,44 @@ void main()
 :::
 
 
+We are going to use this simple vertex shader to simply pass through the points from the vertex buffer without any transformations.
+
 
 ::: {.sourceClojure}
 ```clojure
-(render-pixel [vertex-test] [fragment-test])
+(def vertex-passthrough
+"#version 130
+in vec3 point;
+void main()
+{
+  gl_Position = vec4(point, 1);
+}")
+```
+:::
+
+
+The following fragment shader is used to test rendering white pixels.
+
+
+::: {.sourceClojure}
+```clojure
+(def fragment-test
+"#version 130
+out vec4 fragColor;
+void main()
+{
+  fragColor = vec4(1, 1, 1, 1);
+}")
+```
+:::
+
+
+We can now render a single white RGBA pixel using the graphics card.
+
+
+::: {.sourceClojure}
+```clojure
+(render-pixel [vertex-passthrough] [fragment-test])
 ```
 :::
 
@@ -1722,7 +1807,12 @@ void main()
 
 
 
-## Noise octaves shader
+## Volumetric Clouds
+
+
+### Mocks and probing shaders
+
+The following fragment shader creates a 3D checkboard pattern serving as a mock function below.
 
 
 ::: {.sourceClojure}
@@ -1737,6 +1827,9 @@ float noise(vec3 idx)
 ```
 :::
 
+
+We can test this mock function using the following probing shader.
+Note that we are using the `template` macro of the `comb` Clojure library to generate the shader code from a template.
 
 
 ::: {.sourceClojure}
@@ -1754,11 +1847,13 @@ void main()
 :::
 
 
+Here multiple tests are run to test that the mock implements a checkboard pattern correctly.
+
 
 ::: {.sourceClojure}
 ```clojure
 (tabular "Test noise mock"
-         (fact (nth (render-pixel [vertex-test] [noise-mock (noise-probe ?x ?y ?z)]) 0)
+         (fact (nth (render-pixel [vertex-passthrough] [noise-mock (noise-probe ?x ?y ?z)]) 0)
                => ?result)
          ?x ?y ?z ?result
          0  0  0  0.0
@@ -1783,6 +1878,12 @@ true
 
 
 
+### Octaves of noise
+
+We now implement a shader for 3D Fractal Brownian motion.
+Note that we can use the template macro to generate code for an arbitrary number of octaves.
+
+
 ::: {.sourceClojure}
 ```clojure
 (def noise-octaves
@@ -1803,6 +1904,8 @@ float octaves(vec3 idx)
 :::
 
 
+Again we use a probing shader to test the shader function.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -1819,11 +1922,13 @@ void main()
 :::
 
 
+A few unit tests with one or two octaves are sufficient to drive development of the shader function.
+
 
 ::: {.sourceClojure}
 ```clojure
 (tabular "Test octaves of noise"
-         (fact (first (render-pixel [vertex-test]
+         (fact (first (render-pixel [vertex-passthrough]
                                     [noise-mock (noise-octaves ?octaves)
                                      (octaves-probe ?x ?y ?z)]))
                => ?result)
@@ -1848,7 +1953,10 @@ true
 
 
 
-## Shader for intersecting a ray with a box
+### Shader for intersecting a ray with a box
+
+The following shader implements intersection of a ray with an axis-aligned box.
+The shader function returns the distance of the near and far intersection with the box.
 
 
 ::: {.sourceClojure}
@@ -1873,6 +1981,8 @@ vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction)
 :::
 
 
+The probing shader returns the near and far distance in the red and green channel of the fragment color.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -1893,12 +2003,14 @@ void main()
 :::
 
 
+The shader is tested with different ray origins and directions.
+
 
 ::: {.sourceClojure}
 ```clojure
 (tabular "Test intersection of ray with box"
          (fact ((juxt first second)
-                (render-pixel [vertex-test]
+                (render-pixel [vertex-passthrough]
                               [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)]))
                => ?result)
          ?ox ?oy ?oz ?dx ?dy ?dz ?result
@@ -1927,7 +2039,9 @@ true
 
 
 
-## Shader for light transfer through clouds
+### Shader for light transfer through clouds
+
+We test the light transfer through clouds using constant density fog.
 
 
 ::: {.sourceClojure}
@@ -1942,6 +2056,8 @@ float fog(vec3 idx)
 ```
 :::
 
+
+Volumetric rendering involves sampling cloud density along a ray and multiplying the transmittance values.
 
 
 ::: {.sourceClojure}
@@ -1970,6 +2086,9 @@ vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval)
 :::
 
 
+For now we also assume isotropic scattering of light in all directions.
+This is a placeholder for introducing Mie scattering later.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -1983,6 +2102,9 @@ float in_scatter(vec3 point, vec3 direction)
 :::
 
 
+Finally we assume that there is no shadow.
+This is a placeholder for introducing cloud shadows later.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -1995,6 +2117,8 @@ float shadow(vec3 point)
 ```
 :::
 
+
+We can now test the color and opacity of the cloud using the following probing shader.
 
 
 ::: {.sourceClojure}
@@ -2015,6 +2139,8 @@ void main()
 :::
 
 
+We also introduce a Midje checker for requiring a vector to have an approximate value.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -2028,11 +2154,13 @@ void main()
 :::
 
 
+A few tests are performed to check that there is opacity and that the step size does not affect the result in constant fog.
+
 
 ::: {.sourceClojure}
 ```clojure
 (tabular "Test cloud transfer"
-         (fact (seq (render-pixel [vertex-test]
+         (fact (seq (render-pixel [vertex-passthrough]
                                   [(fog ?density) constant-scatter no-shadow
                                    (cloud-transfer "fog" ?step)
                                    (cloud-transfer-probe ?a ?b)]))
@@ -2056,7 +2184,17 @@ true
 
 
 
-## Rendering of fog box
+### Rendering of fog box
+
+The following fragment shader is used to render an image of a box filled with fog.
+
+
+* The pixel coordinate and the resolution of the image are used to determine a viewing direction which also gets rotated using the rotation matrix.
+* The origin of the camera is set at a specified distance to the center of the box and rotated as well.
+* The ray box function is used to determine the near and far intersection points of the ray with the box.
+* The cloud transfer function is used to sample the cloud density along the ray and determine the overall opacity and color of the fog box.
+* The background is a mix of blue color and a small blob of white where the viewing direction points to the light source.
+* The opacity value of the fog is used to overlay the fog color over the background.
 
 
 ::: {.sourceClojure}
@@ -2112,7 +2250,7 @@ void main()
   [width height]
   (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01)
                           (fog 1.0) fragment-cloud]
-        program          (make-program-with-shaders [vertex-test] fragment-sources)
+        program          (make-program-with-shaders [vertex-passthrough] fragment-sources)
         vao              (setup-quad-vao)]
     (setup-point-attribute program)
     (try
@@ -2152,7 +2290,7 @@ void main()
 
 
 
-## Rendering of 3D noise
+### Rendering of 3D noise
 
 
 ::: {.sourceClojure}
@@ -2233,7 +2371,7 @@ float noise(vec3 idx)
 (defn render-noise
   [width height & cloud-shaders]
   (let [fragment-sources (concat cloud-shaders [ray-box fragment-cloud])
-        program          (make-program-with-shaders [vertex-test] fragment-sources)
+        program          (make-program-with-shaders [vertex-passthrough] fragment-sources)
         vao              (setup-quad-vao)]
     (try
       (setup-point-attribute program)
@@ -2265,7 +2403,7 @@ float noise(vec3 idx)
 
 
 
-## Remap and clamp 3D noise
+### Remap and clamp 3D noise
 
 
 ::: {.sourceClojure}
@@ -2302,7 +2440,7 @@ void main()
 ```clojure
 (tabular "Remap and clamp input parameter values"
        (fact (first (render-pixel
-                      [vertex-test]
+                      [vertex-passthrough]
                       [remap-clamp (remap-probe ?value ?low1 ?high1 ?low2 ?high2)]))
              => ?expected)
        ?value ?low1 ?high1 ?low2 ?high2 ?expected
@@ -2371,7 +2509,7 @@ float remap_noise(vec3 idx)
 
 
 
-## Octaves of 3D noise
+### Octaves of 3D noise
 
 
 ::: {.sourceClojure}
@@ -2392,7 +2530,7 @@ float remap_noise(vec3 idx)
 
 
 
-## Mie scattering
+### Mie scattering
 
 
 ::: {.sourceClojure}
@@ -2437,7 +2575,7 @@ void main()
 ::: {.sourceClojure}
 ```clojure
 (tabular "Shader function for scattering phase function"
-         (fact (first (render-pixel [vertex-test] [(mie-scatter ?g) (mie-probe ?mu)]))
+         (fact (first (render-pixel [vertex-passthrough] [(mie-scatter ?g) (mie-probe ?mu)]))
                => (roughly ?result 1e-6))
          ?g  ?mu ?result
          0   0   (/ 3 (* 16 PI))
@@ -2462,7 +2600,7 @@ true
 ::: {.sourceClojure}
 ```clojure
 (defn scatter-amount [theta]
-  (first (render-pixel [vertex-test] [(mie-scatter 0.76) (mie-probe (cos theta))])))
+  (first (render-pixel [vertex-passthrough] [(mie-scatter 0.76) (mie-probe (cos theta))])))
 ```
 :::
 
@@ -2513,7 +2651,7 @@ true
 
 
 
-## Self-shading of clouds
+### Self-shading of clouds
 
 
 ::: {.sourceClojure}
@@ -2561,7 +2699,7 @@ float shadow(vec3 point)
 
 
 
-## Tidy up
+### Tidy up
 
 
 ::: {.sourceClojure}
@@ -2638,6 +2776,7 @@ nil
 * [Vertical density profile](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
 * [Powder function](https://advances.realtimerendering.com/s2015/index.html)
 * [Curl noise](https://www.wedesoft.de/software/2023/03/20/procedural-global-cloud-cover/)
+* [Precomputed atmospheric scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/)
 * [Deep opacity maps](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
 
 
