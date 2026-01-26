@@ -624,6 +624,7 @@
 ;; #### OpenGL setup
 ;;
 ;; In order to render the clouds we create a window and an OpenGL context.
+;; Note that we need to create an invisible window to get an OpenGL context, even though we are not going to draw to the window
 (GLFW/glfwInit)
 
 (def window-width 640)
@@ -647,7 +648,7 @@
       (throw (Exception. (GL20/glGetShaderInfoLog shader 1024))))
     shader))
 
-
+;; The different shaders are then linked to become a shader program using the following method.
 (defn make-program [& shaders]
   (let [program (GL20/glCreateProgram)]
     (doseq [shader shaders]
@@ -658,7 +659,7 @@
       (throw (Exception. (GL20/glGetProgramInfoLog program 1024))))
     program))
 
-
+;; This method is used to perform both compilation and linking of vertex shaders and fragment shaders.
 (defn make-program-with-shaders
   [vertex-sources fragment-sources]
   (let [vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-sources)
@@ -666,8 +667,8 @@
         program          (apply make-program (concat vertex-shaders fragment-shaders))]
     program))
 
-
-(def vertex-test
+;; We are going to use this simple vertex shader to simply pass a vertex through without any transformations.
+(def vertex-passthrough
 "#version 130
 in vec3 point;
 void main()
@@ -675,7 +676,7 @@ void main()
   gl_Position = vec4(point, 1);
 }")
 
-
+;; The following fragment shader is used to test rendering white pixels.
 (def fragment-test
 "#version 130
 out vec4 fragColor;
@@ -684,7 +685,7 @@ void main()
   fragColor = vec4(1, 1, 1, 1);
 }")
 
-
+;; In order to pass data to LWJGL methods, we need to be able to convert arrays to Java buffer objects.
 (defmacro def-make-buffer [method create-buffer]
   `(defn ~method [data#]
      (let [buffer# (~create-buffer (count data#))]
@@ -692,10 +693,12 @@ void main()
        (.flip buffer#)
        buffer#)))
 
+;; Above macro is used to define methods for creating float, int, and byte buffer objects.
 (def-make-buffer make-float-buffer BufferUtils/createFloatBuffer)
 (def-make-buffer make-int-buffer BufferUtils/createIntBuffer)
 (def-make-buffer make-byte-buffer BufferUtils/createByteBuffer)
 
+;; We implement a method to create a vertex array object with a vertex buffer object and an index buffer object.
 (defn setup-vao [vertices indices]
   (let [vao (GL30/glGenVertexArrays)
         vbo (GL15/glGenBuffers)
@@ -709,7 +712,7 @@ void main()
                        GL15/GL_STATIC_DRAW)
     {:vao vao :vbo vbo :ibo ibo}))
 
-
+;; We also define the corresponding destructor for the vertex data.
 (defn teardown-vao [{:keys [vao vbo ibo]}]
   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
   (GL15/glDeleteBuffers ibo)
@@ -718,16 +721,9 @@ void main()
   (GL30/glBindVertexArray 0)
   (GL15/glDeleteBuffers vao))
 
-
-(defn float-buffer->array
-  "Convert float buffer to flaot array"
-  [buffer]
-  (let [result (float-array (.limit buffer))]
-    (.get buffer result)
-    (.flip buffer)
-    result))
-
-
+;; #### Offscreen rendering to a texture
+;;
+;; The following method is used to create an empty 2D RGBA floating point texture
 (defn make-texture-2d
   [width height]
   (let [texture (GL11/glGenTextures)]
@@ -739,7 +735,16 @@ void main()
     (GL42/glTexStorage2D GL11/GL_TEXTURE_2D 1 GL30/GL_RGBA32F width height)
     texture))
 
+;; We define a method to convert a Java buffer object to a floating point array.
+(defn float-buffer->array
+  "Convert float buffer to float array"
+  [buffer]
+  (let [result (float-array (.limit buffer))]
+    (.get buffer result)
+    (.flip buffer)
+    result))
 
+;; The following method reads texture data into a Java buffer and then converts it to a floating point array.
 (defn read-texture-2d
   [texture width height]
   (let [buffer (BufferUtils/createFloatBuffer (* height width 4))]
@@ -747,7 +752,7 @@ void main()
     (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL12/GL_RGBA GL11/GL_FLOAT buffer)
     (float-buffer->array buffer)))
 
-
+;; This method sets up rendering to a specified texture of specified size and then executes the body.
 (defmacro framebuffer-render
   [texture width height & body]
   `(let [fbo# (GL30/glGenFramebuffers)]
@@ -764,7 +769,8 @@ void main()
          (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
          (GL30/glDeleteFramebuffers fbo#)))))
 
-
+;; We also create a method to set up the layout of the vertex buffer.
+;; Our vertex data is only going to be 3D coordinates of points.
 (defn setup-point-attribute
   [program]
   (let [point-attribute (GL20/glGetAttribLocation program "point")]
@@ -804,7 +810,7 @@ void main()
         (GL20/glDeleteProgram program)))))
 
 
-(render-pixel [vertex-test] [fragment-test])
+(render-pixel [vertex-passthrough] [fragment-test])
 
 
 ;; ## Noise octaves shader
@@ -830,7 +836,7 @@ void main()
 
 
 (tabular "Test noise mock"
-         (fact (nth (render-pixel [vertex-test] [noise-mock (noise-probe ?x ?y ?z)]) 0)
+         (fact (nth (render-pixel [vertex-passthrough] [noise-mock (noise-probe ?x ?y ?z)]) 0)
                => ?result)
          ?x ?y ?z ?result
          0  0  0  0.0
@@ -871,7 +877,7 @@ void main()
 
 
 (tabular "Test octaves of noise"
-         (fact (first (render-pixel [vertex-test]
+         (fact (first (render-pixel [vertex-passthrough]
                                     [noise-mock (noise-octaves ?octaves)
                                      (octaves-probe ?x ?y ?z)]))
                => ?result)
@@ -921,7 +927,7 @@ void main()
 
 (tabular "Test intersection of ray with box"
          (fact ((juxt first second)
-                (render-pixel [vertex-test]
+                (render-pixel [vertex-passthrough]
                               [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)]))
                => ?result)
          ?ox ?oy ?oz ?dx ?dy ?dz ?result
@@ -1010,7 +1016,7 @@ void main()
 
 
 (tabular "Test cloud transfer"
-         (fact (seq (render-pixel [vertex-test]
+         (fact (seq (render-pixel [vertex-passthrough]
                                   [(fog ?density) constant-scatter no-shadow
                                    (cloud-transfer "fog" ?step)
                                    (cloud-transfer-probe ?a ?b)]))
@@ -1065,7 +1071,7 @@ void main()
   [width height]
   (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01)
                           (fog 1.0) fragment-cloud]
-        program          (make-program-with-shaders [vertex-test] fragment-sources)
+        program          (make-program-with-shaders [vertex-passthrough] fragment-sources)
         vao              (setup-quad-vao)]
     (setup-point-attribute program)
     (try
@@ -1131,7 +1137,7 @@ float noise(vec3 idx)
 (defn render-noise
   [width height & cloud-shaders]
   (let [fragment-sources (concat cloud-shaders [ray-box fragment-cloud])
-        program          (make-program-with-shaders [vertex-test] fragment-sources)
+        program          (make-program-with-shaders [vertex-passthrough] fragment-sources)
         vao              (setup-quad-vao)]
     (try
       (setup-point-attribute program)
@@ -1174,7 +1180,7 @@ void main()
 
 (tabular "Remap and clamp input parameter values"
        (fact (first (render-pixel
-                      [vertex-test]
+                      [vertex-passthrough]
                       [remap-clamp (remap-probe ?value ?low1 ?high1 ?low2 ?high2)]))
              => ?expected)
        ?value ?low1 ?high1 ?low2 ?high2 ?expected
@@ -1253,7 +1259,7 @@ void main()
 
 
 (tabular "Shader function for scattering phase function"
-         (fact (first (render-pixel [vertex-test] [(mie-scatter ?g) (mie-probe ?mu)]))
+         (fact (first (render-pixel [vertex-passthrough] [(mie-scatter ?g) (mie-probe ?mu)]))
                => (roughly ?result 1e-6))
          ?g  ?mu ?result
          0   0   (/ 3 (* 16 PI))
@@ -1264,7 +1270,7 @@ void main()
 
 
 (defn scatter-amount [theta]
-  (first (render-pixel [vertex-test] [(mie-scatter 0.76) (mie-probe (cos theta))])))
+  (first (render-pixel [vertex-passthrough] [(mie-scatter 0.76) (mie-probe (cos theta))])))
 
 
 (let [scatter
