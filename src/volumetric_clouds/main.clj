@@ -29,8 +29,6 @@
              [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL32 GL42]))
 
 
-;; # Procedural generation of volumetric clouds
-;;
 ;; Volumetric clouds are commonly used in flight simulators and visual effects.
 ;; For a introductory video see [Sebastian Lague's video "Coding Adventure: Clouds](https://www.youtube.com/watch?v=4QOcCGI6xOU).
 ;; Note that this article is about procedural generation and not about simulating real weather.
@@ -144,6 +142,7 @@
   [params a b]
   (mag (mod-vec params (sub b a))))
 
+;; The `tabular` macro implemented by Midje is useful for running parametrized tests.
 (tabular "Wrapped distance of two points"
          (fact (mod-dist {:size 8} (vec2 ?ax ?ay) (vec2 ?bx ?by)) => ?result)
          ?ax ?ay ?bx ?by ?result
@@ -518,6 +517,8 @@
          (interpolate z3 2.5 3.5 5.5) => 2.0))
 
 ;; ### Octaves of noise
+;;
+;; Fractal Brownian Motion is implemented by computing a weighted sum of the same base noise function using different frequencies.
 (defn fractal-brownian-motion
   [base octaves & args]
   (let [scales (take (count octaves) (iterate #(* 2 %) 1))]
@@ -525,7 +526,7 @@
             (map (fn [amplitude scale] (* amplitude (apply base (map #(* scale %) args))))
                  octaves scales))))
 
-
+;; Here the Fractal Brownian Motion is tested using an alternating 1D function and later a 2D checkboard function.
 (facts "Fractal Brownian motion"
        (let [base1 (fn [x] (if (>= (mod x 2.0) 1.0) 1.0 0.0))
              base2 (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0)))
@@ -545,11 +546,12 @@
          (fractal-brownian-motion base1 [0.0 1.0] 0.0) => 0.0
          (fractal-brownian-motion base1 [0.0 1.0] 0.5) => 1.0))
 
-
+;; ### Remapping and clamping
+;;
+;; The remap function is used to map a range of values of an input tensor to a different range.
 (defn remap
   [value low1 high1 low2 high2]
   (dfn/+ low2 (dfn/* (dfn/- value low1) (/ (- high2 low2) (- high1 low1)))))
-
 
 (tabular "Remap values of tensor"
        (fact ((remap (tensor/->tensor [?value]) ?low1 ?high1 ?low2 ?high2) 0)
@@ -564,10 +566,10 @@
        1      0     2      0     4      2)
 
 
+;; The clamp function is used to clamp a value to a range.
 (defn clamp
   [value low high]
   (dfn/max low (dfn/min value high)))
-
 
 (tabular "Clamp values of tensor"
        (fact ((clamp (tensor/->tensor [?value]) ?low ?high) 0) => ?expected)
@@ -577,17 +579,20 @@
        0      2    3      2
        4      2    3      3)
 
-
+;; ### Generating octaves of noise
+;;
+;; The octaves function is to create a series of decreasing weights and normalize them so that they add up to 1.
 (defn octaves
   [n decay]
   (let [series (take n (iterate #(* % decay) 1.0))
         sum    (apply + series)]
     (mapv #(/ % sum) series)))
 
-
+;; Here is an example of noise weights decreasing by 50% at each octave.
 (octaves 4 0.5)
 
 
+;; Now a noise array can be generated using octaves of noise.
 (defn noise-octaves
   [tensor octaves low high]
   (tensor/clone
@@ -603,15 +608,24 @@
         low high 0 255)
       0 255)))
 
+;; ### 2D examples
+;;
+;; Here is an example of 4 octaves of Worley noise.
 (bufimg/tensor->image (noise-octaves worley-norm (octaves 4 0.6) 120 230))
 
+;; Here is an example of 4 octaves of Perlin noise.
 (bufimg/tensor->image (noise-octaves perlin-norm (octaves 4 0.6) 120 230))
 
+;; Here is an example of 4 octaves of mixed Perlin and Worley noise.
 (bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 4 0.6) 120 230))
 
 
-;; ## Testing shaders
+;; ## OpenGL rendering
 
+;; ### OpenGL initialization
+;;
+;; In order to render the clouds we create a window and an OpenGL context.
+;; Note that we need to create an invisible window to get an OpenGL context, even though we are not going to draw to the window
 (GLFW/glfwInit)
 
 (def window-width 640)
@@ -624,7 +638,9 @@
 (GLFW/glfwMakeContextCurrent window)
 (GL/createCapabilities)
 
-
+;; ### Compiling and linking shader programs
+;;
+;; The following method is used compile a shader program.
 (defn make-shader [source shader-type]
   (let [shader (GL20/glCreateShader shader-type)]
     (GL20/glShaderSource shader source)
@@ -633,7 +649,7 @@
       (throw (Exception. (GL20/glGetShaderInfoLog shader 1024))))
     shader))
 
-
+;; The different shaders are then linked to become a shader program using the following method.
 (defn make-program [& shaders]
   (let [program (GL20/glCreateProgram)]
     (doseq [shader shaders]
@@ -644,7 +660,7 @@
       (throw (Exception. (GL20/glGetProgramInfoLog program 1024))))
     program))
 
-
+;; This method is used to perform both compilation and linking of vertex shaders and fragment shaders.
 (defn make-program-with-shaders
   [vertex-sources fragment-sources]
   (let [vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-sources)
@@ -652,25 +668,7 @@
         program          (apply make-program (concat vertex-shaders fragment-shaders))]
     program))
 
-
-(def vertex-test "
-#version 130
-in vec3 point;
-void main()
-{
-  gl_Position = vec4(point, 1);
-}")
-
-
-(def fragment-test "
-#version 130
-out vec4 fragColor;
-void main()
-{
-  fragColor = vec4(1, 1, 1, 1);
-}")
-
-
+;; In order to pass data to LWJGL methods, we need to be able to convert arrays to Java buffer objects.
 (defmacro def-make-buffer [method create-buffer]
   `(defn ~method [data#]
      (let [buffer# (~create-buffer (count data#))]
@@ -678,10 +676,14 @@ void main()
        (.flip buffer#)
        buffer#)))
 
+;; ### Setup of vertex data
+;;
+;; Above macro is used to define methods for creating float, int, and byte buffer objects.
 (def-make-buffer make-float-buffer BufferUtils/createFloatBuffer)
 (def-make-buffer make-int-buffer BufferUtils/createIntBuffer)
 (def-make-buffer make-byte-buffer BufferUtils/createByteBuffer)
 
+;; We implement a method to create a vertex array object (VAO) with a vertex buffer object (VBO) and an index buffer object (IBO).
 (defn setup-vao [vertices indices]
   (let [vao (GL30/glGenVertexArrays)
         vbo (GL15/glGenBuffers)
@@ -695,7 +697,7 @@ void main()
                        GL15/GL_STATIC_DRAW)
     {:vao vao :vbo vbo :ibo ibo}))
 
-
+;; We also define the corresponding destructor for the vertex data.
 (defn teardown-vao [{:keys [vao vbo ibo]}]
   (GL15/glBindBuffer GL15/GL_ELEMENT_ARRAY_BUFFER 0)
   (GL15/glDeleteBuffers ibo)
@@ -704,16 +706,9 @@ void main()
   (GL30/glBindVertexArray 0)
   (GL15/glDeleteBuffers vao))
 
-
-(defn float-buffer->array
-  "Convert float buffer to flaot array"
-  [buffer]
-  (let [result (float-array (.limit buffer))]
-    (.get buffer result)
-    (.flip buffer)
-    result))
-
-
+;; ### Offscreen rendering to a texture
+;;
+;; The following method is used to create an empty 2D RGBA floating point texture
 (defn make-texture-2d
   [width height]
   (let [texture (GL11/glGenTextures)]
@@ -725,7 +720,16 @@ void main()
     (GL42/glTexStorage2D GL11/GL_TEXTURE_2D 1 GL30/GL_RGBA32F width height)
     texture))
 
+;; We define a method to convert a Java buffer object to a floating point array.
+(defn float-buffer->array
+  "Convert float buffer to float array"
+  [buffer]
+  (let [result (float-array (.limit buffer))]
+    (.get buffer result)
+    (.flip buffer)
+    result))
 
+;; The following method reads texture data into a Java buffer and then converts it to a floating point array.
 (defn read-texture-2d
   [texture width height]
   (let [buffer (BufferUtils/createFloatBuffer (* height width 4))]
@@ -733,7 +737,7 @@ void main()
     (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL12/GL_RGBA GL11/GL_FLOAT buffer)
     (float-buffer->array buffer)))
 
-
+;; This method sets up rendering to a specified texture of specified size and then executes the body.
 (defmacro framebuffer-render
   [texture width height & body]
   `(let [fbo# (GL30/glGenFramebuffers)]
@@ -750,7 +754,8 @@ void main()
          (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
          (GL30/glDeleteFramebuffers fbo#)))))
 
-
+;; We also create a method to set up the layout of the vertex buffer.
+;; Our vertex data is only going to be 3D coordinates of points.
 (defn setup-point-attribute
   [program]
   (let [point-attribute (GL20/glGetAttribLocation program "point")]
@@ -759,13 +764,18 @@ void main()
     (GL20/glEnableVertexAttribArray point-attribute)))
 
 
+;; We are going to use a simple background quad to perform volumetric rendering.
 (defn setup-quad-vao
   []
-  (let [vertices (float-array [1.0 1.0 0.0, -1.0 1.0 0.0, -1.0 -1.0 0.0, 1.0 -1.0 0.0])
-        indices  (int-array [0 1 2 3])]
+  (let [vertices (float-array [ 1.0  1.0 0.0,
+                               -1.0  1.0 0.0,
+                                1.0 -1.0 0.0,
+                               -1.0 -1.0 0.0])
+        indices  (int-array [0 1 3 2])]
     (setup-vao vertices indices)))
 
 
+;; We now have all definitions ready to implement rendering of an image.
 (defmacro render-array
   [width height & body]
   `(let [texture# (volumetric-clouds.main/make-texture-2d ~width ~height)]
@@ -775,7 +785,9 @@ void main()
        (finally
          (GL11/glDeleteTextures texture#)))))
 
-
+;; The following method creates a program and the quad VAO and sets up the memory layout.
+;; The program and VAO are then used to render a single pixel.
+;; Using this method we can write unit tests for OpenGL shaders!
 (defn render-pixel
   [vertex-sources fragment-sources]
   (let [program (make-program-with-shaders vertex-sources fragment-sources)
@@ -790,11 +802,33 @@ void main()
         (GL20/glDeleteProgram program)))))
 
 
-(render-pixel [vertex-test] [fragment-test])
+;; We are going to use this simple vertex shader to simply pass through the points from the vertex buffer without any transformations.
+(def vertex-passthrough
+"#version 130
+in vec3 point;
+void main()
+{
+  gl_Position = vec4(point, 1);
+}")
+
+;; The following fragment shader is used to test rendering white pixels.
+(def fragment-test
+"#version 130
+out vec4 fragColor;
+void main()
+{
+  fragColor = vec4(1, 1, 1, 1);
+}")
+
+;; We can now render a single white RGBA pixel using the graphics card.
+(render-pixel [vertex-passthrough] [fragment-test])
 
 
-;; ## Noise octaves shader
-
+;; ## Volumetric Clouds
+;;
+;; ### Mocks and probing shaders
+;;
+;; The following fragment shader creates a 3D checkboard pattern serving as a mock function below.
 (def noise-mock
 "#version 130
 float noise(vec3 idx)
@@ -803,7 +837,8 @@ float noise(vec3 idx)
   return ((v.x == 1) == (v.y == 1)) == (v.z == 1) ? 1.0 : 0.0;
 }")
 
-
+;; We can test this mock function using the following probing shader.
+;; Note that we are using the `template` macro of the `comb` Clojure library to generate the shader code from a template.
 (def noise-probe
   (template/fn [x y z]
 "#version 130
@@ -814,9 +849,9 @@ void main()
   fragColor = vec4(noise(vec3(<%= x %>, <%= y %>, <%= z %>)));
 }"))
 
-
+;; Here multiple tests are run to test that the mock implements a checkboard pattern correctly.
 (tabular "Test noise mock"
-         (fact (nth (render-pixel [vertex-test] [noise-mock (noise-probe ?x ?y ?z)]) 0)
+         (fact (nth (render-pixel [vertex-passthrough] [noise-mock (noise-probe ?x ?y ?z)]) 0)
                => ?result)
          ?x ?y ?z ?result
          0  0  0  0.0
@@ -828,7 +863,10 @@ void main()
          0  1  1  0.0
          1  1  1  1.0)
 
-
+;; ### Octaves of noise
+;;
+;; We now implement a shader for 3D Fractal Brownian motion.
+;; Note that we can use the template macro to generate code for an arbitrary number of octaves.
 (def noise-octaves
   (template/fn [octaves]
 "#version 130
@@ -844,7 +882,7 @@ float octaves(vec3 idx)
   return result;
 }"))
 
-
+;; Again we use a probing shader to test the shader function.
 (def octaves-probe
   (template/fn [x y z]
 "#version 130
@@ -855,9 +893,9 @@ void main()
   fragColor = vec4(octaves(vec3(<%= x %>, <%= y %>, <%= z %>)));
 }"))
 
-
+;; A few unit tests with one or two octaves are sufficient to drive development of the shader function.
 (tabular "Test octaves of noise"
-         (fact (first (render-pixel [vertex-test]
+         (fact (first (render-pixel [vertex-passthrough]
                                     [noise-mock (noise-octaves ?octaves)
                                      (octaves-probe ?x ?y ?z)]))
                => ?result)
@@ -870,8 +908,10 @@ void main()
          1   0  0  [1.0 0.0] 1.0)
 
 
-;; ## Shader for intersecting a ray with a box
-
+;; ### Shader for intersecting a ray with a box
+;;
+;; The following shader implements intersection of a ray with an axis-aligned box.
+;; The shader function returns the distance of the near and far intersection with the box.
 (def ray-box
 "#version 130
 vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction)
@@ -889,7 +929,7 @@ vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction)
     return vec2(max(s_near, 0.0), max(0.0, s_far));
 }")
 
-
+;; The probing shader returns the near and far distance in the red and green channel of the fragment color.
 (def ray-box-probe
   (template/fn [ox oy oz dx dy dz]
 "#version 130
@@ -904,10 +944,10 @@ void main()
   fragColor = vec4(ray_box(box_min, box_max, origin, direction), 0, 0);
 }"))
 
-
+;; The shader is tested with different ray origins and directions.
 (tabular "Test intersection of ray with box"
          (fact ((juxt first second)
-                (render-pixel [vertex-test]
+                (render-pixel [vertex-passthrough]
                               [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)]))
                => ?result)
          ?ox ?oy ?oz ?dx ?dy ?dz ?result
@@ -924,8 +964,9 @@ void main()
           2   0   0   1   0   0  [0.0 0.0])
 
 
-;; ## Shader for light transfer through clouds
-
+;; ### Shader for light transfer through clouds
+;;
+;; We test the light transfer through clouds using constant density fog.
 (def fog
   (template/fn [v]
 "#version 130
@@ -934,7 +975,7 @@ float fog(vec3 idx)
   return <%= v %>;
 }"))
 
-
+;; Volumetric rendering involves sampling cloud density along a ray and multiplying the transmittance values.
 (def cloud-transfer
   (template/fn [noise step]
 "#version 130
@@ -956,7 +997,8 @@ vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval)
   return result;
 }"))
 
-
+;; For now we also assume isotropic scattering of light in all directions.
+;; This is a placeholder for introducing Mie scattering later.
 (def constant-scatter
 "#version 130
 float in_scatter(vec3 point, vec3 direction)
@@ -964,7 +1006,8 @@ float in_scatter(vec3 point, vec3 direction)
   return 1.0;
 }")
 
-
+;; Finally we assume that there is no shadow.
+;; This is a placeholder for introducing cloud shadows later.
 (def no-shadow
 "#version 130
 float shadow(vec3 point)
@@ -972,7 +1015,7 @@ float shadow(vec3 point)
   return 1.0;
 }")
 
-
+;; We can now test the color and opacity of the cloud using the following probing shader.
 (def cloud-transfer-probe
   (template/fn [a b]
 "#version 130
@@ -986,7 +1029,7 @@ void main()
   fragColor = cloud_transfer(origin, direction, interval);
 }"))
 
-
+;; We also introduce a Midje checker for requiring a vector to have an approximate value.
 (defn roughly-vector
   [expected error]
   (fn [actual]
@@ -994,9 +1037,9 @@ void main()
            (<= (apply + (mapv (fn [a b] (* (- b a) (- b a))) actual expected))
                (* error error)))))
 
-
+;; A few tests are performed to check that there is opacity and that the step size does not affect the result in constant fog.
 (tabular "Test cloud transfer"
-         (fact (seq (render-pixel [vertex-test]
+         (fact (seq (render-pixel [vertex-passthrough]
                                   [(fog ?density) constant-scatter no-shadow
                                    (cloud-transfer "fog" ?step)
                                    (cloud-transfer-probe ?a ?b)]))
@@ -1008,8 +1051,16 @@ void main()
          0  1  0.5   0.5      [0.393 0.393 0.393 0.393])
 
 
-;; ## Rendering of fog box
-
+;; ### Rendering of fog box
+;;
+;; The following fragment shader is used to render an image of a box filled with fog.
+;;
+;; * The pixel coordinate and the resolution of the image are used to determine a viewing direction which also gets rotated using the rotation matrix.
+;; * The origin of the camera is set at a specified distance to the center of the box and rotated as well.
+;; * The ray box function is used to determine the near and far intersection points of the ray with the box.
+;; * The cloud transfer function is used to sample the cloud density along the ray and determine the overall opacity and color of the fog box.
+;; * The background is a mix of blue color and a small blob of white where the viewing direction points to the light source.
+;; * The opacity value of the fog is used to overlay the fog color over the background.
 (def fragment-cloud
 "#version 130
 uniform vec2 resolution;
@@ -1051,7 +1102,7 @@ void main()
   [width height]
   (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01)
                           (fog 1.0) fragment-cloud]
-        program          (make-program-with-shaders [vertex-test] fragment-sources)
+        program          (make-program-with-shaders [vertex-passthrough] fragment-sources)
         vao              (setup-quad-vao)]
     (setup-point-attribute program)
     (try
@@ -1073,7 +1124,7 @@ void main()
 (bufimg/tensor->image (rgba-array->bufimg (render-fog 640 480) 640 480))
 
 
-;; ## Rendering of 3D noise
+;; ### Rendering of 3D noise
 
 (defn float-array->texture3d
   [data size]
@@ -1117,7 +1168,7 @@ float noise(vec3 idx)
 (defn render-noise
   [width height & cloud-shaders]
   (let [fragment-sources (concat cloud-shaders [ray-box fragment-cloud])
-        program          (make-program-with-shaders [vertex-test] fragment-sources)
+        program          (make-program-with-shaders [vertex-passthrough] fragment-sources)
         vao              (setup-quad-vao)]
     (try
       (setup-point-attribute program)
@@ -1136,7 +1187,7 @@ float noise(vec3 idx)
     640 480))
 
 
-;; ## Remap and clamp 3D noise
+;; ### Remap and clamp 3D noise
 
 (def remap-clamp
 "#version 130
@@ -1160,7 +1211,7 @@ void main()
 
 (tabular "Remap and clamp input parameter values"
        (fact (first (render-pixel
-                      [vertex-test]
+                      [vertex-passthrough]
                       [remap-clamp (remap-probe ?value ?low1 ?high1 ?low2 ?high2)]))
              => ?expected)
        ?value ?low1 ?high1 ?low2 ?high2 ?expected
@@ -1197,7 +1248,7 @@ float remap_noise(vec3 idx)
     640 480))
 
 
-;; ## Octaves of 3D noise
+;; ### Octaves of 3D noise
 
 (bufimg/tensor->image
   (rgba-array->bufimg
@@ -1207,7 +1258,7 @@ float remap_noise(vec3 idx)
     640 480))
 
 
-;; ## Mie scattering
+;; ### Mie scattering
 
 (def mie-scatter
   (template/fn [g]
@@ -1239,7 +1290,7 @@ void main()
 
 
 (tabular "Shader function for scattering phase function"
-         (fact (first (render-pixel [vertex-test] [(mie-scatter ?g) (mie-probe ?mu)]))
+         (fact (first (render-pixel [vertex-passthrough] [(mie-scatter ?g) (mie-probe ?mu)]))
                => (roughly ?result 1e-6))
          ?g  ?mu ?result
          0   0   (/ 3 (* 16 PI))
@@ -1250,7 +1301,7 @@ void main()
 
 
 (defn scatter-amount [theta]
-  (first (render-pixel [vertex-test] [(mie-scatter 0.76) (mie-probe (cos theta))])))
+  (first (render-pixel [vertex-passthrough] [(mie-scatter 0.76) (mie-probe (cos theta))])))
 
 
 (let [scatter
@@ -1277,7 +1328,7 @@ void main()
     640 480))
 
 
-;; ## Self-shading of clouds
+;; ### Self-shading of clouds
 (def shadow
   (template/fn [noise step]
 "#version 130
@@ -1307,7 +1358,7 @@ float shadow(vec3 point)
                   (noise-octaves (octaves 4 0.5)) noise-shader)
     640 480))
 
-;; ## Tidy up
+;; ### Tidy up
 (GL11/glBindTexture GL12/GL_TEXTURE_3D 0)
 (GL11/glDeleteTextures noise-texture)
 
@@ -1320,4 +1371,5 @@ float shadow(vec3 point)
 ;; * [Vertical density profile](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
 ;; * [Powder function](https://advances.realtimerendering.com/s2015/index.html)
 ;; * [Curl noise](https://www.wedesoft.de/software/2023/03/20/procedural-global-cloud-cover/)
+;; * [Precomputed atmospheric scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/)
 ;; * [Deep opacity maps](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
