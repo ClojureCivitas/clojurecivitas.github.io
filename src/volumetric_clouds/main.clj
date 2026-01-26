@@ -518,6 +518,8 @@
          (interpolate z3 2.5 3.5 5.5) => 2.0))
 
 ;; ### Octaves of noise
+;;
+;; Fractal Brownian Motion is implemented by computing a weighted sum of the same base noise function using different frequencies.
 (defn fractal-brownian-motion
   [base octaves & args]
   (let [scales (take (count octaves) (iterate #(* 2 %) 1))]
@@ -525,7 +527,7 @@
             (map (fn [amplitude scale] (* amplitude (apply base (map #(* scale %) args))))
                  octaves scales))))
 
-
+;; Here the Fractal Brownian Motion is tested using an alternating 1D function and later a 2D checkboard function.
 (facts "Fractal Brownian motion"
        (let [base1 (fn [x] (if (>= (mod x 2.0) 1.0) 1.0 0.0))
              base2 (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0)))
@@ -545,11 +547,12 @@
          (fractal-brownian-motion base1 [0.0 1.0] 0.0) => 0.0
          (fractal-brownian-motion base1 [0.0 1.0] 0.5) => 1.0))
 
-
+;; ### Remapping and clamping
+;;
+;; The remap function is used to map a range of values of an input tensor to a different range.
 (defn remap
   [value low1 high1 low2 high2]
   (dfn/+ low2 (dfn/* (dfn/- value low1) (/ (- high2 low2) (- high1 low1)))))
-
 
 (tabular "Remap values of tensor"
        (fact ((remap (tensor/->tensor [?value]) ?low1 ?high1 ?low2 ?high2) 0)
@@ -564,10 +567,10 @@
        1      0     2      0     4      2)
 
 
+;; The clamp function is used to clamp a value to a range.
 (defn clamp
   [value low high]
   (dfn/max low (dfn/min value high)))
-
 
 (tabular "Clamp values of tensor"
        (fact ((clamp (tensor/->tensor [?value]) ?low ?high) 0) => ?expected)
@@ -577,17 +580,20 @@
        0      2    3      2
        4      2    3      3)
 
-
+;; ### Generating octaves of noise
+;;
+;; The octaves function is to create a series of decreasing weights and normalize them so that they add up to 1.
 (defn octaves
   [n decay]
   (let [series (take n (iterate #(* % decay) 1.0))
         sum    (apply + series)]
     (mapv #(/ % sum) series)))
 
-
+;; Here is an example of noise weights decreasing by 50% at each octave.
 (octaves 4 0.5)
 
 
+;; Now a noise array can be generated using octaves of noise.
 (defn noise-octaves
   [tensor octaves low high]
   (tensor/clone
@@ -603,10 +609,15 @@
         low high 0 255)
       0 255)))
 
+;; ### 2D examples
+;;
+;; Here is an example of 4 octaves of Worley noise.
 (bufimg/tensor->image (noise-octaves worley-norm (octaves 4 0.6) 120 230))
 
+;; Here is an example of 4 octaves of Perlin noise.
 (bufimg/tensor->image (noise-octaves perlin-norm (octaves 4 0.6) 120 230))
 
+;; Here is an example of 4 octaves of mixed Perlin and Worley noise.
 (bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 4 0.6) 120 230))
 
 
@@ -1320,4 +1331,5 @@ float shadow(vec3 point)
 ;; * [Vertical density profile](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
 ;; * [Powder function](https://advances.realtimerendering.com/s2015/index.html)
 ;; * [Curl noise](https://www.wedesoft.de/software/2023/03/20/procedural-global-cloud-cover/)
+;; * [Precomputed atmospheric scattering](https://ebruneton.github.io/precomputed_atmospheric_scattering/)
 ;; * [Deep opacity maps](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
