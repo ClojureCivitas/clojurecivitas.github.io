@@ -16,6 +16,8 @@
             [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda]]
             [civitas.repl :as repl]))
 
+;; ##!!Draft Version!!
+
 ;; I investigate a Lorentz covariant Lagrangian that is not widely known. It is discussed in the textbooks of Greiner, "Systems of Particles and Hamiltonian Mechanics" (chapter 21), and also [on-line in: Cline, "Variational Principles in Classical Mechanics"](https://phys.libretexts.org/Bookshelves/Classical_Mechanics/Variational_Principles_in_Classical_Mechanics_(Cline)/17%3A_Relativistic_Mechanics/17.06%3A_Lorentz-Invariant_Formulation_of_Lagrangian_Mechanics).
 
 ;; Then I derive, along deBroglie's argument, the momentum-wavelength relation of a free particle.
@@ -556,7 +558,7 @@
 ;; Take the momentum for $x$.
 ;; The key insight is recognizing the following:
 ;; Since the free Lagrangian depends on $dx/ds$ only,
-;; The Lagrange equation is the derivative of this momentum. So:
+;; the Lagrange equation is the derivative of this momentum. So:
 ;; $d/ds(\sigma · dx/ds) = 0$,
 ;; this means $\sigma · dx/ds = C$ (some constant).
 
