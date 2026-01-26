@@ -11,10 +11,11 @@
                               :tags     [:visualization]}}}
 
 (ns volumetric-clouds.main
-    (:require [clojure.math :refer (PI sqrt tan to-radians pow)]
+    (:require [clojure.math :refer (PI sqrt cos sin tan to-radians pow floor)]
               [midje.sweet :refer (fact facts tabular => roughly)]
               [fastmath.vector :refer (vec2 vec3 add mult sub div mag dot normalize)]
-              [fastmath.matrix :refer (mat->float-array mulm mulv inverse rotation-matrix-3d-x rotation-matrix-3d-y)]
+              [fastmath.matrix :refer (mat->float-array mulm mulv inverse
+                                       rotation-matrix-3d-x rotation-matrix-3d-y)]
               [tech.v3.datatype :as dtype]
               [tech.v3.tensor :as tensor]
               [tech.v3.datatype.functional :as dfn]
@@ -28,48 +29,57 @@
              [org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL32 GL42]))
 
 
-;; Procedural generation of volumetric clouds
+;; # Procedural generation of volumetric clouds
 ;;
-;; * Midje testing of shaders
-;; * Generating OpenGL shaders using templates
-;; * cloud shadows
-;; * powder function
-;; * video showing TDD with tmux
+;; Volumetric clouds are commonly used in flight simulators and visual effects.
+;; For a introductory video see [Sebastian Lague's video "Coding Adventure: Clouds](https://www.youtube.com/watch?v=4QOcCGI6xOU).
+;; Note that this article is about procedural generation and not about simulating real weather.
 ;;
-;; References
-;; * https://adrianb.io/2014/08/09/perlinnoise.html
-;; * https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/
-
-;; # Worley noise
-
-
+;; ## Worley noise
+;;
+;; [Worley noise](https://en.wikipedia.org/wiki/Worley_noise) is a type of structured noise which is defined for each pixel using the distance to the nearest seed point.
+;;
+;; ### Noise parameters
+;;
+;; First we define a function to create parameters of the noise.
+;;
+;; * **size** is the size of each dimension of the noise array
+;; * **divisions** is the number of subdividing cells in each dimension
+;; * **dimensions** is the number of dimensions
 (defn make-noise-params
   [size divisions dimensions]
   {:size size :divisions divisions :cellsize (/ size divisions) :dimensions dimensions})
 
-
+;; Here is a corresponding Midje test.
+;; Note that ideally you practise [Test Driven Development (TDD)](https://martinfowler.com/bliki/TestDrivenDevelopment.html), i.e. you start with writing one failing test.
+;; Because this is a Clojure notebook, the unit tests are displayed after the implementation.
 (fact "Noise parameter initialisation"
       (make-noise-params 256 8 2) => {:size 256 :divisions 8 :cellsize 32 :dimensions 2})
 
 
+;; ### 2D and 3D vectors
+;;
+;; Next we need a function which allows us to create 2D or 3D vectors depending on the number of input parameters.
 (defn vec-n
   ([x y] (vec2 x y))
   ([x y z] (vec3 x y z)))
-
 
 (facts "Generic vector function for creating 2D and 3D vectors"
        (vec-n 2 3) => (vec2 2 3)
        (vec-n 2 3 1) => (vec3 2 3 1))
 
 
+;; ### Random points
+;;
+;; The following method generates a random point in a cell specified by the cell indices.
 (defn random-point-in-cell
-  [{:keys [cellsize]} & args]
+  [{:keys [cellsize]} & indices]
   (let [random-seq (repeatedly #(rand cellsize))
-        dimensions (count args)]
-    (add (mult (apply vec-n (reverse args)) cellsize)
+        dimensions (count indices)]
+    (add (mult (apply vec-n (reverse indices)) cellsize)
          (apply vec-n (take dimensions random-seq)))))
 
-
+;; We test the method by replacing the random function with a deterministic function.
 (facts "Place random point in a cell"
        (with-redefs [rand (fn [s] (* 0.5 s))]
          (random-point-in-cell {:cellsize 1} 0 0) => (vec2 0.5 0.5)
@@ -79,10 +89,12 @@
          (random-point-in-cell {:cellsize 2} 2 3 5) => (vec3 11.0 7.0 5.0)))
 
 
+;; We can now use the `random-point` method to generate a grid of random points.
 (defn random-points
   [{:keys [divisions dimensions] :as params}]
-  (tensor/clone (tensor/compute-tensor (repeat dimensions divisions) (partial random-point-in-cell params))))
-
+  (tensor/clone
+    (tensor/compute-tensor (repeat dimensions divisions)
+                           (partial random-point-in-cell params))))
 
 (facts "Greate grid of random points"
        (let [params-2d (make-noise-params 32 8 2)
@@ -95,7 +107,7 @@
            (dtype/shape (random-points params-3d)) => [8 8 8]
            ((random-points params-3d) 2 3 5) => (vec3 22.0 14.0 10.0))))
 
-
+;; Here is a scatter plot showing one random point placed in each cell.
 (let [points  (tensor/reshape (random-points (make-noise-params 256 8 2)) [(* 8 8)])
       scatter (tc/dataset {:x (map first points) :y (map second points)})]
   (-> scatter
@@ -103,12 +115,14 @@
       (plotly/layer-point {:=x :x :=y :y})))
 
 
+;; ### Modular distance
+;;
+;; In order to get a periodic noise array, we need to component-wise wrap around distance vectors.
 (defn mod-vec
   [{:keys [size]} v]
   (let [size2 (/ size 2)
         wrap  (fn [x] (-> x (+ size2) (mod size) (- size2)))]
     (apply vec-n (map wrap v))))
-
 
 (facts "Wrap around components of vector to be within -size/2..size/2"
        (mod-vec {:size 8} (vec2 2 3)) => (vec2 2 3)
@@ -124,11 +138,11 @@
        (mod-vec {:size 8} (vec3 2 -5 1)) => (vec3 2 3 1)
        (mod-vec {:size 8} (vec3 2 3 -5)) => (vec3 2 3 3))
 
-
+;;
+;; Using the `mod-dist` function we can calculate the distance between two points in the periodic noise array.
 (defn mod-dist
   [params a b]
   (mag (mod-vec params (sub b a))))
-
 
 (tabular "Wrapped distance of two points"
          (fact (mod-dist {:size 8} (vec2 ?ax ?ay) (vec2 ?bx ?by)) => ?result)
@@ -144,13 +158,17 @@
          0   5   0   0   3.0)
 
 
+;; ### Modular lookup
+;;
+;; We also need to lookup elements with wrap around.
+;; We recursively use `tensor/select` and then finally the tensor as a function to lookup along each axis.
 (defn wrap-get
   [t & args]
   (if (> (count (dtype/shape t)) (count args))
     (apply tensor/select t (map mod args (dtype/shape t)))
     (apply t (map mod args (dtype/shape t)))))
 
-
+;; A tensor with index vectors is used to test the lookup.
 (facts "Wrapped lookup of tensor values"
        (let [t (tensor/compute-tensor [4 6] vec2)]
          (wrap-get t 2 3) => (vec2 2 3)
@@ -159,56 +177,76 @@
          (wrap-get (wrap-get t 5) 3) => (vec2 1 3)))
 
 
+;; The following function converts a noise coordinate to the index of a cell in the random point array.
 (defn division-index
   [{:keys [cellsize]} x]
-  (int (/ x cellsize)))
-
+  (int (floor (/ x cellsize))))
 
 (facts "Convert coordinate to division index"
-       (division-index {:cellsize 4} 3.5) => 0
-       (division-index {:cellsize 4} 7.5) => 1)
+       (division-index {:cellsize 4} 3.5)  => 0
+       (division-index {:cellsize 4} 7.5)  => 1
+       (division-index {:cellsize 4} -0.5) => -1)
 
-
+;; ### Getting indices of Neighbours
+;;
+;; The following function determines the neighbouring indices of a cell recursing over each dimension.
 (defn neighbours
   [& args]
   (if (seq args)
-    (mapcat (fn [v] (map (fn [delta] (into [(+ (first args) delta)] v)) [-1 0 1])) (apply neighbours (rest args)) )
+    (mapcat (fn [v] (map (fn [delta] (into [(+ (first args) delta)] v)) [-1 0 1]))
+            (apply neighbours (rest args)) )
     [[]]))
-
 
 (facts "Get neighbouring indices"
        (neighbours) => [[]]
+       (neighbours 0) => [[-1] [0] [1]]
        (neighbours 3) => [[2] [3] [4]]
        (neighbours 1 10) => [[0 9] [1 9] [2 9] [0 10] [1 10] [2 10] [0 11] [1 11] [2 11]])
 
 
+;; ### Sampling Worley noise
+;;
+;; Using above functions one can now implement Worley noise.
+;; For each pixel the distance to the closest seed point is calculated.
+;; The distance to each random point in all neighbouring cells is calculated and the minimum is taken.
 (defn worley-noise
   [{:keys [size dimensions] :as params}]
   (let [random-points (random-points params)]
     (tensor/clone
-      (tensor/compute-tensor (repeat dimensions size)
-                             (fn [& coords]
-                                 (let [center   (map #(+ % 0.5) coords)
-                                       division (map (partial division-index params) center)]
-                                   (apply min
-                                          (for [neighbour (apply neighbours division)]
-                                               (mod-dist params (apply vec-n (reverse center))
-                                                         (apply wrap-get random-points neighbour))))))
-                             :double))))
+      (tensor/compute-tensor
+        (repeat dimensions size)
+        (fn [& coords]
+            (let [center   (map #(+ % 0.5) coords)
+                  division (map (partial division-index params) center)]
+              (apply min
+                     (for [neighbour (apply neighbours division)]
+                          (mod-dist params (apply vec-n (reverse center))
+                                    (apply wrap-get random-points neighbour))))))
+        :double))))
 
-
+;; Here a 256x256 Worley noise tensor is created.
 (def worley (worley-noise (make-noise-params 256 8 2)))
 
-(def worley-norm (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley))) (dfn/- (dfn/reduce-max worley) worley)))
+;; The values are inverted and normalised to be between 0 and 255.
+(def worley-norm
+  (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley)))
+         (dfn/- (dfn/reduce-max worley) worley)))
 
+;; Finally one can display the noise.
 (bufimg/tensor->image worley-norm)
 
-;; # Perlin noise
+;; ## Perlin noise
+;;
+;; [Perlin noise](https://adrianb.io/2014/08/09/perlinnoise.html) is generated by choosing a random gradient vector at each cell corner.
+;; The noise tensor's intermediate values are interpolated with a continuous function, utilizing the gradient at the corner points.
 
-
-(defmulti random-gradient (fn [& args] (count args)))
-
-(defmethod random-gradient 2
+;; ### Random gradients
+;;
+;; The 2D or 3D gradients are generated by creating a vector where each component is set to a random number between -1 and 1.
+;; Random vectors are generated until the vector length is greater 0 and lower or equal to 1.
+;; The vector then is normalized and returned.
+;; Random vectors outside the unit circle or sphere are discarded in order to achieve a uniform distribution on the surface of the unit circle or sphere.
+(defn random-gradient
   [& args]
   (loop [args args]
         (let [random-vector (apply vec-n (map (fn [_x] (- (rand 2.0) 1.0)) args))
@@ -217,55 +255,63 @@
             (div random-vector vector-length)
             (recur args)))))
 
-
-(defmethod random-gradient 3
-  [& _args]
-  (apply vec3
-          (rand-nth [[1  1  0] [-1  1  0] [1 -1  0] [-1 -1  0]
-                     [1  0  1] [-1  0  1] [1  0 -1] [-1  0 -1]
-                     [0  1  1] [ 0 -1  1] [0  1 -1] [ 0 -1 -1]])))
-
-
+;; The function below serves as a Midje checker for a vector with an approximate expected value.
 (defn roughly-vec
   [expected error]
   (fn [actual]
       (<= (mag (sub actual expected)) error)))
 
-
+;; In the following tests, the random function is again replaced with a deterministic function.
 (facts "Create unit vector with random direction"
        (with-redefs [rand (constantly 0.5)]
-         (random-gradient 0 0) => (roughly-vec (vec2 (- (sqrt 0.5)) (- (sqrt 0.5))) 1e-6))
+         (random-gradient 0 0)
+         => (roughly-vec (vec2 (- (sqrt 0.5)) (- (sqrt 0.5))) 1e-6))
        (with-redefs [rand (constantly 1.5)]
-         (random-gradient 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)))
+         (random-gradient 0 0)
+         => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)))
 
-
+;; The random gradient function is then used to generate a field of random gradients.
 (defn random-gradients
  [{:keys [divisions dimensions]}]
  (tensor/clone (tensor/compute-tensor (repeat dimensions divisions) random-gradient)))
 
-
+;; The function is tested that it generates 2D and 3D random gradient fields correctly.
 (facts "Random gradients"
-       (with-redefs [rand (constantly 1.5)
-                     rand-nth (fn [x] (first x))]
-         (dtype/shape (random-gradients {:divisions 8 :dimensions 2})) => [8 8]
-         ((random-gradients {:divisions 8 :dimensions 2}) 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)
+       (with-redefs [rand (constantly 1.5)]
+         (dtype/shape (random-gradients {:divisions 8 :dimensions 2}))
+         => [8 8]
+         ((random-gradients {:divisions 8 :dimensions 2}) 0 0)
+         => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)
          (dtype/shape (random-gradients {:divisions 8 :dimensions 3})) => [8 8 8]
-         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (vec3 1 1 0)))
+         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0)
+         => (vec3 (/ 1 (sqrt 3)) (/ 1 (sqrt 3)) (/ 1 (sqrt 3)))))
 
-
-(let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2)) [(* 8 8)])
-      points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y))) [(* 8 8)])
-      scatter   (tc/dataset {:x (mapcat (fn [point gradient] [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil]) points gradients)
-                             :y (mapcat (fn [point gradient] [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil]) points gradients)})]
+;; The gradient field can be plotted with Plotly as a scatter plot of disconnected lines/
+(let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2))
+                                [(* 8 8)])
+      points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y)))
+                                [(* 8 8)])
+      scatter   (tc/dataset {:x (mapcat (fn [point gradient]
+                                            [(point 0)
+                                             (+ (point 0) (* 0.5 (gradient 0)))
+                                             nil])
+                                        points gradients)
+                             :y (mapcat (fn [point gradient]
+                                            [(point 1)
+                                             (+ (point 1) (* 0.5 (gradient 1)))
+                                             nil])
+                                        points gradients)})]
   (-> scatter
       (plotly/base {:=title "Random gradients" :=mode "lines"})
       (plotly/layer-point {:=x :x :=y :y})))
 
-
+;; ### Corner vectors
+;;
+;; The next step is to determine the vectors to the corners of the cell for a given point.
+;; First we define a function to determine the fractional part of a number.
 (defn frac
   [x]
-  (- x (Math/floor x)))
-
+  (mod x 1.0))
 
 (facts "Fractional part of floating point number"
        (frac 0.25) => 0.25
@@ -273,22 +319,23 @@
        (frac -0.25) => 0.75)
 
 
+;; This function can be used to determine the relative position of a point in a cell.
 (defn cell-pos
   [{:keys [cellsize]} point]
   (apply vec-n (map frac (div point cellsize))))
-
 
 (facts "Relative position of point in a cell"
        (cell-pos {:cellsize 4} (vec2 2 3)) => (vec2 0.5 0.75)
        (cell-pos {:cellsize 4} (vec2 7 5)) => (vec2 0.75 0.25)
        (cell-pos {:cellsize 4} (vec3 7 5 2)) => (vec3 0.75 0.25 0.5))
 
-
+;; A tensor converting the corner vectors can be computed by subtracting the corner coordinates from the point coordinates.
 (defn corner-vectors
   [{:keys [dimensions] :as params} point]
   (let [cell-pos (cell-pos params point)]
-    (tensor/compute-tensor (repeat dimensions 2) (fn [& args] (sub cell-pos (apply vec-n (reverse args)))))))
-
+    (tensor/compute-tensor
+      (repeat dimensions 2)
+      (fn [& args] (sub cell-pos (apply vec-n (reverse args)))))))
 
 (facts "Compute relative vectors from cell corners to point in cell"
        (let [v2 (corner-vectors {:cellsize 4 :dimensions 2} (vec2 7 6))
@@ -299,29 +346,41 @@
          (v2 1 1) => (vec2 -0.25 -0.5)
          (v3 0 0 0) => (vec3 0.75 0.5 0.25)))
 
-
+;; ### Extract gradients of cell corners
+;;
+;; The function below retrieves the gradient values at a cell's corners, utilizing `wrap-get` for modular access.
 (defn corner-gradients
   [{:keys [dimensions] :as params} gradients point]
   (let [division (map (partial division-index params) point)]
-    (tensor/compute-tensor (repeat dimensions 2) (fn [& coords] (apply wrap-get gradients (map + (reverse division) coords))))))
-
+    (tensor/compute-tensor
+      (repeat dimensions 2)
+      (fn [& coords] (apply wrap-get gradients (map + (reverse division) coords))))))
 
 (facts "Get 2x2 tensor of gradients from a larger tensor using wrap around"
        (let [gradients2 (tensor/compute-tensor [4 6] (fn [y x] (vec2 x y)))
              gradients3 (tensor/compute-tensor [4 6 8] (fn [z y x] (vec3 x y z))) ]
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 0) => (vec2 2 1)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 1) => (vec2 3 1)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 0) => (vec2 2 2)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 1) => (vec2 3 2)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 23 15)) 1 1) => (vec2 0 0)
-         ((corner-gradients {:cellsize 4 :dimensions 3} gradients3 (vec3 9 6 3)) 0 0 0) => (vec3 2 1 0)))
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 0)
+         => (vec2 2 1)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 1)
+         => (vec2 3 1)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 0)
+         => (vec2 2 2)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 1)
+         => (vec2 3 2)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 23 15)) 1 1)
+         => (vec2 0 0)
+         ((corner-gradients {:cellsize 4 :dimensions 3} gradients3 (vec3 9 6 3)) 0 0 0)
+         => (vec3 2 1 0)))
 
-
+;; ### Influence values
+;;
+;; The influence value is the function value of the function with the selected random gradient at a corner.
 (defn influence-values
   [gradients vectors]
-  (tensor/compute-tensor (repeat (count (dtype/shape gradients)) 2)
-                         (fn [& args] (dot (apply gradients args) (apply vectors args))) :double))
-
+  (tensor/compute-tensor
+    (repeat (count (dtype/shape gradients)) 2)
+    (fn [& args] (dot (apply gradients args) (apply vectors args)))
+    :double))
 
 (facts "Compute influence values from corner vectors and gradients"
        (let [gradients2 (tensor/compute-tensor [2 2] (fn [_y x] (vec2 x 10)))
@@ -336,11 +395,12 @@
          (influence2 1 1) => 11.0
          (influence3 1 1 1) => 111.0))
 
-
+;; ### Interpolating the influence values
+;;
+;; For interpolation the following "ease curve" is used.
 (defn ease-curve
   [t]
   (-> t (* 6.0) (- 15.0) (* t) (+ 10.0) (* t t t)))
-
 
 (facts "Monotonously increasing function with zero derivative at zero and one"
        (ease-curve 0.0) => 0.0
@@ -349,12 +409,13 @@
        (ease-curve 0.75) => (roughly 0.896484 1e-6)
        (ease-curve 1.0) => 1.0)
 
-
-(-> (tc/dataset {:t (range 0.0 1.025 0.025) :ease (map ease-curve (range 0.0 1.025 0.025))})
+;; The ease curve monotonously increases in the interval from zero to one.
+(-> (tc/dataset {:t (range 0.0 1.025 0.025)
+                 :ease (map ease-curve (range 0.0 1.025 0.025))})
     (plotly/base {:=title "Ease Curve"})
     (plotly/layer-line {:=x :t :=y :ease}))
 
-
+;; The interpolation weights are recursively calculated from the ease curve and the coordinate distances of the point to upper and lower cell boundary.
 (defn interpolation-weights
   ([params point]
    (interpolation-weights (cell-pos params point)))
@@ -366,7 +427,6 @@
        (tensor/->tensor [(dfn/* (ease-curve w1) elem) (dfn/* (ease-curve w2) elem)]))
      1.0)))
 
-
 (facts "Interpolation weights"
        (let [weights2 (interpolation-weights {:cellsize 8} (vec2 2 7))
              weights3 (interpolation-weights {:cellsize 8} (vec3 2 7 3))]
@@ -377,6 +437,14 @@
          (weights3 0 0 0) => (roughly 0.010430 1e-6)))
 
 
+;; ### Sampling Perlin noise
+;;
+;; A Perlin noise sample is computed by
+;; * Getting the random gradients for the cell corners.
+;; * Getting the corner vectors for the cell corners.
+;; * Computing the influence values which have the desired gradients.
+;; * Determining the interpolation weights.
+;; * Computing the weighted sum of the influence values.
 (defn perlin-sample
   [params gradients point]
   (let [gradients (corner-gradients params gradients point)
@@ -385,30 +453,42 @@
         weights   (interpolation-weights params point)]
     (dfn/reduce-+ (dfn/* weights influence))))
 
-
+;; Now one can sample the Perlin noise by performing above computation for the center of each pixel.
 (defn perlin-noise
   [{:keys [size dimensions] :as params}]
   (let [gradients (random-gradients params)]
     (tensor/clone
-      (tensor/compute-tensor (repeat dimensions size)
-                             (fn [& args]
-                                 (let [center (add (apply vec-n (reverse args)) (apply vec-n (repeat dimensions 0.5)))]
-                                   (perlin-sample params gradients center)))
-                             :double))))
+      (tensor/compute-tensor
+        (repeat dimensions size)
+        (fn [& args]
+            (let [center (apply vec-n (map #(+ % 0.5) (reverse args)))]
+              (perlin-sample params gradients center)))
+        :double))))
 
-
+;; Here a 256x256 Perlin noise tensor is created.
 (def perlin (perlin-noise (make-noise-params 256 8 2)))
 
-(def perlin-norm (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin))) (dfn/- perlin (dfn/reduce-min perlin))))
+;; The values are normalised to be between 0 and 255.
+(def perlin-norm
+  (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin)))
+         (dfn/- perlin (dfn/reduce-min perlin))))
 
+;; Finally one can display the noise.
 (bufimg/tensor->image perlin-norm)
 
-;; # Combination of Worley and Perlin noise
+;; ## Mixing noise values
+;;
+;; ### Combination of Worley and Perlin noise
+;;
+;; One can mix Worley and Perlin noise by simply doing a linear combination of the two.
 (def perlin-worley-norm (dfn/+ (dfn/* 0.3 perlin-norm) (dfn/* 0.7 worley-norm)))
 
+;; Here for example is the average of Perlin and Worley noise.
 (bufimg/tensor->image (dfn/+ (dfn/* 0.5 perlin-norm) (dfn/* 0.5 worley-norm)))
 
-;; # Interpolation
+;; ### Interpolation
+;;
+;; One can linearly interpolate tensor values by recursing over the dimensions as follows.
 (defn interpolate
   [tensor & args]
   (if (seq args)
@@ -420,7 +500,7 @@
          (*        xf  (apply interpolate (wrap-get tensor (inc x0)) (rest args)))))
     tensor))
 
-
+;; Here x-, y-,  and z-ramps are used to test that interpolation works.
 (facts "Interpolate values of tensor"
        (let [x2 (tensor/compute-tensor [4 6] (fn [_y x] x))
              y2 (tensor/compute-tensor [4 6] (fn [y _x] y))
@@ -437,16 +517,19 @@
          (interpolate y3 2.5 3.5 3.0) => 3.0
          (interpolate z3 2.5 3.5 5.5) => 2.0))
 
-;; # Octaves of noise
+;; ### Octaves of noise
 (defn fractal-brownian-motion
   [base octaves & args]
   (let [scales (take (count octaves) (iterate #(* 2 %) 1))]
-    (reduce + 0.0 (map (fn [amplitude scale] (* amplitude (apply base (map #(* scale %) args)))) octaves scales))))
+    (reduce + 0.0
+            (map (fn [amplitude scale] (* amplitude (apply base (map #(* scale %) args))))
+                 octaves scales))))
 
 
 (facts "Fractal Brownian motion"
        (let [base1 (fn [x] (if (>= (mod x 2.0) 1.0) 1.0 0.0))
-             base2 (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0))) 0.0 1.0))]
+             base2 (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0)))
+                               0.0 1.0))]
          (fractal-brownian-motion base2 [1.0] 0 0) => 0.0
          (fractal-brownian-motion base2 [1.0] 0 1) => 1.0
          (fractal-brownian-motion base2 [1.0] 1 0) => 1.0
@@ -469,7 +552,8 @@
 
 
 (tabular "Remap values of tensor"
-       (fact ((remap (tensor/->tensor [?value]) ?low1 ?high1 ?low2 ?high2) 0) => ?expected)
+       (fact ((remap (tensor/->tensor [?value]) ?low1 ?high1 ?low2 ?high2) 0)
+             => ?expected)
        ?value ?low1 ?high1 ?low2 ?high2 ?expected
        0      0     1      0     1      0
        1      0     1      0     1      1
@@ -526,7 +610,7 @@
 (bufimg/tensor->image (noise-octaves perlin-worley-norm (octaves 4 0.6) 120 230))
 
 
-;; # Testing shaders
+;; ## Testing shaders
 
 (GLFW/glfwInit)
 
@@ -562,9 +646,9 @@
 
 
 (defn make-program-with-shaders
-  [vertex-shader-sources fragment-shader-sources]
-  (let [vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-shader-sources)
-        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-shader-sources)
+  [vertex-sources fragment-sources]
+  (let [vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-sources)
+        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-sources)
         program          (apply make-program (concat vertex-shaders fragment-shaders))]
     program))
 
@@ -653,21 +737,25 @@ void main()
 (defmacro framebuffer-render
   [texture width height & body]
   `(let [fbo# (GL30/glGenFramebuffers)]
-     (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo#)
-     (GL11/glBindTexture GL11/GL_TEXTURE_2D ~texture)
-     (GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0 ~texture 0)
-     (GL20/glDrawBuffers (volumetric-clouds.main/make-int-buffer (int-array [GL30/GL_COLOR_ATTACHMENT0])))
-     (GL11/glViewport 0 0 ~width ~height)
-     (let [result# (do ~@body)]
-       (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
-       (GL30/glDeleteFramebuffers fbo#)
-       result#)))
+     (try
+       (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo#)
+       (GL11/glBindTexture GL11/GL_TEXTURE_2D ~texture)
+       (GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0
+                                  ~texture 0)
+       (GL20/glDrawBuffers (volumetric-clouds.main/make-int-buffer
+                             (int-array [GL30/GL_COLOR_ATTACHMENT0])))
+       (GL11/glViewport 0 0 ~width ~height)
+       ~@body
+       (finally
+         (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
+         (GL30/glDeleteFramebuffers fbo#)))))
 
 
 (defn setup-point-attribute
   [program]
   (let [point-attribute (GL20/glGetAttribLocation program "point")]
-    (GL20/glVertexAttribPointer point-attribute 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+    (GL20/glVertexAttribPointer point-attribute 3 GL11/GL_FLOAT false
+                                (* 3 Float/BYTES) (* 0 Float/BYTES))
     (GL20/glEnableVertexAttribArray point-attribute)))
 
 
@@ -681,10 +769,11 @@ void main()
 (defmacro render-array
   [width height & body]
   `(let [texture# (volumetric-clouds.main/make-texture-2d ~width ~height)]
-     (volumetric-clouds.main/framebuffer-render texture# ~width ~height ~@body)
-     (let [result# (volumetric-clouds.main/read-texture-2d texture# ~width ~height)]
-       (GL11/glDeleteTextures texture#)
-       result#)))
+     (try
+       (volumetric-clouds.main/framebuffer-render texture# ~width ~height ~@body)
+       (volumetric-clouds.main/read-texture-2d texture# ~width ~height)
+       (finally
+         (GL11/glDeleteTextures texture#)))))
 
 
 (defn render-pixel
@@ -692,19 +781,19 @@ void main()
   (let [program (make-program-with-shaders vertex-sources fragment-sources)
         vao     (setup-quad-vao)]
     (setup-point-attribute program)
-    (let [result
-          (render-array 1 1
-                        (GL20/glUseProgram program)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
-      (teardown-vao vao)
-      (GL20/glDeleteProgram program)
-      result)))
+    (try
+      (render-array 1 1
+                    (GL20/glUseProgram program)
+                    (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+      (finally
+        (teardown-vao vao)
+        (GL20/glDeleteProgram program)))))
 
 
 (render-pixel [vertex-test] [fragment-test])
 
 
-;; # Noise octaves shader
+;; ## Noise octaves shader
 
 (def noise-mock
 "#version 130
@@ -727,7 +816,8 @@ void main()
 
 
 (tabular "Test noise mock"
-         (fact (nth (render-pixel [vertex-test] [noise-mock (noise-probe ?x ?y ?z)]) 0) => ?result)
+         (fact (nth (render-pixel [vertex-test] [noise-mock (noise-probe ?x ?y ?z)]) 0)
+               => ?result)
          ?x ?y ?z ?result
          0  0  0  0.0
          1  0  0  1.0
@@ -767,7 +857,9 @@ void main()
 
 
 (tabular "Test octaves of noise"
-         (fact (first (render-pixel [vertex-test] [noise-mock (noise-octaves ?octaves) (octaves-probe ?x ?y ?z)]))
+         (fact (first (render-pixel [vertex-test]
+                                    [noise-mock (noise-octaves ?octaves)
+                                     (octaves-probe ?x ?y ?z)]))
                => ?result)
          ?x  ?y ?z ?octaves  ?result
          0   0  0  [1.0]     0.0
@@ -778,7 +870,7 @@ void main()
          1   0  0  [1.0 0.0] 1.0)
 
 
-;; # Shader for intersecting a ray with a box
+;; ## Shader for intersecting a ray with a box
 
 (def ray-box
 "#version 130
@@ -814,7 +906,9 @@ void main()
 
 
 (tabular "Test intersection of ray with box"
-         (fact ((juxt first second) (render-pixel [vertex-test] [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)]))
+         (fact ((juxt first second)
+                (render-pixel [vertex-test]
+                              [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)]))
                => ?result)
          ?ox ?oy ?oz ?dx ?dy ?dz ?result
          -2   0   0   1   0   0  [1.0 3.0]
@@ -830,7 +924,7 @@ void main()
           2   0   0   1   0   0  [0.0 0.0])
 
 
-;; # Shader for light transfer through clouds
+;; ## Shader for light transfer through clouds
 
 (def fog
   (template/fn [v]
@@ -897,11 +991,15 @@ void main()
   [expected error]
   (fn [actual]
       (and (== (count expected) (count actual))
-           (<= (apply + (mapv (fn [a b] (* (- b a) (- b a))) actual expected)) (* error error)))))
+           (<= (apply + (mapv (fn [a b] (* (- b a) (- b a))) actual expected))
+               (* error error)))))
 
 
 (tabular "Test cloud transfer"
-         (fact (seq (render-pixel [vertex-test] [(fog ?density) constant-scatter no-shadow (cloud-transfer "fog" ?step) (cloud-transfer-probe ?a ?b)]))
+         (fact (seq (render-pixel [vertex-test]
+                                  [(fog ?density) constant-scatter no-shadow
+                                   (cloud-transfer "fog" ?step)
+                                   (cloud-transfer-probe ?a ?b)]))
                => (roughly-vector ?result 1e-3))
          ?a ?b ?step ?density ?result
          0  0  1     0.0      [0.0 0.0 0.0 0.0]
@@ -910,7 +1008,7 @@ void main()
          0  1  0.5   0.5      [0.393 0.393 0.393 0.393])
 
 
-;; # Rendering of fog box
+;; ## Rendering of fog box
 
 (def fragment-cloud
 "#version 130
@@ -935,12 +1033,14 @@ void main()
 
 (defn setup-fog-uniforms
   [program width height]
-  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 30.0)) (rotation-matrix-3d-x (to-radians -20.0)))
+  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 40.0))
+                           (rotation-matrix-3d-x (to-radians -20.0)))
         focal-length (/ (* 0.5 width) (tan (to-radians 30.0)))
-        light        (normalize (vec3 4 1 10))]
+        light        (normalize (vec3 6 1 10))]
     (GL20/glUseProgram program)
     (GL20/glUniform2f (GL20/glGetUniformLocation program "resolution") width height)
-    (GL20/glUniform3f (GL20/glGetUniformLocation program "light") (light 0) (light 1) (light 2))
+    (GL20/glUniform3f (GL20/glGetUniformLocation program "light")
+                      (light 0) (light 1) (light 2))
     (GL20/glUniformMatrix3fv (GL20/glGetUniformLocation program "rotation") true
                              (make-float-buffer (mat->float-array rotation)))
     (GL20/glUniform1f (GL20/glGetUniformLocation program "focal_length") focal-length)
@@ -949,27 +1049,31 @@ void main()
 
 (defn render-fog
   [width height]
-  (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01) (fog 1.0) fragment-cloud]
+  (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01)
+                          (fog 1.0) fragment-cloud]
         program          (make-program-with-shaders [vertex-test] fragment-sources)
         vao              (setup-quad-vao)]
     (setup-point-attribute program)
-    (let [result
-          (render-array width height
-                        (setup-fog-uniforms program width height)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
-      (teardown-vao vao)
-      (GL20/glDeleteProgram program)
-      result)))
+    (try
+      (render-array width height
+                    (setup-fog-uniforms program width height)
+                    (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+      (finally
+        (teardown-vao vao)
+        (GL20/glDeleteProgram program)))))
 
 
 (defn rgba-array->bufimg [data width height]
-  (-> data tensor/->tensor (tensor/reshape [height width 4]) (tensor/select :all :all [2 1 0]) (dfn/* 255) (clamp 0 255)))
+  (-> data
+      tensor/->tensor
+      (tensor/reshape [height width 4])
+      (tensor/select :all :all [2 1 0]) (dfn/* 255) (clamp 0 255)))
 
 
 (bufimg/tensor->image (rgba-array->bufimg (render-fog 640 480) 640 480))
 
 
-;; # Rendering of 3D noise
+;; ## Rendering of 3D noise
 
 (defn float-array->texture3d
   [data size]
@@ -981,13 +1085,15 @@ void main()
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL12/GL_TEXTURE_WRAP_R GL11/GL_REPEAT)
-    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0 GL11/GL_RED GL11/GL_FLOAT buffer)
+    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0
+                       GL11/GL_RED GL11/GL_FLOAT buffer)
     texture))
 
 
 (def noise3d (dfn/- (dfn/* 0.3 (perlin-noise (make-noise-params 32 4 3)))
                     (dfn/* 0.7 (worley-noise (make-noise-params 32 4 3)))))
-(def noise-3d-norm (dfn/* (/ 1.0 (- (dfn/reduce-max noise3d) (dfn/reduce-min noise3d))) (dfn/- noise3d (dfn/reduce-min noise3d))))
+(def noise-3d-norm (dfn/* (/ 1.0 (- (dfn/reduce-max noise3d) (dfn/reduce-min noise3d)))
+                          (dfn/- noise3d (dfn/reduce-min noise3d))))
 (def noise-texture (float-array->texture3d (dtype/->float-array noise-3d-norm) 32))
 
 
@@ -1013,20 +1119,24 @@ float noise(vec3 idx)
   (let [fragment-sources (concat cloud-shaders [ray-box fragment-cloud])
         program          (make-program-with-shaders [vertex-test] fragment-sources)
         vao              (setup-quad-vao)]
-    (setup-point-attribute program)
-    (let [result
-          (render-array width height
-                        (setup-noise-uniforms program width height)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
-      (teardown-vao vao)
-      (GL20/glDeleteProgram program)
-      result)))
+    (try
+      (setup-point-attribute program)
+      (render-array width height
+                    (setup-noise-uniforms program width height)
+                    (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+      (finally
+        (teardown-vao vao)
+        (GL20/glDeleteProgram program)))))
 
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480
+                  constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader)
+    640 480))
 
 
-;; # Remap and clamp 3D noise
+;; ## Remap and clamp 3D noise
 
 (def remap-clamp
 "#version 130
@@ -1049,7 +1159,9 @@ void main()
 
 
 (tabular "Remap and clamp input parameter values"
-       (fact (first (render-pixel [vertex-test] [remap-clamp (remap-probe ?value ?low1 ?high1 ?low2 ?high2)]))
+       (fact (first (render-pixel
+                      [vertex-test]
+                      [remap-clamp (remap-probe ?value ?low1 ?high1 ?low2 ?high2)]))
              => ?expected)
        ?value ?low1 ?high1 ?low2 ?high2 ?expected
        0      0     1      0     1      0.0
@@ -1074,16 +1186,28 @@ float remap_noise(vec3 idx)
 }"))
 
 
-(def cloud-strength 5.0)
+(def cloud-strength 6.5)
 
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480
+                  constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
+                  remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader)
+    640 480))
 
 
-;; # Octaves of 3D noise
+;; ## Octaves of 3D noise
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
+                  remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                  (noise-octaves (octaves 4 0.5)) noise-shader)
+    640 480))
 
+
+;; ## Mie scattering
 
 (def mie-scatter
   (template/fn [g]
@@ -1102,7 +1226,6 @@ float in_scatter(vec3 point, vec3 direction)
 }"))
 
 
-;; # Mie scattering
 (def mie-probe
   (template/fn [mu]
 "#version 450 core
@@ -1116,7 +1239,8 @@ void main()
 
 
 (tabular "Shader function for scattering phase function"
-         (fact (first (render-pixel [vertex-test] [(mie-scatter ?g) (mie-probe ?mu)])) => (roughly ?result 1e-6))
+         (fact (first (render-pixel [vertex-test] [(mie-scatter ?g) (mie-probe ?mu)]))
+               => (roughly ?result 1e-6))
          ?g  ?mu ?result
          0   0   (/ 3 (* 16 PI))
          0   1   (/ 6 (* 16 PI))
@@ -1125,10 +1249,35 @@ void main()
          0.5 1   (/ (* 6 0.75) (* 8 PI 2.25 (pow 0.25 1.5))))
 
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+(defn scatter-amount [theta]
+  (first (render-pixel [vertex-test] [(mie-scatter 0.76) (mie-probe (cos theta))])))
 
 
-;; # Self-shading of clouds
+(let [scatter
+      (tc/dataset {:x (map (fn [theta]
+                               (* (cos (to-radians theta))
+                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
+                           (range 361))
+                   :y (map (fn [theta]
+                               (* (sin (to-radians theta))
+                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
+                           (range 361)) })]
+  (-> scatter
+      (plotly/base {:=title "Mixed Mie and isotropic scattering" :=mode "lines"})
+      (plotly/layer-point {:=x :x :=y :y})
+      plotly/plot
+      (assoc-in [:layout :yaxis :scaleanchor] "x")))
+
+
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01)
+                  remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                  (noise-octaves (octaves 4 0.5)) noise-shader)
+    640 480))
+
+
+;; ## Self-shading of clouds
 (def shadow
   (template/fn [noise step]
 "#version 130
@@ -1149,11 +1298,26 @@ float shadow(vec3 point)
 }"))
 
 
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) (shadow "remap_noise" 0.01) (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480
+                  (mie-scatter 0.76) (shadow "remap_noise" 0.01)
+                  (cloud-transfer "remap_noise" 0.01) remap-clamp
+                  (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                  (noise-octaves (octaves 4 0.5)) noise-shader)
+    640 480))
 
-
+;; ## Tidy up
+(GL11/glBindTexture GL12/GL_TEXTURE_3D 0)
 (GL11/glDeleteTextures noise-texture)
 
 (GLFW/glfwDestroyWindow window)
 
 (GLFW/glfwTerminate)
+
+;; ## Further topics
+;;
+;; * [Vertical density profile](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
+;; * [Powder function](https://advances.realtimerendering.com/s2015/index.html)
+;; * [Curl noise](https://www.wedesoft.de/software/2023/03/20/procedural-global-cloud-cover/)
+;; * [Deep opacity maps](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)

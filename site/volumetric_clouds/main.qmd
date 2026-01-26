@@ -25,22 +25,27 @@ image: clouds.jpg
 .clay-side-by-side {margin: 1em 0}
 </style>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" type="text/javascript"></script><script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" type="text/javascript"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.20.0/plotly.min.js" type="text/javascript"></script>
-Procedural generation of volumetric clouds
+
+# Procedural generation of volumetric clouds
+
+Volumetric clouds are commonly used in flight simulators and visual effects.
+For a introductory video see [Sebastian Lague's video "Coding Adventure: Clouds](https://www.youtube.com/watch?v=4QOcCGI6xOU).
+Note that this article is about procedural generation and not about simulating real weather.
 
 
-* Midje testing of shaders
-* Generating OpenGL shaders using templates
-* cloud shadows
-* powder function
-* video showing TDD with tmux
+## Worley noise
 
-References
-
-* https://adrianb.io/2014/08/09/perlinnoise.html
-* https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/
+[Worley noise](https://en.wikipedia.org/wiki/Worley_noise) is a type of structured noise which is defined for each pixel using the distance to the nearest seed point.
 
 
-# Worley noise
+### Noise parameters
+
+First we define a function to create parameters of the noise.
+
+
+* **size** is the size of each dimension of the noise array
+* **divisions** is the number of subdividing cells in each dimension
+* **dimensions** is the number of dimensions
 
 
 ::: {.sourceClojure}
@@ -51,6 +56,10 @@ References
 ```
 :::
 
+
+Here is a corresponding Midje test.
+Note that ideally you practise [Test Driven Development (TDD)](https://martinfowler.com/bliki/TestDrivenDevelopment.html), i.e. you start with writing one failing test.
+Because this is a Clojure notebook, the unit tests are displayed after the implementation.
 
 
 ::: {.sourceClojure}
@@ -69,6 +78,11 @@ true
 ```
 :::
 
+
+
+### 2D and 3D vectors
+
+Next we need a function which allows us to create 2D or 3D vectors depending on the number of input parameters.
 
 
 ::: {.sourceClojure}
@@ -100,17 +114,24 @@ true
 
 
 
+### Random points
+
+The following method generates a random point in a cell specified by the cell indices.
+
+
 ::: {.sourceClojure}
 ```clojure
 (defn random-point-in-cell
-  [{:keys [cellsize]} & args]
+  [{:keys [cellsize]} & indices]
   (let [random-seq (repeatedly #(rand cellsize))
-        dimensions (count args)]
-    (add (mult (apply vec-n (reverse args)) cellsize)
+        dimensions (count indices)]
+    (add (mult (apply vec-n (reverse indices)) cellsize)
          (apply vec-n (take dimensions random-seq)))))
 ```
 :::
 
+
+We test the method by replacing the random function with a deterministic function.
 
 
 ::: {.sourceClojure}
@@ -135,12 +156,16 @@ true
 :::
 
 
+We can now use the `random-point` method to generate a grid of random points.
+
 
 ::: {.sourceClojure}
 ```clojure
 (defn random-points
   [{:keys [divisions dimensions] :as params}]
-  (tensor/clone (tensor/compute-tensor (repeat dimensions divisions) (partial random-point-in-cell params))))
+  (tensor/clone
+    (tensor/compute-tensor (repeat dimensions divisions)
+                           (partial random-point-in-cell params))))
 ```
 :::
 
@@ -171,6 +196,8 @@ true
 :::
 
 
+Here is a scatter plot showing one random point placed in each cell.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -185,9 +212,14 @@ true
 
 
 ```{=html}
-<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[17.888350937655158,1.6708197450519293,10.275679361189276,19.923353852845384,5.046912456661946,15.454493995872532,15.251079908413114,5.443515518328123,34.10494638936682,50.38218042072107,32.27317965559706,44.26311863614815,55.36754240570593,63.17132339981927,57.853584736390005,55.23285177642265,67.33456638228226,73.15608465192808,71.96358165709668,93.88215058071152,79.5161180024531,90.1423571896289,77.43651553773499,80.00174529321728,104.9530715009261,126.74910197572767,123.13774125770999,124.77504216618473,108.56769114302095,127.36101547083261,113.02715274572569,109.5833252930651,133.46932554572933,133.81752684462228,139.2392933885786,152.60979462928518,131.340182205892,151.96311992783293,133.30604254645533,151.36742842311628,183.02617418327802,183.18398463794648,165.64687852677372,181.2756703192759,171.45785389374404,189.05599748556105,171.45172468670023,178.4109529611962,217.0264176156084,213.22902898028627,193.0813687643843,222.55604095003588,217.53978922711642,220.67258016575025,221.11046091694925,216.67320903948558,234.883788951059,246.4077458641412,228.13809415513953,230.92624295439626,246.51336677577362,237.85050805196403,229.4909576322936,227.3762717981416],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[31.721131022929942,51.438908448049915,66.98789462069877,108.97114520225645,129.97262990708663,164.0705448823744,206.38317950235552,232.28333167821626,3.466216889570415,62.856716103311726,69.9259220715069,120.38549154620395,157.9725790432141,178.15935204725642,193.6504907217103,237.50095640278528,12.125893093307415,46.41603823169634,78.14677144431096,114.90809714702985,156.41774873538594,173.34145844584674,194.16445126241942,254.2677458447969,8.693031242822371,53.16204704261405,88.28174403162869,99.54632345881649,147.2727537473833,171.00884088722702,209.76358028307328,228.6596685662977,18.82884495391311,47.593534488522806,79.73424237248199,123.96256993440066,158.1358852949124,169.29274100440963,215.78945588199036,232.7090011747458,16.824804200310943,38.76545287233225,65.17293498924717,108.60806153938975,138.263521236204,173.2287064251919,207.64237868388403,241.60061464213996,15.689549748316804,45.51645354187124,73.14992198318467,118.98163751228745,130.71954361819803,163.04662776509733,219.46203878860405,236.9932648504909,5.360806483163511,39.82142534034887,78.84389838920671,110.01354256282205,140.64974998845517,176.5857774028681,202.93317678362783,236.46588092633246],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random points"}, {});</script></div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[23.42585547694816,18.189507613376424,4.950576028223416,24.728709896750328,17.30017908201772,17.912957826343145,15.061376728832055,5.9565014104797065,57.590699345493704,60.59822635135083,60.614256037229275,56.188915755436284,38.67676798361539,47.55210430565813,60.452568732576495,49.584338275363216,72.08752123891344,77.21692137204286,65.89704278673725,85.01745833150615,78.9016878167404,95.36576790669605,77.83797409146666,90.79499532241007,100.43841585500546,113.7449780192576,116.93093471375731,105.63119770947668,118.86411700672585,102.78888580110478,126.52099663325612,105.50809867376884,139.3403201121717,144.0318412480076,159.9204768495737,142.0455455273587,141.337549944773,155.84249352330957,159.66518602465882,158.00598531261357,186.7402108713804,178.1053397902581,180.37420776731273,165.55902967318016,180.36749305681636,161.47454272969023,186.83818142669162,168.93077070122564,194.53529512000378,198.82500662704712,198.9611062035475,213.0628706062774,197.2841572681701,192.52572635059707,219.1806597116346,211.90641908314743,239.89821240627253,231.1603974359099,249.99203282398702,241.97554665359002,247.34015473176942,237.32029373064915,237.20027846644786,234.7858152773146],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[6.078687412026984,49.218267994532326,86.05171083347139,116.55249553496435,154.64984010368676,179.72448799846975,192.24185815231,240.14642668995046,7.347892972139579,45.73671914313597,83.58035365914142,126.27800177123301,149.19757109671465,190.08950988452676,206.27502342989024,233.84681545619256,27.405271241567288,34.7881912025052,67.74400478757154,104.95310916039426,133.12581277342017,170.50463491481523,214.87957107425024,227.59372016873834,24.879583658151212,43.629653162577824,84.27484494626717,115.22717803359933,152.2450763226841,161.5070348372026,215.03840314502463,239.8329369169345,22.451813533055685,56.47422961980907,74.8217772453446,103.0897536533855,140.4986636050698,185.33466372057978,197.68483497546197,226.2982018802836,25.422551058875772,44.88670538011573,92.42406401522167,103.67232843530451,133.34254892085943,184.13426398179746,219.98873356821807,235.6254502354953,5.904374281392762,57.80403439992082,90.6099582370496,110.67509426214147,138.75026115248198,185.79437877726093,219.26764545789115,236.5920738584064,0.6392343796278865,35.18085044269449,70.12033695686193,105.41870706365215,129.84276747342562,169.40335764616154,192.522935259552,240.9811785360252],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random points"}, {});</script></div>
 ```
 
+
+
+### Modular distance
+
+In order to get a periodic noise array, we need to component-wise wrap around distance vectors.
 
 
 ::: {.sourceClojure}
@@ -231,6 +263,9 @@ true
 
 
 
+Using the `mod-dist` function we can calculate the distance between two points in the periodic noise array.
+
+
 ::: {.sourceClojure}
 ```clojure
 (defn mod-dist
@@ -269,6 +304,12 @@ true
 
 
 
+### Modular lookup
+
+We also need to lookup elements with wrap around.
+We recursively use `tensor/select` and then finally the tensor as a function to lookup along each axis.
+
+
 ::: {.sourceClojure}
 ```clojure
 (defn wrap-get
@@ -279,6 +320,8 @@ true
 ```
 :::
 
+
+A tensor with index vectors is used to test the lookup.
 
 
 ::: {.sourceClojure}
@@ -302,12 +345,14 @@ true
 :::
 
 
+The following function converts a noise coordinate to the index of a cell in the random point array.
+
 
 ::: {.sourceClojure}
 ```clojure
 (defn division-index
   [{:keys [cellsize]} x]
-  (int (/ x cellsize)))
+  (int (floor (/ x cellsize))))
 ```
 :::
 
@@ -316,8 +361,9 @@ true
 ::: {.sourceClojure}
 ```clojure
 (facts "Convert coordinate to division index"
-       (division-index {:cellsize 4} 3.5) => 0
-       (division-index {:cellsize 4} 7.5) => 1)
+       (division-index {:cellsize 4} 3.5)  => 0
+       (division-index {:cellsize 4} 7.5)  => 1
+       (division-index {:cellsize 4} -0.5) => -1)
 ```
 :::
 
@@ -332,12 +378,18 @@ true
 
 
 
+### Getting indices of Neighbours
+
+The following function determines the neighbouring indices of a cell recursing over each dimension.
+
+
 ::: {.sourceClojure}
 ```clojure
 (defn neighbours
   [& args]
   (if (seq args)
-    (mapcat (fn [v] (map (fn [delta] (into [(+ (first args) delta)] v)) [-1 0 1])) (apply neighbours (rest args)) )
+    (mapcat (fn [v] (map (fn [delta] (into [(+ (first args) delta)] v)) [-1 0 1]))
+            (apply neighbours (rest args)) )
     [[]]))
 ```
 :::
@@ -348,6 +400,7 @@ true
 ```clojure
 (facts "Get neighbouring indices"
        (neighbours) => [[]]
+       (neighbours 0) => [[-1] [0] [1]]
        (neighbours 3) => [[2] [3] [4]]
        (neighbours 1 10) => [[0 9] [1 9] [2 9] [0 10] [1 10] [2 10] [0 11] [1 11] [2 11]])
 ```
@@ -364,24 +417,34 @@ true
 
 
 
+### Sampling Worley noise
+
+Using above functions one can now implement Worley noise.
+For each pixel the distance to the closest seed point is calculated.
+The distance to each random point in all neighbouring cells is calculated and the minimum is taken.
+
+
 ::: {.sourceClojure}
 ```clojure
 (defn worley-noise
   [{:keys [size dimensions] :as params}]
   (let [random-points (random-points params)]
     (tensor/clone
-      (tensor/compute-tensor (repeat dimensions size)
-                             (fn [& coords]
-                                 (let [center   (map #(+ % 0.5) coords)
-                                       division (map (partial division-index params) center)]
-                                   (apply min
-                                          (for [neighbour (apply neighbours division)]
-                                               (mod-dist params (apply vec-n (reverse center))
-                                                         (apply wrap-get random-points neighbour))))))
-                             :double))))
+      (tensor/compute-tensor
+        (repeat dimensions size)
+        (fn [& coords]
+            (let [center   (map #(+ % 0.5) coords)
+                  division (map (partial division-index params) center)]
+              (apply min
+                     (for [neighbour (apply neighbours division)]
+                          (mod-dist params (apply vec-n (reverse center))
+                                    (apply wrap-get random-points neighbour))))))
+        :double))))
 ```
 :::
 
+
+Here a 256x256 Worley noise tensor is created.
 
 
 ::: {.sourceClojure}
@@ -391,13 +454,19 @@ true
 :::
 
 
+The values are inverted and normalised to be between 0 and 255.
+
 
 ::: {.sourceClojure}
 ```clojure
-(def worley-norm (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley))) (dfn/- (dfn/reduce-max worley) worley)))
+(def worley-norm
+  (dfn/* (/ 255 (- (dfn/reduce-max worley) (dfn/reduce-min worley)))
+         (dfn/- (dfn/reduce-max worley) worley)))
 ```
 :::
 
+
+Finally one can display the noise.
 
 
 ::: {.sourceClojure}
@@ -413,29 +482,23 @@ true
 
 
 
-# Perlin noise
+## Perlin noise
+
+[Perlin noise](https://adrianb.io/2014/08/09/perlinnoise.html) is generated by choosing a random gradient vector at each cell corner.
+The noise tensor's intermediate values are interpolated with a continuous function, utilizing the gradient at the corner points.
+
+
+### Random gradients
+
+The 2D or 3D gradients are generated by creating a vector where each component is set to a random number between -1 and 1.
+Random vectors are generated until the vector length is greater 0 and lower or equal to 1.
+The vector then is normalized and returned.
+Random vectors outside the unit circle or sphere are discarded in order to achieve a uniform distribution on the surface of the unit circle or sphere.
 
 
 ::: {.sourceClojure}
 ```clojure
-(defmulti random-gradient (fn [& args] (count args)))
-```
-:::
-
-
-
-::: {.printedClojure}
-```clojure
-#'volumetric-clouds.main/random-gradient
-
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(defmethod random-gradient 2
+(defn random-gradient
   [& args]
   (loop [args args]
         (let [random-vector (apply vec-n (map (fn [_x] (- (rand 2.0) 1.0)) args))
@@ -447,36 +510,7 @@ true
 :::
 
 
-
-::: {.printedClojure}
-```clojure
-#object[clojure.lang.MultiFn 0x50404204 "clojure.lang.MultiFn@50404204"]
-
-```
-:::
-
-
-
-::: {.sourceClojure}
-```clojure
-(defmethod random-gradient 3
-  [& _args]
-  (apply vec3
-          (rand-nth [[1  1  0] [-1  1  0] [1 -1  0] [-1 -1  0]
-                     [1  0  1] [-1  0  1] [1  0 -1] [-1  0 -1]
-                     [0  1  1] [ 0 -1  1] [0  1 -1] [ 0 -1 -1]])))
-```
-:::
-
-
-
-::: {.printedClojure}
-```clojure
-#object[clojure.lang.MultiFn 0x50404204 "clojure.lang.MultiFn@50404204"]
-
-```
-:::
-
+The function below serves as a Midje checker for a vector with an approximate expected value.
 
 
 ::: {.sourceClojure}
@@ -489,14 +523,18 @@ true
 :::
 
 
+In the following tests, the random function is again replaced with a deterministic function.
+
 
 ::: {.sourceClojure}
 ```clojure
 (facts "Create unit vector with random direction"
        (with-redefs [rand (constantly 0.5)]
-         (random-gradient 0 0) => (roughly-vec (vec2 (- (sqrt 0.5)) (- (sqrt 0.5))) 1e-6))
+         (random-gradient 0 0)
+         => (roughly-vec (vec2 (- (sqrt 0.5)) (- (sqrt 0.5))) 1e-6))
        (with-redefs [rand (constantly 1.5)]
-         (random-gradient 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)))
+         (random-gradient 0 0)
+         => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)))
 ```
 :::
 
@@ -509,6 +547,8 @@ true
 ```
 :::
 
+
+The random gradient function is then used to generate a field of random gradients.
 
 
 ::: {.sourceClojure}
@@ -520,16 +560,20 @@ true
 :::
 
 
+The function is tested that it generates 2D and 3D random gradient fields correctly.
+
 
 ::: {.sourceClojure}
 ```clojure
 (facts "Random gradients"
-       (with-redefs [rand (constantly 1.5)
-                     rand-nth (fn [x] (first x))]
-         (dtype/shape (random-gradients {:divisions 8 :dimensions 2})) => [8 8]
-         ((random-gradients {:divisions 8 :dimensions 2}) 0 0) => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)
+       (with-redefs [rand (constantly 1.5)]
+         (dtype/shape (random-gradients {:divisions 8 :dimensions 2}))
+         => [8 8]
+         ((random-gradients {:divisions 8 :dimensions 2}) 0 0)
+         => (roughly-vec (vec2 (sqrt 0.5) (sqrt 0.5)) 1e-6)
          (dtype/shape (random-gradients {:divisions 8 :dimensions 3})) => [8 8 8]
-         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0) => (vec3 1 1 0)))
+         ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0)
+         => (vec3 (/ 1 (sqrt 3)) (/ 1 (sqrt 3)) (/ 1 (sqrt 3)))))
 ```
 :::
 
@@ -543,13 +587,25 @@ true
 :::
 
 
+The gradient field can be plotted with Plotly as a scatter plot of disconnected lines/
+
 
 ::: {.sourceClojure}
 ```clojure
-(let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2)) [(* 8 8)])
-      points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y))) [(* 8 8)])
-      scatter   (tc/dataset {:x (mapcat (fn [point gradient] [(point 0) (+ (point 0) (* 0.5 (gradient 0))) nil]) points gradients)
-                             :y (mapcat (fn [point gradient] [(point 1) (+ (point 1) (* 0.5 (gradient 1))) nil]) points gradients)})]
+(let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2))
+                                [(* 8 8)])
+      points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y)))
+                                [(* 8 8)])
+      scatter   (tc/dataset {:x (mapcat (fn [point gradient]
+                                            [(point 0)
+                                             (+ (point 0) (* 0.5 (gradient 0)))
+                                             nil])
+                                        points gradients)
+                             :y (mapcat (fn [point gradient]
+                                            [(point 1)
+                                             (+ (point 1) (* 0.5 (gradient 1)))
+                                             nil])
+                                        points gradients)})]
   (-> scatter
       (plotly/base {:=title "Random gradients" :=mode "lines"})
       (plotly/layer-point {:=x :x :=y :y})))
@@ -559,16 +615,22 @@ true
 
 
 ```{=html}
-<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,-0.4996444077497972,null,0.0,-0.25134720905599756,null,0.0,-0.49006576145337827,null,0.0,-0.40332339071498785,null,0.0,-0.018260924930915537,null,0.0,-0.20416750780788992,null,0.0,0.4731011135714833,null,0.0,-0.4441226584305075,null,1.0,1.2374395364860624,null,1.0,1.2748893178481069,null,1.0,1.2298398293430142,null,1.0,0.6727964696492921,null,1.0,0.8687605261094852,null,1.0,0.5474369059808706,null,1.0,0.7700153364974228,null,1.0,0.9737372123223091,null,2.0,2.4327942588817364,null,2.0,2.4580588141834108,null,2.0,1.9147140401766438,null,2.0,2.4989834003055913,null,2.0,2.4694831903726877,null,2.0,2.4157137566201463,null,2.0,2.3508653111480635,null,2.0,1.514315645760009,null,3.0,2.623508938883648,null,3.0,3.494410605294328,null,3.0,2.5145149421433066,null,3.0,2.598119965620603,null,3.0,2.989219850527056,null,3.0,3.29570585645775,null,3.0,2.6209199025415018,null,3.0,2.684494377560891,null,4.0,4.49531934706067,null,4.0,3.582987338402254,null,4.0,3.7903766751263275,null,4.0,3.6696417910201466,null,4.0,4.2448943801230925,null,4.0,3.688664311441035,null,4.0,4.497761985844884,null,4.0,4.383434682579847,null,5.0,5.013105865531607,null,5.0,4.79117841214687,null,5.0,5.497532139080703,null,5.0,5.122579423513565,null,5.0,4.744772843337293,null,5.0,4.748476187859123,null,5.0,4.500592047470685,null,5.0,4.639613076061148,null,6.0,6.1520056183419864,null,6.0,5.50017290456935,null,6.0,5.500345022548548,null,6.0,6.436561948639803,null,6.0,6.447546137376384,null,6.0,6.192072362847898,null,6.0,6.243329678142006,null,6.0,6.273993354283344,null,7.0,7.440268745634359,null,7.0,6.5514167360292905,null,7.0,7.14346105418004,null,7.0,6.808793289118144,null,7.0,6.8904802270111025,null,7.0,7.499122941752274,null,7.0,6.842022635865806,null,7.0,7.467051981165919,null],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,0.018853800793326835,null,1.0,0.5677679089889776,null,2.0,1.900825661327536,null,3.0,3.2955169073033983,null,4.0,4.499666427349955,null,5.0,4.543583930217707,null,6.0,5.8382120636839,null,7.0,7.229684706214016,null,0.0,0.4400255293881071,null,1.0,1.417655196224113,null,2.0,1.555957600169112,null,3.0,3.3780712230863825,null,4.0,4.482468859609551,null,5.0,4.787428492191845,null,6.0,5.556032597420028,null,7.0,7.49930978959299,null,0.0,0.25037797323049116,null,1.0,0.7995452102121585,null,2.0,1.507327385521573,null,3.0,2.968132050278215,null,4.0,4.172004459120927,null,5.0,4.722183383224174,null,6.0,6.356221186109098,null,7.0,7.1187885013226575,null,0.0,0.329020487051313,null,1.0,1.074553023899077,null,2.0,2.119600412197798,null,3.0,2.7025232144062086,null,4.0,3.50011622513094,null,5.0,5.403184878754882,null,6.0,6.326034169544935,null,7.0,7.387886842016212,null,0.0,-0.06825499562223415,null,1.0,1.2758630821026327,null,2.0,1.5460638132194053,null,3.0,2.624682196319408,null,4.0,4.4359205691225485,null,5.0,4.608758272893196,null,6.0,6.0472546870453945,null,7.0,7.320901611393418,null,0.0,-0.4998282067757555,null,1.0,1.4543055628610524,null,2.0,1.9503837669529458,null,3.0,2.515258538052415,null,4.0,3.570047562512003,null,5.0,4.567870653708729,null,6.0,6.024324821694668,null,7.0,6.6534148516541824,null,0.0,0.47633422299103206,null,1.0,0.986851818629168,null,2.0,2.0185715779617537,null,3.0,3.2437491846136464,null,4.0,4.222940473937503,null,5.0,5.461636445084252,null,6.0,6.43679591085003,null,7.0,6.581756480255148,null,0.0,-0.2369882520665281,null,1.0,1.220846225427072,null,2.0,1.5210230423772437,null,3.0,2.5380043358279836,null,4.0,3.5121420090595414,null,5.0,5.029602179253496,null,6.0,6.474387133490373,null,7.0,6.821499448491076,null],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random gradients"}, {});</script></div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,-0.20604936002203628,null,0.0,0.15863087919023647,null,0.0,-0.38085674430926364,null,0.0,0.4999952322475774,null,0.0,0.49896122067290766,null,0.0,0.4620479921178867,null,0.0,-0.4967620754481247,null,0.0,0.2861663871022829,null,1.0,0.5561035581092595,null,1.0,0.8794854493438875,null,1.0,0.5023510978381946,null,1.0,1.1147734779998841,null,1.0,1.3172216220698991,null,1.0,1.2925113717621732,null,1.0,1.0112994126167834,null,1.0,1.2966272296641015,null,2.0,1.930324927040028,null,2.0,1.6762709208065099,null,2.0,1.9736544837928423,null,2.0,1.5843483042620767,null,2.0,1.5574981400464725,null,2.0,2.1243591769536927,null,2.0,2.3112898781434685,null,2.0,1.6086687582437202,null,3.0,2.5110511386278627,null,3.0,2.883209548448048,null,3.0,3.327007025316867,null,3.0,3.4996457318979135,null,3.0,2.5531451244109484,null,3.0,3.4539580068409967,null,3.0,3.0237712303452655,null,3.0,2.6294921346023856,null,4.0,4.022458960608534,null,4.0,3.962791227393187,null,4.0,3.5247006460601287,null,4.0,3.720620458647807,null,4.0,4.2041832251573075,null,4.0,3.5639673862707104,null,4.0,4.4982593574891006,null,4.0,3.7428105582185895,null,5.0,5.4707657818602415,null,5.0,4.850514171988135,null,5.0,5.482401274376597,null,5.0,4.662394737778072,null,5.0,5.211720736349805,null,5.0,4.61596959479211,null,5.0,4.596018090714494,null,5.0,4.512705196737749,null,6.0,5.561748617744251,null,6.0,6.475508303727065,null,6.0,5.527581826337281,null,6.0,6.264397279259755,null,6.0,6.365721288944369,null,6.0,5.686262443223099,null,6.0,6.365904483257755,null,6.0,6.310197807040303,null,7.0,6.930384638284146,null,7.0,6.526560443669684,null,7.0,7.4964011763910765,null,7.0,6.5622140205456665,null,7.0,6.9216251721324165,null,7.0,7.275662472632201,null,7.0,6.502540684237719,null,7.0,7.27668785788522,null],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,-0.4555696008674298,null,1.0,1.4741690038027926,null,2.0,2.323957003804746,null,3.0,2.997816486846595,null,4.0,4.032213355376332,null,5.0,5.1910802265537415,null,6.0,6.056810565887621,null,7.0,7.410010730216694,null,0.0,-0.23012159585041211,null,1.0,1.4852589443587365,null,2.0,1.9515689131120322,null,3.0,3.4866487940474222,null,4.0,3.6135152752160287,null,5.0,4.594491556943864,null,6.0,6.499872306969006,null,7.0,7.402507498839215,null,0.0,-0.4951215852778211,null,1.0,1.3810504996513389,null,2.0,1.500694568649831,null,3.0,2.7220905402290363,null,4.0,3.7672080243271506,null,5.0,5.4842879258327635,null,6.0,5.608721823039637,null,7.0,7.311223166273798,null,0.0,0.10454191007864061,null,1.0,1.4861686851559768,null,2.0,2.378241200021116,null,3.0,2.981181323208093,null,4.0,3.7756771965173996,null,5.0,4.790423932604533,null,6.0,6.499434608940822,null,7.0,7.335743833418431,null,0.0,0.4994953404070796,null,1.0,1.4986135850948052,null,2.0,1.8447887757140577,null,3.0,3.414665011634498,null,4.0,3.5435909613467755,null,5.0,4.755305170131439,null,6.0,6.041684681533494,null,7.0,6.571218480999745,null,0.0,0.16846239529792836,null,1.0,0.522869004126113,null,2.0,2.1314876818558854,null,3.0,2.631187463716235,null,4.0,4.452961731054066,null,5.0,5.3201884568123345,null,6.0,5.705383949911012,null,7.0,6.888001005747354,null,0.0,-0.24069841285501906,null,1.0,0.8454301029093653,null,2.0,2.163771393085548,null,3.0,3.4243749270633685,null,4.0,4.340951519739786,null,5.0,5.389318308672558,null,6.0,5.659245089350314,null,7.0,6.607855485174933,null,0.0,-0.4951299843608451,null,1.0,1.1607948584431518,null,2.0,2.059882151577536,null,3.0,3.241543859771284,null,4.0,3.5061808161313226,null,5.0,4.582854700155568,null,6.0,5.949658872069417,null,7.0,7.416465880113711,null],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random gradients"}, {});</script></div>
 ```
 
+
+
+### Corner vectors
+
+The next step is to determine the vectors to the corners of the cell for a given point.
+First we define a function to determine the fractional part of a number.
 
 
 ::: {.sourceClojure}
 ```clojure
 (defn frac
   [x]
-  (- x (Math/floor x)))
+  (mod x 1.0))
 ```
 :::
 
@@ -592,6 +654,8 @@ true
 ```
 :::
 
+
+This function can be used to determine the relative position of a point in a cell.
 
 
 ::: {.sourceClojure}
@@ -623,13 +687,17 @@ true
 :::
 
 
+A tensor converting the corner vectors can be computed by subtracting the corner coordinates from the point coordinates.
+
 
 ::: {.sourceClojure}
 ```clojure
 (defn corner-vectors
   [{:keys [dimensions] :as params} point]
   (let [cell-pos (cell-pos params point)]
-    (tensor/compute-tensor (repeat dimensions 2) (fn [& args] (sub cell-pos (apply vec-n (reverse args)))))))
+    (tensor/compute-tensor
+      (repeat dimensions 2)
+      (fn [& args] (sub cell-pos (apply vec-n (reverse args)))))))
 ```
 :::
 
@@ -659,12 +727,19 @@ true
 
 
 
+### Extract gradients of cell corners
+
+The function below retrieves the gradient values at a cell's corners, utilizing `wrap-get` for modular access.
+
+
 ::: {.sourceClojure}
 ```clojure
 (defn corner-gradients
   [{:keys [dimensions] :as params} gradients point]
   (let [division (map (partial division-index params) point)]
-    (tensor/compute-tensor (repeat dimensions 2) (fn [& coords] (apply wrap-get gradients (map + (reverse division) coords))))))
+    (tensor/compute-tensor
+      (repeat dimensions 2)
+      (fn [& coords] (apply wrap-get gradients (map + (reverse division) coords))))))
 ```
 :::
 
@@ -675,12 +750,18 @@ true
 (facts "Get 2x2 tensor of gradients from a larger tensor using wrap around"
        (let [gradients2 (tensor/compute-tensor [4 6] (fn [y x] (vec2 x y)))
              gradients3 (tensor/compute-tensor [4 6 8] (fn [z y x] (vec3 x y z))) ]
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 0) => (vec2 2 1)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 1) => (vec2 3 1)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 0) => (vec2 2 2)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 1) => (vec2 3 2)
-         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 23 15)) 1 1) => (vec2 0 0)
-         ((corner-gradients {:cellsize 4 :dimensions 3} gradients3 (vec3 9 6 3)) 0 0 0) => (vec3 2 1 0)))
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 0)
+         => (vec2 2 1)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 0 1)
+         => (vec2 3 1)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 0)
+         => (vec2 2 2)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 9 6)) 1 1)
+         => (vec2 3 2)
+         ((corner-gradients {:cellsize 4 :dimensions 2} gradients2 (vec2 23 15)) 1 1)
+         => (vec2 0 0)
+         ((corner-gradients {:cellsize 4 :dimensions 3} gradients3 (vec3 9 6 3)) 0 0 0)
+         => (vec3 2 1 0)))
 ```
 :::
 
@@ -695,12 +776,19 @@ true
 
 
 
+### Influence values
+
+The influence value is the function value of the function with the selected random gradient at a corner.
+
+
 ::: {.sourceClojure}
 ```clojure
 (defn influence-values
   [gradients vectors]
-  (tensor/compute-tensor (repeat (count (dtype/shape gradients)) 2)
-                         (fn [& args] (dot (apply gradients args) (apply vectors args))) :double))
+  (tensor/compute-tensor
+    (repeat (count (dtype/shape gradients)) 2)
+    (fn [& args] (dot (apply gradients args) (apply vectors args)))
+    :double))
 ```
 :::
 
@@ -734,6 +822,11 @@ true
 
 
 
+### Interpolating the influence values
+
+For interpolation the following "ease curve" is used.
+
+
 ::: {.sourceClojure}
 ```clojure
 (defn ease-curve
@@ -765,10 +858,13 @@ true
 :::
 
 
+The ease curve monotonously increases in the interval from zero to one.
+
 
 ::: {.sourceClojure}
 ```clojure
-(-> (tc/dataset {:t (range 0.0 1.025 0.025) :ease (map ease-curve (range 0.0 1.025 0.025))})
+(-> (tc/dataset {:t (range 0.0 1.025 0.025)
+                 :ease (map ease-curve (range 0.0 1.025 0.025))})
     (plotly/base {:=title "Ease Curve"})
     (plotly/layer-line {:=x :t :=y :ease}))
 ```
@@ -780,6 +876,8 @@ true
 <div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,1.5044921875000003E-4,0.001158125,0.003758378906250001,0.008560000000000002,0.01605224609375,0.026611875,0.04051017578124999,0.05791999999999999,0.07892279296874999,0.10351562499999996,0.13161822265624998,0.16308000000000003,0.19768708984375005,0.23516937500000007,0.27520751953125006,0.31744000000000017,0.36147013671875017,0.4068731250000002,0.4532030664062503,0.5000000000000001,0.5467969335937503,0.5931268750000003,0.6385298632812504,0.6825600000000003,0.7247924804687504,0.7648306250000004,0.8023129101562504,0.8369200000000006,0.8683817773437502,0.8964843750000004,0.9210772070312503,0.9420800000000003,0.9594898242187506,0.9733881249999998,0.9839477539062503,0.9914399999999999,0.9962416210937496,0.9988418749999993,0.9998495507812496,1.0000000000000013],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,0.025,0.05,0.07500000000000001,0.1,0.125,0.15000000000000002,0.17500000000000002,0.2,0.225,0.25,0.275,0.30000000000000004,0.325,0.35000000000000003,0.375,0.4,0.42500000000000004,0.45,0.47500000000000003,0.5,0.525,0.55,0.5750000000000001,0.6000000000000001,0.625,0.65,0.675,0.7000000000000001,0.7250000000000001,0.75,0.775,0.8,0.8250000000000001,0.8500000000000001,0.875,0.9,0.925,0.9500000000000001,0.9750000000000001,1.0],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"t","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"ease","showgrid":true},"title":"Ease Curve"}, {});</script></div>
 ```
 
+
+The interpolation weights are recursively calculated from the ease curve and the coordinate distances of the point to upper and lower cell boundary.
 
 
 ::: {.sourceClojure}
@@ -823,6 +921,17 @@ true
 
 
 
+### Sampling Perlin noise
+
+A Perlin noise sample is computed by
+
+* Getting the random gradients for the cell corners.
+* Getting the corner vectors for the cell corners.
+* Computing the influence values which have the desired gradients.
+* Determining the interpolation weights.
+* Computing the weighted sum of the influence values.
+
+
 ::: {.sourceClojure}
 ```clojure
 (defn perlin-sample
@@ -836,6 +945,8 @@ true
 :::
 
 
+Now one can sample the Perlin noise by performing above computation for the center of each pixel.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -843,14 +954,17 @@ true
   [{:keys [size dimensions] :as params}]
   (let [gradients (random-gradients params)]
     (tensor/clone
-      (tensor/compute-tensor (repeat dimensions size)
-                             (fn [& args]
-                                 (let [center (add (apply vec-n (reverse args)) (apply vec-n (repeat dimensions 0.5)))]
-                                   (perlin-sample params gradients center)))
-                             :double))))
+      (tensor/compute-tensor
+        (repeat dimensions size)
+        (fn [& args]
+            (let [center (apply vec-n (map #(+ % 0.5) (reverse args)))]
+              (perlin-sample params gradients center)))
+        :double))))
 ```
 :::
 
+
+Here a 256x256 Perlin noise tensor is created.
 
 
 ::: {.sourceClojure}
@@ -860,13 +974,19 @@ true
 :::
 
 
+The values are normalised to be between 0 and 255.
+
 
 ::: {.sourceClojure}
 ```clojure
-(def perlin-norm (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin))) (dfn/- perlin (dfn/reduce-min perlin))))
+(def perlin-norm
+  (dfn/* (/ 255 (- (dfn/reduce-max perlin) (dfn/reduce-min perlin)))
+         (dfn/- perlin (dfn/reduce-min perlin))))
 ```
 :::
 
+
+Finally one can display the noise.
 
 
 ::: {.sourceClojure}
@@ -882,7 +1002,12 @@ true
 
 
 
-# Combination of Worley and Perlin noise
+## Mixing noise values
+
+
+### Combination of Worley and Perlin noise
+
+One can mix Worley and Perlin noise by simply doing a linear combination of the two.
 
 
 ::: {.sourceClojure}
@@ -891,6 +1016,8 @@ true
 ```
 :::
 
+
+Here for example is the average of Perlin and Worley noise.
 
 
 ::: {.sourceClojure}
@@ -906,7 +1033,9 @@ true
 
 
 
-# Interpolation
+### Interpolation
+
+One can linearly interpolate tensor values by recursing over the dimensions as follows.
 
 
 ::: {.sourceClojure}
@@ -924,6 +1053,8 @@ true
 ```
 :::
 
+
+Here x-, y-,  and z-ramps are used to test that interpolation works.
 
 
 ::: {.sourceClojure}
@@ -957,7 +1088,7 @@ true
 
 
 
-# Octaves of noise
+### Octaves of noise
 
 
 ::: {.sourceClojure}
@@ -965,7 +1096,9 @@ true
 (defn fractal-brownian-motion
   [base octaves & args]
   (let [scales (take (count octaves) (iterate #(* 2 %) 1))]
-    (reduce + 0.0 (map (fn [amplitude scale] (* amplitude (apply base (map #(* scale %) args)))) octaves scales))))
+    (reduce + 0.0
+            (map (fn [amplitude scale] (* amplitude (apply base (map #(* scale %) args))))
+                 octaves scales))))
 ```
 :::
 
@@ -975,7 +1108,8 @@ true
 ```clojure
 (facts "Fractal Brownian motion"
        (let [base1 (fn [x] (if (>= (mod x 2.0) 1.0) 1.0 0.0))
-             base2 (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0))) 0.0 1.0))]
+             base2 (fn [y x] (if (= (Math/round (mod y 2.0)) (Math/round (mod x 2.0)))
+                               0.0 1.0))]
          (fractal-brownian-motion base2 [1.0] 0 0) => 0.0
          (fractal-brownian-motion base2 [1.0] 0 1) => 1.0
          (fractal-brownian-motion base2 [1.0] 1 0) => 1.0
@@ -1017,7 +1151,8 @@ true
 ::: {.sourceClojure}
 ```clojure
 (tabular "Remap values of tensor"
-       (fact ((remap (tensor/->tensor [?value]) ?low1 ?high1 ?low2 ?high2) 0) => ?expected)
+       (fact ((remap (tensor/->tensor [?value]) ?low1 ?high1 ?low2 ?high2) 0)
+             => ?expected)
        ?value ?low1 ?high1 ?low2 ?high2 ?expected
        0      0     1      0     1      0
        1      0     1      0     1      1
@@ -1165,7 +1300,7 @@ true
 
 
 
-# Testing shaders
+## Testing shaders
 
 
 ::: {.sourceClojure}
@@ -1270,7 +1405,7 @@ nil
 
 ::: {.printedClojure}
 ```clojure
-#object[org.lwjgl.opengl.GLCapabilities 0x6aa8f2e2 "org.lwjgl.opengl.GLCapabilities@6aa8f2e2"]
+#object[org.lwjgl.opengl.GLCapabilities 0x39d3f717 "org.lwjgl.opengl.GLCapabilities@39d3f717"]
 
 ```
 :::
@@ -1310,9 +1445,9 @@ nil
 ::: {.sourceClojure}
 ```clojure
 (defn make-program-with-shaders
-  [vertex-shader-sources fragment-shader-sources]
-  (let [vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-shader-sources)
-        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-shader-sources)
+  [vertex-sources fragment-sources]
+  (let [vertex-shaders   (map #(make-shader % GL20/GL_VERTEX_SHADER) vertex-sources)
+        fragment-shaders (map #(make-shader % GL20/GL_FRAGMENT_SHADER) fragment-sources)
         program          (apply make-program (concat vertex-shaders fragment-shaders))]
     program))
 ```
@@ -1494,15 +1629,18 @@ void main()
 (defmacro framebuffer-render
   [texture width height & body]
   `(let [fbo# (GL30/glGenFramebuffers)]
-     (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo#)
-     (GL11/glBindTexture GL11/GL_TEXTURE_2D ~texture)
-     (GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0 ~texture 0)
-     (GL20/glDrawBuffers (volumetric-clouds.main/make-int-buffer (int-array [GL30/GL_COLOR_ATTACHMENT0])))
-     (GL11/glViewport 0 0 ~width ~height)
-     (let [result# (do ~@body)]
-       (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
-       (GL30/glDeleteFramebuffers fbo#)
-       result#)))
+     (try
+       (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER fbo#)
+       (GL11/glBindTexture GL11/GL_TEXTURE_2D ~texture)
+       (GL32/glFramebufferTexture GL30/GL_FRAMEBUFFER GL30/GL_COLOR_ATTACHMENT0
+                                  ~texture 0)
+       (GL20/glDrawBuffers (volumetric-clouds.main/make-int-buffer
+                             (int-array [GL30/GL_COLOR_ATTACHMENT0])))
+       (GL11/glViewport 0 0 ~width ~height)
+       ~@body
+       (finally
+         (GL30/glBindFramebuffer GL30/GL_FRAMEBUFFER 0)
+         (GL30/glDeleteFramebuffers fbo#)))))
 ```
 :::
 
@@ -1513,7 +1651,8 @@ void main()
 (defn setup-point-attribute
   [program]
   (let [point-attribute (GL20/glGetAttribLocation program "point")]
-    (GL20/glVertexAttribPointer point-attribute 3 GL11/GL_FLOAT false (* 3 Float/BYTES) (* 0 Float/BYTES))
+    (GL20/glVertexAttribPointer point-attribute 3 GL11/GL_FLOAT false
+                                (* 3 Float/BYTES) (* 0 Float/BYTES))
     (GL20/glEnableVertexAttribArray point-attribute)))
 ```
 :::
@@ -1537,10 +1676,11 @@ void main()
 (defmacro render-array
   [width height & body]
   `(let [texture# (volumetric-clouds.main/make-texture-2d ~width ~height)]
-     (volumetric-clouds.main/framebuffer-render texture# ~width ~height ~@body)
-     (let [result# (volumetric-clouds.main/read-texture-2d texture# ~width ~height)]
-       (GL11/glDeleteTextures texture#)
-       result#)))
+     (try
+       (volumetric-clouds.main/framebuffer-render texture# ~width ~height ~@body)
+       (volumetric-clouds.main/read-texture-2d texture# ~width ~height)
+       (finally
+         (GL11/glDeleteTextures texture#)))))
 ```
 :::
 
@@ -1553,13 +1693,13 @@ void main()
   (let [program (make-program-with-shaders vertex-sources fragment-sources)
         vao     (setup-quad-vao)]
     (setup-point-attribute program)
-    (let [result
-          (render-array 1 1
-                        (GL20/glUseProgram program)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
-      (teardown-vao vao)
-      (GL20/glDeleteProgram program)
-      result)))
+    (try
+      (render-array 1 1
+                    (GL20/glUseProgram program)
+                    (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+      (finally
+        (teardown-vao vao)
+        (GL20/glDeleteProgram program)))))
 ```
 :::
 
@@ -1582,7 +1722,7 @@ void main()
 
 
 
-# Noise octaves shader
+## Noise octaves shader
 
 
 ::: {.sourceClojure}
@@ -1618,7 +1758,8 @@ void main()
 ::: {.sourceClojure}
 ```clojure
 (tabular "Test noise mock"
-         (fact (nth (render-pixel [vertex-test] [noise-mock (noise-probe ?x ?y ?z)]) 0) => ?result)
+         (fact (nth (render-pixel [vertex-test] [noise-mock (noise-probe ?x ?y ?z)]) 0)
+               => ?result)
          ?x ?y ?z ?result
          0  0  0  0.0
          1  0  0  1.0
@@ -1682,7 +1823,9 @@ void main()
 ::: {.sourceClojure}
 ```clojure
 (tabular "Test octaves of noise"
-         (fact (first (render-pixel [vertex-test] [noise-mock (noise-octaves ?octaves) (octaves-probe ?x ?y ?z)]))
+         (fact (first (render-pixel [vertex-test]
+                                    [noise-mock (noise-octaves ?octaves)
+                                     (octaves-probe ?x ?y ?z)]))
                => ?result)
          ?x  ?y ?z ?octaves  ?result
          0   0  0  [1.0]     0.0
@@ -1705,7 +1848,7 @@ true
 
 
 
-# Shader for intersecting a ray with a box
+## Shader for intersecting a ray with a box
 
 
 ::: {.sourceClojure}
@@ -1754,7 +1897,9 @@ void main()
 ::: {.sourceClojure}
 ```clojure
 (tabular "Test intersection of ray with box"
-         (fact ((juxt first second) (render-pixel [vertex-test] [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)]))
+         (fact ((juxt first second)
+                (render-pixel [vertex-test]
+                              [ray-box (ray-box-probe ?ox ?oy ?oz ?dx ?dy ?dz)]))
                => ?result)
          ?ox ?oy ?oz ?dx ?dy ?dz ?result
          -2   0   0   1   0   0  [1.0 3.0]
@@ -1782,7 +1927,7 @@ true
 
 
 
-# Shader for light transfer through clouds
+## Shader for light transfer through clouds
 
 
 ::: {.sourceClojure}
@@ -1877,7 +2022,8 @@ void main()
   [expected error]
   (fn [actual]
       (and (== (count expected) (count actual))
-           (<= (apply + (mapv (fn [a b] (* (- b a) (- b a))) actual expected)) (* error error)))))
+           (<= (apply + (mapv (fn [a b] (* (- b a) (- b a))) actual expected))
+               (* error error)))))
 ```
 :::
 
@@ -1886,7 +2032,10 @@ void main()
 ::: {.sourceClojure}
 ```clojure
 (tabular "Test cloud transfer"
-         (fact (seq (render-pixel [vertex-test] [(fog ?density) constant-scatter no-shadow (cloud-transfer "fog" ?step) (cloud-transfer-probe ?a ?b)]))
+         (fact (seq (render-pixel [vertex-test]
+                                  [(fog ?density) constant-scatter no-shadow
+                                   (cloud-transfer "fog" ?step)
+                                   (cloud-transfer-probe ?a ?b)]))
                => (roughly-vector ?result 1e-3))
          ?a ?b ?step ?density ?result
          0  0  1     0.0      [0.0 0.0 0.0 0.0]
@@ -1907,7 +2056,7 @@ true
 
 
 
-# Rendering of fog box
+## Rendering of fog box
 
 
 ::: {.sourceClojure}
@@ -1940,12 +2089,14 @@ void main()
 ```clojure
 (defn setup-fog-uniforms
   [program width height]
-  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 30.0)) (rotation-matrix-3d-x (to-radians -20.0)))
+  (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 40.0))
+                           (rotation-matrix-3d-x (to-radians -20.0)))
         focal-length (/ (* 0.5 width) (tan (to-radians 30.0)))
-        light        (normalize (vec3 4 1 10))]
+        light        (normalize (vec3 6 1 10))]
     (GL20/glUseProgram program)
     (GL20/glUniform2f (GL20/glGetUniformLocation program "resolution") width height)
-    (GL20/glUniform3f (GL20/glGetUniformLocation program "light") (light 0) (light 1) (light 2))
+    (GL20/glUniform3f (GL20/glGetUniformLocation program "light")
+                      (light 0) (light 1) (light 2))
     (GL20/glUniformMatrix3fv (GL20/glGetUniformLocation program "rotation") true
                              (make-float-buffer (mat->float-array rotation)))
     (GL20/glUniform1f (GL20/glGetUniformLocation program "focal_length") focal-length)
@@ -1959,17 +2110,18 @@ void main()
 ```clojure
 (defn render-fog
   [width height]
-  (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01) (fog 1.0) fragment-cloud]
+  (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01)
+                          (fog 1.0) fragment-cloud]
         program          (make-program-with-shaders [vertex-test] fragment-sources)
         vao              (setup-quad-vao)]
     (setup-point-attribute program)
-    (let [result
-          (render-array width height
-                        (setup-fog-uniforms program width height)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
-      (teardown-vao vao)
-      (GL20/glDeleteProgram program)
-      result)))
+    (try
+      (render-array width height
+                    (setup-fog-uniforms program width height)
+                    (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+      (finally
+        (teardown-vao vao)
+        (GL20/glDeleteProgram program)))))
 ```
 :::
 
@@ -1978,7 +2130,10 @@ void main()
 ::: {.sourceClojure}
 ```clojure
 (defn rgba-array->bufimg [data width height]
-  (-> data tensor/->tensor (tensor/reshape [height width 4]) (tensor/select :all :all [2 1 0]) (dfn/* 255) (clamp 0 255)))
+  (-> data
+      tensor/->tensor
+      (tensor/reshape [height width 4])
+      (tensor/select :all :all [2 1 0]) (dfn/* 255) (clamp 0 255)))
 ```
 :::
 
@@ -1997,7 +2152,7 @@ void main()
 
 
 
-# Rendering of 3D noise
+## Rendering of 3D noise
 
 
 ::: {.sourceClojure}
@@ -2012,7 +2167,8 @@ void main()
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL12/GL_TEXTURE_WRAP_R GL11/GL_REPEAT)
-    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0 GL11/GL_RED GL11/GL_FLOAT buffer)
+    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0
+                       GL11/GL_RED GL11/GL_FLOAT buffer)
     texture))
 ```
 :::
@@ -2030,7 +2186,8 @@ void main()
 
 ::: {.sourceClojure}
 ```clojure
-(def noise-3d-norm (dfn/* (/ 1.0 (- (dfn/reduce-max noise3d) (dfn/reduce-min noise3d))) (dfn/- noise3d (dfn/reduce-min noise3d))))
+(def noise-3d-norm (dfn/* (/ 1.0 (- (dfn/reduce-max noise3d) (dfn/reduce-min noise3d)))
+                          (dfn/- noise3d (dfn/reduce-min noise3d))))
 ```
 :::
 
@@ -2078,14 +2235,14 @@ float noise(vec3 idx)
   (let [fragment-sources (concat cloud-shaders [ray-box fragment-cloud])
         program          (make-program-with-shaders [vertex-test] fragment-sources)
         vao              (setup-quad-vao)]
-    (setup-point-attribute program)
-    (let [result
-          (render-array width height
-                        (setup-noise-uniforms program width height)
-                        (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))]
-      (teardown-vao vao)
-      (GL20/glDeleteProgram program)
-      result)))
+    (try
+      (setup-point-attribute program)
+      (render-array width height
+                    (setup-noise-uniforms program width height)
+                    (GL11/glDrawElements GL11/GL_QUADS 4 GL11/GL_UNSIGNED_INT 0))
+      (finally
+        (teardown-vao vao)
+        (GL20/glDeleteProgram program)))))
 ```
 :::
 
@@ -2093,7 +2250,11 @@ float noise(vec3 idx)
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480
+                  constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader)
+    640 480))
 ```
 :::
 
@@ -2104,7 +2265,7 @@ float noise(vec3 idx)
 
 
 
-# Remap and clamp 3D noise
+## Remap and clamp 3D noise
 
 
 ::: {.sourceClojure}
@@ -2140,7 +2301,9 @@ void main()
 ::: {.sourceClojure}
 ```clojure
 (tabular "Remap and clamp input parameter values"
-       (fact (first (render-pixel [vertex-test] [remap-clamp (remap-probe ?value ?low1 ?high1 ?low2 ?high2)]))
+       (fact (first (render-pixel
+                      [vertex-test]
+                      [remap-clamp (remap-probe ?value ?low1 ?high1 ?low2 ?high2)]))
              => ?expected)
        ?value ?low1 ?high1 ?low2 ?high2 ?expected
        0      0     1      0     1      0.0
@@ -2184,7 +2347,7 @@ float remap_noise(vec3 idx)
 
 ::: {.sourceClojure}
 ```clojure
-(def cloud-strength 5.0)
+(def cloud-strength 6.5)
 ```
 :::
 
@@ -2192,7 +2355,12 @@ float remap_noise(vec3 idx)
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480
+                  constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
+                  remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader)
+    640 480))
 ```
 :::
 
@@ -2203,12 +2371,17 @@ float remap_noise(vec3 idx)
 
 
 
-# Octaves of 3D noise
+## Octaves of 3D noise
 
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
+                  remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                  (noise-octaves (octaves 4 0.5)) noise-shader)
+    640 480))
 ```
 :::
 
@@ -2217,6 +2390,9 @@ float remap_noise(vec3 idx)
 ![](main_files/image9.png)
 :::
 
+
+
+## Mie scattering
 
 
 ::: {.sourceClojure}
@@ -2241,9 +2417,6 @@ float in_scatter(vec3 point, vec3 direction)
 
 
 
-# Mie scattering
-
-
 ::: {.sourceClojure}
 ```clojure
 (def mie-probe
@@ -2264,7 +2437,8 @@ void main()
 ::: {.sourceClojure}
 ```clojure
 (tabular "Shader function for scattering phase function"
-         (fact (first (render-pixel [vertex-test] [(mie-scatter ?g) (mie-probe ?mu)])) => (roughly ?result 1e-6))
+         (fact (first (render-pixel [vertex-test] [(mie-scatter ?g) (mie-probe ?mu)]))
+               => (roughly ?result 1e-6))
          ?g  ?mu ?result
          0   0   (/ 3 (* 16 PI))
          0   1   (/ 6 (* 16 PI))
@@ -2287,7 +2461,48 @@ true
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+(defn scatter-amount [theta]
+  (first (render-pixel [vertex-test] [(mie-scatter 0.76) (mie-probe (cos theta))])))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+(let [scatter
+      (tc/dataset {:x (map (fn [theta]
+                               (* (cos (to-radians theta))
+                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
+                           (range 361))
+                   :y (map (fn [theta]
+                               (* (sin (to-radians theta))
+                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
+                           (range 361)) })]
+  (-> scatter
+      (plotly/base {:=title "Mixed Mie and isotropic scattering" :=mode "lines"})
+      (plotly/layer-point {:=x :x :=y :y})
+      plotly/plot
+      (assoc-in [:layout :yaxis :scaleanchor] "x")))
+```
+:::
+
+
+
+```{=html}
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,0.025360926517815807,0.05026768547516574,0.07430991828057171,0.09715754239814561,0.11858169268939363,0.1384616278283216,0.15677607450298436,0.17358643197273366,0.1890130078449121,0.20321283539058999,0.21636004603964937,0.22862934013934708,0.24018581148892965,0.2511779530048358,0.26173469813490297,0.2719642194848011,0.28195509698295684,0.29177820496081974,0.3014883312512414,0.3111273886502506,0.3207258082385,0.3303052618584426,0.33988014253376003,0.34945889639953376,0.35904580497324945,0.3686413787230056,0.37824377096570716,0.3878490171811543,0.39745192434568677,0.40704606100916857,0.4166245092493745,0.4261798169674456,0.43570431582429453,0.44519024293778037,0.4546298234856557,0.4640153795311734,0.4733393662581841,0.4825944325730872,0.49177343328248807,0.5008694291703009,0.5098757320495632,0.5187858878903102,0.5275936842374551,0.5362931395697995,0.5448785141830071,0.5533442762704586,0.5616851076335537,0.5698959217886479,0.5779718188920269,0.5859080941630679,0.5937002248402926,0.6013438749545835,0.6088348664904691,0.6161691952748931,0.62334301119101,0.6303526110639879,0.6371944413501998,0.6438650835022438,0.6503612585839843,0.6566798127061101,0.6628177172143734,0.6687720730987843,0.6745400885739925,0.6801190923717032,0.6855065227577498,0.6906999283666247,0.6956969619936821,0.7004953800411007,0.7050930410845857,0.7094879040457471,0.7136780207548138,0.7176615440109427,0.7214367184553174,0.7250018813729326,0.7283554608303329,0.7314959760673239,0.7344220343582156,0.7371323315619472,0.7396256507881467,0.741900859614676,0.743956912756113,0.7457928474085281,0.7474077864032767,0.7488009326521377,0.7499715742565256,0.7509190802240712,0.7516428990221123,0.75214256164854,0.7524176785427296,0.7524679391644895,0.7522931117029785,0.7518930438535638,0.7512676607103084,0.7504169651362478,0.7493410364291085,0.7480400321651451,0.7465141834814171,0.7447638007224227,0.742789266527615,0.7405910390499166,0.7381696530092189,0.7355257142855391,0.7326599031912869,0.7295729740057649,0.7262657525522122,0.7227391366968671,0.7189940966742707,0.7150316733573406,0.7108529777428106,0.7064591912816467,0.7018515658212814,0.6970314204734881,0.6920001442391364,0.6867591925151003,0.681310089401197,0.6756544251377091,0.6697938557884047,0.6637301030917812,0.6574649535501379,0.6510002576103171,0.6443379296302819,0.6374799462048368,0.6304283462894203,0.6231852305750591,0.6157527599760481,0.6081331553770281,0.6003286969546965,0.592341723657082,0.5841746312849689,0.5758298727883504,0.5673099574889241,0.5586174494993552,0.5497549670438436,0.5407251823361603,0.5315308201341193,0.5221746568978521,0.5126595192134085,0.5029882848480691,0.4931638794460417,0.4831892774438777,0.4730674999720495,0.4628016143836867,0.452394733149158,0.44185001309511857,0.4311706538630154,0.42035989760294057,0.4094210274739456,0.39835736656986853,0.38717227714119057,0.37586915917927394,0.3644514500094941,0.3529226226065232,0.34128618416161416,0.32954567629653203,0.3177046724452901,0.30576677799377117,0.2937356279139821,0.2816148871090065,0.26940824760370413,0.2571194288806228,0.24475217578413103,0.23231025759109408,0.2197974668117835,0.2072176183796385,0.19457454786078107,0.1818721106724072,0.16911418060327282,0.15630464879745518,0.14344742259440596,0.13054642406455352,0.11760558906028022,0.10462886564818821,0.09162021328120996,0.07858360127518772,0.06552300766634107,0.05244241794028889,0.03934582381937251,0.026237222072321924,0.013120613137373302,9.206821122027452E-17,-0.01312061313737345,-0.026237222072321743,-0.03934582381937232,-0.0524424179402887,-0.0655230076663409,-0.07858360127518754,-0.0916202132812098,-0.10462886564818835,-0.11760558906028003,-0.13054642406455366,-0.14344742259440577,-0.15630464879745531,-0.16911418060327266,-0.18187211067240702,-0.1945745478607809,-0.20721761837963834,-0.21979746681178364,-0.23231025759109392,-0.24475217578413117,-0.2571194288806226,-0.2694082476037043,-0.28161488710900634,-0.29373562791398194,-0.305766777993771,-0.31770467244528994,-0.3295456762965322,-0.34128618416161405,-0.3529226226065233,-0.3644514500094939,-0.3758691591792741,-0.3871722771411904,-0.3983573665698684,-0.40942102747394543,-0.4203598976029404,-0.43117065386301556,-0.4418500130951184,-0.4523947331491582,-0.46280161438368655,-0.47306749997204967,-0.4831892774438775,-0.4931638794460415,-0.502988284848069,-0.5126595192134082,-0.5221746568978523,-0.5315308201341192,-0.5407251823361604,-0.5497549670438436,-0.5586174494993553,-0.567309957488924,-0.5758298727883503,-0.5841746312849686,-0.592341723657082,-0.6003286969546966,-0.608133155377028,-0.615752759976048,-0.6231852305750593,-0.6304283462894205,-0.6374799462048367,-0.6443379296302818,-0.6510002576103169,-0.6574649535501379,-0.6637301030917813,-0.6697938557884046,-0.675654425137709,-0.681310089401197,-0.6867591925151004,-0.6920001442391364,-0.697031420473488,-0.7018515658212813,-0.7064591912816467,-0.7108529777428106,-0.7150316733573405,-0.7189940966742705,-0.7227391366968671,-0.7262657525522122,-0.7295729740057649,-0.7326599031912868,-0.735525714285539,-0.7381696530092189,-0.7405910390499166,-0.7427892665276149,-0.7447638007224225,-0.7465141834814171,-0.7480400321651453,-0.7493410364291085,-0.7504169651362478,-0.7512676607103084,-0.7518930438535638,-0.7522931117029785,-0.7524679391644895,-0.7524176785427296,-0.75214256164854,-0.7516428990221123,-0.7509190802240713,-0.7499715742565256,-0.7488009326521378,-0.7474077864032767,-0.7457928474085281,-0.743956912756113,-0.7419008596146761,-0.7396256507881467,-0.7371323315619472,-0.7344220343582156,-0.731495976067324,-0.728355460830333,-0.7250018813729325,-0.7214367184553174,-0.7176615440109428,-0.7136780207548139,-0.7094879040457471,-0.7050930410845857,-0.7004953800411007,-0.6956969619936821,-0.6906999283666249,-0.6855065227577498,-0.6801190923717032,-0.6745400885739926,-0.6687720730987845,-0.6628177172143734,-0.6566798127061101,-0.6503612585839843,-0.6438650835022439,-0.6371944413502,-0.6303526110639878,-0.62334301119101,-0.6161691952748932,-0.6088348664904693,-0.6013438749545833,-0.5937002248402925,-0.5859080941630679,-0.577971818892027,-0.5698959217886481,-0.5616851076335537,-0.5533442762704586,-0.5448785141830074,-0.5362931395697997,-0.5275936842374549,-0.5187858878903101,-0.5098757320495633,-0.5008694291703011,-0.4917734332824884,-0.4825944325730871,-0.4733393662581841,-0.4640153795311736,-0.4546298234856561,-0.4451902429377801,-0.4357043158242945,-0.4261798169674457,-0.4166245092493748,-0.407046061009169,-0.39745192434568666,-0.3878490171811543,-0.3782437709657074,-0.36864137872300595,-0.3590458049732493,-0.3494588963995337,-0.33988014253376014,-0.33030526185844294,-0.3207258082385005,-0.31112738865025047,-0.3014883312512414,-0.29177820496081996,-0.28195509698295723,-0.2719642194848009,-0.2617346981349029,-0.251177953004836,-0.24018581148893,-0.22862934013934766,-0.2163600460396492,-0.20321283539059004,-0.1890130078449124,-0.1735864319727342,-0.15677607450298403,-0.13846162782832153,-0.11858169268939384,-0.09715754239814607,-0.07430991828057246,-0.050267685475165524,-0.025360926517815876,-3.569842744991019E-16],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[1.4574989080429077,1.452926507126177,1.439478173212784,1.4179177079655019,1.3894175881582194,1.3553949495897417,1.3173743900835797,1.2768386623702594,1.2351316422754952,1.1933811645740997,1.1524772588636192,1.1130759437487994,1.0756164775297632,1.040359047809661,1.007419744836358,0.976807191543161,0.9484519472392144,0.9222335672616542,0.8980009779144618,0.875585691112187,0.8548154748904458,0.8355192958071976,0.8175342112400585,0.800707437884673,0.7848975322813364,0.7699762135450587,0.7558268349608668,0.742345198539181,0.7294379111711611,0.7170222519441439,0.705024458688661,0.6933796225880876,0.6820302766733982,0.6709258105206349,0.6600216777422576,0.6492786762165587,0.638662379207277,0.6281425548620099,0.6176927057148899,0.6072896144200244,0.5969129416343172,0.5865449337585023,0.5761700996077531,0.5657749585828894,0.5553478031024442,0.5448785141830073,0.5343583561981262,0.5237798365271452,0.513136592807344,0.502423236994361,0.4916352657160133,0.4807689625799547,0.4698213260898689,0.458789979487687,0.4476731248140497,0.4364694753262847,0.42517820477652146,0.41379890855606555,0.4023315574450921,0.390776468424316,0.3791342666372658,0.36740586011518905,0.35559241889842363,0.3436953418326754,0.33171624545551504,0.3196569412771426,0.3075194210493724,0.29530584007984856,0.2830185046129697,0.2706598598261214,0.25823247864456755,0.24573904954379727,0.23318237087807409,0.22056533956264396,0.20789094415014306,0.1951622575322859,0.18238243080068894,0.16955468659503733,0.15668231389261433,0.14376866264638624,0.13081713856087063,0.11783119925244687,0.10481434928986781,0.09177013686893824,0.07870214939262823,0.06561401071413667,0.05250937730762238,0.039391935151616195,0.0262653970202614,0.013133499432102156,4.6075372657939866E-17,-0.013131325109826309,-0.026256683666858856,-0.039372269744992534,-0.052474266000302236,-0.06555884580231348,-0.07862217552882966,-0.09166041622655606,-0.10466972620965473,-0.11764626225804907,-0.13058618185541665,-0.14348564534801433,-0.15634081684842127,-0.1691478665600026,-0.18190297253721718,-0.19460232188674692,-0.20724211255513084,-0.21981855514097864,-0.23232787410417374,-0.24476630922603348,-0.2571301173502928,-0.2694155740520818,-0.28161897410242165,-0.2937366340429274,-0.30576489240705007,-0.3177001122660448,-0.329538681748394,-0.3412770154391934,-0.3529115558915458,-0.36443877476581565,-0.3758551739738321,-0.3871572872605879,-0.39834168084020916,-0.4094049550472993,-0.4203437455932887,-0.431154724208663,-0.44183460007150277,-0.4523801209831447,-0.46278807467349214,-0.4730552890121481,-0.48317863387756493,-0.4931550222762089,-0.5029814107445638,-0.5126548004474971,-0.5221722388375385,-0.5315308201341192,-0.540727686310916,-0.5497600273007567,-0.5586250839647362,-0.5673201464972769,-0.5758425572967414,-0.5841897105646295,-0.5923590536958476,-0.6003480879539376,-0.6081543695840722,-0.6157755098801598,-0.6232091769141317,-0.6304530956560963,-0.6375050486196236,-0.6443628769810116,-0.6510244806966965,-0.657487820295043,-0.663750916555524,-0.6698118504193493,-0.6756687660866271,-0.681319868737147,-0.6867634276122159,-0.6919977739478803,-0.6970213048098158,-0.7018324797707298,-0.7064298249525794,-0.7108119312470986,-0.7149774553050525,-0.7189251198575035,-0.7226537153554646,-0.7261620984761764,-0.7294491938268117,-0.7325139932824091,-0.7353555569839629,-0.7379730139886408,-0.7403655614134065,-0.7425324660635944,-0.7444730627205243,-0.7461867567670925,-0.7476730226574447,-0.7489314046605108,-0.7499615166590711,-0.7507630423887196,-0.7513357367031108,-0.7516794232121576,-0.7517939971294254,-0.7516794232121576,-0.7513357367031108,-0.7507630423887196,-0.7499615166590711,-0.7489314046605108,-0.7476730226574447,-0.7461867567670926,-0.7444730627205242,-0.7425324660635944,-0.7403655614134065,-0.7379730139886408,-0.7353555569839628,-0.7325139932824091,-0.7294491938268117,-0.7261620984761765,-0.7226537153554646,-0.7189251198575034,-0.7149774553050525,-0.7108119312470985,-0.7064298249525796,-0.7018324797707298,-0.697021304809816,-0.6919977739478803,-0.686763427612216,-0.6813198687371471,-0.675668766086627,-0.6698118504193494,-0.6637509165555239,-0.6574878202950432,-0.6510244806966964,-0.6443628769810117,-0.6375050486196238,-0.6304530956560963,-0.6232091769141319,-0.6157755098801598,-0.6081543695840724,-0.6003480879539375,-0.5923590536958477,-0.5841897105646294,-0.5758425572967415,-0.567320146497277,-0.5586250839647363,-0.5497600273007568,-0.5407276863109158,-0.5315308201341195,-0.5221722388375384,-0.5126548004474972,-0.5029814107445637,-0.493155022276209,-0.483178633877565,-0.47305528901214855,-0.462788074673492,-0.45238012098314456,-0.44183460007150294,-0.4311547242086632,-0.4203437455932886,-0.40940495504729923,-0.3983416808402093,-0.38715728726058807,-0.3758551739738326,-0.36443877476581554,-0.3529115558915457,-0.3412770154391936,-0.3295386817483942,-0.31770011226604467,-0.3057648924070499,-0.29373663404292744,-0.2816189741024218,-0.26941557405208216,-0.2571301173502927,-0.24476630922603348,-0.2323278741041739,-0.21981855514097898,-0.20724211255513073,-0.19460232188674675,-0.18190297253721718,-0.16914786656000277,-0.1563408168484216,-0.1434856453480142,-0.13058618185541668,-0.11764626225804924,-0.10466972620965509,-0.09166041622655591,-0.07862217552882952,-0.0655588458023135,-0.05247426600030242,-0.03937226974499288,-0.02625668366685871,-0.013131325109826324,-1.382261179738196E-16,0.013133499432101804,0.026265397020261552,0.03939193515161618,0.052509377307622375,0.06561401071413649,0.07870214939262787,0.0917701368689384,0.10481434928986781,0.11783119925244669,0.13081713856087027,0.1437686626463864,0.15668231389261433,0.16955468659503733,0.18238243080068878,0.19516225753228555,0.20789094415014323,0.2205653395626439,0.23318237087807392,0.24573904954379694,0.25823247864456766,0.2706598598261214,0.2830185046129697,0.2953058400798484,0.3075194210493721,0.3196569412771427,0.331716245455515,0.3436953418326753,0.3555924188984233,0.3674058601151892,0.3791342666372658,0.390776468424316,0.4023315574450919,0.4137989085560652,0.42517820477652163,0.43646947532628466,0.44767312481404953,0.4587899794876867,0.46982132608986904,0.4807689625799547,0.49163526571601324,0.5024232369943608,0.5131365928073437,0.5237798365271452,0.5343583561981262,0.544878514183007,0.5553478031024439,0.5657749585828896,0.5761700996077531,0.5865449337585021,0.5969129416343171,0.6072896144200242,0.61769270571489,0.6281425548620099,0.6386623792072769,0.6492786762165585,0.6600216777422578,0.6709258105206349,0.6820302766733982,0.6933796225880875,0.7050244586886608,0.717022251944144,0.7294379111711611,0.742345198539181,0.7558268349608666,0.7699762135450589,0.7848975322813365,0.8007074378846729,0.8175342112400584,0.8355192958071974,0.8548154748904458,0.875585691112187,0.8980009779144618,0.9222335672616541,0.9484519472392144,0.976807191543161,1.007419744836358,1.0403590478096607,1.0756164775297632,1.1130759437487994,1.1524772588636192,1.1933811645740995,1.2351316422754952,1.2768386623702594,1.3173743900835797,1.3553949495897417,1.3894175881582194,1.4179177079655019,1.439478173212784,1.452926507126177,1.4574989080429077],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true,"scaleanchor":"x"},"title":"Mixed Mie and isotropic scattering"}, {});</script></div>
+```
+
+
+
+::: {.sourceClojure}
+```clojure
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01)
+                  remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                  (noise-octaves (octaves 4 0.5)) noise-shader)
+    640 480))
 ```
 :::
 
@@ -2298,7 +2513,7 @@ true
 
 
 
-# Self-shading of clouds
+## Self-shading of clouds
 
 
 ::: {.sourceClojure}
@@ -2328,13 +2543,40 @@ float shadow(vec3 point)
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image (rgba-array->bufimg (render-noise 640 480 (mie-scatter 0.76) (shadow "remap_noise" 0.01) (cloud-transfer "remap_noise" 0.01) remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength) (noise-octaves (octaves 4 0.5)) noise-shader) 640 480))
+(bufimg/tensor->image
+  (rgba-array->bufimg
+    (render-noise 640 480
+                  (mie-scatter 0.76) (shadow "remap_noise" 0.01)
+                  (cloud-transfer "remap_noise" 0.01) remap-clamp
+                  (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                  (noise-octaves (octaves 4 0.5)) noise-shader)
+    640 480))
 ```
 :::
 
 
 ::: {.clay-image}
 ![](main_files/image11.png)
+:::
+
+
+
+## Tidy up
+
+
+::: {.sourceClojure}
+```clojure
+(GL11/glBindTexture GL12/GL_TEXTURE_3D 0)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+nil
+
+```
 :::
 
 
@@ -2388,6 +2630,15 @@ nil
 ```
 :::
 
+
+
+## Further topics
+
+
+* [Vertical density profile](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
+* [Powder function](https://advances.realtimerendering.com/s2015/index.html)
+* [Curl noise](https://www.wedesoft.de/software/2023/03/20/procedural-global-cloud-cover/)
+* [Deep opacity maps](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
 
 
 ```{=html}
