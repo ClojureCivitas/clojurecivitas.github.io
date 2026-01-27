@@ -31,7 +31,7 @@
 
 ;; Volumetric clouds are commonly used in flight simulators and visual effects.
 ;; For a introductory video see [Sebastian Lague's video "Coding Adventure: Clouds](https://www.youtube.com/watch?v=4QOcCGI6xOU).
-;; Note that this article is about procedural generation and not about simulating real weather.
+;; This article gets you started with computing and rendering volumetric clouds.
 ;;
 ;; ## Worley noise
 ;;
@@ -88,6 +88,7 @@
 
 
 ;; We can now use the `random-point` method to generate a grid of random points.
+;; The grid is represented using a tensor from the [dtype-next](https://cnuernber.github.io/dtype-next/) library.
 (defn random-points
   [{:keys [divisions dimensions] :as params}]
   (tensor/clone
@@ -1081,7 +1082,12 @@ void main()
   fragColor = vec4(background * (1.0 - transfer.a) + transfer.rgb, 1.0);
 }")
 
-
+;; Uniform variables are parameters that remain constant throughout the shader execution, unlike vertex input data.
+;; Here we use the following uniform variables:
+;; * resolution: a 2D vector containing the window pixel width and height
+;; * light: a 3D unit vector pointing to the light source
+;; * rotation: a 3x3 rotation matrix to rotate the camera around the origin
+;; * focal_length: the ratio of camera focal length to pixel size of the virtual camera
 (defn setup-fog-uniforms
   [program width height]
   (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 40.0))
@@ -1097,7 +1103,8 @@ void main()
     (GL20/glUniform1f (GL20/glGetUniformLocation program "focal_length") focal-length)
     (GL20/glUniform1f (GL20/glGetUniformLocation program "distance") 2.0)))
 
-
+;; The following function sets up the shader program, the vertex array object, and the uniform variables.
+;; Then `GL11/glDrawElements` draws the background quad used for performing volumetric rendering.
 (defn render-fog
   [width height]
   (let [fragment-sources [ray-box constant-scatter no-shadow (cloud-transfer "fog" 0.01)
@@ -1113,41 +1120,53 @@ void main()
         (teardown-vao vao)
         (GL20/glDeleteProgram program)))))
 
-
+;; We also need to convert the floating point array to a tensor and then to a `BufferedImage`.
+;; The one-dimensional array gets converted to a tensor and then reshaped to a 3D tensor containing width × height RGBA values.
+;; The RGBA data is converted to BGR data and then multiplied with 255 and clamped.
+;; Finally the tensor is converted to a `BufferedImage`.
 (defn rgba-array->bufimg [data width height]
   (-> data
       tensor/->tensor
       (tensor/reshape [height width 4])
-      (tensor/select :all :all [2 1 0]) (dfn/* 255) (clamp 0 255)))
+      (tensor/select :all :all [2 1 0])
+      (dfn/* 255)
+      (clamp 0 255)
+      bufimg/tensor->image))
 
-
-(bufimg/tensor->image (rgba-array->bufimg (render-fog 640 480) 640 480))
+;; Finally we are ready to render the volumetric fog.
+(rgba-array->bufimg (render-fog 640 480) 640 480)
 
 
 ;; ### Rendering of 3D noise
-
+;;
+;; This method converts a floating point array to a buffer and initialises a 3D texture with it.
+;; It is also necessary to set the texture parameters for interpolation and wrapping.
 (defn float-array->texture3d
   [data size]
   (let [buffer  (make-float-buffer data)
         texture (GL11/glGenTextures)]
     (GL11/glBindTexture GL12/GL_TEXTURE_3D texture)
+    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0
+                       GL11/GL_RED GL11/GL_FLOAT buffer)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL12/GL_TEXTURE_WRAP_R GL11/GL_REPEAT)
-    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0
-                       GL11/GL_RED GL11/GL_FLOAT buffer)
     texture))
 
-
+;; Here a mixture of 3D Perlin and Worley noise is created.
 (def noise3d (dfn/- (dfn/* 0.3 (perlin-noise (make-noise-params 32 4 3)))
                     (dfn/* 0.7 (worley-noise (make-noise-params 32 4 3)))))
+
+;; The noise is normalised to be between 0 and 1.
 (def noise-3d-norm (dfn/* (/ 1.0 (- (dfn/reduce-max noise3d) (dfn/reduce-min noise3d)))
                           (dfn/- noise3d (dfn/reduce-min noise3d))))
+
+;; Then the noise data is converted to a 3D texture.
 (def noise-texture (float-array->texture3d (dtype/->float-array noise-3d-norm) 32))
 
-
+;; Instead of a constant density fog, we can use the noise as a density function.
 (def noise-shader
 "#version 130
 uniform sampler3D noise3d;
@@ -1156,7 +1175,7 @@ float noise(vec3 idx)
   return texture(noise3d, idx).r;
 }")
 
-
+;; We also set the uniform sampler to texture slot 0 and bind the noise texture to that slot.
 (defn setup-noise-uniforms
   [program width height]
   (setup-fog-uniforms program width height)
@@ -1164,7 +1183,7 @@ float noise(vec3 idx)
   (GL13/glActiveTexture GL13/GL_TEXTURE0)
   (GL11/glBindTexture GL12/GL_TEXTURE_3D noise-texture))
 
-
+;; Similar to the fog example above, we define a method to render the noise.
 (defn render-noise
   [width height & cloud-shaders]
   (let [fragment-sources (concat cloud-shaders [ray-box fragment-cloud])
@@ -1179,16 +1198,16 @@ float noise(vec3 idx)
         (teardown-vao vao)
         (GL20/glDeleteProgram program)))))
 
-
-(bufimg/tensor->image
-  (rgba-array->bufimg
-    (render-noise 640 480
-                  constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader)
-    640 480))
+;; Now we can render the mixture of 3D Perlin and Worley noise using a step size of 0.01.
+(rgba-array->bufimg
+  (render-noise 640 480
+                constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader)
+  640 480)
 
 
 ;; ### Remap and clamp 3D noise
 
+;; We define a method to map a range of input values to a range of output values and clamp the result.
 (def remap-clamp
 "#version 130
 float remap_clamp(float value, float low1, float high1, float low2, float high2)
@@ -1197,7 +1216,7 @@ float remap_clamp(float value, float low1, float high1, float low2, float high2)
   return clamp(low2 + t * (high2 - low2), low2, high2);
 }")
 
-
+;; A probing shader is used to test the remap_clamp function.
 (def remap-probe
   (template/fn [value low1 high1 low2 high2]
 "#version 130
@@ -1208,7 +1227,7 @@ void main()
   fragColor = vec4(remap_clamp(<%= value %>, <%= low1 %>, <%= high1 %>, <%= low2 %>, <%= high2 %>));
 }"))
 
-
+;; `remap_clamp` is tested using a parametrized tests.
 (tabular "Remap and clamp input parameter values"
        (fact (first (render-pixel
                       [vertex-passthrough]
@@ -1225,7 +1244,8 @@ void main()
        0      1     2      1     2      1.0
        3      1     2      1     2      2.0)
 
-
+;; We use the `remap-noise` method to map the 3D noise to the output range.
+;; The base noise function and the remapping parameters are template parameters.
 (def remap-noise
   (template/fn [base low1 high1 high2]
 "#version 130
@@ -1236,30 +1256,32 @@ float remap_noise(vec3 idx)
   return remap_clamp(<%= base %>(idx), <%= low1 %>, <%= high1 %>, 0.0, <%= high2 %>);
 }"))
 
-
+;; We are going to use the following value as the upper value of the cloud density.
 (def cloud-strength 6.5)
 
-
-(bufimg/tensor->image
-  (rgba-array->bufimg
-    (render-noise 640 480
-                  constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
-                  remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader)
-    640 480))
+;; Now we can render the remapped noise values.
+(rgba-array->bufimg
+  (render-noise 640 480
+                constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
+                remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader)
+  640 480)
 
 
 ;; ### Octaves of 3D noise
-
-(bufimg/tensor->image
-  (rgba-array->bufimg
-    (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
-                  remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
-                  (noise-octaves (octaves 4 0.5)) noise-shader)
-    640 480))
+;;
+;; Earlier we defined a function for creating octaves of 3D noise.
+;; Here we create octaves of noise before remapping and clamping the values.
+(rgba-array->bufimg
+  (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
+                remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                (noise-octaves (octaves 4 0.5)) noise-shader)
+  640 480)
 
 
 ;; ### Mie scattering
-
+;;
+;; In-scattering of light towards the observer depends of the angle between light source and viewing direction.
+;; Here we are going to use the phase function by Cornette and Shanks which depends on the asymmetry g and mu = cos(theta).
 (def mie-scatter
   (template/fn [g]
 "#version 450 core
@@ -1276,7 +1298,7 @@ float in_scatter(vec3 point, vec3 direction)
   return mix(1.0, mie(dot(light, direction)), ANISOTROPIC);
 }"))
 
-
+;; We define a probing shader.
 (def mie-probe
   (template/fn [mu]
 "#version 450 core
@@ -1288,7 +1310,7 @@ void main()
   fragColor = vec4(result, 0, 0, 1);
 }"))
 
-
+;; The shader is tested using a few values.
 (tabular "Shader function for scattering phase function"
          (fact (first (render-pixel [vertex-passthrough] [(mie-scatter ?g) (mie-probe ?mu)]))
                => (roughly ?result 1e-6))
@@ -1299,11 +1321,11 @@ void main()
          0.5 0   (/ (* 3 0.75) (* 8 PI 2.25 (pow 1.25 1.5)))
          0.5 1   (/ (* 6 0.75) (* 8 PI 2.25 (pow 0.25 1.5))))
 
-
+;; We can define a function to compute a particular value of the scattering phase function using the GPU.
 (defn scatter-amount [theta]
   (first (render-pixel [vertex-passthrough] [(mie-scatter 0.76) (mie-probe (cos theta))])))
 
-
+;; We can use this function to plot a mix of isotropic and anisotropic scattering.
 (let [scatter
       (tc/dataset {:x (map (fn [theta]
                                (* (cos (to-radians theta))
@@ -1319,16 +1341,19 @@ void main()
       plotly/plot
       (assoc-in [:layout :yaxis :scaleanchor] "x")))
 
-
-(bufimg/tensor->image
-  (rgba-array->bufimg
-    (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01)
-                  remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
-                  (noise-octaves (octaves 4 0.5)) noise-shader)
-    640 480))
+;; We replace the `in_scatter` placeholder from earlier with the Mie scattering and now the clouds look a bit more realistic.
+(rgba-array->bufimg
+  (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01)
+                remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                (noise-octaves (octaves 4 0.5)) noise-shader)
+  640 480)
 
 
 ;; ### Self-shading of clouds
+;;
+;; Finally we can implement the shadow function by also sampling towards the light source to compute the shading value at each point.
+;; Testing the function requires extending the `render-pixel` function to accept a function for setting the `light` uniform.
+;; We leave this as an exercise for the interested reader 😉.
 (def shadow
   (template/fn [noise step]
 "#version 130
@@ -1348,17 +1373,18 @@ float shadow(vec3 point)
   return result;
 }"))
 
-
-(bufimg/tensor->image
-  (rgba-array->bufimg
-    (render-noise 640 480
-                  (mie-scatter 0.76) (shadow "remap_noise" 0.01)
-                  (cloud-transfer "remap_noise" 0.01) remap-clamp
-                  (remap-noise "octaves" 0.45 0.9 cloud-strength)
-                  (noise-octaves (octaves 4 0.5)) noise-shader)
-    640 480))
+;; The final result is starting to look realistic.
+(rgba-array->bufimg
+  (render-noise 640 480
+                (mie-scatter 0.76) (shadow "remap_noise" 0.05)
+                (cloud-transfer "remap_noise" 0.01) remap-clamp
+                (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                (noise-octaves (octaves 4 0.5)) noise-shader)
+  640 480)
 
 ;; ### Tidy up
+;;
+;; Finally we free the texture, destroy the window, and terminate GLFW.
 (GL11/glBindTexture GL12/GL_TEXTURE_3D 0)
 (GL11/glDeleteTextures noise-texture)
 
@@ -1367,6 +1393,8 @@ float shadow(vec3 point)
 (GLFW/glfwTerminate)
 
 ;; ## Further topics
+;;
+;; Here are some references to get from a cloud prototype to more realistic clouds.
 ;;
 ;; * [Vertical density profile](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
 ;; * [Powder function](https://advances.realtimerendering.com/s2015/index.html)
