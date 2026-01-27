@@ -27,7 +27,7 @@ image: clouds.jpg
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" type="text/javascript"></script><script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js" type="text/javascript"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.20.0/plotly.min.js" type="text/javascript"></script>
 Volumetric clouds are commonly used in flight simulators and visual effects.
 For a introductory video see [Sebastian Lague's video "Coding Adventure: Clouds](https://www.youtube.com/watch?v=4QOcCGI6xOU).
-Note that this article is about procedural generation and not about simulating real weather.
+This article gets you started with computing and rendering volumetric clouds.
 
 
 ## Worley noise
@@ -154,6 +154,7 @@ true
 
 
 We can now use the `random-point` method to generate a grid of random points.
+The grid is represented using a tensor from the [dtype-next](https://cnuernber.github.io/dtype-next/) library.
 
 
 ::: {.sourceClojure}
@@ -209,7 +210,7 @@ Here is a scatter plot showing one random point placed in each cell.
 
 
 ```{=html}
-<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[17.70780638210882,31.92335189341236,10.090211360027109,8.30845632254093,21.177832977965704,24.651409645530492,24.1210705845193,12.136520252836174,49.443797047757755,55.081140887554184,37.87079890631181,51.07611279499304,41.0353712286213,58.51857300611648,42.161802263705326,60.89747819160104,95.59870935080163,76.47344366035044,79.86047445282574,94.27575666591244,75.61522870081205,78.6206548804954,81.83914264869324,86.63623093322136,110.13796842648699,122.56055837712043,105.01808815642075,116.86089772118315,122.67052383992272,127.50307029704015,122.61264816860408,122.98137141624109,129.3135655534144,146.00060710548684,156.71039536427017,152.9831132442591,149.30392913768685,137.85485918884444,143.30339373446947,158.8459871420633,178.0712878138064,178.32238455918434,175.90053390718052,173.94614836417585,168.93740173588452,184.74403567862953,181.84494802554315,185.9442566831189,201.58294278610109,205.72321155994837,205.46150006111193,209.28501808180556,223.40690536687774,212.97793981675508,208.15935423875095,205.43305609471963,229.90358470717246,231.9917863033451,255.61462579951177,242.97010978226243,254.18214198921348,247.58859153391484,242.15810271141964,241.6785592565504],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[20.17374783204084,55.84862276626468,87.01334316390043,110.53398441378843,143.8764541417936,186.80204943365064,218.035713724919,225.78443351023313,14.58296179605816,53.60822962267703,77.86370088300853,100.52176308651553,135.75728932212002,164.6400085983729,192.6085244572704,224.7559542058754,4.14754995237184,46.69545057314148,84.26622346137515,116.72434315699151,135.05038971322642,185.54791323388264,213.99869350951295,233.47392980065874,23.88987228033712,35.34183664719872,95.29167459938944,96.85188466788713,129.23582297740344,167.95922282934816,218.11469479500994,230.02926238852584,2.386618665840988,33.4818291168627,73.20796686813516,115.68291532044688,152.64144090938333,186.87405567760837,221.62123555333838,234.9606151968105,13.386971769919374,52.011544337740986,74.62958129703462,126.35437022414499,158.1235479497034,190.18047550163877,209.1511717181102,251.60695283973905,27.555770040798066,32.172568180914936,67.79197643568483,103.77662723000965,132.872559947122,185.1007844531261,204.64242003075265,232.5850791821582,12.341673968798794,33.06073931316353,69.95100381760514,126.17355000696344,154.34367152831766,174.762808416456,222.7998709533633,248.39217543609337],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random points"}, {});</script></div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[4.957230259038898,31.00702561756981,23.847224674751914,9.385648598146776,28.005724673402472,4.58746617214657,16.70471586392558,5.894900302305178,33.98555180156664,33.42683312479924,34.95244892460582,43.703972202450714,42.73691681533603,61.612190841652954,33.095020239817,56.86638788021817,88.13065843077104,92.1086573062845,74.16926010680794,95.8058026653524,85.33756471388378,88.14248923539901,89.93640359347276,84.13756883493927,117.22464403547622,103.24237220814167,111.76371112454818,120.71100215034127,125.0033507373991,123.06391742768278,121.32054628728301,109.9973521253367,140.2547599465105,134.12235302464669,150.21390177618503,135.94847472347377,155.4566994432626,142.55842701823096,145.68838120495985,154.45120773237105,178.13783182910285,162.06251103667876,183.51563748040854,179.5024529966029,189.78369036966518,166.08190307788314,177.1982552008191,162.2299555049027,218.6196705794245,199.43633820052858,192.6130966086868,209.883790427461,199.39597114962885,212.4667018502694,213.21909307667113,199.92355215216736,229.29949033829783,244.84194207516597,224.95449331197352,252.32624664041134,237.11767356986934,250.14919178576014,249.948563371066,235.23988425073276],"r":null,"name":"","fill":null,"mode":"markers","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[6.650277290728674,32.22958371885338,93.44825090712837,126.00824994521366,145.816660270903,181.09349067371687,208.47318235495965,255.84535342922123,8.435338078203817,34.17891320740566,74.07951251776923,119.7314650413092,136.83062378134537,176.0553788703855,211.46778739189483,232.337599758163,2.3125820620342843,41.92801530125798,70.84776049637755,125.74016608322654,149.59551923980482,190.3690294696179,209.36566590979987,253.55185285569166,14.26529577911598,45.379258725498275,83.1428234425442,106.445101050809,145.42047215097054,161.90480348458104,221.55057471698854,253.19314638002646,5.612281874387072,60.93373909979566,87.84653998746003,125.35364579838952,128.20842806645146,160.2979002976017,218.29721140018174,235.71987778082573,12.305714730835689,47.304753610970444,87.91186513405705,120.66452685214273,135.3165012456969,163.32433569015467,214.9128116988065,232.50103674873552,23.353988181403082,58.45627983740018,64.0669661160453,111.98755199515622,135.5413293463,174.40191651450124,213.00375177618872,251.0984301277752,30.369569369478416,41.66645085744864,69.644328995099,120.18833409668801,138.229420553824,185.21622035162898,196.86715133452415,233.67390734367575],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random points"}, {});</script></div>
 ```
 
 
@@ -614,7 +615,7 @@ The gradient field can be plotted with Plotly as a scatter plot of disconnected 
 
 
 ```{=html}
-<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,-0.4822952263098752,null,0.0,-0.1394028234133456,null,0.0,-0.45318526852082613,null,0.0,-0.4355113457874082,null,0.0,0.29553059341129534,null,0.0,0.2687894836740384,null,0.0,0.3405111104849766,null,0.0,-0.4856266555937909,null,1.0,1.3755602947493952,null,1.0,0.8642382357999572,null,1.0,1.284551561145744,null,1.0,0.8763971179212906,null,1.0,1.4973914001399211,null,1.0,0.9396115929226927,null,1.0,0.6361303598871916,null,1.0,0.5162671903498609,null,2.0,2.1380283905816526,null,2.0,1.513603334586218,null,2.0,2.436707352247592,null,2.0,1.572899751950954,null,2.0,1.8527186727809024,null,2.0,2.4853575989664356,null,2.0,2.2789820326814265,null,2.0,1.784709455381447,null,3.0,3.499635016184241,null,3.0,2.542311011144384,null,3.0,3.1984264414515153,null,3.0,3.376942390026162,null,3.0,2.9981661921349323,null,3.0,2.721060866958555,null,3.0,2.535469756070982,null,3.0,3.4669996022784098,null,4.0,3.636837498875207,null,4.0,4.429571440912929,null,4.0,3.86505532732362,null,4.0,3.6625554558074436,null,4.0,4.239301824591318,null,4.0,4.158181910952864,null,4.0,3.6546670972867545,null,4.0,4.399139477689273,null,5.0,5.339502809460831,null,5.0,4.772522095069016,null,5.0,5.163688912084758,null,5.0,5.465672373999245,null,5.0,4.765402033816763,null,5.0,5.491816262266537,null,5.0,4.579502427707389,null,5.0,5.095368571289715,null,6.0,6.225191771232561,null,6.0,6.400686043414137,null,6.0,5.98510272586067,null,6.0,5.783555379517349,null,6.0,6.170892077058232,null,6.0,6.159436305091123,null,6.0,6.438158276968689,null,6.0,5.526671274072294,null,7.0,7.494903581888245,null,7.0,7.469410635794342,null,7.0,6.57333626667484,null,7.0,7.372761657500186,null,7.0,7.323413337058816,null,7.0,6.5815623056225085,null,7.0,6.875625230812441,null,7.0,6.6421749972500965,null],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,0.13187613384804056,null,1.0,0.5198262264300688,null,2.0,1.7887581660851555,null,3.0,2.7543786090536075,null,4.0,3.5966866375162265,null,5.0,5.421606704721644,null,6.0,6.3661313748318875,null,7.0,6.880975837004457,null,0.0,-0.3300825124234051,null,1.0,0.5187840989937136,null,2.0,2.4111330794882844,null,3.0,3.4844815038180887,null,4.0,4.0510077941774485,null,5.0,5.496339843545393,null,6.0,5.657073061711134,null,7.0,6.8734987396585225,null,0.0,-0.4805706643080066,null,1.0,0.8841626835844613,null,2.0,1.7565114202002539,null,3.0,3.2599718794724604,null,4.0,3.5221839154522097,null,5.0,5.120116614693958,null,6.0,6.414932555291748,null,7.0,6.548724051828765,null,0.0,0.019101062865008414,null,1.0,0.7987022367726762,null,2.0,2.458941115321877,null,3.0,2.6714966749005957,null,4.0,3.5000033628625946,null,5.0,4.585038604135171,null,6.0,6.184963922090895,null,7.0,6.8213624578320475,null,0.0,0.34367571601261626,null,1.0,1.255867890037007,null,2.0,1.5185543277624518,null,3.0,2.631040409265896,null,4.0,3.560984468671932,null,5.0,4.52568103237663,null,6.0,6.361587038351272,null,7.0,7.301143947888605,null,0.0,-0.367066536704454,null,1.0,1.4452570075453168,null,2.0,1.5275532410307928,null,3.0,2.817930672286882,null,4.0,3.558452953511533,null,5.0,4.909906913860315,null,6.0,5.729478666837492,null,7.0,6.509179426256235,null,0.0,-0.44641759168870354,null,1.0,1.299083089814728,null,2.0,2.4997780219489623,null,3.0,3.4507235585856604,null,4.0,3.530110759860663,null,5.0,5.4738987915355874,null,6.0,5.759132143439957,null,7.0,6.838879184424686,null,0.0,0.07120705466584866,null,1.0,1.1722023664272676,null,2.0,1.739312335034746,null,3.0,2.6667602264169026,null,4.0,3.6186814803704377,null,5.0,4.726303277469295,null,6.0,5.515716078328486,null,7.0,6.6507704660155,null],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random gradients"}, {});</script></div>
+<div style="height:auto;width:100%;"><script>Plotly.newPlot(document.currentScript.parentElement, [{"y":[0.0,-0.4961394668906912,null,0.0,0.315077820120418,null,0.0,0.18082555593729682,null,0.0,-0.4978572631773272,null,0.0,-0.4756048571494581,null,0.0,-0.3240448198671877,null,0.0,-0.05266046050467347,null,0.0,-0.4683240451863831,null,1.0,1.4994902194589566,null,1.0,0.6038421300388344,null,1.0,1.2229037075768612,null,1.0,1.3778577988580731,null,1.0,0.727431952157253,null,1.0,1.0161214707524067,null,1.0,0.5451817868706101,null,1.0,0.501783216338417,null,2.0,2.1377760384674795,null,2.0,1.7768338873123508,null,2.0,1.6925088017258032,null,2.0,1.6958590659295334,null,2.0,1.6999104204088233,null,2.0,1.7006707538840236,null,2.0,2.398409055519511,null,2.0,2.0984564973961484,null,3.0,2.5048816893994945,null,3.0,2.5031971504217743,null,3.0,3.441678966372118,null,3.0,2.500000815538769,null,3.0,2.5870151902767295,null,3.0,3.4246320318977572,null,3.0,2.8785439206806664,null,3.0,3.1176045999552753,null,4.0,3.7931214295888287,null,4.0,3.539537157055418,null,4.0,4.435164421770242,null,4.0,4.04521366370839,null,4.0,3.607786463685876,null,4.0,3.8394011093848848,null,4.0,4.349144635113639,null,4.0,3.5458311754967546,null,5.0,5.499654481158044,null,5.0,4.954591134103955,null,5.0,5.3183098550807815,null,5.0,4.677171566532818,null,5.0,5.356755551702825,null,5.0,5.1026090002319675,null,5.0,4.616069707593083,null,5.0,4.838612905480376,null,6.0,5.527379561440225,null,6.0,6.228096592931344,null,6.0,6.362226100788736,null,6.0,5.7011161418713705,null,6.0,5.682605916329773,null,6.0,5.514638489654747,null,6.0,6.079088101749103,null,6.0,5.664747042612779,null,7.0,6.943898873908881,null,7.0,7.292719200130963,null,7.0,7.17710019000532,null,7.0,7.461236920125598,null,7.0,6.7230501178900415,null,7.0,7.4350131493301514,null,7.0,7.120486747174715,null,7.0,6.9228257564678675,null],"r":null,"name":"","fill":null,"mode":"lines","width":null,"type":"scatter","theta":null,"z":null,"lon":null,"lat":null,"x":[0.0,0.062013138877343124,null,1.0,0.6117655769149708,null,2.0,1.5338432470509866,null,3.0,3.046240085440898,null,4.0,3.8457274494414397,null,5.0,4.61921796954525,null,6.0,6.497219142732292,null,7.0,7.175135914935408,null,0.0,-0.02257256442771882,null,1.0,1.3050556376594802,null,2.0,1.5524355497266464,null,3.0,3.3274499715103545,null,4.0,3.580826218263601,null,5.0,4.500259969403311,null,6.0,5.7922973447310095,null,7.0,6.957809521478092,null,0.0,0.4806430725852684,null,1.0,1.4474336667573011,null,2.0,2.3942704186011152,null,3.0,3.396860545056754,null,4.0,4.399932799631126,null,5.0,5.400502187783839,null,6.0,5.69789037671724,null,7.0,6.509789516513077,null,0.0,-0.06969833934966861,null,1.0,1.056452888774223,null,2.0,2.234349505364226,null,3.0,3.0009030714833296,null,4.0,3.718142683370053,null,5.0,4.736015838569088,null,6.0,6.4850241445499135,null,7.0,7.485972384060411,null,0.0,0.45519364791770783,null,1.0,0.8051308893965144,null,2.0,2.2462355092698263,null,3.0,2.5020484716219213,null,4.0,4.310110531797888,null,5.0,4.5264939321052005,null,6.0,5.642092157432442,null,7.0,7.209118815149044,null,0.0,0.01858492557655995,null,1.0,0.502066234426671,null,2.0,2.3855889471424874,null,3.0,2.6181861676875426,null,4.0,3.6496780390423504,null,5.0,4.5106418560283315,null,6.0,5.679691507180438,null,7.0,6.526761998860495,null,0.0,0.16318676740338278,null,1.0,0.5550596171472939,null,2.0,2.3446625188606793,null,3.0,3.4008346783277927,null,4.0,4.386343106126066,null,5.0,4.879899191196,null,6.0,5.5062945491877535,null,7.0,7.370952092005319,null,0.0,-0.4968426950769312,null,1.0,0.5946415538382246,null,2.0,1.5324152240501412,null,3.0,2.8069702004532666,null,4.0,4.416291679954428,null,5.0,5.246502657003659,null,6.0,6.485265848535889,null,7.0,7.494008234886063,null],"text":null}], {"width":500,"height":400,"margin":{"t":25},"automargin":false,"plot_bgcolor":"rgb(235,235,235)","xaxis":{"gridcolor":"rgb(255,255,255)","title":"x","showgrid":true},"yaxis":{"gridcolor":"rgb(255,255,255)","title":"y","showgrid":true},"title":"Random gradients"}, {});</script></div>
 ```
 
 
@@ -1439,7 +1440,7 @@ nil
 
 ::: {.printedClojure}
 ```clojure
-#object[org.lwjgl.opengl.GLCapabilities 0x734ee5fd "org.lwjgl.opengl.GLCapabilities@734ee5fd"]
+#object[org.lwjgl.opengl.GLCapabilities 0x79c3fe0c "org.lwjgl.opengl.GLCapabilities@79c3fe0c"]
 
 ```
 :::
@@ -2222,6 +2223,14 @@ void main()
 :::
 
 
+Uniform variables are parameters that remain constant throughout the shader execution, unlike vertex input data.
+Here we use the following uniform variables:
+
+* resolution: a 2D vector containing the window pixel width and height
+* light: a 3D unit vector pointing to the light source
+* rotation: a 3x3 rotation matrix to rotate the camera around the origin
+* focal_length: the ratio of camera focal length to pixel size of the virtual camera
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -2242,6 +2251,9 @@ void main()
 ```
 :::
 
+
+The following function sets up the shader program, the vertex array object, and the uniform variables.
+Then `GL11/glDrawElements` draws the background quad used for performing volumetric rendering.
 
 
 ::: {.sourceClojure}
@@ -2264,6 +2276,11 @@ void main()
 :::
 
 
+We also need to convert the floating point array to a tensor and then to a `BufferedImage`.
+The one-dimensional array gets converted to a tensor and then reshaped to a 3D tensor containing width × height RGBA values.
+The RGBA data is converted to BGR data and then multiplied with 255 and clamped.
+Finally the tensor is converted to a `BufferedImage`.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -2271,15 +2288,20 @@ void main()
   (-> data
       tensor/->tensor
       (tensor/reshape [height width 4])
-      (tensor/select :all :all [2 1 0]) (dfn/* 255) (clamp 0 255)))
+      (tensor/select :all :all [2 1 0])
+      (dfn/* 255)
+      (clamp 0 255)
+      bufimg/tensor->image))
 ```
 :::
 
 
+Finally we are ready to render the volumetric fog.
+
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image (rgba-array->bufimg (render-fog 640 480) 640 480))
+(rgba-array->bufimg (render-fog 640 480) 640 480)
 ```
 :::
 
@@ -2292,6 +2314,9 @@ void main()
 
 ### Rendering of 3D noise
 
+This method converts a floating point array to a buffer and initialises a 3D texture with it.
+It is also necessary to set the texture parameters for interpolation and wrapping.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -2300,17 +2325,19 @@ void main()
   (let [buffer  (make-float-buffer data)
         texture (GL11/glGenTextures)]
     (GL11/glBindTexture GL12/GL_TEXTURE_3D texture)
+    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0
+                       GL11/GL_RED GL11/GL_FLOAT buffer)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL12/GL_TEXTURE_WRAP_R GL11/GL_REPEAT)
-    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0
-                       GL11/GL_RED GL11/GL_FLOAT buffer)
     texture))
 ```
 :::
 
+
+Here a mixture of 3D Perlin and Worley noise is created.
 
 
 ::: {.sourceClojure}
@@ -2321,6 +2348,8 @@ void main()
 :::
 
 
+The noise is normalised to be between 0 and 1.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -2330,6 +2359,8 @@ void main()
 :::
 
 
+Then the noise data is converted to a 3D texture.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -2337,6 +2368,8 @@ void main()
 ```
 :::
 
+
+Instead of a constant density fog, we can use the noise as a density function.
 
 
 ::: {.sourceClojure}
@@ -2352,6 +2385,8 @@ float noise(vec3 idx)
 :::
 
 
+We also set the uniform sampler to texture slot 0 and bind the noise texture to that slot.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -2364,6 +2399,8 @@ float noise(vec3 idx)
 ```
 :::
 
+
+Similar to the fog example above, we define a method to render the noise.
 
 
 ::: {.sourceClojure}
@@ -2385,14 +2422,15 @@ float noise(vec3 idx)
 :::
 
 
+Now we can render the mixture of 3D Perlin and Worley noise using a step size of 0.01.
+
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image
-  (rgba-array->bufimg
-    (render-noise 640 480
-                  constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader)
-    640 480))
+(rgba-array->bufimg
+  (render-noise 640 480
+                constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader)
+  640 480)
 ```
 :::
 
@@ -2404,6 +2442,8 @@ float noise(vec3 idx)
 
 
 ### Remap and clamp 3D noise
+
+We define a method to map a range of input values to a range of output values and clamp the result.
 
 
 ::: {.sourceClojure}
@@ -2418,6 +2458,8 @@ float remap_clamp(float value, float low1, float high1, float low2, float high2)
 ```
 :::
 
+
+A probing shader is used to test the remap_clamp function.
 
 
 ::: {.sourceClojure}
@@ -2434,6 +2476,8 @@ void main()
 ```
 :::
 
+
+`remap_clamp` is tested using a parametrized tests.
 
 
 ::: {.sourceClojure}
@@ -2466,6 +2510,9 @@ true
 :::
 
 
+We use the `remap-noise` method to map the 3D noise to the output range.
+The base noise function and the remapping parameters are template parameters.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -2482,6 +2529,8 @@ float remap_noise(vec3 idx)
 :::
 
 
+We are going to use the following value as the upper value of the cloud density.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -2490,15 +2539,16 @@ float remap_noise(vec3 idx)
 :::
 
 
+Now we can render the remapped noise values.
+
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image
-  (rgba-array->bufimg
-    (render-noise 640 480
-                  constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
-                  remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader)
-    640 480))
+(rgba-array->bufimg
+  (render-noise 640 480
+                constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
+                remap-clamp (remap-noise "noise" 0.45 0.9 cloud-strength) noise-shader)
+  640 480)
 ```
 :::
 
@@ -2511,15 +2561,17 @@ float remap_noise(vec3 idx)
 
 ### Octaves of 3D noise
 
+Earlier we defined a function for creating octaves of 3D noise.
+Here we create octaves of noise before remapping and clamping the values.
+
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image
-  (rgba-array->bufimg
-    (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
-                  remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
-                  (noise-octaves (octaves 4 0.5)) noise-shader)
-    640 480))
+(rgba-array->bufimg
+  (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
+                remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                (noise-octaves (octaves 4 0.5)) noise-shader)
+  640 480)
 ```
 :::
 
@@ -2531,6 +2583,9 @@ float remap_noise(vec3 idx)
 
 
 ### Mie scattering
+
+In-scattering of light towards the observer depends of the angle between light source and viewing direction.
+Here we are going to use the phase function by Cornette and Shanks which depends on the asymmetry g and mu = cos(theta).
 
 
 ::: {.sourceClojure}
@@ -2554,6 +2609,8 @@ float in_scatter(vec3 point, vec3 direction)
 :::
 
 
+We define a probing shader.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -2570,6 +2627,8 @@ void main()
 ```
 :::
 
+
+The shader is tested using a few values.
 
 
 ::: {.sourceClojure}
@@ -2596,6 +2655,8 @@ true
 :::
 
 
+We can define a function to compute a particular value of the scattering phase function using the GPU.
+
 
 ::: {.sourceClojure}
 ```clojure
@@ -2604,6 +2665,8 @@ true
 ```
 :::
 
+
+We can use this function to plot a mix of isotropic and anisotropic scattering.
 
 
 ::: {.sourceClojure}
@@ -2632,15 +2695,16 @@ true
 ```
 
 
+We replace the `in_scatter` placeholder from earlier with the Mie scattering and now the clouds look a bit more realistic.
+
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image
-  (rgba-array->bufimg
-    (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01)
-                  remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
-                  (noise-octaves (octaves 4 0.5)) noise-shader)
-    640 480))
+(rgba-array->bufimg
+  (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01)
+                remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                (noise-octaves (octaves 4 0.5)) noise-shader)
+  640 480)
 ```
 :::
 
@@ -2652,6 +2716,10 @@ true
 
 
 ### Self-shading of clouds
+
+Finally we can implement the shadow function by also sampling towards the light source to compute the shading value at each point.
+Testing the function requires extending the `render-pixel` function to accept a function for setting the `light` uniform.
+We leave this as an exercise for the interested reader 😉.
 
 
 ::: {.sourceClojure}
@@ -2678,17 +2746,18 @@ float shadow(vec3 point)
 :::
 
 
+The final result is starting to look realistic.
+
 
 ::: {.sourceClojure}
 ```clojure
-(bufimg/tensor->image
-  (rgba-array->bufimg
-    (render-noise 640 480
-                  (mie-scatter 0.76) (shadow "remap_noise" 0.01)
-                  (cloud-transfer "remap_noise" 0.01) remap-clamp
-                  (remap-noise "octaves" 0.45 0.9 cloud-strength)
-                  (noise-octaves (octaves 4 0.5)) noise-shader)
-    640 480))
+(rgba-array->bufimg
+  (render-noise 640 480
+                (mie-scatter 0.76) (shadow "remap_noise" 0.05)
+                (cloud-transfer "remap_noise" 0.01) remap-clamp
+                (remap-noise "octaves" 0.45 0.9 cloud-strength)
+                (noise-octaves (octaves 4 0.5)) noise-shader)
+  640 480)
 ```
 :::
 
@@ -2700,6 +2769,8 @@ float shadow(vec3 point)
 
 
 ### Tidy up
+
+Finally we free the texture, destroy the window, and terminate GLFW.
 
 
 ::: {.sourceClojure}
@@ -2771,6 +2842,8 @@ nil
 
 
 ## Further topics
+
+Here are some references to get from a cloud prototype to more realistic clouds.
 
 
 * [Vertical density profile](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
