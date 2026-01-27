@@ -1138,29 +1138,35 @@ void main()
 
 
 ;; ### Rendering of 3D noise
-
+;;
+;; This method converts a floating point array to a buffer and initialises a 3D texture with it.
+;; It is also necessary to set the texture parameters for interpolation and wrapping.
 (defn float-array->texture3d
   [data size]
   (let [buffer  (make-float-buffer data)
         texture (GL11/glGenTextures)]
     (GL11/glBindTexture GL12/GL_TEXTURE_3D texture)
+    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0
+                       GL11/GL_RED GL11/GL_FLOAT buffer)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_MIN_FILTER GL11/GL_LINEAR)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_MAG_FILTER GL11/GL_LINEAR)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_S GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL11/GL_TEXTURE_WRAP_T GL11/GL_REPEAT)
     (GL11/glTexParameteri GL12/GL_TEXTURE_3D GL12/GL_TEXTURE_WRAP_R GL11/GL_REPEAT)
-    (GL12/glTexImage3D GL12/GL_TEXTURE_3D 0 GL30/GL_R32F size size size 0
-                       GL11/GL_RED GL11/GL_FLOAT buffer)
     texture))
 
-
+;; Here a mixture of 3D Perlin and Worley noise is created.
 (def noise3d (dfn/- (dfn/* 0.3 (perlin-noise (make-noise-params 32 4 3)))
                     (dfn/* 0.7 (worley-noise (make-noise-params 32 4 3)))))
+
+;; The noise is normalised to be between 0 and 1.
 (def noise-3d-norm (dfn/* (/ 1.0 (- (dfn/reduce-max noise3d) (dfn/reduce-min noise3d)))
                           (dfn/- noise3d (dfn/reduce-min noise3d))))
+
+;; Then the noise data is converted to a 3D texture.
 (def noise-texture (float-array->texture3d (dtype/->float-array noise-3d-norm) 32))
 
-
+;; Instead of a constant density fog, we can use the noise as a density function.
 (def noise-shader
 "#version 130
 uniform sampler3D noise3d;
@@ -1169,7 +1175,7 @@ float noise(vec3 idx)
   return texture(noise3d, idx).r;
 }")
 
-
+;; We also set the uniform sampler to texture slot 0 and bind the noise texture to that slot.
 (defn setup-noise-uniforms
   [program width height]
   (setup-fog-uniforms program width height)
@@ -1177,7 +1183,7 @@ float noise(vec3 idx)
   (GL13/glActiveTexture GL13/GL_TEXTURE0)
   (GL11/glBindTexture GL12/GL_TEXTURE_3D noise-texture))
 
-
+;; Similar to the fog example above, we define a method to render the noise.
 (defn render-noise
   [width height & cloud-shaders]
   (let [fragment-sources (concat cloud-shaders [ray-box fragment-cloud])
@@ -1192,7 +1198,7 @@ float noise(vec3 idx)
         (teardown-vao vao)
         (GL20/glDeleteProgram program)))))
 
-
+;; The noise is rendered with a step size of 0.01.
 (rgba-array->bufimg
   (render-noise 640 480
                 constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader)
@@ -1201,6 +1207,7 @@ float noise(vec3 idx)
 
 ;; ### Remap and clamp 3D noise
 
+;; We define a method to map a range of input values to a range of output values and clamp the result.
 (def remap-clamp
 "#version 130
 float remap_clamp(float value, float low1, float high1, float low2, float high2)
@@ -1209,7 +1216,7 @@ float remap_clamp(float value, float low1, float high1, float low2, float high2)
   return clamp(low2 + t * (high2 - low2), low2, high2);
 }")
 
-
+;; A probing shader is used to test the remap_clamp function.
 (def remap-probe
   (template/fn [value low1 high1 low2 high2]
 "#version 130
@@ -1220,7 +1227,7 @@ void main()
   fragColor = vec4(remap_clamp(<%= value %>, <%= low1 %>, <%= high1 %>, <%= low2 %>, <%= high2 %>));
 }"))
 
-
+;; `remap_clamp` is tested using a parametrized tests.
 (tabular "Remap and clamp input parameter values"
        (fact (first (render-pixel
                       [vertex-passthrough]
@@ -1237,7 +1244,8 @@ void main()
        0      1     2      1     2      1.0
        3      1     2      1     2      2.0)
 
-
+;; We use the `remap-noise` method to map the 3D noise to the output range.
+;; The base noise function and the remapping parameters are template parameters.
 (def remap-noise
   (template/fn [base low1 high1 high2]
 "#version 130
