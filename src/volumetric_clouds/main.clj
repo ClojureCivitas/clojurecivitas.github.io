@@ -46,6 +46,7 @@
 ;;   generateme/fastmath {:mvn/version "3.0.0-alpha4"}
 ;;   comb/comb           {:mvn/version "1.0.0"}
 ;;   }
+;; }
 ;; ```
 ;;
 ;; We are going to import the following methods and namespaces:
