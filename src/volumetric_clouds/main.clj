@@ -1198,7 +1198,7 @@ float noise(vec3 idx)
         (teardown-vao vao)
         (GL20/glDeleteProgram program)))))
 
-;; The noise is rendered with a step size of 0.01.
+;; Now we can render the mixture of 3D Perlin and Worley noise using a step size of 0.01.
 (rgba-array->bufimg
   (render-noise 640 480
                 constant-scatter no-shadow (cloud-transfer "noise" 0.01) noise-shader)
@@ -1256,10 +1256,10 @@ float remap_noise(vec3 idx)
   return remap_clamp(<%= base %>(idx), <%= low1 %>, <%= high1 %>, 0.0, <%= high2 %>);
 }"))
 
-
+;; We are going to use the following value as the upper value of the cloud density.
 (def cloud-strength 6.5)
 
-
+;; Now we can render the remapped noise values.
 (rgba-array->bufimg
   (render-noise 640 480
                 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
@@ -1268,7 +1268,9 @@ float remap_noise(vec3 idx)
 
 
 ;; ### Octaves of 3D noise
-
+;;
+;; Earlier we defined a function for creating octaves of 3D noise.
+;; Here we create octaves of noise before remapping and clamping the values.
 (rgba-array->bufimg
   (render-noise 640 480 constant-scatter no-shadow (cloud-transfer "remap_noise" 0.01)
                 remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
@@ -1277,7 +1279,9 @@ float remap_noise(vec3 idx)
 
 
 ;; ### Mie scattering
-
+;;
+;; In-scattering of light towards the observer depends of the angle between light source and viewing direction.
+;; Here we are going to use the phase function by Cornette and Shanks which depends on the asymmetry g and mu = cos(theta).
 (def mie-scatter
   (template/fn [g]
 "#version 450 core
@@ -1294,7 +1298,7 @@ float in_scatter(vec3 point, vec3 direction)
   return mix(1.0, mie(dot(light, direction)), ANISOTROPIC);
 }"))
 
-
+;; We define a probing shader.
 (def mie-probe
   (template/fn [mu]
 "#version 450 core
@@ -1306,7 +1310,7 @@ void main()
   fragColor = vec4(result, 0, 0, 1);
 }"))
 
-
+;; The shader is tested using a few values.
 (tabular "Shader function for scattering phase function"
          (fact (first (render-pixel [vertex-passthrough] [(mie-scatter ?g) (mie-probe ?mu)]))
                => (roughly ?result 1e-6))
@@ -1317,11 +1321,11 @@ void main()
          0.5 0   (/ (* 3 0.75) (* 8 PI 2.25 (pow 1.25 1.5)))
          0.5 1   (/ (* 6 0.75) (* 8 PI 2.25 (pow 0.25 1.5))))
 
-
+;; We can define a function to compute a particular value of the scattering phase function using the GPU.
 (defn scatter-amount [theta]
   (first (render-pixel [vertex-passthrough] [(mie-scatter 0.76) (mie-probe (cos theta))])))
 
-
+;; We can use this function to plot a mix of isotropic and anisotropic scattering.
 (let [scatter
       (tc/dataset {:x (map (fn [theta]
                                (* (cos (to-radians theta))
@@ -1337,7 +1341,7 @@ void main()
       plotly/plot
       (assoc-in [:layout :yaxis :scaleanchor] "x")))
 
-
+;; Now the clouds look a bit more realistic.
 (rgba-array->bufimg
   (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01)
                 remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
