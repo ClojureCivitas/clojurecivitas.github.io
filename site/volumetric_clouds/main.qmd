@@ -1487,7 +1487,7 @@ nil
 
 ### Compiling and linking shader programs
 
-The following method is used compile a shader program.
+The following method is used to compile a shader.
 
 
 ::: {.sourceClojure}
@@ -1503,7 +1503,7 @@ The following method is used compile a shader program.
 :::
 
 
-The different shaders are then linked to become a shader program using the following method.
+The different shaders are then linked to become a program using the following method.
 
 
 ::: {.sourceClojure}
