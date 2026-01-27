@@ -6,7 +6,7 @@
                               :description "Procedural generation of volumetric clouds using different types of noise"
                               :image    "clouds.jpg"
                               :type     :post
-                              :date     "2026-01-24"
+                              :date     "2026-01-27"
                               :category :clojure
                               :tags     [:visualization]}}}
 
