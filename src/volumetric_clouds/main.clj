@@ -1341,7 +1341,7 @@ void main()
       plotly/plot
       (assoc-in [:layout :yaxis :scaleanchor] "x")))
 
-;; Now the clouds look a bit more realistic.
+;; We replace the `in_scatter` placeholder from earlier with the Mie scattering and now the clouds look a bit more realistic.
 (rgba-array->bufimg
   (render-noise 640 480 (mie-scatter 0.76) no-shadow (cloud-transfer "remap_noise" 0.01)
                 remap-clamp (remap-noise "octaves" 0.45 0.9 cloud-strength)
@@ -1350,6 +1350,10 @@ void main()
 
 
 ;; ### Self-shading of clouds
+;;
+;; Finally we can implement the shadow function by also sampling towards the light source to compute the shading value at each point.
+;; Testing the function requires extending the `render-pixel` function to accept a function for setting the `light` uniform.
+;; We leave this as an exercise for the interested reader 😉.
 (def shadow
   (template/fn [noise step]
 "#version 130
@@ -1369,16 +1373,18 @@ float shadow(vec3 point)
   return result;
 }"))
 
-
+;; The final result is starting to look realistic.
 (rgba-array->bufimg
   (render-noise 640 480
-                (mie-scatter 0.76) (shadow "remap_noise" 0.01)
+                (mie-scatter 0.76) (shadow "remap_noise" 0.05)
                 (cloud-transfer "remap_noise" 0.01) remap-clamp
                 (remap-noise "octaves" 0.45 0.9 cloud-strength)
                 (noise-octaves (octaves 4 0.5)) noise-shader)
   640 480)
 
 ;; ### Tidy up
+;;
+;; Finally we free the texture, destroy the window, and terminate GLFW.
 (GL11/glBindTexture GL12/GL_TEXTURE_3D 0)
 (GL11/glDeleteTextures noise-texture)
 
@@ -1387,6 +1393,8 @@ float shadow(vec3 point)
 (GLFW/glfwTerminate)
 
 ;; ## Further topics
+;;
+;; Here are some references to get from a cloud prototype to more realistic clouds.
 ;;
 ;; * [Vertical density profile](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
 ;; * [Powder function](https://advances.realtimerendering.com/s2015/index.html)
