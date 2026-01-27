@@ -43,6 +43,7 @@ To download the required libraries, we use a `deps.edn` file with the following 
   generateme/fastmath {:mvn/version "3.0.0-alpha4"}
   comb/comb           {:mvn/version "1.0.0"}
   }
+}
 ```
 
 We are going to import the following methods and namespaces:
@@ -480,7 +481,7 @@ This is achieved by determining the distance to each random point in all neighbo
 :::
 
 
-Here a 256x256 Worley noise tensor is created.
+Here a 256 × 256 Worley noise tensor is created.
 
 
 ::: {.sourceClojure}
@@ -1001,7 +1002,7 @@ Now one can sample the Perlin noise by performing above computation for the cent
 :::
 
 
-Here a 256x256 Perlin noise tensor is created.
+Here a 256 × 256 Perlin noise tensor is created.
 
 
 ::: {.sourceClojure}
@@ -1681,7 +1682,7 @@ We define a method to convert a Java buffer object to a floating point array.
 :::
 
 
-The following method reads texture data into a Java buffer and then converts it to a floating point array.
+The following method copies texture data into a Java buffer and then converts it to a floating point array.
 
 
 ::: {.sourceClojure}
