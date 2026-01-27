@@ -2,7 +2,7 @@
   :clay             {:title  "Volumetric Clouds with Clojure and LWJGL"
                      :external-requirements ["Xorg"]
                      :quarto {:author   [:janwedekind]
-                              :draft    true
+                              :draft    false
                               :description "Procedural generation of volumetric clouds using different types of noise"
                               :image    "clouds.jpg"
                               :type     :post
@@ -14,7 +14,7 @@
     (:require [clojure.math :refer (PI sqrt cos sin tan to-radians pow floor)]
               [midje.sweet :refer (fact facts tabular => roughly)]
               [fastmath.vector :refer (vec2 vec3 add mult sub div mag dot normalize)]
-              [fastmath.matrix :refer (mat->float-array mulm mulv inverse
+              [fastmath.matrix :refer (mat->float-array mulm
                                        rotation-matrix-3d-x rotation-matrix-3d-y)]
               [tech.v3.datatype :as dtype]
               [tech.v3.tensor :as tensor]
@@ -32,6 +32,41 @@
 ;; Volumetric clouds are commonly used in flight simulators and visual effects.
 ;; For a introductory video see [Sebastian Lague's video "Coding Adventure: Clouds](https://www.youtube.com/watch?v=4QOcCGI6xOU).
 ;; This article gets you started with computing and rendering volumetric clouds.
+;;
+;; ## Dependencies
+;;
+;; To download the required libraries, we use a `deps.edn` file with the following content:
+;;
+;; ```Clojure
+;; {:deps
+;;  {
+;;   org.clojure/clojure {:mvn/version "1.12.3"}
+;;   org.scicloj/noj     {:mvn/version "2-beta18"}
+;;   midje/midje         {:mvn/version "1.10.10"}
+;;   generateme/fastmath {:mvn/version "3.0.0-alpha4"}
+;;   comb/comb           {:mvn/version "1.0.0"}
+;;   }
+;; ```
+;;
+;; We are going to import the following methods and namespaces:
+;; ```Clojure
+;; (require '[clojure.math :refer (PI sqrt cos sin tan to-radians pow floor)]
+;;          '[midje.sweet :refer (fact facts tabular => roughly)]
+;;          '[fastmath.vector :refer (vec2 vec3 add mult sub div mag dot normalize)]
+;;          '[fastmath.matrix :refer (mat->float-array mulm
+;;                                    rotation-matrix-3d-x rotation-matrix-3d-y)]
+;;          '[tech.v3.datatype :as dtype]
+;;          '[tech.v3.tensor :as tensor]
+;;          '[tech.v3.datatype.functional :as dfn]
+;;          '[tablecloth.api :as tc]
+;;          '[scicloj.tableplot.v1.plotly :as plotly]
+;;          '[tech.v3.libs.buffered-image :as bufimg]
+;;          '[comb.template :as template])
+;; (import '[org.lwjgl.opengl GL11]
+;;         '[org.lwjgl BufferUtils]
+;;         '[org.lwjgl.glfw GLFW]
+;;         '[org.lwjgl.opengl GL GL11 GL12 GL13 GL15 GL20 GL30 GL32 GL42])
+;; ```
 ;;
 ;; ## Worley noise
 ;;
