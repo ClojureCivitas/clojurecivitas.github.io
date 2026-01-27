@@ -678,7 +678,7 @@
 
 ;; ### Compiling and linking shader programs
 ;;
-;; The following method is used compile a shader program.
+;; The following method is used to compile a shader.
 (defn make-shader [source shader-type]
   (let [shader (GL20/glCreateShader shader-type)]
     (GL20/glShaderSource shader source)
@@ -687,7 +687,7 @@
       (throw (Exception. (GL20/glGetShaderInfoLog shader 1024))))
     shader))
 
-;; The different shaders are then linked to become a shader program using the following method.
+;; The different shaders are then linked to become a program using the following method.
 (defn make-program [& shaders]
   (let [program (GL20/glCreateProgram)]
     (doseq [shader shaders]
