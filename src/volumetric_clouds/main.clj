@@ -260,7 +260,7 @@
                                     (apply wrap-get random-points neighbour))))))
         :double))))
 
-;; Here a 256x256 Worley noise tensor is created.
+;; Here a 256 × 256 Worley noise tensor is created.
 (def worley (worley-noise (make-noise-params 256 8 2)))
 
 ;; The values are inverted and normalised to be between 0 and 255.
@@ -502,7 +502,7 @@
               (perlin-sample params gradients center)))
         :double))))
 
-;; Here a 256x256 Perlin noise tensor is created.
+;; Here a 256 × 256 Perlin noise tensor is created.
 (def perlin (perlin-noise (make-noise-params 256 8 2)))
 
 ;; The values are normalised to be between 0 and 255.
@@ -767,7 +767,7 @@
     (.flip buffer)
     result))
 
-;; The following method reads texture data into a Java buffer and then converts it to a floating point array.
+;; The following method copies texture data into a Java buffer and then converts it to a floating point array.
 (defn read-texture-2d
   [texture width height]
   (let [buffer (BufferUtils/createFloatBuffer (* height width 4))]
