@@ -70,41 +70,6 @@
      (require emmy-mn)))
 
 ^:kindly/hide-code
-(kind/scittle
-  '(defn show-expression [e]
-     (simplify e)))
-
-^:kindly/hide-code
-(kind/scittle
-  '(defn show-tex-expression [e]
-     (->infix (simplify e))))
-
-^:kindly/hide-code
-(kind/scittle
-  '(defn show-tex [e]
-     (->infix e)))
-
-^:kindly/hide-code
-(define (eq-transformation f)
-  (lambda (tuple)
-          (apply down (map f tuple))))
-
-^:kindly/hide-code
-(kind/scittle
-  '(defn show-eq [tuple]
-     (->infix (simplify (down (first tuple) '= (second tuple))))))
-
-^:kindly/hide-code
-(def tex (comp kind/tex emmy.expression.render/->TeX))
-
-^:kindly/hide-code
-(def tex-simp (comp tex simplify))
-
-^:kindly/hide-code
-(defn fn-show-eq [tuple]
-  (tex-simp (down (first tuple) '= (second tuple))))
-
-^:kindly/hide-code
 (define show-exp (comp str simplify))
 
 ^:kindly/hide-code
@@ -127,22 +92,58 @@
     (reag-comp e)))
 
 ^:kindly/hide-code
-(defmacro show-tex-expression [e]
-  (if prod
-    (list 'tex-simp e)
-    (reag-comp e)))
+(kind/scittle
+  '(defn show-expression [e]
+     (simplify e)))
+
+^:kindly/hide-code
+(def show-tex-fn (comp kind/tex emmy.expression.render/->TeX))
 
 ^:kindly/hide-code
 (defmacro show-tex [e]
   (if prod
-    (list 'tex e)
+    (list 'show-tex-fn e)
     (reag-comp e)))
+
+^:kindly/hide-code
+(kind/scittle
+  '(defn show-tex [e]
+     (->infix e)))
+
+^:kindly/hide-code
+(def show-tex-expression-fn (comp show-tex-fn simplify))
+
+^:kindly/hide-code
+(defmacro show-tex-expression [e]
+  (if prod
+    (list 'show-tex-expression-fn e)
+    (reag-comp e)))
+
+^:kindly/hide-code
+(kind/scittle
+  '(defn show-tex-expression [e]
+     (->infix (simplify e))))
+
+
+^:kindly/hide-code
+(defn show-eq-fn [tuple]
+  (show-tex-expression-fn (down (first tuple) '= (second tuple))))
 
 ^:kindly/hide-code
 (defmacro show-eq [e]
   (if prod
-    (list 'fn-show-eq e)
+    (list 'show-eq-fn e)
     (reag-comp e)))
+
+^:kindly/hide-code
+(kind/scittle
+  '(defn show-eq [tuple]
+     (->infix (simplify (down (first tuple) '= (second tuple))))))
+
+^:kindly/hide-code
+(define (eq-transformation f)
+  (lambda (tuple)
+          (apply down (map f tuple))))
 
 ^:kindly/hide-code
 (define velocities velocity)
