@@ -41,6 +41,8 @@ website:
               text: "FDG Chapter 1 Infix"
             - href: mentat_collective/emmy/sicm_ch01.qmd
               text: "SICM Chapter 1"
+            - href: mentat_collective/emmy/debroglie.qmd
+              text: "deBroglie Wavelength"
             - href: mentat_collective/emmy/silcm_ch01.qmd
               text: "Lorentz Covariant"
 
