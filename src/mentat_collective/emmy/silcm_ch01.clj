@@ -70,14 +70,14 @@
      (require emmy-mn)))
 
 ^:kindly/hide-code
-(define show-exp (comp str simplify))
+(define string-exp (comp str simplify))
 
 ^:kindly/hide-code
 (defn reag-comp [b]
-  (let [server-erg (show-exp (eval b))]
+  (let [server-erg (string-exp (eval b))]
     (list 'kind/reagent
           [:div (list 'quote
-                      (list 'let ['a (list 'show-exp b)]
+                      (list 'let ['a (list 'string-exp b)]
                             [:div
                              (when (not prod)
                                [:div
@@ -126,14 +126,14 @@
 
 
 ^:kindly/hide-code
-(defn show-eq-fn [tuple]
-  (show-tex-expression-fn (down (first tuple) '= (second tuple))))
+(defn show-eq-fn [down-tuple]
+  (show-tex-expression-fn (down (first down-tuple) '= (second down-tuple))))
 
 ^:kindly/hide-code
-(defmacro show-eq [e]
+(defmacro show-eq [down-tuple]
   (if prod
-    (list 'show-eq-fn e)
-    (reag-comp e)))
+    (list 'show-eq-fn down-tuple)
+    (reag-comp down-tuple)))
 
 ^:kindly/hide-code
 (kind/scittle
