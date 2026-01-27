@@ -1084,10 +1084,10 @@ void main()
 
 ;; Uniform variables are parameters that remain constant throughout the shader execution, unlike vertex input data.
 ;; Here we use the following uniform variables:
-;; * resolution: a 2D vector containing the window pixel width and height
-;; * light: a 3D unit vector pointing to the light source
-;; * rotation: a 3x3 rotation matrix to rotate the camera around the origin
-;; * focal_length: the ratio of camera focal length to pixel size of the virtual camera
+;; * **resolution: a 2D vector containing the window pixel width and height
+;; * **light:** a 3D unit vector pointing to the light source
+;; * **rotation:** a 3x3 rotation matrix to rotate the camera around the origin
+;; * **focal_length:** the ratio of camera focal length to pixel size of the virtual camera
 (defn setup-fog-uniforms
   [program width height]
   (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 40.0))
