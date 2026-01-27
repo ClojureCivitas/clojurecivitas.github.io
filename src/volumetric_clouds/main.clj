@@ -6,7 +6,7 @@
                               :description "Procedural generation of volumetric clouds using different types of noise"
                               :image    "clouds.jpg"
                               :type     :post
-                              :date     "2026-01-24"
+                              :date     "2026-01-27"
                               :category :clojure
                               :tags     [:visualization]}}}
 
@@ -48,7 +48,7 @@
   [size divisions dimensions]
   {:size size :divisions divisions :cellsize (/ size divisions) :dimensions dimensions})
 
-;; Here is a corresponding Midje test.
+;; Here is a corresponding [Midje](https://github.com/marick/Midje) test.
 ;; Note that ideally you practise [Test Driven Development (TDD)](https://martinfowler.com/bliki/TestDrivenDevelopment.html), i.e. you start with writing one failing test.
 ;; Because this is a Clojure notebook, the unit tests are displayed after the implementation.
 (fact "Noise parameter initialisation"
@@ -208,7 +208,7 @@
 ;;
 ;; Using above functions one can now implement Worley noise.
 ;; For each pixel the distance to the closest seed point is calculated.
-;; The distance to each random point in all neighbouring cells is calculated and the minimum is taken.
+;; This is achieved by determining the distance to each random point in all neighbouring cells and then taking the minimum.
 (defn worley-noise
   [{:keys [size dimensions] :as params}]
   (let [random-points (random-points params)]
@@ -275,7 +275,7 @@
  [{:keys [divisions dimensions]}]
  (tensor/clone (tensor/compute-tensor (repeat dimensions divisions) random-gradient)))
 
-;; The function is tested that it generates 2D and 3D random gradient fields correctly.
+;; The function is verified to correctly generate 2D and 3D random gradient fields.
 (facts "Random gradients"
        (with-redefs [rand (constantly 1.5)]
          (dtype/shape (random-gradients {:divisions 8 :dimensions 2}))
@@ -286,7 +286,7 @@
          ((random-gradients {:divisions 8 :dimensions 3}) 0 0 0)
          => (vec3 (/ 1 (sqrt 3)) (/ 1 (sqrt 3)) (/ 1 (sqrt 3)))))
 
-;; The gradient field can be plotted with Plotly as a scatter plot of disconnected lines/
+;; The gradient field can be plotted with Plotly as a scatter plot of disconnected lines.
 (let [gradients (tensor/reshape (random-gradients (make-noise-params 256 8 2))
                                 [(* 8 8)])
       points    (tensor/reshape (tensor/compute-tensor [8 8] (fn [y x] (vec2 x y)))
@@ -311,7 +311,7 @@
 ;; First we define a function to determine the fractional part of a number.
 (defn frac
   [x]
-  (mod x 1.0))
+  (- x (Math/floor x)))
 
 (facts "Fractional part of floating point number"
        (frac 0.25) => 0.25
@@ -329,7 +329,7 @@
        (cell-pos {:cellsize 4} (vec2 7 5)) => (vec2 0.75 0.25)
        (cell-pos {:cellsize 4} (vec3 7 5 2)) => (vec3 0.75 0.25 0.5))
 
-;; A tensor converting the corner vectors can be computed by subtracting the corner coordinates from the point coordinates.
+;; A 2 × 2 tensor of corner vectors can be computed by subtracting the corner coordinates from the point coordinates.
 (defn corner-vectors
   [{:keys [dimensions] :as params} point]
   (let [cell-pos (cell-pos params point)]
@@ -338,17 +338,18 @@
       (fn [& args] (sub cell-pos (apply vec-n (reverse args)))))))
 
 (facts "Compute relative vectors from cell corners to point in cell"
-       (let [v2 (corner-vectors {:cellsize 4 :dimensions 2} (vec2 7 6))
-             v3 (corner-vectors {:cellsize 4 :dimensions 3} (vec3 7 6 5))]
-         (v2 0 0) => (vec2 0.75 0.5)
-         (v2 0 1) => (vec2 -0.25 0.5)
-         (v2 1 0) => (vec2 0.75 -0.5)
-         (v2 1 1) => (vec2 -0.25 -0.5)
-         (v3 0 0 0) => (vec3 0.75 0.5 0.25)))
+       (let [corners2 (corner-vectors {:cellsize 4 :dimensions 2} (vec2 7 6))
+             corners3 (corner-vectors {:cellsize 4 :dimensions 3} (vec3 7 6 5))]
+         (corners2 0 0) => (vec2 0.75 0.5)
+         (corners2 0 1) => (vec2 -0.25 0.5)
+         (corners2 1 0) => (vec2 0.75 -0.5)
+         (corners2 1 1) => (vec2 -0.25 -0.5)
+         (corners3 0 0 0) => (vec3 0.75 0.5 0.25)))
 
 ;; ### Extract gradients of cell corners
 ;;
 ;; The function below retrieves the gradient values at a cell's corners, utilizing `wrap-get` for modular access.
+;; The result is a 2 × 2 tensor of gradient vectors.
 (defn corner-gradients
   [{:keys [dimensions] :as params} gradients point]
   (let [division (map (partial division-index params) point)]
@@ -480,7 +481,7 @@
 ;;
 ;; ### Combination of Worley and Perlin noise
 ;;
-;; One can mix Worley and Perlin noise by simply doing a linear combination of the two.
+;; You can blend Worley and Perlin noise by performing a linear combination of both.
 (def perlin-worley-norm (dfn/+ (dfn/* 0.3 perlin-norm) (dfn/* 0.7 worley-norm)))
 
 ;; Here for example is the average of Perlin and Worley noise.
@@ -567,7 +568,7 @@
        1      0     2      0     4      2)
 
 
-;; The clamp function is used to clamp a value to a range.
+;; The clamp function is used to element-wise clamp values to a range.
 (defn clamp
   [value low high]
   (dfn/max low (dfn/min value high)))
@@ -582,7 +583,7 @@
 
 ;; ### Generating octaves of noise
 ;;
-;; The octaves function is to create a series of decreasing weights and normalize them so that they add up to 1.
+;; The octaves function is used to create a series of decreasing weights and normalize them so that they add up to 1.
 (defn octaves
   [n decay]
   (let [series (take n (iterate #(* % decay) 1.0))
@@ -738,7 +739,7 @@
     (GL11/glGetTexImage GL11/GL_TEXTURE_2D 0 GL12/GL_RGBA GL11/GL_FLOAT buffer)
     (float-buffer->array buffer)))
 
-;; This method sets up rendering to a specified texture of specified size and then executes the body.
+;; This method sets up rendering using a specified texture as a framebuffer and then executes the body.
 (defmacro framebuffer-render
   [texture width height & body]
   `(let [fbo# (GL30/glGenFramebuffers)]
@@ -756,7 +757,7 @@
          (GL30/glDeleteFramebuffers fbo#)))))
 
 ;; We also create a method to set up the layout of the vertex buffer.
-;; Our vertex data is only going to be 3D coordinates of points.
+;; Our vertex data is only going to contain 3D coordinates of points.
 (defn setup-point-attribute
   [program]
   (let [point-attribute (GL20/glGetAttribLocation program "point")]
@@ -803,7 +804,7 @@
         (GL20/glDeleteProgram program)))))
 
 
-;; We are going to use this simple vertex shader to simply pass through the points from the vertex buffer without any transformations.
+;; We are going to use a simple vertex shader to simply pass through the points from the vertex buffer without any transformations.
 (def vertex-passthrough
 "#version 130
 in vec3 point;
@@ -839,7 +840,7 @@ float noise(vec3 idx)
 }")
 
 ;; We can test this mock function using the following probing shader.
-;; Note that we are using the `template` macro of the `comb` Clojure library to generate the shader code from a template.
+;; Note that we are using the `template` macro of the `comb` Clojure library to generate the probing shader code from a template.
 (def noise-probe
   (template/fn [x y z]
 "#version 130
@@ -852,7 +853,8 @@ void main()
 
 ;; Here multiple tests are run to test that the mock implements a checkboard pattern correctly.
 (tabular "Test noise mock"
-         (fact (nth (render-pixel [vertex-passthrough] [noise-mock (noise-probe ?x ?y ?z)]) 0)
+         (fact (nth (render-pixel [vertex-passthrough]
+                                  [noise-mock (noise-probe ?x ?y ?z)]) 0)
                => ?result)
          ?x ?y ?z ?result
          0  0  0  0.0
@@ -945,7 +947,7 @@ void main()
   fragColor = vec4(ray_box(box_min, box_max, origin, direction), 0, 0);
 }"))
 
-;; The shader is tested with different ray origins and directions.
+;; The `ray-box` shader is tested with different ray origins and directions.
 (tabular "Test intersection of ray with box"
          (fact ((juxt first second)
                 (render-pixel [vertex-passthrough]
@@ -1056,7 +1058,7 @@ void main()
 ;;
 ;; The following fragment shader is used to render an image of a box filled with fog.
 ;;
-;; * The pixel coordinate and the resolution of the image are used to determine a viewing direction which also gets rotated using the rotation matrix.
+;; * The pixel coordinate and the resolution of the image are used to determine a viewing direction which also gets rotated using the rotation matrix and normalized.
 ;; * The origin of the camera is set at a specified distance to the center of the box and rotated as well.
 ;; * The ray box function is used to determine the near and far intersection points of the ray with the box.
 ;; * The cloud transfer function is used to sample the cloud density along the ray and determine the overall opacity and color of the fog box.
@@ -1074,20 +1076,22 @@ vec2 ray_box(vec3 box_min, vec3 box_max, vec3 origin, vec3 direction);
 vec4 cloud_transfer(vec3 origin, vec3 direction, vec2 interval);
 void main()
 {
-  vec3 direction = normalize(rotation * vec3(gl_FragCoord.xy - 0.5 * resolution, focal_length));
+  vec3 direction =
+    normalize(rotation * vec3(gl_FragCoord.xy - 0.5 * resolution, focal_length));
   vec3 origin = rotation * vec3(0, 0, -distance);
   vec2 interval = ray_box(vec3(-0.5, -0.5, -0.5), vec3(0.5, 0.5, 0.5), origin, direction);
   vec4 transfer = cloud_transfer(origin, direction, interval);
-  vec3 background = mix(vec3(0.125, 0.125, 0.25), vec3(1, 1, 1), pow(dot(direction, light), 1000.0));
+  vec3 background = mix(vec3(0.125, 0.125, 0.25), vec3(1, 1, 1),
+                        pow(dot(direction, light), 1000.0));
   fragColor = vec4(background * (1.0 - transfer.a) + transfer.rgb, 1.0);
 }")
 
 ;; Uniform variables are parameters that remain constant throughout the shader execution, unlike vertex input data.
 ;; Here we use the following uniform variables:
-;; * resolution: a 2D vector containing the window pixel width and height
-;; * light: a 3D unit vector pointing to the light source
-;; * rotation: a 3x3 rotation matrix to rotate the camera around the origin
-;; * focal_length: the ratio of camera focal length to pixel size of the virtual camera
+;; * **resolution**: a 2D vector containing the window pixel width and height
+;; * **light:** a 3D unit vector pointing to the light source
+;; * **rotation:** a 3x3 rotation matrix to rotate the camera around the origin
+;; * **focal_length:** the ratio of camera focal length to pixel size of the virtual camera
 (defn setup-fog-uniforms
   [program width height]
   (let [rotation     (mulm (rotation-matrix-3d-y (to-radians 40.0))
@@ -1224,7 +1228,9 @@ out vec4 fragColor;
 float remap_clamp(float value, float low1, float high1, float low2, float high2);
 void main()
 {
-  fragColor = vec4(remap_clamp(<%= value %>, <%= low1 %>, <%= high1 %>, <%= low2 %>, <%= high2 %>));
+  fragColor = vec4(remap_clamp(<%= value %>,
+                               <%= low1 %>, <%= high1 %>,
+                               <%= low2 %>, <%= high2 %>));
 }"))
 
 ;; `remap_clamp` is tested using a parametrized tests.
@@ -1291,7 +1297,8 @@ float remap_noise(vec3 idx)
 uniform vec3 light;
 float mie(float mu)
 {
-  return 3 * (1 - G * G) * (1 + mu * mu) / (8 * M_PI * (2 + G * G) * pow(1 + G * G - 2 * G * mu, 1.5));
+  return 3 * (1 - G * G) * (1 + mu * mu) /
+    (8 * M_PI * (2 + G * G) * pow(1 + G * G - 2 * G * mu, 1.5));
 }
 float in_scatter(vec3 point, vec3 direction)
 {
@@ -1312,7 +1319,8 @@ void main()
 
 ;; The shader is tested using a few values.
 (tabular "Shader function for scattering phase function"
-         (fact (first (render-pixel [vertex-passthrough] [(mie-scatter ?g) (mie-probe ?mu)]))
+         (fact (first (render-pixel [vertex-passthrough]
+                                    [(mie-scatter ?g) (mie-probe ?mu)]))
                => (roughly ?result 1e-6))
          ?g  ?mu ?result
          0   0   (/ 3 (* 16 PI))
@@ -1325,18 +1333,18 @@ void main()
 (defn scatter-amount [theta]
   (first (render-pixel [vertex-passthrough] [(mie-scatter 0.76) (mie-probe (cos theta))])))
 
-;; We can use this function to plot a mix of isotropic and anisotropic scattering.
+;; We can use this function to plot Mie scattering for different angles.
 (let [scatter
       (tc/dataset {:x (map (fn [theta]
                                (* (cos (to-radians theta))
-                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
+                                  (scatter-amount (to-radians theta))))
                            (range 361))
                    :y (map (fn [theta]
                                (* (sin (to-radians theta))
-                                  (+ 0.75 (* 0.25 (scatter-amount (to-radians theta))))))
+                                  (scatter-amount (to-radians theta))))
                            (range 361)) })]
   (-> scatter
-      (plotly/base {:=title "Mixed Mie and isotropic scattering" :=mode "lines"})
+      (plotly/base {:=title "Mie scattering" :=mode "lines"})
       (plotly/layer-point {:=x :x :=y :y})
       plotly/plot
       (assoc-in [:layout :yaxis :scaleanchor] "x")))
@@ -1394,6 +1402,7 @@ float shadow(vec3 point)
 
 ;; ## Further topics
 ;;
+;; I hope you enjoyed this little tour of volumetric clouds.
 ;; Here are some references to get from a cloud prototype to more realistic clouds.
 ;;
 ;; * [Vertical density profile](https://www.wedesoft.de/software/2023/05/03/volumetric-clouds/)
