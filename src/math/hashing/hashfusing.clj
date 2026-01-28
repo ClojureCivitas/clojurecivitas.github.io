@@ -38,16 +38,23 @@
 ;; that I need to be able to fuse hashes together in a way that is associative
 ;; and not commutative. As a starting point, I have been reading the HP paper
 ;; describing hash fusing via matrix multiplication:
-;; https://www.labs.hpe.com/techreports/2017/HPE-2017-08.pdf
+;; [https://www.labs.hpe.com/techreports/2017/HPE-2017-08.pdf](https://www.labs.hpe.com/techreports/2017/HPE-2017-08.pdf)
 
 ;; ## Hash Fusing via Upper Triangular Matrix Multiplication
 
 ;; The basic approach of fusing two hashes is to represent each hash as an
-;; upper triangular matrix. For example, if we have a hash that is 4 bytes
-;; long, we can represent it as a 4x4 upper triangular matrix like this:
+;; upper triangular matrix and then to multiply the two matrices together.
+;; Since matrix multiplication is associative but not commutative. The
+;; following sections define hashes and build up the necessary functions to
+;; perform hash fusing via upper triangular matrix multiplication.
 
-^:kindly/hide-code
-(set! *unchecked-math* true)
+;; ### Hash Representation
+
+;; A hash is represented as a string of 64 hexadecimal values (256 bits). To
+;; start with, here is a zero hash and a function to generate random hashes.
+
+(def zero-hex (apply str (vec (repeat 64 0))))
+^:kindly/hide-code zero-hex
 
 (defn random-hex
   "Generate a random hex string representing length `n` bytes."
@@ -55,45 +62,13 @@
   (let [hex-chars "0123456789abcdef"]
     (apply str (repeatedly (* 2 n) #(rand-nth hex-chars)))))
 
-(defn hex->hash8
-  "Convert a hex string to a byte vector."
-  [s]
-  (->> s
-       (partition 2)
-       (map #(-> (apply str %)
-                 (Integer/parseInt 16)))
-       (vec)))
-
-(defn hash8->hex
-  "Convert a byte vector to a hex string."
-  [bytes]
-  (->> bytes
-       (map #(format "%02x" %))
-       (apply str)))
-
-(def zero-hex
-  "Generate a zero hash of given byte length."
-  (-> (repeat 32 0)
-      hash8->hex))
-
-(def h1
-  (hex->hash8 "a1a2a3a4"))
-
-^:kindly/hide-code
-(kind/table
- {:row-vectors (->> h1
-                    (partition 2)
-                    (map #(apply str %))
-                    (vec))})
-(def m1
-  [[1 (h1 0) (h1 1) (h1 2)]
-   [0 1 (h1 3) 0]
-   [0 0 1 0]
-   [0 0 0 1]])
-
-^:kindly/hide-code
-(kind/table
- {:row-vectors m1})
+;; Generate some random hashes for testing:
+(def a-hex (random-hex 32))
+^:kindly/hide-code a-hex
+(def b-hex (random-hex 32))
+^:kindly/hide-code b-hex
+(def c-hex (random-hex 32))
+^:kindly/hide-code c-hex
 
 ;; To fuse two hashes, we convert each hash to its corresponding upper
 ;; triangular matrix and then multiply the two matrices together. The result is
@@ -102,17 +77,197 @@
 ;; defines this mapping between hashes and upper triangular matrices. For the
 ;; experiments below four different bit sizes of cells and four corresponding
 ;; matrices are defined.
-;; 1. 256 bit hash -> 32 8 bit cells -> 9x9 matrix
-;; 2. 256 bit hash -> 16 16 bit cells -> 7x7 matrix
-;; 3. 256 bit hash -> 8 32 bit cells -> 5x5 matrix
-;; 4. 256 bit hash -> 4 64 bit cells -> 4x4 matrix
+
+;; 8 bit cells in a 9x9 matrix:
+^:kindly/hide-code
+(kind/tex
+ "%% Example: 7x7 Upper Triangular Matrix for 16 bit cells
+  %% representing a 256 bit hash
+  hash
+  \\to
+  [ h_0, h_1, h_2, h_3, \\ldots, h_{31} ]
+  \\to
+  {\\begin{bmatrix}
+   1 &  h_0 &  h_8 & h_{15} & h_{21} & h_{26} & h_{29} & h_{31} & h_{25} \\\\
+   0 &    1 &  h_1 &    h_9 & h_{16} & h_{22} & h_{27} & h_{30} & h_{20} \\\\
+   0 &    0 &    1 &    h_2 & h_{10} & h_{17} & h_{23} & h_{28} & h_{14} \\\\
+   0 &    0 &    0 &      1 &    h_3 & h_{11} & h_{18} & h_{24} &    h_7 \\\\
+   0 &    0 &    0 &      0 &      1 &    h_4 & h_{12} & h_{19} &      0 \\\\
+   0 &    0 &    0 &      0 &      0 &      1 &    h_5 & h_{13} &      0 \\\\
+   0 &    0 &    0 &      0 &      0 &      0 &      1 &    h_6 &      0 \\\\
+   0 &    0 &    0 &      0 &      0 &      0 &      0 &      1 &      0 \\\\
+   0 &    0 &    0 &      0 &      0 &      0 &      0 &      0 &      1
+   \\end{bmatrix}}
+  ")
+
+;; 16 bit cells in a 7x7 matrix:
+^:kindly/hide-code
+(kind/tex
+ "%% Example: 7x7 Upper Triangular Matrix for 16 bit cells
+  %% representing a 256 bit hash
+  hash
+  \\to
+  [ h_0, h_1, h_2, h_3, \\ldots, h_{15} ]
+  \\to
+  {\\begin{bmatrix}
+   1 &  h_0 &  h_6 & h_{10} & h_{13} & h_{15} &  h_5 \\\\
+   0 &    1 &  h_1 &  h_7 & h_{11} & h_{14} &    0 \\\\
+   0 &    0 &    1 &  h_2 &  h_8 & h_{12} &    0 \\\\
+   0 &    0 &    0 &    1 &  h_3 &  h_9 &    0 \\\\
+   0 &    0 &    0 &    0 &    1 &  h_4 &    0 \\\\
+   0 &    0 &    0 &    0 &    0 &    1 &    0 \\\\
+   0 &    0 &    0 &    0 &    0 &    0 &    1
+   \\end{bmatrix}}
+  ")
+
+;; 32 bit cells in a 5x5 matrix:
+^:kindly/hide-code
+(kind/tex
+ "%% Example: 5x5 Upper Triangular Matrix for 32 bit cells
+  %% representing a 256 bit hash
+  hash
+  \\to
+  [ h_0, h_1, h_2, h_3, \\ldots, h_7 ]
+  \\to
+  {\\begin{bmatrix}
+   1 & h_0 & h_4 & h_7 & h_6 \\\\
+   0 &   1 & h_1 & h_5 & h_3 \\\\
+   0 &   0 &   1 & h_2 &   0 \\\\
+   0 &   0 &   0 &   1 &   0
+   \\end{bmatrix}}
+  ")
+
+;; 64 bit cells in a 4x4 matrix:
+^:kindly/hide-code
+(kind/tex
+ "%% Example: 4x4 Upper Triangular Matrix for 64 bit cells
+  %% representing a 256 bit hash
+  hash
+  \\to
+  [ h_0, h_1, h_2, h_3 ]
+  \\to
+  {\\begin{bmatrix}
+   1 & h_0 & h_3 & h_2 \\\\
+   0 & 1 & h_1 & 0 \\\\
+   0 & 0 & 1 & 0 \\\\
+   0 & 0 & 0 & 1
+   \\end{bmatrix}}
+  ")
+
+;; ### Hex and Byte Vector Conversion Functions
+
+;; The first type of conversion is between hex strings and byte vectors.
+
+(defn hex->hash8
+  "Convert a hex string to a byte vector."
+  [s]
+  (with-meta
+    (->> s
+         (partition 2)
+         (map #(-> (apply str %)
+                   (Integer/parseInt 16)))
+         (vec))
+    {:cell-size 8}))
+
+(defn hash8->hex
+  "Convert a byte vector to a hex string."
+  [bytes]
+  (->> bytes
+       (map #(format "%02x" %))
+       (apply str)))
+
+(= a-hex (-> a-hex hex->hash8 hash8->hex))
+
+;; ### Hash Conversion Functions
+
+;; The next type of conversion is from bytes and larger word sizes.
+
+(defn hash8->hash16
+  "Convert a vector of 32 bytes into a vector of 16 2-byte words."
+  [hash8]
+  (with-meta
+    (vec (map (fn [i]
+                (+ (bit-shift-left (hash8 (* 2 i)) 8)
+                   (hash8 (+ 1 (* 2 i)))))
+              (range 16)))
+    {:cell-size 16}))
+
+(defn hash16->hash8
+  "Convert a vector 2-byte words into a vector of bytes."
+  [hash16]
+  (with-meta
+    (vec (mapcat (fn [word]
+                   [(bit-and (bit-shift-right word 8) 0xFF)
+                    (bit-and word 0xFF)])
+                 hash16))
+    {:cell-size 8}))
+
+(= a-hex (-> a-hex hex->hash8 hash8->hash16 hash16->hash8 hash8->hex))
+
+(defn hash8->hash32
+  "Convert a vector of 32 bytes into a vector of 8 4-byte words."
+  [hash8]
+  (with-meta
+    (vec (map (fn [i]
+                (+ (bit-shift-left (hash8 (* 4 i)) 24)
+                   (bit-shift-left (hash8 (+ 1 (* 4 i))) 16)
+                   (bit-shift-left (hash8 (+ 2 (* 4 i))) 8)
+                   (hash8 (+ 3 (* 4 i)))))
+              (range 8)))
+    {:cell-size 32}))
+
+(defn hash32->hash8
+  "Convert a vector of 4-byte words into a vector of bytes."
+  [hash32]
+  (with-meta
+    (vec (mapcat (fn [word]
+                   [(bit-and (bit-shift-right word 24) 0xFF)
+                    (bit-and (bit-shift-right word 16) 0xFF)
+                    (bit-and (bit-shift-right word 8) 0xFF)
+                    (bit-and word 0xFF)])
+                 hash32))
+    {:cell-size 8}))
+
+(= a-hex (-> a-hex hex->hash8 hash8->hash32 hash32->hash8 hash8->hex))
+
+(defn hash8->hash64
+  "Convert a vector of 32 bytes into a vector of 4 8-byte words."
+  [hash8]
+  (with-meta
+    (vec (map (fn [i]
+                (+ (bit-shift-left (hash8 (* 8 i)) 56)
+                   (bit-shift-left (hash8 (+ 1 (* 8 i))) 48)
+                   (bit-shift-left (hash8 (+ 2 (* 8 i))) 40)
+                   (bit-shift-left (hash8 (+ 3 (* 8 i))) 32)
+                   (bit-shift-left (hash8 (+ 4 (* 8 i))) 24)
+                   (bit-shift-left (hash8 (+ 5 (* 8 i))) 16)
+                   (bit-shift-left (hash8 (+ 6 (* 8 i))) 8)
+                   (hash8 (+ 7 (* 8 i)))))
+              (range 4)))
+    {:cell-size 64}))
+
+(defn hash64->hash8
+  "Convert a vector of 8-byte words into a vector of bytes."
+  [hash64]
+  (with-meta
+    (vec (mapcat (fn [word]
+                   [(bit-and (bit-shift-right word 56) 0xFF)
+                    (bit-and (bit-shift-right word 48) 0xFF)
+                    (bit-and (bit-shift-right word 40) 0xFF)
+                    (bit-and (bit-shift-right word 32) 0xFF)
+                    (bit-and (bit-shift-right word 24) 0xFF)
+                    (bit-and (bit-shift-right word 16) 0xFF)
+                    (bit-and (bit-shift-right word 8) 0xFF)
+                    (bit-and word 0xFF)])
+                 hash64))
+    {:cell-size 8}))
+
+(= a-hex (-> a-hex hex->hash8 hash8->hash64 hash64->hash8 hash8->hex))
 
 ;; ### Matrix Conversion Functions
 
-;; The following functions convert between byte vectors representing hashes
-;; an four different upper triangular matrix sizes based on cell bit size.
-;; These functions also convert between different hash sizes by grouping
-;; bytes into larger words.
+;; The following functions convert between byte vectors representing hashes and
+;; four different upper triangular matrix sizes based on cell bit size.
 
 (defn hash8->utm8
   "Convert a vector of 32 bytes into a 9x9 upper triangular matrix."
@@ -120,15 +275,17 @@
     h08 h09 h10 h11 h12 h13 h14 h15
     h16 h17 h18 h19 h20 h21 h22 h23
     h24 h25 h26 h27 h28 h29 h30 h31]]
-  [[1 h00 h08 h15 h21 h26 h29 h31 h25]
-   [0   1 h01 h09 h16 h22 h27 h30 h20]
-   [0   0   1 h02 h10 h17 h23 h28 h14]
-   [0   0   0   1 h03 h11 h18 h24 h07]
-   [0   0   0   0   1 h04 h12 h19   0]
-   [0   0   0   0   0   1 h05 h13   0]
-   [0   0   0   0   0   0   1 h06   0]
-   [0   0   0   0   0   0   0   1   0]
-   [0   0   0   0   0   0   0   0   1]])
+  (with-meta
+    [[1 h00 h08 h15 h21 h26 h29 h31 h25]
+     [0   1 h01 h09 h16 h22 h27 h30 h20]
+     [0   0   1 h02 h10 h17 h23 h28 h14]
+     [0   0   0   1 h03 h11 h18 h24 h07]
+     [0   0   0   0   1 h04 h12 h19   0]
+     [0   0   0   0   0   1 h05 h13   0]
+     [0   0   0   0   0   0   1 h06   0]
+     [0   0   0   0   0   0   0   1   0]
+     [0   0   0   0   0   0   0   0   1]]
+    {:cell-size 8}))
 
 (defn utm8->hash8
   "Convert a 9x9 upper triangular matrix back to a vector of 32 bytes."
@@ -141,23 +298,27 @@
     [_   _   _   _   _   _   _ h06   _]
     [_   _   _   _   _   _   _   _   _]
     [_   _   _   _   _   _   _   _   _]]]
-  (mapv #(bit-and % 0xFF)
-        [h00 h01 h02 h03 h04 h05 h06 h07
-         h08 h09 h10 h11 h12 h13 h14 h15
-         h16 h17 h18 h19 h20 h21 h22 h23
-         h24 h25 h26 h27 h28 h29 h30 h31]))
+  (with-meta
+    (mapv #(bit-and % 0xFF)
+          [h00 h01 h02 h03 h04 h05 h06 h07
+           h08 h09 h10 h11 h12 h13 h14 h15
+           h16 h17 h18 h19 h20 h21 h22 h23
+           h24 h25 h26 h27 h28 h29 h30 h31])
+    {:cell-size 8}))
 
 (defn hash16->utm16
   "Convert a vector of 16 2-byte words into a 7x7 upper triangular matrix."
   [[h00 h01 h02 h03 h04 h05 h06 h07
     h08 h09 h10 h11 h12 h13 h14 h15]]
-  [[1 h00 h06 h10 h13 h15 h05]
-   [0   1 h01 h07 h11 h14   0]
-   [0   0   1 h02 h08 h12   0]
-   [0   0   0   1 h03 h09   0]
-   [0   0   0   0   1 h04   0]
-   [0   0   0   0   0   1   0]
-   [0   0   0   0   0   0   1]])
+  (with-meta
+    [[1 h00 h06 h10 h13 h15 h05]
+     [0   1 h01 h07 h11 h14   0]
+     [0   0   1 h02 h08 h12   0]
+     [0   0   0   1 h03 h09   0]
+     [0   0   0   0   1 h04   0]
+     [0   0   0   0   0   1   0]
+     [0   0   0   0   0   0   1]]
+    {:cell-size 16}))
 
 (defn utm16->hash16
   "Convert a 7x7 upper triangular matrix back to a vector of 16 2-byte words."
@@ -168,18 +329,22 @@
     [_   _   _   _   _ h04   _]
     [_   _   _   _   _   _   _]
     [_   _   _   _   _   _   _]]]
-  (mapv #(bit-and % 0xFFFF)
-        [h00 h01 h02 h03 h04 h05 h06 h07
-         h08 h09 h10 h11 h12 h13 h14 h15]))
+  (with-meta
+    (mapv #(bit-and % 0xFFFF)
+          [h00 h01 h02 h03 h04 h05 h06 h07
+           h08 h09 h10 h11 h12 h13 h14 h15])
+    {:cell-size 16}))
 
 (defn hash32->utm32
   "Convert a vector of 8 4-byte words into a 5x5 upper triangular matrix."
   [[h00 h01 h02 h03 h04 h05 h06 h07]]
-  [[1 h00 h04 h07 h06]
-   [0   1 h01 h05 h03]
-   [0   0   1 h02   0]
-   [0   0   0   1   0]
-   [0   0   0   0   1]])
+  (with-meta
+    [[1 h00 h04 h07 h06]
+     [0   1 h01 h05 h03]
+     [0   0   1 h02   0]
+     [0   0   0   1   0]
+     [0   0   0   0   1]]
+    {:cell-size 32}))
 
 (defn utm32->hash32
   "Convert a 5x5 upper triangular matrix back to a vector of 8 4-byte words."
@@ -188,16 +353,20 @@
     [_   _   _ h02   _]
     [_   _   _   _   _]
     [_   _   _   _   _]]]
-  (mapv #(bit-and % 0xFFFFFFFF)
-        [h00 h01 h02 h03 h04 h05 h06 h07]))
+  (with-meta
+    (mapv #(bit-and % 0xFFFFFFFF)
+          [h00 h01 h02 h03 h04 h05 h06 h07])
+    {:cell-size 32}))
 
 (defn hash64->utm64
   "Convert a vector of 4 8-byte words into a 4x4 upper triangular matrix."
   [[h00 h01 h02 h03]]
-  [[1 h00 h03 h02]
-   [0   1 h01   0]
-   [0   0   1   0]
-   [0   0   0   1]])
+  (with-meta
+    [[1 h00 h03 h02]
+     [0   1 h01   0]
+     [0   0   1   0]
+     [0   0   0   1]]
+    {:cell-size 64}))
 
 (defn utm64->hash64
   "Convert a 4x4 upper triangular matrix back to a vector of 4 8-byte words."
@@ -205,136 +374,80 @@
     [_   _ h01   _]
     [_   _   _   _]
     [_   _   _   _]]]
-  [h00 h01 h02 h03])
+  (with-meta
+    [h00 h01 h02 h03]
+    {:cell-size 64}))
 
-;; ### Hash Conversion Functions
+;; ### Combined Conversion Functions
 
-(defn hash8->hash16
-  "Convert a vector of 32 bytes into a vector of 16 2-byte words."
-  [hash8]
-  (vec (map (fn [i]
-              (+ (bit-shift-left (hash8 (* 2 i)) 8)
-                 (hash8 (+ 1 (* 2 i)))))
-            (range 16))))
-
-(defn hash16->hash8
-  "Convert a vector 2-byte words into a vector of bytes."
-  [hash16]
-  (vec (mapcat (fn [word]
-                 [(bit-and (bit-shift-right word 8) 0xFF)
-                  (bit-and word 0xFF)])
-               hash16)))
-
-(defn hash8->hash32
-  "Convert a vector of 32 bytes into a vector of 8 4-byte words."
-  [hash8]
-  (vec (map (fn [i]
-              (+ (bit-shift-left (hash8 (* 4 i)) 24)
-                 (bit-shift-left (hash8 (+ 1 (* 4 i))) 16)
-                 (bit-shift-left (hash8 (+ 2 (* 4 i))) 8)
-                 (hash8 (+ 3 (* 4 i)))))
-            (range 8))))
-
-(defn hash32->hash8
-  "Convert a vector of 4-byte words into a vector of bytes."
-  [hash32]
-  (vec (mapcat (fn [word]
-                 [(bit-and (bit-shift-right word 24) 0xFF)
-                  (bit-and (bit-shift-right word 16) 0xFF)
-                  (bit-and (bit-shift-right word 8) 0xFF)
-                  (bit-and word 0xFF)])
-               hash32)))
-
-(defn hash8->hash64
-  "Convert a vector of 32 bytes into a vector of 4 8-byte words."
-  [hash8]
-  (vec (map (fn [i]
-              (+ (bit-shift-left (hash8 (* 8 i)) 56)
-                 (bit-shift-left (hash8 (+ 1 (* 8 i))) 48)
-                 (bit-shift-left (hash8 (+ 2 (* 8 i))) 40)
-                 (bit-shift-left (hash8 (+ 3 (* 8 i))) 32)
-                 (bit-shift-left (hash8 (+ 4 (* 8 i))) 24)
-                 (bit-shift-left (hash8 (+ 5 (* 8 i))) 16)
-                 (bit-shift-left (hash8 (+ 6 (* 8 i))) 8)
-                 (hash8 (+ 7 (* 8 i)))))
-            (range 4))))
-
-(defn hash64->hash8
-  "Convert a vector of 8-byte words into a vector of bytes."
-  [hash64]
-  (vec (mapcat (fn [word]
-                 [(bit-and (bit-shift-right word 56) 0xFF)
-                  (bit-and (bit-shift-right word 48) 0xFF)
-                  (bit-and (bit-shift-right word 40) 0xFF)
-                  (bit-and (bit-shift-right word 32) 0xFF)
-                  (bit-and (bit-shift-right word 24) 0xFF)
-                  (bit-and (bit-shift-right word 16) 0xFF)
-                  (bit-and (bit-shift-right word 8) 0xFF)
-                  (bit-and word 0xFF)])
-               hash64)))
+;; The following combined conversion functions convert between hex strings into upper
+;; triangular matrices and back for the four different cell bit sizes.
 
 (def hex->utm8
   "Convert a hex string to an upper triangular matrix with 8-bit cells."
   (comp hash8->utm8 hex->hash8))
 
-(def hex->utm16
-  "Convert a hex string to an upper triangular matrix with 16-bit cells."
-  (comp hash16->utm16 hash8->hash16 hex->hash8))
-
-(def hex->utm32
-  "Convert a hex string to an upper triangular matrix with 32-bit cells."
-  (comp hash32->utm32 hash8->hash32 hex->hash8))
-
-(def hex->utm64
-  "Convert a hex string to an upper triangular matrix with 32-bit cells."
-  (comp hash64->utm64 hash8->hash64 hex->hash8))
-
 (def utm8->hex
   "Convert an upper triangular matrix with 8-bit cells to a hex string."
   (comp hash8->hex utm8->hash8))
+
+(= a-hex (-> a-hex hex->utm8 utm8->hex))
+
+(def hex->utm16
+  "Convert a hex string to an upper triangular matrix with 16-bit cells."
+  (comp hash16->utm16 hash8->hash16 hex->hash8))
 
 (def utm16->hex
   "Convert an upper triangular matrix with 16-bit cells to a hex string."
   (comp hash8->hex hash16->hash8 utm16->hash16))
 
+(= a-hex (-> a-hex hex->utm16 utm16->hex))
+
+(def hex->utm32
+  "Convert a hex string to an upper triangular matrix with 32-bit cells."
+  (comp hash32->utm32 hash8->hash32 hex->hash8))
+
 (def utm32->hex
   "Convert an upper triangular matrix with 32-bit cells to a hex string."
   (comp hash8->hex hash32->hash8 utm32->hash32))
+
+(= a-hex (-> a-hex hex->utm32 utm32->hex))
+
+(def hex->utm64
+  "Convert a hex string to an upper triangular matrix with 32-bit cells."
+  (comp hash64->utm64 hash8->hash64 hex->hash8))
 
 (def utm64->hex
   "Convert an upper triangular matrix with 64-bit cells to a hex string."
   (comp hash8->hex hash64->hash8 utm64->hash64))
 
-(defn with-conversion
-  "Use given converters and return a high order function that converts incoming
-  parameters and return value."
-  [to-fn from-fn]
-  (fn
-    [f & args]
-    (->> args
-         (map to-fn)
-         (apply f)
-         (from-fn))))
+(= a-hex (-> a-hex hex->utm64 utm64->hex))
 
-(def apply-hash8
-  "Return a fn that takes `f` and applies it to 32-byte hashes, converting them
-  and then applying `f` to them."
-  (with-conversion hex->utm8 utm8->hex))
+(defn hex->utm
+  "Convert a hex string to an upper triangular matrix with the given cell size
+  (8, 16, 32, or 64 bits)."
+  [hex cell-size]
+  (case cell-size
+    8  (hex->utm8 hex)
+    16 (hex->utm16 hex)
+    32 (hex->utm32 hex)
+    64 (hex->utm64 hex)
+    (throw (ex-info "Unsupported cell size for upper triangular matrix."
+                    {:cell-size cell-size}))))
 
-(def apply-hash16
-  "Return a fn that takes 32-byte hashes, converts them into a utm of 2-byte
-  words per cell and then applies `f` to them."
-  (with-conversion hex->utm16 utm16->hex))
+(defn utm->hex
+  "Convert an upper triangular matrix with the given cell size (8, 16, 32,
+  or 64 bits) to a hex string."
+  [utm cell-size]
+  (case cell-size
+    8  (utm8->hex utm)
+    16 (utm16->hex utm)
+    32 (utm32->hex utm)
+    64 (utm64->hex utm)
+    (throw (ex-info "Unsupported cell size for upper triangular matrix."
+                    {:cell-size cell-size}))))
 
-(def apply-hash32
-  "Return a fn that takes 32-byte hashes, converts them into a utm of 4-byte
-  words per cell and then applies `f` to them."
-  (with-conversion hex->utm32 utm32->hex))
-
-(def apply-hash64
-  "Return a fn that takes 32-byte hashes, converts them into a utm of 8-byte
-  words per cell and then applies `f` to them."
-  (with-conversion hex->utm64 utm64->hex))
+(= a-hex (-> a-hex (hex->utm 32) (utm->hex 32)))
 
 ;; ### Upper Triangular Matrix Multiplication
 
@@ -342,40 +455,53 @@
 ;; triangular matrices. The multiplication ignores the lower triangular part of
 ;; of the matrices since they are always 0 (and always 1 on the main diagonal).
 
+;; Note that unchecked math is enabled to ignore integer overflow since the
+;; cells are treated as fixed size bit fields.
+(set! *unchecked-math* true)
+
 (defn utm-multiply
   "Multiply two upper triangular matrices `a` and `b`."
   [a b]
   (let [dim (count a)
-        bit-mask (-> Long/MAX_VALUE dec)]
-    (vec (for [i (range dim)]
-           (vec (for [j (range dim)]
-                  (cond
-                    (< j i) 0
-                    (= j i) 1
-                    :else
-                    (reduce (fn [sum k]
-                              (-> sum
-                                  (+ (* (get-in a [i k])
-                                        (get-in b [k j])))
-                                  (bit-and bit-mask)))
-                            0
-                            (range i (inc j))))))))))
+        cell-size (-> a meta :cell-size)
+        bit-mask (bit-shift-right Long/MAX_VALUE (- 64 cell-size))]
+    (with-meta
+      (vec (for [i (range dim)]
+             (vec (for [j (range dim)]
+                    (cond
+                      (< j i) 0
+                      (= j i) 1
+                      :else
+                      (reduce (fn [sum k]
+                                (-> sum
+                                    (+ (* (get-in a [i k])
+                                          (get-in b [k j])))
+                                    (bit-and bit-mask)))
+                              0
+                              (range i (inc j))))))))
+      {:cell-size cell-size})))
 
-;; ### Example Multiplications
+;; #### Associativity & Non-Commutativity Properties
 
-;; Here are some example multiplications of two random 32-byte hashes using
-;; different bit sizes for the cells of the upper triangular matrices.
+;; Show that upper triangular matrix multiplication is associative and
+;; non-commutative. Associativity is necessary for hash fusing to work with
+;; Finger Trees so that different tree shapes produce the same fused hash.
+;; Non-commutativity is necessary for seqeuences of data where the order of
+;; data affects the fused hash.
 
-(let [a (random-hex 32)
-      b (random-hex 32)]
-  (kind/table
-   {:row-vectors
-    {:a a
-     :b b
-     :b8 (apply-hash8 utm-multiply a b)
-     :b16 (apply-hash16 utm-multiply a b)
-     :b32 (apply-hash32 utm-multiply a b)
-     :b64 (apply-hash64 utm-multiply a b)}}))
+(-> (for [cell-size [8 16 32 64]]
+      (let [a (hex->utm a-hex cell-size)
+            b (hex->utm b-hex cell-size)
+            c (hex->utm c-hex cell-size)
+            ab (utm-multiply a b)
+            ba (utm-multiply b a)
+            bc (utm-multiply b c)
+            ab*c (utm-multiply ab c)
+            a*bc (utm-multiply a bc)]
+        {:cell-size cell-size
+         :commutative? (= ab ba)
+         :associative? (= ab*c a*bc)}))
+    (kind/table))
 
 ;; ## Experiment 1: Random Fuses
 
@@ -399,16 +525,16 @@
               32 (update-vals hashes hex->utm32)
               64 (update-vals hashes hex->utm64)}
         results {8  {:acc (hex->utm8 zero-hex)
-                     :unique   #{}
+                     :uniques   #{}
                      :duplicates #{}}
                  16 {:acc (hex->utm16 zero-hex)
-                     :unique   #{}
+                     :uniques   #{}
                      :duplicates #{}}
                  32 {:acc (hex->utm32 zero-hex)
-                     :unique   #{}
+                     :uniques   #{}
                      :duplicates #{}}
                  64 {:acc (hex->utm64 zero-hex)
-                     :unique   #{}
+                     :uniques   #{}
                      :duplicates #{}}}
         results (reduce
                  (fn [results _]
@@ -422,20 +548,20 @@
                             ;; fuse the selected hash onto the accumulator
                             new-acc (utm-multiply curr-acc selected-hash)]
                         ;; update results with new accumulator and uniqueness info
-                        (if (contains? (get-in results [cell-size :unique]) new-acc)
+                        (if (contains? (get-in results [cell-size :uniques]) new-acc)
                           (update-in results [cell-size :duplicates] conj new-acc)
                           (-> results
                               (assoc-in [cell-size :acc] new-acc)
-                              (update-in [cell-size :unique] conj new-acc)))))
+                              (update-in [cell-size :uniques] conj new-acc)))))
                     results
                     [8 16 32 64]))
                  results
                  (range 10000))]
     ;; convert final results to totals of unique and duplicate hashes
     (->> results
-         (map (fn [[cell-size {:keys [unique duplicates]}]]
+         (map (fn [[cell-size {:keys [uniques duplicates]}]]
                 {:cell-size   cell-size
-                 :unique     (count unique)
+                 :uniques     (count uniques)
                  :duplicates (count duplicates)}))
          (kind/table))))
 
@@ -456,72 +582,65 @@
 ;; and then the result in turn fused with itself and so on. This folding is
 ;; repeated many times and the quality of the accumulator is measured both by
 ;; keeping track of global uniqueness after each fuse and by the uniform
-;; distribution of bit values. Once the lower bits of the accumulator become all
-;; zero, the folding stops and the number of folds to reach this state is
-;; recorded.
+;; distribution of bit values. Once the accumulator becomes zero the folding
+;; stops and the number of folds to reach this state is recorded. Also, the
+;; number of lower bits that are zero across all cells is recorded after each
+;; fold.
 
-(defn zero-in-low-bits?
-  "Return true if the lower bits of the utm are all zero."
-  [utm cell-size]
-  (let [bit-mask (bit-shift-right Long/MAX_VALUE (- 64 cell-size))]
-    (every?
-     (fn [[i j]]
-       (or (<= j i)
-           (zero? (bit-and bit-mask (get-in utm [i j])))))
-     (for [i (range (count utm))
-           j (range (count utm))]
-       [i j]))))
-
-(defn repeat-fold
-  [starting-utm low-bit-size]
-  (loop [new-fold starting-utm
-         folds []]
-    (let [folds (conj folds new-fold)]
-      (if (or (zero-in-low-bits? new-fold low-bit-size)
-              (>= (count folds) 100))
-        folds
-        (recur (utm-multiply new-fold new-fold)
-               folds)))))
+(defn calc-zero-lower-bits
+  "Calculate the number of lower bits that are zero across all upper cells in
+  the upper triangular matrix."
+  [utm]
+  (let [cell-size (-> utm meta :cell-size)]
+    (loop [mask 1 zero-lower-bits 0]
+      (if (and (< zero-lower-bits cell-size)
+               (->> (for [i (range (count utm))
+                          j (range (inc i) (count utm))]
+                      (get-in utm [i j]))
+                    (map #(bit-and mask %))
+                    (every? zero?)))
+        (recur (bit-shift-left mask 1)
+               (inc zero-lower-bits))
+        zero-lower-bits))))
 
 (defn folded-fuses
-  "Perform folded fuses starting with a given hash and keeping track of of when
-  folding produces the zero hash. Continue folding until the zero hash is found
-  or 1000 folds occur and report the number of folds performed. Repeat this for
+  "Perform folded fuses starting with a given hash and keeping track of how
+  many lower bits of each cell are zero in all cells. Stop when folding
+  produces the zero hash or 1000 folds occur. folds occur. Report the folds
+  performed and how many zero lower bits exist for that fold. Repeat this for
   all four utm sizes based on cell bit size and for different lower bit sizes."
   []
-  (let [hash (random-hex 32)
-        starting-utms {8  (hex->utm8 hash)
-                       16 (hex->utm16 hash)
-                       32 (hex->utm32 hash)
-                       64 (hex->utm64 hash)}
-        utm->hex-fns {8  utm8->hex
-                      16 utm16->hex
-                      32 utm32->hex
-                      64 utm64->hex}
-        result
-        (reduce
-         (fn [result cell-size]
-           (assoc result cell-size
-                  (reduce
-                   (fn [result lower-bit-divider]
-                     (let [utm->hex (get utm->hex-fns cell-size)
-                           low-bit-size (quot cell-size lower-bit-divider)]
-                       (assoc result low-bit-size
-                              (->> (repeat-fold (get starting-utms cell-size)
-                                                low-bit-size)
-                                   (map utm->hex)))))
-                   {}
-                   [1 2 3 4 8])))
-         {}
-         [8 16 32 64])]
+  (let [;; convert hashes to utms for each bit size and store in a map
+        results (reduce
+                 (fn [results cell-size]
+                   (let [fold (hex->utm a-hex cell-size)
+                         zero-lower-bits (calc-zero-lower-bits fold)
+                         fold-result
+                         (loop [folds [{:fold fold
+                                        :zero-lower-bits zero-lower-bits}]]
+                           (let [{:keys [fold zero-lower-bits]} (last folds)]
+                             (if (or (= zero-lower-bits cell-size)
+                                     (>= (count folds) 1000))
+                               folds
+                               (let [fold (utm-multiply fold fold)
+                                     zero-lower-bits (calc-zero-lower-bits fold)]
+                                 (recur (conj folds
+                                              {:fold fold
+                                               :zero-lower-bits zero-lower-bits}))))))]
+                     (assoc results cell-size fold-result)))
+                 {}
+                 [8 16 32 64])]
+    ;; format results into a table
+    (->> results
+         (mapcat (fn [[cell-size folds]]
+                   (map-indexed (fn [index {:keys [fold zero-lower-bits]}]
+                                  {:cell-size      cell-size
+                                   :fold-count     index
+                                   :zero-lower-bits zero-lower-bits
+                                   :fold (-> [:pre (utm->hex fold cell-size)]
+                                             (kind/hiccup))})
 
-    ;; return a result with values converted back to hex strings
-    (->> (for [[cell-size folds-map] result
-               [low-bit-size folds] folds-map]
-           {:cell-size           cell-size
-            :low-bit-size  low-bit-size
-            :folds-to-zero (if (< (count folds) 100) (count folds) 'NA)
-            :folds folds})
+                                folds)))
          (kind/table))))
 
 ;; ### Folded Fuses Results
@@ -557,16 +676,29 @@
 ;; LowEntropyDataError can be raised to indicate the data being hashed has
 ;; insufficient entropy.
 
-(defn safe-hash-fuse
-  "Fuse two 32-byte hex hashes together using upper triangular matrix
-  multiplication with 64-bit cells. Raise an error if the lower 32 bits of
-  the result are all zero."
-  [a b]
-  (let [fused (apply-hash64 utm-multiply a b)]
-    (if (zero-in-low-bits? (hex->utm64 fused) 32)
+(defn high-entropy-fuse
+  "Fuse two 256-bit hashes together via upper triangular matrix multiplication
+  with 64-bit cells. Raise an error when the lower 32 bits of the result are
+  all zero."
+  [a-hex b-hex]
+  (let [a (hex->utm64 a-hex)
+        b (hex->utm64 b-hex)
+        ab (utm-multiply a b)]
+    (if (->> (for [i (range (count a))
+                   j (range (inc i) (count a))]
+               (get-in ab [i j]))
+             (map #(bit-and 0xFFFFFFFF %))
+             (every? zero?))
       (throw (ex-info "Low entropy data detected during hash fusing."
-                      {:a a :b b :fused fused}))
-      fused)))
+                      {:a a-hex :b b-hex :fused (utm64->hex ab)}))
+      (utm64->hex ab))))
+
+(high-entropy-fuse a-hex b-hex)
+
+(try
+  (high-entropy-fuse zero-hex zero-hex)
+  (catch Exception e
+         (.getMessage e)))
 
 ;; ## Appendix: Why Low Entropy Data Fails (AI Explanation)
 
