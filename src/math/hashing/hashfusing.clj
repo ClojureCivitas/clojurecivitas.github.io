@@ -609,11 +609,13 @@
         zero-lower-bits))))
 
 (defn folded-fuses
-  "Perform folded fuses starting with a given hash and keeping track of how
-  many lower bits of each cell are zero in all cells. Stop when folding
-  produces the zero hash or 1000 folds occur. folds occur. Report the folds
-  performed and how many zero lower bits exist for that fold. Repeat this for
-  all four utm sizes based on cell bit size and for different lower bit sizes."
+  "Perform folded fuses starting from the fixed hash `a-hex`, converted to an
+  upper triangular matrix (UTM) for each cell size. After each fold, track how
+  many lower bits of each cell are zero across all upper cells using
+  `calc-zero-lower-bits`. Stop when all those lower bits are zero (i.e.,
+  `zero-lower-bits` equals the cell size) or when 1000 folds have been
+  performed. Report, for each cell size and fold, the fold count, the number
+  of zero lower bits, and the resulting hash."
   []
   (let [;; convert hashes to utms for each bit size and store in a map
         results (reduce
