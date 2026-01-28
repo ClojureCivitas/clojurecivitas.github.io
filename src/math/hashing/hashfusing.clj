@@ -84,7 +84,7 @@
 ;; 8 bit cells in a 9x9 matrix:
 ^:kindly/hide-code
 (kind/tex
- "%% Example: 7x7 Upper Triangular Matrix for 16 bit cells
+ "%% Example: 9x9 Upper Triangular Matrix for 8 bit cells
   %% representing a 256 bit hash
   hash
   \\to
@@ -417,7 +417,7 @@
 (= a-hex (-> a-hex hex->utm32 utm32->hex))
 
 (def hex->utm64
-  "Convert a hex string to an upper triangular matrix with 32-bit cells."
+  "Convert a hex string to an upper triangular matrix with 64-bit cells."
   (comp hash64->utm64 hash8->hash64 hex->hash8))
 
 (def utm64->hex
@@ -491,7 +491,7 @@
 ;; Show that upper triangular matrix multiplication is associative and
 ;; non-commutative. Associativity is necessary for hash fusing to work with
 ;; Finger Trees so that different tree shapes produce the same fused hash.
-;; Non-commutativity is necessary for seqeuences of data where the order of
+;; Non-commutativity is necessary for sequences of data where the order of
 ;; data affects the fused hash.
 
 (-> (for [cell-size [8 16 32 64]]
