@@ -1,13 +1,3 @@
-#+begin_quote
-The purpose of mechanics is to describe how bodies change their position in
-space with “time.” I should load my conscience with grave sins against the
-sacred spirit of lucidity were I to formulate the aims of mechanics in this way,
-without serious reflection and detailed explanations. Let us proceed to disclose
-these sins.
-
-Albert Einstein, /Relativity, the Special and General Theory/ [[[file:bibliography.html#bib_16][16]]], [[#p9][p. 9]]
-#+end_quote
-
 The subject of this book is motion and the mathematical tools used to describe
 it.
 
@@ -787,18 +777,6 @@ z) t) 2)))
    We can watch the progress of the minimization by modifying the procedure
    parametric-path-action to plot the path each time the action is computed. Try
    this:
-
-    #+begin_src scheme
-(define win2 (frame 0.0 :pi/2 0.0 1.2))
-
-(define ((parametric-path-action Lagrangian t0 q0 t1 q1) intermediate-qs)
-  (let ((path (make-path t0 q0 t1 q1 intermediate-qs))) ;; display path
-    (graphics-clear win2)
-    (plot-function win2 path t0 t1 (/ (- t1 t0) 100)) ;; compute action
-    (Lagrangian-action Lagrangian path t0 t1)))
-
-(find-path (L-harmonic 1.0 1.0) 0.0 1.0 :pi/2 0.0 2)
-    #+end_src
 
    *Exercise 1.6: Minimizing action*
 
