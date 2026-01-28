@@ -467,7 +467,9 @@
   [a b]
   (let [dim (count a)
         cell-size (-> a meta :cell-size)
-        bit-mask (bit-shift-right Long/MAX_VALUE (- 64 cell-size))]
+        bit-mask (if (= cell-size 64)
+                   -1
+                   (dec (bit-shift-left 1 cell-size)))]
     (with-meta
       (vec (for [i (range dim)]
              (vec (for [j (range dim)]
