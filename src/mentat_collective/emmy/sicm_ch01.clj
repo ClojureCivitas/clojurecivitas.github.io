@@ -295,6 +295,10 @@
               (make-path-tz (lambda (t) (- (cos t) (harmonic-path t)))
                             0 pi-half 35))))
 
+;;   *Figure 1.1* The difference between the polynomial
+;;   approximation with minimum action and the actual trajectory taken by the
+;;   harmonic oscillator. The abscissa is the time and the ordinate is the error.
+
 (md "Calculate the Lagrange equation of the harmonic oszillator.")
 
 (show-tex-expression
