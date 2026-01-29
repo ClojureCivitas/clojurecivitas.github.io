@@ -8,7 +8,7 @@
                               :category :libs
                               :tags     [:emmy :physics]}}}
 
-(ns mentat-collective.emmy.silcm-ch01
+(ns mentat-collective.emmy.sicm-original-ch01
   (:refer-clojure :exclude [+ - * / zero? compare divide numerator denominator
                             time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
@@ -112,16 +112,13 @@
      (->infix e)))
 
 ^:kindly/hide-code
-(def show-tex-expression-fn (comp show-tex-fn simplify))
-
-^:kindly/hide-code
-(defn show-tex-expression-fn [e] 
+(defn show-expression-fn [e]
   (kind/tex (str "\\boxed{" (emmy.expression.render/->TeX e) "}")))
 
 ^:kindly/hide-code
 (defmacro show-expression [e]
   (if prod
-    (list 'show-tex-expression-fn e)
+    (list 'show-expression-fn e)
     (reag-comp e)))
 
 ^:kindly/hide-code
@@ -140,7 +137,6 @@
 
 ^:kindly/hide-code
 (define time first)
-
 
 ;;The subject of this book is motion and the mathematical tools used to describe
 ;;it.
@@ -953,7 +949,10 @@
 ;;### 1.5.1 Derivation of the Lagrange Equations
 
 ;; The executable Scheme code of the remaining chapters is
-;; accessible via the sidebar as "SICM Ch01 Graphics"
+;; accessible via the sidebar as "SICM Ch01 Graphics".
+
+;; Continue reading the text with the nice HTML version of the entire book:
+;; https://tgvaughan.github.io/sicm
 
 ;; The content of this notebook has been manually converted from the following org-file:
 ;; https://raw.githubusercontent.com/mentat-collective/sicm-book/refs/heads/main/org/chapter001.org
