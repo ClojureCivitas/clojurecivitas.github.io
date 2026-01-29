@@ -773,14 +773,16 @@
 ;;
 ;;   (I + N)² = I + 2N + N²
 ;;
-;; With modular arithmetic (our bit masking), the coefficient 2 on N causes the
-;; lowest bit to become 0 (since 2 ≡ 0 mod 2). After k squarings:
+;; With our bit masking over w-bit cells, arithmetic is effectively done
+;; modulo 2^w. Multiplying by 2 shifts all bits left and, after masking back
+;; to w bits, forces the least significant bit of each cell to 0. After k squarings:
 ;;
 ;;   (I + N)^(2^k) = I + 2^k · N + (higher powers of N)
 ;;
-;; The coefficient 2^k means the lowest k bits of each cell become zero.
-;; This is exactly what Experiment 2 observed: each fold (squaring) zeros out
-;; one more bit, and after cell-size folds, all bits are zero.
+;; The coefficient 2^k means the lowest k bits of each cell are forced to zero
+;; under mod 2^w / bitmasking. This is exactly what Experiment 2 observed:
+;; each fold (squaring) zeros out one more bit, and after cell-size folds,
+;; all bits are zero.
 
 ;; ### Why This Is Fundamental
 
