@@ -13,7 +13,7 @@
                             time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda]]
+            [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda] :as scheme]
             [civitas.repl :as repl]))
 
 ;; The following examples are taken from the MIT open-access book [Structure and Interpretation of Classical Mechanics (SICM)](https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/9579/sicm_edition_2.zip/chapter001.html).
@@ -34,15 +34,7 @@
 ;; while being sure of the gratitude of all readers of the immutable, dense book.
 
 ^:kindly/hide-code
-(kind/hiccup
-  [:div
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.emmy.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.cljs-ajax.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.reagent.js"}]
-   [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
+(kind/hiccup scheme/scittle-kitchen-hiccup)
 
 ^:kindly/hide-code
 (defmacro define [& b]
