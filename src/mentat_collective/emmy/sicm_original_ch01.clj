@@ -906,7 +906,7 @@
 ;;   {D(\partial_{2}L \circ \Gamma\lbrack q\rbrack) - \partial_{1}L \circ \Gamma\lbrack q\rbrack = 0.} \tag{1.12}
 ;;   $$
 ;;
-;;   Here $L$ is a real-valued function of a local tuple; $∂_{1}L and $∂_{2}L
+;;   Here $L$ is a real-valued function of a local tuple; $∂_{1}L$ and $∂_{2}L$
 ;;   denote the partial derivatives of $L$ with respect to its generalized
 ;;   position argument and generalized velocity argument respectively.[fn:47] The
 ;;   function $∂_{2}L$ maps a local tuple to a structure whose components are the
@@ -933,10 +933,10 @@
 ;; and $L ∘ Γ[q]$, which is a real-valued function of one real variable
 ;;   $t$. If we do not realize this notational pun, the equations don't make sense
 ;;   as written --- $∂L/∂\dot{q}$
-;;   is a function of three variables, so we must regard the arguments $q$, $\dot{q}$˙
-;; as functions of $t$ before taking $d/dt$ of the expression. Similarly,
+;;   is a function of three variables, so we must regard the arguments $q$, $\dot{q}$
+;;   as functions of $t$ before taking $d/dt$ of the expression. Similarly,
 ;;   $∂L/∂q$ is a function of three variables, which we must view as a function
-;;   of $t$ before setting it equal to $d/dt\left( {\partial L/\partial\overset{˙}{q}} \right)$
+;;   of $t$ before setting it equal to $d/dt\left( {\partial L/\partial\dot{q}} \right)$
 ;;
 ;;   A correct use of the traditional notation is more explicit:
 ;;
@@ -949,7 +949,24 @@
 ;;   derivatives of the Lagrangian function are taken, then the path and its
 ;;   derivative are substituted for the position and velocity arguments of the
 ;;   Lagrangian, resulting in an expression in terms of the time.
-;;
+
+;;### 1.5.1 Derivation of the Lagrange Equations
+
+;; The executable Scheme code of the remaining chapters is
+;; accessible via the sidebar as "SICM Ch01 Graphics"
+
+;; The content of this notebook has been manually converted from the following org-file:
+;; https://raw.githubusercontent.com/mentat-collective/sicm-book/refs/heads/main/org/chapter001.org
+
+;; Maybe in the future this notebook can be used as a pattern
+;; to automate (to a certain extent) the conversion of the remaining chapters.
+
+
+ (repl/scittle-sidebar)
+
+
+^:kindly/hide-code
+(comment
 ;;### 1.5.1 Derivation of the Lagrange Equations
 ;;    We will show that the principle of stationary action implies that realizable
 ;;    paths satisfy the Euler--Lagrange equations.
@@ -6426,5 +6443,5 @@
 ;; [fn:99] Arnold et al. [[[file:bibliography.html#bib_6][6]]] call the variational mechanics with the constraints
 ;; added to the Lagrangian /Vakonomic mechanics/.
 
- (repl/scittle-sidebar)
+  :end-comment)
 
