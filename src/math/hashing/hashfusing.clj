@@ -743,6 +743,9 @@
 
 ;; ## Appendix: Why Low Entropy Data Fails — Nilpotent Group Structure
 
+;; _The following explanation is from interactions with a Claude based AI
+;; assistant and which I think is very well written and accurate._
+
 ;; The low-entropy failure observed in Experiment 2 is not an accident of
 ;; implementation — it is a fundamental consequence of the algebraic structure
 ;; we chose. Understanding this helps clarify both the limitations and the
@@ -840,8 +843,6 @@
 ;;
 ;; Matrix multiplication is special precisely because it is one of the few
 ;; operations that provides both associativity and non-commutativity naturally.
-;; This explains why it keeps appearing in authenticated data structure
-;; constructions despite its limitations.
 
 ;; ### Why Upper Triangular Matrices Were Chosen
 
