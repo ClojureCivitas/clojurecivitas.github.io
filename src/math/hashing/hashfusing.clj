@@ -743,8 +743,8 @@
 
 ;; ## Appendix: Why Low Entropy Data Fails — Nilpotent Group Structure
 
-;; _The following explanation is from interactions with a Claude based AI
-;; assistant and which I think is very well written and accurate._
+;; _The following explanation, based on interactions with a Claude-based AI
+;; assistant, is very well written and accurate._
 
 ;; The low-entropy failure observed in Experiment 2 is not an accident of
 ;; implementation — it is a fundamental consequence of the algebraic structure
