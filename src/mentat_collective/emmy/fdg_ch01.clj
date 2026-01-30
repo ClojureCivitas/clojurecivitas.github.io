@@ -13,7 +13,7 @@
                             time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define-1 let-scheme]]
+            [mentat-collective.emmy.scheme :refer [define-1 let-scheme] :as scheme]
             [civitas.repl :as repl]))
 
 ;; The code snippets are executable, copy-paste them to the sidebar of the page.
@@ -30,15 +30,7 @@
 ;; while being sure of the gratitude of all readers of the immutable, dense book. So without further ado ...
 
 ^:kindly/hide-code
-(kind/hiccup
-  [:div
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.emmy.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.cljs-ajax.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.reagent.js"}]
-   [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
+(kind/hiccup scheme/scittle-kitchen-hiccup)
 
 ^:kindly/hide-code
 (defmacro define [& b]
@@ -433,6 +425,10 @@
 (kind/hidden
   (define-coordinates t e/R1-rect))
 
+^:kindly/hide-code
+(kind/scittle
+  '(define-coordinates t e/R1-rect))
+
 ;; :::{#cartan}
 (define Cartan
   (Christoffel->Cartan
@@ -441,7 +437,7 @@
       (coordinate-system->basis R2-rect))))
 ;; :::
 
-(def geodesic-equation-residuals
+(define geodesic-equation-residuals
   (((((covariant-derivative Cartan gamma) d:dt)
      ((differential gamma) d:dt))
     (chart R2-rect))
@@ -449,8 +445,6 @@
 
 ;; where =d:dt= is a vector field on the real line[fn:8] and =Cartan= is a way of
 ;; encapsulating the geometry, as specified by the Christoffel coefficients.
-
-;; [note KLM: I could not get d:dt to work in the sidebar. In [clj-tiles, FDG001 page 19](https://kloimhardt.github.io/cljtiles.html?page=FDG001) and [maria cloud](https://2.maria.cloud/gist/65d96869f9a901b243df06f996c1d707) the code works on-line]
 
 ;;The Christoffel coefficients are computed from the metric:
 
@@ -460,12 +454,12 @@
 ;; If we change the representation of the geodesic equations by "lowering" them
 ;; using the mass and the metric, we see that the residuals are equal:
 
-(def metric-components
+(define metric-components
   (metric->components
    the-metric
    (coordinate-system->basis R2-rect)))
 
-(show-expression :calc-on-server
+(show-expression
   (- Lagrange-residuals
      (* (* 'm (metric-components (gamma ((point R1-rect) 't))))
         geodesic-equation-residuals)))

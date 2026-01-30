@@ -14,7 +14,7 @@
                             time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda]]
+            [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda] :as scheme]
             [civitas.repl :as repl]))
 
 ;; ## 2 Manifolds
@@ -24,15 +24,7 @@
 (def prod true) #_"used to check Emmy in Scittle kitchen"
 
 ^:kindly/hide-code
-(kind/hiccup
-  [:div
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.emmy.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.cljs-ajax.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.28-59/dist/scittle.reagent.js"}]
-   [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
+(kind/hiccup scheme/scittle-kitchen-hiccup)
 
 ^:kindly/hide-code
 (defmacro define [& b]
@@ -43,7 +35,7 @@
 ^:kindly/hide-code
 (define emmy-env
   '[emmy.env :refer :all :exclude [print-expression Lagrangian-action find-path Lagrange-equations r->p
-                                   R2 R2-rect R2-polar]])
+                                   R2 R2-rect R2-polar define-coordinates]])
 
 ^:kindly/hide-code
 (define emmy-lg
@@ -65,6 +57,12 @@
      (require emmy-env)
      (require emmy-lg)
      (require emmy-mn)))
+
+^:kindly/hide-code
+(defmacro define-coordinates [& b]
+  (list 'do
+        (cons 'emmy.env/define-coordinates b)
+        (list 'kind/scittle (list 'quote (cons 'emmy.env/define-coordinates b)))))
 
 ^:kindly/hide-code
 (define string-exp (comp str simplify))
@@ -148,6 +146,7 @@
 
 (define R2->R '(-> (UP Real Real) Real))
 
+;; ### Manifold Functions Are Coordinate Independent
 (define f
   (compose (literal-function 'f-rect R2->R) R2-rect-chi))
 
@@ -168,38 +167,50 @@
 (print-expression
   (f corresponding-polar-point))
 
+;; ### Naming Coordinate Functions
+
 (define-coordinates (up x y) R2-rect)
 
 (define-coordinates (up r theta) R2-polar)
 
-(x (R2-rect-chi-inverse (up 'x0 'y0)))
+(print-expression
+  (x (R2-rect-chi-inverse (up 'x0 'y0))))
 
-(x (R2-polar-chi-inverse (up 'r0 'theta0)))
+(print-expression
+  (x (R2-polar-chi-inverse (up 'r0 'theta0))))
 
-(r (R2-polar-chi-inverse (up 'r0 'theta0)))
+(print-expression
+  (r (R2-polar-chi-inverse (up 'r0 'theta0))))
 
-(r (R2-rect-chi-inverse (up 'x0 'y0)))
+(print-expression
+  (r (R2-rect-chi-inverse (up 'x0 'y0))))
 
-(theta (R2-rect-chi-inverse (up 'x0 'y0)))
+(print-expression
+  (theta (R2-rect-chi-inverse (up 'x0 'y0))))
 
 (define h (+ (* x (square r)) (cube y)))
 
-(h R2-rect-point)
+(print-expression
+  (h R2-rect-point))
 
-(h (R2-polar-chi-inverse (up 'r0 'theta0)))
+(print-expression
+  (h (R2-polar-chi-inverse (up 'r0 'theta0))))
+
+;; ### Exercise 2.1: Curves
 
 (define-coordinates (up r theta) R2-polar)
 
-((- r (* 2 'a (+ 1 (cos theta)))) ((point R2-rect) (up 'x 'y)))
+(print-expression
+  ((- r (* 2 'a (+ 1 (cos theta)))) ((point R2-rect) (up 'x 'y))))
 
-((compose
-  (chart S2-spherical)
-  (point S2-Riemann)
-  (chart R2-rect)
-  (point R2-polar))
- (up 'rho 'theta))
+;; ### Exercise 2.2: Stereographic Projection
 
+(print-expression
+  ((compose
+     (chart S2-spherical)
+     (point S2-Riemann)
+     (chart R2-rect)
+     (point R2-polar))
+   (up 'rho 'theta)))
 
-;; requires emmy.util.def/careful-def for define-coordinates
-
-;; (repl/scittle-sidebar)
+(repl/scittle-sidebar)

@@ -12,7 +12,7 @@
                             time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define-1 let-scheme]]
+            [mentat-collective.emmy.scheme :refer [define-1 let-scheme] :as scheme]
             [civitas.repl :as repl]))
 
 ;; Elementary introduction to Emmy, taken from the first pages of the MIT open-access book
@@ -26,15 +26,7 @@
 ;; while being sure of the gratitude of all readers of the immutable, dense book. So without further ado ...
 
 ^:kindly/hide-code
-(kind/hiccup
-  [:div
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.emmy.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.cljs-ajax.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.reagent.js"}]
-   [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
+(kind/hiccup scheme/scittle-kitchen-hiccup)
 
 ^:kindly/hide-code
 (defmacro define [& b]
