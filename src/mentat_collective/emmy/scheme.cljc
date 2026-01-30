@@ -13,23 +13,8 @@
 (defn postwalk-replace [smap form]
   (postwalk (fn [x] (if (contains? smap x) (smap x) x)) form))
 
-(defmacro let-scheme [b & e]
-  (concat (list 'let (into [] (apply concat b))) e))
-
-(defmacro define-1 [h & b]
-  (let [body (->> b
-                  (postwalk-replace {'let 'let-scheme})
-                  (postwalk-replace {'let-cloj 'let}))]
-    (if (coll? h)
-      (if (coll? (first h))
-        (list 'defn (ffirst h) (into [] (rest (first h)))
-              (concat (list 'fn (into [] (rest h))) body))
-        (concat (list 'defn (first h) (into [] (rest h)))
-                body))
-      (concat (list 'def h) body))))
-
 (defn define->let [h b1 b2]
-  (list 'let-cloj
+  (list 'let
         (vector (first h)
                 (list 'fn (into [] (rest h))
                       (last b1)))
@@ -42,12 +27,28 @@
        (last b))]
     b))
 
+(defmacro let-scheme [b & e]
+  (concat (list 'let (into [] (apply concat b)))
+          (embrace-define e)))
+
+(defmacro define-1 [h & b]
+  (let [body (->> b
+                  (postwalk-replace {'let 'let-scheme})
+                  (embrace-define))]
+    (if (coll? h)
+      (if (coll? (first h))
+        (list 'defn (ffirst h) (into [] (rest (first h)))
+              (concat (list 'fn (into [] (rest h))) body))
+        (concat (list 'defn (first h) (into [] (rest h)))
+                body))
+      (concat (list 'def h) body))))
+
 (defmacro define [h & b]
   (if (and (coll? h) (= (first h) 'tex-inspect))
     (list 'do
           (concat ['define-1 (second h)] b)
           h)
-    (concat ['define-1 h] (embrace-define b))))
+    (concat ['define-1 h] b)))
 
 (defmacro lambda [h b]
   (list 'fn (into [] h) b))
@@ -72,6 +73,17 @@
 
   (f 1 2)
 
+  (define (fu a b)
+    (define (h i j)
+      (let ((u 1))
+        (define (g n m)
+          (+ n m))
+        (+ (g i j) u)))
+    (+ (h a b) b))
+
+  (fu 1 2)
+
+
   (define (g x y)
     (+ 3 4))
 
@@ -84,8 +96,7 @@
         (+ (h i j) 7))
      '(+ (g a b) c d)])
 
-  (define emmy-env
-    '[emmy.env :refer :all :exclude [r->p]])
+  (define emmy-env 3)
 
   emmy-env
 
