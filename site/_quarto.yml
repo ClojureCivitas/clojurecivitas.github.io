@@ -41,6 +41,8 @@ website:
               text: "SICM Chapter 1"
             - href: mentat_collective/emmy/fdg_ch02.qmd
               text: "FDG Chapter 2"
+            - href: mentat_collective/emmy/fdg_ch03.qmd
+              text: "FDG Chapter 3"
             - href: mentat_collective/emmy/fdg_ch01_ys.qmd
               text: "FDG Ch01 Infix"
             - href: mentat_collective/emmy/sicm_ch01.qmd
