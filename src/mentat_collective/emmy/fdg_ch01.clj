@@ -437,6 +437,14 @@
       (coordinate-system->basis R2-rect))))
 ;; :::
 
+^:kindly/hide-code
+(kind/scittle
+  '(define Cartan
+     (Christoffel->Cartan
+       (metric->Christoffel-2
+         the-metric
+         (coordinate-system->basis R2-rect)))))
+
 (define geodesic-equation-residuals
   (((((covariant-derivative Cartan gamma) d:dt)
      ((differential gamma) d:dt))
