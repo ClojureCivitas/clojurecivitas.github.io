@@ -45,3 +45,19 @@
    [:script {:src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js", :crossorigin ""}]
    [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.30-64/dist/scittle.reagent.js"}]
    [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
+
+
+(defn define->let [h b1 b2]
+  (list 'let (list (list (first h) (list 'lambda (rest h) b1))) b2))
+
+(define->let '(g i j) '(plus i j) '(plus 4 5))
+
+(defn embrace-define [h & b]
+  (if (= (ffirst b) 'define)
+    (define->let (nth (first b) 1) (nth (first b) 2) (last b))
+    b))
+
+(embrace-define '(f a b c d)
+   '(define (g i j)
+     (+ i j))
+   '(+ (g a b) c d))
