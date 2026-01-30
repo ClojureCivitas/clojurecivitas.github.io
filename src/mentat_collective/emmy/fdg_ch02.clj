@@ -58,6 +58,7 @@
      (require emmy-lg)
      (require emmy-mn)))
 
+^:kindly/hide-code
 (defmacro define-coordinates [& b]
   (list 'do
         (cons 'emmy.env/define-coordinates b)
