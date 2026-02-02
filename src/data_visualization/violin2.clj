@@ -227,15 +227,14 @@
 
 ;;; # Rotate
 
-;;; Violin plots are often oriented vertically. We'll rotate our visualizations with another hack. 
+;;; Violin plots are often oriented vertically. We'll rotate our visualizations with another hack. First we'll define a utility function to swap pairs of keywords in a stucture, using some existing utility functions in multitool:
 
 (defn swap-keys
-  "Swap keywords"
+  "Swap keywords in struct based on pairs defined in keyswaps"
   [struct keyswaps]
-  (let [remap (mu/map-bidirectional keyswaps)]
-    (mu/walk-filtered
-     (fn [k]
-       (get remap k k))
+  (let [remap (mu/map-bidirectional keyswaps)] ;This ensures that the relationships in keyswaps are bidirectional
+    (mu/walk-filtered                   ;This applies a fn to all keyword elements of struct.
+     (fn [k] (get remap k k))
      struct
      keyword?)))
 

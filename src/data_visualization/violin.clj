@@ -53,6 +53,13 @@
 ;;; - [Violin Plots: A Box Plot-Density Trace Synergism](https://web.archive.org/web/20231106021405/https://quantixed.org/wp-content/uploads/2014/12/hintze_1998.pdf) Jerry L. Hintze, Ray D. Nelson
 ;;; - [Violin Plot - Wikipedia](https://en.wikipedia.org/wiki/Violin_plot)
 
+;;; ## Resources
+;;; - [A miminal Clojure project for generating Vega plots](https://github.com/mtravers/vega-minimal)
+;;; - [Vaguely](https://vagueness.herokuapp.com/index.html?library=99ff4864-1870-4fbd-9119-1a6f7675ed2d) Vaguely, a block-based environment for experimenting with Vega
+;;; - [Vega-Lite](https://vega.github.io/vega-lite/) The Vega documentation
+;;; - [Hanami](ttps://github.com/jsa-aerial/hanami)), a templating library for generating Vega plots in Clojure
+
+
 ;;; # Data
 
 ;;; We'll use this classic [dataset about penguin morphology](https://github.com/ttimbers/palmerpenguins/blob/master/README.md). Each row in this dataset describes an individual penguin, with properties like species, sex, body mass, wing size.
