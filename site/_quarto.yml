@@ -4,13 +4,14 @@ project:
     - "*.cljs"
     - "*.svg"
     - "*.png"
+    - "*.tif"
 
 website:
   title: "Clojure Civitas"
   favicon: "favicon.ico"
   site-url: "https://clojurecivitas.github.io"
   image: "/images/civitas-icon.svg"
-  draft-mode: unlinked
+  draft-mode: visible
   open-graph: true
   navbar:
     logo: "/images/civitas-icon.svg"
@@ -18,12 +19,38 @@ website:
     right:
       - about.qmd
       - posts.qmd
+      - drafts.qmd
       - civitas/authors.qmd
       - civitas/explorer.qmd
       - icon: github
         href: "https://github.com/ClojureCivitas/clojurecivitas.github.io"
       - icon: rss
         href: posts.xml
+  sidebar:
+    - id: emmy-fdg
+      title: "Functional Differential Geometry in Emmy"
+      logo: "https://raw.githubusercontent.com/mentat-collective/emmy/main/doc/img/logo.png"
+      contents:
+        - href: mentat_collective/emmy/fdg_prologue.qmd
+          text: "Prologue"
+        - section: "Chapters"
+          contents:
+            - href: mentat_collective/emmy/fdg_ch01.qmd
+              text: "FDG Chapter 1"
+            - href: mentat_collective/emmy/sicm_original_ch01.qmd
+              text: "SICM Chapter 1"
+            - href: mentat_collective/emmy/fdg_ch02.qmd
+              text: "FDG Chapter 2"
+            - href: mentat_collective/emmy/fdg_ch03.qmd
+              text: "FDG Chapter 3"
+            - href: mentat_collective/emmy/fdg_ch01_ys.qmd
+              text: "FDG Ch01 Infix"
+            - href: mentat_collective/emmy/sicm_ch01.qmd
+              text: "SICM Ch01 Graphics"
+            - href: mentat_collective/emmy/debroglie.qmd
+              text: "deBroglie Waves"
+            - href: mentat_collective/emmy/silcm_ch01.qmd
+              text: "Lorentz Covariant"
 
 format:
   html:
@@ -32,6 +59,7 @@ format:
       dark: [ darkly, brand, styles.scss, styles-dark.scss ]
     respect-user-color-scheme: true
     lightbox: true
+    include-after-body: zulip_script.html
     include-in-header:
       - text: |
           <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>

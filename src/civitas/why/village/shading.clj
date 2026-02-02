@@ -1,5 +1,6 @@
 (ns civitas.why.village.shading
-  (:require [thi.ng.color.core :as col]))
+  (:require [thi.ng.color.core :as col]
+            [thi.ng.math.core :as m]))
 
 (defn normalize [[x y z]]
   (let [m (Math/sqrt (+ (* x x) (* y y) (* z z)))]
@@ -13,10 +14,10 @@
 (defn shade-color [hex normal]
   (let [n (normalize normal)
         lighting (max 0.3 (dot n light-dir)) ;; never go below 30%
-        c (col/hex hex)]
+        c (col/css hex)]
     (-> c
-        (col/scale lighting)
-        col/as-hex)))
+        (m/mix col/BLACK lighting)
+        col/as-css)))
 
 (defn face-normal [verts face]
   (let [[a b c] (map verts face)

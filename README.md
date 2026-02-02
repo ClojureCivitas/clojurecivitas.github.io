@@ -181,6 +181,8 @@ If you `git add -f site/my-ns/my-post.qmd`,
 it will prevent the source `src/my-ns/my-post.clj` file from executing in the publish process.
 Only you will run the code locally (where you have secrets and large files available).
 
+If your notebook displays locally stored images, you will also need to commit these. Quarto puts them under `site/my-ns/my-post_files`.
+
 See [Some notebooks should only be run locally](https://clojurecivitas.github.io/scicloj/clay/skip_if_unchanged_example.html) for more detail.
 
 ### Styling and other features
@@ -306,7 +308,21 @@ Goal: Minimize friction in authoring while ensuring publishable reproducibility.
 
 ## Deployment
 
-See [.github/workflows/render-and-publish.yml](.github/workflows/render-and-publish.yml)
+The site is built and deployed using GitHub Actions with two workflows:
+
+- **Full Build and Publish**: Triggered on pushes to `main`.
+  Rebuilds all notebooks with Clay, renders the entire site with Quarto, and deploys to GitHub Pages.
+  See [.github/workflows/render-and-publish.yml](.github/workflows/render-and-publish.yml).
+
+- **Incremental Build**: Triggered on pushes to `main`.
+  Uses a separate cache repository to enable partial rebuilds.
+  Restores the cached site (containing rendered HTML and generated files) without overwriting source-controlled files in `site/`.
+  Sets file mtimes of source and cache files based on the last commit so that Quarto will know if the cached file is newer than the source.
+  Compares the current source commit to the last build source commit (stored in the cache) to detect changes in Clojure sources.
+  Rebuilds affected notebooks with Clay (rebuilds all if no changes detected).
+  Renders the site incrementally with Quarto.
+  Replaces the cache with the new site, and writes the source commit in a file in the cache.
+  See [.github/workflows/render-and-publish-incremental.yml](.github/workflows/render-and-publish-incremental.yml).
 
 ## License
 

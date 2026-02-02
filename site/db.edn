@@ -119,6 +119,7 @@
   {:id          :kloimhardt
    :name        "Markus Agwin Kloimwieder"
    :url         "https://github.com/kloimhardt"
+   :image       "https://github.com/kloimhardt.png"
    :affiliation [:scicloj]}
   {:id          :edwardaw
    :name        "Edward Widjaja"
@@ -135,6 +136,8 @@
    :links [{:icon "github" :href "https://github.com/tombarys"}]}
   {:id          :mattb
    :name        "Matthias Buehlmaier"
+   :url         "https://github.com/buehlmaier"
+   :image       "https://github.com/buehlmaier.png"
    :affiliation [:cim]}
   {:id          :tanvi
    :name        "Tanvi Nagar"
@@ -142,10 +145,13 @@
    :affiliation [:cim]}
   {:id          :luke-zeitlin
    :name        "Luke Zeitlin"
+   :url         "https://github.com/larzeitlin"
+   :image       "https://github.com/larzeitlin.png"
    :affiliation []}
   {:id          :ludgersolbach
    :name        "Ludger Solbach"
    :url         "https://github.com/lsolbach"
+   :image       "https://github.com/lsolbach.png"
    :links       [{:icon "github" :href "https://github.com/lsolbach"}]
    :affiliation []}
   {:id    :bsless
@@ -170,7 +176,22 @@
    :image       "https://avatars.githubusercontent.com/burinc"
    :links       [{:icon "github" :href "https://github.com/burinc"}]
    :affiliation []}
- ,]
+  {:id          :proffitt
+   :name        "William Proffitt"
+   :url         "https://github.com/doogiecode"
+   :image       "https://avatars.githubusercontent.com/doogiecode"}
+  {:id          :jclaggett
+   :name        "Jonathan Claggett"
+   :image       "https://avatars.githubusercontent.com/u/100909?v=4"
+   :url         "https://github.com/jclaggett"
+   :links       [{:icon "github" :href "https://github.com/jclaggett"}]}
+  {:id          :rafd
+   :name        "Rafal Dittwald"
+   :image       "https://avatars.githubusercontent.com/u/89664?v=4"
+   :affiliation [:clojurecamp]
+   :url         "https://github.com/rafd"
+   :links       [{:icon "github" :href "https://github.com/rafd"}]}
+  ]
 
  :affiliation
  [{:id   :clojure.core
