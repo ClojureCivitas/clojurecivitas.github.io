@@ -303,46 +303,63 @@
 
 ;;; well that doesn't work
   
+
+
+
 ^:kind/vega-lite
-{:data
- {:url
-  "https://raw.githubusercontent.com/ttimbers/palmerpenguins/refs/heads/file-variants/inst/extdata/penguins.tsv",
-  :format {:type "tsv"}},
- :config {:facet {:spacing 0}, :view {}},
+{:data {:values (tc/rows penguin-data :as-maps)}
+ :config {:facet {:spacing 0}
+          :view {}}
  :facet
- {:row {:field "species island", :type :nominal, :header {:labelAngle 0, :labelAlign "left"}}},
+ {:row {:field "species island"
+        :type :nominal
+        :header {:labelAngle 0 :labelAlign "left"}}}
  :spec
- {    :height 50,
+ {:height 50
   :width 800
-  :resolve {:scale {:y "independent"}},
+  :resolve {:scale {:y "independent"}}
   :layer
-  [{:mark {:type "point", :tooltip {:content :data}},
-    :transform [{:calculate "random()", :as "jitter"}],
+  [
+   ;; Violins
+   {:mark {:type :area :orient :vertical}
+    :transform [{:density "body_mass_g"
+                 :groupby ["species island"]
+                 :bandwidth 80
+                 :extent [2200 6800]}]
     :encoding
-    {:x {:field "body_mass_g", :type :quantitative, :scale {:zero false}},
-
-     :y {:field "jitter", :type :quantitative, :axis false},
-     :color {:field "species island", :type :nominal, :legend false}},
+    {:color {:field "species island" :type :nominal :legend false}
+     :x {:field "value" :type :quantitative :title "body_mass_g"}
+     :y {:field "density" :type :quantitative :stack :center :axis false}
+     :opacity {:value 0.7}
+     }
     }
+
+   ;; Points
+   {:mark {:type "point" :tooltip {:content :data}}
+    :transform [{:calculate "random()" :as "jitter"}]
+    :encoding
+    {:x {:field "body_mass_g" :type :quantitative :scale {:zero false}}
+     :y {:field "jitter" :type :quantitative :axis false}
+     }
+    }
+
+   ;; Box
    {:mark
-    {:type :boxplot,
-     :tooltip {:content :data},
-     :extent :min-max,
-     :box {:strokeWidth 1.5, :stroke "gray"}},
-    :transform [{:calculate "random()", :as "jitter"}],
+    {:type :boxplot
+     :tooltip {:content :data}
+     :extent :min-max
+     :box {:strokeWidth 1.5 :stroke "gray"}}
+    :transform [{:calculate "random()" :as "jitter"}]
     :encoding
-    {:x {:field "body_mass_g", :type :quantitative, :scale {:zero false}},
+    {:x {:field "body_mass_g"
+         :type :quantitative
+         :scale {:zero false}}
+     :fill {:value "none"}
+     :stroke {:value "black"}
+     }
 
-     :color {:field "species island", :type :nominal, :legend false}},
     }
-   {:mark {:type :area, :orient :vertical},
-    :transform [{:density "body_mass_g"  :groupby ["species island"]}],
-    :encoding
-    {:color {:field "species island", :type :nominal, :legend false},
-     :x {:field "value", :type :quantitative, :title "body_mass_g", #_ :scale #_ {:zero false}},
-     :y {:field "density", :type :quantitative,  :stack  :center, :axis false},
-     },
-    }],
+   ]
   }}
 
 
