@@ -1,22 +1,20 @@
 ^{:kindly/hide-code true
   :clay
-  {:title  "Introduction to Violin Plots with Vega Lite"
+  {:title  "Introduction to Violin Plots with Vega-Lite"
    :quarto {:author      :mt
-            :description "..."
-            :image       "violin-example.png"
+            :draft       true
             :type        :post
-            :date        "2026-01-05"
+            :date        "2026-02-03"
             :category    :clojure
+            :image       "violin-example.png"
             :tags        [:dataviz :vega-lite]}}}
 
 (ns scicloj.data-visualization.violin
   (:require
-   [clojure.data.json :as json]
    [tablecloth.api :as tc]
    [scicloj.kindly.v4.api :as kindly]
    [scicloj.kindly.v4.kind :as kind]
    [clojure.java.io :as io]
-   [clojure.set :as set]
    [hyperphor.multitool.core :as mu]
    ))
 
@@ -176,5 +174,5 @@
   :width 800
   })
 
-;;; That's the basics of a violin plot! In the [followup page](violin2), we'll see about abstracting some of this into functions, with some variations. and we'll look at combining violin plots with dot and box plots for a richer of our data.
+;;; That's the basics of a violin plot! In [Part 2](data_visualization/violin2.html), we'll see about abstracting some of this into functions, with some variations. and we'll look at combining violin plots with dot and box plots for a richer of our data.
 

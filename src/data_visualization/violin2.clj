@@ -1,22 +1,19 @@
 ^{:kindly/hide-code true
   :clay
-  {:title  "Part 2 Violin Plots Variations"
+  {:title  "Introduction to Violin Plots with Vega-Lite (Part 2)"
    :quarto {:author      :mt
-            :description "..."
-            :image       "violin-example.png" ;TODO
+            :draft       true
             :type        :post
-            :date        "2026-01-05"
+            :date        "2026-02-03"
             :category    :clojure
             :tags        [:dataviz :vega-lite]}}}
 
+
 (ns scicloj.data-visualization.violin2
   (:require
-   [clojure.data.json :as json]
    [tablecloth.api :as tc]
    [scicloj.kindly.v4.api :as kindly]
    [scicloj.kindly.v4.kind :as kind]
-   [clojure.java.io :as io]
-   [clojure.set :as set]
    [hyperphor.multitool.core :as mu]
    ))
 
@@ -24,7 +21,7 @@
 ;; # The World's Smallest Violin (plot generating code), Part 2
 
 
-;;; [Link to Part 1]() TODO
+;;; This is Part 2 of a tutorial,  [Part 1 is here](data_visualization/violin.html).
 
 
 ^:kindly/hide-code ^:kind/hidden
