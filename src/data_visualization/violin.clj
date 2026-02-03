@@ -4,7 +4,7 @@
    :quarto {:author      :mt
             :draft       true
             :type        :post
-            :date        "2026-02-03"
+            :date        "2026-02-02"
             :category    :clojure
             :image       "violin-example.png"
             :tags        [:dataviz :vega-lite]}}}
@@ -87,7 +87,7 @@
  }
 
 ;;; Vega's defaults are not always what we want, so the next version has the same as structure as before, with a bit of tweaking to look more like what we want. We'll adjust the size of the graph, adjust the scale, use color.
-;;;Wwe add some randomness (jitter) so we can better see individual points, and just for the hell of it, map another attribute, `sex`, to `:shape`.
+;;;We add some randomness (jitter) so we can better see individual points, and just for the hell of it, map another attribute, `sex`, to `:shape`.
 
 ^:kind/vega-lite
 {:mark {:type "point" :tooltip {:content :data}}
