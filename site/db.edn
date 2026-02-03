@@ -191,6 +191,14 @@
    :affiliation [:clojurecamp]
    :url         "https://github.com/rafd"
    :links       [{:icon "github" :href "https://github.com/rafd"}]}
+  {:id          :mt
+   :name        "Mike Travers"
+   :image       "https://avatars.githubusercontent.com/u/19027"
+   :url         "https://hyperphor.com"
+   :affiliation [:scicloj]
+   :links       [{:icon "github" :href "https://github.com/mtravers"}
+                 {:icon "mastodon" :text "Mastodon" :href "https://mastodon.social/@mtraven23"}
+                 ]}
   ]
 
  :affiliation
