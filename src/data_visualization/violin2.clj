@@ -4,7 +4,7 @@
    :quarto {:author      :mt
             :draft       true
             :type        :post
-            :date        "2026-02-03"
+            :date        "2026-02-02"
             :category    :clojure
             :tags        [:dataviz :vega-lite]}}}
 
@@ -21,7 +21,7 @@
 ;; # The World's Smallest Violin (plot generating code), Part 2
 
 
-;;; This is Part 2 of a tutorial,  [Part 1 is here](data_visualization/violin.html).
+;;; This is Part 2 of a tutorial,  [Part 1 is here](/scicloj/data_visualization/violin.html).
 
 
 ^:kindly/hide-code ^:kind/hidden

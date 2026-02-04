@@ -4,7 +4,7 @@
    :quarto {:author      :mt
             :draft       true
             :type        :post
-            :date        "2026-02-02"
+            :date        "2026-02-03"
             :category    :clojure
             :image       "violin-example.png"
             :tags        [:dataviz :vega-lite]}}}
@@ -174,5 +174,5 @@
   :width 800
   })
 
-;;; That's the basics of a violin plot! In [Part 2](data_visualization/violin2.html), we'll see about abstracting some of this into functions, with some variations. and we'll look at combining violin plots with dot and box plots for a richer of our data.
+;;; That's the basics of a violin plot! In [Part 2](/scicloj/data_visualization/violin2.html), we'll see about abstracting some of this into functions, with some variations. and we'll look at combining violin plots with dot and box plots for a richer of our data.
 
