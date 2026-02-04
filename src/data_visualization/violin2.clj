@@ -92,7 +92,7 @@
 
 ;;; Take our dot-plot abstraction above. We could parameterize it further, eg by adding optional arguments for height or scale or any of the many things Vega allows you to tweak.  
 
-;; But instead, we're going to introduce a much more general (if somewhat unclean) way of modifying a base Vega spec – through structural merge. This makes use of a function `mu/merge-recursive` from the  (Multitool utility library)[https://github.com/hyperphor/multitool/blob/9e10c6b9cfe7f1deb496e842fc12505748a09d69/src/cljc/hyperphor/multitool/core.cljc#L1012]. This function m merges arbitrarily nested structures. This means we can alter any aspect of the spec, at the cost of having to have some knowledge of its structure. 
+;; But instead, we're going to introduce a much more general way of modifying a base Vega spec – through structural merge. This makes use of a function `mu/merge-recursive` from the  [Multitool utility library](https://github.com/hyperphor/multitool/blob/9e10c6b9cfe7f1deb496e842fc12505748a09d69/src/cljc/hyperphor/multitool/core.cljc#L1021). This function m merges arbitrarily nested structures. This means we can alter any aspect of the spec, at the cost of having to have some knowledge of its structure. 
 
 (defn dot-plot-g
   "Generalized dot plot"
@@ -102,7 +102,7 @@
    overrides))
 
 
-;;; So here's another penguin dotplot, but in this case we've used the `:overrides` option to specify that the marks should eb filled, bigger than the defautl, and we'll add an econding.
+;;; So here's another penguin dotplot, but in this case we've used the `:overrides` option to specify that the marks should eb filled, bigger than the default, and we'll add an econding.
 
 ^:kind/vega-lite
 (dot-plot-g {:values (tc/rows penguin-data :as-maps)}
