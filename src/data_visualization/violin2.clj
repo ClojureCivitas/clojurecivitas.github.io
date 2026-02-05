@@ -2,7 +2,6 @@
   :clay
   {:title  "Introduction to Violin Plots with Vega-Lite (Part 2)"
    :quarto {:author      :mt
-            :draft       true
             :type        :post
             :date        "2026-02-02"
             :category    :clojure
