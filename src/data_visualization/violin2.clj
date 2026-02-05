@@ -9,7 +9,7 @@
             :tags        [:dataviz :vega-lite]}}}
 
 
-(ns scicloj.data-visualization.violin2
+(ns data-visualization.violin2
   (:require
    [tablecloth.api :as tc]
    [scicloj.kindly.v4.api :as kindly]
@@ -18,10 +18,11 @@
    ))
 
 
-;; # The World's Smallest Violin (plot generating code), Part 2
+;; # The World's Smallest Violin (plot generating code)
+;; ### Part 2
 
 
-;;; This is Part 2 of a tutorial,  [Part 1 is here](/scicloj/data_visualization/violin.html).
+;;; This is Part 2 of a tutorial,  [Part 1 is here](/data_visualization/violin.html).
 
 
 ^:kindly/hide-code ^:kind/hidden

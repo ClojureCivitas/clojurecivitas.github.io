@@ -9,7 +9,7 @@
             :image       "violin-example.png"
             :tags        [:dataviz :vega-lite]}}}
 
-(ns scicloj.data-visualization.violin
+(ns data-visualization.violin
   (:require
    [tablecloth.api :as tc]
    [scicloj.kindly.v4.api :as kindly]
@@ -173,5 +173,5 @@
   :width 800
   })
 
-;;; That's the basics of a violin plot! In [Part 2](/scicloj/data_visualization/violin2.html), we'll see about abstracting some of this into functions, with some variations. and we'll look at combining violin plots with dot and box plots for a richer of our data.
+;;; That's the basics of a violin plot! In [Part 2](/data_visualization/violin2.html), we'll see about abstracting some of this into functions, with some variations. and we'll look at combining violin plots with dot and box plots for a richer of our data.
 
