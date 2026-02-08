@@ -198,7 +198,7 @@
           (wedge (d c) dx dy))) X Y Z)
        R3-rect-point))
 
-;; ## Properties of Exterior Derivatives
+;; ### Properties of Exterior Derivatives
 
 (print-expression
   (((d (d theta)) X Y Z) R3-rect-point))
