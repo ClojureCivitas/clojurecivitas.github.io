@@ -9,7 +9,7 @@ project:
 website:
   title: "Clojure Civitas"
   favicon: "favicon.ico"
-  site-url: "https://clojurecivitas.github.io"
+  site-url: "https://clojurecivitas.org"
   image: "/images/civitas-icon.svg"
   draft-mode: visible
   open-graph: true
