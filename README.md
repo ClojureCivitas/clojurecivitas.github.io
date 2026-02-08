@@ -2,7 +2,7 @@
 
 <img src="src/images/civitas-icon.svg" alt="Civitas Icon" align="right">
 
-Clojure Civitas is a shared [blog](https://clojurecivitas.github.io/posts.html) space for your ideas and explorations.
+Clojure Civitas is a [shared blog space](https://clojurecivitas.org/posts.html) for your ideas and explorations.
 Clojure Civitas makes it easy for you to publish Clojure ideas and explorations without the overhead of setting up a new project, blog, or repo.
 Whether you're sketching out a quick experiment or writing a deeper post,
 just fork this repo, add a namespace, write, commit and submit a pull request.
@@ -14,7 +14,7 @@ Think. Code. Share.
 
 ✍️ Write as you code – Capture notes, results, and ideas as you go as comments.
 
-🚀 Easy to share – Create a Pull Request, once merged it appears on the [Clojure Civitas Website](https://clojurecivitas.github.io).
+🚀 Easy to share – Create a Pull Request, once merged it appears on the [Clojure Civitas Website](https://clojurecivitas.org).
 
 🧠 Build shared knowledge – Your work becomes part of a community resource.
 
@@ -26,7 +26,7 @@ Literate programming is fun.
 We want more people to experience it.
 Why markdown in code? We value reproducible artifacts.
 
-See [Clojure Civitas Rationale](https://clojurecivitas.github.io/about#rationale) for more detail.
+See [Clojure Civitas Rationale](https://clojurecivitas.org/about#rationale) for more detail.
 
 ## Contributing
 
