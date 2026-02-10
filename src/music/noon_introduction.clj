@@ -3,6 +3,7 @@
          :quarto {:author :pbaille
                   :description "An introduction to noon, a Clojure library for composing MIDI music using layered harmonic abstractions."
                   :type :post
+                  :draft true
                   :date "2026-02-10"
                   :category :music
                   :tags [:music :harmony :functional-programming :midi]
