@@ -6,10 +6,11 @@
                   :draft true
                   :date "2026-02-10"
                   :category :music
-                  :tags [:music :harmony :functional-programming :midi]
-                  :image "noon_introduction/steps.png"}}}
+                  :tags [:music :harmony :functional-programming :midi]}}}
 
-(ns music.noon-introduction)
+(ns music.noon-introduction
+  (:require [noon.viz.piano-roll :as pr]
+            [noon.eval :refer [score]]))
 
 ;; ## What is Noon?
 ;;
@@ -165,7 +166,20 @@
 ;; (play (tup t0 t1 t2))                 ; tonic: octave by octave
 ;;```
 
-;; ![The four step types — chromatic, diatonic, structural, and tonic — each walking up from C4. Note how the same ascending pattern selects different notes depending on the layer. Colors indicate each note's role: tonic (dark blue), structural (medium blue), diatonic (light blue), chromatic (grey).](noon_introduction/steps.png)
+;; *The four step types — chromatic, diatonic, structural, and tonic — each walking up from C4.
+;; Note how the same ascending pattern selects different notes depending on the layer.
+;; Colors indicate each note's role: tonic (dark blue), structural (medium blue), diatonic (light blue), chromatic (grey).*
+
+^:kindly/hide-code
+(pr/piano-roll-group
+ [{:label "chromatic — (tup c0 c1 c2 c3 c4 c5 c6)"
+   :score (score (tup c0 c1 c2 c3 c4 c5 c6))}
+  {:label "diatonic — (tup d0 d1 d2 d3 d4 d5 d6)"
+   :score (score (tup d0 d1 d2 d3 d4 d5 d6))}
+  {:label "structural — (tup s0 s1 s2 s3)"
+   :score (score (tup s0 s1 s2 s3))}
+  {:label "tonic — (tup t0 t1 t2)"
+   :score (score (tup t0 t1 t2))}])
 
 ;; The chromatic run gives you all 7 semitones.
 ;; The diatonic run gives you the major scale.
@@ -187,7 +201,18 @@
 ;; (play dur:4 (scale :hungarian) (lin d0 d1 d2 d3 d4 d5 d6 d7))
 ;;```
 
-;; ![Same diatonic steps, three different scales. The code is identical — only the scale context changes. Notice how the intervals between notes shift while the structure remains.](noon_introduction/scales.png)
+;; *Same diatonic steps, three different scales. The code is identical — only the scale context changes.
+;; Notice how the intervals between notes shift while the structure remains.*
+
+^:kindly/hide-code
+(pr/piano-roll-group
+ [{:label "major (default)"
+   :score (score dur:4 (lin d0 d1 d2 d3 d4 d5 d6 d7))}
+  {:label "dorian"
+   :score (score dur:4 (scale :dorian) (lin d0 d1 d2 d3 d4 d5 d6 d7))}
+  {:label "hungarian"
+   :score (score dur:4 (scale :hungarian) (lin d0 d1 d2 d3 d4 d5 d6 d7))}]
+ {:shared-pitch-range true})
 
 ;; The same goes for structural steps:
 ;;
@@ -199,7 +224,16 @@
 ;; (play (structure :tetrad) (tup s0 s1 s2 s3))
 ;;```
 
-;; ![Triad vs tetrad: the same structural steps produce C-E-G-C with a triad structure, but C-E-G-B when the structure is set to tetrad — the seventh appears automatically.](noon_introduction/structures.png)
+;; *Triad vs tetrad: the same structural steps produce C-E-G-C with a triad structure,
+;; but C-E-G-B when the structure is set to tetrad — the seventh appears automatically.*
+
+^:kindly/hide-code
+(pr/piano-roll-group
+ [{:label "triad (default) — (tup s0 s1 s2 s3)"
+   :score (score (tup s0 s1 s2 s3))}
+  {:label "tetrad — (structure :tetrad) (tup s0 s1 s2 s3)"
+   :score (score (structure :tetrad) (tup s0 s1 s2 s3))}]
+ {:shared-pitch-range true})
 
 ;; ## Changing the Context
 ;;
@@ -229,7 +263,11 @@
 ;; (play (lin I IV V I) (each (tup s0 s1 s2)))
 ;;```
 
-;; ![A I-IV-V-I chord progression, each chord arpeggiated. Dashed lines mark where the harmonic context changes — the same arpeggio pattern adapts to each degree.](noon_introduction/progression.png)
+;; *A I-IV-V-I chord progression, each chord arpeggiated.
+;; Dashed lines mark where the harmonic context changes — the same arpeggio pattern adapts to each degree.*
+
+^:kindly/hide-code
+(pr/piano-roll (score (lin I IV V I) (each (tup s0 s1 s2))))
 
 ;; Here `I`, `IV`, `V` are degree changes — they shift the harmonic context
 ;; so that structural steps target the chord tones of each degree.
@@ -247,7 +285,11 @@
 ;;       (each (tup d1 d1- d0)))
 ;;```
 
-;; ![Mixing layers: structural chord tones (medium blue) decorated with diatonic neighbor notes (light blue). The structural steps define the skeleton; the diatonic steps fill in the passing tones.](noon_introduction/mixing.png)
+;; *Mixing layers: structural chord tones (medium blue) decorated with diatonic neighbor notes (light blue).
+;; The structural steps define the skeleton; the diatonic steps fill in the passing tones.*
+
+^:kindly/hide-code
+(pr/piano-roll (score dur:2 (tup s0 s1 s2 s3) (each (tup d1 d1- d0))))
 
 ;; This creates a chord arpeggio (`s0 s1 s2 s3`) then decorates each chord tone
 ;; with upper and lower neighbor scale notes (`d1 d1- d0`).
@@ -263,7 +305,11 @@
 ;;       (each (tup s0 s1 s2)))
 ;;```
 
-;; ![Harmonic minor progression: I-IV-VII-I with arpeggiated chords. Notice the characteristic G♯ (raised 7th degree) appearing in the VII chord.](noon_introduction/harmonic-minor.png)
+;; *Harmonic minor progression: I-IV-VII-I with arpeggiated chords.
+;; Notice the characteristic G♯ (raised 7th degree) appearing in the VII chord.*
+
+^:kindly/hide-code
+(pr/piano-roll (score (scale :harmonic-minor) (lin I IV VII I) (each (tup s0 s1 s2))))
 
 ;; ## Why This Matters
 ;;
