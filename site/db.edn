@@ -197,9 +197,12 @@
    :url         "https://hyperphor.com"
    :affiliation [:scicloj]
    :links       [{:icon "github" :href "https://github.com/mtravers"}
-                 {:icon "mastodon" :text "Mastodon" :href "https://mastodon.social/@mtraven23"}
-                 ]}
-  ]
+                 {:icon "mastodon" :text "Mastodon" :href "https://mastodon.social/@mtraven23"}]}
+  {:id          :pbaille
+   :name        "Pierre Baille"
+   :image       "https://avatars.githubusercontent.com/u/4739483"
+   :url         "https://github.com/pbaille"
+   :links       []}]
 
  :affiliation
  [{:id   :clojure.core
