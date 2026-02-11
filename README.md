@@ -138,7 +138,7 @@ clojure -M:clay -A:markdown
 quarto preview site
 ```
 
-(`bb site-preview` will run these two commands for you.)
+(`bb preview` will run these two commands for you.)
 
 This will open a browser displaying the site locally.
 
