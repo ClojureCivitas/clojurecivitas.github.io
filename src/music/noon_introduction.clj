@@ -1,5 +1,6 @@
 ^{:kindly/hide-code true
-  :clay {:title "Noon — Composing Music with Clojure"
+  :clay {:hide-code true
+         :title "Noon — Composing Music with Clojure"
          :quarto {:author :pbaille
                   :description "An introduction to noon, a Clojure library for composing MIDI music using layered harmonic abstractions."
                   :type :post
@@ -10,7 +11,78 @@
 
 (ns music.noon-introduction
   (:require [noon.viz.piano-roll :as pr]
-            [noon.eval :refer [score]]))
+            [noon.eval :refer [score]]
+            [scicloj.kindly.v4.kind :as kind]
+            [scicloj.kindly.v4.api :as kindly]
+            [clojure.pprint :as pp]
+            [clojure.string :as str]))
+
+(kind/hiccup
+ [:div
+  ;; Editor styles
+  [:style
+   ".noon-editor .CodeMirror {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      height: auto;
+      min-height: 60px;
+    }
+    .noon-editor .CodeMirror-scroll {
+      min-height: 60px;
+      max-height: 300px;
+    }
+    .noon-editor .CodeMirror-activeline-background {
+      background: rgba(0, 120, 215, 0.06);
+    }
+    .noon-editor .CodeMirror-matchingbracket {
+      color: #2196F3 !important;
+      font-weight: bold;
+      background: rgba(33, 150, 243, 0.15);
+    }"]
+  ;; 1. CodeMirror 5 (editor + Clojure mode + editing addons)
+  [:link {:rel "stylesheet"
+          :href "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css"}]
+  [:link {:rel "stylesheet"
+          :href "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/neat.min.css"}]
+  [:script {:src "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"}]
+  [:script {:src "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/clojure/clojure.min.js"}]
+  [:script {:src "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/matchbrackets.min.js"}]
+  [:script {:src "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/closebrackets.min.js"}]
+  [:script {:src "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/selection/active-line.min.js"}]
+  ;; 2. Compiled noon bundle (includes SCI, smplr, all noon namespaces)
+  [:script {:src "noon-eval.js"}]
+  ;; 3. Scittle + Reagent from CDN
+  [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.6.20/dist/scittle.js"}]
+  [:script {:crossorigin true
+            :src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"}]
+  [:script {:crossorigin true
+            :src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"}]
+  [:script {:src "https://cdn.jsdelivr.net/npm/scittle@0.6.20/dist/scittle.reagent.js"}]
+  ;; 4. Editor component
+  [:script {:type "application/x-scittle" :src "noon_editor.cljs"}]])
+
+(defn noon-editor
+  "Create an interactive noon editor widget.
+  `label` is the heading text. `code` is either a string (whitespace preserved)
+  or a quoted form (pretty-printed automatically)."
+  [label code]
+  (let [code-str (if (string? code)
+                   code
+                   (str/trimr
+                    (binding [pp/*print-right-margin* 40]
+                      (with-out-str (pp/pprint code)))))
+        id (str "editor-" (Math/abs (hash [label code-str])))]
+    (kind/hiccup
+     [:div {:id id}
+      [:script {:type "application/x-scittle"}
+       (str "(music.noon-editor/render-editor \"" id "\" "
+            "{:label " (pr-str label)
+            " :initial-code " (pr-str code-str) "})")]])))
+
+(noon-editor
+ "Simple melody"
+ '(score (tup s0 s1 s2)))
 
 ;; ## What is Noon?
 ;;
