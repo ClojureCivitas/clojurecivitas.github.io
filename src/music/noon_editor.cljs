@@ -6,43 +6,7 @@
 ;; CSS (injected once)
 ;; ============================================================================
 
-(defonce _inject-styles
-  (let [style (js/document.createElement "style")]
-    (set! (.-textContent style)
-          "@keyframes noon-spin {
-             0% { transform: rotate(0deg); }
-             100% { transform: rotate(360deg); }
-           }
-           .noon-spinner {
-             display: inline-block;
-             width: 14px; height: 14px;
-             border: 2px solid rgba(255,255,255,0.3);
-             border-top-color: #fff;
-             border-radius: 50%;
-             animation: noon-spin 0.6s linear infinite;
-             vertical-align: middle;
-             margin-right: 6px;
-           }
-           .noon-editor .CodeMirror {
-             border: 1px solid #ccc;
-             border-radius: 4px;
-             font-size: 0.9rem;
-             height: auto;
-             min-height: 60px;
-           }
-           .noon-editor .CodeMirror-scroll {
-             min-height: 60px;
-             max-height: 300px;
-           }
-           .noon-editor .CodeMirror-activeline-background {
-             background: rgba(0, 120, 215, 0.06);
-           }
-           .noon-editor .CodeMirror-matchingbracket {
-             color: #2196F3 !important;
-             font-weight: bold;
-             background: rgba(33, 150, 243, 0.15);
-           }")
-    (.appendChild js/document.head style)))
+;; CSS is loaded via [:style] in the .clj notebook — no runtime injection needed.
 
 ;; ============================================================================
 ;; noon interop (via window globals from noon-eval.js)
@@ -242,7 +206,7 @@
                   :font-size "0.85rem"
                   :transition "background 0.2s"}}
          (if (= @play-state :evaluating)
-           [:span [:span.noon-spinner] "Evaluating..."]
+           "Evaluating..."
            "Eval")]
 
         ;; Play button
@@ -263,7 +227,7 @@
            (case @play-state
              :idle "▶ Play"
              :evaluating "▶ Play"
-             :loading [:span [:span.noon-spinner] "Loading..."])]
+             :loading "Loading...")]
 
           :playing
           [:button

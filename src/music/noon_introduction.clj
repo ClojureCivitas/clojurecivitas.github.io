@@ -19,6 +19,27 @@
 
 (kind/hiccup
  [:div
+  ;; Editor styles
+  [:style
+   ".noon-editor .CodeMirror {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      height: auto;
+      min-height: 60px;
+    }
+    .noon-editor .CodeMirror-scroll {
+      min-height: 60px;
+      max-height: 300px;
+    }
+    .noon-editor .CodeMirror-activeline-background {
+      background: rgba(0, 120, 215, 0.06);
+    }
+    .noon-editor .CodeMirror-matchingbracket {
+      color: #2196F3 !important;
+      font-weight: bold;
+      background: rgba(33, 150, 243, 0.15);
+    }"]
   ;; 1. CodeMirror 5 (editor + Clojure mode + editing addons)
   [:link {:rel "stylesheet"
           :href "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css"}]
