@@ -176,6 +176,10 @@
    :image       "https://avatars.githubusercontent.com/burinc"
    :links       [{:icon "github" :href "https://github.com/burinc"}]
    :affiliation []}
+  {:id          :annieliu
+   :name        "Annie Liu"
+   :url         "https://github.com/humanni-e"
+   :email       "u3629374@connect.hku.hk"}
   {:id          :proffitt
    :name        "William Proffitt"
    :url         "https://github.com/doogiecode"
