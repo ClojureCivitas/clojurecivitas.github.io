@@ -169,7 +169,10 @@
    :image       "https://avatars.githubusercontent.com/burinc"
    :links       [{:icon "github" :href "https://github.com/burinc"}]
    :affiliation []}
- ,]
+  {:id          :annieliu
+   :url         "https://github.com/humanni-e"
+   :name        "Annie Liu"
+   :email       "u3629374@connect.hku.hk"}]
 
  :affiliation
  [{:id   :clojure.core
