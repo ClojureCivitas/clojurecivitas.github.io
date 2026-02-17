@@ -2,7 +2,7 @@
 
 <img src="src/images/civitas-icon.svg" alt="Civitas Icon" align="right">
 
-Clojure Civitas is a shared [blog](https://clojurecivitas.github.io/posts.html) space for your ideas and explorations.
+Clojure Civitas is a [shared blog space](https://clojurecivitas.org/posts.html) for your ideas and explorations.
 Clojure Civitas makes it easy for you to publish Clojure ideas and explorations without the overhead of setting up a new project, blog, or repo.
 Whether you're sketching out a quick experiment or writing a deeper post,
 just fork this repo, add a namespace, write, commit and submit a pull request.
@@ -14,7 +14,7 @@ Think. Code. Share.
 
 ✍️ Write as you code – Capture notes, results, and ideas as you go as comments.
 
-🚀 Easy to share – Create a Pull Request, once merged it appears on the [Clojure Civitas Website](https://clojurecivitas.github.io).
+🚀 Easy to share – Create a Pull Request, once merged it appears on the [Clojure Civitas Website](https://clojurecivitas.org).
 
 🧠 Build shared knowledge – Your work becomes part of a community resource.
 
@@ -26,7 +26,7 @@ Literate programming is fun.
 We want more people to experience it.
 Why markdown in code? We value reproducible artifacts.
 
-See [Clojure Civitas Rationale](https://clojurecivitas.github.io/about#rationale) for more detail.
+See [Clojure Civitas Rationale](https://clojurecivitas.org/about#rationale) for more detail.
 
 ## Contributing
 
@@ -138,7 +138,7 @@ clojure -M:clay -A:markdown
 quarto preview site
 ```
 
-(`bb site-preview` will run these two commands for you.)
+(`bb preview` will run these two commands for you.)
 
 This will open a browser displaying the site locally.
 
@@ -180,6 +180,8 @@ You can render a `qmd` file locally (see preview instructions above).
 If you `git add -f site/my-ns/my-post.qmd`,
 it will prevent the source `src/my-ns/my-post.clj` file from executing in the publish process.
 Only you will run the code locally (where you have secrets and large files available).
+
+If your notebook displays locally stored images, you will also need to commit these. Quarto puts them under `site/my-ns/my-post_files`.
 
 See [Some notebooks should only be run locally](https://clojurecivitas.github.io/scicloj/clay/skip_if_unchanged_example.html) for more detail.
 
@@ -306,7 +308,21 @@ Goal: Minimize friction in authoring while ensuring publishable reproducibility.
 
 ## Deployment
 
-See [.github/workflows/render-and-publish.yml](.github/workflows/render-and-publish.yml)
+The site is built and deployed using GitHub Actions with two workflows:
+
+- **Full Build and Publish**: Triggered on pushes to `main`.
+  Rebuilds all notebooks with Clay, renders the entire site with Quarto, and deploys to GitHub Pages.
+  See [.github/workflows/render-and-publish.yml](.github/workflows/render-and-publish.yml).
+
+- **Incremental Build**: Triggered on pushes to `main`.
+  Uses a separate cache repository to enable partial rebuilds.
+  Restores the cached site (containing rendered HTML and generated files) without overwriting source-controlled files in `site/`.
+  Sets file mtimes of source and cache files based on the last commit so that Quarto will know if the cached file is newer than the source.
+  Compares the current source commit to the last build source commit (stored in the cache) to detect changes in Clojure sources.
+  Rebuilds affected notebooks with Clay (rebuilds all if no changes detected).
+  Renders the site incrementally with Quarto.
+  Replaces the cache with the new site, and writes the source commit in a file in the cache.
+  See [.github/workflows/render-and-publish-incremental.yml](.github/workflows/render-and-publish-incremental.yml).
 
 ## License
 

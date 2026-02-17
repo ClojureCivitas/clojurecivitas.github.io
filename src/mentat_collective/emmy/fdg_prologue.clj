@@ -1,58 +1,75 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Classical Mechanics Prologue"
-                     :quarto {:author   :kloimhardt
-                              :type     :post
+                     :quarto {:type     :draft
+                              :sidebar  "emmy-fdg"
                               :date     "2025-11-12"
                               :image    "fdg_prologue.png"
                               :category :libs
                               :tags     [:emmy :physics]}}}
 (ns mentat-collective.emmy.fdg-prologue
+  (:refer-clojure :exclude [+ - * / zero? compare divide numerator
+                            denominator
+                            time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [emmy.env :as e :refer [->infix simplify Lagrange-equations literal-function]]
-            [emmy.mechanics.lagrange :as lg]
+            [mentat-collective.emmy.scheme :refer [define-1 let-scheme] :as scheme]
             [civitas.repl :as repl]))
 
-;; Elemetary introduction to Emmy, taken from the first pages of the MIT open-access book
+;; Elementary introduction to Emmy, taken from the first pages of the MIT open-access book
 ;; [Functional Differential Geometry (FDG)](https://mitpress.mit.edu/9780262019347/functional-differential-geometry/).
 ;; The code snippets are executable, copy-paste them to the sidebar of the page.
 
-;; The [Emmy](https://emmy.mentat.org) maintainer, [Sam Ritchie](https://roadtoreality.substack.com/), wrote the source for this page, namely the
+;; [Sam Ritchie](https://roadtoreality.substack.com/), the [Emmy](https://emmy.mentat.org) maintainer along with [Colin Smith](https://github.com/littleredcomputer), wrote the source for this page, namely the
 ;; [LaTex version of FDG](https://github.com/mentat-collective/fdg-book/blob/main/scheme/org/prologue.org).
 
 ;; In adopting MIT-Scheme's `(define ...)`, I trust that Clojure people will bridge that gap quickly
 ;; while being sure of the gratitude of all readers of the immutable, dense book. So without further ado ...
 
 ^:kindly/hide-code
-(kind/hiccup
-  [:div
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.emmy.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.cljs-ajax.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.reagent.js"}]
-   [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
-
-^:kindly/hide-code
-(kind/scittle
-  '(require '[emmy.env :refer :all :exclude [Lagrange-equations Gamma]]))
-
-^:kindly/hide-code
-(kind/scittle
-  '(def show-expression (comp ->infix simplify)))
+(kind/hiccup scheme/scittle-kitchen-hiccup)
 
 ^:kindly/hide-code
 (defmacro define [& b]
-  (list 'kind/scittle (list 'quote (cons 'define b))))
+  (list 'do
+        (cons 'mentat-collective.emmy.scheme/define b)
+        (list 'kind/scittle (list 'quote (cons 'define b)))))
 
 ^:kindly/hide-code
-(defmacro show-expression [& b]
-  (list 'kind/reagent [:tt (list 'quote (cons 'show-expression b))]))
+(define emmy-require
+  '[emmy.env :refer :all :exclude [Lagrange-equations Gamma]])
 
 ^:kindly/hide-code
-(def md
-  (comp kindly/hide-code kind/md))
+(require emmy-require)
+
+^:kindly/hide-code
+(kind/scittle
+  '(require emmy-require))
+
+^:kindly/hide-code
+(define show-exp (comp ->infix simplify))
+
+^:kindly/hide-code
+(kind/scittle
+  '(def show-expression show-exp))
+
+^:kindly/hide-code
+(defmacro show-expression [b & c]
+  (case b
+    :calc-on-server
+    (list 'show-exp (first c))
+    :browser
+    (list 'kind/reagent
+          [:tt (list 'quote
+                     (list 'show-exp (first c)))])
+    (let [serg (show-exp (eval b))]
+      (list 'kind/reagent
+            [:div (list 'quote
+                        (list 'let ['a (list 'show-exp b)]
+                              (list 'if (list '= serg 'a)
+                                    [:tt 'a]
+                                    [:div
+                                     [:tt 'a]
+                                     [:tt serg]])))]))))
 
 ;; ## Programming and Understanding
 
@@ -183,7 +200,7 @@
 
 ;; The functions $\partial_1 L$ and $\partial_2 L$ are partial derivatives of the
 ;; function $L$. Composition with $\Gamma[w]$ evaluates these partials with
-;; coordinates and velocites appropriate for the path $w$, making functions of
+;; coordinates and velocities appropriate for the path $w$, making functions of
 ;; time. Applying $D$ takes the time derivative. The Lagrange equation states that
 ;; the difference of the resulting functions of time must be zero. This statement
 ;; of the Lagrange equation is complete, unambiguous, and functional. It is not
@@ -194,7 +211,7 @@
 ;; This expression is equivalent to a computer program:[fn:6]
 
 ^:kindly/hide-code
-(kind/scittle '(declare Gamma))
+(define _ (declare Gamma))
 
 (define ((Lagrange-equations Lagrangian) w)
   (- (D (compose ((partial 2) Lagrangian) (Gamma w)))
@@ -254,15 +271,10 @@
 ;; But, suppose we had no idea what the solution looks like. We could propose a
 ;; literal function for the path:
 
-;; [note by MAK: the following does not work in the sidebar because I could not get
-;; `literal-function` to work.
-;; As a remedy, I have an [alternative execution environment](https://kloimhardt.github.io/blog/html/sicmutils-as-js-book-part1.html) ]
-
-(->infix
-  (simplify
-    (((Lagrange-equations (lg/L-harmonic 'm 'k))
-      (literal-function 'x))
-     't)))
+(show-expression
+  (((Lagrange-equations (L-harmonic 'm 'k))
+    (literal-function 'x))
+   't))
 
 ;; If this residual is zero we have the Lagrange equation for the harmonic
 ;; oscillator.

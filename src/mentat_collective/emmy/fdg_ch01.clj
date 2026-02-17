@@ -1,17 +1,19 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Differential Geometry Chapter One"
-                     :quarto {:author   :kloimhardt
-                              :type     :post
+                     :quarto {:type     :draft
+                              :sidebar  "emmy-fdg"
                               :description "First chapter of the book \"Functional Differential Geometry\", the code is on-line executable."
                               :date     "2025-11-14"
                               :image    "fdg_ch01.png"
                               :category :libs
-                              :tags     [:emmy :physics]}}}
+                              :tags [:emmy :physics]}}}
 (ns mentat-collective.emmy.fdg-ch01
+  (:refer-clojure :exclude [+ - * / zero? compare divide numerator
+                            denominator
+                            time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [emmy.env :as e :refer :all :exlude [Cartan]]
-            [emmy.mechanics.lagrange :as lg]
+            [mentat-collective.emmy.scheme :refer [define-1 let-scheme] :as scheme]
             [civitas.repl :as repl]))
 
 ;; The code snippets are executable, copy-paste them to the sidebar of the page.
@@ -28,43 +30,59 @@
 ;; while being sure of the gratitude of all readers of the immutable, dense book. So without further ado ...
 
 ^:kindly/hide-code
-(kind/hiccup
-  [:div
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.emmy.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.cljs-ajax.js"}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js", :crossorigin ""}]
-   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen/dist/scittle.reagent.js"}]
-   [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
-
-^:kindly/hide-code
-(kind/scittle
-  '(require '[emmy.env :as e :refer :all :exclude [F->C]]))
-
-^:kindly/hide-code
-(kind/scittle
-  '(def velocities velocity))
-
-^:kindly/hide-code
-(kind/scittle
-  '(def coordinates coordinate))
-
-^:kindly/hide-code
-(kind/scittle
-  '(def show-expression (comp simplify)))
-
-^:kindly/hide-code
-(defmacro show-expression [& b]
-  (list 'kind/reagent [:tt (list 'quote (cons 'show-expression b))]))
+(kind/hiccup scheme/scittle-kitchen-hiccup)
 
 ^:kindly/hide-code
 (defmacro define [& b]
-  (list 'kind/scittle (list 'quote (cons 'define b))))
+  (list 'do
+        (cons 'mentat-collective.emmy.scheme/define b)
+        (list 'kind/scittle (list 'quote (cons 'define b)))))
 
 ^:kindly/hide-code
-(def md
-  (comp kindly/hide-code kind/md))
+(define emmy-require
+  '[emmy.env :as e :refer :all :exclude [F->C Cartan]])
+
+^:kindly/hide-code
+(require emmy-require)
+
+^:kindly/hide-code
+(kind/scittle
+  '(require emmy-require))
+
+^:kindly/hide-code
+(define show-exp (comp str simplify))
+
+^:kindly/hide-code
+(kind/scittle
+  '(def show-expression show-exp))
+
+^:kindly/hide-code
+(defmacro show-expression [b & c]
+  (case b
+    :calc-on-server
+    (list 'simplify (first c))
+    :browser
+    (list 'kind/reagent
+          [:tt (list 'quote
+                     (list 'show-exp (first c)))])
+    (let [serg (show-exp (eval b))]
+      (list 'kind/reagent
+            [:div (list 'quote
+                        (list 'let ['a (list 'show-exp b)]
+                              (list 'if (list '= serg 'a)
+                                    [:tt 'a]
+                                    [:div
+                                     ;; [:tt 'a] ;; comment this in prod
+                                     [:tt serg]])))]))))
+
+^:kindly/hide-code
+(define velocities velocity)
+
+^:kindly/hide-code
+(define coordinates coordinate)
+
+^:kindly/hide-code
+(define time first)
 
 ;; > Philosophy is written in that great book which ever lies before our eyes---I
 ;; > mean the Universe---but we cannot understand it if we do not learn the language
@@ -272,11 +290,6 @@
 (define ((L2 mass metric) place velocity)
   (* 1/2 mass ((metric velocity velocity) place)))
 
-^:kindly/hide-code
-(defn L2 [mass metric]
-  (fn [place velocity]
-    (* 1/2 mass ((metric velocity velocity) place))))
-
 ;; This program gives the Lagrangian in a coordinate-independent, geometric way. It
 ;; is entirely in terms of geometric objects, such as a place on the configuration
 ;; manifold, the velocity at that place, and the metric that describes the local
@@ -293,12 +306,6 @@
         (e (coordinate-system->vector-basis coordsys)))
     ((L2 mass metric) ((point coordsys) x) (* e v))))
 
-^:kindly/hide-code
-(defn Lc [mass metric coordsys]
-  (let [e (coordinate-system->vector-basis coordsys)]
-    (fn [[_ x v]]
-      ((L2 mass metric) ((point coordsys) x) (* e v)))))
-
 ;; The manifold point $\mathsf{m}$ represented by the coordinates $x$ is given by
 ;; =(define m ((point coordsys) x))=. The coordinates of $\mathsf{m}$ in a
 ;; different coordinate system are given by =((chart coordsys2) m)=. The manifold
@@ -312,18 +319,12 @@
 
 (define the-metric (literal-metric 'g R2-rect))
 
-^:kindly/hide-code
-(def the-metric (literal-metric 'g R2-rect))
-
 ;; The metric is expressed in rectangular coordinates, so the coordinate system is
 ;; =R2-rect=.[fn:5] The component functions will be labeled as subscripted ~g~s.
 
 ;; We can now make the Lagrangian for the system:
 
 (define L (Lc 'm the-metric R2-rect))
-
-^:kindly/hide-code
-(def L (Lc 'm the-metric R2-rect))
 
 ;; And we can apply our Lagrangian to an arbitrary state:
 
@@ -341,9 +342,6 @@
 
 (define gamma (literal-manifold-map 'q R1-rect R2-rect))
 
-^:kindly/hide-code
-(def gamma (literal-manifold-map 'q R1-rect R2-rect))
-
 ;; The values of $\gamma$ are points on the manifold, not a coordinate
 ;; representation of the points. We may evaluate =gamma= only on points of the
 ;; real-line manifold; =gamma= produces points on the $\mathbb{R}^2$ manifold. So
@@ -358,10 +356,6 @@
 (define coordinate-path
   (compose (chart R2-rect) gamma (point R1-rect)))
 
-^:kindly/hide-code
-(def coordinate-path
-  (compose (chart R2-rect) gamma (point R1-rect)))
-
 (show-expression
   (coordinate-path 't))
 
@@ -370,10 +364,6 @@
 ;; compare with the residuals of the geodesic equations.
 
 (define Lagrange-residuals
-  (((Lagrange-equations L) coordinate-path) 't))
-
-^:kindly/hide-code
-(def Lagrange-residuals
   (((Lagrange-equations L) coordinate-path) 't))
 
 ;; ## Geodesic Equations
@@ -436,13 +426,26 @@
   (define-coordinates t e/R1-rect))
 
 ^:kindly/hide-code
-(def Cartan
+(kind/scittle
+  '(define-coordinates t e/R1-rect))
+
+;; :::{#cartan}
+(define Cartan
   (Christoffel->Cartan
     (metric->Christoffel-2
       the-metric
       (coordinate-system->basis R2-rect))))
+;; :::
 
-(def geodesic-equation-residuals
+^:kindly/hide-code
+(kind/scittle
+  '(define Cartan
+     (Christoffel->Cartan
+       (metric->Christoffel-2
+         the-metric
+         (coordinate-system->basis R2-rect)))))
+
+(define geodesic-equation-residuals
   (((((covariant-derivative Cartan gamma) d:dt)
      ((differential gamma) d:dt))
     (chart R2-rect))
@@ -451,28 +454,20 @@
 ;; where =d:dt= is a vector field on the real line[fn:8] and =Cartan= is a way of
 ;; encapsulating the geometry, as specified by the Christoffel coefficients.
 
-;; [note KLM: I could not get d:dt to work in the sidebar. In [clj-tiles, FDG001 page 19](https://kloimhardt.github.io/cljtiles.html?page=FDG001) and [maria cloud](https://2.maria.cloud/gist/65d96869f9a901b243df06f996c1d707) the code works on-line]
-
 ;;The Christoffel coefficients are computed from the metric:
 
-^:kindly/hide-code
-(kind/code
-  "(def Cartan
-    (Christoffel->Cartan
-      (metric->Christoffel-2
-        the-metric
-        (coordinate-system->basis R2-rect))))")
+;; {{<contents cartan>}}
 
 ;; The two messy residual results that we did not show are related by the metric.
 ;; If we change the representation of the geodesic equations by "lowering" them
 ;; using the mass and the metric, we see that the residuals are equal:
 
-(def metric-components
+(define metric-components
   (metric->components
    the-metric
    (coordinate-system->basis R2-rect)))
 
-(simplify
+(show-expression
   (- Lagrange-residuals
      (* (* 'm (metric-components (gamma ((point R1-rect) 't))))
         geodesic-equation-residuals)))

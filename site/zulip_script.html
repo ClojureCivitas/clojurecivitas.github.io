@@ -1,0 +1,30 @@
+<script>
+function zulipEncodeTopic(topic) {
+  return Array.from(topic).map(ch => {
+    const code = ch.charCodeAt(0);
+    if (
+      (code >= 48 && code <= 57) ||   // 0-9
+      (code >= 65 && code <= 90) ||   // A-Z
+      (code >= 97 && code <= 122)     // a-z
+    ) {
+      return ch;
+    } else {
+      return "." + code.toString(16).toUpperCase().padStart(2, "0");
+    }
+  }).join("");
+}
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    const zulipOrg = "clojurians.zulipchat.com";
+    const zulipChannel = "528764-clojurecivitas";
+    const title = document.querySelector('#title-block-header h1.title')?.textContent.trim();
+
+    if (title) {
+        const encodedTitle = zulipEncodeTopic(title);
+        const zulipURL = `https://${zulipOrg}/#narrow/channel/${zulipChannel}/topic/${encodedTitle}`;
+        const linkHTML = `<p><a href="${zulipURL}">Discuss ${title} on Zulip</a></p>`;
+        document.getElementById('quarto-content').insertAdjacentHTML('beforeend', linkHTML);
+    }
+});
+</script>
+

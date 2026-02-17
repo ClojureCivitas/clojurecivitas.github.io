@@ -10,10 +10,11 @@
   io.github.clojure/core.async.flow-monitor   {:git/tag "v0.1.2"
                                                :git/url "https://github.com/clojure/core.async.flow-monitor"
                                                :git/sha "6248a5d"}
+  criterium/criterium                         {:mvn/version "0.4.6"}
   metosin/malli                               {:mvn/version "0.19.1"}
   clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
   clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
-  org.scicloj/clay                            {:mvn/version "2.0.2"}
+  org.scicloj/clay                            {:mvn/version "2.0.5"}
   org.scicloj/kindly                          {:mvn/version "4-beta21"}
   thi.ng/geom                                 {:mvn/version "1.0.1"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
@@ -25,20 +26,37 @@
   camel-snake-kebab/camel-snake-kebab         {:mvn/version "0.4.3"}
   io.github.alza-bitz/snowpark-clj            {:git/url "https://github.com/alza-bitz/snowpark-clj.git"
                                                :git/sha "7856d9ca2080b188f9feec115ca709d3f54877b0"}
-  org.lwjgl/lwjgl                             {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl$natives-linux               {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-opengl                      {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-opengl$natives-linux        {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-opengl$natives-windows      {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-opengl$natives-macos        {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-glfw                        {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-glfw$natives-linux          {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-glfw$natives-windows        {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-glfw$natives-macos          {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-stb                         {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-stb$natives-linux           {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-stb$natives-windows         {:mvn/version "3.3.6"}
-  org.lwjgl/lwjgl-stb$natives-macos           {:mvn/version "3.3.6"}
+  org.lwjgl/lwjgl                             {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl$natives-linux               {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-opengl                      {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-opengl$natives-linux        {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-opengl$natives-windows      {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-opengl$natives-macos        {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-glfw                        {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-glfw$natives-linux          {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-glfw$natives-windows        {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-glfw$natives-macos          {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-stb                         {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-stb$natives-linux           {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-stb$natives-windows         {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-stb$natives-macos           {:mvn/version "3.4.0"}
+  comb/comb                                   {:mvn/version "1.0.0"}
+  midje/midje                                 {:mvn/version "1.10.10"}
+  dev.data-star.clojure/sdk                   {:mvn/version "1.0.0-RC4"}
+  dev.data-star.clojure/http-kit              {:mvn/version "1.0.0-RC4"}
+  dev.data-star.clojure/brotli                {:mvn/version "1.0.0-RC4"}
+  dev.data-star.clojure/malli-schemas         {:mvn/version "1.0.0-RC4"}
+  dev.data-star.clojure/http-kit-malli-schemas {:mvn/version "1.0.0-RC4"}
+  dev.data-star.clojure/ring-malli-schemas    {:mvn/version "1.0.0-RC4"}
+
+  ;; libraries for GIS work
+  org.apache.sis.storage/sis-geotiff          {:mvn/version "1.5"}
+  org.apache.sis.core/sis-referencing         {:mvn/version "1.5"}
+  org.geotools/gt-geotiff                     {:mvn/version "31.2"}
+  org.geotools/gt-main                        {:mvn/version "31.2"}
+  org.geotools/gt-epsg-hsql                   {:mvn/version "31.2"}
+  org.geotools/gt-geojson                     {:mvn/version "31.2"}
+
   clj-http/clj-http                           {:mvn/version "3.13.1"}
 
   generateme/fastmath                         {:mvn/version "3.0.0-alpha4"}
@@ -48,11 +66,18 @@
 
   org.soulspace/qclojure                      {:mvn/version "0.22.0"}
   org.babashka/http-client                    {:mvn/version "0.4.22"}
-  com.github.danielsz/bioscoop                {:mvn/version "1.0.5"}
+  io.github.babashka/sci.nrepl                {:mvn/version "0.0.2"}
+  com.github.danielsz/bioscoop                {:mvn/version "1.0.5"
+                                               :exclusions [ch.qos.logback/logback-classic]}
   yamlscript/core                             {:git/url "https://github.com/yaml/yamlscript"
                                                :git/sha "ed7adfbf90a39f379d5a7193bb2e4bdd7f0eecf8"
                                                :deps/root "core"}
-  }
+  com.hyperphor/multitool                     {:mvn/version "0.2.3"}
+  datascript/datascript                       {:mvn/version "1.7.8"}
+  io.github.pbaille/noon                      {:git/url "https://github.com/pbaille/noon.git"
+                                               :git/sha "e63bb7c82671293c5610da6a02e3148a48ad71dd"}}
+
+ :mvn/repos {"osgeo" {:url "https://repo.osgeo.org/repository/release/"}}
 
  :aliases
  {;; Build the site with `clojure -M:clay -A:markdown`

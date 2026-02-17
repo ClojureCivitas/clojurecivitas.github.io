@@ -1,10 +1,13 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Infix Notation"
                      :quarto {:author   :kloimhardt
-                              :type     :draft
-                              :date     "2025-11-15"
+                              :type     :post
+                              :sidebar  "emmy-fdg"
+                              :description "Emmy can wear a different apparel should the occasion demand it."
+                              :date     "2025-11-19"
+                              :image    "fdg_ch01_ys.jpg"
                               :category :libs
-                              :tags     [:emmy :infix :yamlscript]}}}
+                              :tags     [:emmy :infix :yamlscript :notation]}}}
 
 (ns mentat-collective.emmy.fdg-ch01-ys
     (:refer-clojure :exclude [+ - * / zero? compare divide numerator denominator
@@ -56,11 +59,10 @@
 (kind/scittle
   '(def time first))
 
-^:kindly/hide-code
-(kind/scittle
-  '(def D partial))
+;; The Clojure code below is taken from a [previous Civitas entry](https://clojurecivitas.github.io/mentat_collective/emmy/fdg_ch01.html) (the picture from [Emily's parser game](https://ifdb.org/viewgame?id=urxrv27t7qtu52lb)).
 
-;; The Clojure code below is taken from the snippets of [a previous entry](https://clojurecivitas.github.io/mentat_collective/emmy/fdg_ch01.html). Please make pull requests to [the source file of this notebook](https://github.com/kloimhardt/clojurecivitas.github.io/blob/infix/src/mentat_collective/emmy/fdg_ch01_ys.clj). It is not necessary to understand what the Clojure code does. As this semantics does not matter here, it is rather the syntax, the notation, that should be compared and critiqued vis-a-vis the proposed infix notation.
+;; It is not necessary to understand what the Clojure code does. As this semantics does not matter here, it is rather the syntax, the notation, that should be compared and given attention to.
+
 
 ;; ## First Example
 
@@ -72,23 +74,10 @@
 
 (ys "
 defn LFree(mass):
-  fn([_ _ v]): mass * 1/2 * square(v)
+  fn([_ _ v]): 1/2 * mass * square(v)
 ")
 
 ;; ## Another one
-
-;; I proceed to the next infix snippet
-
-(ys "
-defn sphere-to-R3(R):
-  fn([_ [theta phi]]):
-    up:
-     =>: R * sin(theta) * cos(phi)
-     =>: R * sin(theta) * sin(phi)
-     =>: R * cos(theta)
-")
-
-;; which is the following in Clojure
 
 (kind/scittle
   '(defn sphere->R3 [R]
@@ -96,6 +85,17 @@ defn sphere-to-R3(R):
        (up (* R (sin theta) (cos phi))
            (* R (sin theta) (sin phi))
            (* R (cos theta))))))
+
+(ys "
+defn sphere-to-R3(R):
+  fn([_ [theta phi]]):
+    up:
+     R *: sin(theta) * cos(phi)
+     R *: sin(theta) * sin(phi)
+     R *: cos(theta)
+")
+
+;; The `*:` means nothing but normal multiplication.
 
 ;; ## Higher order functions
 
@@ -106,7 +106,6 @@ defn sphere-to-R3(R):
   (def of call)
   (def at call))
 
-(def D partial)
 
 (ys "
 defn F-to-C(F):
@@ -114,18 +113,20 @@ defn F-to-C(F):
     up:
      time: state
      F: state
-     =>: D(0).of(F).at(state) + ( D(1).of(F).at(state) * velocity(state) )
+     partial(0).of(F).at(state) +:
+       partial(1).of(F).at(state) *
+       velocity(state)
 ")
 
-;; With `of` and `at` like that, the above `D(0).of(F).at(state)` (which means "take the zeroth derivative of the function F at point state") translates into what are higher order functions in the Clojure version.
+;; Again, the above `+:` is normal addition. With `of` and `at` like that, the above `partial(0).of(F).at(state)` (which means "take the partial derivative with respect to the first variable of the function F at point state") translates into what are higher order functions in the Clojure version.
 
 (kind/scittle
   '(defn F->C [F]
      (fn [state]
        (up (time state)
            (F state)
-           (+ (((D 0) F) state)
-              (* (((D 1) F) state)
+           (+ (((partial 0) F) state)
+              (* (((partial 1) F) state)
                  (velocity state)))))))
 
 ;; ## Another one
@@ -139,19 +140,21 @@ defn Lsphere(m R):
 
 (kind/scittle
   '(defn Lsphere [m R]
-     (compose (Lfree m) (F->C (sphere->R3 R)))))
+     (compose (Lfree m)
+              (F->C (sphere->R3 R)))))
 
 ;; ## The proof is in the pudding
 
-;; In order to quote symbols, I introduce a macro called `q`
+;; Emmy is a symbolic algebra system, `s:q` as well as `q: s` produce the symbol named `s`. Below we have `m:q` and `q: t` to produce the symbols `m` and `t`.
 
-(defmacro q [f] (list 'quote f))
+^:kindly/hide-code
+(defmacro q [s] (list 'quote s))
 
 (ys "
 simplify:
   Lsphere(m:q R:q):
     up:
-     =>: t:q
+     q: t
      up: theta:q phi:q
      up: thetadot:q phidot:q
 ")
@@ -160,7 +163,9 @@ simplify:
   (vector :tt
     '(simplify
        ((Lsphere 'm 'R)
-        (up 't (up 'theta 'phi) (up 'thetadot 'phidot))))))
+        (up 't
+            (up 'theta 'phi)
+            (up 'thetadot 'phidot))))))
 
 ;; Indeed the results are the same which proves the infix technically works.
 
@@ -186,12 +191,18 @@ yamlscript/core {:git/url \"https://github.com/yaml/yamlscript\"
 ;; ## 1
 (ys "
 defn L2(mass metric):
-  fn(place velocity): mass * 1/2 * metric(velocity velocity).at(place)
+  fn(place velocity):
+    1/2 *:
+      mass *
+      metric(velocity velocity).at(place)
 ")
+
 (kind/scittle
   '(defn L2 [mass metric]
      (fn [place velocity]
-       (* 1/2 mass ((metric velocity velocity) place)))))
+       (* 1/2
+          mass
+          ((metric velocity velocity) place)))))
 
 
 ;; ## 2
@@ -203,8 +214,10 @@ defn L2(mass metric):
 defn Lc(mass metric coordsys):
   e =: coordinate-system-to-vector-basis(coordsys)
   fn([_ x v]):
-    L2(mass metric): point(coordsys).at(x) (e * v)
+    L2(mass metric): point(coordsys).at(x), (e * v)
 ")
+
+;; The `,` above is a matter of taste and can also be omitted
 
 (kind/scittle
   '(defn Lc [mass metric coordsys]
@@ -237,7 +250,7 @@ L =: Lc(m:q the-metric R2-rect)
 simplify:
   L:
     up:
-      =>: t:q
+      q: t
       up: x:q y:q
       up: vx:q vy:q
 ")
@@ -245,4 +258,6 @@ simplify:
 (kind/reagent
   (vector :tt
     '(simplify
-       (L (up 't (up 'x 'y) (up 'vx 'vy))))))
+       (L (up 't
+              (up 'x 'y)
+              (up 'vx 'vy))))))

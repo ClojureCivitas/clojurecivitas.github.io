@@ -1,5 +1,5 @@
 /temp
-/site/*/
+/site
 .clj-kondo/
 .quarto/
 _site/
@@ -37,6 +37,8 @@ _site/
 .portal/vs-code.edn
 **/password.edn
 /src/finance/portfolio_analysis/*.edn# Created by https://www.toptal.com/developers/gitignore/api/osx
+
+!/site/_quarto.yml
 
 # Edit at https://www.toptal.com/developers/gitignore?templates=osx
 

@@ -6,7 +6,7 @@
                   :type :post
                   :date "2025-11-13"
                   :tags [:dsp :math :music]
-                  :image "wav.png"}}}
+                  :image "wav.svg"}}}
 (ns dsp.wav-files
   (:require [scicloj.kindly.v4.kind :as kind]
             [clojure.java.io :as io]
@@ -250,8 +250,7 @@ wav-format
 ;; into the correct datatype for each frame manually. For now we just
 ;; put the data for 16-bit mono WAV files into a short-array.
 (defn audio-data [^InputStream is]
-  (let [{:keys
-         [frame-length]} (audio-format is)
+  (let [{:keys [frame-length]} (audio-format is)
         format           (-> (AudioSystem/getAudioFileFormat is)
                              AudioFileFormat/.getFormat)
         ^bytes
