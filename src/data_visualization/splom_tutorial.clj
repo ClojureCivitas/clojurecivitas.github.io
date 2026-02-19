@@ -2,17 +2,16 @@
   :clay {:title "Building a SPLOM using geom.viz"
          :quarto {:type :post
                   :author [:daslu]
-                  :date "2026-01-11"
+                  :date "2026-01-13"
                   :description "Progressive tutorial building scatter plot matrices step-by-step with thi.ng/geom.viz"
                   :category :data-visualization
                   :tags [:datavis :geomviz :splom :tutorial]
                   :keywords [:datavis :splom :scatterplot-matrix :geomviz :tutorial]
                   :toc true
                   :toc-depth 2
-                  :draft true}}}
-(ns data-visualization.splom-tutorial
-  (:require [tablecloth.api :as tc]
-            [tablecloth.column.api :as tcc]))
+                  :image "splom_iris.png"}}}
+
+(ns data-visualization.splom-tutorial)
 
 ^{:kindly/hide-code true
   :kindly/kind :kind/hiccup}
@@ -971,15 +970,18 @@ domains
              regressions (get all-regressions [x-col y-col])]
          (render-panel x-col y-col row col regressions))))))
 
-iris-splom-4x4
 ;; A complete scatter plot matrix! 
 ;; - 4 diagonal histograms show distributions
 ;; - 12 off-diagonal scatter plots show all pairwise relationships
 ;; - Per-species regression lines reveal species-specific trends
 ;;
-;; Notice the symmetry: the upper and lower triangles are mirror images of each other
-;; (x vs y in one panel corresponds to y vs x in the reflected panel).
-;; Some SPLOM designs only show one triangle to avoid redundancy.
+;; Notice the symmetry: the upper and lower triangles are mirror images of each other:
+;; x vs y in one panel corresponds to y vs x in the reflected panel.
+;; (But the regression lines are not symmetric: the two axes have different roles
+;; in the definition of regression, that uses x as a predictor and minimizes the 
+;; prediction error for y.)
+;; Some SPLOM designs only show one triangle to avoid redundancy. Others use each triangle
+;; for a different data visualization.
 
 
 ;; ## Reflection: What We've Built
