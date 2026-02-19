@@ -419,7 +419,6 @@ simple-data
           layers))
 
 ;; Examples:
-;; Line 99-100
 (kind/pprint
  (merge-layers {:=columns [:a]} {:=columns [:b]}))
 
@@ -2488,3 +2487,5 @@ iris
 ;; **Feedback and contributions welcome!**
 ;; - GitHub: [Civitas3 repository](https://github.com/daslu/civitas3)
 ;; - Zulip: [#data-science>AlgebraOfGraphics.jl](https://clojurians.zulipchat.com/#narrow/channel/151924-data-science/topic/AlgebraOfGraphics.2Ejl/)
+
+
