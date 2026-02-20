@@ -50,8 +50,8 @@
           h)
     (concat ['define-1 h] b)))
 
-(defmacro lambda [h b]
-  (list 'fn (into [] h) b))
+(defmacro lambda [h & b]
+  (concat (list 'fn (into [] h)) (embrace-define b)))
 
 (def scittle-kitchen-hiccup
   [:div
@@ -99,5 +99,23 @@
   (define emmy-env 3)
 
   emmy-env
+
+  (define (f1 F)
+    (lambda (v)
+            (define (g delta)
+              (+ delta v F))
+            (g 0)))
+
+  ((f1 7) 1)
+
+  (define (f3 x)
+    (let ((a 1))
+      (define (f4 y) ;; no higher define here
+        (lambda (z)
+                (let ((b 2))
+                  (+ y b z))))
+      (+ ((f4 x) x) a)))
+
+(f3 5)
 
   :end-comment)
