@@ -848,8 +848,9 @@
         ph (/ (- height (* 2 m)) rows)
         ;; Compute stats + domains
         data-views (mapv compute-stat views)
-        all-colors (let [cs (distinct (mapcat :color-order data-views))]
-                     (when (seq cs) (vec cs)))
+        all-colors (let [color-views (filter :color views)]
+                     (when (seq color-views)
+                       (vec (distinct (mapcat #(vec ((:data %) (:color %))) color-views)))))
         color-cols (distinct (remove nil? (map :color views)))
         shape-col (first (remove nil? (map :shape views)))
         shape-categories (when shape-col
