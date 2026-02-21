@@ -976,7 +976,7 @@
                               :show-x? (= ri (dec rows))
                               :show-y? (zero? ci)
                               :all-colors all-colors
-                              :x-domain global-x-doms :y-domain global-y-doms
+                              :x-domain (when (<= (count x-vars) 1) global-x-doms) :y-domain (when (<= (count y-vars) 1) global-y-doms)
                               :tooltip-fn tooltip-fn
                               :shape-categories shape-categories)
                 ;; Column headers (top row) — skip for polar
