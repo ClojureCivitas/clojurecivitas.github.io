@@ -9,8 +9,7 @@
                   :tags [:music :harmony :functional-programming :midi]}}}
 
 (ns music.noon-introduction
-  (:require [noon.viz.piano-roll :as pr]
-            [noon.eval :refer [score]]))
+  (:require [noon.viz.clay :as nclay]))
 
 ;; ## What is Noon?
 ;;
@@ -168,18 +167,19 @@
 
 ;; *The four step types — chromatic, diatonic, structural, and tonic — each walking up from C4.
 ;; Note how the same ascending pattern selects different notes depending on the layer.
-;; Colors indicate each note's role: tonic (dark blue), structural (medium blue), diatonic (light blue), chromatic (grey).*
+;; Try editing the code and pressing Eval & Play!*
 
-^:kindly/hide-code
-(pr/piano-roll-group
- [{:label "chromatic — (tup c0 c1 c2 c3 c4 c5 c6)"
-   :score (score (tup c0 c1 c2 c3 c4 c5 c6))}
-  {:label "diatonic — (tup d0 d1 d2 d3 d4 d5 d6)"
-   :score (score (tup d0 d1 d2 d3 d4 d5 d6))}
-  {:label "structural — (tup s0 s1 s2 s3)"
-   :score (score (tup s0 s1 s2 s3))}
-  {:label "tonic — (tup t0 t1 t2)"
-   :score (score (tup t0 t1 t2))}])
+;; chromatic — semitone by semitone:
+(nclay/editor "(score (tup c0 c1 c2 c3 c4 c5 c6))")
+
+;; diatonic — scale degree by degree:
+(nclay/editor "(score (tup d0 d1 d2 d3 d4 d5 d6))")
+
+;; structural — chord tone by chord tone:
+(nclay/editor "(score (tup s0 s1 s2 s3))")
+
+;; tonic — octave by octave:
+(nclay/editor "(score (tup t0 t1 t2))")
 
 ;; The chromatic run gives you all 7 semitones.
 ;; The diatonic run gives you the major scale.
@@ -204,15 +204,14 @@
 ;; *Same diatonic steps, three different scales. The code is identical — only the scale context changes.
 ;; Notice how the intervals between notes shift while the structure remains.*
 
-^:kindly/hide-code
-(pr/piano-roll-group
- [{:label "major (default)"
-   :score (score dur:4 (lin d0 d1 d2 d3 d4 d5 d6 d7))}
-  {:label "dorian"
-   :score (score dur:4 (scale :dorian) (lin d0 d1 d2 d3 d4 d5 d6 d7))}
-  {:label "hungarian"
-   :score (score dur:4 (scale :hungarian) (lin d0 d1 d2 d3 d4 d5 d6 d7))}]
- {:shared-pitch-range true})
+;; major (default):
+(nclay/editor "(score dur:4 (lin d0 d1 d2 d3 d4 d5 d6 d7))")
+
+;; dorian:
+(nclay/editor "(score dur:4 (scale :dorian) (lin d0 d1 d2 d3 d4 d5 d6 d7))")
+
+;; hungarian:
+(nclay/editor "(score dur:4 (scale :hungarian) (lin d0 d1 d2 d3 d4 d5 d6 d7))")
 
 ;; The same goes for structural steps:
 ;;
@@ -227,13 +226,11 @@
 ;; *Triad vs tetrad: the same structural steps produce C-E-G-C with a triad structure,
 ;; but C-E-G-B when the structure is set to tetrad — the seventh appears automatically.*
 
-^:kindly/hide-code
-(pr/piano-roll-group
- [{:label "triad (default) — (tup s0 s1 s2 s3)"
-   :score (score (tup s0 s1 s2 s3))}
-  {:label "tetrad — (structure :tetrad) (tup s0 s1 s2 s3)"
-   :score (score (structure :tetrad) (tup s0 s1 s2 s3))}]
- {:shared-pitch-range true})
+;; triad (default):
+(nclay/editor "(score (tup s0 s1 s2 s3))")
+
+;; tetrad:
+(nclay/editor "(score (structure :tetrad) (tup s0 s1 s2 s3))")
 
 ;; ## Changing the Context
 ;;
@@ -264,10 +261,10 @@
 ;;```
 
 ;; *A I-IV-V-I chord progression, each chord arpeggiated.
-;; Dashed lines mark where the harmonic context changes — the same arpeggio pattern adapts to each degree.*
+;; The same arpeggio pattern adapts to each degree.
+;; Try changing `(tup s0 s1 s2)` to `(tup s0 s1 s2 s3)` after switching to `(structure :tetrad)`!*
 
-^:kindly/hide-code
-(pr/piano-roll (score (lin I IV V I) (each (tup s0 s1 s2))))
+(nclay/editor "(score (lin I IV V I) (each (tup s0 s1 s2)))")
 
 ;; Here `I`, `IV`, `V` are degree changes — they shift the harmonic context
 ;; so that structural steps target the chord tones of each degree.
@@ -285,11 +282,10 @@
 ;;       (each (tup d1 d1- d0)))
 ;;```
 
-;; *Mixing layers: structural chord tones (medium blue) decorated with diatonic neighbor notes (light blue).
+;; *Mixing layers: structural chord tones decorated with diatonic neighbor notes.
 ;; The structural steps define the skeleton; the diatonic steps fill in the passing tones.*
 
-^:kindly/hide-code
-(pr/piano-roll (score dur:2 (tup s0 s1 s2 s3) (each (tup d1 d1- d0))))
+(nclay/editor "(score dur:2 (tup s0 s1 s2 s3) (each (tup d1 d1- d0)))")
 
 ;; This creates a chord arpeggio (`s0 s1 s2 s3`) then decorates each chord tone
 ;; with upper and lower neighbor scale notes (`d1 d1- d0`).
@@ -308,8 +304,7 @@
 ;; *Harmonic minor progression: I-IV-VII-I with arpeggiated chords.
 ;; Notice the characteristic G♯ (raised 7th degree) appearing in the VII chord.*
 
-^:kindly/hide-code
-(pr/piano-roll (score (scale :harmonic-minor) (lin I IV VII I) (each (tup s0 s1 s2))))
+(nclay/editor "(score (scale :harmonic-minor) (lin I IV VII I) (each (tup s0 s1 s2)))")
 
 ;; ## Why This Matters
 ;;
