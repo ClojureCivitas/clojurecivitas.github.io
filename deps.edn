@@ -58,6 +58,7 @@
   clj-http/clj-http                           {:mvn/version "3.13.1"}
 
   generateme/fastmath                         {:mvn/version "3.0.0-alpha4"}
+  org.scicloj/wadogo                          {:local/root "/workspace/clones/wadogo"}
   clojure2d/clojure2d                         {:mvn/version "1.5.0-alpha1"}
 
   com.github.psambit9791/jdsp                 {:mvn/version "3.1.0"}
