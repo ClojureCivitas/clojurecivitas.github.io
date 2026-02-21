@@ -26,64 +26,45 @@
 ;; A noon score is a set of event maps. That's it.
 ;; Each event represents a MIDI note with properties like position, duration, velocity, and pitch:
 ;;
-;;```clj
-;; noon.events/DEFAULT_EVENT
-;; ;; => {:position 0, :duration 1, :channel 0, :track 0,
-;; ;;     :velocity 80, :pitch {...}, :voice 0, :patch [0 4]}
-;;```
-;;
+
+(nclay/editor "noon.events/DEFAULT_EVENT")
+
 ;; A fresh score contains a single event — middle C:
-;;
-;;```clj
-;; (score)
-;; ;; => #{{:position 0, :duration 1, ...}}
-;;```
+
+(nclay/editor "(score)")
 ;;
 ;; Everything in noon is a **transformation** — a function from score to score.
 ;; You build music by composing transformations:
 ;;
-;;```clj
-;; (play dur2 (tup s0 s1 s2 s3))
-;;```
-;;
 ;; This plays an ascending arpeggio at double duration.
 ;; `dur2` doubles the duration, `tup` splits it into equal parts,
 ;; and `s0` through `s3` are structural intervals (more on those soon).
+
+(nclay/editor "(play dur2 (tup s0 s1 s2 s3))")
 
 ;; ## Building Blocks
 ;;
 ;; Three core functions handle most of the composition:
 ;;
 ;; **`lin`** — concatenate transformations in sequence (a melody):
-;;
-;;```clj
-;; (play (lin C0 E0 G0 B0))
-;;```
-;;
+
+(nclay/editor "(play (lin C0 E0 G0 B0))")
+
 ;; **`par`** — stack transformations simultaneously (a chord):
-;;
-;;```clj
-;; (play (par C0 Eb0 G0))  ; C minor chord
-;;```
-;;
+
+(nclay/editor "(play (par C0 Eb0 G0))")
+
 ;; **`tup`** — like `lin`, but fitted to the current duration (a tuplet):
-;;
-;;```clj
-;; (play (tup c0 c3 c7 c10))  ; four notes in the space of one
-;;```
-;;
+
+(nclay/editor "(play (tup c0 c3 c7 c10))")
+
 ;; These compose freely. A chord progression with arpeggios:
-;;
-;;```clj
-;; (play (lin I IV V I)
-;;       (each (tup s0 s1 s2)))
-;;```
-;;
+
+(nclay/editor "(play (lin I IV V I) (each (tup s0 s1 s2)))")
+
 ;; And transformations can be chained using vectors:
-;;
-;;```clj
-;; (play [dur:2 (lin C0 E0 G0)])
-;;```
+
+(nclay/editor "(play [dur:2 (lin C0 E0 G0)])")
 ;;
 ;; A few more useful combinators:
 ;;
@@ -92,14 +73,12 @@
 ;; - `each` — apply a transformation to every event individually
 ;; - `chans` — like `par` but on separate MIDI channels (for different instruments)
 ;;
-;;```clj
-;; (play
-;;  (chans
-;;   [(patch :ocarina) (tup s0 s1 s2 s3) (rep 4 s1)]
-;;   [(patch :vibraphone) vel3 (par s0 s1 s2)]
-;;   [(patch :acoustic-bass) o1-])
-;;  (dup 4))
-;;```
+(nclay/editor "(play
+ (chans
+  [(patch :ocarina) (tup s0 s1 s2 s3) (rep 4 s1)]
+  [(patch :vibraphone) vel3 (par s0 s1 s2)]
+  [(patch :acoustic-bass) o1-])
+ (dup 4))")
 
 ;; ## How Musicians Think About Pitch
 ;;
@@ -142,13 +121,8 @@
 ;;
 ;; Each event in a noon score carries this full context under its `:pitch` key:
 ;;
-;;```clj
-;; (:pitch noon.events/DEFAULT_EVENT)
-;; ;; => {:scale     [0 2 4 5 7 9 11]   ; C major
-;; ;;     :structure [0 2 4]             ; triad
-;; ;;     :origin    {:d 35, :c 60}      ; middle C
-;; ;;     :position  {:t 0, :s 0, :d 0, :c 0}}
-;;```
+
+(nclay/editor "(:pitch noon.events/DEFAULT_EVENT)")
 ;;
 ;; The `:position` map holds an offset at each layer.
 ;; This is where the note actually *is* within the harmonic context.
@@ -158,12 +132,7 @@
 ;; Each layer has a corresponding **step** operation.
 ;; A step moves you to the next position *on that layer*:
 ;;
-;;```clj
-;; (play (tup c0 c1 c2 c3 c4 c5 c6))    ; chromatic: semitone by semitone
-;; (play (tup d0 d1 d2 d3 d4 d5 d6))    ; diatonic:  scale degree by degree
-;; (play (tup s0 s1 s2 s3))              ; structural: chord tone by chord tone
-;; (play (tup t0 t1 t2))                 ; tonic: octave by octave
-;;```
+
 
 ;; *The four step types — chromatic, diatonic, structural, and tonic — each walking up from C4.
 ;; Note how the same ascending pattern selects different notes depending on the layer.
@@ -190,16 +159,7 @@
 ;; Here's the key insight: **steps are always relative to the current harmonic context**.
 ;; When you change the scale or structure, the same step operations produce different notes:
 ;;
-;;```clj
-;; ;; Major scale
-;; (play dur:4 (lin d0 d1 d2 d3 d4 d5 d6 d7))
-;;
-;; ;; Dorian scale — same code, different result
-;; (play dur:4 (scale :dorian) (lin d0 d1 d2 d3 d4 d5 d6 d7))
-;;
-;; ;; Hungarian scale
-;; (play dur:4 (scale :hungarian) (lin d0 d1 d2 d3 d4 d5 d6 d7))
-;;```
+
 
 ;; *Same diatonic steps, three different scales. The code is identical — only the scale context changes.
 ;; Notice how the intervals between notes shift while the structure remains.*
@@ -215,13 +175,7 @@
 
 ;; The same goes for structural steps:
 ;;
-;;```clj
-;; ;; Triad arpeggio
-;; (play (tup s0 s1 s2 s3))
-;;
-;; ;; Tetrad arpeggio — same code, richer chord
-;; (play (structure :tetrad) (tup s0 s1 s2 s3))
-;;```
+
 
 ;; *Triad vs tetrad: the same structural steps produce C-E-G-C with a triad structure,
 ;; but C-E-G-B when the structure is set to tetrad — the seventh appears automatically.*
@@ -237,28 +191,20 @@
 ;; Several functions let you reshape the harmonic context:
 ;;
 ;; **`scale`** — change the scale:
-;;
-;;```clj
-;; (play (scale :melodic-minor) (rup 8 d1))
-;;```
-;;
+
+(nclay/editor "(play (scale :melodic-minor) (rup 8 d1))")
+
 ;; **`structure`** — change the chord structure:
-;;
-;;```clj
-;; (play (structure :tetrad) (tup s0 s1 s2 s3))
-;;```
-;;
+
+(nclay/editor "(play (structure :tetrad) (tup s0 s1 s2 s3))")
+
 ;; **`root`** — change the tonal center:
-;;
-;;```clj
-;; (play (root :Eb) (tup s0 s1 s2))
-;;```
-;;
+
+(nclay/editor "(play (root :Eb) (tup s0 s1 s2))")
+
 ;; **`degree`** — move to a scale degree (mode change):
-;;
-;;```clj
-;; (play (lin I IV V I) (each (tup s0 s1 s2)))
-;;```
+
+(nclay/editor "(play (lin I IV V I) (each (tup s0 s1 s2)))")
 
 ;; *A I-IV-V-I chord progression, each chord arpeggiated.
 ;; The same arpeggio pattern adapts to each degree.
@@ -275,12 +221,7 @@
 ;; The real power emerges when you mix layers.
 ;; Since each event carries the full context, you can navigate between layers freely:
 ;;
-;;```clj
-;; ;; Structural arpeggio with diatonic passing tones
-;; (play dur:2
-;;       (tup s0 s1 s2 s3)
-;;       (each (tup d1 d1- d0)))
-;;```
+
 
 ;; *Mixing layers: structural chord tones decorated with diatonic neighbor notes.
 ;; The structural steps define the skeleton; the diatonic steps fill in the passing tones.*
@@ -295,11 +236,7 @@
 ;;
 ;; An arpeggiated chord progression in harmonic minor:
 ;;
-;;```clj
-;; (play (scale :harmonic-minor)
-;;       (lin I IV VII I)
-;;       (each (tup s0 s1 s2)))
-;;```
+
 
 ;; *Harmonic minor progression: I-IV-VII-I with arpeggiated chords.
 ;; Notice the characteristic G♯ (raised 7th degree) appearing in the VII chord.*
