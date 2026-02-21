@@ -90,6 +90,5 @@
                                org.scicloj/kindly        {:local/root "../kindly"}
                                org.scicloj/kindly-advice {:local/root "../kindly-advice"}
                                org.scicloj/kindly-render {:local/root "../kindly-render"}}}
-  :local-noon {:override-deps {io.github.pbaille/noon {:local/root "/Users/pierrebaille/Code/WIP/noon"}}}
   :neil       {:project {:name io.github.timothypratley/clojurecivitas}}
   :dev        {:jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"]}}}
