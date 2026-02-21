@@ -118,4 +118,23 @@
 
 (f3 5)
 
+
+
+  :end-comment)
+
+(comment
+  "does not work, but should"
+
+  (let-scheme ((a 1))
+    (let ((b 2))
+      (+ a b)))
+
+  (define (f3 x)
+    (let ((a 1))
+      (define ((f4 y) yy) ;; higher define here is the problem
+        (lambda (z)
+                (let ((b 2))
+                  (+ y b z))))
+      (+ (((f4 x) x) x) a)))
+
   :end-comment)
