@@ -75,7 +75,7 @@
   com.hyperphor/multitool                     {:mvn/version "0.2.3"}
   datascript/datascript                       {:mvn/version "1.7.8"}
   io.github.pbaille/noon                      {:git/url "https://github.com/pbaille/noon.git"
-                                               :git/sha "e63bb7c82671293c5610da6a02e3148a48ad71dd"}}
+                                               :git/sha "97677727bff20243dc15d5cafb821d4af9019842"}}
 
  :mvn/repos {"osgeo" {:url "https://repo.osgeo.org/repository/release/"}}
 
