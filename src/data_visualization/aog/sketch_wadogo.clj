@@ -857,12 +857,8 @@
                                              views)))
         polar? (= :polar (:coord (first views)))
         tooltip-fn (when tooltip
-                     (fn [row view]
-                       (str "<title>"
-                            (clojure.string/join ", "
-                                                 (map (fn [[k v]] (str (name k) ": " v))
-                                                      (select-keys row (remove nil? [(:x view) (:y view) (:color view)]))))
-                            "</title>")))
+                     (fn [row]
+                       (str/join ", " (map (fn [[k v]] (str (name k) ": " v)) row))))
         ;; Scales control
         scale-mode (or scales :shared)
         global-x-doms (when (#{:shared :free-y} scale-mode)
