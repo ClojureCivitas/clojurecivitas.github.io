@@ -255,7 +255,7 @@ iris
 ;;
 ;; Each stat method transforms a view's data and returns domain information.
 ;; `compute-stat` is a multimethod — we define the `:identity` pass-through
-;; here and add `:bin`, `:regress`, `:smooth`, and `:count` in later sections.
+;; here and add `:bin`, `:lm`, `:loess`, and `:count` in later sections.
 
 (defmulti compute-stat
   "Compute a statistical transform for a view.
@@ -365,9 +365,6 @@ iris
 (defmethod make-coord :cartesian [_ sx sy pw ph m]
   (fn [dx dy] [(sx dx) (sy dy)]))
 
-(defmethod make-coord :flip [_ sx sy pw ph m]
-  (fn [dx dy] [(sx dy) (sy dx)]))
-
 ;; ---
 
 ;; # Mark Rendering
@@ -387,7 +384,7 @@ iris
         size-scale (when all-sizes
                      (let [lo (reduce min all-sizes) hi (reduce max all-sizes)
                            span (max 1e-6 (- (double hi) (double lo)))]
-                       (fn [v] (+ 2.0 (* 6.0 (/ (- (double v) (double lo)) span))))))
+                       (fn [v] (+ 4.0 (* 12.0 (/ (- (double v) (double lo)) span))))))
         shape-map (when shape-categories
                     (into {} (map-indexed (fn [i c] [c (nth shape-syms (mod i (count shape-syms)))])
                                           shape-categories)))]
@@ -396,7 +393,7 @@ iris
                     (let [c (if color (color-for all-colors color) "#333")]
                       (for [i (range (count xs))
                             :let [[px py] (coord (nth xs i) (nth ys i))
-                                  r (if sizes (size-scale (nth sizes i)) 2.5)
+                                  r (if sizes (size-scale (nth sizes i)) 5.0)
                                   sh (if shapes (get shape-map (nth shapes i) :circle) :circle)
                                   base-opts {:stroke "#fff" :stroke-width 0.5 :opacity 0.7}
                                   elem (render-shape-elem sh px py r c base-opts)]]
@@ -429,12 +426,6 @@ iris
            (for [t y-ticks :let [py (sy t)]]
              [:line {:x1 m :y1 py :x2 (- pw m) :y2 py
                      :stroke (:grid theme) :stroke-width 0.5}])))))
-
-(defmethod render-grid :flip [_ sx sy pw ph m]
-  (render-grid :cartesian sx sy pw ph m))
-
-(defmethod render-grid :default [_ sx sy pw ph m]
-  (render-grid :cartesian sx sy pw ph m))
 
 (defmulti render-x-ticks
   "Render x-axis tick labels."
@@ -621,6 +612,13 @@ iris
      [:g [:circle {:cx x :cy (+ y (* i 16)) :r 4 :fill (color-fn cat)}]
       [:text {:x (+ x 10) :y (+ y (* i 16) 4) :fill "#333"} (str cat)]])])
 
+(defmulti wrap-plot
+  "Wrap SVG content for final output. Dispatches on interaction mode keyword."
+  (fn [mode svg-content] mode))
+
+(defmethod wrap-plot :default [_ svg]
+  (kind/hiccup svg))
+
 (defn plot
   "Render views as SVG. Options: :width :height :scales :coord :tooltip :brush"
   ([views] (plot views {}))
@@ -732,50 +730,7 @@ iris
                       [:g (render-shape-elem sh x-off (+ y-off (* i 16)) 4 "#666" {:stroke "none"})
                        [:text {:x (+ x-off 10) :y (+ y-off (* i 16) 4) :fill "#333"} (str cat)]]))))
           (into [:g] (remove nil? (arrange-panels layout-type ctx)))]]
-     (if brush
-       (kind/hiccup
-        [:div {:style {:position "relative" :display "inline-block"}}
-         svg-content
-         [:script "
-(function(){
-  var svg = document.currentScript.previousElementSibling;
-  var pts = svg.querySelectorAll('circle,rect.data-point,polygon');
-  var drag = false, x0, y0, sel;
-  svg.addEventListener('mousedown', function(e){
-    var r = svg.getBoundingClientRect();
-    x0 = e.clientX - r.left; y0 = e.clientY - r.top;
-    sel = document.createElementNS('http://www.w3.org/2000/svg','rect');
-    sel.setAttribute('fill','rgba(100,100,255,0.2)');
-    sel.setAttribute('stroke','#66f');
-    svg.appendChild(sel); drag = true;
-  });
-  svg.addEventListener('mousemove', function(e){
-    if(!drag) return;
-    var r = svg.getBoundingClientRect();
-    var x1 = e.clientX - r.left, y1 = e.clientY - r.top;
-    sel.setAttribute('x', Math.min(x0,x1));
-    sel.setAttribute('y', Math.min(y0,y1));
-    sel.setAttribute('width', Math.abs(x1-x0));
-    sel.setAttribute('height', Math.abs(y1-y0));
-  });
-  svg.addEventListener('mouseup', function(e){
-    if(!drag) return; drag = false;
-    var bx = parseFloat(sel.getAttribute('x')), by = parseFloat(sel.getAttribute('y'));
-    var bw = parseFloat(sel.getAttribute('width')), bh = parseFloat(sel.getAttribute('height'));
-    svg.removeChild(sel);
-    pts.forEach(function(p){
-      var cx = parseFloat(p.getAttribute('cx')||p.getAttribute('x'));
-      var cy = parseFloat(p.getAttribute('cy')||p.getAttribute('y'));
-      if(cx>=bx && cx<=bx+bw && cy>=by && cy<=by+bh){
-        p.setAttribute('opacity','1.0');
-      } else {
-        p.setAttribute('opacity','0.15');
-      }
-    });
-  });
-})();
-"]])
-       (kind/hiccup svg-content)))))
+     (wrap-plot (if brush :brush :default) svg-content))))
 
 ;; ---
 
@@ -892,6 +847,20 @@ iris
     (layer (histogram {:color :species}))
     plot)
 
+;; ## ⚙️ Flip Coordinate
+;;
+;; Flipping swaps the x and y axes. We extend `make-coord` and `render-grid`
+;; with a `:flip` method — histograms become horizontal automatically.
+
+(defmethod make-coord :flip [_ sx sy pw ph m]
+  (fn [dx dy] [(sx dy) (sy dx)]))
+
+(defmethod render-grid :flip [_ sx sy pw ph m]
+  (render-grid :cartesian sx sy pw ph m))
+
+(defmethod render-grid :default [_ sx sy pw ph m]
+  (render-grid :cartesian sx sy pw ph m))
+
 ;; ## 🧪 Flipped Histogram
 ;;
 ;; Flip swaps the axes — bars grow horizontally instead of vertically.
@@ -912,17 +881,17 @@ iris
 
 ;; ## ⚙️ Mark Constructors
 
-(defn linear
-  ([] {:mark :line :stat :regress})
-  ([opts] (merge {:mark :line :stat :regress} opts)))
+(defn lm
+  ([] {:mark :line :stat :lm})
+  ([opts] (merge {:mark :line :stat :lm} opts)))
 
-(defn smooth
-  ([] {:mark :line :stat :smooth})
-  ([opts] (merge {:mark :line :stat :smooth} opts)))
+(defn loess
+  ([] {:mark :line :stat :loess})
+  ([opts] (merge {:mark :line :stat :loess} opts)))
 
-;; ## ⚙️ compute-stat :regress
+;; ## ⚙️ compute-stat :lm
 
-(defmethod compute-stat :regress [view]
+(defmethod compute-stat :lm [view]
   (let [{:keys [data x y color]} view
         clean (tc/drop-missing data [x y])
         n (tc/row-count clean)]
@@ -957,12 +926,12 @@ iris
            :x-domain [x-min x-max]
            :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]})))))
 
-;; ## ⚙️ compute-stat :smooth
+;; ## ⚙️ compute-stat :loess
 ;;
 ;; Loess curve via fastmath.interpolation, sampling 80 points.
 ;; Deduplicates x values via `tc/group-by` + `tc/aggregate`.
 
-(defmethod compute-stat :smooth [view]
+(defmethod compute-stat :loess [view]
   (let [{:keys [data x y color]} view
         clean (tc/drop-missing data [x y])
         n (tc/row-count clean)]
@@ -974,23 +943,24 @@ iris
                              (tc/group-by [x])
                              (tc/aggregate {y #(dfn/mean (% y))})
                              (tc/order-by [x])))
-            fit-smooth (fn [ds]
-                         (let [deduped (dedup-sort ds)
-                               sxs (double-array (deduped x)) sys (double-array (deduped y))
-                               f (interp/interpolation :loess sxs sys)
-                               xmin (first sxs) xmax (last sxs)
-                               step (/ (- xmax xmin) (dec n-sample))
-                               sample-xs (mapv #(+ xmin (* % step)) (range n-sample))
-                               sample-ys (mapv f sample-xs)]
-                           {:xs sample-xs :ys sample-ys}))]
+            fit-loess (fn [ds]
+                        (let [deduped (dedup-sort ds)
+                              sxs (double-array (deduped x)) sys (double-array (deduped y))
+                              f (interp/interpolation :loess sxs sys)
+                              x-lo (aget sxs 0) x-hi (aget sxs (dec (alength sxs)))
+                              step (/ (- x-hi x-lo) (dec n-sample))
+                              sample-xs (mapv #(+ x-lo (* % step)) (range n-sample))
+                              sample-ys (mapv f sample-xs)]
+                          {:xs sample-xs :ys sample-ys}))]
         (if color
-          (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)]
-            {:points (for [[gk gds] grouped
-                           :let [{:keys [xs ys]} (fit-smooth gds)]]
-                       {:color (gk color) :xs xs :ys ys})
+          (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)
+                results (for [[gk gds] grouped
+                              :let [{:keys [xs ys]} (fit-loess gds)]]
+                          {:color (gk color) :xs xs :ys ys})]
+            {:points results
              :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
              :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]})
-          (let [{:keys [xs ys]} (fit-smooth clean)]
+          (let [{:keys [xs ys]} (fit-loess clean)]
             {:points [{:xs xs :ys ys}]
              :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
              :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]}))))))
@@ -1033,14 +1003,14 @@ iris
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layers (point {:color :species})
-            (linear {:color :species}))
+            (lm {:color :species}))
     plot)
 
 ;; ## 🧪 Smooth Curve (Loess)
 
 (-> (views iris [[:sepal-length :petal-length]])
     (layers (point {:color :species})
-            (smooth {:color :species}))
+            (loess {:color :species}))
     plot)
 
 ;; ---
@@ -1672,6 +1642,54 @@ iris
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species}))
     (plot {:tooltip true}))
+
+;; ## ⚙️ wrap-plot :brush
+;;
+;; Brushable plots wrap the SVG in a div with a selection script.
+
+(defmethod wrap-plot :brush [_ svg-content]
+  (kind/hiccup
+   [:div {:style {:position "relative" :display "inline-block"}}
+    svg-content
+    [:script "
+(function(){
+  var svg = document.currentScript.previousElementSibling;
+  var pts = svg.querySelectorAll('circle,rect.data-point,polygon');
+  var drag = false, x0, y0, sel;
+  svg.addEventListener('mousedown', function(e){
+    var r = svg.getBoundingClientRect();
+    x0 = e.clientX - r.left; y0 = e.clientY - r.top;
+    sel = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    sel.setAttribute('fill','rgba(100,100,255,0.2)');
+    sel.setAttribute('stroke','#66f');
+    svg.appendChild(sel); drag = true;
+  });
+  svg.addEventListener('mousemove', function(e){
+    if(!drag) return;
+    var r = svg.getBoundingClientRect();
+    var x1 = e.clientX - r.left, y1 = e.clientY - r.top;
+    sel.setAttribute('x', Math.min(x0,x1));
+    sel.setAttribute('y', Math.min(y0,y1));
+    sel.setAttribute('width', Math.abs(x1-x0));
+    sel.setAttribute('height', Math.abs(y1-y0));
+  });
+  svg.addEventListener('mouseup', function(e){
+    if(!drag) return; drag = false;
+    var bx = parseFloat(sel.getAttribute('x')), by = parseFloat(sel.getAttribute('y'));
+    var bw = parseFloat(sel.getAttribute('width')), bh = parseFloat(sel.getAttribute('height'));
+    svg.removeChild(sel);
+    pts.forEach(function(p){
+      var cx = parseFloat(p.getAttribute('cx')||p.getAttribute('x'));
+      var cy = parseFloat(p.getAttribute('cy')||p.getAttribute('y'));
+      if(cx>=bx && cx<=bx+bw && cy>=by && cy<=by+bh){
+        p.setAttribute('opacity','1.0');
+      } else {
+        p.setAttribute('opacity','0.15');
+      }
+    });
+  });
+})();
+"]]))
 
 ;; ## 🧪 Brushable Scatter
 
