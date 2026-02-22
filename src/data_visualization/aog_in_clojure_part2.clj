@@ -13,19 +13,8 @@
                   :image "aog_iris.png"
                   :draft true}}}
 (ns data-visualization.aog-in-clojure-part2
-  (:require
-   [tablecloth.api :as tc]
-   [tablecloth.column.api :as tcc]
-   [tech.v3.datatype.functional :as dfn]
-   [scicloj.kindly.v4.kind :as kind]
-   [thi.ng.geom.svg.core :as svg]
-   [thi.ng.geom.viz.core :as viz]
-   [fastmath.ml.regression :as regr]
-   [fastmath.stats :as stats]
-   [fastmath.interpolation :as interp]
-   [clojure.string :as str]
-   [scicloj.metamorph.ml.rdatasets :as rdatasets]
-   [wadogo.scale :as ws]))
+  (:require [tablecloth.api :as tc]
+            [scicloj.kindly.v4.kind :as kind]))
 
 ^{:kindly/hide-code true
   :kindly/kind :kind/hiccup}
@@ -42,17 +31,23 @@
 
 ;; # Introduction
 ;;
-;; The [Algebra of Graphics](https://link.springer.com/book/10.1007/0-387-28695-0)
-;; (Wilkinson, 2005) proposes that charts are built from composable pieces:
-;; a dataset, aesthetic mappings (which columns map to x, y, color, etc.),
-;; statistical transforms (bin, regress, smooth), and coordinate systems
-;; (Cartesian, polar, flipped). Julia's
-;; [AlgebraOfGraphics.jl](https://aog.makie.org/stable/) showed this can work
-;; beautifully in practice: you multiply data × mappings × visual marks, and
-;; the library figures out axes, legends, and layout.
+;; Wilkinson's [Grammar of Graphics](https://link.springer.com/book/10.1007/0-387-28695-0)
+;; (2005) describes a formal system for specifying statistical charts as
+;; a pipeline of composable components: data transformations, variable
+;; mappings, geometric elements, scales, coordinate systems, and guides.
+;; The book also introduces algebraic operators — cross (×), nest (/), and
+;; blend (+) — for combining variables within a specification.
+;;
+;; Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/) applies
+;; algebraic composition to plot specifications using two operators
+;; (distinct from Wilkinson's cross/nest/blend, despite the similar
+;; symbols): `*` ("merge together") combines partial specifications — a
+;; dataset with a mapping with a visual mark — while `+` ("stack on top")
+;; layers separate specifications in the same plot. The library infers
+;; axes, legends, and layout from the composed result.
 ;;
 ;; Can we bring this to Clojure? This post builds a compositional plotting library
-;; from scratch — about 1300 lines of code — implementing these ideas on top of
+;; from scratch, implementing these ideas on top of
 ;; [Tablecloth](https://scicloj.github.io/tablecloth/) datasets and hand-rolled
 ;; SVG. The design emerged from ongoing experimentation in the
 ;; [Scicloj](https://scicloj.github.io/) community, and is part of a broader
@@ -72,16 +67,16 @@
 ;; ```
 ;;
 ;; A plot is a vector of views. Five small functions (`cross`, `stack`, `views`,
-;; `layer`, `layers`) compose views algebraically — no macros, no classes, no hidden
-;; state. Since views are just maps, you can `println` them, `assoc` into them,
-;; or manipulate them with any Clojure function.
+;; `layer`, `layers`) compose views algebraically. Since views are plain maps,
+;; you can `println` them, `assoc` into them, or manipulate them with any
+;; Clojure function.
 ;;
 ;; Three architectural decisions keep the rendering pipeline simple:
 ;;
 ;; **1. Wadogo for scales.** Instead of hand-rolling scale functions,
 ;; we delegate to [wadogo](https://github.com/generateme/wadogo) — a scale library
 ;; inspired by d3-scale. One call gives us ticks, formatting, band calculation,
-;; and log transforms. When we need datetime scales, it's one keyword away.
+;; and log transforms, with support for datetime and other scale types.
 ;;
 ;; **2. Stat-driven domains.** Each statistical transform returns `{:x-domain :y-domain}`
 ;; alongside its output data. A histogram's y-domain is `[0 max-count]`, not the
@@ -90,28 +85,46 @@
 ;;
 ;; **3. Single coord function.** There's one projection function per coordinate system:
 ;; `[data-x data-y] → [pixel-x pixel-y]`. All marks decompose to points before calling
-;; it. For bars, we project 4 corners into a polygon. This eliminates the M×N
-;; combinatorics of marks × coordinate systems.
+;; it. For bars, we project 4 corners into a polygon. Adding a new coordinate system
+;; (say, polar) means writing one function, not updating every renderer.
 ;;
-;; Everything renders to SVG via Hiccup — no external charting libraries, no JSON
-;; serialization, full pixel control. We add tooltips and brushing via inline
+;; Everything renders to SVG via Hiccup. We add tooltips and brushing via inline
 ;; JavaScript. The result covers scatter plots, histograms, regression, smoothing,
 ;; categorical bars, stacked bars, faceting, SPLOM, polar coordinates, log scales,
-;; annotations, size/shape aesthetics, and more. Let's build it up piece by piece.
+;; annotations, size/shape aesthetics, and more.
 
 ;; ---
 
 ;; # Setup
 
 ;; ## ⚙️ Dependencies
-;;
-;; [Tablecloth](https://scicloj.github.io/tablecloth/) for data manipulation,
-;; [Kindly](https://scicloj.github.io/kindly-noted/) for notebook rendering,
-;; [Fastmath](https://github.com/generateme/fastmath) for regression and loess
-;; smoothing, [thi.ng/geom](https://github.com/thi-ng/geom) for SVG generation,
-;; [wadogo](https://github.com/generateme/wadogo) for scales (ticks, formatting,
-;; band calculation, log transforms), and
-;; [rdatasets](https://github.com/scicloj/rdatasets-clj) for sample datasets.
+
+(ns data-visualization.aog-in-clojure-part2
+  (:require
+   ;; Tablecloth - dataset manipulation
+   [tablecloth.api :as tc]
+   [tablecloth.column.api :as tcc]
+   [tech.v3.datatype.functional :as dfn]
+
+   ;; Kindly - notebook rendering protocol
+   [scicloj.kindly.v4.kind :as kind]
+
+   ;; thi.ng/geom - SVG generation
+   [thi.ng.geom.svg.core :as svg]
+   [thi.ng.geom.viz.core :as viz]
+
+   ;; Fastmath - regression and loess smoothing
+   [fastmath.ml.regression :as regr]
+   [fastmath.stats :as stats]
+   [fastmath.interpolation :as interp]
+
+   ;; Wadogo - scales (ticks, formatting, bands, log)
+   [wadogo.scale :as ws]
+
+   ;; RDatasets - sample datasets (iris, mpg, etc.)
+   [scicloj.metamorph.ml.rdatasets :as rdatasets]
+
+   [clojure.string :as str]))
 
 ;; ## 📖 Datasets
 
@@ -137,7 +150,7 @@ iris
 ;; A plot is a vector of views. The algebra provides five small functions that
 ;; compose views through standard `merge` and `concat` operations. You can
 ;; `println` any view and understand everything. You can `assoc` or `merge`
-;; views with standard Clojure functions — there's nothing hidden.
+;; views with standard Clojure functions.
 
 ;; ## ⚙️ Combinators
 
@@ -167,7 +180,7 @@ iris
 
 ;; ## 🧪 What a View Looks Like
 
-;; A single view — just a map with the dataset, x column, and y column:
+;; A single view — a map with the dataset, x column, and y column:
 
 (kind/pprint
  (first (views iris [[:sepal-length :sepal-width]])))
@@ -282,7 +295,7 @@ iris
 
 ;; ## 🧪 What Specs Look Like
 
-;; A geometry spec is just a map. The `layer` function merges it into views:
+;; A geometry spec is a map. The `layer` function merges it into views:
 
 (point :color :species)
 
@@ -652,8 +665,8 @@ iris
     :max-count (:max-count result)
     :n-bins (count (:bin-maps (first (:bins result))))}))
 
-;; The y-domain is `[0 N]` where N is the tallest bin — exactly what we need
-;; for the y-axis of a histogram. If we'd computed the y-domain from the raw
+;; The y-domain is `[0 N]` where N is the tallest bin — the correct range
+;; for a histogram's y-axis. If we'd computed the y-domain from the raw
 ;; data column, we'd get `[4.3 7.9]` — completely wrong for a count axis.
 
 ;; ---
@@ -714,15 +727,15 @@ iris
 ;; A coord is a single function: `[data-x data-y] → [pixel-x pixel-y]`.
 ;;
 ;; For **cartesian**, the scales already produce pixel coords, so the coord
-;; just calls `(sx dx)` and `(sy dy)`.
+;; calls `(sx dx)` and `(sy dy)`.
 ;;
 ;; For **flip**, we swap: `(sx dy)` and `(sy dx)`.
 ;;
 ;; For **polar**, we normalize the pixel positions to angle and radius, then
 ;; compute `(cx + r·cos(θ), cy + r·sin(θ))`.
 ;;
-;; This single-function approach means renderers never branch on coordinate type.
-;; They just call `(coord x y)` and get pixels back.
+;; Renderers call `(coord x y)` and get pixels back, regardless of
+;; coordinate type.
 
 ;; ## ⚙️ make-coord
 
@@ -1063,7 +1076,7 @@ iris
 
 ;; # Panel Renderer
 ;;
-;; `render-panel` is the heart of the rendering pipeline. It takes a set of views
+;; `render-panel` is the central rendering function. It takes a set of views
 ;; for a single panel and produces SVG. The pipeline has four steps:
 ;;
 ;; 1. **Compute stats** for all data views → get stat-driven domains
@@ -1472,8 +1485,8 @@ iris
 
 ;; # Examples
 ;;
-;; Now that all the pieces are in place, let's see the system in action.
-;; Each example shows the full pipeline from data to rendered SVG.
+;; With the implementation complete, here are examples showing the
+;; pipeline from data to rendered SVG.
 
 ;; ## Basic
 
@@ -1710,12 +1723,12 @@ iris
 ;; **Wadogo eliminates hand-rolled scale code.** Functions like `linear-scale`,
 ;; `nice-ticks`, `categorical-scale`, and `inv-scale-label` that you'd
 ;; normally hand-roll are replaced by `(ws/scale ...)`, `(ws/ticks ...)`,
-;; `(ws/format ...)`. Log scales get proper tick placement for free. Band
-;; scales get proper padding for free. When we need datetime, it's one keyword away.
+;; `(ws/format ...)`. Log scales get proper tick placement, band scales
+;; get proper padding, and datetime support is available.
 ;;
-;; **Single coord function eliminates M×N.** Instead of `make-projection`
-;; returning 8 functions per coord type, there's one function
-;; `[x y] → [px py]`. All marks decompose to points before calling it.
+;; **Single coord function keeps renderers simple.** There's one function
+;; `[x y] → [px py]` per coordinate system. All marks decompose to points
+;; before calling it, so renderers never branch on coordinate type.
 ;; For bars, we project 4 corners into a polygon. For polar bars, we
 ;; munch arcs by sampling 20+ points and projecting each one.
 ;;
