@@ -20,11 +20,11 @@
   :kindly/kind :kind/hiccup}
 [:style
  ".clay-dataset {
-  max-height:400px;
+  max-height: 400px;
   overflow-y: auto;
 }
-.printedClojure {
-  max-height:400px;
+.sourceCode.clojure {
+  max-height: 400px;
   overflow-y: auto;
 }
 "]
