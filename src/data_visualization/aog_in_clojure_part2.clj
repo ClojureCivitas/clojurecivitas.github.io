@@ -129,7 +129,7 @@
 ;; ## 📖 Datasets
 
 (def iris (rdatasets/datasets-iris))
-(def iris-cols [:sepal-length :sepal-width :petal-length :petal-width])
+(def iris-quantities [:sepal-length :sepal-width :petal-length :petal-width])
 
 (def mpg (rdatasets/ggplot2-mpg))
 
@@ -364,7 +364,7 @@ iris
 ;; When you cross all columns with themselves, `auto` detects that diagonal
 ;; views (where x=y) should be histograms and off-diagonal should be scatters:
 
-(let [vs (views iris (cross iris-cols iris-cols))
+(let [vs (views iris (cross iris-quantities iris-quantities))
       auto-vs (auto vs)]
   (kind/pprint
    {:diagonal-example (select-keys (first (filter diagonal? auto-vs))
@@ -1535,7 +1535,7 @@ iris
 ;; Cross all columns with themselves. `auto` detects diagonal views (histograms)
 ;; and off-diagonal views (scatters). Color by species:
 
-(-> (views iris (cross iris-cols iris-cols))
+(-> (views iris (cross iris-quantities iris-quantities))
     auto
     (layer :color :species)
     plot)
