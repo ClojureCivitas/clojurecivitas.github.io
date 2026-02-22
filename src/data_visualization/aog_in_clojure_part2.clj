@@ -426,8 +426,11 @@ iris
       sy (ws/scale :linear {:domain [0 50] :range [375 25]})
       stat {:points [{:xs [2 5 8] :ys [10 30 20]}]}
       ctx {:coord (make-coord :cartesian sx sy 600 400 25)
-           :all-colors nil :tooltip-fn nil :shape-categories nil}]
-  (render-mark :point stat ctx))
+           :all-colors nil :tooltip-fn nil :shape-categories nil}
+      marks (render-mark :point stat ctx)]
+  (kind/hiccup [:svg {:width 600 :height 400
+                      "xmlns" "http://www.w3.org/2000/svg"}
+                marks]))
 
 ;; ---
 
@@ -855,6 +858,20 @@ iris
            :x-domain [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)]
            :y-domain [0 max-count]})))))
 
+
+;; ## 🧪 What :bin Returns
+;;
+;; The `:bin` stat divides data into bins with counts and boundaries:
+
+(let [stat (-> (views iris [[:sepal-length :sepal-length]])
+               (layer (histogram))
+               first
+               compute-stat)]
+  (kind/pprint
+   {:x-domain (:x-domain stat)
+    :y-domain (:y-domain stat)
+    :first-3-bins (mapv #(select-keys % [:min :max :count])
+                        (take 3 (:bin-maps (first (:bins stat)))))}))
 ;; ## ⚙️ render-mark :bar
 ;;
 ;; Histogram bars are projected through the coord function as 4-corner polygons.
@@ -975,6 +992,16 @@ iris
          :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
          :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]}))))
 
+
+;; ## 🧪 What :lm Returns
+;;
+;; Two endpoints per group — the fitted line from x-min to x-max:
+
+(-> (views iris [[:sepal-length :sepal-width]])
+    (layer (lm {:color :species}))
+    first
+    compute-stat
+    kind/pprint)
 ;; ## ⚙️ compute-stat :loess
 ;;
 ;; Loess curve via fastmath.interpolation, sampling 80 points.
@@ -1047,6 +1074,16 @@ iris
         data-specs (remove #(and (map? %) (annotation-marks (:mark %))) layer-specs)]
     (concat (apply stack (map #(layer base-views %) data-specs))
             ann-specs)))
+
+;; ## 🧪 What layers Produces
+;;
+;; `layers` duplicates the base views, each copy with a different mark:
+
+(-> (views iris [[:sepal-length :sepal-width]])
+    (layers (point {:color :species})
+            (lm {:color :species}))
+    (->> (mapv #(select-keys % [:x :y :mark :stat :color])))
+    kind/pprint)
 
 ;; ## 🧪 Scatter + Regression
 
@@ -1131,6 +1168,16 @@ iris
            :max-count max-count
            :x-domain categories
            :y-domain [0 max-count]})))))
+
+;; ## 🧪 What :count Returns
+;;
+;; The `:count` stat tallies rows per category:
+
+(-> (views iris [[:species :species]])
+    (layer (bar))
+    first
+    compute-stat
+    kind/pprint)
 
 ;; ## ⚙️ Categorical Bar Helpers
 
@@ -1315,6 +1362,15 @@ iris
   "Apply `infer-defaults` to all views."
   [views]
   (mapv infer-defaults views))
+
+;; ## 🧪 Auto-Detection in Action
+;;
+;; Diagonal views (x=y) become histograms, off-diagonal become scatters:
+
+(-> (views iris (cross [:sepal-length :sepal-width] [:sepal-length :sepal-width]))
+    auto
+    (->> (mapv #(select-keys % [:x :y :mark :stat])))
+    kind/pprint)
 
 ;; ## ⚙️ Filtering and Conditional Specs
 
@@ -1525,6 +1581,18 @@ iris
   [views c]
   (mapv #(assoc % :coord c) views))
 
+;; ## 🧪 How Setters Modify Views
+;;
+;; `set-scale` and `set-coord` add keys to each view map:
+
+(-> (views iris [[:sepal-length :sepal-width]])
+    (layer (point))
+    (set-scale :x :log)
+    (set-coord :polar)
+    first
+    (select-keys [:x :y :mark :x-scale :coord])
+    kind/pprint)
+
 ;; ## 🧪 Log Scale
 
 (let [data (tc/dataset {:x (mapv #(Math/pow 10 %) (range 0.0 3.01 0.1))
@@ -1608,6 +1676,15 @@ iris
   "Horizontal reference band between y1 and y2."
   [y1 y2] {:mark :band-h :y1 y1 :y2 y2})
 
+
+;; ## 🧪 Annotation Specs
+;;
+;; Each annotation constructor returns a plain map:
+
+(kind/pprint
+ [(hline 3.0)
+  (vline 6.0)
+  (hband 2.5 3.5)])
 ;; ## ⚙️ render-annotation methods
 
 (defmethod render-annotation :rule-h [ann {:keys [coord x-domain]}]
