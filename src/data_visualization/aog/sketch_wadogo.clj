@@ -520,52 +520,96 @@
                 (:bins stat))))
 
 (defn- render-categorical-bars
-  "Render counted categorical bars using wadogo band scale."
-  [stat coord sx-scale all-colors & {:keys [position] :or {position :dodge}}]
+  "Render counted categorical bars using wadogo band scale.
+  When coord-px is provided (polar), renders arc-shaped wedges via munching."
+  [stat coord sx-scale all-colors & {:keys [position coord-px sy] :or {position :dodge}}]
   (let [bw (ws/data sx-scale :bandwidth)
         n-colors (clojure.core/count (:bars stat))
-        sub-bw (/ (* bw 0.8) (clojure.core/max 1 n-colors))
-        cum-y (atom {})]
+        cum-y (atom {})
+        ;; For dodge: per-category, which bar indices have count > 0?
+        active-map (when (= position :dodge)
+                     (into {}
+                           (for [cat (:categories stat)]
+                             [cat (vec (keep-indexed
+                                        (fn [bi {:keys [counts]}]
+                                          (let [c (some #(when (= cat (:category %)) (:count %)) counts)]
+                                            (when (and c (pos? c)) bi)))
+                                        (:bars stat)))])))
+        ;; Arc munching helper for polar
+        munch-arc (when coord-px
+                    (fn [px-lo px-hi py-lo py-hi n-seg]
+                      (let [outer (for [i (range (inc n-seg))
+                                        :let [t (/ (double i) n-seg)
+                                              px (+ px-lo (* t (- px-hi px-lo)))]]
+                                    (coord-px px py-hi))
+                            inner (for [i (range n-seg -1 -1)
+                                        :let [t (/ (double i) n-seg)
+                                              px (+ px-lo (* t (- px-hi px-lo)))]]
+                                    (coord-px px py-lo))]
+                        (str/join " " (map (fn [[x y]] (str x "," y))
+                                           (concat outer inner))))))]
     (into [:g]
           (mapcat (fn [bi {:keys [color counts]}]
                     (let [c (if color (color-for all-colors color) "#333")]
                       (for [{:keys [category count]} counts
+                            :when (or (= position :stack) (pos? count))
                             :let [band-info (sx-scale category true)
                                   band-start (:rstart band-info)
                                   band-end (:rend band-info)
                                   band-mid (/ (+ band-start band-end) 2.0)]]
                         (if (= position :stack)
                           (let [base (get @cum-y category 0)
-                                [_ yb] (coord (first (:x-domain stat)) base)
-                                [_ yt] (coord (first (:x-domain stat)) (+ base count))
+                                py-lo (sy base)
+                                py-hi (sy (+ base count))
                                 x-lo (- band-mid (* bw 0.4))
                                 x-hi (+ band-mid (* bw 0.4))]
                             (swap! cum-y assoc category (+ base count))
-                            [:rect {:x x-lo :y (clojure.core/min yb yt)
-                                    :width (- x-hi x-lo)
-                                    :height (Math/abs (- yb yt))
-                                    :fill c :opacity 0.7}])
-                          ;; dodge (original behavior)
-                          (let [x-lo (+ (- band-mid (/ (* bw 0.4))) (* bi sub-bw))
+                            (if coord-px
+                              [:polygon {:points (munch-arc x-lo x-hi py-lo py-hi 20)
+                                         :fill c :opacity 0.7}]
+                              [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
+                                      :width (- x-hi x-lo)
+                                      :height (Math/abs (- py-lo py-hi))
+                                      :fill c :opacity 0.7}]))
+                          ;; dodge: center only non-zero bars per category
+                          (let [active (get active-map category)
+                                n-active (clojure.core/count active)
+                                active-idx (.indexOf ^java.util.List active bi)
+                                sub-bw (/ (* bw 0.8) (clojure.core/max 1 n-active))
+                                x-lo (+ (- band-mid (/ (* n-active sub-bw) 2.0)) (* active-idx sub-bw))
                                 x-hi (+ x-lo sub-bw)
-                                [_ y-bottom] (coord (first (:x-domain stat)) 0)
-                                [_ y-top] (coord (first (:x-domain stat)) count)]
-                            [:rect {:x x-lo :y (clojure.core/min y-bottom y-top)
-                                    :width (- x-hi x-lo)
-                                    :height (Math/abs (- y-bottom y-top))
-                                    :fill c :opacity 0.7}])))))
+                                py-lo (sy 0)
+                                py-hi (sy count)]
+                            (if coord-px
+                              [:polygon {:points (munch-arc x-lo x-hi py-lo py-hi 20)
+                                         :fill c :opacity 0.7}]
+                              [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
+                                      :width (- x-hi x-lo)
+                                      :height (Math/abs (- py-lo py-hi))
+                                      :fill c :opacity 0.7}]))))))
                   (range) (:bars stat)))))
 
 (defn- render-value-bars
   "Render pre-aggregated bars: categorical x, continuous y.
   stat has :points [{:xs [...] :ys [...] :color ...}]."
-  [stat coord sx-scale all-colors & {:keys [position] :or {position :dodge}}]
+  [stat coord sx-scale all-colors & {:keys [position coord-px sy] :or {position :dodge}}]
   (let [bw (ws/data sx-scale :bandwidth)
         groups (:points stat)
         n-groups (clojure.core/count groups)
         sub-bw (/ (* bw 0.8) (clojure.core/max 1 n-groups))
-        ;; For stacking: track cumulative y per category
-        cum-y (atom {})]
+        cum-y (atom {})
+        munch-arc (when coord-px
+                    (fn [px-lo px-hi py-lo py-hi n-seg]
+                      (let [outer (for [i (range (inc n-seg))
+                                        :let [t (/ (double i) n-seg)
+                                              px (+ px-lo (* t (- px-hi px-lo)))]]
+                                    (coord-px px py-hi))
+                            inner (for [i (range n-seg -1 -1)
+                                        :let [t (/ (double i) n-seg)
+                                              px (+ px-lo (* t (- px-hi px-lo)))]]
+                                    (coord-px px py-lo))]
+                        (str/join " " (map (fn [[x y]] (str x "," y))
+                                           (concat outer inner))))))]
     (into [:g]
           (mapcat (fn [gi {:keys [color xs ys]}]
                     (let [c (if color (color-for all-colors color) "#333")]
@@ -575,27 +619,33 @@
                                   band-info (sx-scale cat true)
                                   band-start (:rstart band-info)
                                   band-end (:rend band-info)
-                                  band-mid (/ (+ band-start band-end) 2.0)
-                                  [_ y-bottom] (coord cat 0)
-                                  [_ y-top] (coord cat val)]]
+                                  band-mid (/ (+ band-start band-end) 2.0)]]
                         (if (= position :stack)
                           (let [base (get @cum-y cat 0)
-                                [_ yb] (coord cat base)
-                                [_ yt] (coord cat (+ base val))
+                                py-lo (sy base)
+                                py-hi (sy (+ base val))
                                 x-lo (- band-mid (* bw 0.4))
                                 x-hi (+ band-mid (* bw 0.4))]
                             (swap! cum-y assoc cat (+ base val))
-                            [:rect {:x x-lo :y (clojure.core/min yb yt)
-                                    :width (- x-hi x-lo)
-                                    :height (Math/abs (- yb yt))
-                                    :fill c :opacity 0.7}])
+                            (if coord-px
+                              [:polygon {:points (munch-arc x-lo x-hi py-lo py-hi 20)
+                                         :fill c :opacity 0.7}]
+                              [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
+                                      :width (- x-hi x-lo)
+                                      :height (Math/abs (- py-lo py-hi))
+                                      :fill c :opacity 0.7}]))
                           ;; dodge
-                          (let [x-lo (+ (- band-mid (/ (* bw 0.4))) (* gi sub-bw))
-                                x-hi (+ x-lo sub-bw)]
-                            [:rect {:x x-lo :y (clojure.core/min y-bottom y-top)
-                                    :width (- x-hi x-lo)
-                                    :height (Math/abs (- y-bottom y-top))
-                                    :fill c :opacity 0.7}])))))
+                          (let [x-lo (+ (- band-mid (/ (* n-groups sub-bw) 2.0)) (* gi sub-bw))
+                                x-hi (+ x-lo sub-bw)
+                                py-lo (sy 0)
+                                py-hi (sy val)]
+                            (if coord-px
+                              [:polygon {:points (munch-arc x-lo x-hi py-lo py-hi 20)
+                                         :fill c :opacity 0.7}]
+                              [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
+                                      :width (- x-hi x-lo)
+                                      :height (Math/abs (- py-lo py-hi))
+                                      :fill c :opacity 0.7}]))))))
                   (range) groups))))
 
 (defn- render-lines [stat coord all-colors]
@@ -774,6 +824,20 @@
         ;; Step 4: build coord function
         coord (make-coord coord-type sx sy pw ph m)
 
+        ;; Pixel-space polar projection (for categorical bar arc munching)
+        coord-px (when polar?
+                   (let [cx (/ pw 2.0) cy (/ ph 2.0)
+                         r-max (- (min cx cy) m)
+                         x-lo (double m) x-span (double (- pw m m))
+                         y-lo (double m) y-span (double (- ph m m))]
+                     (fn [px py]
+                       (let [t-angle (/ (- px x-lo) (max 1.0 x-span))
+                             t-radius (/ (- (+ y-lo y-span) py) (max 1.0 y-span))
+                             angle (* 2.0 Math/PI t-angle)
+                             radius (* r-max t-radius)]
+                         [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
+                          (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
+
         ;; Annotation views (not data-driven)
         annotation-views (filter #(#{:rule-h :rule-v :band-h} (:mark %)) panel-views)]
 
@@ -829,10 +893,12 @@
                          :rect (if (:bars stat)
                                  ;; Count stat output → categorical bars
                                  [(render-categorical-bars stat coord sx all-colors
-                                                           :position (or (:position view) :dodge))]
+                                                           :position (or (:position view) :dodge)
+                                                           :coord-px coord-px :sy sy)]
                                  ;; Identity stat output → pre-aggregated value bars
                                  [(render-value-bars stat coord sx all-colors
-                                                     :position (or (:position view) :dodge))])
+                                                     :position (or (:position view) :dodge)
+                                                     :coord-px coord-px :sy sy)])
                          :line [(render-lines stat coord all-colors)]
                          :text [(render-text stat coord all-colors)]
                          [(render-points stat coord all-colors
@@ -1257,6 +1323,20 @@
 (-> (views mpg [[:cyl :cyl]])
     (layer (bar :x-type :categorical))
     plot)
+;; ### 26. Polar bar chart (rose / coxcomb)
+
+(-> (views iris [[:species :species]])
+    (layer (bar))
+    (set-coord :polar)
+    plot)
+
+;; ### 27. Polar stacked bar chart
+
+(-> (views mpg [[:class :class]])
+    (layer (stacked-bar :color :drv))
+    (set-coord :polar)
+    plot)
+
 ;; ---
 
 ;; ## Part 7: Reflection
