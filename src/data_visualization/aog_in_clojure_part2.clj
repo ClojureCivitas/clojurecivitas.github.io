@@ -157,12 +157,12 @@ iris
 (defn cross
   "Cartesian product of two sequences."
   [xs ys]
-  (vec (for [x xs, y ys] [x y])))
+  (for [x xs, y ys] [x y]))
 
 (defn stack
   "Concatenate multiple collections into one flat vector."
   [& colls]
-  (vec (apply concat colls)))
+  (apply concat colls))
 
 ;; ## 🧪 Cross and Stack
 
@@ -218,8 +218,8 @@ iris
   [base-views & layer-specs]
   (let [ann-specs (filter #(and (map? %) (annotation-marks (:mark %))) layer-specs)
         data-specs (remove #(and (map? %) (annotation-marks (:mark %))) layer-specs)]
-    (into (vec (apply stack (map #(layer base-views %) data-specs)))
-          ann-specs)))
+    (concat (apply stack (map #(layer base-views %) data-specs))
+             ann-specs)))
 
 ;; ## ⚙️ Faceting
 
@@ -227,26 +227,26 @@ iris
   "Split each view by a categorical column. Creates one view per category,
   each with a filtered dataset and a `:facet-val` tag."
   [views col]
-  (vec (mapcat
-        (fn [v]
-          (let [groups (-> (:data v) (tc/group-by [col]) tc/groups->map)]
-            (map (fn [[gk gds]]
-                   (assoc v :data gds :facet-val (get gk col)))
-                 groups)))
-        views)))
+  (mapcat
+     (fn [v]
+       (let [groups (-> (:data v) (tc/group-by [col]) tc/groups->map)]
+         (map (fn [[gk gds]]
+                (assoc v :data gds :facet-val (get gk col)))
+              groups)))
+     views))
 
 (defn facet-grid
   "Split each view by two categorical columns for a row × column grid."
   [views row-col col-col]
-  (vec (mapcat
-        (fn [v]
-          (let [groups (-> (:data v) (tc/group-by [row-col col-col]) tc/groups->map)]
-            (map (fn [[gk gds]]
-                   (assoc v :data gds
-                          :facet-row (get gk row-col)
-                          :facet-col (get gk col-col)))
-                 groups)))
-        views)))
+  (mapcat
+     (fn [v]
+       (let [groups (-> (:data v) (tc/group-by [row-col col-col]) tc/groups->map)]
+         (map (fn [[gk gds]]
+                (assoc v :data gds
+                       :facet-row (get gk row-col)
+                       :facet-col (get gk col-col)))
+              groups)))
+     views))
 
 ;; ---
 
@@ -332,8 +332,8 @@ iris
 
 ;; ## ⚙️ Filtering and Conditional Specs
 
-(defn where [views pred] (vec (filter pred views)))
-(defn where-not [views pred] (vec (remove pred views)))
+(defn where [views pred] (filter pred views))
+(defn where-not [views pred] (remove pred views))
 
 (defn when-diagonal
   "Merge spec into diagonal views only."
@@ -355,9 +355,9 @@ iris
 (defn pairs
   "Upper-triangle pairs of columns — used for pairwise scatters."
   [cols]
-  (vec (for [i (range (count cols))
+  (for [i (range (count cols))
              j (range (inc i) (count cols))]
-         [(nth cols i) (nth cols j)])))
+         [(nth cols i) (nth cols j)]))
 
 ;; ## 🧪 Auto-Detection in Action
 
@@ -414,7 +414,7 @@ iris
 (defn- color-for
   "Look up the color for a categorical value from the palette."
   [categories val]
-  (let [idx (.indexOf (vec categories) val)]
+  (let [idx (.indexOf categories val)]
     (nth ggplot-palette (mod (if (neg? idx) 0 idx) (count ggplot-palette)))))
 
 ;; ---
@@ -467,10 +467,10 @@ iris
             cat-x? (not (number? (first xs-col)))
             cat-y? (not (number? (first ys-col)))
             x-dom (if cat-x?
-                    (vec (distinct xs-col))
+                    (distinct xs-col)
                     [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)])
             y-dom (if cat-y?
-                    (vec (distinct ys-col))
+                    (distinct ys-col)
                     [(dfn/reduce-min ys-col) (dfn/reduce-max ys-col)])]
         (if color
           (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)]
@@ -606,13 +606,13 @@ iris
   (let [{:keys [data x color x-type]} view
         clean (cond-> (tc/drop-missing data [x])
                 (= x-type :categorical) (tc/map-columns x [x] str))
-        categories (vec (distinct (clean x)))]
+        categories (distinct (clean x))]
     (if (empty? categories)
       {:categories [] :bars [] :max-count 0 :x-domain ["?"] :y-domain [0 1]}
       (if color
         (let [clean-c (tc/drop-missing clean [color])
               color-cats (sort (distinct (clean-c color)))
-              group-cols (vec (distinct [x color]))
+              group-cols (distinct [x color])
               grouped (-> clean-c (tc/group-by group-cols) tc/groups->map)
               count-fn (fn [cat cc]
                          (let [key (if (= x color) {x cat} {x cat color cc})]
@@ -699,8 +699,8 @@ iris
 (let [s (ws/scale :linear {:domain [0 100] :range [50 550]})]
   (kind/pprint
    {:value-at-50 (s 50)
-    :ticks (vec (ws/ticks s))
-    :formatted (vec (ws/format s (ws/ticks s)))}))
+    :ticks (ws/ticks s)
+    :formatted (ws/format s (ws/ticks s))}))
 
 ;; Band scales handle categorical data with proper padding:
 
@@ -708,7 +708,7 @@ iris
   (kind/pprint
    {:a-position (s "A")
     :bandwidth (ws/data s :bandwidth)
-    :ticks (vec (ws/ticks s))}))
+    :ticks (ws/ticks s)}))
 
 ;; ---
 
@@ -843,11 +843,11 @@ iris
         active-map (when (= position :dodge)
                      (into {}
                            (for [cat (:categories stat)]
-                             [cat (vec (keep-indexed
+                             [cat (keep-indexed
                                         (fn [bi {:keys [counts]}]
                                           (let [c (some #(when (= cat (:category %)) (:count %)) counts)]
                                             (when (and c (pos? c)) bi)))
-                                        (:bars stat)))])))
+                                        (:bars stat))])))
         munch-arc (when coord-px
                     (fn [px-lo px-hi py-lo py-hi n-seg]
                       (let [outer (for [i (range (inc n-seg))
@@ -1113,13 +1113,13 @@ iris
 
         merged-x-dom (or x-domain
                          (if (categorical-domain? (first stat-x-domains))
-                           (vec (distinct (mapcat identity stat-x-domains)))
+                           (distinct (mapcat identity stat-x-domains))
                            (let [lo (reduce min (map first stat-x-domains))
                                  hi (reduce max (map second stat-x-domains))]
                              (pad-domain [lo hi] x-scale-spec))))
         merged-y-dom (or y-domain
                          (if (categorical-domain? (first stat-y-domains))
-                           (vec (distinct (mapcat identity stat-y-domains)))
+                           (distinct (mapcat identity stat-y-domains))
                            (let [lo (reduce min (map first stat-y-domains))
                                  hi (reduce max (map second stat-y-domains))]
                              (pad-domain [lo hi] y-scale-spec))))
@@ -1293,7 +1293,7 @@ iris
         data-views (mapv compute-stat non-ann-views)
         all-colors (let [color-views (filter #(and (:color %) (:data %)) views)]
                      (when (seq color-views)
-                       (vec (distinct (mapcat #(vec ((:data %) (:color %))) color-views)))))
+                       (distinct (mapcat #((:data %) (:color %)) color-views))))
         color-cols (distinct (remove nil? (map :color views)))
         shape-col (first (remove nil? (map :shape views)))
         shape-categories (when shape-col
@@ -1310,7 +1310,7 @@ iris
                                                       d (map str d)))) data-views)]
                           (if (number? (first xd))
                             (pad-domain [(reduce min xd) (reduce max xd)] (or (:x-scale (first views)) {:type :linear}))
-                            (vec (distinct xd)))))
+                            (distinct xd))))
         global-y-doms (when (#{:shared :free-x} scale-mode)
                         (let [has-stacked? (some #(= :stack (:position %)) views)
                               yd (if has-stacked?
@@ -1338,7 +1338,7 @@ iris
                           (if (number? (first yd))
                             (pad-domain [(reduce min yd) (reduce max yd)]
                                         (or (:y-scale (first data-views)) {:type :linear}))
-                            (vec (distinct yd)))))
+                            (distinct yd))))
         legend-w (if (or all-colors shape-categories) 100 0)
         total-w (+ (* cols pw) legend-w)
         total-h (* rows ph)
@@ -1370,9 +1370,9 @@ iris
            grid-facet?
            (for [[ri rv] (map-indexed vector facet-row-vals)
                  [ci cv] (map-indexed vector facet-col-vals)
-                 :let [panel-views (into (vec (filter #(and (= rv (:facet-row %))
-                                                            (= cv (:facet-col %))) non-ann-views))
-                                         ann-views)]]
+                 :let [panel-views (concat (filter #(and (= rv (:facet-row %))
+                                                           (= cv (:facet-col %))) non-ann-views)
+                                        ann-views)]]
              (when (seq panel-views)
                [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
                 (render-panel panel-views pw ph m
@@ -1392,8 +1392,8 @@ iris
                    (str rv)])]))
            multi-facet?
            (for [[ci fv] (map-indexed vector facet-vals)
-                 :let [fviews (into (vec (filter #(= fv (:facet-val %)) non-ann-views))
-                                    ann-views)]]
+                 :let [fviews (concat (filter #(= fv (:facet-val %)) non-ann-views)
+                                     ann-views)]]
              [:g {:transform (str "translate(" (* ci pw) ",0)")}
               (render-panel fviews pw ph m
                             :show-x? true :show-y? (zero? ci)
@@ -1406,8 +1406,8 @@ iris
            :else
            (for [[ri yv] (map-indexed vector y-vars)
                  [ci xv] (map-indexed vector x-vars)
-                 :let [panel-views (into (vec (filter #(and (= xv (:x %)) (= yv (:y %))) non-ann-views))
-                                         ann-views)]]
+                 :let [panel-views (concat (filter #(and (= xv (:x %)) (= yv (:y %))) non-ann-views)
+                                          ann-views)]]
              (when (seq panel-views)
                [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
                 (render-panel panel-views pw ph m
