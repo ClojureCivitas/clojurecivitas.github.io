@@ -437,25 +437,11 @@ iris
 ;; `:identity` (pass-through), `:bin` (histogram), `:regress` (linear regression),
 ;; `:smooth` (loess), `:count` (categorical counting).
 
-;; ## ⚙️ Data Cleaning Helpers
-
-(defn- clean-vec
-  "Remove entries where the value is nil or NaN."
-  [xs]
-  (vec (remove (fn [x] (or (nil? x) (and (number? x) (Double/isNaN (double x))))) xs)))
-
-(defn- clean-paired
-  "Remove pairs where either x or y is nil/NaN. Returns [clean-xs clean-ys extra-vecs...]."
-  [xs ys & extra-vecs]
-  (let [n (count xs)
-        good? (fn [i]
-                (let [x (nth xs i) y (nth ys i)]
-                  (and (some? x) (some? y)
-                       (not (and (number? x) (Double/isNaN (double x))))
-                       (not (and (number? y) (Double/isNaN (double y)))))))
-        idxs (filterv good? (range n))]
-    (into [(mapv #(nth xs %) idxs) (mapv #(nth ys %) idxs)]
-          (map (fn [ev] (when ev (mapv #(nth ev %) idxs))) extra-vecs))))
+;; ## 📖 Data Cleaning
+;;
+;; Each stat method uses `tc/drop-missing` to remove rows with nil or NaN
+;; in the relevant columns. For numeric columns, dtype-next treats NaN as
+;; missing, so a single `(tc/drop-missing data [x y])` handles both.
 
 ;; ## ⚙️ The compute-stat Multimethod
 
@@ -467,42 +453,40 @@ iris
 
 ;; ### ⚙️ :identity — Pass-Through
 ;;
-;; No transformation. Extracts x, y, color, size, shape values and returns them
-;; grouped by color (if present). Handles categorical x coercion.
+;; No transformation. Uses `tc/drop-missing` to clean rows, `tc/group-by` to
+;; split by color (if present), and `dfn/reduce-min`/`max` for domains.
 
 (defmethod compute-stat :identity [view]
   (let [{:keys [data x y color size shape text-col x-type]} view
-        raw-xs (vec (data x)) raw-ys (vec (data y))
-        raw-szs (when size (vec (data size)))
-        raw-shs (when shape (vec (data shape)))
-        raw-lbls (when text-col (vec (data text-col)))
-        [xs0 ys szs shs lbls] (clean-paired raw-xs raw-ys raw-szs raw-shs raw-lbls)
-        xs (if (= x-type :categorical) (mapv str xs0) xs0)]
-    (if (empty? xs)
+        clean (cond-> (tc/drop-missing data [x y])
+                (= x-type :categorical) (tc/map-columns x [x] str))]
+    (if (zero? (tc/row-count clean))
       {:points [] :x-domain [0 1] :y-domain [0 1]}
-      (let [cat-x? (not (number? (first xs)))
-            cat-y? (and (seq ys) (not (number? (first ys))))
-            x-dom (if cat-x? (vec (distinct xs)) [(reduce min xs) (reduce max xs)])
-            y-dom (if cat-y? (vec (distinct ys)) [(reduce min ys) (reduce max ys)])]
+      (let [xs-col (clean x)
+            ys-col (clean y)
+            cat-x? (not (number? (first xs-col)))
+            cat-y? (not (number? (first ys-col)))
+            x-dom (if cat-x?
+                    (vec (distinct xs-col))
+                    [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)])
+            y-dom (if cat-y?
+                    (vec (distinct ys-col))
+                    [(dfn/reduce-min ys-col) (dfn/reduce-max ys-col)])]
         (if color
-          (let [raw-cs (vec (data color))
-                [_ _ cleaned-cs] (clean-paired raw-xs raw-ys raw-cs)
-                groups (group-by #(nth cleaned-cs %) (range (count xs)))]
-            {:points (for [[c idxs] groups]
-                       (cond-> {:color c
-                                :xs (mapv #(nth xs %) idxs)
-                                :ys (mapv #(nth ys %) idxs)}
-                         szs (assoc :sizes (mapv #(nth szs %) idxs))
-                         shs (assoc :shapes (mapv #(nth shs %) idxs))
-                         lbls (assoc :labels (mapv #(nth lbls %) idxs))))
-             :x-domain x-dom
-             :y-domain y-dom})
-          {:points [(cond-> {:xs xs :ys ys}
-                      szs (assoc :sizes szs)
-                      shs (assoc :shapes shs)
-                      lbls (assoc :labels lbls))]
-           :x-domain x-dom
-           :y-domain y-dom})))))
+          (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)]
+            {:points (for [[gk gds] grouped]
+                       (cond-> {:color (gk color)
+                                :xs (vec (gds x))
+                                :ys (vec (gds y))}
+                         size (assoc :sizes (vec (gds size)))
+                         shape (assoc :shapes (vec (gds shape)))
+                         text-col (assoc :labels (vec (gds text-col)))))
+             :x-domain x-dom :y-domain y-dom})
+          {:points [(cond-> {:xs (vec xs-col) :ys (vec ys-col)}
+                      size (assoc :sizes (vec (clean size)))
+                      shape (assoc :shapes (vec (clean shape)))
+                      text-col (assoc :labels (vec (clean text-col))))]
+           :x-domain x-dom :y-domain y-dom})))))
 
 ;; ### ⚙️ :bin — Histogram
 ;;
@@ -511,30 +495,28 @@ iris
 
 (defmethod compute-stat :bin [view]
   (let [{:keys [data x color]} view
-        xs (clean-vec (vec (data x)))]
-    (if (empty? xs)
+        clean (tc/drop-missing data [x])
+        xs-col (clean x)]
+    (if (zero? (tc/row-count clean))
       {:bins [] :max-count 0 :x-domain [0 1] :y-domain [0 1]}
       (if color
-        (let [cs (vec (data color))
-              raw-xs (vec (data x))
-              pairs (filter (fn [[xv _]] (some? xv)) (map vector raw-xs cs))
-              groups (group-by second pairs)
-              all-bin-data (for [[c group-pairs] groups
-                                 :let [vals (mapv first group-pairs)
-                                       hist (stats/histogram vals :sturges)]]
-                             {:color c :bin-maps (:bins-maps hist)})
+        (let [grouped (-> (tc/drop-missing clean [color])
+                          (tc/group-by [color]) tc/groups->map)
+              all-bin-data (for [[gk gds] grouped
+                                 :let [hist (stats/histogram (vec (gds x)) :sturges)]]
+                             {:color (gk color) :bin-maps (:bins-maps hist)})
               max-count (reduce max 1 (for [{:keys [bin-maps]} all-bin-data
                                             b bin-maps]
                                         (:count b)))]
           {:bins all-bin-data
            :max-count max-count
-           :x-domain [(reduce min xs) (reduce max xs)]
+           :x-domain [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)]
            :y-domain [0 max-count]})
-        (let [hist (stats/histogram xs :sturges)
+        (let [hist (stats/histogram (vec xs-col) :sturges)
               max-count (reduce max 1 (map :count (:bins-maps hist)))]
           {:bins [{:bin-maps (:bins-maps hist)}]
            :max-count max-count
-           :x-domain [(reduce min xs) (reduce max xs)]
+           :x-domain [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)]
            :y-domain [0 max-count]})))))
 
 ;; ### ⚙️ :regress — Linear Regression
@@ -544,54 +526,59 @@ iris
 
 (defmethod compute-stat :regress [view]
   (let [{:keys [data x y color]} view
-        raw-xs (vec (data x)) raw-ys (vec (data y))
-        [xs ys] (clean-paired raw-xs raw-ys)
-        x-range-zero? (fn [xv] (= (reduce min xv) (reduce max xv)))]
-    (if (or (< (count xs) 2) (x-range-zero? xs))
-      {:lines [] :x-domain (if (seq xs) [(first xs) (first xs)] [0 1])
-       :y-domain (if (seq ys) [(reduce min ys) (reduce max ys)] [0 1])}
+        clean (tc/drop-missing data [x y])
+        n (tc/row-count clean)]
+    (if (or (< n 2)
+            (= (dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))))
+      {:lines []
+       :x-domain (if (pos? n)
+                   [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
+                   [0 1])
+       :y-domain (if (pos? n)
+                   [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]
+                   [0 1])}
       (if color
-        (let [raw-cs (vec (data color))
-              [_ _ cs] (clean-paired raw-xs raw-ys raw-cs)
-              groups (group-by #(nth cs %) (range (count xs)))]
-          {:lines (for [[c idxs] groups
-                        :let [gxs (mapv #(nth xs %) idxs)
-                              gys (mapv #(nth ys %) idxs)]
-                        :when (and (>= (count gxs) 2) (not (x-range-zero? gxs)))
-                        :let [model (regr/lm gys gxs)
-                              xmin (reduce min gxs) xmax (reduce max gxs)]]
-                    {:color c
-                     :x1 xmin :y1 (regr/predict model [xmin])
-                     :x2 xmax :y2 (regr/predict model [xmax])})
-           :x-domain [(reduce min xs) (reduce max xs)]
-           :y-domain [(reduce min ys) (reduce max ys)]})
-        (let [model (regr/lm ys xs)
-              xmin (reduce min xs) xmax (reduce max xs)]
-          {:lines [{:x1 xmin :y1 (regr/predict model [xmin])
-                    :x2 xmax :y2 (regr/predict model [xmax])}]
-           :x-domain [xmin xmax]
-           :y-domain [(reduce min ys) (reduce max ys)]})))))
+        (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)]
+          {:lines (for [[gk gds] grouped
+                        :let [gxs (vec (gds x))
+                              gys (vec (gds y))
+                              gx-min (dfn/reduce-min (gds x))
+                              gx-max (dfn/reduce-max (gds x))]
+                        :when (and (>= (count gxs) 2) (not= gx-min gx-max))
+                        :let [model (regr/lm gys gxs)]]
+                    {:color (gk color)
+                     :x1 gx-min :y1 (regr/predict model [gx-min])
+                     :x2 gx-max :y2 (regr/predict model [gx-max])})
+           :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
+           :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]})
+        (let [model (regr/lm (vec (clean y)) (vec (clean x)))
+              x-min (dfn/reduce-min (clean x))
+              x-max (dfn/reduce-max (clean x))]
+          {:lines [{:x1 x-min :y1 (regr/predict model [x-min])
+                    :x2 x-max :y2 (regr/predict model [x-max])}]
+           :x-domain [x-min x-max]
+           :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]})))))
 
 ;; ### ⚙️ :smooth — Loess Curve
 ;;
 ;; Fits a loess curve using fastmath.interpolation, sampling 80 points.
-;; Handles duplicate x values by averaging y.
+;; Deduplicates x values via `tc/group-by` + `tc/aggregate` (averaging y).
 
 (defmethod compute-stat :smooth [view]
   (let [{:keys [data x y color]} view
-        raw-xs (vec (data x)) raw-ys (vec (data y))
-        [xs ys] (clean-paired raw-xs raw-ys)]
-    (if (< (count xs) 4)
+        clean (tc/drop-missing data [x y])
+        n (tc/row-count clean)]
+    (if (< n 4)
       {:points [] :x-domain [0 1] :y-domain [0 1]}
       (let [n-sample 80
-            dedup-sort (fn [gxs gys]
-                         (let [pairs (sort-by first (map vector gxs gys))
-                               groups (partition-by first pairs)
-                               sxs (mapv (fn [g] (ffirst g)) groups)
-                               sys (mapv (fn [g] (/ (reduce + (map second g)) (count g))) groups)]
-                           [sxs sys]))
-            fit-smooth (fn [gxs gys]
-                         (let [[sxs sys] (dedup-sort gxs gys)
+            dedup-sort (fn [ds]
+                         (-> ds
+                             (tc/group-by [x])
+                             (tc/aggregate {y #(dfn/mean (% y))})
+                             (tc/order-by [x])))
+            fit-smooth (fn [ds]
+                         (let [deduped (dedup-sort ds)
+                               sxs (vec (deduped x)) sys (vec (deduped y))
                                f (interp/interpolation :loess sxs sys)
                                xmin (first sxs) xmax (last sxs)
                                step (/ (- xmax xmin) (dec n-sample))
@@ -599,20 +586,16 @@ iris
                                sample-ys (mapv f sample-xs)]
                            {:xs sample-xs :ys sample-ys}))]
         (if color
-          (let [raw-cs (vec (data color))
-                [_ _ cs] (clean-paired raw-xs raw-ys raw-cs)
-                groups (group-by #(nth cs %) (range (count xs)))]
-            {:points (for [[c idxs] groups
-                           :let [gxs (mapv #(nth xs %) idxs)
-                                 gys (mapv #(nth ys %) idxs)
-                                 {:keys [xs ys]} (fit-smooth gxs gys)]]
-                       {:color c :xs xs :ys ys})
-             :x-domain [(reduce min xs) (reduce max xs)]
-             :y-domain [(reduce min ys) (reduce max ys)]})
-          (let [{:keys [xs ys]} (fit-smooth xs ys)]
+          (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)]
+            {:points (for [[gk gds] grouped
+                           :let [{:keys [xs ys]} (fit-smooth gds)]]
+                       {:color (gk color) :xs xs :ys ys})
+             :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
+             :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]})
+          (let [{:keys [xs ys]} (fit-smooth clean)]
             {:points [{:xs xs :ys ys}]
-             :x-domain [(reduce min xs) (reduce max xs)]
-             :y-domain [(reduce min ys) (reduce max ys)]}))))))
+             :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
+             :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]}))))))
 
 ;; ### ⚙️ :count — Categorical Counting
 ;;
@@ -621,30 +604,37 @@ iris
 
 (defmethod compute-stat :count [view]
   (let [{:keys [data x color x-type]} view
-        raw-xs (clean-vec (vec (data x)))
-        xs (if (= x-type :categorical) (mapv str raw-xs) raw-xs)
-        categories (vec (distinct xs))]
+        clean (cond-> (tc/drop-missing data [x])
+                (= x-type :categorical) (tc/map-columns x [x] str))
+        categories (vec (distinct (clean x)))]
     (if (empty? categories)
       {:categories [] :bars [] :max-count 0 :x-domain ["?"] :y-domain [0 1]}
       (if color
-        (let [all-raw (vec (data x))
-              cs (vec (data color))
-              pairs (filter (fn [[xv _]] (some? xv)) (map vector all-raw cs))
-              xs-c (mapv (fn [[xv _]] (if (= x-type :categorical) (str xv) xv)) pairs)
-              cs-c (mapv second pairs)
-              pair-tuples (map vector xs-c cs-c)
-              grouped (group-by identity pair-tuples)
-              color-cats (sort (distinct cs-c))
-              max-count (reduce max 1 (map #(count (val %)) grouped))]
+        (let [clean-c (tc/drop-missing clean [color])
+              color-cats (sort (distinct (clean-c color)))
+              group-cols (vec (distinct [x color]))
+              grouped (-> clean-c (tc/group-by group-cols) tc/groups->map)
+              count-fn (fn [cat cc]
+                         (let [key (if (= x color) {x cat} {x cat color cc})]
+                           (if-let [ds (get grouped key)]
+                             (tc/row-count ds)
+                             0)))
+              max-count (reduce max 1 (for [cat categories, cc color-cats]
+                                        (count-fn cat cc)))]
           {:categories categories
            :bars (for [cc color-cats]
                    {:color cc
-                    :counts (mapv (fn [cat] {:category cat :count (count (get grouped [cat cc] []))})
+                    :counts (mapv (fn [cat] {:category cat :count (count-fn cat cc)})
                                   categories)})
            :max-count max-count
            :x-domain categories
            :y-domain [0 max-count]})
-        (let [counts-by-cat (mapv (fn [cat] {:category cat :count (count (filter #{cat} xs))}) categories)
+        (let [grouped (-> clean (tc/group-by [x]) tc/groups->map)
+              counts-by-cat (mapv (fn [cat]
+                                    {:category cat
+                                     :count (if-let [ds (get grouped {x cat})]
+                                              (tc/row-count ds) 0)})
+                                  categories)
               max-count (reduce max 1 (map :count counts-by-cat))]
           {:categories categories
            :bars [{:counts counts-by-cat}]
