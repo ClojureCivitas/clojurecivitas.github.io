@@ -476,16 +476,16 @@ iris
           (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)]
             {:points (for [[gk gds] grouped]
                        (cond-> {:color (gk color)
-                                :xs (vec (gds x))
-                                :ys (vec (gds y))}
-                         size (assoc :sizes (vec (gds size)))
-                         shape (assoc :shapes (vec (gds shape)))
-                         text-col (assoc :labels (vec (gds text-col)))))
+                                :xs (gds x)
+                                :ys (gds y)}
+                         size (assoc :sizes (gds size))
+                         shape (assoc :shapes (gds shape))
+                         text-col (assoc :labels (gds text-col))))
              :x-domain x-dom :y-domain y-dom})
-          {:points [(cond-> {:xs (vec xs-col) :ys (vec ys-col)}
-                      size (assoc :sizes (vec (clean size)))
-                      shape (assoc :shapes (vec (clean shape)))
-                      text-col (assoc :labels (vec (clean text-col))))]
+          {:points [(cond-> {:xs xs-col :ys ys-col}
+                      size (assoc :sizes (clean size))
+                      shape (assoc :shapes (clean shape))
+                      text-col (assoc :labels (clean text-col)))]
            :x-domain x-dom :y-domain y-dom})))))
 
 ;; ### ⚙️ :bin — Histogram
@@ -503,7 +503,7 @@ iris
         (let [grouped (-> (tc/drop-missing clean [color])
                           (tc/group-by [color]) tc/groups->map)
               all-bin-data (for [[gk gds] grouped
-                                 :let [hist (stats/histogram (vec (gds x)) :sturges)]]
+                                 :let [hist (stats/histogram (double-array (gds x)) :sturges)]]
                              {:color (gk color) :bin-maps (:bins-maps hist)})
               max-count (reduce max 1 (for [{:keys [bin-maps]} all-bin-data
                                             b bin-maps]
@@ -512,7 +512,7 @@ iris
            :max-count max-count
            :x-domain [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)]
            :y-domain [0 max-count]})
-        (let [hist (stats/histogram (vec xs-col) :sturges)
+        (let [hist (stats/histogram (double-array xs-col) :sturges)
               max-count (reduce max 1 (map :count (:bins-maps hist)))]
           {:bins [{:bin-maps (:bins-maps hist)}]
            :max-count max-count
@@ -540,8 +540,8 @@ iris
       (if color
         (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)]
           {:lines (for [[gk gds] grouped
-                        :let [gxs (vec (gds x))
-                              gys (vec (gds y))
+                        :let [gxs (double-array (gds x))
+                              gys (double-array (gds y))
                               gx-min (dfn/reduce-min (gds x))
                               gx-max (dfn/reduce-max (gds x))]
                         :when (and (>= (count gxs) 2) (not= gx-min gx-max))
@@ -551,7 +551,7 @@ iris
                      :x2 gx-max :y2 (regr/predict model [gx-max])})
            :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
            :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]})
-        (let [model (regr/lm (vec (clean y)) (vec (clean x)))
+        (let [model (regr/lm (double-array (clean y)) (double-array (clean x)))
               x-min (dfn/reduce-min (clean x))
               x-max (dfn/reduce-max (clean x))]
           {:lines [{:x1 x-min :y1 (regr/predict model [x-min])
@@ -578,7 +578,7 @@ iris
                              (tc/order-by [x])))
             fit-smooth (fn [ds]
                          (let [deduped (dedup-sort ds)
-                               sxs (vec (deduped x)) sys (vec (deduped y))
+                               sxs (double-array (deduped x)) sys (double-array (deduped y))
                                f (interp/interpolation :loess sxs sys)
                                xmin (first sxs) xmax (last sxs)
                                step (/ (- xmax xmin) (dec n-sample))
