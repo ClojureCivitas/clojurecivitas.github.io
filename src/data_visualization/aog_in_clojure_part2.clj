@@ -173,17 +173,22 @@ iris
 ;; ## ⚙️ Views
 
 (defn views
-  "Bind a dataset to column pairs → vector of view maps.
-  Each pair `[x-col y-col]` becomes a view `{:data data :x x-col :y y-col}`."
+  "Bind data to column pairs → sequence of view maps.
+  Data can be a tablecloth dataset, a map of columns, or a sequence of row maps —
+  anything `tc/dataset` accepts. It is coerced to a dataset internally."
   [data pairs]
-  (mapv (fn [[x y]] {:data data :x x :y y}) pairs))
+  (let [ds (if (tc/dataset? data) data (tc/dataset data))]
+    (mapv (fn [[x y]] {:data ds :x x :y y}) pairs)))
 
 ;; ## 🧪 What a View Looks Like
 
-;; A single view — a map with the dataset, x column, and y column:
+;; `views` accepts anything `tc/dataset` accepts — a dataset, a map of columns,
+;; or a sequence of row maps. The data is coerced to a dataset internally.
+;; A single view is a map with the dataset, x column, and y column:
 
 (kind/pprint
- (first (views iris [[:sepal-length :sepal-width]])))
+ (first (views {:x [1 2 3] :y [4 5 6]}
+               [[:x :y]])))
 
 ;; ## ⚙️ Layer
 
@@ -199,10 +204,11 @@ iris
 
 (kind/pprint
  (first
-  (-> (views iris [[:sepal-length :sepal-width]])
-      (layer :mark :point :color :species))))
+  (-> (views {:x [1 2 3] :y [4 5 6] :group ["a" "a" "b"]}
+             [[:x :y]])
+      (layer :mark :point :color :group))))
 
-;; The view now has `:mark :point` and `:color :species` — everything we need
+;; The view now has `:mark :point` and `:color :group` — everything we need
 ;; to know how to render this data.
 
 ;; ## ⚙️ Layers (Multi-Layer Composition)
@@ -219,7 +225,7 @@ iris
   (let [ann-specs (filter #(and (map? %) (annotation-marks (:mark %))) layer-specs)
         data-specs (remove #(and (map? %) (annotation-marks (:mark %))) layer-specs)]
     (concat (apply stack (map #(layer base-views %) data-specs))
-             ann-specs)))
+            ann-specs)))
 
 ;; ## ⚙️ Faceting
 
@@ -228,25 +234,25 @@ iris
   each with a filtered dataset and a `:facet-val` tag."
   [views col]
   (mapcat
-     (fn [v]
-       (let [groups (-> (:data v) (tc/group-by [col]) tc/groups->map)]
-         (map (fn [[gk gds]]
-                (assoc v :data gds :facet-val (get gk col)))
-              groups)))
-     views))
+   (fn [v]
+     (let [groups (-> (:data v) (tc/group-by [col]) tc/groups->map)]
+       (map (fn [[gk gds]]
+              (assoc v :data gds :facet-val (get gk col)))
+            groups)))
+   views))
 
 (defn facet-grid
   "Split each view by two categorical columns for a row × column grid."
   [views row-col col-col]
   (mapcat
-     (fn [v]
-       (let [groups (-> (:data v) (tc/group-by [row-col col-col]) tc/groups->map)]
-         (map (fn [[gk gds]]
-                (assoc v :data gds
-                       :facet-row (get gk row-col)
-                       :facet-col (get gk col-col)))
-              groups)))
-     views))
+   (fn [v]
+     (let [groups (-> (:data v) (tc/group-by [row-col col-col]) tc/groups->map)]
+       (map (fn [[gk gds]]
+              (assoc v :data gds
+                     :facet-row (get gk row-col)
+                     :facet-col (get gk col-col)))
+            groups)))
+   views))
 
 ;; ---
 
@@ -356,8 +362,8 @@ iris
   "Upper-triangle pairs of columns — used for pairwise scatters."
   [cols]
   (for [i (range (count cols))
-             j (range (inc i) (count cols))]
-         [(nth cols i) (nth cols j)]))
+        j (range (inc i) (count cols))]
+    [(nth cols i) (nth cols j)]))
 
 ;; ## 🧪 Auto-Detection in Action
 
@@ -844,10 +850,10 @@ iris
                      (into {}
                            (for [cat (:categories stat)]
                              [cat (keep-indexed
-                                        (fn [bi {:keys [counts]}]
-                                          (let [c (some #(when (= cat (:category %)) (:count %)) counts)]
-                                            (when (and c (pos? c)) bi)))
-                                        (:bars stat))])))
+                                   (fn [bi {:keys [counts]}]
+                                     (let [c (some #(when (= cat (:category %)) (:count %)) counts)]
+                                       (when (and c (pos? c)) bi)))
+                                   (:bars stat))])))
         munch-arc (when coord-px
                     (fn [px-lo px-hi py-lo py-hi n-seg]
                       (let [outer (for [i (range (inc n-seg))
@@ -1371,8 +1377,8 @@ iris
            (for [[ri rv] (map-indexed vector facet-row-vals)
                  [ci cv] (map-indexed vector facet-col-vals)
                  :let [panel-views (concat (filter #(and (= rv (:facet-row %))
-                                                           (= cv (:facet-col %))) non-ann-views)
-                                        ann-views)]]
+                                                         (= cv (:facet-col %))) non-ann-views)
+                                           ann-views)]]
              (when (seq panel-views)
                [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
                 (render-panel panel-views pw ph m
@@ -1393,7 +1399,7 @@ iris
            multi-facet?
            (for [[ci fv] (map-indexed vector facet-vals)
                  :let [fviews (concat (filter #(= fv (:facet-val %)) non-ann-views)
-                                     ann-views)]]
+                                      ann-views)]]
              [:g {:transform (str "translate(" (* ci pw) ",0)")}
               (render-panel fviews pw ph m
                             :show-x? true :show-y? (zero? ci)
@@ -1407,7 +1413,7 @@ iris
            (for [[ri yv] (map-indexed vector y-vars)
                  [ci xv] (map-indexed vector x-vars)
                  :let [panel-views (concat (filter #(and (= xv (:x %)) (= yv (:y %))) non-ann-views)
-                                          ann-views)]]
+                                           ann-views)]]
              (when (seq panel-views)
                [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
                 (render-panel panel-views pw ph m
@@ -1480,19 +1486,30 @@ iris
 
 ;; ## Basic
 
-;; ### 🧪 1. Basic Scatter
+;; ### 🧪 1. Scatter from Inline Data
+;;
+;; Since `views` accepts plain maps, we can plot small datasets directly:
+
+(-> (views {:x [1 2 3 4 5 6]
+            :y [2 4 3 5 4 6]
+            :group ["a" "a" "a" "b" "b" "b"]}
+           [[:x :y]])
+    (layer (point :color :group))
+    plot)
+
+;; ### 🧪 3. Iris Scatter
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point))
     plot)
 
-;; ### 🧪 2. Colored Scatter
+;; ### 🧪 3. Colored Scatter
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point :color :species))
     plot)
 
-;; ### 🧪 3. Scatter + Regression
+;; ### 🧪 4. Scatter + Regression
 ;;
 ;; `layers` stacks two marks on the same views — scatter points and
 ;; regression lines, both colored by species:
@@ -1504,7 +1521,7 @@ iris
 
 ;; ## Distributions
 
-;; ### 🧪 4. Histogram
+;; ### 🧪 5. Histogram
 ;;
 ;; The key test for stat-driven domains. The y-axis ranges over counts
 ;; (0 to ~28), not data values (4.3 to 7.9):
@@ -1513,13 +1530,13 @@ iris
     (layer (histogram))
     plot)
 
-;; ### 🧪 5. Colored Histogram
+;; ### 🧪 6. Colored Histogram
 
 (-> (views iris [[:sepal-length :sepal-length]])
     (layer (histogram :color :species))
     plot)
 
-;; ### 🧪 6. Flipped Histogram
+;; ### 🧪 7. Flipped Histogram
 ;;
 ;; Flip swaps the axes — bars grow horizontally instead of vertically:
 
@@ -1530,7 +1547,7 @@ iris
 
 ;; ## Grid
 
-;; ### 🧪 7. SPLOM (Scatterplot Matrix)
+;; ### 🧪 8. SPLOM (Scatterplot Matrix)
 ;;
 ;; Cross all columns with themselves. `auto` detects diagonal views (histograms)
 ;; and off-diagonal views (scatters). Color by species:
@@ -1540,14 +1557,14 @@ iris
     (layer :color :species)
     plot)
 
-;; ### 🧪 8. Faceted Scatter
+;; ### 🧪 9. Faceted Scatter
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point :color :species))
     (facet :species)
     plot)
 
-;; ### 🧪 9. Row × Column Faceting
+;; ### 🧪 10. Row × Column Faceting
 
 (let [tips (tc/dataset "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv")]
   (-> (views tips [["total_bill" "tip"]])
@@ -1557,31 +1574,31 @@ iris
 
 ;; ## Categorical
 
-;; ### 🧪 10. Categorical Bar Chart
+;; ### 🧪 11. Categorical Bar Chart
 
 (-> (views iris [[:species :species]])
     (layer (bar))
     plot)
 
-;; ### 🧪 11. Colored Categorical Bar Chart
+;; ### 🧪 12. Colored Categorical Bar Chart
 
 (-> (views iris [[:species :species]])
     (layer (bar :color :species))
     plot)
 
-;; ### 🧪 12. Stacked Bar Chart
+;; ### 🧪 13. Stacked Bar Chart
 
 (-> (views mpg [[:class :class]])
     (layer (stacked-bar :color :drv))
     plot)
 
-;; ### 🧪 13. Strip Plot (Categorical x, Continuous y)
+;; ### 🧪 14. Strip Plot (Categorical x, Continuous y)
 
 (-> (views iris [[:species :sepal-length]])
     (layer (point :color :species))
     plot)
 
-;; ### 🧪 14. Numeric-as-Categorical
+;; ### 🧪 15. Numeric-as-Categorical
 
 (-> (views mpg [[:cyl :cyl]])
     (layer (bar :x-type :categorical))
@@ -1589,7 +1606,7 @@ iris
 
 ;; ## Advanced
 
-;; ### 🧪 15. Log Scale
+;; ### 🧪 16. Log Scale
 ;;
 ;; With wadogo, log ticks show proper values (1, 10, 100...) instead of
 ;; transformed values:
@@ -1601,14 +1618,14 @@ iris
       (set-scale :x :log)
       plot))
 
-;; ### 🧪 16. Polar Scatter
+;; ### 🧪 17. Polar Scatter
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point :color :species))
     (set-coord :polar)
     plot)
 
-;; ### 🧪 17. Polar Bar Chart (Rose / Coxcomb)
+;; ### 🧪 18. Polar Bar Chart (Rose / Coxcomb)
 ;;
 ;; Categorical bars in polar coordinates render as arc-shaped wedges via
 ;; "munching" — sampling points along the arc and projecting through polar:
@@ -1618,26 +1635,26 @@ iris
     (set-coord :polar)
     plot)
 
-;; ### 🧪 18. Polar Stacked Bar Chart
+;; ### 🧪 19. Polar Stacked Bar Chart
 
 (-> (views mpg [[:class :class]])
     (layer (stacked-bar :color :drv))
     (set-coord :polar)
     plot)
 
-;; ### 🧪 19. Bubble Chart (Size Aesthetic)
+;; ### 🧪 20. Bubble Chart (Size Aesthetic)
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point :color :species :size :petal-length))
     plot)
 
-;; ### 🧪 20. Shape Aesthetic
+;; ### 🧪 21. Shape Aesthetic
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point :color :species :shape :species))
     plot)
 
-;; ### 🧪 21. Annotations: Reference Line and Band
+;; ### 🧪 22. Annotations: Reference Line and Band
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layers (point :color :species)
@@ -1646,7 +1663,7 @@ iris
             (vline 6.0))
     plot)
 
-;; ### 🧪 22. Text Labels at Group Means
+;; ### 🧪 23. Text Labels at Group Means
 
 (let [means (-> iris
                 (tc/group-by :species)
@@ -1659,7 +1676,7 @@ iris
                  (layer (text-label :species))))
       plot))
 
-;; ### 🧪 23. Smooth Curve (Loess)
+;; ### 🧪 24. Smooth Curve (Loess)
 
 (-> (views iris [[:sepal-length :petal-length]])
     (layers (point :color :species)
@@ -1668,7 +1685,7 @@ iris
 
 ;; ## Scales
 
-;; ### 🧪 24. Faceted Scatter with Free Y-Scale
+;; ### 🧪 25. Faceted Scatter with Free Y-Scale
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point :color :species))
@@ -1677,13 +1694,13 @@ iris
 
 ;; ## Interactive
 
-;; ### 🧪 25. Tooltips on Hover
+;; ### 🧪 26. Tooltips on Hover
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point :color :species))
     (plot :tooltip true))
 
-;; ### 🧪 26. Brushable Scatter
+;; ### 🧪 27. Brushable Scatter
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point :color :species))
@@ -1691,7 +1708,7 @@ iris
 
 ;; ## Edge Cases
 
-;; ### 🧪 27. Missing Data Tolerance
+;; ### 🧪 28. Missing Data Tolerance
 
 (let [data (tc/dataset {:x [1 2 nil 4 5 6 nil 8]
                         :y [2 4 6 nil 10 12 14 16]})]
