@@ -67,10 +67,19 @@
   [views & {:as overrides}]
   (mapv #(merge % overrides) views))
 
+(def ^:private annotation-marks
+  "Mark types that represent annotations (not data-driven)."
+  #{:rule-h :rule-v :band-h})
+
 (defn layers
-  "Stack multiple layers from the same base views."
+  "Stack multiple layers from the same base views.
+  Annotation specs (hline, vline, hband) are stacked as separate views
+  rather than merged into data views."
   [base-views & layer-specs]
-  (apply stack (map #(layer base-views %) layer-specs)))
+  (let [ann-specs (filter #(and (map? %) (annotation-marks (:mark %))) layer-specs)
+        data-specs (remove #(and (map? %) (annotation-marks (:mark %))) layer-specs)]
+    (into (vec (apply stack (map #(layer base-views %) data-specs)))
+          ann-specs)))
 
 (defn facet
   "Split each view by a categorical column."
@@ -222,145 +231,163 @@
         raw-lbls (when text-col (vec (data text-col)))
         [xs0 ys szs shs lbls] (clean-paired raw-xs raw-ys raw-szs raw-shs raw-lbls)
         ;; Coerce to categorical if requested
-        xs (if (= x-type :categorical) (mapv str xs0) xs0)
-        cat-x? (and (seq xs) (not (number? (first xs))))
-        cat-y? (and (seq ys) (not (number? (first ys))))
-        x-dom (if cat-x? (vec (distinct xs)) [(reduce min xs) (reduce max xs)])
-        y-dom (if cat-y? (vec (distinct ys)) [(reduce min ys) (reduce max ys)])]
-    (if color
-      (let [raw-cs (vec (data color))
-            [_ _ cleaned-cs] (clean-paired raw-xs raw-ys raw-cs)
-            groups (group-by #(nth cleaned-cs %) (range (count xs)))]
-        {:points (for [[c idxs] groups]
-                   (cond-> {:color c
-                            :xs (mapv #(nth xs %) idxs)
-                            :ys (mapv #(nth ys %) idxs)}
-                     szs (assoc :sizes (mapv #(nth szs %) idxs))
-                     shs (assoc :shapes (mapv #(nth shs %) idxs))
-                     lbls (assoc :labels (mapv #(nth lbls %) idxs))))
-         :x-domain x-dom
-         :y-domain y-dom})
-      {:points [(cond-> {:xs xs :ys ys}
-                  szs (assoc :sizes szs)
-                  shs (assoc :shapes shs)
-                  lbls (assoc :labels lbls))]
-       :x-domain x-dom
-       :y-domain y-dom})))
+        xs (if (= x-type :categorical) (mapv str xs0) xs0)]
+    (if (empty? xs)
+      ;; No valid data after cleaning
+      {:points [] :x-domain [0 1] :y-domain [0 1]}
+      (let [cat-x? (not (number? (first xs)))
+            cat-y? (and (seq ys) (not (number? (first ys))))
+            x-dom (if cat-x? (vec (distinct xs)) [(reduce min xs) (reduce max xs)])
+            y-dom (if cat-y? (vec (distinct ys)) [(reduce min ys) (reduce max ys)])]
+        (if color
+          (let [raw-cs (vec (data color))
+                [_ _ cleaned-cs] (clean-paired raw-xs raw-ys raw-cs)
+                groups (group-by #(nth cleaned-cs %) (range (count xs)))]
+            {:points (for [[c idxs] groups]
+                       (cond-> {:color c
+                                :xs (mapv #(nth xs %) idxs)
+                                :ys (mapv #(nth ys %) idxs)}
+                         szs (assoc :sizes (mapv #(nth szs %) idxs))
+                         shs (assoc :shapes (mapv #(nth shs %) idxs))
+                         lbls (assoc :labels (mapv #(nth lbls %) idxs))))
+             :x-domain x-dom
+             :y-domain y-dom})
+          {:points [(cond-> {:xs xs :ys ys}
+                      szs (assoc :sizes szs)
+                      shs (assoc :shapes shs)
+                      lbls (assoc :labels lbls))]
+           :x-domain x-dom
+           :y-domain y-dom})))))
 
 (defmethod compute-stat :bin [view]
   (let [{:keys [data x color]} view
         xs (clean-vec (vec (data x)))]
-    (if color
-      (let [cs (vec (data color))
-            raw-xs (vec (data x))
-            ;; Align cs with cleaned xs
-            pairs (filter (fn [[xv _]] (some? xv)) (map vector raw-xs cs))
-            groups (group-by second pairs)
-            all-bin-data (for [[c group-pairs] groups
-                               :let [vals (mapv first group-pairs)
-                                     hist (stats/histogram vals :sturges)]]
-                           {:color c :bin-maps (:bins-maps hist)})
-            max-count (reduce max 1 (for [{:keys [bin-maps]} all-bin-data
-                                          b bin-maps]
-                                      (:count b)))]
-        {:bins all-bin-data
-         :max-count max-count
-         :x-domain [(reduce min xs) (reduce max xs)]
-         :y-domain [0 max-count]})
-      (let [hist (stats/histogram xs :sturges)
-            max-count (reduce max 1 (map :count (:bins-maps hist)))]
-        {:bins [{:bin-maps (:bins-maps hist)}]
-         :max-count max-count
-         :x-domain [(reduce min xs) (reduce max xs)]
-         :y-domain [0 max-count]}))))
+    (if (empty? xs)
+      {:bins [] :max-count 0 :x-domain [0 1] :y-domain [0 1]}
+      (if color
+        (let [cs (vec (data color))
+              raw-xs (vec (data x))
+              ;; Align cs with cleaned xs
+              pairs (filter (fn [[xv _]] (some? xv)) (map vector raw-xs cs))
+              groups (group-by second pairs)
+              all-bin-data (for [[c group-pairs] groups
+                                 :let [vals (mapv first group-pairs)
+                                       hist (stats/histogram vals :sturges)]]
+                             {:color c :bin-maps (:bins-maps hist)})
+              max-count (reduce max 1 (for [{:keys [bin-maps]} all-bin-data
+                                            b bin-maps]
+                                        (:count b)))]
+          {:bins all-bin-data
+           :max-count max-count
+           :x-domain [(reduce min xs) (reduce max xs)]
+           :y-domain [0 max-count]})
+        (let [hist (stats/histogram xs :sturges)
+              max-count (reduce max 1 (map :count (:bins-maps hist)))]
+          {:bins [{:bin-maps (:bins-maps hist)}]
+           :max-count max-count
+           :x-domain [(reduce min xs) (reduce max xs)]
+           :y-domain [0 max-count]})))))
 
 (defmethod compute-stat :regress [view]
   (let [{:keys [data x y color]} view
         raw-xs (vec (data x)) raw-ys (vec (data y))
-        [xs ys] (clean-paired raw-xs raw-ys)]
-    (if color
-      (let [raw-cs (vec (data color))
-            [_ _ cs] (clean-paired raw-xs raw-ys raw-cs)
-            groups (group-by #(nth cs %) (range (count xs)))]
-        {:lines (for [[c idxs] groups
-                      :let [gxs (mapv #(nth xs %) idxs)
-                            gys (mapv #(nth ys %) idxs)
-                            model (regr/lm gys gxs)
-                            xmin (reduce min gxs) xmax (reduce max gxs)]]
-                  {:color c
-                   :x1 xmin :y1 (regr/predict model [xmin])
-                   :x2 xmax :y2 (regr/predict model [xmax])})
-         :x-domain [(reduce min xs) (reduce max xs)]
-         :y-domain [(reduce min ys) (reduce max ys)]})
-      (let [model (regr/lm ys xs)
-            xmin (reduce min xs) xmax (reduce max xs)]
-        {:lines [{:x1 xmin :y1 (regr/predict model [xmin])
-                  :x2 xmax :y2 (regr/predict model [xmax])}]
-         :x-domain [xmin xmax]
-         :y-domain [(reduce min ys) (reduce max ys)]}))))
+        [xs ys] (clean-paired raw-xs raw-ys)
+        x-range-zero? (fn [xv] (= (reduce min xv) (reduce max xv)))]
+    (if (or (< (count xs) 2) (x-range-zero? xs))
+      {:lines [] :x-domain (if (seq xs) [(first xs) (first xs)] [0 1])
+       :y-domain (if (seq ys) [(reduce min ys) (reduce max ys)] [0 1])}
+      (if color
+        (let [raw-cs (vec (data color))
+              [_ _ cs] (clean-paired raw-xs raw-ys raw-cs)
+              groups (group-by #(nth cs %) (range (count xs)))]
+          {:lines (for [[c idxs] groups
+                        :let [gxs (mapv #(nth xs %) idxs)
+                              gys (mapv #(nth ys %) idxs)]
+                        :when (and (>= (count gxs) 2) (not (x-range-zero? gxs)))
+                        :let [model (regr/lm gys gxs)
+                              xmin (reduce min gxs) xmax (reduce max gxs)]]
+                    {:color c
+                     :x1 xmin :y1 (regr/predict model [xmin])
+                     :x2 xmax :y2 (regr/predict model [xmax])})
+           :x-domain [(reduce min xs) (reduce max xs)]
+           :y-domain [(reduce min ys) (reduce max ys)]})
+        (let [model (regr/lm ys xs)
+              xmin (reduce min xs) xmax (reduce max xs)]
+          {:lines [{:x1 xmin :y1 (regr/predict model [xmin])
+                    :x2 xmax :y2 (regr/predict model [xmax])}]
+           :x-domain [xmin xmax]
+           :y-domain [(reduce min ys) (reduce max ys)]})))))
 
 (defmethod compute-stat :smooth [view]
   (let [{:keys [data x y color]} view
         raw-xs (vec (data x)) raw-ys (vec (data y))
-        [xs ys] (clean-paired raw-xs raw-ys)
-        n-sample 80
-        dedup-sort (fn [gxs gys]
-                     ;; Average duplicate x values, then sort — loess needs strict monotonicity
-                     (let [pairs (sort-by first (map vector gxs gys))
-                           groups (partition-by first pairs)
-                           sxs (mapv (fn [g] (ffirst g)) groups)
-                           sys (mapv (fn [g] (/ (reduce + (map second g)) (count g))) groups)]
-                       [sxs sys]))
-        fit-smooth (fn [gxs gys]
-                     (let [[sxs sys] (dedup-sort gxs gys)
-                           f (interp/interpolation :loess sxs sys)
-                           xmin (first sxs) xmax (last sxs)
-                           step (/ (- xmax xmin) (dec n-sample))
-                           sample-xs (mapv #(+ xmin (* % step)) (range n-sample))
-                           sample-ys (mapv f sample-xs)]
-                       {:xs sample-xs :ys sample-ys}))]
-    (if color
-      (let [raw-cs (vec (data color))
-            [_ _ cs] (clean-paired raw-xs raw-ys raw-cs)
-            groups (group-by #(nth cs %) (range (count xs)))]
-        {:points (for [[c idxs] groups
-                       :let [gxs (mapv #(nth xs %) idxs)
-                             gys (mapv #(nth ys %) idxs)
-                             {:keys [xs ys]} (fit-smooth gxs gys)]]
-                   {:color c :xs xs :ys ys})
-         :x-domain [(reduce min xs) (reduce max xs)]
-         :y-domain [(reduce min ys) (reduce max ys)]})
-      (let [{:keys [xs ys]} (fit-smooth xs ys)]
-        {:points [{:xs xs :ys ys}]
-         :x-domain [(reduce min xs) (reduce max xs)]
-         :y-domain [(reduce min ys) (reduce max ys)]}))))
+        [xs ys] (clean-paired raw-xs raw-ys)]
+    (if (< (count xs) 4)
+      {:points [] :x-domain [0 1] :y-domain [0 1]}
+      (let [n-sample 80
+            dedup-sort (fn [gxs gys]
+                         ;; Average duplicate x values, then sort — loess needs strict monotonicity
+                         (let [pairs (sort-by first (map vector gxs gys))
+                               groups (partition-by first pairs)
+                               sxs (mapv (fn [g] (ffirst g)) groups)
+                               sys (mapv (fn [g] (/ (reduce + (map second g)) (count g))) groups)]
+                           [sxs sys]))
+            fit-smooth (fn [gxs gys]
+                         (let [[sxs sys] (dedup-sort gxs gys)
+                               f (interp/interpolation :loess sxs sys)
+                               xmin (first sxs) xmax (last sxs)
+                               step (/ (- xmax xmin) (dec n-sample))
+                               sample-xs (mapv #(+ xmin (* % step)) (range n-sample))
+                               sample-ys (mapv f sample-xs)]
+                           {:xs sample-xs :ys sample-ys}))]
+        (if color
+          (let [raw-cs (vec (data color))
+                [_ _ cs] (clean-paired raw-xs raw-ys raw-cs)
+                groups (group-by #(nth cs %) (range (count xs)))]
+            {:points (for [[c idxs] groups
+                           :let [gxs (mapv #(nth xs %) idxs)
+                                 gys (mapv #(nth ys %) idxs)
+                                 {:keys [xs ys]} (fit-smooth gxs gys)]]
+                       {:color c :xs xs :ys ys})
+             :x-domain [(reduce min xs) (reduce max xs)]
+             :y-domain [(reduce min ys) (reduce max ys)]})
+          (let [{:keys [xs ys]} (fit-smooth xs ys)]
+            {:points [{:xs xs :ys ys}]
+             :x-domain [(reduce min xs) (reduce max xs)]
+             :y-domain [(reduce min ys) (reduce max ys)]}))))))
 
 (defmethod compute-stat :count [view]
   (let [{:keys [data x color x-type]} view
-        raw-xs (vec (data x))
+        raw-xs (clean-vec (vec (data x)))
         xs (if (= x-type :categorical) (mapv str raw-xs) raw-xs)
         categories (vec (distinct xs))]
-    (if color
-      (let [cs (vec (data color))
-            pairs (map vector xs cs)
-            grouped (group-by identity pairs)
-            color-cats (sort (distinct cs))
-            max-count (reduce max 1 (map #(count (val %)) grouped))]
-        {:categories categories
-         :bars (for [cc color-cats]
-                 {:color cc
-                  :counts (mapv (fn [cat] {:category cat :count (count (get grouped [cat cc] []))})
-                                categories)})
-         :max-count max-count
-         :x-domain categories
-         :y-domain [0 max-count]})
-      (let [counts-by-cat (mapv (fn [cat] {:category cat :count (count (filter #{cat} xs))}) categories)
-            max-count (reduce max 1 (map :count counts-by-cat))]
-        {:categories categories
-         :bars [{:counts counts-by-cat}]
-         :max-count max-count
-         :x-domain categories
-         :y-domain [0 max-count]}))))
+    (if (empty? categories)
+      {:categories [] :bars [] :max-count 0 :x-domain ["?"] :y-domain [0 1]}
+      (if color
+        (let [all-raw (vec (data x))
+              cs (vec (data color))
+              pairs (filter (fn [[xv _]] (some? xv)) (map vector all-raw cs))
+              xs-c (mapv (fn [[xv _]] (if (= x-type :categorical) (str xv) xv)) pairs)
+              cs-c (mapv second pairs)
+              pair-tuples (map vector xs-c cs-c)
+              grouped (group-by identity pair-tuples)
+              color-cats (sort (distinct cs-c))
+              max-count (reduce max 1 (map #(count (val %)) grouped))]
+          {:categories categories
+           :bars (for [cc color-cats]
+                   {:color cc
+                    :counts (mapv (fn [cat] {:category cat :count (count (get grouped [cat cc] []))})
+                                  categories)})
+           :max-count max-count
+           :x-domain categories
+           :y-domain [0 max-count]})
+        (let [counts-by-cat (mapv (fn [cat] {:category cat :count (count (filter #{cat} xs))}) categories)
+              max-count (reduce max 1 (map :count counts-by-cat))]
+          {:categories categories
+           :bars [{:counts counts-by-cat}]
+           :max-count max-count
+           :x-domain categories
+           :y-domain [0 max-count]})))))
 
 ;; ### Wadogo Scale Construction
 ;;
@@ -511,8 +538,8 @@
                           (let [base (get @cum-y category 0)
                                 [_ yb] (coord (first (:x-domain stat)) base)
                                 [_ yt] (coord (first (:x-domain stat)) (+ base count))
-                                x-lo (+ (- band-mid (/ (* bw 0.4))) (* 0.1 bw))
-                                x-hi (- (+ band-mid (/ (* bw 0.4))) (* 0.1 bw))]
+                                x-lo (- band-mid (* bw 0.4))
+                                x-hi (+ band-mid (* bw 0.4))]
                             (swap! cum-y assoc category (+ base count))
                             [:rect {:x x-lo :y (clojure.core/min yb yt)
                                     :width (- x-hi x-lo)
@@ -555,8 +582,8 @@
                           (let [base (get @cum-y cat 0)
                                 [_ yb] (coord cat base)
                                 [_ yt] (coord cat (+ base val))
-                                x-lo (+ (- band-mid (/ (* bw 0.4))) (* 0.1 bw))
-                                x-hi (- (+ band-mid (/ (* bw 0.4))) (* 0.1 bw))]
+                                x-lo (- band-mid (* bw 0.4))
+                                x-hi (+ band-mid (* bw 0.4))]
                             (swap! cum-y assoc cat (+ base val))
                             [:rect {:x x-lo :y (clojure.core/min yb yt)
                                     :width (- x-hi x-lo)
@@ -822,39 +849,45 @@
        (render-y-ticks sy pw ph m))]))
 
 ;; ### The Plot Function
-
 (defn plot
-  "Render views as SVG. Options: :width :height :margin :scales :coord :tooltip :brush"
-  [views & {:keys [width height margin scales coord tooltip brush]
-            :or {width 600 height 400 margin 40}}]
+  "Render views as SVG. Options: :width :height :scales :coord :tooltip :brush"
+  [views & {:keys [width height scales coord tooltip brush]
+            :or {width 600 height 400}}]
   (let [views (if (map? views) [views] views)
         views (if coord (mapv #(assoc % :coord coord) views) views)
+        ;; Separate annotations from data views
+        ann-views (filter #(annotation-marks (:mark %)) views)
+        non-ann-views (remove #(annotation-marks (:mark %)) views)
         ;; Collect facet/aesthetic info
-        facet-vals (distinct (remove nil? (map :facet-val views)))
-        facet-row-vals (distinct (remove nil? (map :facet-row views)))
-        facet-col-vals (distinct (remove nil? (map :facet-col views)))
+        facet-vals (distinct (remove nil? (map :facet-val non-ann-views)))
+        facet-row-vals (distinct (remove nil? (map :facet-row non-ann-views)))
+        facet-col-vals (distinct (remove nil? (map :facet-col non-ann-views)))
         grid-facet? (and (seq facet-row-vals) (seq facet-col-vals))
         multi-facet? (seq facet-vals)
-        x-vars (distinct (map :x views))
-        y-vars (distinct (map :y views))
+        x-vars (distinct (map :x non-ann-views))
+        y-vars (distinct (map :y non-ann-views))
         cols (cond grid-facet? (count facet-col-vals)
                    multi-facet? (count facet-vals)
                    :else (count x-vars))
         rows (cond grid-facet? (count facet-row-vals)
                    multi-facet? 1
                    :else (count y-vars))
-        m margin
-        pw (/ (- width (* 2 m)) cols)
-        ph (/ (- height (* 2 m)) rows)
+        m 25
+        pw0 (/ width cols)
+        ph0 (/ height rows)
+        ;; Square panels for multi-var grids (SPLOM)
+        square? (and (not grid-facet?) (not multi-facet?) (> cols 1) (> rows 1))
+        pw (if square? (min pw0 ph0) pw0)
+        ph (if square? (min pw0 ph0) ph0)
         ;; Compute stats + domains
-        data-views (mapv compute-stat views)
-        all-colors (let [color-views (filter :color views)]
+        data-views (mapv compute-stat non-ann-views)
+        all-colors (let [color-views (filter #(and (:color %) (:data %)) views)]
                      (when (seq color-views)
                        (vec (distinct (mapcat #(vec ((:data %) (:color %))) color-views)))))
         color-cols (distinct (remove nil? (map :color views)))
         shape-col (first (remove nil? (map :shape views)))
         shape-categories (when shape-col
-                           (distinct (mapcat (fn [v] (map #(get % shape-col) (-> v :data tc/rows)))
+                           (distinct (mapcat (fn [v] (when (:data v) (map #(get % shape-col) (tc/rows (:data v) :as-maps))))
                                              views)))
         polar? (= :polar (:coord (first views)))
         tooltip-fn (when tooltip
@@ -867,7 +900,7 @@
                                                     (if (and (= 2 (count d)) (number? (first d)))
                                                       d (map str d)))) data-views)]
                           (if (number? (first xd))
-                            (pad-domain [(reduce min xd) (reduce max xd)] {:type :linear})
+                            (pad-domain [(reduce min xd) (reduce max xd)] (or (:x-scale (first views)) {:type :linear}))
                             (vec (distinct xd)))))
         global-y-doms (when (#{:shared :free-x} scale-mode)
                         (let [;; Check for stacked bars — sum counts per category across colors
@@ -931,8 +964,9 @@
            grid-facet?
            (for [[ri rv] (map-indexed vector facet-row-vals)
                  [ci cv] (map-indexed vector facet-col-vals)
-                 :let [panel-views (filter #(and (= rv (:facet-row %))
-                                                 (= cv (:facet-col %))) views)]]
+                 :let [panel-views (into (vec (filter #(and (= rv (:facet-row %))
+                                                            (= cv (:facet-col %))) non-ann-views))
+                                         ann-views)]]
              (when (seq panel-views)
                [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
                 (render-panel panel-views pw ph m
@@ -955,7 +989,8 @@
            ;; Simple faceting: one row of panels
            multi-facet?
            (for [[ci fv] (map-indexed vector facet-vals)
-                 :let [fviews (filter #(= fv (:facet-val %)) views)]]
+                 :let [fviews (into (vec (filter #(= fv (:facet-val %)) non-ann-views))
+                                    ann-views)]]
              [:g {:transform (str "translate(" (* ci pw) ",0)")}
               (render-panel fviews pw ph m
                             :show-x? true :show-y? (zero? ci)
@@ -969,7 +1004,8 @@
            :else
            (for [[ri yv] (map-indexed vector y-vars)
                  [ci xv] (map-indexed vector x-vars)
-                 :let [panel-views (filter #(and (= xv (:x %)) (= yv (:y %))) views)]]
+                 :let [panel-views (into (vec (filter #(and (= xv (:x %)) (= yv (:y %))) non-ann-views))
+                                         ann-views)]]
              (when (seq panel-views)
                [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
                 (render-panel panel-views pw ph m
