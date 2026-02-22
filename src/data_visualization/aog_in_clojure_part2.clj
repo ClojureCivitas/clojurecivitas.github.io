@@ -100,15 +100,10 @@
   (:require
    ;; Tablecloth - dataset manipulation
    [tablecloth.api :as tc]
-   [tablecloth.column.api :as tcc]
    [tech.v3.datatype.functional :as dfn]
 
    ;; Kindly - notebook rendering protocol
    [scicloj.kindly.v4.kind :as kind]
-
-   ;; thi.ng/geom - SVG generation
-   [thi.ng.geom.svg.core :as svg]
-   [thi.ng.geom.viz.core :as viz]
 
    ;; Fastmath - regression and loess smoothing
    [fastmath.ml.regression :as regr]
@@ -275,27 +270,21 @@ iris
             ys-col (clean y)
             cat-x? (not (number? (first xs-col)))
             cat-y? (not (number? (first ys-col)))
-            x-dom (if cat-x?
-                    (distinct xs-col)
-                    [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)])
-            y-dom (if cat-y?
-                    (distinct ys-col)
-                    [(dfn/reduce-min ys-col) (dfn/reduce-max ys-col)])]
-        (if color
-          (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)]
-            {:points (for [[gk gds] grouped]
-                       (cond-> {:color (gk color)
-                                :xs (gds x)
-                                :ys (gds y)}
-                         size (assoc :sizes (gds size))
-                         shape (assoc :shapes (gds shape))
-                         text-col (assoc :labels (gds text-col))))
-             :x-domain x-dom :y-domain y-dom})
-          {:points [(cond-> {:xs xs-col :ys ys-col}
-                      size (assoc :sizes (clean size))
-                      shape (assoc :shapes (clean shape))
-                      text-col (assoc :labels (clean text-col)))]
-           :x-domain x-dom :y-domain y-dom})))))
+            x-dom (if cat-x? (distinct xs-col)
+                      [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)])
+            y-dom (if cat-y? (distinct ys-col)
+                      [(dfn/reduce-min ys-col) (dfn/reduce-max ys-col)])
+            point-group (fn [ds color-val]
+                          (cond-> {:xs (ds x) :ys (ds y)}
+                            color-val (assoc :color color-val)
+                            size (assoc :sizes (ds size))
+                            shape (assoc :shapes (ds shape))
+                            text-col (assoc :labels (ds text-col))))
+            groups (if color
+                     (for [[gk gds] (-> clean (tc/group-by [color]) tc/groups->map)]
+                       (point-group gds (gk color)))
+                     [(point-group clean nil)])]
+        {:points groups :x-domain x-dom :y-domain y-dom}))))
 
 ;; ---
 
@@ -582,6 +571,18 @@ iris
   "Arrange panels into an SVG layout. Dispatches on layout type."
   (fn [layout-type ctx] layout-type))
 
+(defn- panel-from-ctx
+  "Call render-panel with common args from ctx. Overrides via kwargs."
+  [ctx panel-views & {:keys [show-x? show-y? x-domain y-domain]
+                      :or {show-x? true show-y? true}}]
+  (render-panel panel-views (:pw ctx) (:ph ctx) (:m ctx)
+                :show-x? show-x? :show-y? show-y?
+                :all-colors (:all-colors ctx)
+                :x-domain (or x-domain (:global-x-doms ctx))
+                :y-domain (or y-domain (:global-y-doms ctx))
+                :tooltip-fn (:tooltip-fn ctx)
+                :shape-categories (:shape-categories ctx)))
+
 (defn- infer-layout [views]
   (let [facet-rows (seq (remove nil? (map :facet-row views)))
         facet-cols (seq (remove nil? (map :facet-col views)))
@@ -596,14 +597,8 @@ iris
                 :single)))))
 
 (defmethod arrange-panels :single [_ ctx]
-  (let [{:keys [non-ann-views ann-views pw ph m all-colors tooltip-fn shape-categories
-                global-x-doms global-y-doms]} ctx
-        panel-views (concat non-ann-views ann-views)]
-    [[:g (render-panel panel-views pw ph m
-                       :all-colors all-colors
-                       :x-domain global-x-doms :y-domain global-y-doms
-                       :tooltip-fn tooltip-fn
-                       :shape-categories shape-categories)]]))
+  (let [panel-views (concat (:non-ann-views ctx) (:ann-views ctx))]
+    [[:g (panel-from-ctx ctx panel-views)]]))
 
 (defn- render-legend [categories color-fn & {:keys [x y title]}]
   [:g {:font-family "sans-serif" :font-size 10}
@@ -618,6 +613,43 @@ iris
 
 (defmethod wrap-plot :default [_ svg]
   (kind/hiccup svg))
+
+(defn- collect-domain
+  "Collect and merge domains from stat-results along axis-key (:x-domain or :y-domain).
+   Returns a padded numeric domain or a distinct categorical domain."
+  [stat-results axis-key scale-spec]
+  (let [vals (mapcat (fn [dv] (let [d (axis-key dv)]
+                                (if (and (= 2 (count d)) (number? (first d)))
+                                  d (map str d)))) stat-results)]
+    (when (seq vals)
+      (if (number? (first vals))
+        (pad-domain [(reduce min vals) (reduce max vals)] scale-spec)
+        (distinct vals)))))
+
+(defn- compute-global-y-domain
+  "Compute the global y-domain, handling stacked bar accumulation."
+  [stat-results views scale-spec]
+  (let [has-stacked? (some #(= :stack (:position %)) views)]
+    (if has-stacked?
+      (let [count-views (filter #(= :count (:stat %)) stat-results)
+            all-cats (distinct (mapcat :categories count-views))
+            max-stack (if (seq all-cats)
+                        (apply max
+                               (for [cat all-cats]
+                                 (reduce + (for [dv count-views
+                                                 :let [idx (.indexOf (:categories dv) cat)]
+                                                 :when (>= idx 0)]
+                                             (nth (:counts dv) idx)))))
+                        0)
+            other-yd (mapcat (fn [dv]
+                               (when-not (= :count (:stat (first (filter #(= (:x dv) (:x %)) views))))
+                                 (:y-domain dv)))
+                             stat-results)
+            hi (if (seq other-yd)
+                 (max max-stack (reduce max other-yd))
+                 max-stack)]
+        (pad-domain [0 hi] scale-spec))
+      (collect-domain stat-results :y-domain scale-spec))))
 
 (defn plot
   "Render views as SVG. Options: :width :height :scales :coord :tooltip :brush"
@@ -647,7 +679,6 @@ iris
          square? (and (= layout-type :multi-variable) (> cols 1) (> rows 1))
          pw (if square? (min pw0 ph0) pw0)
          ph (if square? (min pw0 ph0) ph0)
-         ;; Compute stats once for global domain inference
          stat-results (mapv compute-stat non-ann-views)
          all-colors (let [color-views (filter #(and (:color %) (:data %)) views)]
                       (when (seq color-views)
@@ -664,41 +695,9 @@ iris
          x-scale-spec (or (:x-scale (first non-ann-views)) {:type :linear})
          y-scale-spec (or (:y-scale (first non-ann-views)) {:type :linear})
          global-x-doms (when (#{:shared :free-y} scale-mode)
-                         (let [xd (mapcat (fn [dv] (let [d (:x-domain dv)]
-                                                     (if (and (= 2 (count d)) (number? (first d)))
-                                                       d (map str d)))) stat-results)]
-                           (when (seq xd)
-                             (if (number? (first xd))
-                               (pad-domain [(reduce min xd) (reduce max xd)] x-scale-spec)
-                               (distinct xd)))))
+                         (collect-domain stat-results :x-domain x-scale-spec))
          global-y-doms (when (#{:shared :free-x} scale-mode)
-                         (let [has-stacked? (some #(= :stack (:position %)) views)
-                               yd (if has-stacked?
-                                    (let [count-views (filter #(= :count (:stat %)) stat-results)
-                                          all-cats (distinct (mapcat :categories count-views))
-                                          max-stack (if (seq all-cats)
-                                                      (apply max
-                                                             (for [cat all-cats]
-                                                               (reduce + (for [dv count-views
-                                                                               :let [idx (.indexOf (:categories dv) cat)]
-                                                                               :when (>= idx 0)]
-                                                                           (nth (:counts dv) idx)))))
-                                                      0)
-                                          other-yd (mapcat (fn [dv]
-                                                             (when-not (= :count (:stat (first (filter #(= (:x dv) (:x %)) views))))
-                                                               (:y-domain dv)))
-                                                           stat-results)
-                                          hi (if (seq other-yd)
-                                               (max max-stack (reduce max other-yd))
-                                               max-stack)]
-                                      [0 hi])
-                                    (mapcat (fn [dv] (let [d (:y-domain dv)]
-                                                       (if (and (= 2 (count d)) (number? (first d)))
-                                                         d (map str d)))) stat-results))]
-                           (when (seq yd)
-                             (if (number? (first yd))
-                               (pad-domain [(reduce min yd) (reduce max yd)] y-scale-spec)
-                               (distinct yd)))))
+                         (compute-global-y-domain stat-results views y-scale-spec))
          legend-w (if (or all-colors shape-categories) 100 0)
          total-w (+ (* cols pw) legend-w)
          total-h (* rows ph)
@@ -863,9 +862,6 @@ iris
 
 ;; ## 🧪 Flipped Histogram
 ;;
-;; Flip swaps the axes — bars grow horizontally instead of vertically.
-;; Because bars are rendered as 4-corner polygons through the coord function,
-;; this works without any special-casing:
 
 (-> (views iris [[:sepal-length :sepal-length]])
     (layer (histogram))
@@ -891,6 +887,15 @@ iris
 
 ;; ## ⚙️ compute-stat :lm
 
+(defn- fit-lm
+  "Fit a linear model on xs-col and ys-col, return {:x1 :y1 :x2 :y2}."
+  [xs-col ys-col]
+  (let [model (regr/lm (double-array ys-col) (double-array xs-col))
+        x-min (dfn/reduce-min xs-col)
+        x-max (dfn/reduce-max xs-col)]
+    {:x1 x-min :y1 (regr/predict model [x-min])
+     :x2 x-max :y2 (regr/predict model [x-max])}))
+
 (defmethod compute-stat :lm [view]
   (let [{:keys [data x y color]} view
         clean (tc/drop-missing data [x y])
@@ -907,24 +912,15 @@ iris
       (if color
         (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)]
           {:lines (for [[gk gds] grouped
-                        :let [gxs (double-array (gds x))
-                              gys (double-array (gds y))
-                              gx-min (dfn/reduce-min (gds x))
-                              gx-max (dfn/reduce-max (gds x))]
-                        :when (and (>= (count gxs) 2) (not= gx-min gx-max))
-                        :let [model (regr/lm gys gxs)]]
-                    {:color (gk color)
-                     :x1 gx-min :y1 (regr/predict model [gx-min])
-                     :x2 gx-max :y2 (regr/predict model [gx-max])})
+                        :when (and (>= (tc/row-count gds) 2)
+                                   (not= (dfn/reduce-min (gds x))
+                                         (dfn/reduce-max (gds x))))]
+                    (assoc (fit-lm (gds x) (gds y)) :color (gk color)))
            :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
            :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]})
-        (let [model (regr/lm (double-array (clean y)) (double-array (clean x)))
-              x-min (dfn/reduce-min (clean x))
-              x-max (dfn/reduce-max (clean x))]
-          {:lines [{:x1 x-min :y1 (regr/predict model [x-min])
-                    :x2 x-max :y2 (regr/predict model [x-max])}]
-           :x-domain [x-min x-max]
-           :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]})))))
+        {:lines [(fit-lm (clean x) (clean y))]
+         :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
+         :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]}))))
 
 ;; ## ⚙️ compute-stat :loess
 ;;
@@ -1099,6 +1095,17 @@ iris
     (str/join " " (map (fn [[x y]] (str x "," y))
                        (concat outer inner)))))
 
+(defn- render-bar-elem
+  "Render a bar as rect (cartesian) or polygon (polar)."
+  [coord-px x-lo x-hi py-lo py-hi color]
+  (if coord-px
+    [:polygon {:points (munch-arc coord-px x-lo x-hi py-lo py-hi 20)
+               :fill color :opacity 0.7}]
+    [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
+            :width (- x-hi x-lo)
+            :height (Math/abs (- py-lo py-hi))
+            :fill color :opacity 0.7}]))
+
 (defn- render-categorical-bars
   [stat ctx]
   (let [{:keys [all-colors sx sy coord-px position]} ctx
@@ -1129,13 +1136,7 @@ iris
                                 x-lo (- band-mid (* bw 0.4))
                                 x-hi (+ band-mid (* bw 0.4))]
                             (swap! cum-y assoc category (+ base count))
-                            (if coord-px
-                              [:polygon {:points (munch-arc coord-px x-lo x-hi py-lo py-hi 20)
-                                         :fill c :opacity 0.7}]
-                              [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
-                                      :width (- x-hi x-lo)
-                                      :height (Math/abs (- py-lo py-hi))
-                                      :fill c :opacity 0.7}]))
+                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c))
                           (let [active (get active-map category)
                                 n-active (clojure.core/count active)
                                 active-idx (.indexOf ^java.util.List active bi)
@@ -1144,13 +1145,7 @@ iris
                                 x-hi (+ x-lo sub-bw)
                                 py-lo (sy 0)
                                 py-hi (sy count)]
-                            (if coord-px
-                              [:polygon {:points (munch-arc coord-px x-lo x-hi py-lo py-hi 20)
-                                         :fill c :opacity 0.7}]
-                              [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
-                                      :width (- x-hi x-lo)
-                                      :height (Math/abs (- py-lo py-hi))
-                                      :fill c :opacity 0.7}]))))))
+                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c))))))
                   (range) (:bars stat)))))
 
 (defn- render-value-bars
@@ -1178,24 +1173,12 @@ iris
                                 x-lo (- band-mid (* bw 0.4))
                                 x-hi (+ band-mid (* bw 0.4))]
                             (swap! cum-y assoc cat (+ base val))
-                            (if coord-px
-                              [:polygon {:points (munch-arc coord-px x-lo x-hi py-lo py-hi 20)
-                                         :fill c :opacity 0.7}]
-                              [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
-                                      :width (- x-hi x-lo)
-                                      :height (Math/abs (- py-lo py-hi))
-                                      :fill c :opacity 0.7}]))
+                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c))
                           (let [x-lo (+ (- band-mid (/ (* n-groups sub-bw) 2.0)) (* gi sub-bw))
                                 x-hi (+ x-lo sub-bw)
                                 py-lo (sy 0)
                                 py-hi (sy val)]
-                            (if coord-px
-                              [:polygon {:points (munch-arc coord-px x-lo x-hi py-lo py-hi 20)
-                                         :fill c :opacity 0.7}]
-                              [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
-                                      :width (- x-hi x-lo)
-                                      :height (Math/abs (- py-lo py-hi))
-                                      :fill c :opacity 0.7}]))))))
+                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c))))))
                   (range) groups))))
 
 ;; ## ⚙️ render-mark :rect
@@ -1352,22 +1335,18 @@ iris
 ;; ## ⚙️ arrange-panels :multi-variable
 
 (defmethod arrange-panels :multi-variable [_ ctx]
-  (let [{:keys [non-ann-views ann-views pw ph m all-colors tooltip-fn shape-categories
-                global-x-doms global-y-doms x-vars y-vars rows cols polar?]} ctx]
+  (let [{:keys [non-ann-views ann-views pw ph x-vars y-vars rows cols polar?]} ctx]
     (for [[ri yv] (map-indexed vector y-vars)
           [ci xv] (map-indexed vector x-vars)
           :let [panel-views (concat (filter #(and (= xv (:x %)) (= yv (:y %))) non-ann-views)
                                     ann-views)]]
       (when (seq panel-views)
         [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
-         (render-panel panel-views pw ph m
-                       :show-x? (= ri (dec rows))
-                       :show-y? (zero? ci)
-                       :all-colors all-colors
-                       :x-domain (when (<= (count x-vars) 1) global-x-doms)
-                       :y-domain (when (<= (count y-vars) 1) global-y-doms)
-                       :tooltip-fn tooltip-fn
-                       :shape-categories shape-categories)
+         (panel-from-ctx ctx panel-views
+                         :show-x? (= ri (dec rows))
+                         :show-y? (zero? ci)
+                         :x-domain (when (<= (count x-vars) 1) (:global-x-doms ctx))
+                         :y-domain (when (<= (count y-vars) 1) (:global-y-doms ctx)))
          (when (and (zero? ri) (not polar?))
            [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
                    :font-size 9 :fill "#333"} (fmt-name xv)])
@@ -1380,26 +1359,19 @@ iris
 ;; ## ⚙️ arrange-panels :facet
 
 (defmethod arrange-panels :facet [_ ctx]
-  (let [{:keys [non-ann-views ann-views pw ph m all-colors tooltip-fn shape-categories
-                global-x-doms global-y-doms facet-vals cols]} ctx]
+  (let [{:keys [non-ann-views ann-views pw ph facet-vals]} ctx]
     (for [[ci fv] (map-indexed vector facet-vals)
           :let [fviews (concat (filter #(= fv (:facet-val %)) non-ann-views)
                                ann-views)]]
       [:g {:transform (str "translate(" (* ci pw) ",0)")}
-       (render-panel fviews pw ph m
-                     :show-x? true :show-y? (zero? ci)
-                     :all-colors all-colors
-                     :x-domain global-x-doms :y-domain global-y-doms
-                     :tooltip-fn tooltip-fn
-                     :shape-categories shape-categories)
+       (panel-from-ctx ctx fviews :show-y? (zero? ci))
        [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
                :font-size 10 :fill "#333"} (str fv)]])))
 
 ;; ## ⚙️ arrange-panels :facet-grid
 
 (defmethod arrange-panels :facet-grid [_ ctx]
-  (let [{:keys [non-ann-views ann-views pw ph m all-colors tooltip-fn shape-categories
-                global-x-doms global-y-doms facet-row-vals facet-col-vals rows cols]} ctx]
+  (let [{:keys [non-ann-views ann-views pw ph facet-row-vals facet-col-vals rows cols]} ctx]
     (for [[ri rv] (map-indexed vector facet-row-vals)
           [ci cv] (map-indexed vector facet-col-vals)
           :let [panel-views (concat (filter #(and (= rv (:facet-row %))
@@ -1407,13 +1379,9 @@ iris
                                     ann-views)]]
       (when (seq panel-views)
         [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
-         (render-panel panel-views pw ph m
-                       :show-x? (= ri (dec rows))
-                       :show-y? (zero? ci)
-                       :all-colors all-colors
-                       :x-domain global-x-doms :y-domain global-y-doms
-                       :tooltip-fn tooltip-fn
-                       :shape-categories shape-categories)
+         (panel-from-ctx ctx panel-views
+                         :show-x? (= ri (dec rows))
+                         :show-y? (zero? ci))
          (when (zero? ri)
            [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
                    :font-size 10 :fill "#333"} (str cv)])
