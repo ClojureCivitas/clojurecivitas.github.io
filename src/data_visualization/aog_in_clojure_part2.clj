@@ -286,7 +286,6 @@ iris
                      [(point-group clean nil)])]
         {:points groups :x-domain x-dom :y-domain y-dom}))))
 
-
 ;; ## 🧪 What a Stat Returns
 ;;
 ;; `compute-stat` extracts coordinates and domain bounds from a view.
@@ -600,7 +599,6 @@ iris
        (render-x-ticks (if cat-x? :categorical :numeric) sx pw ph m))
      (when (and show-y? (not polar?))
        (render-y-ticks (if cat-y? :categorical :numeric) sy pw ph m))]))
-
 
 ;; ## 🧪 A Single Panel
 ;;
@@ -1398,18 +1396,34 @@ iris
 ;; ## ⚙️ arrange-panels :multi-variable
 
 (defmethod arrange-panels :multi-variable [_ ctx]
-  (let [{:keys [non-ann-views ann-views pw ph x-vars y-vars rows cols polar?]} ctx]
+  (let [{:keys [non-ann-views ann-views pw ph x-vars y-vars rows cols polar?]} ctx
+        ;; Per-variable domains: each column shares its x-variable's domain,
+        ;; each row shares its y-variable's domain (excluding diagonal histograms).
+        var-domain (fn [var-key views-seq]
+                     (let [scatter-views (filter #(not= (:x %) (:y %)) views-seq)
+                           stats (map compute-stat scatter-views)
+                           doms (keep var-key stats)
+                           num-doms (filter #(number? (first %)) doms)]
+                       (when (seq num-doms)
+                         (pad-domain [(reduce min (map first num-doms))
+                                      (reduce max (map second num-doms))]
+                                     {:type :linear}))))
+        col-x-doms (into {} (for [xv x-vars]
+                              [xv (var-domain :x-domain (filter #(= xv (:x %)) non-ann-views))]))
+        row-y-doms (into {} (for [yv y-vars]
+                              [yv (var-domain :y-domain (filter #(= yv (:y %)) non-ann-views))]))]
     (for [[ri yv] (map-indexed vector y-vars)
           [ci xv] (map-indexed vector x-vars)
           :let [panel-views (concat (filter #(and (= xv (:x %)) (= yv (:y %))) non-ann-views)
-                                    ann-views)]]
+                                    ann-views)
+                diagonal? (= xv yv)]]
       (when (seq panel-views)
         [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
          (panel-from-ctx ctx panel-views
                          :show-x? (= ri (dec rows))
                          :show-y? (zero? ci)
-                         :x-domain (when (<= (count x-vars) 1) (:global-x-doms ctx))
-                         :y-domain (when (<= (count y-vars) 1) (:global-y-doms ctx)))
+                         :x-domain (get col-x-doms xv)
+                         :y-domain (when-not diagonal? (get row-y-doms yv)))
          (when (and (zero? ri) (not polar?))
            [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
                    :font-size 9 :fill "#333"} (fmt-name xv)])
