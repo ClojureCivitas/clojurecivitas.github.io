@@ -286,6 +286,18 @@ iris
                      [(point-group clean nil)])]
         {:points groups :x-domain x-dom :y-domain y-dom}))))
 
+
+;; ## 🧪 What a Stat Returns
+;;
+;; `compute-stat` extracts coordinates and domain bounds from a view.
+;; The `:identity` stat passes data through unchanged:
+
+(-> {:x [1 2 3 4] :y [10 20 15 25] :c ["a" "a" "b" "b"]}
+    (views [[:x :y]])
+    (layer (point {:color :c}))
+    first
+    compute-stat
+    kind/pprint)
 ;; ---
 
 ;; # Scales (Wadogo)
@@ -354,6 +366,19 @@ iris
 (defmethod make-coord :cartesian [_ sx sy pw ph m]
   (fn [dx dy] [(sx dx) (sy dy)]))
 
+;; ## 🧪 Coord in Action
+;;
+;; A coord function maps data-space to pixel-space.
+;; With a 600×400 canvas and margin 25:
+
+(let [sx (ws/scale :linear {:domain [0 10] :range [25 575]})
+      sy (ws/scale :linear {:domain [0 100] :range [375 25]})
+      coord (make-coord :cartesian sx sy 600 400 25)]
+  (kind/pprint
+   {:origin (coord 0 0)
+    :center (coord 5 50)
+    :top-right (coord 10 100)}))
+
 ;; ---
 
 ;; # Mark Rendering
@@ -394,6 +419,17 @@ iris
 (defmethod render-mark :default [_ stat ctx]
   (render-mark :point stat ctx))
 
+;; ## 🧪 What render-mark Produces
+;;
+;; `render-mark` returns Hiccup SVG elements — circles for `:point`:
+
+(let [sx (ws/scale :linear {:domain [0 10] :range [25 575]})
+      sy (ws/scale :linear {:domain [0 50] :range [375 25]})
+      stat {:points [{:xs [2 5 8] :ys [10 30 20]}]}
+      ctx {:coord (make-coord :cartesian sx sy 600 400 25)
+           :all-colors nil :tooltip-fn nil :shape-categories nil}]
+  (render-mark :point stat ctx))
+
 ;; ---
 
 ;; # Grid and Ticks
@@ -427,7 +463,11 @@ iris
                  [:text {:x (sx t) :y (- ph 2) :text-anchor "middle"} label])
                ticks labels))))
 
-(defn- render-y-ticks [sy pw ph m]
+(defmulti render-y-ticks
+  "Render y-axis tick labels."
+  (fn [domain-type sy pw ph m] domain-type))
+
+(defmethod render-y-ticks :numeric [_ sy pw ph m]
   (let [ticks (ws/ticks sy) labels (ws/format sy ticks)]
     (into [:g {:font-size (:font-size theme) :fill "#666"}]
           (map (fn [t label]
@@ -510,6 +550,7 @@ iris
         sx (make-scale x-dom' x-pixel-range (if (= coord-type :flip) y-scale-spec x-scale-spec))
         sy (make-scale y-dom' y-pixel-range (if (= coord-type :flip) x-scale-spec y-scale-spec))
         cat-x? (categorical-domain? x-dom')
+        cat-y? (categorical-domain? y-dom')
 
         ;; Build coord function
         coord (make-coord coord-type sx sy pw ph m)
@@ -558,8 +599,22 @@ iris
      (when (and show-x? (not polar?))
        (render-x-ticks (if cat-x? :categorical :numeric) sx pw ph m))
      (when (and show-y? (not polar?))
-       (render-y-ticks sy pw ph m))]))
+       (render-y-ticks (if cat-y? :categorical :numeric) sy pw ph m))]))
 
+
+;; ## 🧪 A Single Panel
+;;
+;; `render-panel` assembles background, grid, data, and ticks into SVG.
+;; We can render it directly — no `plot` needed yet:
+
+(kind/hiccup
+ [:svg {:width 600 :height 400
+        "xmlns" "http://www.w3.org/2000/svg"}
+  (render-panel
+   (-> {:x [1 2 3 4 5] :y [2 4 3 5 4]}
+       (views [[:x :y]])
+       (layer (point)))
+   600 400 25)])
 ;; ---
 
 ;; # Layout
@@ -1196,6 +1251,14 @@ iris
     (into [:g {:font-size (:font-size theme) :fill "#666"}]
           (map (fn [t label]
                  [:text {:x (sx t) :y (- ph 2) :text-anchor "middle"} label])
+               ticks labels))))
+
+(defmethod render-y-ticks :categorical [_ sy pw ph m]
+  (let [ticks (ws/ticks sy)
+        labels (map str ticks)]
+    (into [:g {:font-size (:font-size theme) :fill "#666"}]
+          (map (fn [t label]
+                 [:text {:x (- m 3) :y (+ (sy t) 3) :text-anchor "end"} label])
                ticks labels))))
 
 ;; ## 🧪 Bar Chart
