@@ -289,7 +289,7 @@ iris
   Returns a map with transform-specific output data plus :x-domain and :y-domain."
   (fn [view] (or (:stat view) :identity)))
 
-;; ## ⚙️ :identity -- Raw Data
+;; ## ⚙️ `:identity` -- Raw Data
 ;;
 ;; `prepare-points` handles cleanup (drop-missing, row indexing),
 ;; domain computation, and color grouping. The stat itself adds
@@ -474,7 +474,7 @@ iris
 (defmethod render-mark :default [_ stat ctx]
   (render-mark :point stat ctx))
 
-;; ## 🧪 What render-mark Produces
+;; ## 🧪 What `render-mark` Produces
 ;;
 ;; Hiccup SVG elements, circles for `:point`:
 
@@ -914,7 +914,7 @@ iris
   ([] {:mark :bar :stat :bin})
   ([opts] (merge {:mark :bar :stat :bin} opts)))
 
-;; ## ⚙️ compute-stat :bin
+;; ## ⚙️ `compute-stat` `:bin`
 
 (defmethod compute-stat :bin [view]
   (let [{:keys [data x color]} view
@@ -942,7 +942,7 @@ iris
            :x-domain [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)]
            :y-domain [0 max-count]})))))
 
-;; ## 🧪 What :bin Returns
+;; ## 🧪 What `:bin` Returns
 ;;
 ;; Bins with counts and boundaries:
 
@@ -955,7 +955,7 @@ iris
     :y-domain (:y-domain stat)
     :first-3-bins (mapv #(select-keys % [:min :max :count])
                         (take 3 (:bin-maps (first (:bins stat)))))}))
-;; ## ⚙️ render-mark :bar
+;; ## ⚙️ `render-mark` `:bar`
 ;;
 ;; Bars projected as 4-corner polygons, works with cartesian, flip, and polar.
 
@@ -1035,7 +1035,7 @@ iris
   ([] {:mark :line :stat :loess})
   ([opts] (merge {:mark :line :stat :loess} opts)))
 
-;; ## ⚙️ compute-stat :lm
+;; ## ⚙️ `compute-stat` `:lm`
 
 (defn- fit-lm
   "Fit a linear model on xs-col and ys-col, return {:x1 :y1 :x2 :y2}."
@@ -1072,7 +1072,7 @@ iris
          :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
          :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]}))))
 
-;; ## 🧪 What :lm Returns
+;; ## 🧪 What `:lm` Returns
 ;;
 ;; Two endpoints per group, the fitted line from x-min to x-max:
 
@@ -1081,7 +1081,7 @@ iris
     first
     compute-stat
     kind/pprint)
-;; ## ⚙️ compute-stat :loess
+;; ## ⚙️ `compute-stat` `:loess`
 ;;
 ;; Loess via fastmath.interpolation (80 sample points, x values deduplicated).
 
@@ -1119,7 +1119,7 @@ iris
              :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
              :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]}))))))
 
-;; ## ⚙️ render-mark :line
+;; ## ⚙️ `render-mark` `:line`
 
 (defmethod render-mark :line [_ stat ctx]
   (let [{:keys [coord all-colors]} ctx]
@@ -1152,7 +1152,7 @@ iris
     (concat (apply stack (map #(layer base-views %) data-specs))
             ann-specs)))
 
-;; ## 🧪 What layers Produces
+;; ## 🧪 What `layers` Produces
 ;;
 ;; Base views duplicated, each copy with a different mark:
 
@@ -1247,7 +1247,7 @@ iris
     (layers (point {:color :region}) (line-mark {:color :region}))
     plot)
 
-;; ## ⚙️ compute-stat :count
+;; ## ⚙️ `compute-stat` `:count`
 
 (defmethod compute-stat :count [view]
   (let [{:keys [data x color x-type]} view
@@ -1289,7 +1289,7 @@ iris
            :x-domain categories
            :y-domain [0 max-count]})))))
 
-;; ## 🧪 What :count Returns
+;; ## 🧪 What `:count` Returns
 ;;
 ;; Rows tallied per category:
 
@@ -1401,14 +1401,14 @@ iris
                             (render-bar-elem coord-px x-lo x-hi py-lo py-hi c))))))
                   (range) groups))))
 
-;; ## ⚙️ render-mark :rect
+;; ## ⚙️ `render-mark` `:rect`
 
 (defmethod render-mark :rect [_ stat ctx]
   (if (:bars stat)
     (render-categorical-bars stat ctx)
     (render-value-bars stat ctx)))
 
-;; ## ⚙️ render-x-ticks :categorical
+;; ## ⚙️ `render-x-ticks` `:categorical`
 
 (defmethod render-x-ticks :categorical [_ sx pw ph m]
   (let [ticks (ws/ticks sx)
@@ -1592,9 +1592,9 @@ iris
     (facet :species)
     count)
 
-;; ## ⚙️ arrange-panels :multi-variable
+;; ## ⚙️ `arrange-panels` `:multi-variable`
 
-;; ## 🧪 What Facet Produces
+;; ## 🧪 What `facet` Produces
 ;;
 ;; Each original view is split into one view per group,
 ;; with a `:facet-val` key carrying the group label:
@@ -1643,7 +1643,7 @@ iris
                    :transform (str "rotate(-90," (- pw 5) "," (/ ph 2) ")")}
             (fmt-name yv)])]))))
 
-;; ## ⚙️ arrange-panels :facet
+;; ## ⚙️ `arrange-panels` `:facet`
 
 (defmethod arrange-panels :facet [_ ctx]
   (let [{:keys [non-ann-views ann-views pw ph facet-vals]} ctx]
@@ -1655,7 +1655,7 @@ iris
        [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
                :font-size 10 :fill "#333"} (str fv)]])))
 
-;; ## ⚙️ arrange-panels :facet-grid
+;; ## ⚙️ `arrange-panels` `:facet-grid`
 
 (defmethod arrange-panels :facet-grid [_ ctx]
   (let [{:keys [non-ann-views ann-views pw ph facet-row-vals facet-col-vals rows cols]} ctx]
@@ -1748,7 +1748,7 @@ iris
    (let [k (case channel :x :x-scale :y :y-scale)]
      (mapv #(assoc % k (merge {:type type} opts)) views))))
 
-;; ## ⚙️ make-scale :log
+;; ## ⚙️ `make-scale` `:log`
 
 (defmethod make-scale :log [domain pixel-range _]
   (ws/scale :log {:domain domain :range pixel-range}))
@@ -1787,9 +1787,9 @@ iris
     (set-scale :y :log)
     plot)
 
-;; ## ⚙️ render-grid :polar
+;; ## ⚙️ `render-grid` `:polar`
 
-;; ## ⚙️ make-coord :polar
+;; ## ⚙️ `make-coord` `:polar`
 
 (defmethod make-coord :polar [_ sx sy pw ph m]
   (let [cx (/ pw 2.0) cy (/ ph 2.0)
@@ -1869,7 +1869,7 @@ iris
  [(hline 3.0)
   (vline 6.0)
   (hband 2.5 3.5)])
-;; ## ⚙️ render-annotation methods
+;; ## ⚙️ `render-annotation` methods
 
 (defmethod render-annotation :rule-h [ann {:keys [coord x-domain]}]
   (let [[x1 y1] (coord (first x-domain) (:value ann))
@@ -1896,7 +1896,7 @@ iris
             :width (Math/abs (- x2 x1)) :height (Math/abs (- y2 y1))
             :fill "#333" :opacity 0.08}]))
 
-;; ## ⚙️ render-mark :text
+;; ## ⚙️ `render-mark` `:text`
 
 (defmethod render-mark :text [_ stat ctx]
   (let [{:keys [coord all-colors]} ctx]
@@ -1949,7 +1949,7 @@ iris
     (layer (point {:color :species}))
     (plot {:tooltip true}))
 
-;; ## ⚙️ wrap-plot :brush
+;; ## ⚙️ `wrap-plot` `:brush`
 ;;
 ;; Brushable plots wrap the SVG in a div with a selection script.
 
