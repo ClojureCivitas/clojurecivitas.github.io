@@ -80,6 +80,30 @@
 ;; multi-panel layouts, polar coordinates, and interactivity.
 ;; ---
 
+;; # Glossary
+;;
+;; **View** -- a plain Clojure map describing one layer: data, column mappings, mark, aesthetics.
+;;
+;; **Stat** -- a statistical transform (`compute-stat` multimethod). Takes a view, returns
+;; transformed data plus `:x-domain` and `:y-domain`.
+;;
+;; **Mark** -- a visual element (`render-mark` multimethod). Turns stat output into SVG.
+;;
+;; **Scale** -- maps a data domain to a pixel range (`make-scale` via [Wadogo](https://github.com/generateme/wadogo)).
+;;
+;; **Coord** -- a coordinate function (`make-coord` multimethod):
+;; `[data-x data-y] -> [pixel-x pixel-y]`.
+;;
+;; **Panel** -- one subplot. `render-panel` computes stats, builds scales, and
+;; renders grid + marks + ticks for a group of views.
+;;
+;; **Layout** -- `arrange-panels` multimethod. Positions panels in the final SVG
+;; (single plot, SPLOM grid, facets).
+;;
+;; **Layer** -- `layer` merges a spec (mark, aesthetics) into each view.
+;; `layers` stacks multiple marks on the same base views.
+;; ---
+
 ;; # Setup
 
 ;; ## ⚙️ Dependencies
