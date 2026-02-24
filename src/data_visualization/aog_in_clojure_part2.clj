@@ -472,7 +472,6 @@ iris
              [:line {:x1 m :y1 py :x2 (- pw m) :y2 py
                      :stroke (:grid theme) :stroke-width 0.5}])))))
 
-
 (defmulti render-x-ticks
   "Render x-axis tick labels."
   (fn [domain-type sx pw ph m] domain-type))
@@ -1120,6 +1119,14 @@ iris
             (loess {:color :species}))
     plot)
 
+;; ## 🧪 Triple Layer (Scatter + Regression + Smooth)
+
+(-> (views iris [[:sepal-length :petal-length]])
+    (layers (point {:color :species})
+            (lm {:color :species})
+            (loess {:color :species}))
+    plot)
+
 ;; ---
 
 ;; # Categorical Charts
@@ -1172,6 +1179,16 @@ iris
             :sales [10 15 13 17 20]}
            [[:year :sales]])
     (layers (point) (line-mark))
+    plot)
+
+;; ## 🧪 Colored Scatter + Line
+
+(-> (views {:year [2018 2019 2020 2021 2022 2018 2019 2020 2021 2022]
+            :sales [10 15 13 17 20 8 12 11 14 18]
+            :region ["East" "East" "East" "East" "East"
+                     "West" "West" "West" "West" "West"]}
+           [[:year :sales]])
+    (layers (point {:color :region}) (line-mark {:color :region}))
     plot)
 
 ;; ## ⚙️ compute-stat :count
@@ -1377,6 +1394,13 @@ iris
     (layer (point {:color :species}))
     plot)
 
+;; ## 🧪 Horizontal Strip Plot (Flipped)
+
+(-> (views iris [[:species :sepal-length]])
+    (layer (point {:color :species}))
+    (layer {:coord :flip})
+    plot)
+
 ;; ## 🧪 Numeric-as-Categorical
 
 (-> (views mpg [[:cyl :cyl]])
@@ -1389,6 +1413,14 @@ iris
             :amount [30 20 45]}
            [[:fruit :amount]])
     (layer (value-bar {:color :fruit}))
+    plot)
+
+;; ## 🧪 Value Bar (Plain)
+
+(-> (views {:fruit ["Apple" "Banana" "Cherry"]
+            :amount [30 20 45]}
+           [[:fruit :amount]])
+    (layer (value-bar))
     plot)
 
 ;; ---
@@ -1589,6 +1621,16 @@ iris
     (layer {:color :species})
     plot)
 
+;; ## 🧪 SPLOM with Explicit View Selectors
+;;
+;; Instead of `auto`, use `when-diagonal` and `when-off-diagonal` for
+;; fine-grained control over which marks appear where:
+
+(-> (views iris (cross iris-quantities iris-quantities))
+    (when-off-diagonal (point {:color :species}))
+    (when-diagonal (histogram {:color :species}))
+    plot)
+
 ;; ## 🧪 Faceted Scatter
 
 (-> (views iris [[:sepal-length :sepal-width]])
@@ -1610,6 +1652,20 @@ iris
     (layer (point {:color :species}))
     (facet :species)
     (plot {:scales :free-y}))
+
+;; ## 🧪 Faceted Scatter with Free X-Scale
+
+(-> (views iris [[:sepal-length :sepal-width]])
+    (layer (point {:color :species}))
+    (facet :species)
+    (plot {:scales :free-x}))
+
+;; ## 🧪 Faceted Scatter with Free Scales (Both Axes)
+
+(-> (views iris [[:sepal-length :sepal-width]])
+    (layer (point {:color :species}))
+    (facet :species)
+    (plot {:scales :free}))
 
 ;; ---
 
@@ -1656,6 +1712,14 @@ iris
       (layer (point))
       (set-scale :x :log)
       plot))
+
+;; ## 🧪 Log Scale (Y-Axis)
+
+(-> (views {:x [1 2 3 4 5] :y [1 10 100 1000 10000]}
+           [[:x :y]])
+    (layer (point))
+    (set-scale :y :log)
+    plot)
 
 ;; ## ⚙️ render-grid :polar
 
@@ -1899,6 +1963,15 @@ iris
     (layer {:color :species})
     (plot {:brush true}))
 
+;; ## 🧪 Brushable Facets
+;;
+;; Cross-panel brushing works on faceted plots too:
+
+(-> (views iris [[:sepal-length :sepal-width]])
+    (layer (point {:color :species}))
+    (facet :species)
+    (plot {:brush true}))
+
 ;; ## 🧪 Missing Data Tolerance
 
 (let [data (tc/dataset {:x [1 2 nil 4 5 6 nil 8]
@@ -1906,6 +1979,20 @@ iris
   (-> (views data [[:x :y]])
       (layer (point))
       plot))
+
+;; ## 🧪 Single Point
+
+(-> (views {:x [5] :y [10]}
+           [[:x :y]])
+    (layer (point))
+    plot)
+
+;; ## 🧪 Single Category
+
+(-> (views {:cat ["A"] :val [42]}
+           [[:cat :val]])
+    (layer (value-bar))
+    plot)
 
 ;; ---
 
