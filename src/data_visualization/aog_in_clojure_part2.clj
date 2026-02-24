@@ -24,7 +24,7 @@
   overflow-y: auto;
 }
 .sourceCode.clojure {
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
 }
 "]
