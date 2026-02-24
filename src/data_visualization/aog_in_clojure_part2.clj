@@ -32,64 +32,52 @@
 ;; # Introduction
 ;;
 ;; Wilkinson's [Grammar of Graphics](https://link.springer.com/book/10.1007/0-387-28695-0)
-;; (2005) describes a formal system for specifying statistical charts as
-;; a pipeline of composable components: data transformations, variable
-;; mappings, geometric elements, scales, coordinate systems, and guides.
-;; The book also introduces algebraic operators — cross (×), nest (/), and
-;; blend (+) — for combining variables within a specification.
+;; (2005) describes statistical charts as a pipeline of composable components:
+;; data transformations, variable mappings, geometric elements, scales,
+;; coordinate systems, and guides. It also introduces algebraic operators —
+;; cross (×), nest (/), and blend (+) — for combining variables.
 ;;
 ;; Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/) applies
-;; algebraic composition to plot specifications using two operators
-;; (distinct from Wilkinson's cross/nest/blend, despite the similar
-;; symbols): `*` ("merge together") combines partial specifications — a
-;; dataset with a mapping with a visual mark — while `+` ("stack on top")
-;; layers separate specifications in the same plot. The library infers
-;; axes, legends, and layout from the composed result.
+;; algebraic composition to plot specifications with two operators
+;; (distinct from Wilkinson's, despite similar symbols): `*` merges
+;; partial specs (dataset + mapping + mark), `+` layers them in one plot.
+;; The library infers axes, legends, and layout from the composed result.
 ;;
-;; Can we bring this to Clojure? This post builds a compositional plotting library
-;; from scratch, implementing these ideas on top of
-;; [Tablecloth](https://scicloj.github.io/tablecloth/) datasets and hand-rolled
-;; SVG. The design emerged from ongoing experimentation in the
-;; [Scicloj](https://scicloj.github.io/) community, and is part of a broader
-;; effort to develop
-;; [Tableplot](https://scicloj.github.io/tableplot/) — a Clojure plotting library
-;; for data science.
+;; This post explores what something similar could look like in Clojure,
+;; using [Tablecloth](https://scicloj.github.io/tablecloth/) datasets and
+;; SVG created from scratch. It is part of developing
+;; [Tableplot](https://scicloj.github.io/tableplot/) in the
+;; [Scicloj](https://scicloj.github.io/) community.
 ;;
-;; > *This post is self-contained: everything you need is explained inline.
+;; > *This post is self-contained: everything needed is explained inline.
 ;; > A [companion post](aog_in_clojure_part1.html) explores alternative
-;; > composition operators and multi-target rendering — interesting context
-;; > but not required reading.*
+;; > composition operators and multi-target rendering — not required reading.*
 ;;
-;; The central idea: a **view** is a plain Clojure map describing one layer of a plot:
+;; A **view** is a plain Clojure map describing one layer of a plot:
 ;;
 ;; ```clojure
 ;; {:data iris :x :sepal-length :y :sepal-width :mark :point :color :species}
 ;; ```
 ;;
-;; A plot is a sequence of views. Small functions compose views algebraically.
-;; Since views are plain maps, you can `println` them, `assoc` into them, or
-;; manipulate them with any Clojure function.
+;; A plot is a sequence of views. Small functions compose them.
+;; Since views are plain maps, you can `println`, `assoc`, or `merge` them.
 ;;
-;; Three architectural decisions keep the rendering pipeline simple:
+;; Three decisions shape the rendering:
 ;;
-;; **1. Wadogo for scales.** Instead of hand-rolling scale functions,
-;; we delegate to [wadogo](https://github.com/generateme/wadogo) — a scale library
-;; inspired by d3-scale. One call gives us ticks, formatting, band calculation,
-;; and log transforms, with support for datetime and other scale types.
+;; **1. Wadogo for scales.**
+;; [Wadogo](https://github.com/generateme/wadogo) handles ticks, formatting,
+;; band calculation, and log transforms.
 ;;
-;; **2. Stat-driven domains.** Each statistical transform returns `{:x-domain :y-domain}`
-;; alongside its output data. A histogram's y-domain is `[0 max-count]`, not the
-;; raw data range. This means the renderer always gets correct axis bounds — whether
-;; for identity, binning, regression, smoothing, or categorical counting.
+;; **2. Stat-driven domains.** Each stat returns `{:x-domain :y-domain}`
+;; alongside its data. A histogram's y-domain is `[0 max-count]`, not the
+;; raw data range — so axes are always correct.
 ;;
-;; **3. Single coord function.** There's one projection function per coordinate system:
-;; `[data-x data-y] → [pixel-x pixel-y]`. All marks decompose to points before calling
-;; it. Adding a new coordinate system means writing one function, not updating every renderer.
+;; **3. Single coord function.** One function per coordinate system:
+;; `[data-x data-y] → [pixel-x pixel-y]`. All marks call it the same way.
 ;;
 ;; Everything renders to SVG via Hiccup. The post builds up incrementally:
-;; first a simple scatter plot, then histograms, regression lines, categorical bars,
-;; multi-panel layouts, and finally polar coordinates, annotations, and interactivity.
-
+;; scatter plots, histograms, regression lines, bars,
+;; multi-panel layouts, polar coordinates, and interactivity.
 ;; ---
 
 ;; # Setup
@@ -130,10 +118,8 @@ iris
 
 ;; # The Algebra
 ;;
-;; A plot is a sequence of views — plain maps describing one layer each.
-;; The algebra provides small functions that compose views through standard
-;; `merge` and `concat` operations. You can `println` any view and understand
-;; everything. You can `assoc` or `merge` views with standard Clojure functions.
+;; A plot is a sequence of views — plain maps, one per layer.
+;; Small functions compose them through `merge` and `concat`.
 
 ;; ## ⚙️ Combinators
 
@@ -165,8 +151,7 @@ iris
 
 ;; ## 🧪 What a View Looks Like
 
-;; `views` accepts anything `tc/dataset` accepts — a dataset, a map of columns,
-;; or a sequence of row maps:
+;; `views` accepts anything `tc/dataset` accepts (dataset, column map, row maps):
 
 (-> {:x [1 2 3] :y [4 5 6]}
     (views [[:x :y]])
@@ -191,8 +176,7 @@ iris
 
 ;; ## ⚙️ Mark Constructors
 
-;; A geometry spec is a map with a `:mark` and optionally a `:stat`.
-;; For now, just the point mark:
+;; A geometry spec is a map with `:mark` and optionally `:stat`:
 
 (defn point
   ([] {:mark :point})
@@ -248,9 +232,9 @@ iris
 
 ;; # Statistical Transforms
 ;;
-;; Each stat method transforms a view's data and returns domain information.
-;; `compute-stat` is a multimethod — we define the `:identity` pass-through
-;; here and add `:bin`, `:lm`, `:loess`, and `:count` in later sections.
+;; `compute-stat` is a multimethod that transforms data and returns domain
+;; information. `:identity` is defined here; `:bin`, `:lm`, `:loess`, and
+;; `:count` follow in later sections.
 
 (defmulti compute-stat
   "Compute a statistical transform for a view.
@@ -290,8 +274,7 @@ iris
 
 ;; ## 🧪 What a Stat Returns
 ;;
-;; `compute-stat` extracts coordinates and domain bounds from a view.
-;; The `:identity` stat passes data through unchanged:
+;; Coordinates and domain bounds. `:identity` passes data through:
 
 (-> {:x [1 2 3 4] :y [10 20 15 25] :c ["a" "a" "b" "b"]}
     (views [[:x :y]])
@@ -303,8 +286,8 @@ iris
 
 ;; # Scales (Wadogo)
 ;;
-;; Wadogo gives us scales that handle ticks, formatting, and band calculations.
-;; We auto-detect the scale type from domain values.
+;; Ticks, formatting, and band calculations via Wadogo.
+;; Scale type is auto-detected from domain values.
 
 (defn- numeric-domain?
   [dom]
@@ -355,9 +338,8 @@ iris
 
 ;; # Coordinate Functions
 ;;
-;; A coord is a single function: `[data-x data-y] → [pixel-x pixel-y]`.
-;; Renderers call `(coord x y)` and get pixels back, regardless of
-;; coordinate system.
+;; One function per coordinate system: `[data-x data-y] → [pixel-x pixel-y]`.
+;; Renderers call it the same way regardless of coordinate type.
 
 (defmulti make-coord
   "Build a coordinate function: [data-x data-y] → [pixel-x pixel-y].
@@ -369,8 +351,7 @@ iris
 
 ;; ## 🧪 Coord in Action
 ;;
-;; A coord function maps data-space to pixel-space.
-;; With a 600×400 canvas and margin 25:
+;; Data-space to pixel-space, 600×400 canvas, margin 25:
 
 (let [sx (ws/scale :linear {:domain [0 10] :range [25 575]})
       sy (ws/scale :linear {:domain [0 100] :range [375 25]})
@@ -384,9 +365,8 @@ iris
 
 ;; # Mark Rendering
 ;;
-;; `render-mark` is a multimethod that renders a single mark type.
-;; Each method receives the mark keyword, the stat output, and a context map.
-;; We define `:point` here and add more marks in later sections.
+;; `render-mark` is a multimethod dispatching on mark keyword.
+;; `:point` is defined here; `:bar`, `:line`, `:rect`, `:text` follow later.
 
 (defmulti render-mark
   "Render a mark layer. Dispatches on mark keyword.
@@ -424,7 +404,7 @@ iris
 
 ;; ## 🧪 What render-mark Produces
 ;;
-;; `render-mark` returns Hiccup SVG elements — circles for `:point`:
+;; Hiccup SVG elements — circles for `:point`:
 
 (let [sx (ws/scale :linear {:domain [0 10] :range [25 575]})
       sy (ws/scale :linear {:domain [0 50] :range [375 25]})
@@ -440,8 +420,7 @@ iris
 
 ;; # Grid and Ticks
 ;;
-;; Grid and tick rendering are multimethods so we can add polar grids
-;; and categorical ticks in later sections.
+;; Multimethods — extended later with polar grids and categorical ticks.
 
 (defn- format-ticks
   "Format tick values: strip .0 when all ticks are whole numbers."
@@ -627,8 +606,7 @@ iris
 
 ;; ## 🧪 A Single Panel
 ;;
-;; `render-panel` assembles background, grid, data, and ticks into SVG.
-;; We can render it directly — no `plot` needed yet:
+;; `render-panel` directly — background, grid, data, ticks:
 
 (kind/hiccup
  [:svg {:width 600 :height 400
@@ -642,8 +620,7 @@ iris
 
 ;; # Layout
 ;;
-;; `arrange-panels` is a multimethod that handles different layout modes.
-;; `plot` infers the layout type and delegates.
+;; `plot` infers the layout type and delegates to `arrange-panels`.
 
 (defmulti arrange-panels
   "Arrange panels into an SVG layout. Dispatches on layout type."
@@ -812,8 +789,6 @@ iris
 ;; ---
 
 ;; # 🧪 First Plots
-;;
-;; With the core pipeline in place we can render scatter plots.
 
 ;; ## 🧪 Scatter from Inline Data
 
@@ -842,9 +817,9 @@ iris
 
 ;; # Histograms
 ;;
-;; A histogram bins continuous data and renders counts as bars. The key insight:
-;; `compute-stat :bin` returns `{:y-domain [0 max-count]}` — the y-axis scales
-;; to counts, not raw data values. This is what makes histogram axes correct.
+;; Bins continuous data, renders counts as bars.
+;; `compute-stat :bin` returns `{:y-domain [0 max-count]}` —
+;; the y-axis scales to counts, not raw data values.
 
 ;; ## ⚙️ Histogram Constructor
 
@@ -882,7 +857,7 @@ iris
 
 ;; ## 🧪 What :bin Returns
 ;;
-;; The `:bin` stat divides data into bins with counts and boundaries:
+;; Bins with counts and boundaries:
 
 (let [stat (-> (views iris [[:sepal-length :sepal-length]])
                (layer (histogram))
@@ -895,8 +870,7 @@ iris
                         (take 3 (:bin-maps (first (:bins stat)))))}))
 ;; ## ⚙️ render-mark :bar
 ;;
-;; Histogram bars are projected through the coord function as 4-corner polygons.
-;; This means they automatically work with cartesian, flip, and polar coordinates.
+;; Bars projected as 4-corner polygons — works with cartesian, flip, and polar.
 
 (defmethod render-mark :bar [_ stat ctx]
   (let [{:keys [coord all-colors]} ctx]
@@ -939,8 +913,7 @@ iris
 
 ;; ## ⚙️ Flip Coordinate
 ;;
-;; Flipping swaps the x and y axes. We extend `make-coord` and `render-grid`
-;; with a `:flip` method — histograms become horizontal automatically.
+;; Swaps x and y axes. Histograms become horizontal.
 
 (defmethod make-coord :flip [_ sx sy pw ph m]
   (fn [dx dy] [(sx dy) (sy dx)]))
@@ -963,8 +936,7 @@ iris
 
 ;; # Regression and Smooth Lines
 ;;
-;; Lines are a second mark type: regression lines use OLS from fastmath,
-;; smooth curves use loess interpolation.
+;; Regression (OLS via fastmath) and smooth curves (loess interpolation).
 
 ;; ## ⚙️ Mark Constructors
 
@@ -1024,8 +996,7 @@ iris
     kind/pprint)
 ;; ## ⚙️ compute-stat :loess
 ;;
-;; Loess curve via fastmath.interpolation, sampling 80 points.
-;; Deduplicates x values via `tc/group-by` + `tc/aggregate`.
+;; Loess via fastmath.interpolation (80 sample points, x values deduplicated).
 
 (defmethod compute-stat :loess [view]
   (let [{:keys [data x y color]} view
@@ -1081,11 +1052,10 @@ iris
                [:polyline {:points (str/join " " (map (fn [[px py]] (str px "," py)) projected))
                            :stroke c :stroke-width 1.5 :fill "none"}]))))))
 
-;; ## ⚙️ Layers (Multi-Layer Composition)
+;; ## ⚙️ Layers
 ;;
-;; `layers` stacks multiple marks on the same views. Annotation specs
-;; (hline, vline, hband) are stacked as separate views rather than merged
-;; into data views.
+;; Stacks multiple marks on the same base views.
+;; Annotation specs (hline, vline, hband) are kept as separate views.
 
 (defn layers
   "Stack multiple layers from the same base views."
@@ -1097,7 +1067,7 @@ iris
 
 ;; ## 🧪 What layers Produces
 ;;
-;; `layers` duplicates the base views, each copy with a different mark:
+;; Base views duplicated, each copy with a different mark:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layers (point {:color :species})
@@ -1131,9 +1101,8 @@ iris
 
 ;; # Categorical Charts
 ;;
-;; Categorical marks use wadogo's band scale for bar positioning.
-;; `compute-stat :count` tallies categories, and `render-mark :rect`
-;; renders bars with proper dodge/stack positioning.
+;; Wadogo band scales for bar positioning. `compute-stat :count` tallies
+;; categories; `render-mark :rect` handles dodge and stack.
 
 ;; ## ⚙️ Mark Constructors
 
@@ -1235,7 +1204,7 @@ iris
 
 ;; ## 🧪 What :count Returns
 ;;
-;; The `:count` stat tallies rows per category:
+;; Rows tallied per category:
 
 (-> (views iris [[:species :species]])
     (layer (bar))
@@ -1427,8 +1396,8 @@ iris
 
 ;; # Multi-Panel Layouts
 ;;
-;; Views can span multiple variables or be split by facets. Helper functions
-;; detect these patterns and the `arrange-panels` multimethod handles layout.
+;; Multiple variables or faceting split views across panels.
+;; `arrange-panels` multimethod handles layout.
 
 ;; ## ⚙️ Auto-Detection
 
@@ -1613,8 +1582,8 @@ iris
 
 ;; ## 🧪 SPLOM (Scatterplot Matrix)
 ;;
-;; Cross all columns with themselves. `auto` detects diagonal views (histograms)
-;; and off-diagonal views (scatters):
+;; Cross all columns with themselves; `auto` maps diagonal → histogram,
+;; off-diagonal → scatter:
 
 (-> (views iris (cross iris-quantities iris-quantities))
     auto
@@ -1623,8 +1592,7 @@ iris
 
 ;; ## 🧪 SPLOM with Explicit View Selectors
 ;;
-;; Instead of `auto`, use `when-diagonal` and `when-off-diagonal` for
-;; fine-grained control over which marks appear where:
+;; `when-diagonal` and `when-off-diagonal` instead of `auto`:
 
 (-> (views iris (cross iris-quantities iris-quantities))
     (when-off-diagonal (point {:color :species}))
@@ -1998,66 +1966,49 @@ iris
 
 ;; # Reflection
 ;;
-;; ## 📖 What This Design Demonstrates
+;; ## 📖 What worked
 ;;
-;; **Stat-driven domains fix histograms.** By having `compute-stat :bin`
-;; return `{:y-domain [0 28]}`, the y-axis naturally scales to counts.
-;; A naive approach would compute y-domain from data column values,
-;; which would be wrong for any stat that produces new dimensions.
+;; **Stat-driven domains.** `compute-stat :bin` returns `{:y-domain [0 28]}`,
+;; so histogram axes scale to counts rather than raw data values.
+;; Any stat that produces new dimensions (binning, counting, regression)
+;; supplies its own domain — the renderer doesn't need to know.
 ;;
-;; **Wadogo eliminates hand-rolled scale code.** Functions like `linear-scale`,
-;; `nice-ticks`, `categorical-scale`, and `inv-scale-label` that you'd
-;; normally hand-roll are replaced by `(ws/scale ...)`, `(ws/ticks ...)`,
-;; `(ws/format ...)`. Log scales get proper tick placement, band scales
-;; get proper padding, and datetime support is available.
+;; **Wadogo.** `(ws/scale ...)`, `(ws/ticks ...)`, `(ws/format ...)` replace
+;; custom `linear-scale`, `nice-ticks`, `categorical-scale`. Log scales,
+;; band padding, and datetime support are included.
 ;;
-;; **Single coord function keeps renderers simple.** There's one function
-;; `[x y] → [px py]` per coordinate system. All marks decompose to points
-;; before calling it, so renderers never branch on coordinate type.
-;; For bars, we project 4 corners into a polygon. For polar bars, we
-;; munch arcs by sampling 20+ points and projecting each one.
+;; **One coord function.** `[x y] → [px py]` per coordinate system.
+;; Marks decompose to points and call it; renderers never branch on
+;; coord type. Bars project 4 corners; polar bars sample arc points.
 ;;
-;; ## 📖 What's Still Rough
+;; ## 📖 What's rough
 ;;
-;; **Flip domain swap.** We still swap x/y domains for flip at the scale
-;; construction level. The coord function `(fn [dx dy] [(sx dy) (sy dx)])`
-;; then swaps the arguments. This double-swap works but is subtle.
+;; **Flip.** Domain swap at scale level + argument swap in the coord
+;; function — a double-swap that works but is subtle.
 ;;
-;; **render-panel is long.** It does too much: compute stats, merge
-;; domains, build scales, build coord, render annotations, render data, render
-;; ticks. Could be split into `compute-panel-domains`, `render-panel-content`,
-;; `render-panel-axes`.
+;; **render-panel.** Does too much: stats, domain merge, scales, coord,
+;; annotations, data, ticks. Could split.
 ;;
-;; **No axis labels.** Single-panel plots have tick values but no
-;; "sepal length →" label. The SPLOM panels use column headers, which works,
-;; but standalone scatters are unlabeled.
+;; **No axis labels.** Tick values but no "sepal length →" on
+;; standalone plots. SPLOM panels use column headers.
 ;;
-;; ## 📖 Design Space
+;; ## 📖 Design space
 ;;
-;; There are other ways to build this. The
-;; [companion post](aog_in_clojure_part1.html) explores an alternative with
-;; `=*`/`=+` operators, Malli schema validation, and multi-target rendering
-;; (geom, Vega-Lite, Plotly). That approach has a richer composition API but
-;; lighter rendering — no polar, no stacked bars, no loess, no annotations.
+;; The [companion post](aog_in_clojure_part1.html) takes a different
+;; tradeoff: richer algebraic operators (`=*`/`=+`), Malli schema
+;; validation, multi-target rendering (geom, Vega-Lite, Plotly) —
+;; but lighter rendering (no polar, stacked bars, loess, annotations).
+;; This post has simpler composition but more rendering features. A future library
+;; would ideally combine both.
 ;;
-;; This post takes the opposite tradeoff: simpler composition surface
-;; (`views`, `layer`, `layers`, `plot`) but deeper rendering capability.
-;; A future library would ideally combine both: elegant composition operators
-;; with a full rendering pipeline backed by wadogo + stat-driven domains +
-;; a single coord function.
+;; ## 📖 Open questions
 ;;
-;; ## 📖 What Comes Next
+;; - Composition operators: algebraic feel (`=*`/`=+`) or explicit (`views`/`layer`)?
+;; - Single SVG target or multiple backends?
+;; - Axis labels and titles?
+;; - Faceting: part of the algebra or a separate operation?
 ;;
-;; The design here is ready to inform a real library API. Key decisions to make:
-;;
-;; - Which composition operators? `=*`/`=+` (algebraic feel) or `views`/`layer` (explicit)?
-;; - Should we support multiple rendering targets or focus on SVG?
-;; - How should we handle axis labels and titles?
-;; - Should faceting be part of the algebra or a separate operation?
-;;
-;; As always, feedback is welcome — especially if you've tried the code and found
-;; patterns that work well or feel awkward. This is happening in the
-;; [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/)
-;; context, so your input shapes what gets built.
+;; Feedback welcome. This is part of the
+;; [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/).
 
 ;; ---
