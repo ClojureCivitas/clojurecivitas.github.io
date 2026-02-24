@@ -443,12 +443,26 @@ iris
 ;; Grid and tick rendering are multimethods so we can add polar grids
 ;; and categorical ticks in later sections.
 
+(defn- format-ticks
+  "Format tick values: strip .0 when all ticks are whole numbers."
+  [sx ticks]
+  (let [labels (ws/format sx ticks)]
+    (if (every? #(== (Math/floor %) %) ticks)
+      (mapv #(str (long %)) ticks)
+      labels)))
+
+(defn- tick-count
+  "Suggested tick count based on available pixel range."
+  [pixel-range spacing]
+  (max 2 (int (/ pixel-range spacing))))
+
 (defmulti render-grid
   "Render grid lines for a panel."
   (fn [coord-type sx sy pw ph m] coord-type))
 
 (defmethod render-grid :cartesian [_ sx sy pw ph m]
-  (let [x-ticks (ws/ticks sx) y-ticks (ws/ticks sy)]
+  (let [x-ticks (ws/ticks sx (tick-count (- pw (* 2 m)) 60))
+        y-ticks (ws/ticks sy (tick-count (- ph (* 2 m)) 40))]
     (into [:g]
           (concat
            (for [t x-ticks :let [px (sx t)]]
@@ -458,12 +472,15 @@ iris
              [:line {:x1 m :y1 py :x2 (- pw m) :y2 py
                      :stroke (:grid theme) :stroke-width 0.5}])))))
 
+
 (defmulti render-x-ticks
   "Render x-axis tick labels."
   (fn [domain-type sx pw ph m] domain-type))
 
 (defmethod render-x-ticks :numeric [_ sx pw ph m]
-  (let [ticks (ws/ticks sx) labels (ws/format sx ticks)]
+  (let [n (tick-count (- pw (* 2 m)) 60)
+        ticks (ws/ticks sx n)
+        labels (format-ticks sx ticks)]
     (into [:g {:font-size (:font-size theme) :fill "#666"}]
           (map (fn [t label]
                  [:text {:x (sx t) :y (- ph 2) :text-anchor "middle"} label])
@@ -474,7 +491,9 @@ iris
   (fn [domain-type sy pw ph m] domain-type))
 
 (defmethod render-y-ticks :numeric [_ sy pw ph m]
-  (let [ticks (ws/ticks sy) labels (ws/format sy ticks)]
+  (let [n (tick-count (- ph (* 2 m)) 40)
+        ticks (ws/ticks sy n)
+        labels (format-ticks sy ticks)]
     (into [:g {:font-size (:font-size theme) :fill "#666"}]
           (map (fn [t label]
                  [:text {:x (- m 3) :y (+ (sy t) 3) :text-anchor "end"} label])
