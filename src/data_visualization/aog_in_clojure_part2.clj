@@ -289,11 +289,26 @@ iris
   Returns a map with transform-specific output data plus :x-domain and :y-domain."
   (fn [view] (or (:stat view) :identity)))
 
-;; ## ⚙️ `:identity` -- Raw Data
+;; ## ⚙️ Shared Helpers
+
+(defn- numeric-extent
+  "Min/max pair from a numeric column."
+  [col]
+  [(dfn/reduce-min col) (dfn/reduce-max col)])
+
+(defn- group-by-color
+  "Split dataset by color column, apply f to each group.
+  f takes [dataset color-value]. Returns a sequence of results."
+  [ds color f]
+  (if color
+    (for [[gk gds] (-> ds (tc/group-by [color]) tc/groups->map)]
+      (f gds (gk color)))
+    [(f ds nil)]))
+
+;; ## ⚙️ `prepare-points` -- Data Preparation
 ;;
-;; `prepare-points` handles cleanup (drop-missing, row indexing),
-;; domain computation, and color grouping. The stat itself adds
-;; no transformation.
+;; Cleanup (drop-missing, row indexing), domain computation,
+;; and color grouping via `group-by-color`. Used by `:identity` below.
 
 (defn- prepare-points
   "Clean data, compute domains, group by color, extract aesthetics.
@@ -310,10 +325,8 @@ iris
             ys-col (clean y)
             cat-x? (not (number? (first xs-col)))
             cat-y? (not (number? (first ys-col)))
-            x-dom (if cat-x? (distinct xs-col)
-                      [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)])
-            y-dom (if cat-y? (distinct ys-col)
-                      [(dfn/reduce-min ys-col) (dfn/reduce-max ys-col)])
+            x-dom (if cat-x? (distinct xs-col) (numeric-extent xs-col))
+            y-dom (if cat-y? (distinct ys-col) (numeric-extent ys-col))
             point-group (fn [ds color-val]
                           (cond-> {:xs (ds x) :ys (ds y)
                                    :row-indices (ds :__row-idx)}
@@ -321,25 +334,16 @@ iris
                             size (assoc :sizes (ds size))
                             shape (assoc :shapes (ds shape))
                             text-col (assoc :labels (ds text-col))))
-            groups (if color
-                     (for [[gk gds] (-> clean (tc/group-by [color]) tc/groups->map)]
-                       (point-group gds (gk color)))
-                     [(point-group clean nil)])]
+            groups (group-by-color clean color point-group)]
         {:points groups :x-domain x-dom :y-domain y-dom}))))
+
+;; ## ⚙️ `:identity` -- Raw Data
+;;
+;; No transformation, just `prepare-points`:
 
 (defmethod compute-stat :identity [view]
   (prepare-points view))
 
-;; ## 🧪 What a Stat Returns
-;;
-;; Coordinates and domain bounds. `:identity` passes data through:
-
-(-> {:x [1 2 3 4] :y [10 20 15 25] :c ["a" "a" "b" "b"]}
-    (views [[:x :y]])
-    (layer (point {:color :c}))
-    first
-    compute-stat
-    kind/pprint)
 ;; ---
 
 ;; # Scales (Wadogo)
@@ -933,13 +937,13 @@ iris
                                         (:count b)))]
           {:bins all-bin-data
            :max-count max-count
-           :x-domain [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)]
+           :x-domain (numeric-extent xs-col)
            :y-domain [0 max-count]})
         (let [hist (stats/histogram (double-array xs-col) :sturges)
               max-count (reduce max 1 (map :count (:bins-maps hist)))]
           {:bins [{:bin-maps (:bins-maps hist)}]
            :max-count max-count
-           :x-domain [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)]
+           :x-domain (numeric-extent xs-col)
            :y-domain [0 max-count]})))))
 
 ;; ## 🧪 What `:bin` Returns
@@ -1053,12 +1057,8 @@ iris
     (if (or (< n 2)
             (= (dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))))
       {:lines []
-       :x-domain (if (pos? n)
-                   [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
-                   [0 1])
-       :y-domain (if (pos? n)
-                   [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]
-                   [0 1])}
+       :x-domain (if (pos? n) (numeric-extent (clean x)) [0 1])
+       :y-domain (if (pos? n) (numeric-extent (clean y)) [0 1])}
       (if color
         (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)]
           {:lines (for [[gk gds] grouped
@@ -1066,11 +1066,11 @@ iris
                                    (not= (dfn/reduce-min (gds x))
                                          (dfn/reduce-max (gds x))))]
                     (assoc (fit-lm (gds x) (gds y)) :color (gk color)))
-           :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
-           :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]})
+           :x-domain (numeric-extent (clean x))
+           :y-domain (numeric-extent (clean y))})
         {:lines [(fit-lm (clean x) (clean y))]
-         :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
-         :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]}))))
+         :x-domain (numeric-extent (clean x))
+         :y-domain (numeric-extent (clean y))}))))
 
 ;; ## 🧪 What `:lm` Returns
 ;;
@@ -1105,19 +1105,14 @@ iris
                               step (/ (- x-hi x-lo) (dec n-sample))
                               sample-xs (mapv #(+ x-lo (* % step)) (range n-sample))
                               sample-ys (mapv f sample-xs)]
-                          {:xs sample-xs :ys sample-ys}))]
-        (if color
-          (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)
-                results (for [[gk gds] grouped
-                              :let [{:keys [xs ys]} (fit-loess gds)]]
-                          {:color (gk color) :xs xs :ys ys})]
-            {:points results
-             :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
-             :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]})
-          (let [{:keys [xs ys]} (fit-loess clean)]
-            {:points [{:xs xs :ys ys}]
-             :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
-             :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]}))))))
+                          {:xs sample-xs :ys sample-ys}))
+            results (group-by-color clean color
+                                    (fn [ds cv]
+                                      (cond-> (fit-loess ds)
+                                        cv (assoc :color cv))))]
+        {:points results
+         :x-domain (numeric-extent (clean x))
+         :y-domain (numeric-extent (clean y))}))))
 
 ;; ## ⚙️ `render-mark` `:line`
 
