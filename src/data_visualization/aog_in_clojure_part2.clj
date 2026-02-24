@@ -228,6 +228,36 @@ iris
                                :fill fill} opts)]
     [:circle (merge {:cx cx :cy cy :r r :fill fill} opts)]))
 
+;; ## 🧪 The Palette
+
+(kind/hiccup
+ (into [:svg {:width 400 :height 30}]
+       (map-indexed (fn [i c]
+                      [:rect {:x (* i 50) :y 0 :width 45 :height 25 :fill c :rx 3}])
+                    ggplot-palette)))
+
+;; ## 🧪 Theme
+
+(kind/pprint theme)
+
+;; ## 🧪 Shape Elements
+
+(kind/hiccup
+ [:svg {:width 300 :height 50}
+  (render-shape-elem :circle 40 25 10 "#F8766D" {})
+  (render-shape-elem :square 100 25 10 "#00BA38" {})
+  (render-shape-elem :triangle 160 25 10 "#619CFF" {})
+  (render-shape-elem :diamond 220 25 10 "#A855F7" {})])
+
+;; ## 🧪 Color Lookup
+
+(let [cats ["setosa" "versicolor" "virginica"]]
+  (kind/pprint (mapv (fn [c] [c (color-for cats c)]) cats)))
+
+;; ## 🧪 Name Formatting
+
+(mapv fmt-name [:sepal-length :petal_width :species])
+
 ;; ---
 
 ;; # Statistical Transforms
@@ -334,6 +364,20 @@ iris
     :ticks (ws/ticks s)
     :formatted (ws/format s (ws/ticks s))}))
 
+;; ## 🧪 Domain Padding
+
+(kind/pprint
+ {:raw [4.3 7.9]
+  :padded (pad-domain [4.3 7.9] {:type :linear})
+  :log-padded (pad-domain [1 1000] {:type :log})})
+
+;; ## 🧪 Categorical Scale
+
+(let [s (make-scale ["A" "B" "C"] [50 550] {})]
+  (kind/pprint
+   {:A-position (s "A")
+    :B-band-info (s "B" true)
+    :ticks (ws/ticks s)}))
 ;; ---
 
 ;; # Coordinate Functions
@@ -434,6 +478,15 @@ iris
   "Suggested tick count based on available pixel range."
   [pixel-range spacing]
   (max 2 (int (/ pixel-range spacing))))
+
+;; ## 🧪 Tick Formatting
+
+(let [s (ws/scale :linear {:domain [0 50] :range [25 575]})]
+  (kind/pprint
+   {:whole-numbers (format-ticks s [0.0 10.0 20.0 30.0])
+    :decimals (format-ticks s [0.5 1.0 1.5 2.0])
+    :tick-count-wide (tick-count 550 60)
+    :tick-count-narrow (tick-count 120 60)}))
 
 (defmulti render-grid
   "Render grid lines for a panel."
@@ -661,6 +714,12 @@ iris
    (for [[i cat] (map-indexed vector categories)]
      [:g [:circle {:cx x :cy (+ y (* i 16)) :r 4 :fill (color-fn cat)}]
       [:text {:x (+ x 10) :y (+ y (* i 16) 4) :fill "#333"} (str cat)]])])
+
+;; ## 🧪 Legend
+(let [cats ["setosa" "versicolor" "virginica"]]
+  (kind/hiccup
+   [:svg {:width 120 :height 70}
+    (render-legend cats #(color-for cats %) :x 10 :y 15 :title :species)]))
 
 (defmulti wrap-plot
   "Wrap SVG content for final output. Dispatches on interaction mode keyword."
@@ -1506,6 +1565,17 @@ iris
     count)
 
 ;; ## ⚙️ arrange-panels :multi-variable
+
+;; ## 🧪 What Facet Produces
+;;
+;; Each original view is split into one view per group,
+;; with a `:facet-val` key carrying the group label:
+
+(-> iris
+    (views [[:sepal-length :sepal-width]])
+    (facet :species)
+    (->> (mapv #(select-keys % [:x :y :facet-val])))
+    kind/pprint)
 
 (defmethod arrange-panels :multi-variable [_ ctx]
   (let [{:keys [non-ann-views ann-views pw ph x-vars y-vars rows cols polar?]} ctx
