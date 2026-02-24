@@ -289,9 +289,17 @@ iris
   Returns a map with transform-specific output data plus :x-domain and :y-domain."
   (fn [view] (or (:stat view) :identity)))
 
-;; ## ⚙️ :identity -- Pass-Through
+;; ## ⚙️ :identity -- Raw Data
+;;
+;; `prepare-points` handles cleanup (drop-missing, row indexing),
+;; domain computation, and color grouping. The stat itself adds
+;; no transformation.
 
-(defmethod compute-stat :identity [view]
+(defn- prepare-points
+  "Clean data, compute domains, group by color, extract aesthetics.
+  Used by :identity (and available for reuse by other stats that
+  need point-level data)."
+  [view]
   (let [{:keys [data x y color size shape text-col x-type]} view
         data-idx (tc/add-column data :__row-idx (range (tc/row-count data)))
         clean (cond-> (tc/drop-missing data-idx [x y])
@@ -318,6 +326,9 @@ iris
                        (point-group gds (gk color)))
                      [(point-group clean nil)])]
         {:points groups :x-domain x-dom :y-domain y-dom}))))
+
+(defmethod compute-stat :identity [view]
+  (prepare-points view))
 
 ;; ## 🧪 What a Stat Returns
 ;;
