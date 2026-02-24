@@ -262,7 +262,8 @@ iris
 
 (defmethod compute-stat :identity [view]
   (let [{:keys [data x y color size shape text-col x-type]} view
-        clean (cond-> (tc/drop-missing data [x y])
+        data-idx (tc/add-column data :__row-idx (range (tc/row-count data)))
+        clean (cond-> (tc/drop-missing data-idx [x y])
                 (= x-type :categorical) (tc/map-columns x [x] str))]
     (if (zero? (tc/row-count clean))
       {:points [] :x-domain [0 1] :y-domain [0 1]}
@@ -275,7 +276,8 @@ iris
             y-dom (if cat-y? (distinct ys-col)
                       [(dfn/reduce-min ys-col) (dfn/reduce-max ys-col)])
             point-group (fn [ds color-val]
-                          (cond-> {:xs (ds x) :ys (ds y)}
+                          (cond-> {:xs (ds x) :ys (ds y)
+                                   :row-indices (ds :__row-idx)}
                             color-val (assoc :color color-val)
                             size (assoc :sizes (ds size))
                             shape (assoc :shapes (ds shape))
@@ -397,18 +399,20 @@ iris
         size-scale (when all-sizes
                      (let [lo (reduce min all-sizes) hi (reduce max all-sizes)
                            span (max 1e-6 (- (double hi) (double lo)))]
-                       (fn [v] (+ 4.0 (* 12.0 (/ (- (double v) (double lo)) span))))))
+                       (fn [v] (+ 2.0 (* 6.0 (/ (- (double v) (double lo)) span))))))
         shape-map (when shape-categories
                     (into {} (map-indexed (fn [i c] [c (nth shape-syms (mod i (count shape-syms)))])
                                           shape-categories)))]
     (into [:g]
-          (mapcat (fn [{:keys [color xs ys sizes shapes]}]
+          (mapcat (fn [{:keys [color xs ys sizes shapes row-indices]}]
                     (let [c (if color (color-for all-colors color) "#333")]
                       (for [i (range (count xs))
                             :let [[px py] (coord (nth xs i) (nth ys i))
-                                  r (if sizes (size-scale (nth sizes i)) 5.0)
+                                  r (if sizes (size-scale (nth sizes i)) 2.5)
                                   sh (if shapes (get shape-map (nth shapes i) :circle) :circle)
-                                  base-opts {:stroke "#fff" :stroke-width 0.5 :opacity 0.7}
+                                  row-idx (when row-indices (nth row-indices i))
+                                  base-opts (cond-> {:stroke "#fff" :stroke-width 0.5 :opacity 0.7}
+                                              row-idx (assoc :data-row-idx row-idx))
                                   elem (render-shape-elem sh px py r c base-opts)]]
                         (if tooltip-fn
                           (conj elem [:title (tooltip-fn {:x (nth xs i) :y (nth ys i) :color color})])
@@ -730,11 +734,11 @@ iris
                 :facet-grid (count facet-row-vals)
                 :facet 1
                 (count y-vars))
-         m 25
+         multi? (and (= layout-type :multi-variable) (> cols 1) (> rows 1))
+         m (if multi? 15 25)
          pw0 (/ width cols) ph0 (/ height rows)
-         square? (and (= layout-type :multi-variable) (> cols 1) (> rows 1))
-         pw (if square? (min pw0 ph0) pw0)
-         ph (if square? (min pw0 ph0) ph0)
+         pw (if multi? (min pw0 ph0) pw0)
+         ph (if multi? (min pw0 ph0) ph0)
          stat-results (mapv compute-stat non-ann-views)
          all-colors (let [color-views (filter #(and (:color %) (:data %)) views)]
                       (when (seq color-views)
@@ -857,7 +861,6 @@ iris
            :max-count max-count
            :x-domain [(dfn/reduce-min xs-col) (dfn/reduce-max xs-col)]
            :y-domain [0 max-count]})))))
-
 
 ;; ## 🧪 What :bin Returns
 ;;
@@ -992,7 +995,6 @@ iris
          :x-domain [(dfn/reduce-min (clean x)) (dfn/reduce-max (clean x))]
          :y-domain [(dfn/reduce-min (clean y)) (dfn/reduce-max (clean y))]}))))
 
-
 ;; ## 🧪 What :lm Returns
 ;;
 ;; Two endpoints per group — the fitted line from x-min to x-max:
@@ -1126,6 +1128,32 @@ iris
 (defn line-mark
   ([] {:mark :line :stat :identity})
   ([opts] (merge {:mark :line :stat :identity} opts)))
+
+;; ## 🧪 Line Chart (Connecting Raw Points)
+
+(-> (views {:year [2018 2019 2020 2021 2022]
+            :sales [10 15 13 17 20]}
+           [[:year :sales]])
+    (layer (line-mark))
+    plot)
+
+;; ## 🧪 Colored Line Chart
+
+(-> (views {:year [2018 2019 2020 2021 2022 2018 2019 2020 2021 2022]
+            :sales [10 15 13 17 20 8 12 11 14 18]
+            :region ["East" "East" "East" "East" "East"
+                     "West" "West" "West" "West" "West"]}
+           [[:year :sales]])
+    (layer (line-mark {:color :region}))
+    plot)
+
+;; ## 🧪 Scatter + Line Overlay
+
+(-> (views {:year [2018 2019 2020 2021 2022]
+            :sales [10 15 13 17 20]}
+           [[:year :sales]])
+    (layers (point) (line-mark))
+    plot)
 
 ;; ## ⚙️ compute-stat :count
 
@@ -1334,6 +1362,14 @@ iris
 
 (-> (views mpg [[:cyl :cyl]])
     (layer (bar {:x-type :categorical}))
+    plot)
+
+;; ## 🧪 Value Bar (Pre-Aggregated Data)
+
+(-> (views {:fruit ["Apple" "Banana" "Cherry"]
+            :amount [30 20 45]}
+           [[:fruit :amount]])
+    (layer (value-bar {:color :fruit}))
     plot)
 
 ;; ---
@@ -1676,7 +1712,6 @@ iris
   "Horizontal reference band between y1 and y2."
   [y1 y2] {:mark :band-h :y1 y1 :y2 y2})
 
-
 ;; ## 🧪 Annotation Specs
 ;;
 ;; Each annotation constructor returns a plain map:
@@ -1776,7 +1811,8 @@ iris
     [:script "
 (function(){
   var svg = document.currentScript.previousElementSibling;
-  var pts = svg.querySelectorAll('circle,rect.data-point,polygon');
+  var pts = svg.querySelectorAll('[data-row-idx]');
+  var allShapes = svg.querySelectorAll('circle,polygon');
   var drag = false, x0, y0, sel;
   svg.addEventListener('mousedown', function(e){
     var r = svg.getBoundingClientRect();
@@ -1800,10 +1836,26 @@ iris
     var bx = parseFloat(sel.getAttribute('x')), by = parseFloat(sel.getAttribute('y'));
     var bw = parseFloat(sel.getAttribute('width')), bh = parseFloat(sel.getAttribute('height'));
     svg.removeChild(sel);
+    if(bw < 3 && bh < 3){
+      allShapes.forEach(function(p){ p.setAttribute('opacity','0.7'); });
+      return;
+    }
+    var sr = svg.getBoundingClientRect();
+    var selected = new Set();
     pts.forEach(function(p){
-      var cx = parseFloat(p.getAttribute('cx')||p.getAttribute('x'));
-      var cy = parseFloat(p.getAttribute('cy')||p.getAttribute('y'));
+      var pr = p.getBoundingClientRect();
+      var cx = pr.left + pr.width/2 - sr.left;
+      var cy = pr.top + pr.height/2 - sr.top;
       if(cx>=bx && cx<=bx+bw && cy>=by && cy<=by+bh){
+        selected.add(p.getAttribute('data-row-idx'));
+      }
+    });
+    if(selected.size === 0){
+      allShapes.forEach(function(p){ p.setAttribute('opacity','0.7'); });
+      return;
+    }
+    pts.forEach(function(p){
+      if(selected.has(p.getAttribute('data-row-idx'))){
         p.setAttribute('opacity','1.0');
       } else {
         p.setAttribute('opacity','0.15');
@@ -1817,6 +1869,15 @@ iris
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species}))
+    (plot {:brush true}))
+
+;; ## 🧪 Brushable SPLOM (Cross-Panel)
+;;
+;; Brush in one panel highlights the same rows across all panels:
+
+(-> (views iris (cross iris-quantities iris-quantities))
+    auto
+    (layer {:color :species})
     (plot {:brush true}))
 
 ;; ## 🧪 Missing Data Tolerance
