@@ -53,10 +53,35 @@
 ;; > A [companion post](aog_in_clojure_part1.html) explores alternative
 ;; > composition operators and multi-target rendering, not required reading.*
 ;;
+;; ### Background
+;;
+;; [Tableplot](https://scicloj.github.io/tableplot/) was created in mid-2024
+;; as a plotting layer for the [Noj](https://scicloj.github.io/noj/) toolkit.
+;; Its current APIs (wrapping [Vega-Lite](https://vega.github.io/vega-lite/)
+;; and [Plotly](https://plotly.com/javascript/)) have been useful in real projects,
+;; but we always intended to explore fresh designs alongside them.
+;;
+;; This exploration has been shaped by conversations with
+;; Scicloj community members, in particular Cvetomir Dimov,
+;; Timothy Pratley, Kira Howe, Jon Anthony, Adrian Smith,
+;; respatialized, and others.
+;; It takes place in the context of the
+;; [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/),
+;; recently reinitiated by Timothy Pratley.
+;;
+;; ### Reading this document
+;;
+;; Section headers use emoji to indicate content type:
+;; **📖** narrative, **⚙️** implementation, **🧪** examples.
+;;
 ;; A **view** is a plain Clojure map describing one layer of a plot:
 ;;
 ;; ```clojure
-;; {:data iris :x :sepal-length :y :sepal-width :mark :point :color :species}
+;; {:data  iris
+;;  :x     :sepal-length
+;;  :y     :sepal-width
+;;  :mark  :point
+;;  :color :species}
 ;; ```
 ;;
 ;; A plot is a sequence of views. Small functions compose them.
@@ -75,33 +100,37 @@
 ;; **3. Single coord function.** One function per coordinate system:
 ;; `[data-x data-y] -> [pixel-x pixel-y]`. All marks call it the same way.
 ;;
-;; Everything renders to SVG via Hiccup. The post builds up incrementally:
+;; Everything renders to [SVG](https://en.wikipedia.org/wiki/SVG) via [Hiccup](https://github.com/weavejester/hiccup). The post builds up incrementally:
 ;; scatter plots, histograms, regression lines, bars,
 ;; multi-panel layouts, polar coordinates, and interactivity.
 ;; ---
 
 ;; # Glossary
 ;;
-;; **View** -- a plain Clojure map describing one layer: data, column mappings, mark, aesthetics.
+;; **Mark** -- a visual element: point, bar, line, or text.
 ;;
-;; **Stat** -- a statistical transform (`compute-stat` multimethod). Takes a view, returns
-;; transformed data plus `:x-domain` and `:y-domain`.
+;; **View** -- one layer of a chart: which data, which columns,
+;; which mark.
 ;;
-;; **Mark** -- a visual element (`render-mark` multimethod). Turns stat output into SVG.
+;; **Layer** -- a way to stack several marks on the same data.
+;; Each layer adds a view to the plot.
 ;;
-;; **Scale** -- maps a data domain to a pixel range (`make-scale` via [Wadogo](https://github.com/generateme/wadogo)).
+;; **Stat** -- a statistical transform applied before drawing.
+;; Binning produces a histogram, regression fits a line,
+;; identity passes values through unchanged.
 ;;
-;; **Coord** -- a coordinate function (`make-coord` multimethod):
-;; `[data-x data-y] -> [pixel-x pixel-y]`.
+;; **Scale** -- a mapping from one dimension of data to one axis.
+;; A numeric scale turns value ranges into positions;
+;; a categorical scale assigns bands.
 ;;
-;; **Panel** -- one subplot. `render-panel` computes stats, builds scales, and
-;; renders grid + marks + ticks for a group of views.
+;; **Coord** -- a coordinate system that turns two scaled values
+;; into a position on the canvas. Cartesian gives a standard grid,
+;; flip swaps the axes, polar wraps them into angle and radius.
 ;;
-;; **Layout** -- `arrange-panels` multimethod. Positions panels in the final SVG
-;; (single plot, SPLOM grid, facets).
+;; **Panel** -- one subplot: background, grid, marks, and tick labels.
 ;;
-;; **Layer** -- `layer` merges a spec (mark, aesthetics) into each view.
-;; `layers` stacks multiple marks on the same base views.
+;; **Layout** -- how panels are arranged: a single plot,
+;; a scatterplot matrix, or a faceted grid.
 ;; ---
 
 ;; # Setup
@@ -235,6 +264,8 @@ iris
                                  :font-family "sans-serif"} (str label " " col)]])
                       [["bg" bg] ["grid" grid]]))))
 
+;; ## ⚙️ Color and Shape Helpers
+
 (defn- fmt-name
   "Format a keyword as a readable name: :sepal-length -> \"sepal length\"."
   [k]
@@ -329,6 +360,17 @@ iris
       (f gds (gk color)))
     [(f ds nil)]))
 
+;; ## 🧪 Shared Helpers in Action
+
+(kind/pprint
+ {:numeric-extent (numeric-extent (iris :sepal-length))
+  :group-by-color (mapv (fn [g] (select-keys g [:color :n]))
+                        (group-by-color
+                         (tc/drop-missing iris [:sepal-length :species])
+                         :species
+                         (fn [ds cv]
+                           {:color cv :n (tc/row-count ds)})))})
+
 ;; ## ⚙️ `prepare-points` -- Data Preparation
 ;;
 ;; Cleanup (drop-missing, row indexing), domain computation,
@@ -374,6 +416,8 @@ iris
 ;;
 ;; Ticks, formatting, and band calculations via Wadogo.
 ;; Scale type is auto-detected from domain values.
+
+;; ## ⚙️ `make-scale`
 
 (defn- numeric-domain?
   [dom]
@@ -436,13 +480,22 @@ iris
     :ticks (ws/ticks s)}))
 ;; ---
 
-;; # Coordinate Functions
+;; # Coordinate Systems
 ;;
-;; One function per coordinate system: `[data-x data-y] -> [pixel-x pixel-y]`.
-;; Renderers call it the same way regardless of coordinate type.
+;; A coordinate function maps data values to pixel positions:
+;; `(coord data-x data-y)` returns `[pixel-x pixel-y]`.
+;; All marks call it the same way, so they don't need to know
+;; whether the plot is cartesian, flipped, or polar.
+;;
+;; `make-coord` builds this function from:
+;;
+;; - **coord-type** -- `:cartesian`, `:flip`, or `:polar`
+;; - **sx, sy** -- Wadogo scale for each axis (data -> pixels)
+;; - **pw, ph** -- panel width and height in pixels
+;; - **m** -- margin in pixels
 
 (defmulti make-coord
-  "Build a coordinate function: [data-x data-y] -> [pixel-x pixel-y].
+  "Build a coordinate function: (coord data-x data-y) -> [pixel-x pixel-y].
    Dispatches on coord-type keyword."
   (fn [coord-type sx sy pw ph m] coord-type))
 
@@ -451,7 +504,7 @@ iris
 
 ;; ## 🧪 Coord in Action
 ;;
-;; Data-space to pixel-space, 600×400 canvas, margin 25:
+;; Data-space to pixel-space on a 600x400 canvas with 25px margin:
 
 (let [sx (ws/scale :linear {:domain [0 10] :range [25 575]})
       sy (ws/scale :linear {:domain [0 100] :range [375 25]})
@@ -522,6 +575,8 @@ iris
 ;;
 ;; Multimethods, extended later with polar grids and categorical ticks.
 
+;; ## ⚙️ Tick Helpers
+
 (defn- format-ticks
   "Format tick values: strip .0 when all ticks are whole numbers."
   [sx ticks]
@@ -543,6 +598,8 @@ iris
     :decimals (format-ticks s [0.5 1.0 1.5 2.0])
     :tick-count-wide (tick-count 550 60)
     :tick-count-narrow (tick-count 120 60)}))
+
+;; ## ⚙️ Grid and Tick Rendering
 
 (defmulti render-grid
   "Render grid lines for a panel."
@@ -586,6 +643,21 @@ iris
                  [:text {:x (- m 3) :y (+ (sy t) 3) :text-anchor "end"} label])
                ticks labels))))
 
+;; ## 🧪 Bare Grid
+;;
+;; Background, grid lines, and tick labels, no data.
+;; This is the canvas that marks get drawn onto.
+
+(let [sx (ws/scale :linear {:domain [0 10] :range [25 575]})
+      sy (ws/scale :linear {:domain [0 100] :range [375 25]})
+      pw 600 ph 400 m 25]
+  (kind/hiccup
+   [:svg {:width pw :height ph "xmlns" "http://www.w3.org/2000/svg"}
+    [:rect {:x 0 :y 0 :width pw :height ph :fill (:bg theme)}]
+    (render-grid :cartesian sx sy pw ph m)
+    (render-x-ticks :numeric sx pw ph m)
+    (render-y-ticks :numeric sy pw ph m)]))
+
 ;; ---
 
 ;; # Panel Renderer
@@ -602,6 +674,8 @@ iris
   (fn [ann ann-ctx] (:mark ann)))
 
 (defmethod render-annotation :default [_ _] [:g])
+
+;; ## ⚙️ `render-panel`
 
 (defn render-panel
   [panel-views pw ph m & {:keys [x-domain y-domain show-x? show-y? all-colors
@@ -729,7 +803,10 @@ iris
 
 ;; # Layout
 ;;
-;; `plot` infers the layout type and delegates to `arrange-panels`.
+;; `plot` is the main entry point. It computes stats, builds scales,
+;; and delegates to `arrange-panels` for the SVG layout.
+
+;; ## ⚙️ `arrange-panels`
 
 (defmulti arrange-panels
   "Arrange panels into an SVG layout. Dispatches on layout type."
@@ -764,6 +841,8 @@ iris
   (let [panel-views (concat (:non-ann-views ctx) (:ann-views ctx))]
     [[:g (panel-from-ctx ctx panel-views)]]))
 
+;; ## ⚙️ `render-legend`
+
 (defn- render-legend [categories color-fn & {:keys [x y title]}]
   [:g {:font-family "sans-serif" :font-size 10}
    (when title [:text {:x x :y (- y 5) :fill "#333" :font-size 9} (fmt-name title)])
@@ -777,12 +856,16 @@ iris
    [:svg {:width 120 :height 70}
     (render-legend cats #(color-for cats %) :x 10 :y 15 :title :species)]))
 
+;; ## ⚙️ `wrap-plot`
+
 (defmulti wrap-plot
   "Wrap SVG content for final output. Dispatches on interaction mode keyword."
   (fn [mode svg-content] mode))
 
 (defmethod wrap-plot :default [_ svg]
   (kind/hiccup svg))
+
+;; ## ⚙️ Domain Helpers
 
 (defn- collect-domain
   "Collect and merge domains from stat-results along axis-key (:x-domain or :y-domain).
@@ -820,6 +903,11 @@ iris
                  max-stack)]
         (pad-domain [0 hi] scale-spec))
       (collect-domain stat-results :y-domain scale-spec))))
+
+;; ## ⚙️ `plot`
+;;
+;; The main entry point. Computes stats, builds scales,
+;; delegates to `arrange-panels`, and wraps the result as SVG.
 
 (defn plot
   "Render views as SVG. Options: :width :height :scales :coord :tooltip :brush"
@@ -902,8 +990,6 @@ iris
      (wrap-plot (if brush :brush :default) svg-content))))
 
 ;; ---
-
-;; # 🧪 First Plots
 
 ;; ## 🧪 Scatter from Inline Data
 
@@ -1006,7 +1092,10 @@ iris
 ;;
 ;; The y-domain comes from bin counts, not data values:
 
-(let [v {:data iris :x :sepal-length :y :sepal-length :stat :bin}
+(let [v {:data iris
+         :x :sepal-length
+         :y :sepal-length
+         :stat :bin}
       result (compute-stat v)]
   (kind/pprint
    {:x-domain (:x-domain result)
@@ -1051,7 +1140,7 @@ iris
 
 ;; # Regression and Smooth Lines
 ;;
-;; Regression (OLS via fastmath) and smooth curves (loess interpolation).
+;; Regression ([OLS](https://en.wikipedia.org/wiki/Ordinary_least_squares) via [Fastmath](https://github.com/generateme/fastmath)) and smooth curves ([LOESS](https://en.wikipedia.org/wiki/Local_regression) interpolation).
 
 ;; ## ⚙️ Mark Constructors
 
@@ -1697,7 +1786,7 @@ iris
                    :transform (str "rotate(-90," (- pw 5) "," (/ ph 2) ")")}
             (str rv)])]))))
 
-;; ## 🧪 SPLOM (Scatterplot Matrix)
+;; ## 🧪 SPLOM ([Scatterplot Matrix](https://en.wikipedia.org/wiki/Scatter_plot#Scatter_plot_matrices))
 ;;
 ;; Cross all columns with themselves; `auto` maps diagonal -> histogram,
 ;; off-diagonal -> scatter:
@@ -1806,9 +1895,7 @@ iris
     (set-scale :y :log)
     plot)
 
-;; ## ⚙️ `render-grid` `:polar`
-
-;; ## ⚙️ `make-coord` `:polar`
+;; ## ⚙️ Polar Coordinate System
 
 (defmethod make-coord :polar [_ sx sy pw ph m]
   (let [cx (/ pw 2.0) cy (/ ph 2.0)
