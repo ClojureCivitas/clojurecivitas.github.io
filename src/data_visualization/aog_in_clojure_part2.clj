@@ -8,7 +8,7 @@
                   :tags [:datavis :grammar-of-graphics :design :wadogo]
                   :keywords [:datavis]
                   :toc true
-                  :toc-depth 3
+                  :toc-depth 1
                   :toc-expand 3
                   :image "aog_iris.png"
                   :draft true}}}
@@ -198,6 +198,19 @@ iris
 
 (def theme {:bg "#EBEBEB" :grid "#FFFFFF" :font-size 8})
 
+;; ## 🧪 Theme
+
+(let [{:keys [bg grid]} theme]
+  (kind/hiccup
+   (into [:svg {:width 300 :height 30}]
+         (map-indexed (fn [i [label col]]
+                        [:g
+                         [:rect {:x (* i 150) :y 0 :width 20 :height 20 :fill col :rx 2
+                                 :stroke "#ccc" :stroke-width 0.5}]
+                         [:text {:x (+ (* i 150) 25) :y 14 :font-size 11 :fill "#333"
+                                 :font-family "sans-serif"} (str label " " col)]])
+                      [["bg" bg] ["grid" grid]]))))
+
 (defn- fmt-name
   "Format a keyword as a readable name: :sepal-length -> \"sepal length\"."
   [k]
@@ -236,10 +249,6 @@ iris
                       [:rect {:x (* i 50) :y 0 :width 45 :height 25 :fill c :rx 3}])
                     ggplot-palette)))
 
-;; ## 🧪 Theme
-
-(kind/pprint theme)
-
 ;; ## 🧪 Shape Elements
 
 (kind/hiccup
@@ -252,7 +261,15 @@ iris
 ;; ## 🧪 Color Lookup
 
 (let [cats ["setosa" "versicolor" "virginica"]]
-  (kind/pprint (mapv (fn [c] [c (color-for cats c)]) cats)))
+  (kind/hiccup
+   (into [:svg {:width 400 :height 25}]
+         (map-indexed (fn [i c]
+                        (let [col (color-for cats c)]
+                          [:g
+                           [:rect {:x (* i 135) :y 0 :width 15 :height 15 :fill col :rx 2}]
+                           [:text {:x (+ (* i 135) 20) :y 12 :font-size 11 :fill "#333"
+                                   :font-family "sans-serif"} (str c " " col)]]))
+                      cats))))
 
 ;; ## 🧪 Name Formatting
 
