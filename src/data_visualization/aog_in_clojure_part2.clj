@@ -105,6 +105,36 @@
 ;; multi-panel layouts, polar coordinates, and interactivity.
 ;; ---
 
+
+;; # Motivation
+;;
+;; A [companion post](splom_tutorial.html) builds a colored
+;; [scatterplot matrix](https://en.wikipedia.org/wiki/Scatter_plot#Scatter_plot_matrices)
+;; with regression lines by hand: manual grid offsets, explicit scale
+;; computation, per-panel rendering loops. The result is impressive
+;; but the code is long and tightly coupled to one layout.
+;;
+;; Here is that 4x4 SPLOM, rendered from the companion post:
+
+(require '[data-visualization.splom-tutorial :as splom-tut])
+
+(kind/hiccup splom-tut/iris-splom-4x4)
+
+;; The goal of this post is to build a composable API where
+;; a similar result requires only a few lines:
+;;
+;; ```clojure
+;; (-> (views iris (cross iris-quantities iris-quantities))
+;;     auto
+;;     (layer {:color :species})
+;;     (plot {:brush true}))
+;; ```
+;;
+;; Everything that the companion post does manually — grid layout,
+;; scale sharing, color assignment, diagonal detection —
+;; should follow from the composed specification.
+;; ---
+
 ;; # Glossary
 ;;
 ;; **Mark** -- a visual element: point, bar, line, or text.
