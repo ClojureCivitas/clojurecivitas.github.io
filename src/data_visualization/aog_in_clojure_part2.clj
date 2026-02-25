@@ -366,7 +366,7 @@ iris
 
 ;; ---
 
-;; ## Statistical Transforms
+;; ## Computing Statistics
 ;;
 ;; `compute-stat` is a multimethod that transforms data and returns domain
 ;; information. `:identity` is defined here; `:bin`, `:lm`, `:loess`, and
@@ -446,7 +446,7 @@ iris
 
 ;; ---
 
-;; ## Scales (Wadogo)
+;; ## Scales -- Data to Pixels
 ;;
 ;; Ticks, formatting, and band calculations via Wadogo.
 ;; Scale type is auto-detected from domain values.
@@ -550,7 +550,7 @@ iris
 
 ;; ---
 
-;; ## Mark Rendering
+;; ## Drawing Marks
 ;;
 ;; `render-mark` is a multimethod dispatching on mark keyword.
 ;; `:point` is defined here; `:bar`, `:line`, `:rect`, `:text` follow later.
@@ -605,7 +605,7 @@ iris
 
 ;; ---
 
-;; ## Grid and Ticks
+;; ## Axes and Grid Lines
 ;;
 ;; Multimethods, extended later with polar grids and categorical ticks.
 
@@ -694,7 +694,7 @@ iris
 
 ;; ---
 
-;; ## Panel Renderer
+;; ## Assembling a Panel
 ;;
 ;; `render-panel` takes views for a single panel and produces SVG.
 ;; It computes stats, merges domains, builds scales, and dispatches
@@ -835,7 +835,7 @@ iris
    600 400 25)])
 ;; ---
 
-;; ## Layout
+;; ## Composing the Plot
 ;;
 ;; `plot` is the main entry point. It computes stats, builds scales,
 ;; and delegates to `arrange-panels` for the SVG layout.
