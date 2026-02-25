@@ -158,6 +158,7 @@
   (:require
    ;; Tablecloth - dataset manipulation
    [tablecloth.api :as tc]
+   [tablecloth.column.api :as tcc]
    [tech.v3.datatype.functional :as dfn]
 
    ;; Kindly - notebook rendering protocol
@@ -436,6 +437,101 @@ mpg
 
 ;; ---
 
+;; ## Inference and Defaults
+;;
+;; Many plot parameters derive from others: column types from data, grouping
+;; from column types, scale types from domains. Each follows the same pattern:
+;;
+;; ```
+;; resolved-value = (or user-override (infer-from dependencies))
+;; ```
+;;
+;; `resolve-view` walks this chain once, filling in defaults.
+;; User-specified values always win.
+
+;; ### ⚙️ Visual Defaults
+;;
+;; All visual constants in one map, overridable per-plot via `:config`:
+
+(def defaults
+  {;; Layout
+   :width 600 :height 400
+   :margin 25 :margin-multi 15 :legend-width 100
+   ;; Ticks
+   :tick-spacing-x 60 :tick-spacing-y 40
+   ;; Points
+   :point-radius 2.5 :point-opacity 0.7
+   :point-stroke "#fff" :point-stroke-width 0.5
+   ;; Bars and lines
+   :bar-opacity 0.7 :line-width 1.5 :grid-stroke-width 0.5
+   ;; Annotations
+   :annotation-stroke "#333" :annotation-dash "4,3" :band-opacity 0.08
+   ;; Statistics
+   :bin-method :sturges :domain-padding 0.05
+   ;; Fallback
+   :default-color "#333"})
+
+;; ### ⚙️ Column Type Detection
+
+(defn- column-type
+  "Classify a dataset column as :categorical, :continuous, or :temporal.
+  Uses Tablecloth's tcc/typeof when available, falls back to value inspection."
+  [ds col]
+  (let [t (try (tcc/typeof (ds col)) (catch Exception _ nil))]
+    (cond
+      (#{:string :keyword :boolean :symbol :text} t) :categorical
+      (#{:float32 :float64 :int8 :int16 :int32 :int64} t) :continuous
+      ;; fallback: inspect first values
+      (every? number? (take 100 (ds col))) :continuous
+      :else :categorical)))
+
+;; ### ⚙️ `resolve-view`
+;;
+;; Walks the inference DAG top-down.  Each property is
+;; `(or user-specified inferred)`:
+
+(defn resolve-view
+  "Fill in derived properties: :x-type, :y-type, :color-type, :group.
+  User-specified values always win."
+  [v]
+  (if-not (:data v)
+    v
+    (let [ds (:data v)
+          x-type (or (:x-type v) (column-type ds (:x v)))
+          y-type (or (:y-type v) (when (and (:y v) (not= (:x v) (:y v)))
+                                   (column-type ds (:y v))))
+          c-type (when (:color v)
+                   (or (:color-type v) (column-type ds (:color v))))
+          group (or (:group v)
+                    (when (= c-type :categorical) [(:color v)])
+                    [])]
+      (assoc v :x-type x-type :y-type y-type :color-type c-type :group group))))
+
+;; ### 🧪 What `resolve-view` Produces
+;;
+;; Continuous columns, categorical color -- grouping inferred:
+
+(let [v (first (-> iris
+                   (views [[:sepal-length :sepal-width]])
+                   (layer (point {:color :species}))))]
+  (kind/pprint
+   (select-keys (resolve-view v) [:x-type :y-type :color-type :group])))
+
+;; Continuous color -- no grouping:
+
+(let [v (first (-> iris
+                   (views [[:sepal-length :sepal-width]])
+                   (layer (point {:color :petal-length}))))]
+  (kind/pprint
+   (select-keys (resolve-view v) [:x-type :y-type :color-type :group])))
+
+;; Override defaults per-plot with `:config`:
+
+(kind/pprint
+ (select-keys (merge defaults {:point-radius 5 :bar-opacity 0.9})
+              [:point-radius :bar-opacity :line-width]))
+;; ---
+
 ;; ## Computing Statistics
 ;;
 ;; `compute-stat` is a multimethod that transforms data and returns domain
@@ -455,37 +551,39 @@ mpg
   [col]
   [(dfn/reduce-min col) (dfn/reduce-max col)])
 
-(defn- group-by-color
-  "Split dataset by color column, apply f to each group.
-  f takes [dataset color-value]. Returns a sequence of results."
-  [ds color f]
-  (if color
-    (for [[gk gds] (-> ds (tc/group-by [color]) tc/groups->map)]
-      (f gds (gk color)))
+(defn- group-by-columns
+  "Split dataset by grouping columns, apply f to each group.
+  f takes [dataset group-key]. group-key is nil when no grouping,
+  a single value for one column, a vector for multiple columns."
+  [ds group-cols f]
+  (if (seq group-cols)
+    (for [[gk gds] (-> ds (tc/group-by group-cols) tc/groups->map)]
+      (f gds (if (= 1 (count group-cols))
+               (get gk (first group-cols))
+               (mapv gk group-cols))))
     [(f ds nil)]))
 
 ;; ### 🧪 Shared Helpers in Action
 
 (kind/pprint
  {:numeric-extent (numeric-extent (iris :sepal-length))
-  :group-by-color (mapv (fn [g] (select-keys g [:color :n]))
-                        (group-by-color
-                         (tc/drop-missing iris [:sepal-length :species])
-                         :species
-                         (fn [ds cv]
-                           {:color cv :n (tc/row-count ds)})))})
+  :group-by-columns (mapv (fn [g] (select-keys g [:color :n]))
+                          (group-by-columns
+                           (tc/drop-missing iris [:sepal-length :species])
+                           [:species]
+                           (fn [ds cv]
+                             {:color cv :n (tc/row-count ds)})))})
 
 ;; ### ⚙️ `prepare-points` -- Data Preparation
 ;;
 ;; Cleanup (drop-missing, row indexing), domain computation,
-;; and color grouping via `group-by-color`. Used by `:identity` below.
+;; and grouping via `group-by-columns`. Used by `:identity` below.
 
 (defn- prepare-points
-  "Clean data, compute domains, group by color, extract aesthetics.
-  Used by :identity (and available for reuse by other stats that
-  need point-level data)."
+  "Clean data, compute domains, group by columns, extract aesthetics.
+  Expects a resolved view (with :x-type, :group already filled in)."
   [view]
-  (let [{:keys [data x y color size shape text-col x-type]} view
+  (let [{:keys [data x y color size shape text-col x-type group]} view
         data-idx (tc/add-column data :__row-idx (range (tc/row-count data)))
         clean (cond-> (tc/drop-missing data-idx [x y])
                 (= x-type :categorical) (tc/map-columns x [x] str))]
@@ -493,18 +591,18 @@ mpg
       {:points [] :x-domain [0 1] :y-domain [0 1]}
       (let [xs-col (clean x)
             ys-col (clean y)
-            cat-x? (not (number? (first xs-col)))
-            cat-y? (not (number? (first ys-col)))
+            cat-x? (= x-type :categorical)
+            cat-y? (= (:y-type view) :categorical)
             x-dom (if cat-x? (distinct xs-col) (numeric-extent xs-col))
             y-dom (if cat-y? (distinct ys-col) (numeric-extent ys-col))
-            point-group (fn [ds color-val]
+            point-group (fn [ds group-val]
                           (cond-> {:xs (ds x) :ys (ds y)
                                    :row-indices (ds :__row-idx)}
-                            color-val (assoc :color color-val)
+                            group-val (assoc :color group-val)
                             size (assoc :sizes (ds size))
                             shape (assoc :shapes (ds shape))
                             text-col (assoc :labels (ds text-col))))
-            groups (group-by-color clean color point-group)]
+            groups (group-by-columns clean (or group []) point-group)]
         {:points groups :x-domain x-dom :y-domain y-dom}))))
 
 ;; ### ⚙️ `:identity` -- Raw Data
@@ -631,7 +729,8 @@ mpg
   (fn [mark stat ctx] mark))
 
 (defmethod render-mark :point [_ stat ctx]
-  (let [{:keys [coord all-colors tooltip-fn shape-categories]} ctx
+  (let [{:keys [coord all-colors tooltip-fn shape-categories cfg]} ctx
+        cfg (or cfg defaults)
         all-sizes (seq (mapcat :sizes (:points stat)))
         size-scale (when all-sizes
                      (let [lo (reduce min all-sizes) hi (reduce max all-sizes)
@@ -642,15 +741,17 @@ mpg
                                           shape-categories)))]
     (into [:g]
           (mapcat (fn [{:keys [color xs ys sizes shapes row-indices]}]
-                    (let [c (if color (color-for all-colors color) "#333")]
+                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
                       (for [i (range (count xs))
                             :let [[px py] (coord (nth xs i) (nth ys i))
-                                  r (if sizes (size-scale (nth sizes i)) 2.5)
+                                  r (if sizes (size-scale (nth sizes i)) (:point-radius cfg))
                                   sh (if shapes (get shape-map (nth shapes i) :circle) :circle)
                                   row-idx (when row-indices (nth row-indices i))
                                   tip (when tooltip-fn
                                         (tooltip-fn {:x (nth xs i) :y (nth ys i) :color color}))
-                                  base-opts (cond-> {:stroke "#fff" :stroke-width 0.5 :opacity 0.7}
+                                  base-opts (cond-> {:stroke (:point-stroke cfg)
+                                                     :stroke-width (:point-stroke-width cfg)
+                                                     :opacity (:point-opacity cfg)}
                                               row-idx (assoc :data-row-idx row-idx)
                                               tip (assoc :data-tooltip tip))]]
                         (render-shape-elem sh px py r c base-opts))))
@@ -707,26 +808,28 @@ mpg
 
 (defmulti render-grid
   "Render grid lines for a panel."
-  (fn [coord-type sx sy pw ph m] coord-type))
+  (fn [coord-type sx sy pw ph m cfg] coord-type))
 
-(defmethod render-grid :cartesian [_ sx sy pw ph m]
-  (let [x-ticks (ws/ticks sx (tick-count (- pw (* 2 m)) 60))
-        y-ticks (ws/ticks sy (tick-count (- ph (* 2 m)) 40))]
+(defmethod render-grid :cartesian [_ sx sy pw ph m cfg]
+  (let [cfg (or cfg defaults)
+        x-ticks (ws/ticks sx (tick-count (- pw (* 2 m)) (:tick-spacing-x cfg)))
+        y-ticks (ws/ticks sy (tick-count (- ph (* 2 m)) (:tick-spacing-y cfg)))]
     (into [:g]
           (concat
            (for [t x-ticks :let [px (sx t)]]
              [:line {:x1 px :y1 m :x2 px :y2 (- ph m)
-                     :stroke (:grid theme) :stroke-width 0.5}])
+                     :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])
            (for [t y-ticks :let [py (sy t)]]
              [:line {:x1 m :y1 py :x2 (- pw m) :y2 py
-                     :stroke (:grid theme) :stroke-width 0.5}])))))
+                     :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])))))
 
 (defmulti render-x-ticks
   "Render x-axis tick labels."
-  (fn [domain-type sx pw ph m] domain-type))
+  (fn [domain-type sx pw ph m cfg] domain-type))
 
-(defmethod render-x-ticks :numeric [_ sx pw ph m]
-  (let [n (tick-count (- pw (* 2 m)) 60)
+(defmethod render-x-ticks :numeric [_ sx pw ph m cfg]
+  (let [cfg (or cfg defaults)
+        n (tick-count (- pw (* 2 m)) (:tick-spacing-x cfg))
         ticks (ws/ticks sx n)
         labels (format-ticks sx ticks)]
     (into [:g {:font-size (:font-size theme) :fill "#666"}]
@@ -736,10 +839,11 @@ mpg
 
 (defmulti render-y-ticks
   "Render y-axis tick labels."
-  (fn [domain-type sy pw ph m] domain-type))
+  (fn [domain-type sy pw ph m cfg] domain-type))
 
-(defmethod render-y-ticks :numeric [_ sy pw ph m]
-  (let [n (tick-count (- ph (* 2 m)) 40)
+(defmethod render-y-ticks :numeric [_ sy pw ph m cfg]
+  (let [cfg (or cfg defaults)
+        n (tick-count (- ph (* 2 m)) (:tick-spacing-y cfg))
         ticks (ws/ticks sy n)
         labels (format-ticks sy ticks)]
     (into [:g {:font-size (:font-size theme) :fill "#666"}]
@@ -758,9 +862,9 @@ mpg
   (kind/hiccup
    [:svg {:width pw :height ph "xmlns" "http://www.w3.org/2000/svg"}
     [:rect {:x 0 :y 0 :width pw :height ph :fill (:bg theme)}]
-    (render-grid :cartesian sx sy pw ph m)
-    (render-x-ticks :numeric sx pw ph m)
-    (render-y-ticks :numeric sy pw ph m)]))
+    (render-grid :cartesian sx sy pw ph m defaults)
+    (render-x-ticks :numeric sx pw ph m defaults)
+    (render-y-ticks :numeric sy pw ph m defaults)]))
 
 ;; ---
 
@@ -785,7 +889,7 @@ mpg
 ;; into one SVG `[:g ...]` group, in eight steps:
 ;;
 ;; 1. **Config** -- read coord type and scale specs from the first view.
-;; 2. **Stats** -- call `compute-stat` on each data view.
+;; 2. **Resolve & Stats** -- `resolve-view` infers types and grouping, then `compute-stat` runs.
 ;; 3. **Domains** -- merge x/y domains from all stats.
 ;; 4. **Stack adjustment** -- inflate y-domain for stacked bars.
 ;; 5. **Scales** -- build Wadogo scales (swap axes if flipped).
@@ -795,8 +899,8 @@ mpg
 
 (defn render-panel
   [panel-views pw ph m & {:keys [x-domain y-domain show-x? show-y? all-colors
-                                 tooltip-fn shape-categories]
-                          :or {show-x? true show-y? true}}]
+                                 tooltip-fn shape-categories cfg]
+                          :or {show-x? true show-y? true cfg defaults}}]
   (let [v1 (first panel-views)
         coord-type (or (:coord v1) :cartesian)
         x-scale-spec (or (:x-scale v1) {:type :linear})
@@ -806,8 +910,9 @@ mpg
         ;; Compute stats for data views (not annotations)
         view-stats (for [v panel-views
                          :when (and (:mark v) (not (annotation-marks (:mark v))))]
-                     (let [stat (compute-stat v)]
-                       {:view v :stat stat}))
+                     (let [rv (resolve-view v)
+                           stat (compute-stat rv)]
+                       {:view rv :stat stat}))
 
         ;; Merge domains from stats
         stat-x-domains (keep #(get-in % [:stat :x-domain]) view-stats)
@@ -874,15 +979,16 @@ mpg
         annotation-views (filter #(annotation-marks (:mark %)) panel-views)
 
         ctx {:coord coord :all-colors all-colors :tooltip-fn tooltip-fn
-             :shape-categories shape-categories :sx sx :sy sy :coord-px coord-px}
-        ann-ctx {:coord coord :x-domain merged-x-dom :y-domain merged-y-dom}]
+             :shape-categories shape-categories :sx sx :sy sy :coord-px coord-px
+             :cfg cfg}
+        ann-ctx {:coord coord :x-domain merged-x-dom :y-domain merged-y-dom :cfg cfg}]
 
     [:g
      ;; Background
      [:rect {:x 0 :y 0 :width pw :height ph :fill (:bg theme)}]
 
      ;; Grid
-     (render-grid (if polar? :polar coord-type) sx sy pw ph m)
+     (render-grid (if polar? :polar coord-type) sx sy pw ph m cfg)
 
      ;; Annotations, dispatch through render-annotation multimethod
      (into [:g]
@@ -899,9 +1005,9 @@ mpg
 
      ;; Tick labels
      (when (and show-x? (not polar?))
-       (render-x-ticks (if cat-x? :categorical :numeric) sx pw ph m))
+       (render-x-ticks (if cat-x? :categorical :numeric) sx pw ph m cfg))
      (when (and show-y? (not polar?))
-       (render-y-ticks (if cat-y? :categorical :numeric) sy pw ph m))]))
+       (render-y-ticks (if cat-y? :categorical :numeric) sy pw ph m cfg))]))
 
 ;; ### 🧪 A Single Panel
 ;;
@@ -938,7 +1044,8 @@ mpg
                 :x-domain (or x-domain (:global-x-doms ctx))
                 :y-domain (or y-domain (:global-y-doms ctx))
                 :tooltip-fn (:tooltip-fn ctx)
-                :shape-categories (:shape-categories ctx)))
+                :shape-categories (:shape-categories ctx)
+                :cfg (:cfg ctx)))
 
 (defn- infer-layout [views]
   (let [facet-rows (seq (remove nil? (map :facet-row views)))
@@ -1129,11 +1236,13 @@ mpg
 ;; rendering options.
 
 (defn plot
-  "Render views as SVG. Options: :width :height :scales :coord :tooltip :brush"
+  "Render views as SVG. Options: :width :height :scales :coord :tooltip :brush :config"
   ([views] (plot views {}))
-  ([views {:keys [width height scales coord tooltip brush]
-           :or {width 600 height 400}}]
-   (let [views (if (map? views) [views] views)
+  ([views {:keys [width height scales coord tooltip brush config]}]
+   (let [cfg (merge defaults config)
+         width (or width (:width cfg))
+         height (or height (:height cfg))
+         views (if (map? views) [views] views)
          views (if coord (mapv #(assoc % :coord coord) views) views)
          ann-views (filter #(annotation-marks (:mark %)) views)
          non-ann-views (remove #(annotation-marks (:mark %)) views)
@@ -1152,11 +1261,11 @@ mpg
                 :facet 1
                 (count y-vars))
          multi? (and (= layout-type :multi-variable) (> cols 1) (> rows 1))
-         m (if multi? 15 25)
+         m (if multi? (:margin-multi cfg) (:margin cfg))
          pw0 (/ width cols) ph0 (/ height rows)
          pw (if multi? (min pw0 ph0) pw0)
          ph (if multi? (min pw0 ph0) ph0)
-         stat-results (mapv compute-stat non-ann-views)
+         stat-results (mapv (comp compute-stat resolve-view) non-ann-views)
          all-colors (let [color-views (filter #(and (:color %) (:data %)) views)]
                       (when (seq color-views)
                         (distinct (mapcat #((:data %) (:color %)) color-views))))
@@ -1175,7 +1284,7 @@ mpg
                          (collect-domain stat-results :x-domain x-scale-spec))
          global-y-doms (when (#{:shared :free-x} scale-mode)
                          (compute-global-y-domain stat-results views y-scale-spec))
-         legend-w (if (or all-colors shape-categories) 100 0)
+         legend-w (if (or all-colors shape-categories) (:legend-width cfg) 0)
          total-w (+ (* cols pw) legend-w)
          total-h (* rows ph)
          ctx {:non-ann-views non-ann-views :ann-views ann-views
@@ -1185,7 +1294,8 @@ mpg
               :global-x-doms global-x-doms :global-y-doms global-y-doms
               :x-vars x-vars :y-vars y-vars
               :facet-vals facet-vals :facet-row-vals facet-row-vals :facet-col-vals facet-col-vals
-              :color-cols color-cols :shape-col shape-col :scale-mode scale-mode}
+              :color-cols color-cols :shape-col shape-col :scale-mode scale-mode
+              :cfg cfg}
          svg-content
          [:svg {:width total-w :height total-h
                 "xmlns" "http://www.w3.org/2000/svg"
@@ -1193,18 +1303,20 @@ mpg
                 "version" "1.1"}
           (when all-colors
             (render-legend all-colors #(color-for all-colors %)
-                           :x (+ (* cols pw) 10) :y 30
+                           :x (+ (* cols pw) 10) :y 20
                            :title (first color-cols)))
           (when shape-categories
-            (let [y-off (+ 30 (if all-colors (* (count all-colors) 16) 0) 10)
+            (let [y-off (if all-colors (+ 20 (* (count all-colors) 16) 10) 20)
                   x-off (+ (* cols pw) 10)]
               (into [:g {:font-family "sans-serif" :font-size 10}
                      (when shape-col [:text {:x x-off :y (- y-off 5) :fill "#333" :font-size 9}
                                       (fmt-name shape-col)])]
                     (for [[i cat] (map-indexed vector shape-categories)
                           :let [sh (nth shape-syms (mod i (count shape-syms)))]]
-                      [:g (render-shape-elem sh x-off (+ y-off (* i 16)) 4 "#666" {:stroke "none"})
-                       [:text {:x (+ x-off 10) :y (+ y-off (* i 16) 4) :fill "#333"} (str cat)]]))))
+                      [:g (render-shape-elem sh (+ x-off 5) (+ y-off (* i 16)) 4
+                                             (if all-colors (color-for all-colors cat) "#333") {})
+                       [:text {:x (+ x-off 15) :y (+ y-off (* i 16) 4) :fill "#333"}
+                        (str cat)]]))))
           (into [:g] (remove nil? (arrange-panels layout-type ctx)))]]
      (wrap-plot (cond-> #{} tooltip (conj :tooltip) brush (conj :brush)) svg-content))))
 
@@ -1256,30 +1368,24 @@ mpg
 ;; ### ⚙️ `compute-stat` `:bin`
 
 (defmethod compute-stat :bin [view]
-  (let [{:keys [data x color]} view
+  (let [{:keys [data x group]} view
         clean (tc/drop-missing data [x])
         xs-col (clean x)]
     (if (zero? (tc/row-count clean))
       {:bins [] :max-count 0 :x-domain [0 1] :y-domain [0 1]}
-      (if color
-        (let [grouped (-> (tc/drop-missing clean [color])
-                          (tc/group-by [color]) tc/groups->map)
-              all-bin-data (for [[gk gds] grouped
-                                 :let [hist (stats/histogram (double-array (gds x)) :sturges)]]
-                             {:color (gk color) :bin-maps (:bins-maps hist)})
-              max-count (reduce max 1 (for [{:keys [bin-maps]} all-bin-data
-                                            b bin-maps]
-                                        (:count b)))]
-          {:bins all-bin-data
-           :max-count max-count
-           :x-domain (numeric-extent xs-col)
-           :y-domain [0 max-count]})
-        (let [hist (stats/histogram (double-array xs-col) :sturges)
-              max-count (reduce max 1 (map :count (:bins-maps hist)))]
-          {:bins [{:bin-maps (:bins-maps hist)}]
-           :max-count max-count
-           :x-domain (numeric-extent xs-col)
-           :y-domain [0 max-count]})))))
+      (let [all-bin-data (group-by-columns
+                          clean (or group [])
+                          (fn [ds gv]
+                            (let [hist (stats/histogram (double-array (ds x)) (:bin-method defaults))]
+                              (cond-> {:bin-maps (:bins-maps hist)}
+                                gv (assoc :color gv)))))
+            max-count (reduce max 1 (for [{:keys [bin-maps]} all-bin-data
+                                          b bin-maps]
+                                      (:count b)))]
+        {:bins all-bin-data
+         :max-count max-count
+         :x-domain (numeric-extent xs-col)
+         :y-domain [0 max-count]}))))
 
 ;; ### 🧪 What `:bin` Returns
 ;;
@@ -1289,6 +1395,7 @@ mpg
 (let [stat (-> (view iris :sepal-length)
                (layer (histogram))
                first
+               resolve-view
                compute-stat)]
   (kind/pprint
    {:x-domain (:x-domain stat)
@@ -1300,10 +1407,11 @@ mpg
 ;; Bars projected as 4-corner polygons, works with cartesian, flip, and polar.
 
 (defmethod render-mark :bar [_ stat ctx]
-  (let [{:keys [coord all-colors]} ctx]
+  (let [{:keys [coord all-colors cfg]} ctx
+        cfg (or cfg defaults)]
     (into [:g]
           (mapcat (fn [{:keys [color bin-maps]}]
-                    (let [c (if color (color-for all-colors color) "#333")]
+                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
                       (for [{:keys [min max count]} bin-maps
                             :let [[x1 y1] (coord min 0)
                                   [x2 y2] (coord max 0)
@@ -1311,7 +1419,7 @@ mpg
                                   [x4 y4] (coord min count)]]
                         [:polygon {:points (str x1 "," y1 " " x2 "," y2 " "
                                                 x3 "," y3 " " x4 "," y4)
-                                   :fill c :opacity 0.7}])))
+                                   :fill c :opacity (:bar-opacity cfg)}])))
                   (:bins stat)))))
 ;; ### 🧪 Histogram
 ;;
@@ -1336,11 +1444,11 @@ mpg
 (defmethod make-coord :flip [_ sx sy pw ph m]
   (fn [dx dy] [(sx dy) (sy dx)]))
 
-(defmethod render-grid :flip [_ sx sy pw ph m]
-  (render-grid :cartesian sx sy pw ph m))
+(defmethod render-grid :flip [_ sx sy pw ph m cfg]
+  (render-grid :cartesian sx sy pw ph m cfg))
 
-(defmethod render-grid :default [_ sx sy pw ph m]
-  (render-grid :cartesian sx sy pw ph m))
+(defmethod render-grid :default [_ sx sy pw ph m cfg]
+  (render-grid :cartesian sx sy pw ph m cfg))
 
 ;; ### 🧪 Flipped Histogram
 ;;
@@ -1380,7 +1488,7 @@ mpg
      :x2 x-max :y2 (regr/predict model [x-max])}))
 
 (defmethod compute-stat :lm [view]
-  (let [{:keys [data x y color]} view
+  (let [{:keys [data x y group]} view
         clean (tc/drop-missing data [x y])
         n (tc/row-count clean)]
     (if (or (< n 2)
@@ -1388,16 +1496,15 @@ mpg
       {:lines []
        :x-domain (if (pos? n) (numeric-extent (clean x)) [0 1])
        :y-domain (if (pos? n) (numeric-extent (clean y)) [0 1])}
-      (if color
-        (let [grouped (-> clean (tc/group-by [color]) tc/groups->map)]
-          {:lines (for [[gk gds] grouped
-                        :when (and (>= (tc/row-count gds) 2)
-                                   (not= (dfn/reduce-min (gds x))
-                                         (dfn/reduce-max (gds x))))]
-                    (assoc (fit-lm (gds x) (gds y)) :color (gk color)))
-           :x-domain (numeric-extent (clean x))
-           :y-domain (numeric-extent (clean y))})
-        {:lines [(fit-lm (clean x) (clean y))]
+      (let [lines (group-by-columns
+                   clean (or group [])
+                   (fn [ds gv]
+                     (when (and (>= (tc/row-count ds) 2)
+                                (not= (dfn/reduce-min (ds x))
+                                      (dfn/reduce-max (ds x))))
+                       (cond-> (fit-lm (ds x) (ds y))
+                         gv (assoc :color gv)))))]
+        {:lines (remove nil? lines)
          :x-domain (numeric-extent (clean x))
          :y-domain (numeric-extent (clean y))}))))
 
@@ -1408,6 +1515,7 @@ mpg
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (lm {:color :species}))
     first
+    resolve-view
     compute-stat
     kind/pprint)
 ;; ### ⚙️ `compute-stat` `:loess`
@@ -1415,7 +1523,7 @@ mpg
 ;; Loess via fastmath.interpolation (80 sample points, x values deduplicated).
 
 (defmethod compute-stat :loess [view]
-  (let [{:keys [data x y color]} view
+  (let [{:keys [data x y group]} view
         clean (tc/drop-missing data [x y])
         n (tc/row-count clean)]
     (if (< n 4)
@@ -1435,10 +1543,10 @@ mpg
                               sample-xs (mapv #(+ x-lo (* % step)) (range n-sample))
                               sample-ys (mapv f sample-xs)]
                           {:xs sample-xs :ys sample-ys}))
-            results (group-by-color clean color
-                                    (fn [ds cv]
-                                      (cond-> (fit-loess ds)
-                                        cv (assoc :color cv))))]
+            results (group-by-columns clean (or group [])
+                                      (fn [ds gv]
+                                        (cond-> (fit-loess ds)
+                                          gv (assoc :color gv))))]
         {:points results
          :x-domain (numeric-extent (clean x))
          :y-domain (numeric-extent (clean y))}))))
@@ -1446,22 +1554,23 @@ mpg
 ;; ### ⚙️ `render-mark` `:line`
 
 (defmethod render-mark :line [_ stat ctx]
-  (let [{:keys [coord all-colors]} ctx]
+  (let [{:keys [coord all-colors cfg]} ctx
+        cfg (or cfg defaults)]
     (into [:g]
           (concat
            (when-let [lines (:lines stat)]
              (for [{:keys [color x1 y1 x2 y2]} lines
-                   :let [c (if color (color-for all-colors color) "#333")
+                   :let [c (if color (color-for all-colors color) (:default-color cfg))
                          [px1 py1] (coord x1 y1)
                          [px2 py2] (coord x2 y2)]]
                [:line {:x1 px1 :y1 py1 :x2 px2 :y2 py2
-                       :stroke c :stroke-width 1.5}]))
+                       :stroke c :stroke-width (:line-width cfg)}]))
            (when-let [pts (:points stat)]
              (for [{:keys [color xs ys]} pts
-                   :let [c (if color (color-for all-colors color) "#333")
+                   :let [c (if color (color-for all-colors color) (:default-color cfg))
                          projected (sort-by first (map (fn [x y] (coord x y)) xs ys))]]
                [:polyline {:points (str/join " " (map (fn [[px py]] (str px "," py)) projected))
-                           :stroke c :stroke-width 1.5 :fill "none"}]))))))
+                           :stroke c :stroke-width (:line-width cfg) :fill "none"}]))))))
 
 ;; ### ⚙️ Layers
 ;;
@@ -1580,19 +1689,23 @@ mpg
 ;; ### ⚙️ `compute-stat` `:count`
 
 (defmethod compute-stat :count [view]
-  (let [{:keys [data x color x-type]} view
+  (let [{:keys [data x x-type group]} view
+        group-cols (or group [])
         clean (cond-> (tc/drop-missing data [x])
                 (= x-type :categorical) (tc/map-columns x [x] str))
         categories (distinct (clean x))]
     (if (empty? categories)
       {:categories [] :bars [] :max-count 0 :x-domain ["?"] :y-domain [0 1]}
-      (if color
-        (let [clean-c (tc/drop-missing clean [color])
-              color-cats (sort (distinct (clean-c color)))
-              group-cols (distinct [x color])
-              grouped (-> clean-c (tc/group-by group-cols) tc/groups->map)
+      (if (seq group-cols)
+        (let [color-col (first group-cols)
+              clean-c (tc/drop-missing clean group-cols)
+              color-cats (sort (distinct (clean-c color-col)))
+              all-group-cols (distinct (cons x group-cols))
+              grouped (-> clean-c (tc/group-by all-group-cols) tc/groups->map)
               count-fn (fn [cat cc]
-                         (let [key (if (= x color) {x cat} {x cat color cc})]
+                         (let [key (merge {x cat} (zipmap group-cols
+                                                          (if (= 1 (count group-cols))
+                                                            [cc] cc)))]
                            (if-let [ds (get grouped key)]
                              (tc/row-count ds)
                              0)))
@@ -1625,6 +1738,7 @@ mpg
 
 (-> (view iris :species)
     (layer (bar))
+    resolve-view
     first
     compute-stat
     kind/pprint)
@@ -1647,18 +1761,20 @@ mpg
 
 (defn- render-bar-elem
   "Render a bar as rect (cartesian) or polygon (polar)."
-  [coord-px x-lo x-hi py-lo py-hi color]
-  (if coord-px
-    [:polygon {:points (munch-arc coord-px x-lo x-hi py-lo py-hi 20)
-               :fill color :opacity 0.7}]
-    [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
-            :width (- x-hi x-lo)
-            :height (Math/abs (- py-lo py-hi))
-            :fill color :opacity 0.7}]))
+  [coord-px x-lo x-hi py-lo py-hi color cfg]
+  (let [opacity (:bar-opacity cfg)]
+    (if coord-px
+      [:polygon {:points (munch-arc coord-px x-lo x-hi py-lo py-hi 20)
+                 :fill color :opacity opacity}]
+      [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
+              :width (- x-hi x-lo)
+              :height (Math/abs (- py-lo py-hi))
+              :fill color :opacity opacity}])))
 
 (defn- render-categorical-bars
   [stat ctx]
-  (let [{:keys [all-colors sx sy coord-px position]} ctx
+  (let [{:keys [all-colors sx sy coord-px position cfg]} ctx
+        cfg (or cfg defaults)
         bw (ws/data sx :bandwidth)
         n-colors (clojure.core/count (:bars stat))
         cum-y (atom {})
@@ -1672,7 +1788,7 @@ mpg
                                    (:bars stat))])))]
     (into [:g]
           (mapcat (fn [bi {:keys [color counts]}]
-                    (let [c (if color (color-for all-colors color) "#333")]
+                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
                       (for [{:keys [category count]} counts
                             :when (or (= position :stack) (pos? count))
                             :let [band-info (sx category true)
@@ -1686,7 +1802,7 @@ mpg
                                 x-lo (- band-mid (* bw 0.4))
                                 x-hi (+ band-mid (* bw 0.4))]
                             (swap! cum-y assoc category (+ base count))
-                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c))
+                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c cfg))
                           (let [active (get active-map category)
                                 n-active (clojure.core/count active)
                                 active-idx (.indexOf ^java.util.List active bi)
@@ -1695,12 +1811,13 @@ mpg
                                 x-hi (+ x-lo sub-bw)
                                 py-lo (sy 0)
                                 py-hi (sy count)]
-                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c))))))
+                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c cfg))))))
                   (range) (:bars stat)))))
 
 (defn- render-value-bars
   [stat ctx]
-  (let [{:keys [all-colors sx sy coord-px position]} ctx
+  (let [{:keys [all-colors sx sy coord-px position cfg]} ctx
+        cfg (or cfg defaults)
         bw (ws/data sx :bandwidth)
         groups (:points stat)
         n-groups (clojure.core/count groups)
@@ -1708,7 +1825,7 @@ mpg
         cum-y (atom {})]
     (into [:g]
           (mapcat (fn [gi {:keys [color xs ys]}]
-                    (let [c (if color (color-for all-colors color) "#333")]
+                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
                       (for [i (range (clojure.core/count xs))
                             :let [cat (nth xs i)
                                   val (nth ys i)
@@ -1723,12 +1840,12 @@ mpg
                                 x-lo (- band-mid (* bw 0.4))
                                 x-hi (+ band-mid (* bw 0.4))]
                             (swap! cum-y assoc cat (+ base val))
-                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c))
+                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c cfg))
                           (let [x-lo (+ (- band-mid (/ (* n-groups sub-bw) 2.0)) (* gi sub-bw))
                                 x-hi (+ x-lo sub-bw)
                                 py-lo (sy 0)
                                 py-hi (sy val)]
-                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c))))))
+                            (render-bar-elem coord-px x-lo x-hi py-lo py-hi c cfg))))))
                   (range) groups))))
 
 ;; ### ⚙️ `render-mark` `:rect`
@@ -1740,7 +1857,7 @@ mpg
 
 ;; ### ⚙️ `render-x-ticks` `:categorical`
 
-(defmethod render-x-ticks :categorical [_ sx pw ph m]
+(defmethod render-x-ticks :categorical [_ sx pw ph m cfg]
   (let [ticks (ws/ticks sx)
         labels (map str ticks)]
     (into [:g {:font-size (:font-size theme) :fill "#666"}]
@@ -1748,7 +1865,7 @@ mpg
                  [:text {:x (sx t) :y (- ph 2) :text-anchor "middle"} label])
                ticks labels))))
 
-(defmethod render-y-ticks :categorical [_ sy pw ph m]
+(defmethod render-y-ticks :categorical [_ sy pw ph m cfg]
   (let [ticks (ws/ticks sy)
         labels (map str ticks)]
     (into [:g {:font-size (:font-size theme) :fill "#666"}]
@@ -1960,7 +2077,7 @@ mpg
         ;; each row shares its y-variable's domain (excluding diagonal histograms).
         var-domain (fn [var-key views-seq]
                      (let [scatter-views (filter #(not= (:x %) (:y %)) views-seq)
-                           stats (map compute-stat scatter-views)
+                           stats (map (comp compute-stat resolve-view) scatter-views)
                            doms (keep var-key stats)
                            num-doms (filter #(number? (first %)) doms)]
                        (when (seq num-doms)
@@ -2162,21 +2279,22 @@ mpg
         [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
          (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
 
-(defmethod render-grid :polar [_ sx sy pw ph m]
-  (let [cx (/ pw 2.0) cy (/ ph 2.0)
+(defmethod render-grid :polar [_ sx sy pw ph m cfg]
+  (let [cfg (or cfg defaults)
+        cx (/ pw 2.0) cy (/ ph 2.0)
         r-max (- (min cx cy) m)]
     (into [:g]
           (concat
            (for [i (range 1 6)
                  :let [r (* r-max (/ i 5.0))]]
              [:circle {:cx cx :cy cy :r r :fill "none"
-                       :stroke (:grid theme) :stroke-width 0.5}])
+                       :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])
            (for [i (range 8)
                  :let [a (* i (/ Math/PI 4))]]
              [:line {:x1 cx :y1 cy
                      :x2 (+ cx (* r-max (Math/cos a)))
                      :y2 (+ cy (* r-max (Math/sin a)))
-                     :stroke (:grid theme) :stroke-width 0.5}])))))
+                     :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])))))
 
 ;; ### 🧪 Polar Scatter
 ;;
@@ -2234,38 +2352,44 @@ mpg
   (hband 2.5 3.5)])
 ;; ### ⚙️ `render-annotation` methods
 
-(defmethod render-annotation :rule-h [ann {:keys [coord x-domain]}]
-  (let [[x1 y1] (coord (first x-domain) (:value ann))
+(defmethod render-annotation :rule-h [ann {:keys [coord x-domain cfg]}]
+  (let [cfg (or cfg defaults)
+        [x1 y1] (coord (first x-domain) (:value ann))
         [x2 y2] (coord (if (categorical-domain? x-domain)
                          (last x-domain)
                          (second x-domain))
                        (:value ann))]
     [:line {:x1 x1 :y1 y1 :x2 x2 :y2 y2
-            :stroke "#333" :stroke-width 1 :stroke-dasharray "4,3"}]))
+            :stroke (:annotation-stroke cfg) :stroke-width 1
+            :stroke-dasharray (:annotation-dash cfg)}]))
 
-(defmethod render-annotation :rule-v [ann {:keys [coord y-domain]}]
-  (let [[x1 y1] (coord (:value ann) (first y-domain))
+(defmethod render-annotation :rule-v [ann {:keys [coord y-domain cfg]}]
+  (let [cfg (or cfg defaults)
+        [x1 y1] (coord (:value ann) (first y-domain))
         [x2 y2] (coord (:value ann)
                        (if (categorical-domain? y-domain)
                          (last y-domain)
                          (second y-domain)))]
     [:line {:x1 x1 :y1 y1 :x2 x2 :y2 y2
-            :stroke "#333" :stroke-width 1 :stroke-dasharray "4,3"}]))
+            :stroke (:annotation-stroke cfg) :stroke-width 1
+            :stroke-dasharray (:annotation-dash cfg)}]))
 
-(defmethod render-annotation :band-h [ann {:keys [coord x-domain]}]
-  (let [[x1 y1] (coord (first x-domain) (:y1 ann))
+(defmethod render-annotation :band-h [ann {:keys [coord x-domain cfg]}]
+  (let [cfg (or cfg defaults)
+        [x1 y1] (coord (first x-domain) (:y1 ann))
         [x2 y2] (coord (second x-domain) (:y2 ann))]
     [:rect {:x (min x1 x2) :y (min y1 y2)
             :width (Math/abs (- x2 x1)) :height (Math/abs (- y2 y1))
-            :fill "#333" :opacity 0.08}]))
+            :fill (:annotation-stroke cfg) :opacity (:band-opacity cfg)}]))
 
 ;; ### ⚙️ `render-mark` `:text`
 
 (defmethod render-mark :text [_ stat ctx]
-  (let [{:keys [coord all-colors]} ctx]
-    (into [:g {:font-size 9 :fill "#333" :text-anchor "middle"}]
+  (let [{:keys [coord all-colors cfg]} ctx
+        cfg (or cfg defaults)]
+    (into [:g {:font-size 9 :fill (:default-color cfg) :text-anchor "middle"}]
           (mapcat (fn [{:keys [color xs ys labels]}]
-                    (let [c (if color (color-for all-colors color) "#333")]
+                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
                       (for [i (range (count xs))
                             :let [[px py] (coord (nth xs i) (nth ys i))]]
                         [:text {:x px :y (- py 5) :fill c}
@@ -2390,6 +2514,11 @@ mpg
 ;; Marks decompose to points and call it; renderers never branch on
 ;; coord type. Bars project 4 corners; polar bars sample arc points.
 ;;
+;; **`resolve-view` + `defaults`.**  A single function infers column types,
+;; grouping, and other derived properties -- each as `(or user-override inferred)`.
+;; Visual constants live in one `defaults` map, overridable per-plot via `:config`.
+;; Categorical color → group by it; continuous color → visual-only.
+;;
 ;; ### 📖 The algebra in hindsight
 ;;
 ;; The core API is five functions: `views`, `layer`, `layers`,
@@ -2426,7 +2555,8 @@ mpg
 ;; function, a double-swap that works but is subtle.
 ;;
 ;; **render-panel.** Does too much: stats, domain merge, scales, coord,
-;; annotations, data, ticks. Could split.
+;; annotations, data, ticks. `resolve-view` and `defaults` extract some
+;; concerns, but the function is still large.
 ;;
 ;; **No axis labels.** Tick values but no "sepal length ->" on
 ;; standalone plots. SPLOM panels use column headers.
