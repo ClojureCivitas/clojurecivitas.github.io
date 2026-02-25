@@ -1004,8 +1004,11 @@ iris
 
 ;; ### ⚙️ `plot`
 ;;
-;; The main entry point. Computes stats, builds scales,
-;; delegates to `arrange-panels`, and wraps the result as SVG.
+;; The main entry point. The view pipeline (algebra) specifies *what*
+;; to show -- data, columns, marks, aesthetics. `plot` handles *how*
+;; to show it: canvas size, scale sharing, interactivity. This boundary
+;; mirrors ggplot2's separation of `aes` + `geom` from `theme` and
+;; rendering options.
 
 (defn plot
   "Render views as SVG. Options: :width :height :scales :coord :tooltip :brush"
