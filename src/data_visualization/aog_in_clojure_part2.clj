@@ -105,7 +105,9 @@
 
 (require '[data-visualization.splom-tutorial :as splom-tut])
 
+;; :::{.column-screen-inset-right}
 (kind/hiccup splom-tut/iris-splom-4x4)
+;; ::: 
 
 ;; The goal of this post is to build a composable API where
 ;; a similar result requires only a few lines:
@@ -194,60 +196,42 @@ mpg
 
 ;; ---
 
-;; ## The Algebra
+;; ## Composing Views
 ;;
-;; Two algebraic traditions meet here.
-;; Wilkinson's [Grammar of Graphics](https://www.google.com/books/edition/The_Grammar_of_Graphics/ZiwLCAAAQBAJ)
-;; defines operators on *data*: cross and blend combine variables
-;; into grids and concatenations.
-;; Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/)
-;; defines operators on *visuals*: layers compose marks on shared data.
+;; Two traditions inspire this design:
+;; Wilkinson's [Grammar of Graphics](https://www.google.com/books/edition/The_Grammar_of_Graphics/ZiwLCAAAQBAJ),
+;; which combines variables through operators like cross, blend, and nest;
+;; and Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/),
+;; which composes visual specifications through `*` and `+`.
+;; Our operators are shaped by Clojure's idioms (`merge`, `concat`,
+;; threading) rather than by a direct translation of either system.
+;; They work in two phases:
 ;;
-;; **Views** implement the data algebra -- which dataset, which columns,
-;; combined how. **Layers** implement the visual algebra -- which marks
-;; drawn on those views. A plot is a flat sequence of view maps;
-;; small functions compose them through `merge` and `concat`.
+;; | Phase              | Operators                                                    | Acts on                      |
+;; |--------------------|--------------------------------------------------------------|------------------------------|
+;; | **What** to plot   | `cross`, `views`                                             | column names → view maps     |
+;; | **How** to plot    | `layer`, `layers`, mark constructors (`point`, `bar`, `lm`, …) | view maps → richer view maps |
 ;;
-;; Here is how the two algebras manifest in this notebook:
-;;
-;; | Algebra    | Inspiration | Operators                                                                   | Acts on                      |
-;; |------------|-------------|-----------------------------------------------------------------------------|------------------------------|
-;; | **Data**   | GoG         | `cross`, `stack`, `views`                                                   | column names → view maps     |
-;; | **Visual** | AoG         | `layer`, `layers`, mark constructors (`point`, `histogram`, `bar`, `lm`, …) | view maps → richer view maps |
-;;
-;; The **data algebra** decides *what* to plot: which columns, which pairings.
-;; The **visual algebra** decides *how* to plot it: which marks, which aesthetics.
-;; Both operate on the same unit -- a flat vector of view maps -- so they
-;; compose freely: data operators produce views, visual operators refine them.
+;; Both phases operate on the same unit -- a flat vector of view maps --
+;; so they compose freely through threading.
 
-;; ### ⚙️ Data Algebra: Combinators
+;; ### ⚙️ Cross
+
 ;;
-;; `cross` and `stack` are Wilkinson's cross and blend -- the data algebra's
-;; operators for combining variables.
-;; In Clojure they are just `for` and `concat`. Naming them makes
-;; intent explicit -- `(cross cols cols)` reads as "all pairings"
-;; where a raw `for` comprehension would not.
+;; `cross` produces all pairings of two sequences. Under the hood, just `for` --
+;; naming it makes intent explicit.
 
 (defn cross
   "Cartesian product of two sequences."
   [xs ys]
   (for [x xs, y ys] [x y]))
 
-(defn stack
-  "Concatenate multiple collections into one flat sequence."
-  [& colls]
-  (apply concat colls))
-
-;; ### 🧪 Cross and Stack
+;; ### 🧪 Cross
 
 (cross [:a :b] [:x :y])
 
-(stack [1 2] [3 4] [5])
-
-;; Conceptually, the 4x4 SPLOM from the Motivation section is
 ;; `(cross iris-quantities iris-quantities)` -- 16 column pairs,
-;; one per panel. `cross` turns a list of variables into a grid
-;; of pairings; `stack` would instead concatenate them.
+;; one per panel. `cross` turns a list of variables into a grid of pairings.
 
 ;; ### ⚙️ Views
 
@@ -324,11 +308,10 @@ mpg
     (views [[:x :y] [:x :z]])
     kind/pprint)
 
-;; ### ⚙️ Visual Algebra: Layer
+;; ### ⚙️ Layer
 ;;
-;; `layer` is the core operator of the visual algebra.
-;; It merges a visual specification -- mark, stat, aesthetics -- into every
-;; view.  This is how AoG's `*` operator works: data * visual = plot.
+;; `layer` merges a visual specification -- mark, stat, aesthetics --
+;; into every view. This is the "how" phase: same data, different rendering.
 
 (defn layer
   "Merge overrides into each view. This is how you add marks, aesthetics,
@@ -349,10 +332,9 @@ mpg
     (layer {:mark :point :color :group})
     kind/pprint)
 
-;; ### ⚙️ Visual Algebra: Mark Constructors
+;; ### ⚙️ Mark Constructors
 
-;; Mark constructors are the vocabulary of the visual algebra.
-;; Each returns a map that `layer` can merge into views:
+;; Each mark constructor returns a map that `layer` merges into views:
 
 (defn point
   ([] {:mark :point})
@@ -365,9 +347,9 @@ mpg
     (layer (point {:color :group}))
     kind/pprint)
 
-;; The two algebras compose through threading:
+;; The two phases compose through threading:
 ;; `(-> data (views pairs) (layer (point)))` reads as
-;; "these column pairings, drawn as points" -- data algebra, then visual algebra.
+;; "these column pairings, drawn as points" -- what, then how.
 ;; ---
 
 ;; ## Theme and Colors
@@ -1603,7 +1585,7 @@ mpg
   [base-views & layer-specs]
   (let [ann-specs (filter #(and (map? %) (annotation-marks (:mark %))) layer-specs)
         data-specs (remove #(and (map? %) (annotation-marks (:mark %))) layer-specs)]
-    (concat (apply stack (map #(layer base-views %) data-specs))
+    (concat (apply concat (map #(layer base-views %) data-specs))
             ann-specs)))
 
 ;; ### 🧪 What `layers` Produces
@@ -2435,8 +2417,8 @@ mpg
                                :species #(first (% :species))}))]
   (-> (views iris [[:sepal-length :sepal-width]])
       (layers (point {:color :species}))
-      (stack (-> (views means [[:sepal-length :sepal-width]])
-                 (layer (text-label :species))))
+      (concat (-> (views means [[:sepal-length :sepal-width]])
+                  (layer (text-label :species))))
       plot))
 
 ;; ### 🧪 Bubble Chart (Size Aesthetic)
@@ -2540,14 +2522,14 @@ mpg
 ;; Visual constants live in one `defaults` map, overridable per-plot via `:config`.
 ;; Categorical color → group by it; continuous color → visual-only.
 ;;
-;; ### 📖 The algebra in hindsight
+;; ### 📖 Composition in hindsight
 ;;
-;; The core API is five functions: `views`, `layer`, `layers`,
-;; `cross`, `stack`. After 2000 lines of rendering, some observations.
+;; The core API is four functions: `views`, `layer`, `layers`,
+;; and `cross`. After 2000 lines of rendering, some observations.
 ;;
-;; **`cross` and `stack` earn their names.** They are just `for` and
-;; `concat`, but naming them makes the SPLOM read as intent:
-;; `(cross cols cols)` says "all pairs" where a raw `for` would not.
+;; **`cross` earns its name.** It is just `for`, but naming it makes
+;; the SPLOM read as intent: `(cross cols cols)` says "all pairs"
+;; where a raw `for` would not.
 ;;
 ;; **`views` syntax is heavy for the common case.**
 ;; Every call is `(views data [[:x :y]])` -- the nested vector is
@@ -2564,7 +2546,7 @@ mpg
 ;; auto-detection turns into a histogram. Conceptually a histogram
 ;; has one variable, so the encoding is clever but surprising.
 ;;
-;; **`plot` options live outside the algebra.** Interactivity
+;; **`plot` options live outside the composition.** Interactivity
 ;; (`:brush`, `:tooltip`), scale sharing (`:scales :free`), and
 ;; faceting all pass through `plot` rather than composing through
 ;; views. Whether that is a limitation or a reasonable boundary
