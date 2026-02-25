@@ -2219,6 +2219,36 @@ iris
 ;; Marks decompose to points and call it; renderers never branch on
 ;; coord type. Bars project 4 corners; polar bars sample arc points.
 ;;
+;; ### 📖 The algebra in hindsight
+;;
+;; The core API is five functions: `views`, `layer`, `layers`,
+;; `cross`, `stack`. After 2000 lines of rendering, some observations.
+;;
+;; **`cross` and `stack` earn their names.** They are just `for` and
+;; `concat`, but naming them makes the SPLOM read as intent:
+;; `(cross cols cols)` says "all pairs" where a raw `for` would not.
+;;
+;; **`views` syntax is heavy for the common case.**
+;; Every call is `(views data [[:x :y]])` -- the nested vector is
+;; necessary for multi-pair grids but awkward for a single scatter.
+;; A `(views data :x :y)` convenience would help.
+;;
+;; **`layer` vs `layers` is confusing.** `layer` merges a map into
+;; every view (apply overrides). `layers` duplicates views per spec
+;; (stack marks). The glossary defines Layer as stacking marks,
+;; which is what `layers` does, not what `layer` does.
+;;
+;; **The histogram idiom `[[:col :col]]` is non-obvious.**
+;; Mapping x = y signals "same variable for both axes," which
+;; auto-detection turns into a histogram. Conceptually a histogram
+;; has one variable, so the encoding is clever but surprising.
+;;
+;; **`plot` options live outside the algebra.** Interactivity
+;; (`:brush`, `:tooltip`), scale sharing (`:scales :free`), and
+;; faceting all pass through `plot` rather than composing through
+;; views. Whether that is a limitation or a reasonable boundary
+;; between specification and rendering is an open question.
+;;
 ;; ### 📖 What's rough
 ;;
 ;; **Flip.** Domain swap at scale level + argument swap in the coord
