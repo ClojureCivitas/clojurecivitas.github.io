@@ -630,12 +630,12 @@ iris
                                   r (if sizes (size-scale (nth sizes i)) 2.5)
                                   sh (if shapes (get shape-map (nth shapes i) :circle) :circle)
                                   row-idx (when row-indices (nth row-indices i))
+                                  tip (when tooltip-fn
+                                        (tooltip-fn {:x (nth xs i) :y (nth ys i) :color color}))
                                   base-opts (cond-> {:stroke "#fff" :stroke-width 0.5 :opacity 0.7}
-                                              row-idx (assoc :data-row-idx row-idx))
-                                  elem (render-shape-elem sh px py r c base-opts)]]
-                        (if tooltip-fn
-                          (conj elem [:title (tooltip-fn {:x (nth xs i) :y (nth ys i) :color color})])
-                          elem))))
+                                              row-idx (assoc :data-row-idx row-idx)
+                                              tip (assoc :data-tooltip tip))]]
+                        (render-shape-elem sh px py r c base-opts))))
                   (:points stat)))))
 
 (defmethod render-mark :default [_ stat ctx]
@@ -955,13 +955,113 @@ iris
     (render-legend cats #(color-for cats %) :x 10 :y 15 :title :species)]))
 
 ;; ### ⚙️ `wrap-plot`
+;;
+;; Wraps SVG with [Scittle](https://github.com/babashka/scittle) scripts
+;; for tooltip and/or brush interactions.
 
-(defmulti wrap-plot
-  "Wrap SVG content for final output. Dispatches on interaction mode keyword."
-  (fn [mode svg-content] mode))
+(defn- tooltip-script
+  "Scittle script for custom tooltips on elements with data-tooltip attribute."
+  [div-id]
+  (list 'let ['container (list '.getElementById 'js/document div-id)
+              'svg (list '.querySelector 'container "svg")
+              'tip-el (list '.createElement 'js/document "div")]
+        '(set! (.-className tip-el) "aog-tooltip")
+        '(.appendChild container tip-el)
+        '(let [show! (fn [e]
+                       (let [text (.getAttribute (.-target e) "data-tooltip")]
+                         (when text
+                           (set! (.-textContent tip-el) text)
+                           (set! (.. tip-el -style -display) "block"))))
+               hide! (fn [_]
+                       (set! (.. tip-el -style -display) "none"))
+               move! (fn [e]
+                       (let [r (.getBoundingClientRect container)
+                             x (+ (- (.-clientX e) (.-left r)) 12)
+                             y (+ (- (.-clientY e) (.-top r)) 12)]
+                         (set! (.. tip-el -style -left) (str x "px"))
+                         (set! (.. tip-el -style -top) (str y "px"))))]
+           (.addEventListener svg "mouseover" show!)
+           (.addEventListener svg "mouseout" hide!)
+           (.addEventListener svg "mousemove" move!))))
 
-(defmethod wrap-plot :default [_ svg]
-  (kind/hiccup svg))
+(defn- brush-script
+  "Scittle script for drag-to-select brush interaction."
+  [div-id]
+  (list 'let ['svg (list '.querySelector 'js/document (str "#" div-id " svg"))
+              'pts (list '.querySelectorAll 'svg "[data-row-idx]")
+              'all-shapes (list '.querySelectorAll 'svg "circle,polygon")
+              'state (list 'atom {:drag false :x0 0 :y0 0 :sel nil})
+              'set-all-opacity '(fn [shapes o]
+                                  (.forEach shapes (fn [p] (.setAttribute p "opacity" o))))]
+        '(.addEventListener svg "mousedown"
+                            (fn [e]
+                              (let [r (.getBoundingClientRect svg)
+                                    x0 (- (.-clientX e) (.-left r))
+                                    y0 (- (.-clientY e) (.-top r))
+                                    sel (.createElementNS js/document "http://www.w3.org/2000/svg" "rect")]
+                                (.setAttribute sel "fill" "rgba(100,100,255,0.2)")
+                                (.setAttribute sel "stroke" "#66f")
+                                (.appendChild svg sel)
+                                (reset! state {:drag true :x0 x0 :y0 y0 :sel sel}))))
+        '(.addEventListener svg "mousemove"
+                            (fn [e]
+                              (when (:drag @state)
+                                (let [{:keys [x0 y0 sel]} @state
+                                      r (.getBoundingClientRect svg)
+                                      x1 (- (.-clientX e) (.-left r))
+                                      y1 (- (.-clientY e) (.-top r))]
+                                  (.setAttribute sel "x" (min x0 x1))
+                                  (.setAttribute sel "y" (min y0 y1))
+                                  (.setAttribute sel "width" (js/Math.abs (- x1 x0)))
+                                  (.setAttribute sel "height" (js/Math.abs (- y1 y0)))))))
+        '(.addEventListener svg "mouseup"
+                            (fn [e]
+                              (when (:drag @state)
+                                (let [{:keys [sel]} @state
+                                      _ (swap! state assoc :drag false)
+                                      bx (js/parseFloat (.getAttribute sel "x"))
+                                      by (js/parseFloat (.getAttribute sel "y"))
+                                      bw (js/parseFloat (.getAttribute sel "width"))
+                                      bh (js/parseFloat (.getAttribute sel "height"))]
+                                  (.removeChild svg sel)
+                                  (if (and (< bw 3) (< bh 3))
+                                    (set-all-opacity all-shapes "0.7")
+                                    (let [sr (.getBoundingClientRect svg)
+                                          selected (atom #{})]
+                                      (.forEach pts
+                                                (fn [p]
+                                                  (let [pr (.getBoundingClientRect p)
+                                                        cx (- (+ (.-left pr) (/ (.-width pr) 2)) (.-left sr))
+                                                        cy (- (+ (.-top pr) (/ (.-height pr) 2)) (.-top sr))]
+                                                    (when (and (>= cx bx) (<= cx (+ bx bw))
+                                                               (>= cy by) (<= cy (+ by bh)))
+                                                      (swap! selected conj (.getAttribute p "data-row-idx"))))))
+                                      (if (zero? (count @selected))
+                                        (set-all-opacity all-shapes "0.7")
+                                        (.forEach pts
+                                                  (fn [p]
+                                                    (if (contains? @selected (.getAttribute p "data-row-idx"))
+                                                      (.setAttribute p "opacity" "1.0")
+                                                      (.setAttribute p "opacity" "0.15")))))))))))))
+
+(def ^:private tooltip-css
+  ".aog-tooltip { display:none; position:absolute; pointer-events:none; background:rgba(0,0,0,0.8); color:#fff; padding:6px 10px; border-radius:4px; font-family:sans-serif; font-size:13px; white-space:nowrap; z-index:10; }")
+
+(defn wrap-plot
+  "Wrap SVG content with interaction scripts (tooltip, brush, or both)."
+  [modes svg-content]
+  (if (empty? modes)
+    (kind/hiccup svg-content)
+    (let [div-id (str "plot-" (random-uuid))
+          has-tooltip? (modes :tooltip)
+          scripts (cond-> []
+                    has-tooltip? (conj (tooltip-script div-id))
+                    (modes :brush) (conj (brush-script div-id)))]
+      (kind/hiccup
+       (into (cond-> [:div {:id div-id
+                            :style {:position "relative" :display "inline-block"}}]
+               has-tooltip? (conj [:style tooltip-css]))
+             (cons svg-content scripts))))))
 
 ;; ### ⚙️ Domain Helpers
 
@@ -1088,7 +1188,7 @@ iris
                       [:g (render-shape-elem sh x-off (+ y-off (* i 16)) 4 "#666" {:stroke "none"})
                        [:text {:x (+ x-off 10) :y (+ y-off (* i 16) 4) :fill "#333"} (str cat)]]))))
           (into [:g] (remove nil? (arrange-panels layout-type ctx)))]]
-     (wrap-plot (if brush :brush :default) svg-content))))
+     (wrap-plot (cond-> #{} tooltip (conj :tooltip) brush (conj :brush)) svg-content))))
 
 ;; ---
 
@@ -2196,74 +2296,6 @@ iris
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species}))
     (plot {:tooltip true}))
-
-;; ### ⚙️ `wrap-plot` `:brush`
-;;
-;; Brushable plots wrap the SVG with a [Scittle](https://github.com/babashka/scittle) script
-;; (ClojureScript interpreted in the browser) that handles drag-to-select.
-
-(defmethod wrap-plot :brush [_ svg-content]
-  (let [div-id (str "brush-" (random-uuid))]
-    (kind/hiccup
-     [:div {:id div-id :style {:position "relative" :display "inline-block"}}
-      svg-content
-      (list 'let ['svg (list '.querySelector 'js/document (str "#" div-id " svg"))
-                  'pts (list '.querySelectorAll 'svg "[data-row-idx]")
-                  'all-shapes (list '.querySelectorAll 'svg "circle,polygon")
-                  'state (list 'atom {:drag false :x0 0 :y0 0 :sel nil})
-                  'set-all-opacity '(fn [shapes o]
-                                      (.forEach shapes (fn [p] (.setAttribute p "opacity" o))))]
-            '(.addEventListener svg "mousedown"
-                                (fn [e]
-                                  (let [r (.getBoundingClientRect svg)
-                                        x0 (- (.-clientX e) (.-left r))
-                                        y0 (- (.-clientY e) (.-top r))
-                                        sel (.createElementNS js/document "http://www.w3.org/2000/svg" "rect")]
-                                    (.setAttribute sel "fill" "rgba(100,100,255,0.2)")
-                                    (.setAttribute sel "stroke" "#66f")
-                                    (.appendChild svg sel)
-                                    (reset! state {:drag true :x0 x0 :y0 y0 :sel sel}))))
-            '(.addEventListener svg "mousemove"
-                                (fn [e]
-                                  (when (:drag @state)
-                                    (let [{:keys [x0 y0 sel]} @state
-                                          r (.getBoundingClientRect svg)
-                                          x1 (- (.-clientX e) (.-left r))
-                                          y1 (- (.-clientY e) (.-top r))]
-                                      (.setAttribute sel "x" (min x0 x1))
-                                      (.setAttribute sel "y" (min y0 y1))
-                                      (.setAttribute sel "width" (js/Math.abs (- x1 x0)))
-                                      (.setAttribute sel "height" (js/Math.abs (- y1 y0)))))))
-            '(.addEventListener svg "mouseup"
-                                (fn [e]
-                                  (when (:drag @state)
-                                    (let [{:keys [sel]} @state
-                                          _ (swap! state assoc :drag false)
-                                          bx (js/parseFloat (.getAttribute sel "x"))
-                                          by (js/parseFloat (.getAttribute sel "y"))
-                                          bw (js/parseFloat (.getAttribute sel "width"))
-                                          bh (js/parseFloat (.getAttribute sel "height"))]
-                                      (.removeChild svg sel)
-                                      (if (and (< bw 3) (< bh 3))
-                                        (set-all-opacity all-shapes "0.7")
-                                        (let [sr (.getBoundingClientRect svg)
-                                              selected (atom #{})]
-                                          (.forEach pts
-                                                    (fn [p]
-                                                      (let [pr (.getBoundingClientRect p)
-                                                            cx (- (+ (.-left pr) (/ (.-width pr) 2)) (.-left sr))
-                                                            cy (- (+ (.-top pr) (/ (.-height pr) 2)) (.-top sr))]
-                                                        (when (and (>= cx bx) (<= cx (+ bx bw))
-                                                                   (>= cy by) (<= cy (+ by bh)))
-                                                          (swap! selected conj (.getAttribute p "data-row-idx"))))))
-                                          (if (zero? (count @selected))
-                                            (set-all-opacity all-shapes "0.7")
-                                            (.forEach pts
-                                                      (fn [p]
-                                                        (if (contains? @selected (.getAttribute p "data-row-idx"))
-                                                          (.setAttribute p "opacity" "1.0")
-                                                          (.setAttribute p "opacity" "0.15"))))))))))))])))
-
 ;; ### 🧪 Brushable Scatter
 ;;
 ;; `:brush true` adds a drag-to-select rectangle:
