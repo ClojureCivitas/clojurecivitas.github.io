@@ -2199,68 +2199,70 @@ iris
 
 ;; ### ⚙️ `wrap-plot` `:brush`
 ;;
-;; Brushable plots wrap the SVG in a div with a selection script.
+;; Brushable plots wrap the SVG with a [Scittle](https://github.com/babashka/scittle) script
+;; (ClojureScript interpreted in the browser) that handles drag-to-select.
 
 (defmethod wrap-plot :brush [_ svg-content]
-  (kind/hiccup
-   [:div {:style {:position "relative" :display "inline-block"}}
-    svg-content
-    [:script "
-(function(){
-  var svg = document.currentScript.previousElementSibling;
-  var pts = svg.querySelectorAll('[data-row-idx]');
-  var allShapes = svg.querySelectorAll('circle,polygon');
-  var drag = false, x0, y0, sel;
-  svg.addEventListener('mousedown', function(e){
-    var r = svg.getBoundingClientRect();
-    x0 = e.clientX - r.left; y0 = e.clientY - r.top;
-    sel = document.createElementNS('http://www.w3.org/2000/svg','rect');
-    sel.setAttribute('fill','rgba(100,100,255,0.2)');
-    sel.setAttribute('stroke','#66f');
-    svg.appendChild(sel); drag = true;
-  });
-  svg.addEventListener('mousemove', function(e){
-    if(!drag) return;
-    var r = svg.getBoundingClientRect();
-    var x1 = e.clientX - r.left, y1 = e.clientY - r.top;
-    sel.setAttribute('x', Math.min(x0,x1));
-    sel.setAttribute('y', Math.min(y0,y1));
-    sel.setAttribute('width', Math.abs(x1-x0));
-    sel.setAttribute('height', Math.abs(y1-y0));
-  });
-  svg.addEventListener('mouseup', function(e){
-    if(!drag) return; drag = false;
-    var bx = parseFloat(sel.getAttribute('x')), by = parseFloat(sel.getAttribute('y'));
-    var bw = parseFloat(sel.getAttribute('width')), bh = parseFloat(sel.getAttribute('height'));
-    svg.removeChild(sel);
-    if(bw < 3 && bh < 3){
-      allShapes.forEach(function(p){ p.setAttribute('opacity','0.7'); });
-      return;
-    }
-    var sr = svg.getBoundingClientRect();
-    var selected = new Set();
-    pts.forEach(function(p){
-      var pr = p.getBoundingClientRect();
-      var cx = pr.left + pr.width/2 - sr.left;
-      var cy = pr.top + pr.height/2 - sr.top;
-      if(cx>=bx && cx<=bx+bw && cy>=by && cy<=by+bh){
-        selected.add(p.getAttribute('data-row-idx'));
-      }
-    });
-    if(selected.size === 0){
-      allShapes.forEach(function(p){ p.setAttribute('opacity','0.7'); });
-      return;
-    }
-    pts.forEach(function(p){
-      if(selected.has(p.getAttribute('data-row-idx'))){
-        p.setAttribute('opacity','1.0');
-      } else {
-        p.setAttribute('opacity','0.15');
-      }
-    });
-  });
-})();
-"]]))
+  (let [div-id (str "brush-" (random-uuid))]
+    (kind/hiccup
+     [:div {:id div-id :style {:position "relative" :display "inline-block"}}
+      svg-content
+      (list 'let ['svg (list '.querySelector 'js/document (str "#" div-id " svg"))
+                  'pts (list '.querySelectorAll 'svg "[data-row-idx]")
+                  'all-shapes (list '.querySelectorAll 'svg "circle,polygon")
+                  'state (list 'atom {:drag false :x0 0 :y0 0 :sel nil})
+                  'set-all-opacity '(fn [shapes o]
+                                      (.forEach shapes (fn [p] (.setAttribute p "opacity" o))))]
+            '(.addEventListener svg "mousedown"
+                                (fn [e]
+                                  (let [r (.getBoundingClientRect svg)
+                                        x0 (- (.-clientX e) (.-left r))
+                                        y0 (- (.-clientY e) (.-top r))
+                                        sel (.createElementNS js/document "http://www.w3.org/2000/svg" "rect")]
+                                    (.setAttribute sel "fill" "rgba(100,100,255,0.2)")
+                                    (.setAttribute sel "stroke" "#66f")
+                                    (.appendChild svg sel)
+                                    (reset! state {:drag true :x0 x0 :y0 y0 :sel sel}))))
+            '(.addEventListener svg "mousemove"
+                                (fn [e]
+                                  (when (:drag @state)
+                                    (let [{:keys [x0 y0 sel]} @state
+                                          r (.getBoundingClientRect svg)
+                                          x1 (- (.-clientX e) (.-left r))
+                                          y1 (- (.-clientY e) (.-top r))]
+                                      (.setAttribute sel "x" (min x0 x1))
+                                      (.setAttribute sel "y" (min y0 y1))
+                                      (.setAttribute sel "width" (js/Math.abs (- x1 x0)))
+                                      (.setAttribute sel "height" (js/Math.abs (- y1 y0)))))))
+            '(.addEventListener svg "mouseup"
+                                (fn [e]
+                                  (when (:drag @state)
+                                    (let [{:keys [sel]} @state
+                                          _ (swap! state assoc :drag false)
+                                          bx (js/parseFloat (.getAttribute sel "x"))
+                                          by (js/parseFloat (.getAttribute sel "y"))
+                                          bw (js/parseFloat (.getAttribute sel "width"))
+                                          bh (js/parseFloat (.getAttribute sel "height"))]
+                                      (.removeChild svg sel)
+                                      (if (and (< bw 3) (< bh 3))
+                                        (set-all-opacity all-shapes "0.7")
+                                        (let [sr (.getBoundingClientRect svg)
+                                              selected (atom #{})]
+                                          (.forEach pts
+                                                    (fn [p]
+                                                      (let [pr (.getBoundingClientRect p)
+                                                            cx (- (+ (.-left pr) (/ (.-width pr) 2)) (.-left sr))
+                                                            cy (- (+ (.-top pr) (/ (.-height pr) 2)) (.-top sr))]
+                                                        (when (and (>= cx bx) (<= cx (+ bx bw))
+                                                                   (>= cy by) (<= cy (+ by bh)))
+                                                          (swap! selected conj (.getAttribute p "data-row-idx"))))))
+                                          (if (zero? (count @selected))
+                                            (set-all-opacity all-shapes "0.7")
+                                            (.forEach pts
+                                                      (fn [p]
+                                                        (if (contains? @selected (.getAttribute p "data-row-idx"))
+                                                          (.setAttribute p "opacity" "1.0")
+                                                          (.setAttribute p "opacity" "0.15"))))))))))))])))
 
 ;; ### 🧪 Brushable Scatter
 ;;
