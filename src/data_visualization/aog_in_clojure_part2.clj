@@ -1026,6 +1026,8 @@ iris
 ;; ---
 
 ;; ### 🧪 Scatter from Inline Data
+;;
+;; A map of columns works as data -- `views` wraps it into a dataset:
 
 (-> {:x [1 2 3 4 5 6]
      :y [2 4 3 5 4 6]
@@ -1035,6 +1037,8 @@ iris
     plot)
 
 ;; ### 🧪 Iris Scatter
+;;
+;; Same pipeline, now with a real dataset and no color:
 
 (-> iris
     (views [[:sepal-length :sepal-width]])
@@ -1042,6 +1046,8 @@ iris
     plot)
 
 ;; ### 🧪 Colored Scatter
+;;
+;; Adding `:color` to the `point` spec splits the data by species:
 
 (-> iris
     (views [[:sepal-length :sepal-width]])
@@ -1138,12 +1144,16 @@ iris
     :n-bins (count (:bin-maps (first (:bins result))))}))
 
 ;; ### 🧪 Histogram
+;;
+;; The `[[:sepal-length :sepal-length]]` idiom maps x = y, which auto-selects `:bin`:
 
 (-> (views iris [[:sepal-length :sepal-length]])
     (layer (histogram))
     plot)
 
 ;; ### 🧪 Colored Histogram
+;;
+;; Color splits bins per group, dodging them side by side:
 
 (-> (views iris [[:sepal-length :sepal-length]])
     (layer (histogram {:color :species}))
@@ -1163,6 +1173,8 @@ iris
   (render-grid :cartesian sx sy pw ph m))
 
 ;; ### 🧪 Flipped Histogram
+;;
+;; `:flip` swaps the axes -- bars grow leftward:
 ;;
 
 (-> (views iris [[:sepal-length :sepal-length]])
@@ -1305,6 +1317,8 @@ iris
     kind/pprint)
 
 ;; ### 🧪 Scatter + Regression
+;;
+;; `layers` stacks two marks on the same data -- one scatter, one regression line:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layers (point {:color :species})
@@ -1312,6 +1326,8 @@ iris
     plot)
 
 ;; ### 🧪 Smooth Curve (Loess)
+;;
+;; LOESS fits a local curve instead of a straight line:
 
 (-> (views iris [[:sepal-length :petal-length]])
     (layers (point {:color :species})
@@ -1319,6 +1335,8 @@ iris
     plot)
 
 ;; ### 🧪 Triple Layer (Scatter + Regression + Smooth)
+;;
+;; Three marks on the same data -- `layers` accepts any number of specs:
 
 (-> (views iris [[:sepal-length :petal-length]])
     (layers (point {:color :species})
@@ -1569,30 +1587,40 @@ iris
                ticks labels))))
 
 ;; ### 🧪 Bar Chart
+;;
+;; The simplest categorical plot -- `:count` tallies species, band scale positions bars:
 
 (-> (views iris [[:species :species]])
     (layer (bar))
     plot)
 
 ;; ### 🧪 Colored Bar Chart
+;;
+;; Color = same column as x: each bar gets its species color:
 
 (-> (views iris [[:species :species]])
     (layer (bar {:color :species}))
     plot)
 
 ;; ### 🧪 Stacked Bar Chart
+;;
+;; Color = a *different* column: bars stack by drive type within each class:
 
 (-> (views mpg [[:class :class]])
     (layer (stacked-bar {:color :drv}))
     plot)
 
 ;; ### 🧪 Strip Plot (Categorical x, Continuous y)
+;;
+;; A categorical x with a continuous y: points jitter along the category axis:
 
 (-> (views iris [[:species :sepal-length]])
     (layer (point {:color :species}))
     plot)
 
 ;; ### 🧪 Horizontal Strip Plot (Flipped)
+;;
+;; `:flip` works on categorical plots too:
 
 (-> (views iris [[:species :sepal-length]])
     (layer (point {:color :species}))
@@ -1600,12 +1628,16 @@ iris
     plot)
 
 ;; ### 🧪 Numeric-as-Categorical
+;;
+;; `:x-type :categorical` forces a numeric column onto a band scale:
 
 (-> (views mpg [[:cyl :cyl]])
     (layer (bar {:x-type :categorical}))
     plot)
 
 ;; ### 🧪 Value Bar (Pre-Aggregated Data)
+;;
+;; When data is already aggregated, `value-bar` skips the `:count` stat:
 
 (-> (views {:fruit ["Apple" "Banana" "Cherry"]
             :amount [30 20 45]}
@@ -1614,6 +1646,8 @@ iris
     plot)
 
 ;; ### 🧪 Value Bar (Plain)
+;;
+;; Same data without color -- single-color bars:
 
 (-> (views {:fruit ["Apple" "Banana" "Cherry"]
             :amount [30 20 45]}
@@ -1840,6 +1874,8 @@ iris
     plot)
 
 ;; ### 🧪 Faceted Scatter
+;;
+;; One panel per species -- `facet` splits views by a column:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species}))
@@ -1847,6 +1883,8 @@ iris
     plot)
 
 ;; ### 🧪 Row × Column Faceting
+;;
+;; `facet-grid` maps two columns to rows and columns of panels:
 
 (let [tips (tc/dataset "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv")]
   (-> (views tips [["total_bill" "tip"]])
@@ -1855,6 +1893,8 @@ iris
       (plot {:width 600 :height 500})))
 
 ;; ### 🧪 Faceted Scatter with Free Y-Scale
+;;
+;; `:free-y` lets each panel fit its own y-range:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species}))
@@ -1862,6 +1902,8 @@ iris
     (plot {:scales :free-y}))
 
 ;; ### 🧪 Faceted Scatter with Free X-Scale
+;;
+;; Likewise for the x-axis:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species}))
@@ -1869,6 +1911,8 @@ iris
     (plot {:scales :free-x}))
 
 ;; ### 🧪 Faceted Scatter with Free Scales (Both Axes)
+;;
+;; Both axes free -- each panel zooms to its own data:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species}))
@@ -1962,6 +2006,8 @@ iris
                      :stroke (:grid theme) :stroke-width 0.5}])))))
 
 ;; ### 🧪 Polar Scatter
+;;
+;; `set-coord :polar` wraps the same scatter into polar space:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species}))
@@ -1969,6 +2015,8 @@ iris
     plot)
 
 ;; ### 🧪 Polar Bar Chart (Rose / Coxcomb)
+;;
+;; Bars become wedges -- bar width maps to angle, height to radius:
 
 (-> (views iris [[:species :species]])
     (layer (bar))
@@ -1976,6 +2024,8 @@ iris
     plot)
 
 ;; ### 🧪 Polar Stacked Bar Chart
+;;
+;; Stacking works the same way in polar coords:
 
 (-> (views mpg [[:class :class]])
     (layer (stacked-bar {:color :drv}))
@@ -2072,18 +2122,24 @@ iris
       plot))
 
 ;; ### 🧪 Bubble Chart (Size Aesthetic)
+;;
+;; `:size` maps a continuous column to circle radius:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species :size :petal-length}))
     plot)
 
 ;; ### 🧪 Shape Aesthetic
+;;
+;; `:shape` maps a categorical column to marker shape:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species :shape :species}))
     plot)
 
 ;; ### 🧪 Tooltips on Hover
+;;
+;; `:tooltip true` adds mouseover labels showing data values:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species}))
@@ -2155,6 +2211,8 @@ iris
 "]]))
 
 ;; ### 🧪 Brushable Scatter
+;;
+;; `:brush true` adds a drag-to-select rectangle:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species}))
@@ -2179,6 +2237,8 @@ iris
     (plot {:brush true}))
 
 ;; ### 🧪 Missing Data Tolerance
+;;
+;; `nil` values are dropped silently -- no crash, just fewer points:
 
 (let [data (tc/dataset {:x [1 2 nil 4 5 6 nil 8]
                         :y [2 4 6 nil 10 12 14 16]})]
@@ -2187,6 +2247,8 @@ iris
       plot))
 
 ;; ### 🧪 Single Point
+;;
+;; Edge case: one data point still produces a valid plot:
 
 (-> (views {:x [5] :y [10]}
            [[:x :y]])
@@ -2194,6 +2256,8 @@ iris
     plot)
 
 ;; ### 🧪 Single Category
+;;
+;; Edge case: one bar still renders with correct axis:
 
 (-> (views {:cat ["A"] :val [42]}
            [[:cat :val]])
