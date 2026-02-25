@@ -73,18 +73,7 @@
 ;; Section headers use emoji to indicate content type:
 ;; **📖** narrative, **⚙️** implementation, **🧪** examples.
 ;;
-;; A **view** is a plain Clojure map describing one layer of a plot:
-;;
-;; ```clojure
-;; {:data  iris
-;;  :x     :sepal-length
-;;  :y     :sepal-width
-;;  :mark  :point
-;;  :color :species}
-;; ```
-;;
-;; A plot is a sequence of views. Small functions compose them.
-;; Since views are plain maps, you can `println`, `assoc`, or `merge` them.
+;; #### Design choices
 ;;
 ;; Three decisions shape the rendering:
 ;;
@@ -137,11 +126,11 @@
 ;;
 ;; **Mark** -- a visual element: point, bar, line, or text.
 ;;
-;; **View** -- one layer of a chart: which data, which columns,
-;; which mark.
+;; **View** -- a binding of data to column roles: which dataset,
+;; which x, which y.
 ;;
-;; **Layer** -- one mark drawn on a set of views.
-;; A plot with scatter points and regression lines has two layers.
+;; **Layer** -- a mark applied to views. A scatter plot with
+;; regression lines has two layers sharing the same data.
 ;;
 ;; **Stat** -- a statistical transform applied before drawing.
 ;; Binning produces a histogram, regression fits a line,
@@ -189,24 +178,39 @@
 
 ;; ### 📖 Datasets
 
+;;
+;; Two datasets appear throughout: **iris** (150 flowers, 4 measurements
+;; plus species) and **mpg** (234 cars, fuel economy and class).
+;; Both come from [R datasets](https://vincentarelbundock.github.io/Rdatasets/).
 (def iris (rdatasets/datasets-iris))
 (def iris-quantities [:sepal-length :sepal-width :petal-length :petal-width])
 
+iris
+
 (def mpg (rdatasets/ggplot2-mpg))
 
-iris
+mpg
+
 ;; ---
 
 ;; ## The Algebra
 ;;
-;; A plot is a sequence of views, plain maps, one per layer.
-;; Small functions compose them through `merge` and `concat`.
+;; Two algebraic traditions meet here.
+;; Wilkinson's [Grammar of Graphics](https://www.google.com/books/edition/The_Grammar_of_Graphics/ZiwLCAAAQBAJ)
+;; defines operators on *data*: cross and blend combine variables
+;; into grids and concatenations.
+;; Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/)
+;; defines operators on *visuals*: layers compose marks on shared data.
+;;
+;; **Views** implement the data algebra -- which dataset, which columns,
+;; combined how. **Layers** implement the visual algebra -- which marks
+;; drawn on those views. A plot is a flat sequence of view maps;
+;; small functions compose them through `merge` and `concat`.
 
 ;; ### ⚙️ Combinators
 ;;
-;; Wilkinson's Grammar of Graphics defines algebraic operators for
-;; combining variables: cross (all pairs) and blend (concatenate).
-;; In Clojure these are just `for` and `concat`. Naming them makes
+;; `cross` and `stack` are Wilkinson's cross and blend.
+;; In Clojure they are just `for` and `concat`. Naming them makes
 ;; intent explicit -- `(cross cols cols)` reads as "all pairings"
 ;; where a raw `for` comprehension would not.
 
@@ -242,16 +246,25 @@ iris
     (map? spec) spec
     :else {:x (first spec) :y (second spec)}))
 
+(def ^:private column-keys
+  "View keys whose values are column names in the dataset."
+  #{:x :y :color :size :shape})
+
 (defn- validate-columns
-  "Check that x and y columns exist in the dataset."
-  [ds x y]
-  (let [col-names (set (tc/column-names ds))]
-    (when-not (col-names x)
-      (throw (ex-info (str "Column " x " not found in dataset. Available: " (sort col-names))
-                      {:column x :available (sort col-names)})))
-    (when-not (col-names y)
-      (throw (ex-info (str "Column " y " not found in dataset. Available: " (sort col-names))
-                      {:column y :available (sort col-names)})))))
+  "Check that every column-referencing key in view-map names a real column in ds.
+  Also usable as (validate-columns ds :facet col) for a single named check."
+  ([ds view-map]
+   (let [col-names (set (tc/column-names ds))]
+     (doseq [k column-keys
+             :let [col (get view-map k)]
+             :when (and col (not (col-names col)))]
+       (throw (ex-info (str "Column " col " (from " k ") not found in dataset. Available: " (sort col-names))
+                       {:key k :column col :available (sort col-names)})))))
+  ([ds role col]
+   (let [col-names (set (tc/column-names ds))]
+     (when-not (col-names col)
+       (throw (ex-info (str "Column " col " (from " role ") not found in dataset. Available: " (sort col-names))
+                       {:key role :column col :available (sort col-names)}))))))
 
 (defn view
   "Create a single view from data and a column spec.
@@ -264,12 +277,13 @@ iris
   ([data spec-or-x]
    (let [ds (if (tc/dataset? data) data (tc/dataset data))
          parsed (parse-view-spec spec-or-x)]
-     (validate-columns ds (:x parsed) (:y parsed))
+     (validate-columns ds parsed)
      [(assoc parsed :data ds)]))
   ([data x y]
-   (let [ds (if (tc/dataset? data) data (tc/dataset data))]
-     (validate-columns ds x y)
-     [(assoc {:x x :y y} :data ds)])))
+   (let [ds (if (tc/dataset? data) data (tc/dataset data))
+         v {:x x :y y}]
+     (validate-columns ds v)
+     [(assoc v :data ds)])))
 
 (defn views
   "Create multiple views from data and a sequence of specs.
@@ -278,7 +292,7 @@ iris
   (let [ds (if (tc/dataset? data) data (tc/dataset data))]
     (mapv (fn [spec]
             (let [parsed (parse-view-spec spec)]
-              (validate-columns ds (:x parsed) (:y parsed))
+              (validate-columns ds parsed)
               (assoc parsed :data ds)))
           specs)))
 
@@ -302,7 +316,11 @@ iris
   "Merge overrides into each view. This is how you add marks, aesthetics,
   and other properties to a set of views."
   [views overrides]
-  (mapv #(merge % overrides) views))
+  (mapv (fn [v]
+          (when (:data v)
+            (validate-columns (:data v) overrides))
+          (merge v overrides))
+        views))
 
 ;; ### 🧪 Adding a Mark
 
@@ -323,7 +341,7 @@ iris
 
 ;; ### 🧪 Using Point
 
-(-> {:x [1 2 3] :y [4 5 6]}
+(-> {:x [1 2 3] :y [4 5 6] :group ["a" "a" "b"]}
     (views [[:x :y]])
     (layer (point {:color :group}))
     kind/pprint)
@@ -1894,6 +1912,7 @@ iris
   [views col]
   (mapcat
    (fn [v]
+     (validate-columns (:data v) :facet col)
      (let [groups (-> (:data v) (tc/group-by [col]) tc/groups->map)]
        (map (fn [[gk gds]]
               (assoc v :data gds :facet-val (get gk col)))
@@ -1905,6 +1924,8 @@ iris
   [views row-col col-col]
   (mapcat
    (fn [v]
+     (validate-columns (:data v) :facet-row row-col)
+     (validate-columns (:data v) :facet-col col-col)
      (let [groups (-> (:data v) (tc/group-by [row-col col-col]) tc/groups->map)]
        (map (fn [[gk gds]]
               (assoc v :data gds
