@@ -49,7 +49,7 @@
 ;; [Scicloj](https://scicloj.github.io/) community.
 ;;
 ;; > *This post is self-contained: everything needed is explained inline.
-;; > A [companion post](aog_in_clojure_part1.html) explores alternative
+;; > [Part 1](aog_in_clojure_part1.html) explores alternative
 ;; > composition operators and multi-target rendering, not required reading.*
 ;;
 ;; #### Background
@@ -106,13 +106,13 @@
 
 ;; ## Motivation
 ;;
-;; A [companion post](splom_tutorial.html) builds a colored
+;; The [SPLOM Tutorial](splom_tutorial.html) builds a colored
 ;; [scatterplot matrix](https://en.wikipedia.org/wiki/Scatter_plot#Scatter_plot_matrices)
 ;; with regression lines by hand: manual grid offsets, explicit scale
 ;; computation, per-panel rendering loops. The result is impressive
 ;; but the code is long and tightly coupled to one layout.
 ;;
-;; Here is that 4x4 SPLOM, rendered from the companion post:
+;; Here is that 4x4 SPLOM, rendered from that tutorial:
 
 (require '[data-visualization.splom-tutorial :as splom-tut])
 
@@ -128,7 +128,7 @@
 ;;     (plot {:brush true}))
 ;; ```
 ;;
-;; Everything that the companion post does manually — grid layout,
+;; Everything that the SPLOM Tutorial does manually — grid layout,
 ;; scale sharing, color assignment, diagonal detection —
 ;; should follow from the composed specification.
 ;; ---
@@ -2417,7 +2417,7 @@ iris
 ;;
 ;; ### 📖 Design space
 ;;
-;; The [companion post](aog_in_clojure_part1.html) takes a different
+;; [Part 1](aog_in_clojure_part1.html) takes a different
 ;; tradeoff: richer algebraic operators (`=*`/`=+`), Malli schema
 ;; validation, multi-target rendering (geom, Vega-Lite, Plotly),
 ;; but lighter rendering (no polar, stacked bars, loess, annotations).
