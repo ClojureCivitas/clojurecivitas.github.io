@@ -710,6 +710,18 @@ iris
 (defmethod render-annotation :default [_ _] [:g])
 
 ;; ### ⚙️ `render-panel`
+;;
+;; The longest function in this notebook. It turns a list of views
+;; into one SVG `[:g ...]` group, in eight steps:
+;;
+;; 1. **Config** -- read coord type and scale specs from the first view.
+;; 2. **Stats** -- call `compute-stat` on each data view.
+;; 3. **Domains** -- merge x/y domains from all stats.
+;; 4. **Stack adjustment** -- inflate y-domain for stacked bars.
+;; 5. **Scales** -- build Wadogo scales (swap axes if flipped).
+;; 6. **Coord** -- build the coordinate function.
+;; 7. **Polar projection** -- pixel-space reprojection (polar only).
+;; 8. **SVG** -- emit background, grid, annotations, marks, ticks.
 
 (defn render-panel
   [panel-views pw ph m & {:keys [x-domain y-domain show-x? show-y? all-colors
