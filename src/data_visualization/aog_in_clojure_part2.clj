@@ -232,15 +232,32 @@ iris
   [spec]
   (if (map? spec) spec {:x (first spec) :y (second spec)}))
 
+(defn- validate-columns
+  "Check that x and y columns exist in the dataset."
+  [ds x y]
+  (let [col-names (set (tc/column-names ds))]
+    (when-not (col-names x)
+      (throw (ex-info (str "Column " x " not found in dataset. Available: " (sort col-names))
+                      {:column x :available (sort col-names)})))
+    (when-not (col-names y)
+      (throw (ex-info (str "Column " y " not found in dataset. Available: " (sort col-names))
+                      {:column y :available (sort col-names)})))))
+
 (defn view
   "Create a single view from data and a column spec.
-  Accepts (view data :x :y), (view data [:x :y]),
-  or (view data {:x :a :y :b :color :c})."
+  Accepts (view data), (view data :x :y), (view data [:x :y]),
+  or (view data {:x :a :y :b :color :c}).
+  With no spec, defaults to columns :x and :y."
+  ([data]
+   (view data :x :y))
   ([data spec-or-x]
-   (let [ds (if (tc/dataset? data) data (tc/dataset data))]
-     [(assoc (parse-view-spec spec-or-x) :data ds)]))
+   (let [ds (if (tc/dataset? data) data (tc/dataset data))
+         parsed (parse-view-spec spec-or-x)]
+     (validate-columns ds (:x parsed) (:y parsed))
+     [(assoc parsed :data ds)]))
   ([data x y]
    (let [ds (if (tc/dataset? data) data (tc/dataset data))]
+     (validate-columns ds x y)
      [(assoc {:x x :y y} :data ds)])))
 
 (defn views
@@ -248,18 +265,21 @@ iris
   Each spec can be a [x y] pair or a map with any view keys."
   [data specs]
   (let [ds (if (tc/dataset? data) data (tc/dataset data))]
-    (mapv #(assoc (parse-view-spec %) :data ds) specs)))
+    (mapv (fn [spec]
+            (let [parsed (parse-view-spec spec)]
+              (validate-columns ds (:x parsed) (:y parsed))
+              (assoc parsed :data ds)))
+          specs)))
 
 ;; ### 🧪 What a View Looks Like
 ;;
 ;; All three forms produce the same view:
 
-(kind/pprint
- {:from-keywords (view {:x [1 2 3] :y [4 5 6]} :x :y)
-  :from-pair     (view {:x [1 2 3] :y [4 5 6]} [:x :y])
-  :from-map      (view {:x [1 2 3] :y [4 5 6]} {:x :x :y :y})})
-
-;; `views` creates multiple views at once:
+(let [data {:a [1 2 3] :b [4 5 6]}]
+  (kind/pprint
+   {:from-keywords (view data :a :b)
+    :from-pair (view data [:a :b])
+    :from-map (view data {:x :a :y :b})}))
 
 (-> {:x [1 2 3] :y [4 5 6] :z [7 8 9]}
     (views [[:x :y] [:x :z]])
