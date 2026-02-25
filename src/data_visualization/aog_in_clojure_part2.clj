@@ -49,7 +49,7 @@
 ;; [Scicloj](https://scicloj.github.io/) community.
 ;;
 ;; > *This post is self-contained: everything needed is explained inline.
-;; > [A companion post](aog_in_clojure_part1.html) explores alternative
+;; > [Implementing the Algebra of Graphics in Clojure](aog_in_clojure_part1.html) explores alternative
 ;; > composition operators and multi-target rendering, not required reading.*
 ;;
 ;; #### Background
@@ -140,7 +140,7 @@
 ;;
 ;; **Scale** -- a mapping from one dimension of data to one axis.
 ;; A numeric scale turns value ranges into positions;
-;; a categorical scale assigns bands.
+;; a nominal scale assigns bands.
 ;;
 ;; **Coord** -- a coordinate system that turns two scaled values
 ;; into a position on the canvas. Cartesian gives a standard grid,
@@ -209,8 +209,8 @@ mpg
 ;;
 ;; | Phase              | Operators                                                    | Acts on                      |
 ;; |--------------------|--------------------------------------------------------------|------------------------------|
-;; | **What** to plot   | `cross`, `views`                                             | column names → view maps     |
-;; | **How** to plot    | `layer`, `layers`, mark constructors (`point`, `bar`, `lm`, …) | view maps → richer view maps |
+;; | **What** to plot   | `cross`, `views`                                             | column names to view maps     |
+;; | **How** to plot    | `layer`, `layers`, mark constructors (`point`, `bar`, `lm`, …) | view maps to richer view maps |
 ;;
 ;; Both phases operate on the same unit -- a flat vector of view maps --
 ;; so they compose freely through threading.
@@ -230,8 +230,9 @@ mpg
 
 (cross [:a :b] [:x :y])
 
-;; `(cross iris-quantities iris-quantities)` -- 16 column pairs,
-;; one per panel. `cross` turns a list of variables into a grid of pairings.
+;; With the iris columns, this produces 16 column pairs -- one per panel:
+
+(cross iris-quantities iris-quantities)
 
 ;; ### ⚙️ Views
 
@@ -380,7 +381,7 @@ mpg
   (str/replace (name k) #"[-_]" " "))
 
 (defn- color-for
-  "Look up the color for a categorical value from the palette."
+  "Look up the color for a nominal value from the palette."
   [categories val]
   (let [idx (.indexOf categories val)]
     (nth ggplot-palette (mod (if (neg? idx) 0 idx) (count ggplot-palette)))))
@@ -477,20 +478,21 @@ mpg
 ;; ### ⚙️ Column Type Detection
 
 (defn- column-type
-  "Classify a dataset column as :categorical, :continuous, or :temporal.
+  "Classify a dataset column as :nominal or :quantitative.
   Uses Tablecloth's tcc/typeof when available, falls back to value inspection."
   [ds col]
   (let [t (try (tcc/typeof (ds col)) (catch Exception _ nil))]
     (cond
-      (#{:string :keyword :boolean :symbol :text} t) :categorical
-      (#{:float32 :float64 :int8 :int16 :int32 :int64} t) :continuous
+      (#{:string :keyword :boolean :symbol :text} t) :nominal
+      (#{:float32 :float64 :int8 :int16 :int32 :int64} t) :quantitative
       ;; fallback: inspect first values
-      (every? number? (take 100 (ds col))) :continuous
-      :else :categorical)))
+      (every? number? (take 100 (ds col))) :quantitative
+      :else :nominal)))
 
 ;; ### ⚙️ `resolve-view`
 ;;
-;; Walks the inference DAG top-down: column types → grouping → mark → stat.
+;; Walks the inference chain top-down, from column types through
+;; grouping to mark and stat.
 ;; Each property is `(or user-specified inferred)`:
 
 (defn resolve-view
@@ -506,7 +508,7 @@ mpg
           c-type (when (:color v)
                    (or (:color-type v) (column-type ds (:color v))))
           group (or (:group v)
-                    (when (= c-type :categorical) [(:color v)])
+                    (when (= c-type :nominal) [(:color v)])
                     [])
           ;; Infer mark and stat from column types when not specified
           diagonal? (= (:x v) (:y v))
@@ -514,11 +516,11 @@ mpg
           (cond
             ;; Same column on both axes (or y absent): single-variable
             (or diagonal? (nil? (:y v)))
-            (if (= x-type :categorical)
+            (if (= x-type :nominal)
               [:rect :count]
               [:bar :bin])
-            ;; categorical x, continuous y → strip plot
-            (and (= x-type :categorical) (= y-type :continuous))
+            ;; nominal x, quantitative y → strip plot
+            (and (= x-type :nominal) (= y-type :quantitative))
             [:point :identity]
             ;; otherwise → scatter
             :else [:point :identity])
@@ -529,7 +531,8 @@ mpg
 
 ;; ### 🧪 What `resolve-view` Produces
 ;;
-;; Continuous columns, categorical color -- grouping and mark inferred:
+;; Both columns are quantitative and the color is nominal, so
+;; `resolve-view` infers grouping by species and defaults to a scatter:
 
 (let [v (first (-> iris
                    (views [[:sepal-length :sepal-width]])
@@ -537,7 +540,7 @@ mpg
   (kind/pprint
    (select-keys (resolve-view v) [:x-type :y-type :color-type :group :mark :stat])))
 
-;; Continuous color -- no grouping:
+;; When the color column is quantitative, there is no grouping:
 
 (let [v (first (-> iris
                    (views [[:sepal-length :sepal-width]])
@@ -545,26 +548,26 @@ mpg
   (kind/pprint
    (select-keys (resolve-view v) [:x-type :y-type :color-type :group :mark :stat])))
 
-;; No mark specified -- inferred from column types.
-;; Diagonal continuous → histogram:
+;; When no mark is specified, `resolve-view` infers one from the column types.
+;; A quantitative column mapped to both x and y becomes a histogram:
 
 (let [v (first (views iris [[:sepal-length :sepal-length]]))]
   (kind/pprint
    (select-keys (resolve-view v) [:x-type :y-type :mark :stat])))
 
-;; Categorical alone → bar chart (count):
+;; A nominal column on its own becomes a bar chart with counting:
 
 (let [v (first (views iris [[:species :species]]))]
   (kind/pprint
    (select-keys (resolve-view v) [:x-type :y-type :mark :stat])))
 
-;; Categorical x, continuous y → scatter:
+;; A nominal x with a quantitative y becomes a scatter:
 
 (let [v (first (views iris [[:species :sepal-length]]))]
   (kind/pprint
    (select-keys (resolve-view v) [:x-type :y-type :mark :stat])))
 
-;; User-specified mark overrides inference:
+;; A user-specified mark always overrides the inference:
 
 (let [v (first (-> iris
                    (views [[:sepal-length :sepal-width]])
@@ -633,13 +636,13 @@ mpg
   (let [{:keys [data x y color size shape text-col x-type group]} view
         data-idx (tc/add-column data :__row-idx (range (tc/row-count data)))
         clean (cond-> (tc/drop-missing data-idx [x y])
-                (= x-type :categorical) (tc/map-columns x [x] str))]
+                (= x-type :nominal) (tc/map-columns x [x] str))]
     (if (zero? (tc/row-count clean))
       {:points [] :x-domain [0 1] :y-domain [0 1]}
       (let [xs-col (clean x)
             ys-col (clean y)
-            cat-x? (= x-type :categorical)
-            cat-y? (= (:y-type view) :categorical)
+            cat-x? (= x-type :nominal)
+            cat-y? (= (:y-type view) :nominal)
             x-dom (if cat-x? (distinct xs-col) (numeric-extent xs-col))
             y-dom (if cat-y? (distinct ys-col) (numeric-extent ys-col))
             point-group (fn [ds group-val]
@@ -672,7 +675,7 @@ mpg
   [dom]
   (and (sequential? dom) (seq dom) (number? (first dom))))
 
-(defn- categorical-domain?
+(defn- nominal-domain?
   [dom]
   (and (sequential? dom) (seq dom) (not (number? (first dom)))))
 
@@ -680,7 +683,7 @@ mpg
   "Determine the scale kind from domain and scale-spec."
   [domain scale-spec]
   (cond
-    (categorical-domain? domain) :categorical
+    (nominal-domain? domain) :nominal
     (= :log (:type scale-spec)) :log
     :else :linear))
 
@@ -689,7 +692,7 @@ mpg
    Dispatches on scale-kind."
   (fn [domain pixel-range scale-spec] (scale-kind domain scale-spec)))
 
-(defmethod make-scale :categorical [domain pixel-range _]
+(defmethod make-scale :nominal [domain pixel-range _]
   (ws/scale :bands {:domain domain :range pixel-range}))
 
 (defmethod make-scale :linear [domain pixel-range _]
@@ -825,7 +828,7 @@ mpg
 
 ;; ## Axes and Grid Lines
 ;;
-;; Multimethods, extended later with polar grids and categorical ticks.
+;; Multimethods, extended later with polar grids and nominal ticks.
 
 ;; ### ⚙️ Tick Helpers
 
@@ -966,13 +969,13 @@ mpg
         stat-y-domains (keep #(get-in % [:stat :y-domain]) view-stats)
 
         merged-x-dom (or x-domain
-                         (if (categorical-domain? (first stat-x-domains))
+                         (if (nominal-domain? (first stat-x-domains))
                            (distinct (mapcat identity stat-x-domains))
                            (let [lo (reduce min (map first stat-x-domains))
                                  hi (reduce max (map second stat-x-domains))]
                              (pad-domain [lo hi] x-scale-spec))))
         merged-y-dom (or y-domain
-                         (if (categorical-domain? (first stat-y-domains))
+                         (if (nominal-domain? (first stat-y-domains))
                            (distinct (mapcat identity stat-y-domains))
                            (let [lo (reduce min (map first stat-y-domains))
                                  hi (reduce max (map second stat-y-domains))]
@@ -1003,13 +1006,13 @@ mpg
         y-pixel-range [(- ph m) m]
         sx (make-scale x-dom' x-pixel-range (if (= coord-type :flip) y-scale-spec x-scale-spec))
         sy (make-scale y-dom' y-pixel-range (if (= coord-type :flip) x-scale-spec y-scale-spec))
-        cat-x? (categorical-domain? x-dom')
-        cat-y? (categorical-domain? y-dom')
+        cat-x? (nominal-domain? x-dom')
+        cat-y? (nominal-domain? y-dom')
 
         ;; Build coord function
         coord (make-coord coord-type sx sy pw ph m)
 
-        ;; Pixel-space polar projection (for categorical bar arc munching)
+        ;; Pixel-space polar projection (for nominal bar arc munching)
         coord-px (when polar?
                    (let [cx (/ pw 2.0) cy (/ ph 2.0)
                          r-max (- (min cx cy) m)
@@ -1052,9 +1055,9 @@ mpg
 
      ;; Tick labels
      (when (and show-x? (not polar?))
-       (render-x-ticks (if cat-x? :categorical :numeric) sx pw ph m cfg))
+       (render-x-ticks (if cat-x? :nominal :numeric) sx pw ph m cfg))
      (when (and show-y? (not polar?))
-       (render-y-ticks (if cat-y? :categorical :numeric) sy pw ph m cfg))]))
+       (render-y-ticks (if cat-y? :nominal :numeric) sy pw ph m cfg))]))
 
 ;; ### 🧪 A Single Panel
 ;;
@@ -1239,7 +1242,7 @@ mpg
 
 (defn- collect-domain
   "Collect and merge domains from stat-results along axis-key (:x-domain or :y-domain).
-   Returns a padded numeric domain or a distinct categorical domain."
+   Returns a padded numeric domain or a distinct nominal domain."
   [stat-results axis-key scale-spec]
   (let [vals (mapcat (fn [dv] (let [d (axis-key dv)]
                                 (if (and (= 2 (count d)) (number? (first d)))
@@ -1402,7 +1405,7 @@ mpg
 
 ;; ## Histograms
 ;;
-;; Bins continuous data, renders counts as bars.
+;; Bins quantitative data, renders counts as bars.
 ;; `compute-stat :bin` returns `{:y-domain [0 max-count]}`,
 ;; the y-axis scales to counts, not raw data values.
 
@@ -1689,7 +1692,7 @@ mpg
   ([opts] (merge {:mark :rect :stat :count :position :stack} opts)))
 
 (defn value-bar
-  "Pre-aggregated bars: categorical x, continuous y, no counting."
+  "Pre-aggregated bars: nominal x, quantitative y, no counting."
   ([] {:mark :rect :stat :identity})
   ([opts] (merge {:mark :rect :stat :identity} opts)))
 
@@ -1739,7 +1742,7 @@ mpg
   (let [{:keys [data x x-type group]} view
         group-cols (or group [])
         clean (cond-> (tc/drop-missing data [x])
-                (= x-type :categorical) (tc/map-columns x [x] str))
+                (= x-type :nominal) (tc/map-columns x [x] str))
         categories (distinct (clean x))]
     (if (empty? categories)
       {:categories [] :bars [] :max-count 0 :x-domain ["?"] :y-domain [0 1]}
@@ -1818,7 +1821,7 @@ mpg
               :height (Math/abs (- py-lo py-hi))
               :fill color :opacity opacity}])))
 
-(defn- render-categorical-bars
+(defn- render-nominal-bars
   [stat ctx]
   (let [{:keys [all-colors sx sy coord-px position cfg]} ctx
         cfg (or cfg defaults)
@@ -1899,12 +1902,12 @@ mpg
 
 (defmethod render-mark :rect [_ stat ctx]
   (if (:bars stat)
-    (render-categorical-bars stat ctx)
+    (render-nominal-bars stat ctx)
     (render-value-bars stat ctx)))
 
-;; ### ⚙️ `render-x-ticks` `:categorical`
+;; ### ⚙️ `render-x-ticks` `:nominal`
 
-(defmethod render-x-ticks :categorical [_ sx pw ph m cfg]
+(defmethod render-x-ticks :nominal [_ sx pw ph m cfg]
   (let [ticks (ws/ticks sx)
         labels (map str ticks)]
     (into [:g {:font-size (:font-size theme) :fill "#666"}]
@@ -1912,7 +1915,7 @@ mpg
                  [:text {:x (sx t) :y (- ph 2) :text-anchor "middle"} label])
                ticks labels))))
 
-(defmethod render-y-ticks :categorical [_ sy pw ph m cfg]
+(defmethod render-y-ticks :nominal [_ sy pw ph m cfg]
   (let [ticks (ws/ticks sy)
         labels (map str ticks)]
     (into [:g {:font-size (:font-size theme) :fill "#666"}]
@@ -1922,7 +1925,7 @@ mpg
 
 ;; ### 🧪 Bar Chart
 ;;
-;; The simplest categorical plot -- `:count` tallies species, band scale positions bars:
+;; The simplest nominal plot -- `:count` tallies species, band scale positions bars:
 
 (-> (view iris :species)
     (layer (bar))
@@ -1946,7 +1949,7 @@ mpg
 
 ;; ### 🧪 Strip Plot (Categorical x, Continuous y)
 ;;
-;; A categorical x with a continuous y: points jitter along the category axis:
+;; A nominal x with a quantitative y: points jitter along the category axis:
 
 (-> (views iris [[:species :sepal-length]])
     (layer (point {:color :species}))
@@ -1954,7 +1957,7 @@ mpg
 
 ;; ### 🧪 Horizontal Strip Plot (Flipped)
 ;;
-;; `:flip` works on categorical plots too:
+;; `:flip` works on nominal plots too:
 
 (-> (views iris [[:species :sepal-length]])
     (layer (point {:color :species}))
@@ -1963,10 +1966,10 @@ mpg
 
 ;; ### 🧪 Numeric-as-Categorical
 ;;
-;; `:x-type :categorical` forces a numeric column onto a band scale:
+;; `:x-type :nominal` forces a numeric column onto a band scale:
 
 (-> (view mpg :cyl)
-    (layer (bar {:x-type :categorical}))
+    (layer (bar {:x-type :nominal}))
     plot)
 
 ;; ### 🧪 Value Bar (Pre-Aggregated Data)
@@ -2075,7 +2078,7 @@ mpg
 ;; ### ⚙️ Faceting
 
 (defn facet
-  "Split each view by a categorical column."
+  "Split each view by a nominal column."
   [views col]
   (mapcat
    (fn [v]
@@ -2087,7 +2090,7 @@ mpg
    views))
 
 (defn facet-grid
-  "Split each view by two categorical columns for a row × column grid."
+  "Split each view by two nominal columns for a row × column grid."
   [views row-col col-col]
   (mapcat
    (fn [v]
@@ -2405,7 +2408,7 @@ mpg
 (defmethod render-annotation :rule-h [ann {:keys [coord x-domain cfg]}]
   (let [cfg (or cfg defaults)
         [x1 y1] (coord (first x-domain) (:value ann))
-        [x2 y2] (coord (if (categorical-domain? x-domain)
+        [x2 y2] (coord (if (nominal-domain? x-domain)
                          (last x-domain)
                          (second x-domain))
                        (:value ann))]
@@ -2417,7 +2420,7 @@ mpg
   (let [cfg (or cfg defaults)
         [x1 y1] (coord (:value ann) (first y-domain))
         [x2 y2] (coord (:value ann)
-                       (if (categorical-domain? y-domain)
+                       (if (nominal-domain? y-domain)
                          (last y-domain)
                          (second y-domain)))]
     [:line {:x1 x1 :y1 y1 :x2 x2 :y2 y2
@@ -2470,7 +2473,7 @@ mpg
 
 ;; ### 🧪 Bubble Chart (Size Aesthetic)
 ;;
-;; `:size` maps a continuous column to circle radius:
+;; `:size` maps a quantitative column to circle radius:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species :size :petal-length}))
@@ -2478,7 +2481,7 @@ mpg
 
 ;; ### 🧪 Shape Aesthetic
 ;;
-;; `:shape` maps a categorical column to marker shape:
+;; `:shape` maps a nominal column to marker shape:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layer (point {:color :species :shape :species}))
@@ -2557,7 +2560,7 @@ mpg
 ;; supplies its own domain, the renderer doesn't need to know.
 ;;
 ;; **Wadogo.** `(ws/scale ...)`, `(ws/ticks ...)`, `(ws/format ...)` replace
-;; custom `linear-scale`, `nice-ticks`, `categorical-scale`. Log scales,
+;; custom `linear-scale`, `nice-ticks`, `nominal-scale`. Log scales,
 ;; band padding, and datetime support are included.
 ;;
 ;; **One coord function.** `[x y] -> [px py]` per coordinate system.
@@ -2567,9 +2570,10 @@ mpg
 ;; **`resolve-view` + `defaults`.**  A single function infers column types,
 ;; grouping, mark, and stat -- each as `(or user-override inferred)`.
 ;; Visual constants live in one `defaults` map, overridable per-plot via `:config`.
-;; Categorical color → group by it; continuous color → visual-only.
-;; No explicit mark? Column types decide: two continuous → scatter,
-;; diagonal → histogram, categorical → bar chart.
+;; A nominal color column triggers grouping; a quantitative one is visual-only.
+;; When no mark is specified, column types decide: two quantitative columns
+;; produce a scatter, a diagonal pair becomes a histogram, and a nominal
+;; column becomes a bar chart.
 ;;
 ;; ### 📖 Composition in hindsight
 ;;
@@ -2620,7 +2624,7 @@ mpg
 ;;
 ;; ### 📖 Design space
 ;;
-;; [The companion post](aog_in_clojure_part1.html) takes a different
+;; [Implementing the Algebra of Graphics in Clojure](aog_in_clojure_part1.html) takes a different
 ;; tradeoff: richer algebraic operators (`=*`/`=+`), Malli schema
 ;; validation, multi-target rendering (geom, Vega-Lite, Plotly),
 ;; but lighter rendering (no polar, stacked bars, loess, annotations).
