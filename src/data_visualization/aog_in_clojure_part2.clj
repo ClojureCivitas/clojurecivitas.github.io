@@ -207,10 +207,23 @@ mpg
 ;; combined how. **Layers** implement the visual algebra -- which marks
 ;; drawn on those views. A plot is a flat sequence of view maps;
 ;; small functions compose them through `merge` and `concat`.
-
-;; ### ⚙️ Combinators
 ;;
-;; `cross` and `stack` are Wilkinson's cross and blend.
+;; Here is how the two algebras manifest in this notebook:
+;;
+;; | Algebra    | Inspiration | Operators                                                                   | Acts on                      |
+;; |------------|-------------|-----------------------------------------------------------------------------|------------------------------|
+;; | **Data**   | GoG         | `cross`, `stack`, `views`                                                   | column names → view maps     |
+;; | **Visual** | AoG         | `layer`, `layers`, mark constructors (`point`, `histogram`, `bar`, `lm`, …) | view maps → richer view maps |
+;;
+;; The **data algebra** decides *what* to plot: which columns, which pairings.
+;; The **visual algebra** decides *how* to plot it: which marks, which aesthetics.
+;; Both operate on the same unit -- a flat vector of view maps -- so they
+;; compose freely: data operators produce views, visual operators refine them.
+
+;; ### ⚙️ Data Algebra: Combinators
+;;
+;; `cross` and `stack` are Wilkinson's cross and blend -- the data algebra's
+;; operators for combining variables.
 ;; In Clojure they are just `for` and `concat`. Naming them makes
 ;; intent explicit -- `(cross cols cols)` reads as "all pairings"
 ;; where a raw `for` comprehension would not.
@@ -311,7 +324,11 @@ mpg
     (views [[:x :y] [:x :z]])
     kind/pprint)
 
-;; ### ⚙️ Layer
+;; ### ⚙️ Visual Algebra: Layer
+;;
+;; `layer` is the core operator of the visual algebra.
+;; It merges a visual specification -- mark, stat, aesthetics -- into every
+;; view.  This is how AoG's `*` operator works: data * visual = plot.
 
 (defn layer
   "Merge overrides into each view. This is how you add marks, aesthetics,
@@ -332,9 +349,10 @@ mpg
     (layer {:mark :point :color :group})
     kind/pprint)
 
-;; ### ⚙️ Mark Constructors
+;; ### ⚙️ Visual Algebra: Mark Constructors
 
-;; A geometry spec is a map with `:mark` and optionally `:stat`:
+;; Mark constructors are the vocabulary of the visual algebra.
+;; Each returns a map that `layer` can merge into views:
 
 (defn point
   ([] {:mark :point})
@@ -347,6 +365,9 @@ mpg
     (layer (point {:color :group}))
     kind/pprint)
 
+;; The two algebras compose through threading:
+;; `(-> data (views pairs) (layer (point)))` reads as
+;; "these column pairings, drawn as points" -- data algebra, then visual algebra.
 ;; ---
 
 ;; ## Theme and Colors
