@@ -1,5 +1,5 @@
 ^{:kindly/hide-code true
-  :clay {:title "Implementing the Algebra of Graphics in Clojure - Part 2"
+  :clay {:title "Composable Plotting in Clojure"
          :quarto {:type :post
                   :author [:daslu :claude]
                   :date "2026-02-22"
@@ -49,7 +49,7 @@
 ;; [Scicloj](https://scicloj.github.io/) community.
 ;;
 ;; > *This post is self-contained: everything needed is explained inline.
-;; > [Part 1](aog_in_clojure_part1.html) explores alternative
+;; > [A companion post](aog_in_clojure_part1.html) explores alternative
 ;; > composition operators and multi-target rendering, not required reading.*
 ;;
 ;; #### Background
@@ -198,7 +198,7 @@ mpg
 
 ;; ## Composing Views
 ;;
-;; Two traditions inspire this design:
+;; Two approaches inspire this design:
 ;; Wilkinson's [Grammar of Graphics](https://www.google.com/books/edition/The_Grammar_of_Graphics/ZiwLCAAAQBAJ),
 ;; which combines variables through operators like cross, blend, and nest;
 ;; and Julia's [AlgebraOfGraphics.jl](https://aog.makie.org/stable/),
@@ -914,7 +914,7 @@ mpg
         view-stats (for [v panel-views
                          :when (and (:mark v) (not (annotation-marks (:mark v))))]
                      (let [rv (resolve-view v)
-                           stat (compute-stat rv)]
+                           stat (compute-stat (assoc rv :cfg cfg))]
                        {:view rv :stat stat}))
 
         ;; Merge domains from stats
@@ -1268,7 +1268,7 @@ mpg
          pw0 (/ width cols) ph0 (/ height rows)
          pw (if multi? (min pw0 ph0) pw0)
          ph (if multi? (min pw0 ph0) ph0)
-         stat-results (mapv (comp compute-stat resolve-view) non-ann-views)
+         stat-results (mapv (comp compute-stat #(assoc % :cfg cfg) resolve-view) non-ann-views)
          all-colors (let [color-views (filter #(and (:color %) (:data %)) views)]
                       (when (seq color-views)
                         (distinct (mapcat #((:data %) (:color %)) color-views))))
@@ -1371,7 +1371,7 @@ mpg
 ;; ### ⚙️ `compute-stat` `:bin`
 
 (defmethod compute-stat :bin [view]
-  (let [{:keys [data x group]} view
+  (let [{:keys [data x group cfg]} view
         clean (tc/drop-missing data [x])
         xs-col (clean x)]
     (if (zero? (tc/row-count clean))
@@ -1379,7 +1379,7 @@ mpg
       (let [all-bin-data (group-by-columns
                           clean (or group [])
                           (fn [ds gv]
-                            (let [hist (stats/histogram (double-array (ds x)) (:bin-method defaults))]
+                            (let [hist (stats/histogram (double-array (ds x)) (:bin-method (or cfg defaults)))]
                               (cond-> {:bin-maps (:bins-maps hist)}
                                 gv (assoc :color gv)))))
             max-count (reduce max 1 (for [{:keys [bin-maps]} all-bin-data
@@ -2080,7 +2080,7 @@ mpg
         ;; each row shares its y-variable's domain (excluding diagonal histograms).
         var-domain (fn [var-key views-seq]
                      (let [scatter-views (filter #(not= (:x %) (:y %)) views-seq)
-                           stats (map (comp compute-stat resolve-view) scatter-views)
+                           stats (map (comp compute-stat #(assoc % :cfg (:cfg ctx)) resolve-view) scatter-views)
                            doms (keep var-key stats)
                            num-doms (filter #(number? (first %)) doms)]
                        (when (seq num-doms)
@@ -2571,7 +2571,7 @@ mpg
 ;;
 ;; ### 📖 Design space
 ;;
-;; [Part 1](aog_in_clojure_part1.html) takes a different
+;; [The companion post](aog_in_clojure_part1.html) takes a different
 ;; tradeoff: richer algebraic operators (`=*`/`=+`), Malli schema
 ;; validation, multi-target rendering (geom, Vega-Lite, Plotly),
 ;; but lighter rendering (no polar, stacked bars, loess, annotations).
