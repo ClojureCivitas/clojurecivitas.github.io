@@ -2376,6 +2376,11 @@ iris
 ;; **No axis labels.** Tick values but no "sepal length ->" on
 ;; standalone plots. SPLOM panels use column headers.
 ;;
+;; **Partial validation.** `view` and `views` check that columns exist
+;; in the dataset, catching typos early. But marks, stats, and `plot`
+;; options are not validated -- a misspelled `:mark :piont` fails
+;; silently or deep in `render-panel`.
+;;
 ;; ### 📖 Design space
 ;;
 ;; The [companion post](aog_in_clojure_part1.html) takes a different
