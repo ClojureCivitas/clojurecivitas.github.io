@@ -203,6 +203,12 @@ iris
 ;; Small functions compose them through `merge` and `concat`.
 
 ;; ### ⚙️ Combinators
+;;
+;; Wilkinson's Grammar of Graphics defines algebraic operators for
+;; combining variables: cross (all pairs) and blend (concatenate).
+;; In Clojure these are just `for` and `concat`. Naming them makes
+;; intent explicit -- `(cross cols cols)` reads as "all pairings"
+;; where a raw `for` comprehension would not.
 
 (defn cross
   "Cartesian product of two sequences."
@@ -228,9 +234,13 @@ iris
 ;; ### ⚙️ Views
 
 (defn- parse-view-spec
-  "Parse a view spec: a map passes through, a vector becomes {:x ... :y ...}."
+  "Parse a view spec: a keyword becomes a single-variable view (histogram),
+  a vector becomes {:x ... :y ...}, a map passes through."
   [spec]
-  (if (map? spec) spec {:x (first spec) :y (second spec)}))
+  (cond
+    (keyword? spec) {:x spec :y spec}
+    (map? spec) spec
+    :else {:x (first spec) :y (second spec)}))
 
 (defn- validate-columns
   "Check that x and y columns exist in the dataset."
@@ -245,7 +255,8 @@ iris
 
 (defn view
   "Create a single view from data and a column spec.
-  Accepts (view data), (view data :x :y), (view data [:x :y]),
+  Accepts (view data), (view data :col) for a single variable,
+  (view data :x :y), (view data [:x :y]),
   or (view data {:x :a :y :b :color :c}).
   With no spec, defaults to columns :x and :y."
   ([data]
@@ -1154,7 +1165,7 @@ iris
 ;; Bins with counts and boundaries. Note the y-domain: it comes from
 ;; bin counts, not raw data values -- this is how stat-driven domains work.
 
-(let [stat (-> (views iris [[:sepal-length :sepal-length]])
+(let [stat (-> (view iris :sepal-length)
                (layer (histogram))
                first
                compute-stat)]
@@ -1183,9 +1194,9 @@ iris
                   (:bins stat)))))
 ;; ### 🧪 Histogram
 ;;
-;; The `[[:sepal-length :sepal-length]]` idiom maps x = y, which auto-selects `:bin`:
+;; A single column means x = y, which auto-selects `:bin`:
 
-(-> (views iris [[:sepal-length :sepal-length]])
+(-> (view iris :sepal-length)
     (layer (histogram))
     plot)
 
@@ -1193,7 +1204,7 @@ iris
 ;;
 ;; Color splits bins per group, dodging them side by side:
 
-(-> (views iris [[:sepal-length :sepal-length]])
+(-> (view iris :sepal-length)
     (layer (histogram {:color :species}))
     plot)
 
@@ -1215,7 +1226,7 @@ iris
 ;; `:flip` swaps the axes -- bars grow leftward:
 ;;
 
-(-> (views iris [[:sepal-length :sepal-length]])
+(-> (view iris :sepal-length)
     (layer (histogram))
     (layer {:coord :flip})
     plot)
@@ -1491,7 +1502,7 @@ iris
 ;;
 ;; Rows tallied per category:
 
-(-> (views iris [[:species :species]])
+(-> (view iris :species)
     (layer (bar))
     first
     compute-stat
@@ -1628,7 +1639,7 @@ iris
 ;;
 ;; The simplest categorical plot -- `:count` tallies species, band scale positions bars:
 
-(-> (views iris [[:species :species]])
+(-> (view iris :species)
     (layer (bar))
     plot)
 
@@ -1636,7 +1647,7 @@ iris
 ;;
 ;; Color = same column as x: each bar gets its species color:
 
-(-> (views iris [[:species :species]])
+(-> (view iris :species)
     (layer (bar {:color :species}))
     plot)
 
@@ -1644,7 +1655,7 @@ iris
 ;;
 ;; Color = a *different* column: bars stack by drive type within each class:
 
-(-> (views mpg [[:class :class]])
+(-> (view mpg :class)
     (layer (stacked-bar {:color :drv}))
     plot)
 
@@ -1669,7 +1680,7 @@ iris
 ;;
 ;; `:x-type :categorical` forces a numeric column onto a band scale:
 
-(-> (views mpg [[:cyl :cyl]])
+(-> (view mpg :cyl)
     (layer (bar {:x-type :categorical}))
     plot)
 
@@ -2056,7 +2067,7 @@ iris
 ;;
 ;; Bars become wedges -- bar width maps to angle, height to radius:
 
-(-> (views iris [[:species :species]])
+(-> (view iris :species)
     (layer (bar))
     (set-coord :polar)
     plot)
@@ -2065,7 +2076,7 @@ iris
 ;;
 ;; Stacking works the same way in polar coords:
 
-(-> (views mpg [[:class :class]])
+(-> (view mpg :class)
     (layer (stacked-bar {:color :drv}))
     (set-coord :polar)
     plot)
