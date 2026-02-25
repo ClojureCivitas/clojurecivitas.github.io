@@ -300,10 +300,9 @@ mpg
 ;; All three forms produce the same view:
 
 (let [data {:a [1 2 3] :b [4 5 6]}]
-  (kind/pprint
-   {:from-keywords (view data :a :b)
-    :from-pair (view data [:a :b])
-    :from-map (view data {:x :a :y :b})}))
+  {:from-keywords (view data :a :b)
+   :from-pair (view data [:a :b])
+   :from-map (view data {:x :a :y :b})})
 
 (-> {:x [1 2 3] :y [4 5 6] :z [7 8 9]}
     (views [[:x :y] [:x :z]])
@@ -537,49 +536,42 @@ mpg
 (let [v (first (-> iris
                    (views [[:sepal-length :sepal-width]])
                    (layer (point {:color :species}))))]
-  (kind/pprint
-   (select-keys (resolve-view v) [:x-type :y-type :color-type :group :mark :stat])))
+  (select-keys (resolve-view v) [:x-type :y-type :color-type :group :mark :stat]))
 
 ;; When the color column is quantitative, there is no grouping:
 
 (let [v (first (-> iris
                    (views [[:sepal-length :sepal-width]])
                    (layer (point {:color :petal-length}))))]
-  (kind/pprint
-   (select-keys (resolve-view v) [:x-type :y-type :color-type :group :mark :stat])))
+  (select-keys (resolve-view v) [:x-type :y-type :color-type :group :mark :stat]))
 
 ;; When no mark is specified, `resolve-view` infers one from the column types.
 ;; A quantitative column mapped to both x and y becomes a histogram:
 
 (let [v (first (views iris [[:sepal-length :sepal-length]]))]
-  (kind/pprint
-   (select-keys (resolve-view v) [:x-type :y-type :mark :stat])))
+  (select-keys (resolve-view v) [:x-type :y-type :mark :stat]))
 
 ;; A nominal column on its own becomes a bar chart with counting:
 
 (let [v (first (views iris [[:species :species]]))]
-  (kind/pprint
-   (select-keys (resolve-view v) [:x-type :y-type :mark :stat])))
+  (select-keys (resolve-view v) [:x-type :y-type :mark :stat]))
 
 ;; A nominal x with a quantitative y becomes a scatter:
 
 (let [v (first (views iris [[:species :sepal-length]]))]
-  (kind/pprint
-   (select-keys (resolve-view v) [:x-type :y-type :mark :stat])))
+  (select-keys (resolve-view v) [:x-type :y-type :mark :stat]))
 
 ;; A user-specified mark always overrides the inference:
 
 (let [v (first (-> iris
                    (views [[:sepal-length :sepal-width]])
                    (layer (lm))))]
-  (kind/pprint
-   (select-keys (resolve-view v) [:x-type :y-type :mark :stat])))
+  (select-keys (resolve-view v) [:x-type :y-type :mark :stat]))
 
 ;; Override defaults per-plot with `:config`:
 
-(kind/pprint
- (select-keys (merge defaults {:point-radius 5 :bar-opacity 0.9})
-              [:point-radius :bar-opacity :line-width]))
+(select-keys (merge defaults {:point-radius 5 :bar-opacity 0.9})
+             [:point-radius :bar-opacity :line-width])
 ;; ---
 
 ;; ## Computing Statistics
@@ -615,14 +607,13 @@ mpg
 
 ;; ### 🧪 Shared Helpers in Action
 
-(kind/pprint
- {:numeric-extent (numeric-extent (iris :sepal-length))
-  :group-by-columns (mapv (fn [g] (select-keys g [:color :n]))
-                          (group-by-columns
-                           (tc/drop-missing iris [:sepal-length :species])
-                           [:species]
-                           (fn [ds cv]
-                             {:color cv :n (tc/row-count ds)})))})
+{:numeric-extent (numeric-extent (iris :sepal-length))
+ :group-by-columns (mapv (fn [g] (select-keys g [:color :n]))
+                         (group-by-columns
+                          (tc/drop-missing iris [:sepal-length :species])
+                          [:species]
+                          (fn [ds cv]
+                            {:color cv :n (tc/row-count ds)})))}
 
 ;; ### ⚙️ `prepare-points` -- Data Preparation
 ;;
@@ -711,25 +702,22 @@ mpg
 ;; ### 🧪 What Wadogo Gives Us
 
 (let [s (ws/scale :linear {:domain [0 100] :range [50 550]})]
-  (kind/pprint
-   {:value-at-50 (s 50)
-    :ticks (ws/ticks s)
-    :formatted (ws/format s (ws/ticks s))}))
+  {:value-at-50 (s 50)
+   :ticks (ws/ticks s)
+   :formatted (ws/format s (ws/ticks s))})
 
 ;; ### 🧪 Domain Padding
 
-(kind/pprint
- {:raw [4.3 7.9]
-  :padded (pad-domain [4.3 7.9] {:type :linear})
-  :log-padded (pad-domain [1 1000] {:type :log})})
+{:raw [4.3 7.9]
+ :padded (pad-domain [4.3 7.9] {:type :linear})
+ :log-padded (pad-domain [1 1000] {:type :log})}
 
 ;; ### 🧪 Categorical Scale
 
 (let [s (make-scale ["A" "B" "C"] [50 550] {})]
-  (kind/pprint
-   {:A-position (s "A")
-    :B-band-info (s "B" true)
-    :ticks (ws/ticks s)}))
+  {:A-position (s "A")
+   :B-band-info (s "B" true)
+   :ticks (ws/ticks s)})
 ;; ---
 
 ;; ## Coordinate Systems
@@ -761,10 +749,9 @@ mpg
 (let [sx (ws/scale :linear {:domain [0 10] :range [25 575]})
       sy (ws/scale :linear {:domain [0 100] :range [375 25]})
       coord (make-coord :cartesian sx sy 600 400 25)]
-  (kind/pprint
-   {:origin (coord 0 0)
-    :center (coord 5 50)
-    :top-right (coord 10 100)}))
+  {:origin (coord 0 0)
+   :center (coord 5 50)
+   :top-right (coord 10 100)})
 
 ;; ---
 
@@ -848,11 +835,10 @@ mpg
 ;; ### 🧪 Tick Formatting
 
 (let [s (ws/scale :linear {:domain [0 50] :range [25 575]})]
-  (kind/pprint
-   {:whole-numbers (format-ticks s [0.0 10.0 20.0 30.0])
-    :decimals (format-ticks s [0.5 1.0 1.5 2.0])
-    :tick-count-wide (tick-count 550 60)
-    :tick-count-narrow (tick-count 120 60)}))
+  {:whole-numbers (format-ticks s [0.0 10.0 20.0 30.0])
+   :decimals (format-ticks s [0.5 1.0 1.5 2.0])
+   :tick-count-wide (tick-count 550 60)
+   :tick-count-narrow (tick-count 120 60)})
 
 ;; ### ⚙️ Grid and Tick Rendering
 
@@ -1447,11 +1433,10 @@ mpg
                first
                resolve-view
                compute-stat)]
-  (kind/pprint
-   {:x-domain (:x-domain stat)
-    :y-domain (:y-domain stat)
-    :first-3-bins (mapv #(select-keys % [:min :max :count])
-                        (take 3 (:bin-maps (first (:bins stat)))))}))
+  {:x-domain (:x-domain stat)
+   :y-domain (:y-domain stat)
+   :first-3-bins (mapv #(select-keys % [:min :max :count])
+                       (take 3 (:bin-maps (first (:bins stat)))))})
 ;; ### ⚙️ `render-mark` `:bar`
 ;;
 ;; Bars projected as 4-corner polygons, works with cartesian, flip, and polar.
@@ -1642,8 +1627,7 @@ mpg
 (-> (views iris [[:sepal-length :sepal-width]])
     (layers (point {:color :species})
             (lm {:color :species}))
-    (->> (mapv #(select-keys % [:x :y :mark :stat :color])))
-    kind/pprint)
+    (->> (mapv #(select-keys % [:x :y :mark :stat :color]))))
 
 ;; ### 🧪 Scatter + Regression
 ;;
@@ -2028,8 +2012,7 @@ mpg
 
 (-> (views iris (cross [:sepal-length :sepal-width] [:sepal-length :sepal-width]))
     auto
-    (->> (mapv #(select-keys % [:x :y :mark :stat])))
-    kind/pprint)
+    (->> (mapv #(select-keys % [:x :y :mark :stat]))))
 
 ;; ### ⚙️ Filtering and Conditional Specs
 
@@ -2052,8 +2035,7 @@ mpg
              (views (cross [:sepal-length :sepal-width] [:sepal-length :sepal-width]))
              auto
              (when-off-diagonal {:color :species}))]
-  (kind/pprint
-   (mapv #(select-keys % [:x :y :mark :color]) vs)))
+  (mapv #(select-keys % [:x :y :mark :color]) vs))
 
 ;; ### ⚙️ Column-Pair Helpers
 
@@ -2121,8 +2103,7 @@ mpg
 (-> iris
     (views [[:sepal-length :sepal-width]])
     (facet :species)
-    (->> (mapv #(select-keys % [:x :y :facet-val])))
-    kind/pprint)
+    (->> (mapv #(select-keys % [:x :y :facet-val]))))
 
 (defmethod arrange-panels :multi-variable [_ ctx]
   (let [{:keys [non-ann-views ann-views pw ph x-vars y-vars rows cols polar?]} ctx
@@ -2296,8 +2277,7 @@ mpg
     (set-scale :x :log)
     (set-coord :polar)
     first
-    (select-keys [:x :y :mark :x-scale :coord])
-    kind/pprint)
+    (select-keys [:x :y :mark :x-scale :coord]))
 
 ;; ### 🧪 Log Scale
 
@@ -2399,10 +2379,9 @@ mpg
 ;;
 ;; Each annotation constructor returns a plain map:
 
-(kind/pprint
- [(hline 3.0)
-  (vline 6.0)
-  (hband 2.5 3.5)])
+[(hline 3.0)
+ (vline 6.0)
+ (hband 2.5 3.5)]
 ;; ### ⚙️ `render-annotation` methods
 
 (defmethod render-annotation :rule-h [ann {:keys [coord x-domain cfg]}]
