@@ -490,11 +490,11 @@ mpg
 
 ;; ### ⚙️ `resolve-view`
 ;;
-;; Walks the inference DAG top-down.  Each property is
-;; `(or user-specified inferred)`:
+;; Walks the inference DAG top-down: column types → grouping → mark → stat.
+;; Each property is `(or user-specified inferred)`:
 
 (defn resolve-view
-  "Fill in derived properties: :x-type, :y-type, :color-type, :group.
+  "Fill in derived properties: :x-type, :y-type, :color-type, :group, :mark, :stat.
   User-specified values always win."
   [v]
   (if-not (:data v)
@@ -507,18 +507,35 @@ mpg
                    (or (:color-type v) (column-type ds (:color v))))
           group (or (:group v)
                     (when (= c-type :categorical) [(:color v)])
-                    [])]
-      (assoc v :x-type x-type :y-type y-type :color-type c-type :group group))))
+                    [])
+          ;; Infer mark and stat from column types when not specified
+          diagonal? (= (:x v) (:y v))
+          [default-mark default-stat]
+          (cond
+            ;; Same column on both axes (or y absent): single-variable
+            (or diagonal? (nil? (:y v)))
+            (if (= x-type :categorical)
+              [:rect :count]
+              [:bar :bin])
+            ;; categorical x, continuous y → strip plot
+            (and (= x-type :categorical) (= y-type :continuous))
+            [:point :identity]
+            ;; otherwise → scatter
+            :else [:point :identity])
+          mark (or (:mark v) default-mark)
+          stat (or (:stat v) default-stat)]
+      (assoc v :x-type x-type :y-type y-type :color-type c-type
+             :group group :mark mark :stat stat))))
 
 ;; ### 🧪 What `resolve-view` Produces
 ;;
-;; Continuous columns, categorical color -- grouping inferred:
+;; Continuous columns, categorical color -- grouping and mark inferred:
 
 (let [v (first (-> iris
                    (views [[:sepal-length :sepal-width]])
                    (layer (point {:color :species}))))]
   (kind/pprint
-   (select-keys (resolve-view v) [:x-type :y-type :color-type :group])))
+   (select-keys (resolve-view v) [:x-type :y-type :color-type :group :mark :stat])))
 
 ;; Continuous color -- no grouping:
 
@@ -526,7 +543,34 @@ mpg
                    (views [[:sepal-length :sepal-width]])
                    (layer (point {:color :petal-length}))))]
   (kind/pprint
-   (select-keys (resolve-view v) [:x-type :y-type :color-type :group])))
+   (select-keys (resolve-view v) [:x-type :y-type :color-type :group :mark :stat])))
+
+;; No mark specified -- inferred from column types.
+;; Diagonal continuous → histogram:
+
+(let [v (first (views iris [[:sepal-length :sepal-length]]))]
+  (kind/pprint
+   (select-keys (resolve-view v) [:x-type :y-type :mark :stat])))
+
+;; Categorical alone → bar chart (count):
+
+(let [v (first (views iris [[:species :species]]))]
+  (kind/pprint
+   (select-keys (resolve-view v) [:x-type :y-type :mark :stat])))
+
+;; Categorical x, continuous y → scatter:
+
+(let [v (first (views iris [[:species :sepal-length]]))]
+  (kind/pprint
+   (select-keys (resolve-view v) [:x-type :y-type :mark :stat])))
+
+;; User-specified mark overrides inference:
+
+(let [v (first (-> iris
+                   (views [[:sepal-length :sepal-width]])
+                   (layer (lm))))]
+  (kind/pprint
+   (select-keys (resolve-view v) [:x-type :y-type :mark :stat])))
 
 ;; Override defaults per-plot with `:config`:
 
@@ -892,7 +936,7 @@ mpg
 ;; into one SVG `[:g ...]` group, in eight steps:
 ;;
 ;; 1. **Config** -- read coord type and scale specs from the first view.
-;; 2. **Resolve & Stats** -- `resolve-view` infers types and grouping, then `compute-stat` runs.
+;; 2. **Resolve & Stats** -- `resolve-view` infers types, grouping, mark, and stat; then `compute-stat` runs.
 ;; 3. **Domains** -- merge x/y domains from all stats.
 ;; 4. **Stack adjustment** -- inflate y-domain for stacked bars.
 ;; 5. **Scales** -- build Wadogo scales (swap axes if flipped).
@@ -1953,6 +1997,11 @@ mpg
 ;; `arrange-panels` multimethod handles layout.
 
 ;; ### ⚙️ Auto-Detection
+;;
+;; `resolve-view` already infers `:mark` and `:stat` from column types.
+;; `auto` applies it to every view -- useful for SPLOM grids where
+;; each cell needs different mark/stat depending on whether it's
+;; diagonal (histogram) or off-diagonal (scatter).
 
 (defn diagonal?
   "True if a view maps the same column to both x and y."
@@ -1961,11 +2010,9 @@ mpg
 
 (defn infer-defaults
   "Auto-detect mark and stat from column structure.
-  Diagonal (x=y) -> histogram. Off-diagonal -> scatter."
+  Delegates to `resolve-view`."
   [v]
-  (if (diagonal? v)
-    (merge {:mark :bar :stat :bin} v)
-    (merge {:mark :point :stat :identity} v)))
+  (resolve-view v))
 
 (defn auto
   "Apply `infer-defaults` to all views."
@@ -2518,9 +2565,11 @@ mpg
 ;; coord type. Bars project 4 corners; polar bars sample arc points.
 ;;
 ;; **`resolve-view` + `defaults`.**  A single function infers column types,
-;; grouping, and other derived properties -- each as `(or user-override inferred)`.
+;; grouping, mark, and stat -- each as `(or user-override inferred)`.
 ;; Visual constants live in one `defaults` map, overridable per-plot via `:config`.
 ;; Categorical color → group by it; continuous color → visual-only.
+;; No explicit mark? Column types decide: two continuous → scatter,
+;; diagonal → histogram, categorical → bar chart.
 ;;
 ;; ### 📖 Composition in hindsight
 ;;
