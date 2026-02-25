@@ -104,7 +104,6 @@
 ;; multi-panel layouts, polar coordinates, and interactivity.
 ;; ---
 
-
 ;; ## Motivation
 ;;
 ;; A [companion post](splom_tutorial.html) builds a colored
@@ -141,8 +140,8 @@
 ;; **View** -- one layer of a chart: which data, which columns,
 ;; which mark.
 ;;
-;; **Layer** -- a way to stack several marks on the same data.
-;; Each layer adds a view to the plot.
+;; **Layer** -- one mark drawn on a set of views.
+;; A plot with scatter points and regression lines has two layers.
 ;;
 ;; **Stat** -- a statistical transform applied before drawing.
 ;; Binning produces a histogram, regression fits a line,
@@ -228,20 +227,42 @@ iris
 
 ;; ### ⚙️ Views
 
+(defn- parse-view-spec
+  "Parse a view spec: a map passes through, a vector becomes {:x ... :y ...}."
+  [spec]
+  (if (map? spec) spec {:x (first spec) :y (second spec)}))
+
+(defn view
+  "Create a single view from data and a column spec.
+  Accepts (view data :x :y), (view data [:x :y]),
+  or (view data {:x :a :y :b :color :c})."
+  ([data spec-or-x]
+   (let [ds (if (tc/dataset? data) data (tc/dataset data))]
+     [(assoc (parse-view-spec spec-or-x) :data ds)]))
+  ([data x y]
+   (let [ds (if (tc/dataset? data) data (tc/dataset data))]
+     [(assoc {:x x :y y} :data ds)])))
+
 (defn views
-  "Bind data to column pairs to sequence of view maps.
-  Data can be a tablecloth dataset, a map of columns, or a sequence of row maps.
-  anything `tc/dataset` accepts."
-  [data pairs]
+  "Create multiple views from data and a sequence of specs.
+  Each spec can be a [x y] pair or a map with any view keys."
+  [data specs]
   (let [ds (if (tc/dataset? data) data (tc/dataset data))]
-    (mapv (fn [[x y]] {:data ds :x x :y y}) pairs)))
+    (mapv #(assoc (parse-view-spec %) :data ds) specs)))
 
 ;; ### 🧪 What a View Looks Like
+;;
+;; All three forms produce the same view:
 
-;; `views` accepts anything `tc/dataset` accepts (dataset, column map, row maps):
+(kind/pprint
+ {:from-keywords (view {:x [1 2 3] :y [4 5 6]} :x :y)
+  :from-pair     (view {:x [1 2 3] :y [4 5 6]} [:x :y])
+  :from-map      (view {:x [1 2 3] :y [4 5 6]} {:x :x :y :y})})
 
-(-> {:x [1 2 3] :y [4 5 6]}
-    (views [[:x :y]])
+;; `views` creates multiple views at once:
+
+(-> {:x [1 2 3] :y [4 5 6] :z [7 8 9]}
+    (views [[:x :y] [:x :z]])
     kind/pprint)
 
 ;; ### ⚙️ Layer
@@ -1110,7 +1131,8 @@ iris
 
 ;; ### 🧪 What `:bin` Returns
 ;;
-;; Bins with counts and boundaries:
+;; Bins with counts and boundaries. Note the y-domain: it comes from
+;; bin counts, not raw data values -- this is how stat-driven domains work.
 
 (let [stat (-> (views iris [[:sepal-length :sepal-length]])
                (layer (histogram))
@@ -1139,22 +1161,6 @@ iris
                                                 x3 "," y3 " " x4 "," y4)
                                    :fill c :opacity 0.7}])))
                   (:bins stat)))))
-
-;; ### 🧪 Stat-Driven Domains
-;;
-;; The y-domain comes from bin counts, not data values:
-
-(let [v {:data iris
-         :x :sepal-length
-         :y :sepal-length
-         :stat :bin}
-      result (compute-stat v)]
-  (kind/pprint
-   {:x-domain (:x-domain result)
-    :y-domain (:y-domain result)
-    :max-count (:max-count result)
-    :n-bins (count (:bin-maps (first (:bins result))))}))
-
 ;; ### 🧪 Histogram
 ;;
 ;; The `[[:sepal-length :sepal-length]]` idiom maps x = y, which auto-selects `:bin`:
