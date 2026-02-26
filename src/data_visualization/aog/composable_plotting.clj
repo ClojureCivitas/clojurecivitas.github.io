@@ -194,32 +194,13 @@ mpg
 ;; threading) rather than by a direct translation of either system.
 ;; They work in two phases:
 ;;
-;; | Phase              | Operators                                                | Acts on                      |
-;; |--------------------|----------------------------------------------------------|------------------------------|
-;; | **What** to plot   | `cross`, `view`, `views`                                | column names to view maps     |
-;; | **How** to plot    | `layer`, `layers`, layer specs (`point`, `bar`, `lm`, …) | view maps to richer view maps |
+;; | Phase            | Main concept |
+;; |------------------|--------------|
+;; | **What** to plot | `views`      |
+;; | **How** to plot  | `layers`     |
 ;;
 ;; Both phases operate on the same unit -- a flat vector of view maps --
 ;; so they compose freely through threading.
-
-;; ### ⚙️ Cross
-
-;;
-;; `cross` produces all pairings of two sequences. Under the hood, just `for` --
-;; naming it makes intent explicit.
-
-(defn cross
-  "Cartesian product of two sequences."
-  [xs ys]
-  (for [x xs, y ys] [x y]))
-
-;; ### 🧪 Cross
-
-(cross [:a :b] [:x :y])
-
-;; With the iris columns, this produces 16 column pairs -- one per panel:
-
-(cross iris-quantities iris-quantities)
 
 ;; ### ⚙️ Views
 
@@ -2119,6 +2100,24 @@ mpg
   "True if a view maps the same column to both x and y."
   [v]
   (= (:x v) (:y v)))
+
+;; ### ⚙️ Cross
+;;
+;; `cross` produces all pairings of two sequences. Under the hood, just `for` --
+;; naming it makes intent explicit.
+
+(defn cross
+  "Cartesian product of two sequences."
+  [xs ys]
+  (for [x xs, y ys] [x y]))
+
+;; ### 🧪 Cross
+
+(cross [:a :b] [:x :y])
+
+;; With the iris columns, this produces 16 column pairs -- one per panel:
+
+(cross iris-quantities iris-quantities)
 
 ;; ### 🧪 Auto-Detection in Action
 ;;
