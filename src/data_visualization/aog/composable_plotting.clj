@@ -112,11 +112,12 @@
 ;;
 ;; **Mark** -- a visual element: point, bar, line, or text.
 ;;
-;; **View** -- a binding of data to column roles: which dataset,
-;; which x, which y.
+;; **View** -- *what* to plot: a map binding data to column roles
+;; (dataset, x, y, color, size, ...).
 ;;
-;; **Layer** -- a mark applied to views. A scatter plot with
-;; regression lines has two layers sharing the same data.
+;; **Layer** -- *how* to plot it: a map specifying mark and stat.
+;; A scatter plot with regression lines has two layers sharing
+;; the same views.
 ;;
 ;; **Stat** -- a statistical transform applied before drawing.
 ;; Binning produces a histogram, regression fits a line,
@@ -199,8 +200,9 @@ mpg
 ;; | **What** to plot | `views`      |
 ;; | **How** to plot  | `layers`     |
 ;;
-;; Both phases operate on the same unit -- a flat vector of view maps --
-;; so they compose freely through threading.
+;; A **view** is a map binding data to column roles (`{:data ds :x :a :y :b :color :c}`).
+;; A **layer** is a map specifying mark and stat (`{:mark :point}`, `{:mark :line :stat :lm}`).
+;; Both are plain maps, so they compose freely through threading.
 
 ;; ### ⚙️ Views
 
@@ -279,12 +281,11 @@ mpg
 
 ;; ### ⚙️ Layer
 ;;
-;; `layer` merges a visual specification -- mark, stat, aesthetics --
+;; `layer` merges a layer (mark, stat, and optionally extra column bindings)
 ;; into every view. This is the "how" phase: same data, different rendering.
 
 (defn layer
-  "Merge overrides into each view. This is how you add marks, aesthetics,
-  and other properties to a set of views."
+  "Merge a layer into each view, adding mark, stat, and column bindings."
   [views overrides]
   (mapv (fn [v]
           (when (:data v)
@@ -294,16 +295,16 @@ mpg
 
 ;; ### 🧪 Adding a Mark
 
-;; `layer` merges a mark specification into every view:
+;; `layer` merges a layer into every view:
 
 (-> {:x [1 2 3] :y [4 5 6] :group ["a" "a" "b"]}
     (views [[:x :y]])
     (layer {:mark :point :color :group})
     kind/pprint)
 
-;; ### ⚙️ Layer Specs
+;; ### ⚙️ Layer Constructors
 
-;; Each layer spec is a map that `layer` merges into views:
+;; Each constructor returns a layer -- a map that `layer` merges into views:
 
 (defn point
   ([] {:mark :point})
@@ -1602,7 +1603,7 @@ mpg
 ;; with `:identity` stat. The same `render-mark :line` handles
 ;; both raw lines and regression/loess fits.
 
-;; ### ⚙️ Layer Spec
+;; ### ⚙️ Layer Constructors
 
 (defn line-mark
   ([] {:mark :line :stat :identity})
@@ -1630,14 +1631,14 @@ mpg
 
 ;; ## Layers
 ;;
-;; `layer` merges one spec into every view. `layers` stacks multiple
-;; marks on the same base views, duplicating each view per spec.
-;; Annotation specs (hline, vline, hband) are kept as separate views.
+;; `layer` merges one layer into every view. `layers` applies multiple
+;; layers to the same base views, duplicating each view per layer.
+;; Annotation layers (hline, vline, hband) are kept as separate views.
 
 ;; ### ⚙️ `layers`
 
 (defn layers
-  "Stack multiple layers from the same base views."
+  "Apply multiple layers to the same base views, duplicating each view per layer."
   [base-views & layer-specs]
   (let [ann-specs (filter #(and (map? %) (annotation-marks (:mark %))) layer-specs)
         data-specs (remove #(and (map? %) (annotation-marks (:mark %))) layer-specs)]
@@ -1646,7 +1647,7 @@ mpg
 
 ;; ### 🧪 What `layers` Produces
 ;;
-;; Base views duplicated, each copy with a different mark:
+;; Base views duplicated, each copy with a different layer:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layers (point) (line-mark))
@@ -1676,7 +1677,7 @@ mpg
 ;;
 ;; Regression ([OLS](https://en.wikipedia.org/wiki/Ordinary_least_squares) via [Fastmath](https://github.com/generateme/fastmath)) and smooth curves ([LOESS](https://en.wikipedia.org/wiki/Local_regression) interpolation).
 
-;; ### ⚙️ Layer Specs
+;; ### ⚙️ Layer Constructors
 
 (defn lm
   ([] {:mark :line :stat :lm})
@@ -1784,7 +1785,7 @@ mpg
 
 ;; ### 🧪 Scatter + Regression
 ;;
-;; `layers` stacks two marks on the same data -- one scatter, one regression line:
+;; `layers` applies two layers to the same data -- one scatter, one regression line:
 
 (-> (views iris [[:sepal-length :sepal-width]])
     (layers (point {:color :species})
@@ -1802,7 +1803,7 @@ mpg
 
 ;; ### 🧪 Triple Layer (Scatter + Regression + Smooth)
 ;;
-;; Three marks on the same data -- `layers` accepts any number of specs:
+;; Three layers on the same data -- `layers` accepts any number of layers:
 
 (-> (views iris [[:sepal-length :petal-length]])
     (layers (point {:color :species})
@@ -1817,7 +1818,7 @@ mpg
 ;; Wadogo band scales for bar positioning. `compute-stat :count` tallies
 ;; categories; `render-mark :rect` handles dodge and stack.
 
-;; ### ⚙️ Layer Specs
+;; ### ⚙️ Layer Constructors
 
 (defn bar
   ([] {:mark :rect :stat :count})
@@ -2548,7 +2549,7 @@ mpg
 ;; ### 📖 Composition in hindsight
 ;;
 ;; The compositional core is `views`, `layer`, `layers`, and `cross`.
-;; Layer specs, faceting, scale/coord setters, and view selectors
+;; Layer constructors, faceting, scale/coord setters, and view selectors
 ;; round out the user-facing API. Some observations after building it all.
 ;;
 ;; **`cross` earns its name.** It is just `for`, but naming it makes
@@ -2561,10 +2562,9 @@ mpg
 ;; `(view data :x :y)` exists as a convenience, but the two names
 ;; (`view` vs `views`) are easy to confuse.
 ;;
-;; **`layer` vs `layers` is confusing.** `layer` merges a map into
-;; every view (apply overrides). `layers` duplicates views per spec
-;; (stack marks). The glossary defines Layer as stacking marks,
-;; which is what `layers` does, not what `layer` does.
+;; **`layer` vs `layers` is confusing.** `layer` merges one layer into
+;; every view. `layers` applies multiple layers, duplicating views per
+;; layer. The names are too close for operations that differ in kind.
 ;;
 ;; **The histogram idiom `[[:col :col]]` is non-obvious.**
 ;; Mapping x = y signals "same variable for both axes," which
