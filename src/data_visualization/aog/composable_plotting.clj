@@ -1482,6 +1482,27 @@ mpg
   ([] {:mark :line :stat :identity})
   ([opts] (merge {:mark :line :stat :identity} opts)))
 
+;; ### ⚙️ `render-mark` `:line`
+
+(defmethod render-mark :line [_ stat ctx]
+  (let [{:keys [coord all-colors cfg]} ctx
+        cfg (or cfg defaults)]
+    (into [:g]
+          (concat
+           (when-let [lines (:lines stat)]
+             (for [{:keys [color x1 y1 x2 y2]} lines
+                   :let [c (if color (color-for all-colors color) (:default-color cfg))
+                         [px1 py1] (coord x1 y1)
+                         [px2 py2] (coord x2 y2)]]
+               [:line {:x1 px1 :y1 py1 :x2 px2 :y2 py2
+                       :stroke c :stroke-width (:line-width cfg)}]))
+           (when-let [pts (:points stat)]
+             (for [{:keys [color xs ys]} pts
+                   :let [c (if color (color-for all-colors color) (:default-color cfg))
+                         projected (sort-by first (map (fn [x y] (coord x y)) xs ys))]]
+               [:polyline {:points (str/join " " (map (fn [[px py]] (str px "," py)) projected))
+                           :stroke c :stroke-width (:line-width cfg) :fill "none"}]))))))
+
 ;; ### 🧪 Line Chart (Connecting Raw Points)
 
 (-> (views {:year [2018 2019 2020 2021 2022]
@@ -1635,27 +1656,6 @@ mpg
         {:points results
          :x-domain (numeric-extent (clean x))
          :y-domain (numeric-extent (clean y))}))))
-
-;; ### ⚙️ `render-mark` `:line`
-
-(defmethod render-mark :line [_ stat ctx]
-  (let [{:keys [coord all-colors cfg]} ctx
-        cfg (or cfg defaults)]
-    (into [:g]
-          (concat
-           (when-let [lines (:lines stat)]
-             (for [{:keys [color x1 y1 x2 y2]} lines
-                   :let [c (if color (color-for all-colors color) (:default-color cfg))
-                         [px1 py1] (coord x1 y1)
-                         [px2 py2] (coord x2 y2)]]
-               [:line {:x1 px1 :y1 py1 :x2 px2 :y2 py2
-                       :stroke c :stroke-width (:line-width cfg)}]))
-           (when-let [pts (:points stat)]
-             (for [{:keys [color xs ys]} pts
-                   :let [c (if color (color-for all-colors color) (:default-color cfg))
-                         projected (sort-by first (map (fn [x y] (coord x y)) xs ys))]]
-               [:polyline {:points (str/join " " (map (fn [[px py]] (str px "," py)) projected))
-                           :stroke c :stroke-width (:line-width cfg) :fill "none"}]))))))
 
 ;; ### 🧪 Scatter + Regression
 ;;
