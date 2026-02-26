@@ -345,6 +345,13 @@ mpg
     (concat (apply concat (map #(merge-layer base-views %) data-specs))
             ann-specs)))
 
+;; Defined here (rather than in the Scales and Coordinates section) because
+;; examples use it before that section.
+(defn coord
+  "Set coordinate system: :cartesian (default), :flip, or :polar."
+  [views c]
+  (mapv #(assoc % :coord c) views))
+
 ;; ### 🧪 Adding a Mark
 ;;
 ;; A layer is just a map -- you can write it directly:
@@ -2328,11 +2335,6 @@ mpg
 
 (defmethod make-scale :log [domain pixel-range _]
   (ws/scale :log {:domain domain :range pixel-range}))
-
-(defn coord
-  "Set coordinate system: :cartesian (default), :flip, or :polar."
-  [views c]
-  (mapv #(assoc % :coord c) views))
 
 ;; ### 🧪 How Setters Modify Views
 ;;
