@@ -99,8 +99,8 @@
 ;; a similar result requires only a few lines:
 ;;
 ;; ```clojure
-;; (-> (views iris (cross iris-quantities iris-quantities))
-;;     (layer {:color :species})
+;; (-> (view iris (cross iris-quantities iris-quantities))
+;;     (lay {:color :species})
 ;;     (plot {:brush true}))
 ;; ```
 ;;
@@ -210,8 +210,8 @@ mpg
 ;;
 ;; | Phase            | Main concept | Representation                                  |
 ;; |------------------|--------------|--------------------------------------------------|
-;; | **What** to plot | `views`      | `{:data ds :x :a :y :b :color :c}`              |
-;; | **How** to plot  | `layers`     | `{:mark :point}`, `{:mark :line :stat :lm}`, ... |
+;; | **What** to plot | `view`       | `{:data ds :x :a :y :b :color :c}`              |
+;; | **How** to plot  | `lay`        | `{:mark :point}`, `{:mark :line :stat :lm}`, ... |
 ;;
 ;; Both are plain maps, so they compose freely through threading.
 
@@ -246,66 +246,81 @@ mpg
        (throw (ex-info (str "Column " col " (from " role ") not found in dataset. Available: " (sort col-names))
                        {:key role :column col :available (sort col-names)}))))))
 
+(defn- multi-spec?
+  "True if specs is a sequence of view specs (pairs, keywords, or maps)
+  rather than a single spec."
+  [specs]
+  (and (sequential? specs)
+       (let [fst (first specs)]
+         (or (sequential? fst) (map? fst)))))
+
 (defn view
-  "Create a single view from data and a column spec.
-  Accepts (view data), (view data :col) for a single variable,
-  (view data :x :y), (view data [:x :y]),
-  or (view data {:x :a :y :b :color :c}).
-  With no spec, defaults to columns :x and :y."
-  ([data]
-   (view data :x :y))
+  "Create views from data and column specs. Accepts several forms:
+  - (view data :x :y)           — two keywords, one scatter view
+  - (view data :col)            — single column, histogram view
+  - (view data [:x :y])         — pair as vector, same as two keywords
+  - (view data {:x :a :y :b})   — map spec with any view keys
+  - (view data [[:x :y] [:x :z]]) — multiple pairs, one view per pair
+  - (view data (cross cols cols))  — cross product of columns
+  Anything `tc/dataset` accepts works as data."
   ([data spec-or-x]
-   (let [ds (if (tc/dataset? data) data (tc/dataset data))
-         parsed (parse-view-spec spec-or-x)]
-     (validate-columns ds parsed)
-     [(assoc parsed :data ds)]))
+   (let [ds (if (tc/dataset? data) data (tc/dataset data))]
+     (if (multi-spec? spec-or-x)
+       (mapv (fn [spec]
+               (let [parsed (parse-view-spec spec)]
+                 (validate-columns ds parsed)
+                 (assoc parsed :data ds)))
+             spec-or-x)
+       (let [parsed (parse-view-spec spec-or-x)]
+         (validate-columns ds parsed)
+         [(assoc parsed :data ds)]))))
   ([data x y]
    (let [ds (if (tc/dataset? data) data (tc/dataset data))
          v {:x x :y y}]
      (validate-columns ds v)
      [(assoc v :data ds)])))
 
-(defn views
-  "Create multiple views from data and a sequence of specs.
-  Each spec can be a [x y] pair or a map with any view keys."
-  [data specs]
-  (let [ds (if (tc/dataset? data) data (tc/dataset data))]
-    (mapv (fn [spec]
-            (let [parsed (parse-view-spec spec)]
-              (validate-columns ds parsed)
-              (assoc parsed :data ds)))
-          specs)))
-
 ;; ### 🧪 What a View Looks Like
 ;;
-;; Keywords for x and y:
+;; Two keywords — one scatter view:
 
 (-> (view {:a [1 2 3] :b [4 5 6]} :a :b)
     kind/pprint)
 
-;; A pair works too:
+;; A pair as a vector — same result:
 
 (-> (view {:a [1 2 3] :b [4 5 6]} [:a :b])
     kind/pprint)
 
-;; A map lets you bind additional column roles like `:color`:
+;; A single keyword — histogram (x=y):
+
+(-> (view {:a [1 2 3] :b [4 5 6]} :a)
+    kind/pprint)
+
+;; A map — bind additional column roles like `:color`:
 
 (-> (view {:a [1 2 3] :b [4 5 6] :g ["x" "x" "y"]}
           {:x :a :y :b :color :g})
     kind/pprint)
 
-;; `views` creates multiple views at once:
+;; Multiple pairs — one view per pair:
 
 (-> {:x [1 2 3] :y [4 5 6] :z [7 8 9]}
-    (views [[:x :y] [:x :z]])
+    (view [[:x :y] [:x :z]])
     kind/pprint)
+
+;; Cross product — all pairings (defined later in this notebook):
+;;
+;; ```clojure
+;; (view iris (cross iris-quantities iris-quantities))
+;; ```
 
 ;; ### ⚙️ Layer
 ;;
-;; `layer` merges a layer (mark, stat, and optionally extra column bindings)
-;; into every view. This is the "how" phase: same data, different rendering.
+;; `lay` applies one or more layers (mark, stat, and optional column bindings)
+;; to every view. This is the "how" phase: same data, different rendering.
 
-(defn layer
+(defn merge-layer
   "Merge a layer into each view, adding mark, stat, and column bindings."
   [views overrides]
   (mapv (fn [v]
@@ -314,16 +329,30 @@ mpg
           (merge v overrides))
         views))
 
+(def annotation-marks
+  "Marks that are annotations rather than data layers.
+  'rule' is the traditional name for a reference line in plotting libraries."
+  #{:rule-h :rule-v :band-h})
+
+(defn lay
+  "Apply one or more layers to the base views. Each layer adds a mark, stat,
+  and optional column bindings. Multiple layers duplicate the views."
+  [base-views & layer-specs]
+  (let [ann-specs (filter #(and (map? %) (annotation-marks (:mark %))) layer-specs)
+        data-specs (remove #(and (map? %) (annotation-marks (:mark %))) layer-specs)]
+    (concat (apply concat (map #(merge-layer base-views %) data-specs))
+            ann-specs)))
+
 ;; ### 🧪 Adding a Mark
 
 (-> {:x [1 2 3] :y [4 5 6] :group ["a" "a" "b"]}
-    (views [[:x :y]])
-    (layer {:mark :point :color :group})
+    (view [[:x :y]])
+    (lay {:mark :point :color :group})
     kind/pprint)
 
 ;; ### ⚙️ Layer Constructors
 
-;; Each constructor returns a layer -- a map that `layer` merges into views:
+;; Each constructor returns a layer -- a map that `lay` merges into views:
 
 (defn point
   ([] {:mark :point})
@@ -332,12 +361,12 @@ mpg
 ;; ### 🧪 Using Point
 
 (-> {:x [1 2 3] :y [4 5 6] :group ["a" "a" "b"]}
-    (views [[:x :y]])
-    (layer (point {:color :group}))
+    (view [[:x :y]])
+    (lay (point {:color :group}))
     kind/pprint)
 
 ;; The two phases compose through threading:
-;; `(-> data (views pairs) (layer (point)))` reads as
+;; `(-> data (view pairs) (lay (point)))` reads as
 ;; "these column pairings, drawn as points" -- what, then how.
 ;; ---
 
@@ -528,38 +557,38 @@ mpg
 ;; `resolve-view` infers grouping by species and defaults to a scatter:
 
 (let [v (first (-> iris
-                   (views [[:sepal-length :sepal-width]])
-                   (layer (point {:color :species}))))]
+                   (view [[:sepal-length :sepal-width]])
+                   (lay (point {:color :species}))))]
   (select-keys (resolve-view v) [:x-type :y-type :color-type :group :mark :stat]))
 
 ;; When the color column is numerical, there is no grouping:
 
 (let [v (first (-> iris
-                   (views [[:sepal-length :sepal-width]])
-                   (layer (point {:color :petal-length}))))]
+                   (view [[:sepal-length :sepal-width]])
+                   (lay (point {:color :petal-length}))))]
   (select-keys (resolve-view v) [:x-type :y-type :color-type :group :mark :stat]))
 
 ;; When no mark is specified, `resolve-view` infers one from the column types.
 ;; A numerical column mapped to both x and y becomes a histogram:
 
-(let [v (first (views iris [[:sepal-length :sepal-length]]))]
+(let [v (first (view iris [[:sepal-length :sepal-length]]))]
   (select-keys (resolve-view v) [:x-type :y-type :mark :stat]))
 
 ;; A categorical column on its own becomes a bar chart with counting:
 
-(let [v (first (views iris [[:species :species]]))]
+(let [v (first (view iris [[:species :species]]))]
   (select-keys (resolve-view v) [:x-type :y-type :mark :stat]))
 
 ;; A categorical x with a numerical y becomes a strip plot:
 
-(let [v (first (views iris [[:species :sepal-length]]))]
+(let [v (first (view iris [[:species :sepal-length]]))]
   (select-keys (resolve-view v) [:x-type :y-type :mark :stat]))
 
 ;; A user-specified mark always overrides the inference:
 
 (let [v (first (-> iris
-                   (views [[:sepal-length :sepal-width]])
-                   (layer {:mark :line :stat :lm})))]
+                   (view [[:sepal-length :sepal-width]])
+                   (lay {:mark :line :stat :lm})))]
   (select-keys (resolve-view v) [:x-type :y-type :mark :stat]))
 
 ;; Override defaults per-plot with `:config`:
@@ -993,11 +1022,6 @@ mpg
 ;; It computes stats, merges domains, builds scales, and dispatches
 ;; rendering through multimethods.
 
-(def annotation-marks
-  "Marks that are annotations rather than data layers.
-  'rule' is the traditional name for a reference line in plotting libraries."
-  #{:rule-h :rule-v :band-h})
-
 (defmulti render-annotation
   "Render a single annotation view. Dispatches on (:mark ann).
    ann-ctx contains :coord, :x-domain, :y-domain."
@@ -1128,8 +1152,8 @@ mpg
         "xmlns" "http://www.w3.org/2000/svg"}
   (render-panel
    (-> {:x [1 2 3 4 5] :y [2 4 3 5 4]}
-       (views [[:x :y]])
-       (layer (point)))
+       (view [[:x :y]])
+       (lay (point)))
    600 400 25)])
 ;; ---
 
@@ -1346,13 +1370,13 @@ mpg
 
 ;; ### 🧪 Scatter from Inline Data
 ;;
-;; A map of columns works as data -- `views` wraps it into a dataset:
+;; A map of columns works as data -- `view` wraps it into a dataset:
 
 (-> {:x [1 2 3 4 5 6]
      :y [2 4 3 5 4 6]
      :group ["a" "a" "a" "b" "b" "b"]}
-    (views [[:x :y]])
-    (layer (point {:color :group}))
+    (view [[:x :y]])
+    (lay (point {:color :group}))
     plot)
 
 ;; ### 🧪 Iris Scatter
@@ -1360,8 +1384,8 @@ mpg
 ;; Same pipeline, now with a real dataset and no color:
 
 (-> iris
-    (views [[:sepal-length :sepal-width]])
-    (layer (point))
+    (view [[:sepal-length :sepal-width]])
+    (lay (point))
     plot)
 
 ;; ### 🧪 Colored Scatter
@@ -1369,8 +1393,8 @@ mpg
 ;; Adding `:color` to the `point` spec splits the data by species:
 
 (-> iris
-    (views [[:sepal-length :sepal-width]])
-    (layer (point {:color :species}))
+    (view [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
     plot)
 
 ;; ---
@@ -1415,7 +1439,7 @@ mpg
 ;; bin counts, not raw data values -- this is how stat-driven domains work.
 
 (let [stat (-> (view iris :sepal-length)
-               (layer (histogram))
+               (lay (histogram))
                first
                resolve-view
                compute-stat)]
@@ -1447,7 +1471,7 @@ mpg
 ;; A single column means x = y, which auto-selects `:bin`:
 
 (-> (view iris :sepal-length)
-    (layer (histogram))
+    (lay (histogram))
     plot)
 
 ;; ### 🧪 Colored Histogram
@@ -1455,7 +1479,7 @@ mpg
 ;; Color splits bins per group, dodging them side by side:
 
 (-> (view iris :sepal-length)
-    (layer (histogram {:color :species}))
+    (lay (histogram {:color :species}))
     plot)
 
 ;; ### 🧪 Flipped Histogram
@@ -1464,8 +1488,8 @@ mpg
 ;;
 
 (-> (view iris :sepal-length)
-    (layer (histogram))
-    (layer {:coord :flip})
+    (lay (histogram))
+    (lay {:coord :flip})
     plot)
 
 ;; ---
@@ -1505,64 +1529,54 @@ mpg
 
 ;; ### 🧪 Line Chart (Connecting Raw Points)
 
-(-> (views {:year [2018 2019 2020 2021 2022]
-            :sales [10 15 13 17 20]}
-           [[:year :sales]])
-    (layer (line-mark))
+(-> (view {:year [2018 2019 2020 2021 2022]
+           :sales [10 15 13 17 20]}
+          [[:year :sales]])
+    (lay (line-mark))
     plot)
 
 ;; ### 🧪 Colored Line Chart
 
-(-> (views {:year [2018 2019 2020 2021 2022 2018 2019 2020 2021 2022]
-            :sales [10 15 13 17 20 8 12 11 14 18]
-            :region ["East" "East" "East" "East" "East"
-                     "West" "West" "West" "West" "West"]}
-           [[:year :sales]])
-    (layer (line-mark {:color :region}))
+(-> (view {:year [2018 2019 2020 2021 2022 2018 2019 2020 2021 2022]
+           :sales [10 15 13 17 20 8 12 11 14 18]
+           :region ["East" "East" "East" "East" "East"
+                    "West" "West" "West" "West" "West"]}
+          [[:year :sales]])
+    (lay (line-mark {:color :region}))
     plot)
 
 ;; ---
 
 ;; ## Layers
 ;;
-;; `layer` merges one layer into every view. `layers` applies multiple
-;; layers to the same base views, duplicating each view per layer.
+;; `lay` applies one or more layers to the same base views.
+;; Multiple layers duplicate each view -- once per layer.
 ;; Annotation layers (hline, vline, hband) are kept as separate views.
 
-;; ### ⚙️ `layers`
-
-(defn layers
-  "Apply multiple layers to the same base views, duplicating each view per layer."
-  [base-views & layer-specs]
-  (let [ann-specs (filter #(and (map? %) (annotation-marks (:mark %))) layer-specs)
-        data-specs (remove #(and (map? %) (annotation-marks (:mark %))) layer-specs)]
-    (concat (apply concat (map #(layer base-views %) data-specs))
-            ann-specs)))
-
-;; ### 🧪 What `layers` Produces
+;; ### 🧪 What `lay` Produces
 ;;
 ;; Base views duplicated, each copy with a different layer:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layers (point) (line-mark))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point) (line-mark))
     (->> (mapv #(select-keys % [:x :y :mark :stat]))))
 
 ;; ### 🧪 Scatter + Line Overlay
 
-(-> (views {:year [2018 2019 2020 2021 2022]
-            :sales [10 15 13 17 20]}
-           [[:year :sales]])
-    (layers (point) (line-mark))
+(-> (view {:year [2018 2019 2020 2021 2022]
+           :sales [10 15 13 17 20]}
+          [[:year :sales]])
+    (lay (point) (line-mark))
     plot)
 
 ;; ### 🧪 Colored Scatter + Line
 
-(-> (views {:year [2018 2019 2020 2021 2022 2018 2019 2020 2021 2022]
-            :sales [10 15 13 17 20 8 12 11 14 18]
-            :region ["East" "East" "East" "East" "East"
-                     "West" "West" "West" "West" "West"]}
-           [[:year :sales]])
-    (layers (point {:color :region}) (line-mark {:color :region}))
+(-> (view {:year [2018 2019 2020 2021 2022 2018 2019 2020 2021 2022]
+           :sales [10 15 13 17 20 8 12 11 14 18]
+           :region ["East" "East" "East" "East" "East"
+                    "West" "West" "West" "West" "West"]}
+          [[:year :sales]])
+    (lay (point {:color :region}) (line-mark {:color :region}))
     plot)
 
 ;; ---
@@ -1617,8 +1631,8 @@ mpg
 ;;
 ;; Two endpoints per group, the fitted line from x-min to x-max:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (lm {:color :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (lm {:color :species}))
     first
     resolve-view
     compute-stat
@@ -1659,30 +1673,30 @@ mpg
 
 ;; ### 🧪 Scatter + Regression
 ;;
-;; `layers` applies two layers to the same data -- one scatter, one regression line:
+;; `lay` applies two layers to the same data -- one scatter, one regression line:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layers (point {:color :species})
-            (lm {:color :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species})
+         (lm {:color :species}))
     plot)
 
 ;; ### 🧪 Smooth Curve (Loess)
 ;;
 ;; LOESS fits a local curve instead of a straight line:
 
-(-> (views iris [[:sepal-length :petal-length]])
-    (layers (point {:color :species})
-            (loess {:color :species}))
+(-> (view iris [[:sepal-length :petal-length]])
+    (lay (point {:color :species})
+         (loess {:color :species}))
     plot)
 
 ;; ### 🧪 Triple Layer (Scatter + Regression + Smooth)
 ;;
-;; Three layers on the same data -- `layers` accepts any number of layers:
+;; Three layers on the same data -- `lay` accepts any number of layers:
 
-(-> (views iris [[:sepal-length :petal-length]])
-    (layers (point {:color :species})
-            (lm {:color :species})
-            (loess {:color :species}))
+(-> (view iris [[:sepal-length :petal-length]])
+    (lay (point {:color :species})
+         (lm {:color :species})
+         (loess {:color :species}))
     plot)
 
 ;; ---
@@ -1761,7 +1775,7 @@ mpg
 ;; Rows tallied per category:
 
 (-> (view iris :species)
-    (layer (bar))
+    (lay (bar))
     first
     resolve-view
     compute-stat
@@ -1904,7 +1918,7 @@ mpg
 ;; The simplest categorical plot -- `:count` tallies species, band scale positions bars:
 
 (-> (view iris :species)
-    (layer (bar))
+    (lay (bar))
     plot)
 
 ;; ### 🧪 Colored Bar Chart
@@ -1912,7 +1926,7 @@ mpg
 ;; Color = same column as x: each bar gets its species color:
 
 (-> (view iris :species)
-    (layer (bar {:color :species}))
+    (lay (bar {:color :species}))
     plot)
 
 ;; ### 🧪 Stacked Bar Chart
@@ -1920,24 +1934,24 @@ mpg
 ;; Color = a *different* column: bars stack by drive type within each class:
 
 (-> (view mpg :class)
-    (layer (stacked-bar {:color :drv}))
+    (lay (stacked-bar {:color :drv}))
     plot)
 
 ;; ### 🧪 Strip Plot (Categorical x, Continuous y)
 ;;
 ;; A categorical x with a numerical y: points line up along the category axis:
 
-(-> (views iris [[:species :sepal-length]])
-    (layer (point {:color :species}))
+(-> (view iris [[:species :sepal-length]])
+    (lay (point {:color :species}))
     plot)
 
 ;; ### 🧪 Horizontal Strip Plot (Flipped)
 ;;
 ;; `:flip` works on categorical plots too:
 
-(-> (views iris [[:species :sepal-length]])
-    (layer (point {:color :species}))
-    (layer {:coord :flip})
+(-> (view iris [[:species :sepal-length]])
+    (lay (point {:color :species}))
+    (lay {:coord :flip})
     plot)
 
 ;; ### 🧪 Numeric-as-Categorical
@@ -1945,27 +1959,27 @@ mpg
 ;; `:x-type :categorical` forces a numeric column onto a band scale:
 
 (-> (view mpg :cyl)
-    (layer (bar {:x-type :categorical}))
+    (lay (bar {:x-type :categorical}))
     plot)
 
 ;; ### 🧪 Value Bar (Pre-Aggregated Data)
 ;;
 ;; When data is already aggregated, `value-bar` skips the `:count` stat:
 
-(-> (views {:fruit ["Apple" "Banana" "Cherry"]
-            :amount [30 20 45]}
-           [[:fruit :amount]])
-    (layer (value-bar {:color :fruit}))
+(-> (view {:fruit ["Apple" "Banana" "Cherry"]
+           :amount [30 20 45]}
+          [[:fruit :amount]])
+    (lay (value-bar {:color :fruit}))
     plot)
 
 ;; ### 🧪 Value Bar (Plain)
 ;;
 ;; Same data without color -- single-color bars:
 
-(-> (views {:fruit ["Apple" "Banana" "Cherry"]
-            :amount [30 20 45]}
-           [[:fruit :amount]])
-    (layer (value-bar))
+(-> (view {:fruit ["Apple" "Banana" "Cherry"]
+           :amount [30 20 45]}
+          [[:fruit :amount]])
+    (lay (value-bar))
     plot)
 
 ;; ---
@@ -2002,7 +2016,7 @@ mpg
 ;;
 ;; Diagonal views (x=y) become histograms, off-diagonal become scatters:
 
-(-> (views iris (cross [:sepal-length :sepal-width] [:sepal-length :sepal-width]))
+(-> (view iris (cross [:sepal-length :sepal-width] [:sepal-length :sepal-width]))
     (->> (mapv #(select-keys (resolve-view %) [:x :y :mark :stat]))))
 
 ;; ### ⚙️ Filtering and Conditional Specs
@@ -2035,7 +2049,7 @@ mpg
 ;; ### 🧪 Filtering Views
 
 (let [vs (-> iris
-             (views (cross [:sepal-length :sepal-width] [:sepal-length :sepal-width]))
+             (view (cross [:sepal-length :sepal-width] [:sepal-length :sepal-width]))
              (when-off-diagonal {:color :species}))]
   (mapv #(select-keys % [:x :y :mark :color]) vs))
 
@@ -2044,9 +2058,9 @@ mpg
 ;; replacement views. This is how layers can target specific cells:
 
 (let [vs (-> iris
-             (views (cross [:sepal-length :sepal-width]
-                           [:sepal-length :sepal-width]))
-             (when-off-diagonal #(layers % (point) (lm))))]
+             (view (cross [:sepal-length :sepal-width]
+                          [:sepal-length :sepal-width]))
+             (when-off-diagonal #(lay % (point) (lm))))]
   (mapv #(select-keys % [:x :y :mark :stat]) vs))
 
 ;; ### ⚙️ Column-Pair Helpers
@@ -2054,7 +2068,7 @@ mpg
 (defn distribution
   "Create diagonal views (x=y) for each column, used for histograms."
   [data & cols]
-  (views data (mapv (fn [c] [c c]) cols)))
+  (view data (mapv (fn [c] [c c]) cols)))
 
 (defn pairs
   "Upper-triangle pairs of columns, used for pairwise scatters."
@@ -2101,7 +2115,7 @@ mpg
 ;; ### 🧪 Faceting in Action
 
 (-> iris
-    (views [[:sepal-length :sepal-width]])
+    (view [[:sepal-length :sepal-width]])
     (facet :species)
     kind/pprint)
 
@@ -2185,24 +2199,24 @@ mpg
 ;; Cross all columns with themselves; `resolve-view` infers histogram
 ;; for diagonal cells and scatter for off-diagonal:
 
-(-> (views iris (cross iris-quantities iris-quantities))
-    (layer {:color :species})
+(-> (view iris (cross iris-quantities iris-quantities))
+    (lay {:color :species})
     plot)
 
 ;; This is useful when diagonal and off-diagonal cells need different
 ;; aesthetics. Here, scatters are colored by species while the
 ;; overall distribution on the diagonal stays uncolored:
 
-(-> (views iris (cross [:sepal-length :sepal-width :petal-length]
-                       [:sepal-length :sepal-width :petal-length]))
+(-> (view iris (cross [:sepal-length :sepal-width :petal-length]
+                      [:sepal-length :sepal-width :petal-length]))
     (when-off-diagonal {:color :species})
     plot)
 ;; ### 🧪 Faceted Scatter
 ;;
 ;; One panel per species -- `facet` splits views by a column:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (point {:color :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
     (facet :species)
     plot)
 
@@ -2214,8 +2228,8 @@ mpg
 ;; restaurant bills with tip amount, party size, day, and smoker status.
 
 (let [tips (tc/dataset "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv")]
-  (-> (views tips [["total_bill" "tip"]])
-      (layer (point {:color "day"}))
+  (-> (view tips [["total_bill" "tip"]])
+      (lay (point {:color "day"}))
       (facet-grid "smoker" "sex")
       (plot {:width 600 :height 500})))
 
@@ -2223,8 +2237,8 @@ mpg
 ;;
 ;; `:free-y` lets each panel fit its own y-domain:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (point {:color :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
     (facet :species)
     (plot {:scales :free-y}))
 
@@ -2232,8 +2246,8 @@ mpg
 ;;
 ;; Likewise for the x-axis:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (point {:color :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
     (facet :species)
     (plot {:scales :free-x}))
 
@@ -2241,8 +2255,8 @@ mpg
 ;;
 ;; Both axes free -- each panel zooms to its own data:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (point {:color :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
     (facet :species)
     (plot {:scales :free}))
 
@@ -2251,16 +2265,16 @@ mpg
 ;; Distribution of sepal length per species -- `facet` composes with histograms:
 
 (-> (view iris :sepal-length)
-    (layer (histogram {:color :species}))
+    (lay (histogram {:color :species}))
     (facet :species)
     plot)
 
 ;; ### 🧪 Faceted Regression
 ;;
-;; Scatter with regression line per species -- `facet` composes with `layers`:
+;; Scatter with regression line per species -- `facet` composes with `lay`:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layers (point {:color :species}) (lm {:color :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}) (lm {:color :species}))
     (facet :species)
     plot)
 
@@ -2270,10 +2284,10 @@ mpg
 ;; the diagonal. Passing a function to `when-off-diagonal` applies the
 ;; layers only to off-diagonal views, leaving diagonal views for inference:
 
-(-> (views iris (cross [:sepal-length :sepal-width :petal-length]
-                       [:sepal-length :sepal-width :petal-length]))
+(-> (view iris (cross [:sepal-length :sepal-width :petal-length]
+                      [:sepal-length :sepal-width :petal-length]))
     (when-off-diagonal {:color :species})
-    (when-off-diagonal #(layers % (point) (lm)))
+    (when-off-diagonal #(lay % (point) (lm)))
     plot)
 
 ;; ### 🧪 Faceted Bar Chart
@@ -2281,8 +2295,8 @@ mpg
 ;; Drivetrain counts by cylinder count -- `facet` composes with bar charts.
 ;; Using mpg data:
 
-(-> (views mpg [[:drv :drv]])
-    (layer (bar {:color :drv}))
+(-> (view mpg [[:drv :drv]])
+    (lay (bar {:color :drv}))
     (facet :cyl)
     plot)
 
@@ -2315,8 +2329,8 @@ mpg
 ;;
 ;; `set-scale` and `set-coord` add keys to each view map:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (point))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point))
     (set-scale :x :log)
     (set-coord :polar)
     first
@@ -2326,16 +2340,16 @@ mpg
 
 (let [data (tc/dataset {:x (mapv #(Math/pow 10 %) (range 0.0 3.01 0.1))
                         :y (mapv #(+ % (* 0.5 (rand))) (range 0.0 3.01 0.1))})]
-  (-> (views data [[:x :y]])
-      (layer (point))
+  (-> (view data [[:x :y]])
+      (lay (point))
       (set-scale :x :log)
       plot))
 
 ;; ### 🧪 Log Scale (Y-Axis)
 
-(-> (views {:x [1 2 3 4 5] :y [1 10 100 1000 10000]}
-           [[:x :y]])
-    (layer (point))
+(-> (view {:x [1 2 3 4 5] :y [1 10 100 1000 10000]}
+          [[:x :y]])
+    (lay (point))
     (set-scale :y :log)
     plot)
 
@@ -2343,8 +2357,8 @@ mpg
 ;;
 ;; `set-coord :polar` wraps the same scatter into polar space:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (point {:color :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
     (set-coord :polar)
     plot)
 
@@ -2353,7 +2367,7 @@ mpg
 ;; Bars become wedges -- bar width maps to angle, height to radius:
 
 (-> (view iris :species)
-    (layer (bar))
+    (lay (bar))
     (set-coord :polar)
     plot)
 
@@ -2362,7 +2376,7 @@ mpg
 ;; Stacking works the same way in polar coords:
 
 (-> (view mpg :class)
-    (layer (stacked-bar {:color :drv}))
+    (lay (stacked-bar {:color :drv}))
     (set-coord :polar)
     plot)
 
@@ -2446,11 +2460,11 @@ mpg
 
 ;; ### 🧪 Annotations
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layers (point {:color :species})
-            (hline 3.0)
-            (hband 2.5 3.5)
-            (vline 6.0))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species})
+         (hline 3.0)
+         (hband 2.5 3.5)
+         (vline 6.0))
     plot)
 
 ;; ### 🧪 Text Labels at Group Means
@@ -2460,10 +2474,10 @@ mpg
                 (tc/aggregate {:sepal-length #(dfn/mean (% :sepal-length))
                                :sepal-width #(dfn/mean (% :sepal-width))
                                :species #(first (% :species))}))]
-  (-> (views iris [[:sepal-length :sepal-width]])
-      (layers (point {:color :species}))
-      (concat (-> (views means [[:sepal-length :sepal-width]])
-                  (layer (text-label :species))))
+  (-> (view iris [[:sepal-length :sepal-width]])
+      (lay (point {:color :species}))
+      (concat (-> (view means [[:sepal-length :sepal-width]])
+                  (lay (text-label :species))))
       plot))
 
 ;; ---
@@ -2476,16 +2490,16 @@ mpg
 ;;
 ;; `:size` maps a numerical column to circle radius:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (point {:color :species :size :petal-length}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species :size :petal-length}))
     plot)
 
 ;; ### 🧪 Shape Aesthetic
 ;;
 ;; `:shape` maps a categorical column to marker shape:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (point {:color :species :shape :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species :shape :species}))
     plot)
 
 ;; ---
@@ -2607,31 +2621,31 @@ mpg
 ;;
 ;; `:tooltip true` adds mouseover labels showing data values:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (point {:color :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
     (plot {:tooltip true}))
 ;; ### 🧪 Brushable Scatter
 ;;
 ;; `:brush true` adds a drag-to-select rectangle:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (point {:color :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
     (plot {:brush true}))
 
 ;; ### 🧪 Brushable SPLOM (Cross-Panel)
 ;;
 ;; Brush in one panel highlights the same rows across all panels:
 
-(-> (views iris (cross iris-quantities iris-quantities))
-    (layer {:color :species})
+(-> (view iris (cross iris-quantities iris-quantities))
+    (lay {:color :species})
     (plot {:brush true}))
 
 ;; ### 🧪 Brushable Facets
 ;;
 ;; Cross-panel brushing works on faceted plots too:
 
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layer (point {:color :species}))
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
     (facet :species)
     (plot {:brush true}))
 
@@ -2647,26 +2661,26 @@ mpg
 
 (let [data (tc/dataset {:x [1 2 nil 4 5 6 nil 8]
                         :y [2 4 6 nil 10 12 14 16]})]
-  (-> (views data [[:x :y]])
-      (layer (point))
+  (-> (view data [[:x :y]])
+      (lay (point))
       plot))
 
 ;; ### 🧪 Single Point
 ;;
 ;; Edge case: one data point still produces a valid plot:
 
-(-> (views {:x [5] :y [10]}
-           [[:x :y]])
-    (layer (point))
+(-> (view {:x [5] :y [10]}
+          [[:x :y]])
+    (lay (point))
     plot)
 
 ;; ### 🧪 Single Category
 ;;
 ;; Edge case: one bar still renders with correct axis:
 
-(-> (views {:cat ["A"] :val [42]}
-           [[:cat :val]])
-    (layer (value-bar))
+(-> (view {:cat ["A"] :val [42]}
+          [[:cat :val]])
+    (lay (value-bar))
     plot)
 
 ;; ---
@@ -2711,35 +2725,27 @@ mpg
 ;; All visual constants -- colors, margins, radii -- live in one `defaults`
 ;; map that can be overridden per-plot via `:config`.
 ;;
-;; ### 📖 Composition in hindsight
+;; ### 📖 Composition, reviewed
 ;;
-;; The compositional core of this notebook is small: `views` and `cross`
-;; handle the *what* (which columns, which pairings), while `layer`, `layers`,
+;; The compositional core of this notebook is small: `view` and `cross`
+;; handle the *what* (which columns, which pairings), while `lay`
 ;; and the mark constructors handle the *how* (which marks, which stats).
 ;; Faceting, scale/coord setters, and view selectors like `when-off-diagonal`
 ;; round out the user-facing API. After building the whole thing, a few
 ;; observations stand out.
 ;;
-;; **`cross` earns its name.**
-;; Under the hood it is just Clojure's `for`, but giving it a name makes the
-;; intent legible. `(cross cols cols)` reads as "all pairs of these columns,"
-;; which is exactly what a SPLOM needs. A raw `for` comprehension would do
-;; the same work, but the reader would have to puzzle out the intent.
+;; **`view` accepts several forms.**
+;; Two keywords for the common case `(view data :x :y)`, a vector of
+;; pairs for grids `(view data [[:x :y] [:x :z]])`, a single keyword
+;; for histograms, a map for extra bindings. Earlier versions had
+;; separate `view` and `views` functions; unifying them removed a
+;; source of confusion without losing any expressiveness.
 ;;
-;; **`views` syntax is heavy for the common case.**
-;; Every call looks like `(views data [[:x :y]])` -- the nested vector is
-;; necessary for multi-pair grids, but it feels awkward when you just want a
-;; single scatter plot. The convenience function `(view data :x :y)` exists
-;; for this case, but having both `view` and `views` is easy to trip over.
-;; A future design might accept both forms in a single function.
-;;
-;; **`layer` vs `layers` is easy to confuse.**
-;; `layer` merges one set of overrides into every view. `layers` applies
-;; multiple layers by duplicating each view -- once per layer. The names are
-;; almost identical, but the operations differ in kind: one is a merge, the
-;; other duplicates views. Better naming would help -- perhaps `apply-layer`
-;; and `apply-layers`, or dropping `layer` entirely in favor of always using
-;; `layers` (which already handles the single-layer case).
+;; **`lay` unifies single and multi-layer application.**
+;; Earlier versions had separate `layer` (merge one spec) and `layers`
+;; (duplicate views per spec). The names were almost identical but the
+;; operations differed in kind. `lay` handles both: one argument merges,
+;; multiple arguments duplicate.
 ;;
 ;; **No boxplot yet.**
 ;; When a view pairs a categorical column with a numerical one, the system
@@ -2792,7 +2798,7 @@ mpg
 ;; themselves.
 ;;
 ;; **Partial validation.**
-;; `view` and `views` check that the specified columns actually exist in the
+;; `view` checks that the specified columns actually exist in the
 ;; dataset, which catches typos early. But marks, stats, and `plot` options
 ;; are not validated at all -- a misspelled `:mark :piont` or `:stat :bni`
 ;; will fail silently or produce a confusing error deep inside `render-panel`.
@@ -2824,7 +2830,7 @@ mpg
 ;; community thinks:
 ;;
 ;; - **Composition style:** Should the operators feel algebraic (`=*`/`=+`,
-;;   as in Part 1) or explicit (`views`/`layer`, as here)? The algebraic
+;;   as in Part 1) or explicit (`view`/`lay`, as here)? The algebraic
 ;;   style is more concise; the explicit style is easier to learn.
 ;;
 ;; - **Rendering targets:** Should we commit to SVG, or design for multiple
