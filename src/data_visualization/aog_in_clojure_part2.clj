@@ -98,7 +98,7 @@
 ;; The [SPLOM Tutorial](splom_tutorial.html) builds a colored
 ;; [scatterplot matrix](https://en.wikipedia.org/wiki/Scatter_plot#Scatter_plot_matrices)
 ;; with regression lines by hand: manual grid offsets, explicit scale
-;; computation, per-panel rendering loops. The result is impressive
+;; computation, per-panel rendering loops. The result is nice
 ;; but the code is long and tightly coupled to one layout.
 ;;
 ;; Here is that 4x4 SPLOM, rendered from that tutorial:
@@ -462,7 +462,7 @@ mpg
 (def defaults
   {;; Layout
    :width 600 :height 400
-   :margin 25 :margin-multi 15 :legend-width 100
+   :margin 25 :margin-multi 15 :panel-size 200 :legend-width 100
    ;; Ticks
    :tick-spacing-x 60 :tick-spacing-y 40
    ;; Points
@@ -1362,9 +1362,12 @@ mpg
                 (count y-vars))
          multi? (and (= layout-type :multi-variable) (> cols 1) (> rows 1))
          m (if multi? (:margin-multi cfg) (:margin cfg))
-         pw0 (double (/ width cols)) ph0 (double (/ height rows))
-         pw (if multi? (min pw0 ph0) pw0)
-         ph (if multi? (min pw0 ph0) ph0)
+         pw (if multi?
+              (double (:panel-size cfg))
+              (double (/ width cols)))
+         ph (if multi?
+              (double (:panel-size cfg))
+              (double (/ height rows)))
          stat-results (mapv (comp compute-stat #(assoc % :cfg cfg) resolve-view) non-ann-views)
          all-colors (let [color-views (filter #(and (:color %) (:data %)) views)]
                       (when (seq color-views)
