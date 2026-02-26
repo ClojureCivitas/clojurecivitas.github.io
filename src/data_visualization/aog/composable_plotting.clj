@@ -11,7 +11,7 @@
                   :toc-depth 2
                   :image "aog_iris.png"
                   :draft true}}}
-(ns data-visualization.aog.aog-in-clojure-part2
+(ns data-visualization.aog.composable-plotting
   (:require [tablecloth.api :as tc]
             [scicloj.kindly.v4.kind :as kind]))
 
@@ -158,7 +158,7 @@
 
 ;; ### ⚙️ Dependencies
 
-(ns data-visualization.aog.aog-in-clojure-part2
+(ns data-visualization.aog.composable-plotting
   (:require
    ;; Tablecloth - dataset manipulation
    [tablecloth.api :as tc]
