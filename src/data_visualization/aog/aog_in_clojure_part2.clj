@@ -11,7 +11,7 @@
                   :toc-depth 2
                   :image "aog_iris.png"
                   :draft true}}}
-(ns data-visualization.aog-in-clojure-part2
+(ns data-visualization.aog.aog-in-clojure-part2
   (:require [tablecloth.api :as tc]
             [scicloj.kindly.v4.kind :as kind]))
 
@@ -158,7 +158,7 @@
 
 ;; ### ⚙️ Dependencies
 
-(ns data-visualization.aog-in-clojure-part2
+(ns data-visualization.aog.aog-in-clojure-part2
   (:require
    ;; Tablecloth - dataset manipulation
    [tablecloth.api :as tc]
@@ -740,6 +740,10 @@ mpg
 ;; - **pw, ph** -- panel width and height in pixels
 ;; - **m** -- margin in pixels
 
+(defmulti render-grid
+  "Render grid lines for a panel."
+  (fn [coord-type sx sy pw ph m cfg] coord-type))
+
 (defmulti make-coord
   "Build a coordinate function: (coord data-x data-y) -> [pixel-x pixel-y].
    Dispatches on coord-type keyword."
@@ -895,10 +899,6 @@ mpg
    :tick-count-narrow (tick-count 120 60)})
 
 ;; ### ⚙️ Grid and Tick Rendering
-
-(defmulti render-grid
-  "Render grid lines for a panel."
-  (fn [coord-type sx sy pw ph m cfg] coord-type))
 
 (defmethod render-grid :cartesian [_ sx sy pw ph m cfg]
   (let [cfg (or cfg defaults)
@@ -1153,6 +1153,81 @@ mpg
 (defmethod arrange-panels :single [_ ctx]
   (let [panel-views (concat (:non-ann-views ctx) (:ann-views ctx))]
     [[:g (panel-from-ctx ctx panel-views)]]))
+
+;; ### ⚙️ `arrange-panels` `:multi-variable`
+
+(defmethod arrange-panels :multi-variable [_ ctx]
+  (let [{:keys [non-ann-views ann-views pw ph x-vars y-vars rows cols polar?]} ctx
+        ;; Per-variable domains: each column shares its x-variable's domain,
+        ;; each row shares its y-variable's domain (excluding diagonal histograms).
+        var-domain (fn [var-key views-seq]
+                     (let [scatter-views (filter #(not= (:x %) (:y %)) views-seq)
+                           stats (map (comp compute-stat #(assoc % :cfg (:cfg ctx)) resolve-view) scatter-views)
+                           doms (keep var-key stats)
+                           num-doms (filter #(number? (first %)) doms)]
+                       (when (seq num-doms)
+                         (pad-domain [(reduce min (map first num-doms))
+                                      (reduce max (map second num-doms))]
+                                     {:type :linear}))))
+        col-x-doms (into {} (for [xv x-vars]
+                              [xv (var-domain :x-domain (filter #(= xv (:x %)) non-ann-views))]))
+        row-y-doms (into {} (for [yv y-vars]
+                              [yv (var-domain :y-domain (filter #(= yv (:y %)) non-ann-views))]))]
+    (for [[ri yv] (map-indexed vector y-vars)
+          [ci xv] (map-indexed vector x-vars)
+          :let [panel-views (concat (filter #(and (= xv (:x %)) (= yv (:y %))) non-ann-views)
+                                    ann-views)
+                diagonal? (= xv yv)]]
+      (when (seq panel-views)
+        [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
+         (panel-from-ctx ctx panel-views
+                         :show-x? (= ri (dec rows))
+                         :show-y? (zero? ci)
+                         :x-domain (get col-x-doms xv)
+                         :y-domain (when-not diagonal? (get row-y-doms yv)))
+         (when (and (zero? ri) (not polar?))
+           [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
+                   :font-size 9 :fill "#333"} (fmt-name xv)])
+         (when (and (= ci (dec cols)) (not polar?))
+           [:text {:x (- pw 5) :y (/ ph 2) :text-anchor "end"
+                   :font-size 9 :fill "#333"
+                   :transform (str "rotate(-90," (- pw 5) "," (/ ph 2) ")")}
+            (fmt-name yv)])]))))
+
+;; ### ⚙️ `arrange-panels` `:facet`
+
+(defmethod arrange-panels :facet [_ ctx]
+  (let [{:keys [non-ann-views ann-views pw ph facet-vals]} ctx]
+    (for [[ci fv] (map-indexed vector facet-vals)
+          :let [fviews (concat (filter #(= fv (:facet-val %)) non-ann-views)
+                               ann-views)]]
+      [:g {:transform (str "translate(" (* ci pw) ",0)")}
+       (panel-from-ctx ctx fviews :show-y? (zero? ci))
+       [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
+               :font-size 10 :fill "#333"} (str fv)]])))
+
+;; ### ⚙️ `arrange-panels` `:facet-grid`
+
+(defmethod arrange-panels :facet-grid [_ ctx]
+  (let [{:keys [non-ann-views ann-views pw ph facet-row-vals facet-col-vals rows cols]} ctx]
+    (for [[ri rv] (map-indexed vector facet-row-vals)
+          [ci cv] (map-indexed vector facet-col-vals)
+          :let [panel-views (concat (filter #(and (= rv (:facet-row %))
+                                                  (= cv (:facet-col %))) non-ann-views)
+                                    ann-views)]]
+      (when (seq panel-views)
+        [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
+         (panel-from-ctx ctx panel-views
+                         :show-x? (= ri (dec rows))
+                         :show-y? (zero? ci))
+         (when (zero? ri)
+           [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
+                   :font-size 10 :fill "#333"} (str cv)])
+         (when (= ci (dec cols))
+           [:text {:x (- pw 5) :y (/ ph 2) :text-anchor "end"
+                   :font-size 10 :fill "#333"
+                   :transform (str "rotate(-90," (- pw 5) "," (/ ph 2) ")")}
+            (str rv)])]))))
 
 ;; ### ⚙️ `render-legend`
 
@@ -2153,81 +2228,6 @@ mpg
     (views [[:sepal-length :sepal-width]])
     (facet :species)
     kind/pprint)
-
-;; ### ⚙️ `arrange-panels` `:multi-variable`
-
-(defmethod arrange-panels :multi-variable [_ ctx]
-  (let [{:keys [non-ann-views ann-views pw ph x-vars y-vars rows cols polar?]} ctx
-        ;; Per-variable domains: each column shares its x-variable's domain,
-        ;; each row shares its y-variable's domain (excluding diagonal histograms).
-        var-domain (fn [var-key views-seq]
-                     (let [scatter-views (filter #(not= (:x %) (:y %)) views-seq)
-                           stats (map (comp compute-stat #(assoc % :cfg (:cfg ctx)) resolve-view) scatter-views)
-                           doms (keep var-key stats)
-                           num-doms (filter #(number? (first %)) doms)]
-                       (when (seq num-doms)
-                         (pad-domain [(reduce min (map first num-doms))
-                                      (reduce max (map second num-doms))]
-                                     {:type :linear}))))
-        col-x-doms (into {} (for [xv x-vars]
-                              [xv (var-domain :x-domain (filter #(= xv (:x %)) non-ann-views))]))
-        row-y-doms (into {} (for [yv y-vars]
-                              [yv (var-domain :y-domain (filter #(= yv (:y %)) non-ann-views))]))]
-    (for [[ri yv] (map-indexed vector y-vars)
-          [ci xv] (map-indexed vector x-vars)
-          :let [panel-views (concat (filter #(and (= xv (:x %)) (= yv (:y %))) non-ann-views)
-                                    ann-views)
-                diagonal? (= xv yv)]]
-      (when (seq panel-views)
-        [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
-         (panel-from-ctx ctx panel-views
-                         :show-x? (= ri (dec rows))
-                         :show-y? (zero? ci)
-                         :x-domain (get col-x-doms xv)
-                         :y-domain (when-not diagonal? (get row-y-doms yv)))
-         (when (and (zero? ri) (not polar?))
-           [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
-                   :font-size 9 :fill "#333"} (fmt-name xv)])
-         (when (and (= ci (dec cols)) (not polar?))
-           [:text {:x (- pw 5) :y (/ ph 2) :text-anchor "end"
-                   :font-size 9 :fill "#333"
-                   :transform (str "rotate(-90," (- pw 5) "," (/ ph 2) ")")}
-            (fmt-name yv)])]))))
-
-;; ### ⚙️ `arrange-panels` `:facet`
-
-(defmethod arrange-panels :facet [_ ctx]
-  (let [{:keys [non-ann-views ann-views pw ph facet-vals]} ctx]
-    (for [[ci fv] (map-indexed vector facet-vals)
-          :let [fviews (concat (filter #(= fv (:facet-val %)) non-ann-views)
-                               ann-views)]]
-      [:g {:transform (str "translate(" (* ci pw) ",0)")}
-       (panel-from-ctx ctx fviews :show-y? (zero? ci))
-       [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
-               :font-size 10 :fill "#333"} (str fv)]])))
-
-;; ### ⚙️ `arrange-panels` `:facet-grid`
-
-(defmethod arrange-panels :facet-grid [_ ctx]
-  (let [{:keys [non-ann-views ann-views pw ph facet-row-vals facet-col-vals rows cols]} ctx]
-    (for [[ri rv] (map-indexed vector facet-row-vals)
-          [ci cv] (map-indexed vector facet-col-vals)
-          :let [panel-views (concat (filter #(and (= rv (:facet-row %))
-                                                  (= cv (:facet-col %))) non-ann-views)
-                                    ann-views)]]
-      (when (seq panel-views)
-        [:g {:transform (str "translate(" (* ci pw) "," (* ri ph) ")")}
-         (panel-from-ctx ctx panel-views
-                         :show-x? (= ri (dec rows))
-                         :show-y? (zero? ci))
-         (when (zero? ri)
-           [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
-                   :font-size 10 :fill "#333"} (str cv)])
-         (when (= ci (dec cols))
-           [:text {:x (- pw 5) :y (/ ph 2) :text-anchor "end"
-                   :font-size 10 :fill "#333"
-                   :transform (str "rotate(-90," (- pw 5) "," (/ ph 2) ")")}
-            (str rv)])]))))
 
 ;; ### 🧪 SPLOM ([Scatterplot Matrix](https://en.wikipedia.org/wiki/Scatter_plot#Scatter_plot_matrices))
 ;;
