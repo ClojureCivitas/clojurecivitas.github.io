@@ -238,7 +238,7 @@ mpg
 
 ;; ### ⚙️ Views
 
-(defn- parse-view-spec
+(defn parse-view-spec
   "Parse a view spec: a keyword becomes a single-variable view (histogram),
   a vector becomes {:x ... :y ...}, a map passes through."
   [spec]
@@ -247,11 +247,11 @@ mpg
     (map? spec) spec
     :else {:x (first spec) :y (second spec)}))
 
-(def ^:private column-keys
+(def column-keys
   "View keys whose values are column names in the dataset."
   #{:x :y :color :size :shape})
 
-(defn- validate-columns
+(defn validate-columns
   "Check that every column-referencing key in view-map names a real column in ds.
   Also usable as (validate-columns ds :facet col) for a single named check."
   ([ds view-map]
@@ -377,20 +377,20 @@ mpg
 
 ;; ### ⚙️ Color and Shape Helpers
 
-(defn- fmt-name
+(defn fmt-name
   "Format a keyword as a readable name: :sepal-length -> \"sepal length\"."
   [k]
   (str/replace (name k) #"[-_]" " "))
 
-(defn- color-for
+(defn color-for
   "Look up the color for a categorical value from the palette."
   [categories val]
   (let [idx (.indexOf categories val)]
     (nth ggplot-palette (mod (if (neg? idx) 0 idx) (count ggplot-palette)))))
 
-(def ^:private shape-syms [:circle :square :triangle :diamond])
+(def shape-syms [:circle :square :triangle :diamond])
 
-(defn- render-shape-elem
+(defn render-shape-elem
   "Render a shape element (circle, square, triangle, diamond) at (cx, cy) with radius r."
   [shape cx cy r fill opts]
   (case shape
@@ -479,7 +479,7 @@ mpg
 
 ;; ### ⚙️ Column Type Detection
 
-(defn- column-type
+(defn column-type
   "Classify a dataset column as :categorical or :numerical.
   Uses Tablecloth's tcc/typeof when available, falls back to value inspection."
   [ds col]
@@ -591,12 +591,12 @@ mpg
 
 ;; ### ⚙️ Shared Helpers
 
-(defn- numeric-extent
+(defn numeric-extent
   "Min/max pair from a numeric column."
   [col]
   [(dfn/reduce-min col) (dfn/reduce-max col)])
 
-(defn- group-by-columns
+(defn group-by-columns
   "Split dataset by grouping columns, apply f to each group.
   f takes [dataset group-key]. group-key is nil when no grouping,
   a single value for one column, a vector for multiple columns."
@@ -626,7 +626,7 @@ mpg
 ;; Cleanup (drop-missing, row indexing), domain computation,
 ;; and grouping via `group-by-columns`. Used by `:identity` below.
 
-(defn- prepare-points
+(defn prepare-points
   "Clean data, compute domains, group by columns, extract aesthetics.
   Expects a resolved view (with :x-type, :group already filled in)."
   [view]
@@ -668,15 +668,15 @@ mpg
 
 ;; ### ⚙️ `make-scale`
 
-(defn- numeric-domain?
+(defn numeric-domain?
   [dom]
   (and (sequential? dom) (seq dom) (number? (first dom))))
 
-(defn- categorical-domain?
+(defn categorical-domain?
   [dom]
   (and (sequential? dom) (seq dom) (not (number? (first dom)))))
 
-(defn- scale-kind
+(defn scale-kind
   "Determine the scale kind from domain and scale-spec."
   [domain scale-spec]
   (cond
@@ -695,7 +695,7 @@ mpg
 (defmethod make-scale :linear [domain pixel-range _]
   (ws/scale :linear {:domain domain :range pixel-range}))
 
-(defn- pad-domain
+(defn pad-domain
   "Add padding to a numeric domain. For log scales, use multiplicative padding."
   [[lo hi] scale-spec]
   (if (= :log (:type scale-spec))
@@ -873,7 +873,7 @@ mpg
 
 ;; ### ⚙️ Tick Helpers
 
-(defn- format-ticks
+(defn format-ticks
   "Format tick values: strip .0 when all ticks are whole numbers."
   [sx ticks]
   (let [labels (ws/format sx ticks)]
@@ -881,7 +881,7 @@ mpg
       (mapv #(str (long %)) ticks)
       labels)))
 
-(defn- tick-count
+(defn tick-count
   "Suggested tick count based on available pixel range."
   [pixel-range spacing]
   (max 2 (int (/ pixel-range spacing))))
@@ -964,7 +964,7 @@ mpg
 ;; It computes stats, merges domains, builds scales, and dispatches
 ;; rendering through multimethods.
 
-(def ^:private annotation-marks #{:rule-h :rule-v :band-h})
+(def annotation-marks #{:rule-h :rule-v :band-h})
 
 (defmulti render-annotation
   "Render a single annotation view. Dispatches on (:mark ann).
@@ -1124,7 +1124,7 @@ mpg
   "Arrange panels into an SVG layout. Dispatches on layout type."
   (fn [layout-type ctx] layout-type))
 
-(defn- panel-from-ctx
+(defn panel-from-ctx
   "Call render-panel with common args from ctx. Overrides via kwargs."
   [ctx panel-views & {:keys [show-x? show-y? x-domain y-domain]
                       :or {show-x? true show-y? true}}]
@@ -1137,7 +1137,7 @@ mpg
                 :shape-categories (:shape-categories ctx)
                 :cfg (:cfg ctx)))
 
-(defn- infer-layout [views]
+(defn infer-layout [views]
   (let [facet-rows (seq (remove nil? (map :facet-row views)))
         facet-cols (seq (remove nil? (map :facet-col views)))
         facet-vals (seq (remove nil? (map :facet-val views)))]
@@ -1156,7 +1156,7 @@ mpg
 
 ;; ### ⚙️ `render-legend`
 
-(defn- render-legend [categories color-fn & {:keys [x y title]}]
+(defn render-legend [categories color-fn & {:keys [x y title]}]
   [:g {:font-family "sans-serif" :font-size 10}
    (when title [:text {:x x :y (- y 5) :fill "#333" :font-size 9} (fmt-name title)])
    (for [[i cat] (map-indexed vector categories)]
@@ -1174,7 +1174,7 @@ mpg
 ;; Wraps SVG with [Scittle](https://github.com/babashka/scittle) scripts
 ;; for tooltip and/or brush interactions.
 
-(defn- tooltip-script
+(defn tooltip-script
   "Scittle script for custom tooltips on elements with data-tooltip attribute."
   [div-id]
   (list 'let ['container (list '.getElementById 'js/document div-id)
@@ -1199,7 +1199,7 @@ mpg
            (.addEventListener svg "mouseout" hide!)
            (.addEventListener svg "mousemove" move!))))
 
-(defn- brush-script
+(defn brush-script
   "Scittle script for drag-to-select brush interaction."
   [div-id]
   (list 'let ['svg (list '.querySelector 'js/document (str "#" div-id " svg"))
@@ -1259,7 +1259,7 @@ mpg
                                                       (.setAttribute p "opacity" "1.0")
                                                       (.setAttribute p "opacity" "0.15")))))))))))))
 
-(def ^:private tooltip-css
+(def tooltip-css
   ".aog-tooltip { display:none; position:absolute; pointer-events:none; background:rgba(0,0,0,0.8); color:#fff; padding:6px 10px; border-radius:4px; font-family:sans-serif; font-size:13px; white-space:nowrap; z-index:10; }")
 
 (defn wrap-plot
@@ -1290,7 +1290,7 @@ mpg
 
 ;; ### ⚙️ Domain Helpers
 
-(defn- collect-domain
+(defn collect-domain
   "Collect and merge domains from stat-results along axis-key (:x-domain or :y-domain).
    Returns a padded numeric domain or a distinct categorical domain."
   [stat-results axis-key scale-spec]
@@ -1302,7 +1302,7 @@ mpg
         (pad-domain [(reduce min vals) (reduce max vals)] scale-spec)
         (distinct vals)))))
 
-(defn- compute-global-y-domain
+(defn compute-global-y-domain
   "Compute the global y-domain, handling stacked bar accumulation."
   [stat-results views scale-spec]
   (let [has-stacked? (some #(= :stack (:position %)) views)]
@@ -1647,7 +1647,7 @@ mpg
 
 ;; ### ⚙️ `compute-stat` `:lm`
 
-(defn- fit-lm
+(defn fit-lm
   "Fit a linear model on xs-col and ys-col, return {:x1 :y1 :x2 :y2}."
   [xs-col ys-col]
   (let [model (regr/lm (double-array ys-col) (double-array xs-col))
@@ -1851,7 +1851,7 @@ mpg
 
 ;; ### ⚙️ Categorical Bar Helpers
 
-(defn- munch-arc
+(defn munch-arc
   "Sample points along an arc for polar bar rendering."
   [coord-px px-lo px-hi py-lo py-hi n-seg]
   (let [outer (for [i (range (inc n-seg))
@@ -1865,7 +1865,7 @@ mpg
     (str/join " " (map (fn [[x y]] (str x "," y))
                        (concat outer inner)))))
 
-(defn- render-bar-elem
+(defn render-bar-elem
   "Render a bar as rect (cartesian) or polygon (polar)."
   [coord-px x-lo x-hi py-lo py-hi color cfg]
   (let [opacity (:bar-opacity cfg)]
@@ -1877,7 +1877,7 @@ mpg
               :height (Math/abs (- py-lo py-hi))
               :fill color :opacity opacity}])))
 
-(defn- render-categorical-bars
+(defn render-categorical-bars
   [stat ctx]
   (let [{:keys [all-colors sx sy coord-px position cfg]} ctx
         cfg (or cfg defaults)
@@ -1920,7 +1920,7 @@ mpg
                             (render-bar-elem coord-px x-lo x-hi py-lo py-hi c cfg))))))
                   (range) (:bars stat)))))
 
-(defn- render-value-bars
+(defn render-value-bars
   [stat ctx]
   (let [{:keys [all-colors sx sy coord-px position cfg]} ctx
         cfg (or cfg defaults)
