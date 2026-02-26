@@ -114,7 +114,6 @@
 ;;
 ;; ```clojure
 ;; (-> (views iris (cross iris-quantities iris-quantities))
-;;     auto
 ;;     (layer {:color :species})
 ;;     (plot {:brush true}))
 ;; ```
@@ -949,9 +948,9 @@ mpg
 
         ;; Compute stats for data views (not annotations)
         view-stats (for [v panel-views
-                         :when (and (:mark v) (not (annotation-marks (:mark v))))]
-                     (let [rv (resolve-view v)
-                           stat (compute-stat (assoc rv :cfg cfg))]
+                         :let [rv (resolve-view v)]
+                         :when (and (:mark rv) (not (annotation-marks (:mark rv))))]
+                     (let [stat (compute-stat (assoc rv :cfg cfg))]
                        {:view rv :stat stat}))
 
         ;; Merge domains from stats
@@ -1312,7 +1311,7 @@ mpg
                 (count y-vars))
          multi? (and (= layout-type :multi-variable) (> cols 1) (> rows 1))
          m (if multi? (:margin-multi cfg) (:margin cfg))
-         pw0 (/ width cols) ph0 (/ height rows)
+         pw0 (double (/ width cols)) ph0 (double (/ height rows))
          pw (if multi? (min pw0 ph0) pw0)
          ph (if multi? (min pw0 ph0) ph0)
          stat-results (mapv (comp compute-stat #(assoc % :cfg cfg) resolve-view) non-ann-views)
@@ -1511,6 +1510,56 @@ mpg
 
 ;; ---
 
+;; ## Line Charts
+;;
+;; Lines connecting raw data points, using the `:line` mark
+;; with `:identity` stat. The same `render-mark :line` handles
+;; both raw lines and regression/loess fits.
+
+;; ### ⚙️ Layer Spec
+
+(defn line-mark
+  ([] {:mark :line :stat :identity})
+  ([opts] (merge {:mark :line :stat :identity} opts)))
+
+;; ### 🧪 Line Chart (Connecting Raw Points)
+
+(-> (views {:year [2018 2019 2020 2021 2022]
+            :sales [10 15 13 17 20]}
+           [[:year :sales]])
+    (layer (line-mark))
+    plot)
+
+;; ### 🧪 Colored Line Chart
+
+(-> (views {:year [2018 2019 2020 2021 2022 2018 2019 2020 2021 2022]
+            :sales [10 15 13 17 20 8 12 11 14 18]
+            :region ["East" "East" "East" "East" "East"
+                     "West" "West" "West" "West" "West"]}
+           [[:year :sales]])
+    (layer (line-mark {:color :region}))
+    plot)
+
+;; ### 🧪 Scatter + Line Overlay
+
+(-> (views {:year [2018 2019 2020 2021 2022]
+            :sales [10 15 13 17 20]}
+           [[:year :sales]])
+    (layers (point) (line-mark))
+    plot)
+
+;; ### 🧪 Colored Scatter + Line
+
+(-> (views {:year [2018 2019 2020 2021 2022 2018 2019 2020 2021 2022]
+            :sales [10 15 13 17 20 8 12 11 14 18]
+            :region ["East" "East" "East" "East" "East"
+                     "West" "West" "West" "West" "West"]}
+           [[:year :sales]])
+    (layers (point {:color :region}) (line-mark {:color :region}))
+    plot)
+
+;; ---
+
 ;; ## Regression and Smooth Lines
 ;;
 ;; Regression ([OLS](https://en.wikipedia.org/wiki/Ordinary_least_squares) via [Fastmath](https://github.com/generateme/fastmath)) and smooth curves ([LOESS](https://en.wikipedia.org/wiki/Local_regression) interpolation).
@@ -1693,46 +1742,6 @@ mpg
   "Pre-aggregated bars: categorical x, numerical y, no counting."
   ([] {:mark :rect :stat :identity})
   ([opts] (merge {:mark :rect :stat :identity} opts)))
-
-(defn line-mark
-  ([] {:mark :line :stat :identity})
-  ([opts] (merge {:mark :line :stat :identity} opts)))
-
-;; ### 🧪 Line Chart (Connecting Raw Points)
-
-(-> (views {:year [2018 2019 2020 2021 2022]
-            :sales [10 15 13 17 20]}
-           [[:year :sales]])
-    (layer (line-mark))
-    plot)
-
-;; ### 🧪 Colored Line Chart
-
-(-> (views {:year [2018 2019 2020 2021 2022 2018 2019 2020 2021 2022]
-            :sales [10 15 13 17 20 8 12 11 14 18]
-            :region ["East" "East" "East" "East" "East"
-                     "West" "West" "West" "West" "West"]}
-           [[:year :sales]])
-    (layer (line-mark {:color :region}))
-    plot)
-
-;; ### 🧪 Scatter + Line Overlay
-
-(-> (views {:year [2018 2019 2020 2021 2022]
-            :sales [10 15 13 17 20]}
-           [[:year :sales]])
-    (layers (point) (line-mark))
-    plot)
-
-;; ### 🧪 Colored Scatter + Line
-
-(-> (views {:year [2018 2019 2020 2021 2022 2018 2019 2020 2021 2022]
-            :sales [10 15 13 17 20 8 12 11 14 18]
-            :region ["East" "East" "East" "East" "East"
-                     "West" "West" "West" "West" "West"]}
-           [[:year :sales]])
-    (layers (point {:color :region}) (line-mark {:color :region}))
-    plot)
 
 ;; ### ⚙️ `compute-stat` `:count`
 
@@ -1997,35 +2006,16 @@ mpg
 ;; Multiple variables or faceting split views across panels.
 ;; `arrange-panels` multimethod handles layout.
 
-;; ### ⚙️ Auto-Detection
-;;
-;; `resolve-view` already infers `:mark` and `:stat` from column types.
-;; `auto` applies it to every view -- useful for SPLOM grids where
-;; each cell needs different mark/stat depending on whether it's
-;; diagonal (histogram) or off-diagonal (scatter).
-
 (defn diagonal?
   "True if a view maps the same column to both x and y."
   [v]
   (= (:x v) (:y v)))
-
-(defn infer-defaults
-  "Auto-detect mark and stat from column structure.
-  Delegates to `resolve-view`."
-  [v]
-  (resolve-view v))
-
-(defn auto
-  "Apply `infer-defaults` to all views."
-  [views]
-  (mapv infer-defaults views))
 
 ;; ### 🧪 Auto-Detection in Action
 ;;
 ;; Diagonal views (x=y) become histograms, off-diagonal become scatters:
 
 (-> (views iris (cross [:sepal-length :sepal-width] [:sepal-length :sepal-width]))
-    auto
     (->> (mapv #(select-keys % [:x :y :mark :stat]))))
 
 ;; ### ⚙️ Filtering and Conditional Specs
@@ -2047,9 +2037,17 @@ mpg
 
 (let [vs (-> iris
              (views (cross [:sepal-length :sepal-width] [:sepal-length :sepal-width]))
-             auto
              (when-off-diagonal {:color :species}))]
   (mapv #(select-keys % [:x :y :mark :color]) vs))
+
+;; This is useful when diagonal and off-diagonal cells need different
+;; aesthetics. Here, scatters are colored by species while the
+;; overall distribution on the diagonal stays uncolored:
+
+(-> (views iris (cross [:sepal-length :sepal-width :petal-length]
+                       [:sepal-length :sepal-width :petal-length]))
+    (when-off-diagonal {:color :species})
+    plot)
 
 ;; ### ⚙️ Column-Pair Helpers
 
@@ -2105,19 +2103,9 @@ mpg
 (-> iris
     (views [[:sepal-length :sepal-width]])
     (facet :species)
-    count)
+    kind/pprint)
 
 ;; ### ⚙️ `arrange-panels` `:multi-variable`
-
-;; ### 🧪 What `facet` Produces
-;;
-;; Each original view is split into one view per group,
-;; with a `:facet-val` key carrying the group label:
-
-(-> iris
-    (views [[:sepal-length :sepal-width]])
-    (facet :species)
-    (->> (mapv #(select-keys % [:x :y :facet-val]))))
 
 (defmethod arrange-panels :multi-variable [_ ctx]
   (let [{:keys [non-ann-views ann-views pw ph x-vars y-vars rows cols polar?]} ctx
@@ -2194,21 +2182,11 @@ mpg
 
 ;; ### 🧪 SPLOM ([Scatterplot Matrix](https://en.wikipedia.org/wiki/Scatter_plot#Scatter_plot_matrices))
 ;;
-;; Cross all columns with themselves; `auto` maps diagonal -> histogram,
-;; off-diagonal -> scatter:
+;; Cross all columns with themselves; `resolve-view` infers histogram
+;; for diagonal cells and scatter for off-diagonal:
 
 (-> (views iris (cross iris-quantities iris-quantities))
-    auto
     (layer {:color :species})
-    plot)
-
-;; ### 🧪 SPLOM with Explicit View Selectors
-;;
-;; `when-diagonal` and `when-off-diagonal` instead of `auto`:
-
-(-> (views iris (cross iris-quantities iris-quantities))
-    (when-off-diagonal (point {:color :species}))
-    (when-diagonal (histogram {:color :species}))
     plot)
 
 ;; ### 🧪 Faceted Scatter
@@ -2500,7 +2478,6 @@ mpg
 ;; Brush in one panel highlights the same rows across all panels:
 
 (-> (views iris (cross iris-quantities iris-quantities))
-    auto
     (layer {:color :species})
     (plot {:brush true}))
 
@@ -2589,7 +2566,7 @@ mpg
 ;;
 ;; **The histogram idiom `[[:col :col]]` is non-obvious.**
 ;; Mapping x = y signals "same variable for both axes," which
-;; auto-detection turns into a histogram. Conceptually a histogram
+;; inference turns into a histogram. Conceptually a histogram
 ;; has one variable, so the encoding is clever but surprising.
 ;;
 ;; **`plot` options live outside the composition.** Interactivity
