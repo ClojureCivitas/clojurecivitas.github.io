@@ -194,9 +194,9 @@ mpg
 ;; threading) rather than by a direct translation of either system.
 ;; They work in two phases:
 ;;
-;; | Phase              | Operators                                                    | Acts on                      |
-;; |--------------------|--------------------------------------------------------------|------------------------------|
-;; | **What** to plot   | `cross`, `views`                                             | column names to view maps     |
+;; | Phase              | Operators                                                | Acts on                      |
+;; |--------------------|----------------------------------------------------------|------------------------------|
+;; | **What** to plot   | `cross`, `view`, `views`                                | column names to view maps     |
 ;; | **How** to plot    | `layer`, `layers`, layer specs (`point`, `bar`, `lm`, …) | view maps to richer view maps |
 ;;
 ;; Both phases operate on the same unit -- a flat vector of view maps --
@@ -447,14 +447,14 @@ mpg
 (def defaults
   {;; Layout
    :width 600 :height 400
-   :margin 25 :margin-multi 15 :panel-size 200 :legend-width 100
+   :margin 25 :margin-multi 30 :panel-size 200 :legend-width 100
    ;; Ticks
    :tick-spacing-x 60 :tick-spacing-y 40
    ;; Points
    :point-radius 2.5 :point-opacity 0.7
-   :point-stroke "#fff" :point-stroke-width 0.5
+   :point-stroke "none" :point-stroke-width 0
    ;; Bars and lines
-   :bar-opacity 0.7 :line-width 1.5 :grid-stroke-width 0.5
+   :bar-opacity 0.7 :line-width 2 :grid-stroke-width 1.5
    ;; Annotations
    :annotation-stroke "#333" :annotation-dash "4,3" :band-opacity 0.08
    ;; Statistics
