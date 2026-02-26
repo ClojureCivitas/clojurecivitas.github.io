@@ -73,21 +73,6 @@
 ;; Section headers use emoji to indicate content type:
 ;; **📖** narrative, **⚙️** implementation, **🧪** examples.
 ;;
-;; #### Design choices
-;;
-;; Three decisions shape the rendering:
-;;
-;; **1. Wadogo for scales.**
-;; [Wadogo](https://github.com/generateme/wadogo) handles ticks, formatting,
-;; band calculation, and log transforms.
-;;
-;; **2. Stat-driven domains.** Each stat returns `{:x-domain :y-domain}`
-;; alongside its data. A histogram's y-domain is `[0 max-count]`, not the
-;; raw data range, so axes are always correct.
-;;
-;; **3. Single coord function.** One function per coordinate system:
-;; `[data-x data-y] -> [pixel-x pixel-y]`. All marks call it the same way.
-;;
 ;; Everything renders to [SVG](https://en.wikipedia.org/wiki/SVG) via [Hiccup](https://github.com/weavejester/hiccup). The post builds up incrementally:
 ;; scatter plots, histograms, regression lines, bars,
 ;; multi-panel layouts, polar coordinates, and interactivity.
