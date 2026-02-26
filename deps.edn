@@ -61,6 +61,7 @@
 
   generateme/fastmath                         {:mvn/version "3.0.0-alpha4"}
   clojure2d/clojure2d                         {:mvn/version "1.5.0-alpha1"}
+  org.scicloj/wadogo                          {:mvn/version "1.1.0-alpha1"}
 
   com.github.psambit9791/jdsp                 {:mvn/version "3.1.0"}
 
