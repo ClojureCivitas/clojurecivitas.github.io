@@ -759,6 +759,54 @@ mpg
    :center (coord 5 50)
    :top-right (coord 10 100)})
 
+;; ### ⚙️ Flip
+;;
+;; Swaps x and y axes. Histograms become horizontal, bar charts grow sideways.
+
+(defmethod make-coord :flip [_ sx sy pw ph m]
+  (fn [dx dy] [(sx dy) (sy dx)]))
+
+(defmethod render-grid :flip [_ sx sy pw ph m cfg]
+  (render-grid :cartesian sx sy pw ph m cfg))
+
+(defmethod render-grid :default [_ sx sy pw ph m cfg]
+  (render-grid :cartesian sx sy pw ph m cfg))
+
+;; ### ⚙️ Polar
+;;
+;; Maps x to angle and y to radius. Bars become wedges, scatters wrap into a disc.
+
+(defmethod make-coord :polar [_ sx sy pw ph m]
+  (let [cx (/ pw 2.0) cy (/ ph 2.0)
+        r-max (- (min cx cy) m)
+        x-lo (double m) x-span (double (- pw m m))
+        y-lo (double m) y-span (double (- ph m m))]
+    (fn [dx dy]
+      (let [px (sx dx) py (sy dy)
+            t-angle (/ (- px x-lo) (max 1.0 x-span))
+            t-radius (/ (- (+ y-lo y-span) py) (max 1.0 y-span))
+            angle (* 2.0 Math/PI t-angle)
+            radius (* r-max t-radius)]
+        [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
+         (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
+
+(defmethod render-grid :polar [_ sx sy pw ph m cfg]
+  (let [cfg (or cfg defaults)
+        cx (/ pw 2.0) cy (/ ph 2.0)
+        r-max (- (min cx cy) m)]
+    (into [:g]
+          (concat
+           (for [i (range 1 6)
+                 :let [r (* r-max (/ i 5.0))]]
+             [:circle {:cx cx :cy cy :r r :fill "none"
+                       :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])
+           (for [i (range 8)
+                 :let [a (* i (/ Math/PI 4))]]
+             [:line {:x1 cx :y1 cy
+                     :x2 (+ cx (* r-max (Math/cos a)))
+                     :y2 (+ cy (* r-max (Math/sin a)))
+                     :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])))))
+
 ;; ---
 
 ;; ## Drawing Marks
@@ -1491,19 +1539,6 @@ mpg
 (-> (view iris :sepal-length)
     (layer (histogram {:color :species}))
     plot)
-
-;; ### ⚙️ Flip Coordinate
-;;
-;; Swaps x and y axes. Histograms become horizontal.
-
-(defmethod make-coord :flip [_ sx sy pw ph m]
-  (fn [dx dy] [(sx dy) (sy dx)]))
-
-(defmethod render-grid :flip [_ sx sy pw ph m cfg]
-  (render-grid :cartesian sx sy pw ph m cfg))
-
-(defmethod render-grid :default [_ sx sy pw ph m cfg]
-  (render-grid :cartesian sx sy pw ph m cfg))
 
 ;; ### 🧪 Flipped Histogram
 ;;
@@ -2299,39 +2334,6 @@ mpg
     (set-scale :y :log)
     plot)
 
-;; ### ⚙️ Polar Coordinate System
-
-(defmethod make-coord :polar [_ sx sy pw ph m]
-  (let [cx (/ pw 2.0) cy (/ ph 2.0)
-        r-max (- (min cx cy) m)
-        x-lo (double m) x-span (double (- pw m m))
-        y-lo (double m) y-span (double (- ph m m))]
-    (fn [dx dy]
-      (let [px (sx dx) py (sy dy)
-            t-angle (/ (- px x-lo) (max 1.0 x-span))
-            t-radius (/ (- (+ y-lo y-span) py) (max 1.0 y-span))
-            angle (* 2.0 Math/PI t-angle)
-            radius (* r-max t-radius)]
-        [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
-         (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
-
-(defmethod render-grid :polar [_ sx sy pw ph m cfg]
-  (let [cfg (or cfg defaults)
-        cx (/ pw 2.0) cy (/ ph 2.0)
-        r-max (- (min cx cy) m)]
-    (into [:g]
-          (concat
-           (for [i (range 1 6)
-                 :let [r (* r-max (/ i 5.0))]]
-             [:circle {:cx cx :cy cy :r r :fill "none"
-                       :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])
-           (for [i (range 8)
-                 :let [a (* i (/ Math/PI 4))]]
-             [:line {:x1 cx :y1 cy
-                     :x2 (+ cx (* r-max (Math/cos a)))
-                     :y2 (+ cy (* r-max (Math/sin a)))
-                     :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])))))
-
 ;; ### 🧪 Polar Scatter
 ;;
 ;; `set-coord :polar` wraps the same scatter into polar space:
@@ -2558,8 +2560,9 @@ mpg
 ;;
 ;; ### 📖 Composition in hindsight
 ;;
-;; The core API is four functions: `views`, `layer`, `layers`,
-;; and `cross`. After 2000 lines of rendering, some observations.
+;; The compositional core is `views`, `layer`, `layers`, and `cross`.
+;; Layer specs, faceting, scale/coord setters, and view selectors
+;; round out the user-facing API. Some observations after building it all.
 ;;
 ;; **`cross` earns its name.** It is just `for`, but naming it makes
 ;; the SPLOM read as intent: `(cross cols cols)` says "all pairs"
