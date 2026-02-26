@@ -2616,6 +2616,10 @@ mpg
 ;; This post has simpler composition but more rendering features. A future library
 ;; would ideally combine both.
 ;;
+;; [Plotting Datoms: Queries as Visual Mappings](aog/datomframes.html) takes a
+;; different starting point entirely: DataScript queries as the mapping from
+;; data to visual channels, rather than column names in view maps.
+;;
 ;; ### 📖 Open questions
 ;;
 ;; - Composition operators: algebraic feel (`=*`/`=+`) or explicit (`views`/`layer`)?
