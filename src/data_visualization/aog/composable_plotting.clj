@@ -96,7 +96,7 @@
 ;; ::: 
 
 ;; The goal of this post is to build a composable API where
-;; a similar result requires only a few lines:
+;; something like this could produce a similar result:
 ;;
 ;; ```clojure
 ;; (-> (view iris (cross iris-quantities iris-quantities))
@@ -246,7 +246,7 @@ mpg
        (throw (ex-info (str "Column " col " (from " role ") not found in dataset. Available: " (sort col-names))
                        {:key role :column col :available (sort col-names)}))))))
 
-(defn- multi-spec?
+(defn multi-spec?
   "True if specs is a sequence of view specs (pairs, keywords, or maps)
   rather than a single spec."
   [specs]
@@ -329,6 +329,8 @@ mpg
           (merge v overrides))
         views))
 
+;; Defined here (rather than in the Annotations section) because `lay`
+;; needs it to separate annotation specs from data layers.
 (def annotation-marks
   "Marks that are annotations rather than data layers.
   'rule' is the traditional name for a reference line in plotting libraries."
@@ -344,11 +346,15 @@ mpg
             ann-specs)))
 
 ;; ### 🧪 Adding a Mark
+;;
+;; A layer is just a map -- you can write it directly:
 
 (-> {:x [1 2 3] :y [4 5 6] :group ["a" "a" "b"]}
     (view [[:x :y]])
     (lay {:mark :point :color :group})
     kind/pprint)
+
+;; Constructors like `point` below make this more readable.
 
 ;; ### ⚙️ Layer Constructors
 
@@ -795,10 +801,10 @@ mpg
 
 (let [sx (ws/scale :linear {:domain [0 10] :range [25 575]})
       sy (ws/scale :linear {:domain [0 100] :range [375 25]})
-      coord (make-coord :cartesian sx sy 600 400 25)]
-  {:origin (coord 0 0)
-   :center (coord 5 50)
-   :top-right (coord 10 100)})
+      coord-fn (make-coord :cartesian sx sy 600 400 25)]
+  {:origin (coord-fn 0 0)
+   :center (coord-fn 5 50)
+   :top-right (coord-fn 10 100)})
 
 ;; ### ⚙️ Flip
 ;;
@@ -873,11 +879,11 @@ mpg
 
 (defmulti render-mark
   "Render a mark layer. Dispatches on mark keyword.
-  ctx contains :coord, :all-colors, :tooltip-fn, :shape-categories, :sx, :sy, :coord-px, :position."
+  ctx contains :coord-fn, :all-colors, :tooltip-fn, :shape-categories, :sx, :sy, :coord-px, :position."
   (fn [mark stat ctx] mark))
 
 (defmethod render-mark :point [_ stat ctx]
-  (let [{:keys [coord all-colors tooltip-fn shape-categories cfg]} ctx
+  (let [{:keys [coord-fn all-colors tooltip-fn shape-categories cfg]} ctx
         cfg (or cfg defaults)
         size-bufs (keep :sizes (:points stat))
         size-scale (when (seq size-bufs)
@@ -892,7 +898,7 @@ mpg
           (mapcat (fn [{:keys [color xs ys sizes shapes row-indices]}]
                     (let [c (if color (color-for all-colors color) (:default-color cfg))]
                       (for [i (range (count xs))
-                            :let [[px py] (coord (nth xs i) (nth ys i))
+                            :let [[px py] (coord-fn (nth xs i) (nth ys i))
                                   r (if sizes (size-scale (nth sizes i)) (:point-radius cfg))
                                   sh (if shapes (get shape-map (nth shapes i) :circle) :circle)
                                   row-idx (when row-indices (nth row-indices i))
@@ -918,7 +924,7 @@ mpg
       sy (ws/scale :linear {:domain [0 50] :range [375 25]})
       stat {:points [{:xs [2 5 8] :ys [10 30 20]}]}
       cfg (merge defaults {:point-radius 6})
-      ctx {:coord (make-coord :cartesian sx sy 600 400 25)
+      ctx {:coord-fn (make-coord :cartesian sx sy 600 400 25)
            :cfg cfg
            :all-colors nil :tooltip-fn nil :shape-categories nil}
       marks (render-mark :point stat ctx)]
@@ -1024,7 +1030,7 @@ mpg
 
 (defmulti render-annotation
   "Render a single annotation view. Dispatches on (:mark ann).
-   ann-ctx contains :coord, :x-domain, :y-domain."
+   ann-ctx contains :coord-fn, :x-domain, :y-domain."
   (fn [ann ann-ctx] (:mark ann)))
 
 (defmethod render-annotation :default [_ _] [:g])
@@ -1105,17 +1111,17 @@ mpg
         cat-y? (categorical-domain? y-dom')
 
         ;; Build coord function
-        coord (make-coord coord-type sx sy pw ph m)
+        coord-fn (make-coord coord-type sx sy pw ph m)
 
         ;; Pixel-space reprojection for coordinate systems that need arc interpolation
         coord-px (make-coord-px coord-type sx sy pw ph m)
 
         annotation-views (filter #(annotation-marks (:mark %)) panel-views)
 
-        ctx {:coord coord :all-colors all-colors :tooltip-fn tooltip-fn
+        ctx {:coord-fn coord-fn :all-colors all-colors :tooltip-fn tooltip-fn
              :shape-categories shape-categories :sx sx :sy sy :coord-px coord-px
              :cfg cfg}
-        ann-ctx {:coord coord :x-domain merged-x-dom :y-domain merged-y-dom :cfg cfg}]
+        ann-ctx {:coord-fn coord-fn :x-domain merged-x-dom :y-domain merged-y-dom :cfg cfg}]
 
     [:g
      ;; Background
@@ -1452,16 +1458,16 @@ mpg
 ;; Bars projected as 4-corner polygons, works with cartesian, flip, and polar.
 
 (defmethod render-mark :bar [_ stat ctx]
-  (let [{:keys [coord all-colors cfg]} ctx
+  (let [{:keys [coord-fn all-colors cfg]} ctx
         cfg (or cfg defaults)]
     (into [:g]
           (mapcat (fn [{:keys [color bin-maps]}]
                     (let [c (if color (color-for all-colors color) (:default-color cfg))]
                       (for [{:keys [min max count]} bin-maps
-                            :let [[x1 y1] (coord min 0)
-                                  [x2 y2] (coord max 0)
-                                  [x3 y3] (coord max count)
-                                  [x4 y4] (coord min count)]]
+                            :let [[x1 y1] (coord-fn min 0)
+                                  [x2 y2] (coord-fn max 0)
+                                  [x3 y3] (coord-fn max count)
+                                  [x4 y4] (coord-fn min count)]]
                         [:polygon {:points (str x1 "," y1 " " x2 "," y2 " "
                                                 x3 "," y3 " " x4 "," y4)
                                    :fill c :opacity (:bar-opacity cfg)}])))
@@ -1489,7 +1495,7 @@ mpg
 
 (-> (view iris :sepal-length)
     (lay (histogram))
-    (lay {:coord :flip})
+    (coord :flip)
     plot)
 
 ;; ---
@@ -1500,30 +1506,32 @@ mpg
 ;; with `:identity` stat. The same `render-mark :line` handles
 ;; both raw lines and regression/loess fits.
 
-;; ### ⚙️ Layer Constructors
+;; ### ⚙️ Line Constructors
 
 (defn line-mark
+  "Line mark with identity stat. Named `line-mark` to avoid shadowing
+  SVG's [:line] element used elsewhere in this namespace."
   ([] {:mark :line :stat :identity})
   ([opts] (merge {:mark :line :stat :identity} opts)))
 
 ;; ### ⚙️ `render-mark` `:line`
 
 (defmethod render-mark :line [_ stat ctx]
-  (let [{:keys [coord all-colors cfg]} ctx
+  (let [{:keys [coord-fn all-colors cfg]} ctx
         cfg (or cfg defaults)]
     (into [:g]
           (concat
            (when-let [lines (:lines stat)]
              (for [{:keys [color x1 y1 x2 y2]} lines
                    :let [c (if color (color-for all-colors color) (:default-color cfg))
-                         [px1 py1] (coord x1 y1)
-                         [px2 py2] (coord x2 y2)]]
+                         [px1 py1] (coord-fn x1 y1)
+                         [px2 py2] (coord-fn x2 y2)]]
                [:line {:x1 px1 :y1 py1 :x2 px2 :y2 py2
                        :stroke c :stroke-width (:line-width cfg)}]))
            (when-let [pts (:points stat)]
              (for [{:keys [color xs ys]} pts
                    :let [c (if color (color-for all-colors color) (:default-color cfg))
-                         projected (sort-by first (map (fn [x y] (coord x y)) xs ys))]]
+                         projected (sort-by first (map (fn [x y] (coord-fn x y)) xs ys))]]
                [:polyline {:points (str/join " " (map (fn [[px py]] (str px "," py)) projected))
                            :stroke c :stroke-width (:line-width cfg) :fill "none"}]))))))
 
@@ -1549,9 +1557,10 @@ mpg
 
 ;; ## Layers
 ;;
-;; `lay` applies one or more layers to the same base views.
-;; Multiple layers duplicate each view -- once per layer.
-;; Annotation layers (hline, vline, hband) are kept as separate views.
+;; `lay` (defined in [Composing Views](#composing-views)) applies one or
+;; more layers to the same base views. Multiple layers duplicate each
+;; view -- once per layer. Annotation layers (hline, vline, hband) are
+;; kept as separate views.
 
 ;; ### 🧪 What `lay` Produces
 ;;
@@ -1585,7 +1594,7 @@ mpg
 ;;
 ;; Regression ([OLS](https://en.wikipedia.org/wiki/Ordinary_least_squares) via [Fastmath](https://github.com/generateme/fastmath)) and smooth curves ([LOESS](https://en.wikipedia.org/wiki/Local_regression) interpolation).
 
-;; ### ⚙️ Layer Constructors
+;; ### ⚙️ Regression Constructors
 
 (defn lm
   ([] {:mark :line :stat :lm})
@@ -1708,7 +1717,7 @@ mpg
 ;; [dodge](https://ggplot2.tidyverse.org/reference/position_dodge.html)
 ;; (bars side by side) and stack (bars on top of each other).
 
-;; ### ⚙️ Layer Constructors
+;; ### ⚙️ Bar Constructors
 
 (defn bar
   ([] {:mark :rect :stat :count})
@@ -1951,7 +1960,7 @@ mpg
 
 (-> (view iris [[:species :sepal-length]])
     (lay (point {:color :species}))
-    (lay {:coord :flip})
+    (coord :flip)
     plot)
 
 ;; ### 🧪 Numeric-as-Categorical
@@ -2308,9 +2317,9 @@ mpg
 
 ;; ### ⚙️ Scale and Coord Setters
 
-(defn set-scale
+(defn scale
   "Set a scale type for :x or :y across all views."
-  ([views channel type] (set-scale views channel type {}))
+  ([views channel type] (scale views channel type {}))
   ([views channel type opts]
    (let [k (case channel :x :x-scale :y :y-scale)]
      (mapv #(assoc % k (merge {:type type} opts)) views))))
@@ -2320,19 +2329,19 @@ mpg
 (defmethod make-scale :log [domain pixel-range _]
   (ws/scale :log {:domain domain :range pixel-range}))
 
-(defn set-coord
+(defn coord
   "Set coordinate system: :cartesian (default), :flip, or :polar."
   [views c]
   (mapv #(assoc % :coord c) views))
 
 ;; ### 🧪 How Setters Modify Views
 ;;
-;; `set-scale` and `set-coord` add keys to each view map:
+;; `scale` and `coord` add keys to each view map:
 
 (-> (view iris [[:sepal-length :sepal-width]])
     (lay (point))
-    (set-scale :x :log)
-    (set-coord :polar)
+    (scale :x :log)
+    (coord :polar)
     first
     (select-keys [:x :y :mark :x-scale :coord]))
 
@@ -2342,7 +2351,7 @@ mpg
                         :y (mapv #(+ % (* 0.5 (rand))) (range 0.0 3.01 0.1))})]
   (-> (view data [[:x :y]])
       (lay (point))
-      (set-scale :x :log)
+      (scale :x :log)
       plot))
 
 ;; ### 🧪 Log Scale (Y-Axis)
@@ -2350,16 +2359,16 @@ mpg
 (-> (view {:x [1 2 3 4 5] :y [1 10 100 1000 10000]}
           [[:x :y]])
     (lay (point))
-    (set-scale :y :log)
+    (scale :y :log)
     plot)
 
 ;; ### 🧪 Polar Scatter
 ;;
-;; `set-coord :polar` wraps the same scatter into polar space:
+;; `coord :polar` wraps the same scatter into polar space:
 
 (-> (view iris [[:sepal-length :sepal-width]])
     (lay (point {:color :species}))
-    (set-coord :polar)
+    (coord :polar)
     plot)
 
 ;; ### 🧪 Polar Bar Chart ([Rose / Coxcomb](https://en.wikipedia.org/wiki/Coxcomb_diagram))
@@ -2368,7 +2377,7 @@ mpg
 
 (-> (view iris :species)
     (lay (bar))
-    (set-coord :polar)
+    (coord :polar)
     plot)
 
 ;; ### 🧪 Polar Stacked Bar Chart
@@ -2377,7 +2386,7 @@ mpg
 
 (-> (view mpg :class)
     (lay (stacked-bar {:color :drv}))
-    (set-coord :polar)
+    (coord :polar)
     plot)
 
 ;; ---
@@ -2414,32 +2423,32 @@ mpg
  (hband 2.5 3.5)]
 ;; ### ⚙️ `render-annotation` methods
 
-(defmethod render-annotation :rule-h [ann {:keys [coord x-domain cfg]}]
+(defmethod render-annotation :rule-h [ann {:keys [coord-fn x-domain cfg]}]
   (let [cfg (or cfg defaults)
-        [x1 y1] (coord (first x-domain) (:value ann))
-        [x2 y2] (coord (if (categorical-domain? x-domain)
-                         (last x-domain)
-                         (second x-domain))
-                       (:value ann))]
+        [x1 y1] (coord-fn (first x-domain) (:value ann))
+        [x2 y2] (coord-fn (if (categorical-domain? x-domain)
+                            (last x-domain)
+                            (second x-domain))
+                          (:value ann))]
     [:line {:x1 x1 :y1 y1 :x2 x2 :y2 y2
             :stroke (:annotation-stroke cfg) :stroke-width 1
             :stroke-dasharray (:annotation-dash cfg)}]))
 
-(defmethod render-annotation :rule-v [ann {:keys [coord y-domain cfg]}]
+(defmethod render-annotation :rule-v [ann {:keys [coord-fn y-domain cfg]}]
   (let [cfg (or cfg defaults)
-        [x1 y1] (coord (:value ann) (first y-domain))
-        [x2 y2] (coord (:value ann)
-                       (if (categorical-domain? y-domain)
-                         (last y-domain)
-                         (second y-domain)))]
+        [x1 y1] (coord-fn (:value ann) (first y-domain))
+        [x2 y2] (coord-fn (:value ann)
+                          (if (categorical-domain? y-domain)
+                            (last y-domain)
+                            (second y-domain)))]
     [:line {:x1 x1 :y1 y1 :x2 x2 :y2 y2
             :stroke (:annotation-stroke cfg) :stroke-width 1
             :stroke-dasharray (:annotation-dash cfg)}]))
 
-(defmethod render-annotation :band-h [ann {:keys [coord x-domain cfg]}]
+(defmethod render-annotation :band-h [ann {:keys [coord-fn x-domain cfg]}]
   (let [cfg (or cfg defaults)
-        [x1 y1] (coord (first x-domain) (:y1 ann))
-        [x2 y2] (coord (second x-domain) (:y2 ann))]
+        [x1 y1] (coord-fn (first x-domain) (:y1 ann))
+        [x2 y2] (coord-fn (second x-domain) (:y2 ann))]
     [:rect {:x (min x1 x2) :y (min y1 y2)
             :width (Math/abs (- x2 x1)) :height (Math/abs (- y2 y1))
             :fill (:annotation-stroke cfg) :opacity (:band-opacity cfg)}]))
@@ -2447,13 +2456,13 @@ mpg
 ;; ### ⚙️ `render-mark` `:text`
 
 (defmethod render-mark :text [_ stat ctx]
-  (let [{:keys [coord all-colors cfg]} ctx
+  (let [{:keys [coord-fn all-colors cfg]} ctx
         cfg (or cfg defaults)]
     (into [:g {:font-size 9 :fill (:default-color cfg) :text-anchor "middle"}]
           (mapcat (fn [{:keys [color xs ys labels]}]
                     (let [c (if color (color-for all-colors color) (:default-color cfg))]
                       (for [i (range (count xs))
-                            :let [[px py] (coord (nth xs i) (nth ys i))]]
+                            :let [[px py] (coord-fn (nth xs i) (nth ys i))]]
                         [:text {:x px :y (- py 5) :fill c}
                          (str (nth labels i))])))
                   (:points stat)))))
@@ -2730,7 +2739,7 @@ mpg
 ;; The compositional core of this notebook is small: `view` and `cross`
 ;; handle the *what* (which columns, which pairings), while `lay`
 ;; and the mark constructors handle the *how* (which marks, which stats).
-;; Faceting, scale/coord setters, and view selectors like `when-off-diagonal`
+;; Faceting, `scale`, `coord`, and view selectors like `when-off-diagonal`
 ;; round out the user-facing API. After building the whole thing, a few
 ;; observations stand out.
 ;;
@@ -2754,14 +2763,14 @@ mpg
 ;; distributions across groups. Adding a boxplot stat and mark would be a
 ;; natural next step.
 ;;
-;; **The histogram idiom `[[:col :col]]` is non-obvious.**
-;; Mapping the same column to both x and y signals "single-variable
-;; distribution," which inference turns into a histogram. This is
-;; economical -- no special syntax needed -- but it's also surprising.
-;; A reader seeing `[:sepal-length :sepal-length]` for the first time
-;; has to learn that "same column twice" means "histogram." The `distribution`
-;; helper makes this slightly more readable, but the underlying encoding
-;; remains a convention that needs to be explained.
+;; **The histogram convention.**
+;; `(view data :col)` is the simple way to request a histogram --
+;; it maps the same column to both x and y, which inference turns into
+;; a binned distribution. The shorthand is convenient, but the underlying
+;; encoding (same column twice = histogram) is a convention that needs
+;; explaining. Inside `cross` results, pairs like `[:sepal-length :sepal-length]`
+;; appear naturally, and `resolve-view` handles them. The `distribution`
+;; helper makes multi-column cases more readable.
 ;;
 ;; **`plot` options live outside the composition.**
 ;; Interactivity (`:brush`, `:tooltip`), scale sharing (`:scales :free`),
