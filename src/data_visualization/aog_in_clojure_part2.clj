@@ -3,7 +3,7 @@
          :quarto {:type :post
                   :author [:daslu :claude]
                   :date "2026-02-22"
-                  :description "A revised design: wadogo scales, stat-driven domains, single coord function"
+                  :description "Composable plotting with wadogo scales, stat-driven domains, and a single coord function"
                   :category :data-visualization
                   :tags [:datavis :grammar-of-graphics :design :wadogo]
                   :keywords [:datavis]
@@ -146,6 +146,9 @@
 ;; flip swaps the axes, polar wraps them into angle and radius.
 ;;
 ;; **Panel** -- one subplot: background, grid, marks, and tick labels.
+;;
+;; **Facet** -- splitting views by a categorical column,
+;; producing one panel per group.
 ;;
 ;; **Layout** -- how panels are arranged: a single plot,
 ;; a scatterplot matrix, or a faceted grid.
@@ -565,7 +568,7 @@ mpg
 
 (let [v (first (-> iris
                    (views [[:sepal-length :sepal-width]])
-                   (layer (lm))))]
+                   (layer {:mark :line :stat :lm})))]
   (select-keys (resolve-view v) [:x-type :y-type :mark :stat]))
 
 ;; Override defaults per-plot with `:config`:
@@ -1062,7 +1065,7 @@ mpg
    600 400 25)])
 ;; ---
 
-;; ## Composing the Plot
+;; ## Rendering the Plot
 ;;
 ;; `plot` is the main entry point. It computes stats, builds scales,
 ;; and delegates to `arrange-panels` for the SVG layout.
@@ -1371,6 +1374,10 @@ mpg
 
 ;; ---
 
+;; ## Scatter Plots
+;;
+;; The simplest complete plots: data, views, a mark, and `plot`.
+
 ;; ### 🧪 Scatter from Inline Data
 ;;
 ;; A map of columns works as data -- `views` wraps it into a dataset:
@@ -1540,6 +1547,32 @@ mpg
     (layer (line-mark {:color :region}))
     plot)
 
+;; ---
+
+;; ## Layers
+;;
+;; `layer` merges one spec into every view. `layers` stacks multiple
+;; marks on the same base views, duplicating each view per spec.
+;; Annotation specs (hline, vline, hband) are kept as separate views.
+
+;; ### ⚙️ `layers`
+
+(defn layers
+  "Stack multiple layers from the same base views."
+  [base-views & layer-specs]
+  (let [ann-specs (filter #(and (map? %) (annotation-marks (:mark %))) layer-specs)
+        data-specs (remove #(and (map? %) (annotation-marks (:mark %))) layer-specs)]
+    (concat (apply concat (map #(layer base-views %) data-specs))
+            ann-specs)))
+
+;; ### 🧪 What `layers` Produces
+;;
+;; Base views duplicated, each copy with a different mark:
+
+(-> (views iris [[:sepal-length :sepal-width]])
+    (layers (point) (line-mark))
+    (->> (mapv #(select-keys % [:x :y :mark :stat]))))
+
 ;; ### 🧪 Scatter + Line Overlay
 
 (-> (views {:year [2018 2019 2020 2021 2022]
@@ -1670,28 +1703,6 @@ mpg
                [:polyline {:points (str/join " " (map (fn [[px py]] (str px "," py)) projected))
                            :stroke c :stroke-width (:line-width cfg) :fill "none"}]))))))
 
-;; ### ⚙️ Layers
-;;
-;; Stacks multiple marks on the same base views.
-;; Annotation specs (hline, vline, hband) are kept as separate views.
-
-(defn layers
-  "Stack multiple layers from the same base views."
-  [base-views & layer-specs]
-  (let [ann-specs (filter #(and (map? %) (annotation-marks (:mark %))) layer-specs)
-        data-specs (remove #(and (map? %) (annotation-marks (:mark %))) layer-specs)]
-    (concat (apply concat (map #(layer base-views %) data-specs))
-            ann-specs)))
-
-;; ### 🧪 What `layers` Produces
-;;
-;; Base views duplicated, each copy with a different mark:
-
-(-> (views iris [[:sepal-length :sepal-width]])
-    (layers (point {:color :species})
-            (lm {:color :species}))
-    (->> (mapv #(select-keys % [:x :y :mark :stat :color]))))
-
 ;; ### 🧪 Scatter + Regression
 ;;
 ;; `layers` stacks two marks on the same data -- one scatter, one regression line:
@@ -1795,8 +1806,8 @@ mpg
 
 (-> (view iris :species)
     (layer (bar))
-    resolve-view
     first
+    resolve-view
     compute-stat
     kind/pprint)
 
@@ -1956,7 +1967,7 @@ mpg
 
 ;; ### 🧪 Strip Plot (Categorical x, Continuous y)
 ;;
-;; A categorical x with a numerical y: points jitter along the category axis:
+;; A categorical x with a numerical y: points line up along the category axis:
 
 (-> (views iris [[:species :sepal-length]])
     (layer (point {:color :species}))
@@ -2016,7 +2027,7 @@ mpg
 ;; Diagonal views (x=y) become histograms, off-diagonal become scatters:
 
 (-> (views iris (cross [:sepal-length :sepal-width] [:sepal-length :sepal-width]))
-    (->> (mapv #(select-keys % [:x :y :mark :stat]))))
+    (->> (mapv #(select-keys (resolve-view %) [:x :y :mark :stat]))))
 
 ;; ### ⚙️ Filtering and Conditional Specs
 
@@ -2557,7 +2568,8 @@ mpg
 ;; **`views` syntax is heavy for the common case.**
 ;; Every call is `(views data [[:x :y]])` -- the nested vector is
 ;; necessary for multi-pair grids but awkward for a single scatter.
-;; A `(views data :x :y)` convenience would help.
+;; `(view data :x :y)` exists as a convenience, but the two names
+;; (`view` vs `views`) are easy to confuse.
 ;;
 ;; **`layer` vs `layers` is confusing.** `layer` merges a map into
 ;; every view (apply overrides). `layers` duplicates views per spec
