@@ -1,8 +1,12 @@
 ^{:kindly/hide-code true
   :clay {:quarto {:title "Understanding Cancer Through Computation"
                   :description "Using computational art to understand cancer in the context of evolutionary developmental."
+                  :draft true
+                  :type :post
+                  :date "2026-02-27"
                   :author "Benjamin Kamphaus"
                   :category :biology
+                  :tags [:clojure :biology :creative-coding :science]
                   :bibliography "references.bib"}}}
 (ns biodecahedron.civitas.cancer-through-computation
   (:require [scicloj.clay.v2.api :as clay]))
