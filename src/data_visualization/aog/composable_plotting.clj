@@ -1735,6 +1735,18 @@ mpg
          :x-domain (numeric-extent (clean x))
          :y-domain (numeric-extent (clean y))}))))
 
+;; ### 🧪 What `:loess` Returns
+;;
+;; Sampled points along the fitted curve, one set per color group:
+
+(-> (view iris [[:sepal-length :petal-length]])
+    (lay (loess {:color :species}))
+    first
+    resolve-view
+    compute-stat
+    (update :points (fn [pts] (mapv #(-> % (update :xs count) (update :ys count)) pts)))
+    kind/pprint)
+
 ;; ### 🧪 Scatter + Regression
 ;;
 ;; `lay` applies two layers to the same data -- one scatter, one regression line:
@@ -2292,10 +2304,11 @@ mpg
 ;; The [tips](https://rdrr.io/cran/reshape2/man/tips.html) dataset records
 ;; restaurant bills with tip amount, party size, day, and smoker status.
 
-(let [tips (tc/dataset "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv")]
-  (-> (view tips [["total_bill" "tip"]])
-      (lay (point {:color "day"}))
-      (facet-grid "smoker" "sex")
+(let [tips (tc/dataset "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv"
+                       {:key-fn keyword})]
+  (-> (view tips [[:total_bill :tip]])
+      (lay (point {:color :day}))
+      (facet-grid :smoker :sex)
       (plot {:width 600 :height 500})))
 
 ;; ### 🧪 Faceted Scatter with Free Y-Scale
@@ -2537,7 +2550,7 @@ mpg
 
 ;; ### ⚙️ Annotation Constructors
 
-(defn text-label
+(defn text
   "Text labels at data positions. `col` is the column used for label text."
   ([col] {:mark :text :stat :identity :text-col col})
   ([col opts] (merge {:mark :text :stat :identity :text-col col} opts)))
@@ -2627,7 +2640,7 @@ mpg
   (-> (view iris [[:sepal-length :sepal-width]])
       (lay (point {:color :species}))
       (concat (-> (view means [[:sepal-length :sepal-width]])
-                  (lay (text-label :species))))
+                  (lay (text :species))))
       plot))
 
 ;; ---
@@ -2876,6 +2889,13 @@ mpg
 ;; All visual constants -- colors, margins, radii -- live in one `defaults`
 ;; map that can be overridden per-plot via `:config`.
 ;;
+;; **Axis labels from column names.**
+;; Standalone and faceted plots auto-infer axis titles from column names
+;; via `fmt-name` (e.g. `:sepal-length` → "sepal length"). SPLOM grids
+;; skip this since they already show column headers. The `scale`
+;; constructor and `plot` options both accept overrides, and custom
+;; domains work via `(scale :x {:domain [4 8]})`.
+;;
 ;; ### 📖 Composition, reviewed
 ;;
 ;; The compositional core of this notebook is small: `view` and `cross`
@@ -2941,12 +2961,6 @@ mpg
 ;; into smaller steps -- a preparation phase, a rendering phase, and an
 ;; assembly phase -- would make it easier to understand and modify.
 ;;
-;; **Axis labels are auto-inferred** from column names and shown on
-;; standalone and faceted plots (but not SPLOM grids, which use column
-;; headers). Override with `(plot views {:x-label "..." :title "..."})`
-;; or `(scale :x {:label "..."})`. Custom domains also work:
-;; `(scale :x {:domain [4 8]})`.
-;;
 ;; **Partial validation.**
 ;; `view` checks that the specified columns actually exist in the
 ;; dataset, which catches typos early. But marks, stats, and `plot` options
@@ -2986,9 +3000,6 @@ mpg
 ;; - **Rendering targets:** Should we commit to SVG, or design for multiple
 ;;   backends? SVG is universal and works well with Clay, but Canvas or
 ;;   WebGL would be needed for large datasets.
-;;
-;; - **Axis labels and titles:** How should they be specified? As part of the
-;;   view map, as plot options, or inferred from column metadata?
 ;;
 ;; - **Faceting:** Is faceting part of the data algebra (another way to split
 ;;   views) or a separate layout concern? Right now it sits between the two --
