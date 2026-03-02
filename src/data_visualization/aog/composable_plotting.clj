@@ -1611,14 +1611,12 @@ mpg
 
 ;; ## Layers
 ;;
-;; `lay` (defined in [Composing Views](#composing-views)) applies one or
-;; more layers to the same base views. Multiple layers duplicate each
-;; view -- once per layer. Annotation layers (hline, vline, hband) are
-;; kept as separate views.
+;; Multiple layers duplicate the views -- here's what that looks like
+;; internally, and how it renders.
 
 ;; ### 🧪 What `lay` Produces
 ;;
-;; Base views duplicated, each copy with a different layer:
+;; Each layer gets its own copy of every base view:
 
 (-> (view iris [[:sepal-length :sepal-width]])
     (lay (point) (line))
@@ -1892,7 +1890,6 @@ mpg
   (let [{:keys [all-colors sx sy coord-px position cfg]} ctx
         cfg (or cfg defaults)
         bw (ws/data sx :bandwidth)
-        n-colors (count (:bars stat))
         cum-y (atom {})
         active-map (when (= position :dodge)
                      (into {}
@@ -2138,6 +2135,15 @@ mpg
                           [:sepal-length :sepal-width]))
              (when-off-diagonal #(lay % (point) (lm))))]
   (mapv #(select-keys % [:x :y :mark :stat]) vs))
+
+;; `where` and `where-not` filter views by predicate -- useful for
+;; keeping only certain column pairings:
+
+(-> iris
+    (view (cross [:sepal-length :sepal-width :petal-length]
+                 [:sepal-length :sepal-width :petal-length]))
+    (where-not diagonal?)
+    count)
 
 ;; ### ⚙️ Column-Pair Helpers
 
