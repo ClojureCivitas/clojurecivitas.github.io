@@ -1438,15 +1438,6 @@ mpg
     (lay (point {:color "steelblue" :size 6}))
     plot)
 
-;; Mixed layers: column-bound color on points,
-;; fixed color on the regression line:
-
-(-> iris
-    (view [[:sepal-length :sepal-width]])
-    (lay (point {:color :species})
-         (lm {:color "black"}))
-    plot)
-
 ;; ---
 
 ;; ## Histograms
@@ -1752,6 +1743,17 @@ mpg
 (-> (view iris [[:sepal-length :sepal-width]])
     (lay (point {:color :species})
          (lm {:color :species}))
+    plot)
+
+;; ### 🧪 Mixed Fixed and Column Aesthetics
+;;
+;; Column-bound color on scatter, fixed color on the regression line.
+;; The black line gets no legend entry:
+
+(-> iris
+    (view [[:sepal-length :sepal-width]])
+    (lay (point {:color :species})
+         (lm {:color "black"}))
     plot)
 
 ;; ### 🧪 Smooth Curve (Loess)
