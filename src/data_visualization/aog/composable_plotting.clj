@@ -517,6 +517,9 @@ mpg
    ;; Statistics
    :bin-method :sturges ;; Sturges' rule: bin count = ceil(log2(n) + 1)
    :domain-padding 0.05
+   ;; Labels and titles
+   :label-font-size 11 :title-font-size 13
+   :label-offset 18 :title-offset 18
    ;; Fallback
    :default-color "#333"})
 
@@ -1041,12 +1044,14 @@ mpg
         stat-y-domains (keep #(get-in % [:stat :y-domain]) view-stats)
 
         merged-x-dom (or x-domain
+                         (:domain x-scale-spec) ;; user-specified domain
                          (if (categorical-domain? (first stat-x-domains))
                            (distinct (mapcat identity stat-x-domains))
                            (let [lo (reduce min (map first stat-x-domains))
                                  hi (reduce max (map second stat-x-domains))]
                              (pad-domain [lo hi] x-scale-spec))))
         merged-y-dom (or y-domain
+                         (:domain y-scale-spec) ;; user-specified domain
                          (if (categorical-domain? (first stat-y-domains))
                            (distinct (mapcat identity stat-y-domains))
                            (let [lo (reduce min (map first stat-y-domains))
@@ -1255,9 +1260,11 @@ mpg
 ;; `aes` + `geom` from `theme` and rendering options.
 
 (defn plot
-  "Render views as SVG. Options: :width :height :scales :coord :tooltip :brush :config"
+  "Render views as SVG. Options: :width :height :scales :coord :tooltip :brush :config
+  :x-label :y-label :title — axis labels auto-infer from column names, override here."
   ([views] (plot views {}))
-  ([views {:keys [width height scales coord tooltip brush config]}]
+  ([views {:keys [width height scales coord tooltip brush config
+                  x-label y-label title] :as opts}]
    (let [cfg (merge defaults config)
          width (or width (:width cfg))
          height (or height (:height cfg))
@@ -1303,13 +1310,30 @@ mpg
          scale-mode (or scales :shared)
          x-scale-spec (or (:x-scale (first non-ann-views)) {:type :linear})
          y-scale-spec (or (:y-scale (first non-ann-views)) {:type :linear})
-         global-x-doms (when (#{:shared :free-y} scale-mode)
-                         (collect-domain stat-results :x-domain x-scale-spec))
-         global-y-doms (when (#{:shared :free-x} scale-mode)
-                         (compute-global-y-domain stat-results views y-scale-spec))
+         global-x-doms (or (:domain x-scale-spec)
+                           (when (#{:shared :free-y} scale-mode)
+                             (collect-domain stat-results :x-domain x-scale-spec)))
+         global-y-doms (or (:domain y-scale-spec)
+                           (when (#{:shared :free-x} scale-mode)
+                             (compute-global-y-domain stat-results views y-scale-spec)))
+         ;; Axis labels: auto-infer unless multi-variable (SPLOM), allow override
+         auto-label? (not multi?)
+         eff-x-label (or x-label
+                         (:label x-scale-spec)
+                         (when auto-label?
+                           (when-let [x (first x-vars)] (fmt-name x))))
+         eff-y-label (or y-label
+                         (:label y-scale-spec)
+                         (when auto-label?
+                           (when-let [y (first y-vars)] (fmt-name y))))
+         eff-title title
+         ;; Extra space for labels
+         x-label-pad (if eff-x-label (:label-offset cfg) 0)
+         y-label-pad (if eff-y-label (:label-offset cfg) 0)
+         title-pad (if eff-title (:title-offset cfg) 0)
          legend-w (if (or all-colors shape-categories) (:legend-width cfg) 0)
-         total-w (+ (* cols pw) legend-w)
-         total-h (* rows ph)
+         total-w (+ y-label-pad (* cols pw) legend-w)
+         total-h (+ title-pad (* rows ph) x-label-pad)
          ctx {:non-ann-views non-ann-views :ann-views ann-views
               :pw pw :ph ph :m m :rows rows :cols cols
               :all-colors all-colors :tooltip-fn tooltip-fn
@@ -1324,13 +1348,36 @@ mpg
                 "xmlns" "http://www.w3.org/2000/svg"
                 "xmlns:xlink" "http://www.w3.org/1999/xlink"
                 "version" "1.1"}
+          ;; Plot title
+          (when eff-title
+            [:text {:x (+ y-label-pad (/ (* cols pw) 2))
+                    :y 14
+                    :text-anchor "middle" :font-size (:title-font-size cfg)
+                    :fill "#333" :font-weight "bold" :font-family "sans-serif"}
+             eff-title])
+          ;; Y-axis label (rotated)
+          (when eff-y-label
+            (let [cy (+ title-pad (/ (* rows ph) 2))]
+              [:text {:x 12 :y cy
+                      :text-anchor "middle" :font-size (:label-font-size cfg)
+                      :fill "#333" :font-family "sans-serif"
+                      :transform (str "rotate(-90,12," cy ")")}
+               eff-y-label]))
+          ;; X-axis label
+          (when eff-x-label
+            [:text {:x (+ y-label-pad (/ (* cols pw) 2))
+                    :y (- total-h 3)
+                    :text-anchor "middle" :font-size (:label-font-size cfg)
+                    :fill "#333" :font-family "sans-serif"}
+             eff-x-label])
+          ;; Legend (offset by label padding)
           (when all-colors
             (render-legend all-colors #(color-for all-colors %)
-                           :x (+ (* cols pw) 10) :y 20
+                           :x (+ y-label-pad (* cols pw) 10) :y (+ title-pad 20)
                            :title (first color-cols)))
           (when shape-categories
-            (let [y-off (if all-colors (+ 20 (* (count all-colors) 16) 10) 20)
-                  x-off (+ (* cols pw) 10)]
+            (let [y-off (+ title-pad (if all-colors (+ 20 (* (count all-colors) 16) 10) 20))
+                  x-off (+ y-label-pad (* cols pw) 10)]
               (into [:g {:font-family "sans-serif" :font-size 10}
                      (when shape-col [:text {:x x-off :y (- y-off 5) :fill "#333" :font-size 9}
                                       (fmt-name shape-col)])]
@@ -1340,7 +1387,9 @@ mpg
                                              (if all-colors (color-for all-colors cat) "#333") {})
                        [:text {:x (+ x-off 15) :y (+ y-off (* i 16) 4) :fill "#333"}
                         (str cat)]]))))
-          (into [:g] (remove nil? (arrange-panels layout-type ctx)))]]
+          ;; Panels (offset by label padding)
+          [:g {:transform (str "translate(" y-label-pad "," title-pad ")")}
+           (into [:g] (remove nil? (arrange-panels layout-type ctx)))]]]
      (wrap-plot (cond-> #{} tooltip (conj :tooltip) brush (conj :brush)) svg-content))))
 
 ;; ---
@@ -2325,8 +2374,13 @@ mpg
 ;; ### ⚙️ Scale and Coord Setters
 
 (defn scale
-  "Set a scale type for :x or :y across all views."
-  ([views channel type] (scale views channel type {}))
+  "Set scale options for :x or :y across all views.
+  Accepts (views channel type), (views channel type opts), or (views channel opts-map).
+  opts-map may include :type, :domain, and :label."
+  ([views channel type-or-opts]
+   (if (map? type-or-opts)
+     (scale views channel (or (:type type-or-opts) :linear) (dissoc type-or-opts :type))
+     (scale views channel type-or-opts {})))
   ([views channel type opts]
    (let [k (case channel :x :x-scale :y :y-scale)]
      (mapv #(assoc % k (merge {:type type} opts)) views))))
@@ -2362,6 +2416,37 @@ mpg
           [[:x :y]])
     (lay (point))
     (scale :y :log)
+    plot)
+
+;; ### 🧪 Custom Domain
+;;
+;; The `scale` function also accepts an options map with `:domain`
+;; to clip or expand the axis range:
+
+(-> iris
+    (view [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
+    (scale :x {:domain [4 8]})
+    plot)
+
+;; ### 🧪 Axis Titles
+;;
+;; Axis labels are auto-inferred from column names.
+;; Override with plot options:
+
+(-> iris
+    (view [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
+    (plot {:x-label "Sepal Length (cm)"
+           :y-label "Sepal Width (cm)"
+           :title "Iris Measurements"}))
+
+;; Or via the scale constructor — the label travels with the scale:
+
+(-> iris
+    (view [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
+    (scale :x {:label "Length (cm)"})
     plot)
 
 ;; ### ⚙️ Polar
@@ -2856,12 +2941,11 @@ mpg
 ;; into smaller steps -- a preparation phase, a rendering phase, and an
 ;; assembly phase -- would make it easier to understand and modify.
 ;;
-;; **No axis labels on standalone plots.**
-;; Single-panel plots show tick values but not axis titles like
-;; "sepal length" or "count." Multi-panel layouts use column headers above
-;; and beside the grid, which works well, but a standalone scatter plot
-;; gives no indication of what the axes represent beyond the tick values
-;; themselves.
+;; **Axis labels are auto-inferred** from column names and shown on
+;; standalone and faceted plots (but not SPLOM grids, which use column
+;; headers). Override with `(plot views {:x-label "..." :title "..."})`
+;; or `(scale :x {:label "..."})`. Custom domains also work:
+;; `(scale :x {:domain [4 8]})`.
 ;;
 ;; **Partial validation.**
 ;; `view` checks that the specified columns actually exist in the
