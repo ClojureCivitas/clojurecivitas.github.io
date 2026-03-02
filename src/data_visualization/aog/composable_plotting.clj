@@ -381,6 +381,10 @@ mpg
 ;; The two phases compose through threading:
 ;; `(-> data (view pairs) (lay (point)))` reads as
 ;; "these column pairings, drawn as points" -- what, then how.
+;;
+;; > *The next sections build the rendering pipeline piece by piece.
+;; > To see results first and return for the implementation,
+;; > skip to [Scatter Plots](#scatter-plots).*
 ;; ---
 
 ;; ## Theme and Colors
@@ -555,7 +559,7 @@ mpg
               [:rect :count]
               [:bar :bin])
             ;; one categorical, one numerical → strip plot
-            (or (not= x-type y-type))
+            (not= x-type y-type)
             [:point :identity]
             ;; both numerical → scatter
             :else [:point :identity])
@@ -797,7 +801,6 @@ mpg
   (fn [coord-type] coord-type))
 
 (defmethod show-ticks? :default [_] true)
-(defmethod show-ticks? :polar [_] false)
 
 (defmethod make-coord :cartesian [_ sx sy pw ph m]
   (fn [dx dy] [(sx dx) (sy dy)]))
@@ -813,69 +816,8 @@ mpg
    :center (coord-fn 5 50)
    :top-right (coord-fn 10 100)})
 
-;; ### ⚙️ Flip
-;;
-;; Swaps x and y axes. Histograms become horizontal, bar charts grow sideways.
-
-(defmethod make-coord :flip [_ sx sy pw ph m]
-  (fn [dx dy] [(sx dy) (sy dx)]))
-
-(defmethod render-grid :flip [_ sx sy pw ph m cfg]
-  (render-grid :cartesian sx sy pw ph m cfg))
-
 (defmethod render-grid :default [_ sx sy pw ph m cfg]
   (render-grid :cartesian sx sy pw ph m cfg))
-
-;; ### ⚙️ Polar
-;;
-;; [Polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system)
-;; map x to angle and y to radius. Bars become wedges, scatters wrap into a disc.
-
-(defmethod make-coord :polar [_ sx sy pw ph m]
-  (let [cx (/ pw 2.0) cy (/ ph 2.0)
-        r-max (- (min cx cy) m)
-        x-lo (double m) x-span (double (- pw m m))
-        y-lo (double m) y-span (double (- ph m m))]
-    (fn [dx dy]
-      (let [px (sx dx) py (sy dy)
-            ;; Normalize to [0,1]: t-angle sweeps the full circle,
-            ;; t-radius goes from center (0) to edge (1).
-            t-angle (/ (- px x-lo) (max 1.0 x-span))
-            t-radius (/ (- (+ y-lo y-span) py) (max 1.0 y-span))
-            angle (* 2.0 Math/PI t-angle)
-            radius (* r-max t-radius)]
-        [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
-         (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
-
-(defmethod make-coord-px :polar [_ sx sy pw ph m]
-  (let [cx (/ pw 2.0) cy (/ ph 2.0)
-        r-max (- (min cx cy) m)
-        x-lo (double m) x-span (double (- pw m m))
-        y-lo (double m) y-span (double (- ph m m))]
-    (fn [px py]
-      (let [t-angle (/ (- px x-lo) (max 1.0 x-span))
-            t-radius (/ (- (+ y-lo y-span) py) (max 1.0 y-span))
-            angle (* 2.0 Math/PI t-angle)
-            radius (* r-max t-radius)]
-        [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
-         (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
-
-(defmethod render-grid :polar [_ sx sy pw ph m cfg]
-  (let [cfg (or cfg defaults)
-        cx (/ pw 2.0) cy (/ ph 2.0)
-        r-max (- (min cx cy) m)]
-    (into [:g]
-          (concat
-           (for [i (range 1 6)
-                 :let [r (* r-max (/ i 5.0))]]
-             [:circle {:cx cx :cy cy :r r :fill "none"
-                       :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])
-           (for [i (range 8)
-                 :let [a (* i (/ Math/PI 4))]]
-             [:line {:x1 cx :y1 cy
-                     :x2 (+ cx (* r-max (Math/cos a)))
-                     :y2 (+ cy (* r-max (Math/sin a)))
-                     :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])))))
 
 ;; ---
 
@@ -993,7 +935,7 @@ mpg
         n (tick-count (- pw (* 2 m)) (:tick-spacing-x cfg))
         ticks (ws/ticks sx n)
         labels (format-ticks sx ticks)]
-    (into [:g {:font-size (:font-size theme) :fill "#666"}]
+    (into [:g {:font-size (:font-size theme) :fill "#666" :font-family "sans-serif"}]
           (map (fn [t label]
                  [:text {:x (sx t) :y (- ph 2) :text-anchor "middle"} label])
                ticks labels))))
@@ -1007,7 +949,7 @@ mpg
         n (tick-count (- ph (* 2 m)) (:tick-spacing-y cfg))
         ticks (ws/ticks sy n)
         labels (format-ticks sy ticks)]
-    (into [:g {:font-size (:font-size theme) :fill "#666"}]
+    (into [:g {:font-size (:font-size theme) :fill "#666" :font-family "sans-serif"}]
           (map (fn [t label]
                  [:text {:x (- m 3) :y (+ (sy t) 3) :text-anchor "end"} label])
                ticks labels))))
@@ -1227,8 +1169,9 @@ mpg
 
 ;; ### ⚙️ `wrap-plot`
 ;;
-;; Wraps SVG as hiccup. Tooltip and brush interactions are added later
-;; in the [Interactivity](#interactivity) section.
+;; Wraps SVG as hiccup. This initial definition is a passthrough;
+;; it is **redefined** in the [Interactivity](#interactivity) section
+;; to add tooltip and brush support.
 
 (defn wrap-plot
   "Wrap SVG content as hiccup. Interaction modes are added later."
@@ -1460,6 +1403,7 @@ mpg
    :y-domain (:y-domain stat)
    :first-3-bins (mapv #(select-keys % [:min :max :count])
                        (take 3 (:bin-maps (first (:bins stat)))))})
+
 ;; ### ⚙️ `render-mark` `:bar`
 ;;
 ;; Bars projected as 4-corner polygons, works with cartesian, flip, and polar.
@@ -1495,6 +1439,16 @@ mpg
     (lay (histogram {:color :species}))
     plot)
 
+;; ### ⚙️ Flip
+;;
+;; Swaps x and y axes. Histograms become horizontal, bar charts grow sideways.
+
+(defmethod make-coord :flip [_ sx sy pw ph m]
+  (fn [dx dy] [(sx dy) (sy dx)]))
+
+(defmethod render-grid :flip [_ sx sy pw ph m cfg]
+  (render-grid :cartesian sx sy pw ph m cfg))
+
 ;; ### 🧪 Flipped Histogram
 ;;
 ;; `:flip` swaps the axes -- bars grow leftward:
@@ -1515,9 +1469,8 @@ mpg
 
 ;; ### ⚙️ Line Constructors
 
-(defn line-mark
-  "Line mark with identity stat. Named `line-mark` to avoid shadowing
-  SVG's [:line] element used elsewhere in this namespace."
+(defn line
+  "Line mark with identity stat."
   ([] {:mark :line :stat :identity})
   ([opts] (merge {:mark :line :stat :identity} opts)))
 
@@ -1547,7 +1500,7 @@ mpg
 (-> (view {:year [2018 2019 2020 2021 2022]
            :sales [10 15 13 17 20]}
           [[:year :sales]])
-    (lay (line-mark))
+    (lay (line))
     plot)
 
 ;; ### 🧪 Colored Line Chart
@@ -1557,7 +1510,7 @@ mpg
            :region ["East" "East" "East" "East" "East"
                     "West" "West" "West" "West" "West"]}
           [[:year :sales]])
-    (lay (line-mark {:color :region}))
+    (lay (line {:color :region}))
     plot)
 
 ;; ---
@@ -1574,7 +1527,7 @@ mpg
 ;; Base views duplicated, each copy with a different layer:
 
 (-> (view iris [[:sepal-length :sepal-width]])
-    (lay (point) (line-mark))
+    (lay (point) (line))
     (->> (mapv #(select-keys % [:x :y :mark :stat]))))
 
 ;; ### 🧪 Scatter + Line Overlay
@@ -1582,7 +1535,7 @@ mpg
 (-> (view {:year [2018 2019 2020 2021 2022]
            :sales [10 15 13 17 20]}
           [[:year :sales]])
-    (lay (point) (line-mark))
+    (lay (point) (line))
     plot)
 
 ;; ### 🧪 Colored Scatter + Line
@@ -1592,7 +1545,7 @@ mpg
            :region ["East" "East" "East" "East" "East"
                     "West" "West" "West" "West" "West"]}
           [[:year :sales]])
-    (lay (point {:color :region}) (line-mark {:color :region}))
+    (lay (point {:color :region}) (line {:color :region}))
     plot)
 
 ;; ---
@@ -1653,6 +1606,7 @@ mpg
     resolve-view
     compute-stat
     kind/pprint)
+
 ;; ### ⚙️ `compute-stat` `:loess`
 ;;
 ;; Loess via fastmath.interpolation (80 sample points, x values deduplicated).
@@ -1822,7 +1776,7 @@ mpg
     (if coord-px
       [:polygon {:points (arc-polygon-points coord-px x-lo x-hi py-lo py-hi 20)
                  :fill color :opacity opacity}]
-      [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
+      [:rect {:x x-lo :y (min py-lo py-hi)
               :width (- x-hi x-lo)
               :height (Math/abs (- py-lo py-hi))
               :fill color :opacity opacity}])))
@@ -1832,7 +1786,7 @@ mpg
   (let [{:keys [all-colors sx sy coord-px position cfg]} ctx
         cfg (or cfg defaults)
         bw (ws/data sx :bandwidth)
-        n-colors (clojure.core/count (:bars stat))
+        n-colors (count (:bars stat))
         cum-y (atom {})
         active-map (when (= position :dodge)
                      (into {}
@@ -1845,28 +1799,28 @@ mpg
     (into [:g]
           (mapcat (fn [bi {:keys [color counts]}]
                     (let [c (if color (color-for all-colors color) (:default-color cfg))]
-                      (for [{:keys [category count]} counts
-                            :when (or (= position :stack) (pos? count))
-                            :let [band-info (sx category true)
+                      (for [{cat :category cnt :count} counts
+                            :when (or (= position :stack) (pos? cnt))
+                            :let [band-info (sx cat true)
                                   band-start (:rstart band-info)
                                   band-end (:rend band-info)
                                   band-mid (/ (+ band-start band-end) 2.0)]]
                         (if (= position :stack)
-                          (let [base (get @cum-y category 0)
+                          (let [base (get @cum-y cat 0)
                                 py-lo (sy base)
-                                py-hi (sy (+ base count))
+                                py-hi (sy (+ base cnt))
                                 x-lo (- band-mid (* bw 0.4))
                                 x-hi (+ band-mid (* bw 0.4))]
-                            (swap! cum-y assoc category (+ base count))
+                            (swap! cum-y assoc cat (+ base cnt))
                             (render-bar-elem coord-px x-lo x-hi py-lo py-hi c cfg))
-                          (let [active (get active-map category)
-                                n-active (clojure.core/count active)
+                          (let [active (get active-map cat)
+                                n-active (count active)
                                 active-idx (.indexOf ^java.util.List active bi)
-                                sub-bw (/ (* bw 0.8) (clojure.core/max 1 n-active))
+                                sub-bw (/ (* bw 0.8) (max 1 n-active))
                                 x-lo (+ (- band-mid (/ (* n-active sub-bw) 2.0)) (* active-idx sub-bw))
                                 x-hi (+ x-lo sub-bw)
                                 py-lo (sy 0)
-                                py-hi (sy count)]
+                                py-hi (sy cnt)]
                             (render-bar-elem coord-px x-lo x-hi py-lo py-hi c cfg))))))
                   (range) (:bars stat)))))
 
@@ -1876,13 +1830,13 @@ mpg
         cfg (or cfg defaults)
         bw (ws/data sx :bandwidth)
         groups (:points stat)
-        n-groups (clojure.core/count groups)
-        sub-bw (/ (* bw 0.8) (clojure.core/max 1 n-groups))
+        n-groups (count groups)
+        sub-bw (/ (* bw 0.8) (max 1 n-groups))
         cum-y (atom {})]
     (into [:g]
           (mapcat (fn [gi {:keys [color xs ys]}]
                     (let [c (if color (color-for all-colors color) (:default-color cfg))]
-                      (for [i (range (clojure.core/count xs))
+                      (for [i (range (count xs))
                             :let [cat (nth xs i)
                                   val (nth ys i)
                                   band-info (sx cat true)
@@ -1916,7 +1870,7 @@ mpg
 (defmethod render-x-ticks :categorical [_ sx pw ph m cfg]
   (let [ticks (ws/ticks sx)
         labels (map str ticks)]
-    (into [:g {:font-size (:font-size theme) :fill "#666"}]
+    (into [:g {:font-size (:font-size theme) :fill "#666" :font-family "sans-serif"}]
           (map (fn [t label]
                  [:text {:x (sx t) :y (- ph 2) :text-anchor "middle"} label])
                ticks labels))))
@@ -1924,7 +1878,7 @@ mpg
 (defmethod render-y-ticks :categorical [_ sy pw ph m cfg]
   (let [ticks (ws/ticks sy)
         labels (map str ticks)]
-    (into [:g {:font-size (:font-size theme) :fill "#666"}]
+    (into [:g {:font-size (:font-size theme) :fill "#666" :font-family "sans-serif"}]
           (map (fn [t label]
                  [:text {:x (- m 3) :y (+ (sy t) 3) :text-anchor "end"} label])
                ticks labels))))
@@ -2227,6 +2181,7 @@ mpg
                       [:sepal-length :sepal-width :petal-length]))
     (when-off-diagonal {:color :species})
     plot)
+
 ;; ### 🧪 Faceted Scatter
 ;;
 ;; One panel per species -- `facet` splits views by a column:
@@ -2364,6 +2319,59 @@ mpg
     (scale :y :log)
     plot)
 
+;; ### ⚙️ Polar
+;;
+;; [Polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system)
+;; map x to angle and y to radius. Bars become wedges, scatters wrap into a disc.
+
+(defmethod show-ticks? :polar [_] false)
+
+(defmethod make-coord :polar [_ sx sy pw ph m]
+  (let [cx (/ pw 2.0) cy (/ ph 2.0)
+        r-max (- (min cx cy) m)
+        x-lo (double m) x-span (double (- pw m m))
+        y-lo (double m) y-span (double (- ph m m))]
+    (fn [dx dy]
+      (let [px (sx dx) py (sy dy)
+            ;; Normalize to [0,1]: t-angle sweeps the full circle,
+            ;; t-radius goes from center (0) to edge (1).
+            t-angle (/ (- px x-lo) (max 1.0 x-span))
+            t-radius (/ (- (+ y-lo y-span) py) (max 1.0 y-span))
+            angle (* 2.0 Math/PI t-angle)
+            radius (* r-max t-radius)]
+        [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
+         (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
+
+(defmethod make-coord-px :polar [_ sx sy pw ph m]
+  (let [cx (/ pw 2.0) cy (/ ph 2.0)
+        r-max (- (min cx cy) m)
+        x-lo (double m) x-span (double (- pw m m))
+        y-lo (double m) y-span (double (- ph m m))]
+    (fn [px py]
+      (let [t-angle (/ (- px x-lo) (max 1.0 x-span))
+            t-radius (/ (- (+ y-lo y-span) py) (max 1.0 y-span))
+            angle (* 2.0 Math/PI t-angle)
+            radius (* r-max t-radius)]
+        [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
+         (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
+
+(defmethod render-grid :polar [_ sx sy pw ph m cfg]
+  (let [cfg (or cfg defaults)
+        cx (/ pw 2.0) cy (/ ph 2.0)
+        r-max (- (min cx cy) m)]
+    (into [:g]
+          (concat
+           (for [i (range 1 6)
+                 :let [r (* r-max (/ i 5.0))]]
+             [:circle {:cx cx :cy cy :r r :fill "none"
+                       :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])
+           (for [i (range 8)
+                 :let [a (* i (/ Math/PI 4))]]
+             [:line {:x1 cx :y1 cy
+                     :x2 (+ cx (* r-max (Math/cos a)))
+                     :y2 (+ cy (* r-max (Math/sin a)))
+                     :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])))))
+
 ;; ### 🧪 Polar Scatter
 ;;
 ;; `coord :polar` wraps the same scatter into polar space:
@@ -2423,6 +2431,7 @@ mpg
 [(hline 3.0)
  (vline 6.0)
  (hband 2.5 3.5)]
+
 ;; ### ⚙️ `render-annotation` methods
 
 (defmethod render-annotation :rule-h [ann {:keys [coord-fn x-domain cfg]}]
@@ -2635,6 +2644,7 @@ mpg
 (-> (view iris [[:sepal-length :sepal-width]])
     (lay (point {:color :species}))
     (plot {:tooltip true}))
+
 ;; ### 🧪 Brushable Scatter
 ;;
 ;; `:brush true` adds a drag-to-select rectangle:
