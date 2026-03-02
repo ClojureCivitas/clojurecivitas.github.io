@@ -226,18 +226,24 @@ mpg
     (map? spec) spec
     :else {:x (first spec) :y (second spec)}))
 
+(defn column-ref?
+  "True if v is a column reference (keyword), false if it's a fixed constant (string, number)."
+  [v]
+  (keyword? v))
+
 (def column-keys
   "View keys whose values are column names in the dataset."
   #{:x :y :color :size :shape})
 
 (defn validate-columns
   "Check that every column-referencing key in view-map names a real column in ds.
+  Non-keyword values (strings, numbers) are fixed constants and skip validation.
   Also usable as (validate-columns ds :facet col) for a single named check."
   ([ds view-map]
    (let [col-names (set (tc/column-names ds))]
      (doseq [k column-keys
              :let [col (get view-map k)]
-             :when (and col (not (col-names col)))]
+             :when (and col (column-ref? col) (not (col-names col)))]
        (throw (ex-info (str "Column " col " (from " k ") not found in dataset. Available: " (sort col-names))
                        {:key k :column col :available (sort col-names)})))))
   ([ds role col]
@@ -536,7 +542,9 @@ mpg
 
 (defn resolve-view
   "Fill in derived properties: :x-type, :y-type, :color-type, :group, :mark, :stat.
-  User-specified values always win."
+  User-specified values always win.
+  Fixed aesthetic values (strings, numbers) are split into :fixed-color, :fixed-size
+  so downstream code only sees column references in :color, :size."
   [v]
   (if-not (:data v)
     v
@@ -544,10 +552,19 @@ mpg
           x-type (or (:x-type v) (column-type ds (:x v)))
           y-type (or (:y-type v) (when (and (:y v) (not= (:x v) (:y v)))
                                    (column-type ds (:y v))))
-          c-type (when (:color v)
-                   (or (:color-type v) (column-type ds (:color v))))
+          ;; Color: only resolve column type for keyword (column) colors
+          color-val (:color v)
+          color-is-col? (and color-val (column-ref? color-val))
+          c-type (when color-is-col?
+                   (or (:color-type v) (column-type ds color-val)))
+          fixed-color (when (and color-val (not color-is-col?)) color-val)
+          ;; Size: split into column-ref vs fixed
+          size-val (:size v)
+          size-is-col? (and size-val (column-ref? size-val))
+          fixed-size (when (and size-val (not size-is-col?)) size-val)
+          ;; Group only by column-ref colors
           group (or (:group v)
-                    (when (= c-type :categorical) [(:color v)])
+                    (when (= c-type :categorical) [color-val])
                     [])
           ;; Infer mark and stat from column types when not specified
           diagonal? (= (:x v) (:y v))
@@ -566,7 +583,12 @@ mpg
           mark (or (:mark v) default-mark)
           stat (or (:stat v) default-stat)]
       (assoc v :x-type x-type :y-type y-type :color-type c-type
-             :group group :mark mark :stat stat))))
+             :group group :mark mark :stat stat
+             ;; Normalize: column-ref stays, fixed goes to :fixed-*
+             :color (when color-is-col? color-val)
+             :fixed-color fixed-color
+             :size (when size-is-col? size-val)
+             :fixed-size fixed-size))))
 
 ;; ### 🧪 What `resolve-view` Produces
 ;;
@@ -845,10 +867,10 @@ mpg
                                           shape-categories)))]
     (into [:g]
           (mapcat (fn [{:keys [color xs ys sizes shapes row-indices]}]
-                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
+                    (let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))]
                       (for [i (range (count xs))
                             :let [[px py] (coord-fn (nth xs i) (nth ys i))
-                                  r (if sizes (size-scale (nth sizes i)) (:point-radius cfg))
+                                  r (if sizes (size-scale (nth sizes i)) (or (:fixed-size ctx) (:point-radius cfg)))
                                   sh (if shapes (get shape-map (nth shapes i) :circle) :circle)
                                   row-idx (when row-indices (nth row-indices i))
                                   tip (when tooltip-fn
@@ -1088,7 +1110,9 @@ mpg
      (into [:g]
            (mapcat (fn [{:keys [view stat]}]
                      (let [mark (:mark view)
-                           mark-ctx (assoc ctx :position (or (:position view) :dodge))]
+                           mark-ctx (cond-> (assoc ctx :position (or (:position view) :dodge))
+                                      (:fixed-color view) (assoc :fixed-color (:fixed-color view))
+                                      (:fixed-size view) (assoc :fixed-size (:fixed-size view)))]
                        [(render-mark mark stat mark-ctx)]))
                    view-stats))
 
@@ -1264,13 +1288,14 @@ mpg
               (double (:panel-size cfg))
               (double (/ height rows)))
          stat-results (mapv (comp compute-stat #(assoc % :cfg cfg) resolve-view) non-ann-views)
-         all-colors (let [color-views (filter #(and (:color %) (:data %)) views)]
+         all-colors (let [color-views (filter #(and (column-ref? (:color %)) (:data %)) views)]
                       (when (seq color-views)
                         (distinct (mapcat #((:data %) (:color %)) color-views))))
-         color-cols (distinct (remove nil? (map :color views)))
-         shape-col (first (remove nil? (map :shape views)))
+         color-cols (distinct (keep #(when (column-ref? (:color %)) (:color %)) views))
+         shape-col (first (keep #(when (column-ref? (:shape %)) (:shape %)) views))
          shape-categories (when shape-col
-                            (distinct (mapcat (fn [v] (when (:data v) (map #(get % shape-col) (tc/rows (:data v) :as-maps))))
+                            (distinct (mapcat (fn [v] (when (and (:data v) (column-ref? (:shape v)))
+                                                        (map #(get % shape-col) (tc/rows (:data v) :as-maps))))
                                               views)))
          coord-type-main (or (:coord (first views)) :cartesian)
          tooltip-fn (when tooltip
@@ -1353,6 +1378,26 @@ mpg
     (lay (point {:color :species}))
     plot)
 
+;; ### 🧪 Fixed Aesthetics
+;;
+;; When an aesthetic is a keyword, it binds to a column.
+;; When it's a string or number, it's a fixed value —
+;; no grouping, no legend entry:
+
+(-> {:x [1 2 3 4] :y [2 4 3 5]}
+    (view [[:x :y]])
+    (lay (point {:color "steelblue" :size 6}))
+    plot)
+
+;; Mixed layers: column-bound color on points,
+;; fixed color on the regression line:
+
+(-> iris
+    (view [[:sepal-length :sepal-width]])
+    (lay (point {:color :species})
+         (lm {:color "black"}))
+    plot)
+
 ;; ---
 
 ;; ## Histograms
@@ -1413,7 +1458,7 @@ mpg
         cfg (or cfg defaults)]
     (into [:g]
           (mapcat (fn [{:keys [color bin-maps]}]
-                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
+                    (let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))]
                       (for [{:keys [min max count]} bin-maps
                             :let [[x1 y1] (coord-fn min 0)
                                   [x2 y2] (coord-fn max 0)
@@ -1483,14 +1528,14 @@ mpg
           (concat
            (when-let [lines (:lines stat)]
              (for [{:keys [color x1 y1 x2 y2]} lines
-                   :let [c (if color (color-for all-colors color) (:default-color cfg))
+                   :let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))
                          [px1 py1] (coord-fn x1 y1)
                          [px2 py2] (coord-fn x2 y2)]]
                [:line {:x1 px1 :y1 py1 :x2 px2 :y2 py2
                        :stroke c :stroke-width (:line-width cfg)}]))
            (when-let [pts (:points stat)]
              (for [{:keys [color xs ys]} pts
-                   :let [c (if color (color-for all-colors color) (:default-color cfg))
+                   :let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))
                          projected (sort-by first (map (fn [x y] (coord-fn x y)) xs ys))]]
                [:polyline {:points (str/join " " (map (fn [[px py]] (str px "," py)) projected))
                            :stroke c :stroke-width (:line-width cfg) :fill "none"}]))))))
@@ -1798,7 +1843,7 @@ mpg
                                    (:bars stat))])))]
     (into [:g]
           (mapcat (fn [bi {:keys [color counts]}]
-                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
+                    (let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))]
                       (for [{cat :category cnt :count} counts
                             :when (or (= position :stack) (pos? cnt))
                             :let [band-info (sx cat true)
@@ -1835,7 +1880,7 @@ mpg
         cum-y (atom {})]
     (into [:g]
           (mapcat (fn [gi {:keys [color xs ys]}]
-                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
+                    (let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))]
                       (for [i (range (count xs))
                             :let [cat (nth xs i)
                                   val (nth ys i)
@@ -2471,7 +2516,7 @@ mpg
         cfg (or cfg defaults)]
     (into [:g {:font-size 9 :fill (:default-color cfg) :text-anchor "middle"}]
           (mapcat (fn [{:keys [color xs ys labels]}]
-                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
+                    (let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))]
                       (for [i (range (count xs))
                             :let [[px py] (coord-fn (nth xs i) (nth ys i))]]
                         [:text {:x px :y (- py 5) :fill c}
