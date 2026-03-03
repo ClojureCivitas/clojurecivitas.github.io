@@ -718,9 +718,10 @@ tips
 
 (defn prepare-points
   "Clean data, compute domains, group by columns, extract color/size/shape values.
-  Expects a resolved view (with :x-type, :group already filled in)."
+  Expects a resolved view (with :x-type, :group already filled in).
+  When mark is :rect, the y-domain includes 0 so bars have a baseline."
   [view]
-  (let [{:keys [data x y color size shape text-col x-type y-type group]} view
+  (let [{:keys [data x y color size shape text-col x-type y-type group mark]} view
         data-idx (tc/add-column data :__row-idx (range (tc/row-count data)))
         clean (cond-> (tc/drop-missing data-idx [x y])
                 (= x-type :categorical) (tc/map-columns x [x] str))]
@@ -731,7 +732,12 @@ tips
             cat-x? (= x-type :categorical)
             cat-y? (= y-type :categorical)
             x-dom (if cat-x? (distinct xs-col) (numeric-extent xs-col))
-            y-dom (if cat-y? (distinct ys-col) (numeric-extent ys-col))
+            y-dom (if cat-y?
+                    (distinct ys-col)
+                    (let [[lo hi] (numeric-extent ys-col)]
+                      (if (= mark :rect)
+                        [(min 0 lo) (max 0 hi)]
+                        [lo hi])))
             point-group (fn [ds group-val]
                           (cond-> {:xs (ds x) :ys (ds y)
                                    :row-indices (ds :__row-idx)}
