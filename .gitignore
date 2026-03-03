@@ -3,7 +3,7 @@
 .clj-kondo/
 .quarto/
 _site/
-.calva/output-window/
+.calva
 .classpath
 .clj-kondo/.cache
 .cpcache
@@ -13,8 +13,7 @@ _site/
 .hgignore
 .java-version
 .lein-*
-.lsp/.cache
-.lsp/sqlite.db
+.lsp/
 .nrepl-history
 .nrepl-port
 .project
