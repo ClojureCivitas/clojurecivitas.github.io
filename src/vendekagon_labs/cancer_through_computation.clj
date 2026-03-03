@@ -7,7 +7,8 @@
                   :author "Benjamin Kamphaus"
                   :category :biology
                   :tags [:clojure :biology :creative-coding :science]
-                  :bibliography "references.bib"}}}
+                  ;; :bibliography "references.bib"
+                  }}}
 (ns biodecahedron.civitas.cancer-through-computation
   (:require [scicloj.clay.v2.api :as clay]))
 
@@ -112,6 +113,7 @@
 ;; ## Conclusion
 ;;
 
+^:kindly/hide-code
 (comment
   (clay/make! {:source-path "src/biodecahedron/civitas/cancer_through_computation.clj"
                :format [:quarto :html]}))
