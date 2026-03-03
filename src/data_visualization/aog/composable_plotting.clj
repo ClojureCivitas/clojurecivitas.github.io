@@ -2860,7 +2860,7 @@ tips
 (-> (view iris (cross iris-quantities iris-quantities))
     (lay {:color :species})
     (plot {:brush true}))
-;; ::
+;; :::
 
 ;; ### 🧪 Brushable Facets
 ;;
