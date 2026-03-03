@@ -1,8 +1,8 @@
 ^{:kindly/hide-code true
   :clay {:title "Composable Plotting in Clojure"
          :quarto {:type :post
-                  :author [:daslu :claude]
-                  :date "2026-02-22"
+                  :author [:daslu]
+                  :date "2026-03-03"
                   :description "Building a composable plotting API in Clojure, from views and layers to scatterplot matrices"
                   :category :data-visualization
                   :tags [:datavis :grammar-of-graphics :design :wadogo]
@@ -1351,8 +1351,9 @@ tips
          global-y-doms (or (:domain y-scale-spec)
                            (when (#{:shared :free-x} scale-mode)
                              (compute-global-y-domain stat-results views y-scale-spec)))
-         ;; Axis labels: auto-infer unless multi-variable (SPLOM), allow override
-         auto-label? (not multi?)
+         ;; Axis labels: auto-infer unless multi-variable (SPLOM) or
+         ;; coord system has no rectangular axes (e.g. polar), allow override
+         auto-label? (and (not multi?) (show-ticks? coord-type-main))
          eff-x-label (or x-label
                          (:label x-scale-spec)
                          (when auto-label?
@@ -2913,6 +2914,41 @@ tips
     plot)
 
 ;;
+;; ---
+
+;; ## Putting It All Together
+;;
+;; The examples above introduce features one at a time. These final
+;; examples combine several at once, showing that the composition
+;; works freely -- polar with faceting, layers with facet grids --
+;; without any special-case code.
+
+;; ### 🧪 Polar Rose by Year
+;;
+;; Stacked bars in polar coordinates, faceted by year.
+;; Each wedge shows a vehicle class; color distinguishes drivetrain.
+;; Comparing the two panels reveals how class distributions shifted
+;; between 1999 and 2008:
+
+;; :::{.column-screen-inset-right}
+(-> (view mpg :class)
+    (lay (stacked-bar {:color :drv}))
+    (coord :polar)
+    (facet :year)
+    (plot {:width 800 :height 400}))
+;; :::
+
+;; ### 🧪 Scatter with Regression, Faceted Grid
+;;
+;; Tips vs. total bill, colored by meal time, with a regression
+;; line per group. `facet-grid` splits by smoker status (rows) and
+;; sex (columns) -- four panels, each with its own scatter and fit:
+
+(-> (view tips [[:total-bill :tip]])
+    (lay (point {:color :time}) (lm {:color :time}))
+    (facet-grid :smoker :sex)
+    (plot {:width 600 :height 500}))
+
 ;; ---
 
 ;; ## Reflection
