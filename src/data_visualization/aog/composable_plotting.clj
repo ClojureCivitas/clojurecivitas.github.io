@@ -3019,7 +3019,7 @@ tips
 ;; the code has to hold both swaps in mind simultaneously.
 ;;
 ;; **`render-panel` does too much.**
-;; This function is the workhorse of the system: it computes statistics,
+;; This function does most of the heavy lifting: it computes statistics,
 ;; merges domains, builds scales, constructs the coord function, renders
 ;; marks, draws axes and grid lines, and assembles everything into an SVG
 ;; group. `resolve-view` and `defaults` pull out some of that complexity,
@@ -3034,6 +3034,35 @@ tips
 ;; will fail silently or produce a confusing error deep inside `render-panel`.
 ;; Adding Malli schemas for view maps and plot options would catch these
 ;; mistakes at the point where the user makes them.
+;;
+;; **Inference logic: code vs. data.**
+;; `resolve-view` encodes all its inference rules as ordinary `cond`
+;; branches and `or` expressions. This is easy to read and debug: you
+;; can step through it, print intermediate values, and see exactly why
+;; a view got `:mark :point` instead of `:bar`. But all rules are
+;; wired into one function, so users who want different defaults --
+;; say, boxplots instead of strip plots for categorical-vs-numerical
+;; pairings -- must either override per view or modify the source.
+;;
+;; An alternative is to represent inference as data: a graph of
+;; dependencies between properties, where each node has a rule that
+;; can be replaced. [Hanami](https://github.com/jsa-aerial/hanami)
+;; takes this approach with its substitution-key templates, which
+;; form a DAG of defaults that users can override at any node.
+;; Tableplot's current API builds on the same idea; its
+;; [Dataflow Model Walkthrough](https://scicloj.github.io/tableplot/tableplot_book.dataflow_walkthrough.html)
+;; explains the mechanism in detail.
+;; The advantage is flexibility: swapping one default doesn't require
+;; reading the whole inference function. The cost is indirection:
+;; understanding *why* a property has a particular value means tracing
+;; through a dependency graph rather than reading top-to-bottom code.
+;;
+;; This notebook chose plain code. The inference logic is short enough
+;; (~40 lines) that reading it directly is manageable. But as the
+;; number of inferred properties grows -- and it would in a real
+;; library -- a data-driven approach might pay for its indirection
+;; with better extensibility. Finding the right balance between
+;; "easy to trace" and "easy to extend" is an open tension.
 ;;
 ;; ### 📖 Design space
 ;;
