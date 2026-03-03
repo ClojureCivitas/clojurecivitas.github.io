@@ -24,7 +24,7 @@
    :name        "Daniel Slutsky"
    :image       "https://avatars.githubusercontent.com/u/5673102?v=4"
    :url         "https://scicloj.github.io/contributors/daslu/"
-   :affiliation [:scicloj :endor]
+   :affiliation [:scicloj]
    :links       [{:icon "github" :href "https://github.com/daslu"}]}
   {:id          :danielsz
    :name        "Daniel Szmulewicz"
