@@ -77,6 +77,7 @@
 ;; Everything renders to [SVG](https://en.wikipedia.org/wiki/SVG) via [Hiccup](https://github.com/weavejester/hiccup). The post builds up incrementally:
 ;; scatter plots, histograms, regression lines, bars,
 ;; multi-panel layouts, polar coordinates, and interactivity.
+;;
 ;; ---
 
 ;; ## Motivation
@@ -107,6 +108,7 @@ splom-tut/iris-splom-4x4
 ;; Everything that the SPLOM Tutorial does — grid layout,
 ;; scale sharing, color assignment, diagonal detection —
 ;; should follow from the composed specification.
+;;
 ;; ---
 
 ;; ## Glossary
@@ -150,6 +152,7 @@ splom-tut/iris-splom-4x4
 ;;
 ;; **Layout** -- how panels are arranged: a single plot,
 ;; a scatterplot matrix, or a faceted grid.
+;;
 ;; ---
 
 ;; ## Setup
@@ -201,6 +204,7 @@ mpg
 
 tips
 
+;;
 ;; ---
 
 ;; ## Composing Views
@@ -412,6 +416,7 @@ tips
 ;; > *The next sections build the rendering pipeline piece by piece.
 ;; > To see results first and return for the implementation,
 ;; > skip to [Scatter Plots](#scatter-plots).*
+;;
 ;; ---
 
 ;; ## Theme and Colors
@@ -504,6 +509,7 @@ tips
 
 (mapv fmt-name [:sepal-length :petal_width :species])
 
+;;
 ;; ---
 
 ;; ## Inference and Defaults
@@ -658,6 +664,7 @@ tips
 
 (select-keys (merge defaults {:point-radius 5 :bar-opacity 0.9})
              [:point-radius :bar-opacity :line-width])
+;;
 ;; ---
 
 ;; ## Computing Statistics
@@ -742,6 +749,7 @@ tips
 (defmethod compute-stat :identity [view]
   (prepare-points view))
 
+;;
 ;; ---
 
 ;; ## Scales -- Data to Pixels
@@ -809,6 +817,7 @@ tips
   {:A-position (s "A")
    :B-band-info (s "B" true)
    :ticks (ws/ticks s)})
+;;
 ;; ---
 
 ;; ## Coordinate Systems
@@ -865,6 +874,7 @@ tips
 (defmethod render-grid :default [_ sx sy pw ph m cfg]
   (render-grid :cartesian sx sy pw ph m cfg))
 
+;;
 ;; ---
 
 ;; ## Drawing Marks
@@ -928,6 +938,7 @@ tips
                 [:rect {:x 0 :y 0 :width 600 :height 400 :fill (:bg theme)}]
                 marks]))
 
+;;
 ;; ---
 
 ;; ## Axes and Grid Lines
@@ -1015,6 +1026,7 @@ tips
     (render-x-ticks :numeric sx pw ph m defaults)
     (render-y-ticks :numeric sy pw ph m defaults)]))
 
+;;
 ;; ---
 
 ;; ## Assembling a Panel
@@ -1160,6 +1172,7 @@ tips
        (view [[:x :y]])
        (lay (point)))
    600 400 25)])
+;;
 ;; ---
 
 ;; ## Rendering the Plot
@@ -1188,11 +1201,9 @@ tips
 
 (defn infer-layout [views]
   (let [facet-rows (seq (remove nil? (map :facet-row views)))
-        facet-cols (seq (remove nil? (map :facet-col views)))
-        facet-vals (seq (remove nil? (map :facet-val views)))]
+        facet-cols (seq (remove nil? (map :facet-col views)))]
     (cond
-      (and facet-rows facet-cols) :facet-grid
-      facet-vals :facet
+      (or facet-rows facet-cols) :facet-grid
       :else (let [x-vars (distinct (map :x views))
                   y-vars (distinct (map :y views))]
               (if (or (> (count x-vars) 1) (> (count y-vars) 1))
@@ -1296,16 +1307,13 @@ tips
          layout-type (infer-layout non-ann-views)
          x-vars (distinct (map :x non-ann-views))
          y-vars (distinct (map :y non-ann-views))
-         facet-vals (distinct (remove nil? (map :facet-val non-ann-views)))
          facet-row-vals (distinct (remove nil? (map :facet-row non-ann-views)))
          facet-col-vals (distinct (remove nil? (map :facet-col non-ann-views)))
          cols (case layout-type
                 :facet-grid (count facet-col-vals)
-                :facet (count facet-vals)
                 (count x-vars))
          rows (case layout-type
                 :facet-grid (count facet-row-vals)
-                :facet 1
                 (count y-vars))
          multi? (and (= layout-type :multi-variable) (> cols 1) (> rows 1))
          m (if multi? (:margin-multi cfg) (:margin cfg))
@@ -1361,7 +1369,7 @@ tips
               :shape-categories shape-categories :coord-type coord-type-main
               :global-x-doms global-x-doms :global-y-doms global-y-doms
               :x-vars x-vars :y-vars y-vars
-              :facet-vals facet-vals :facet-row-vals facet-row-vals :facet-col-vals facet-col-vals
+              :facet-row-vals facet-row-vals :facet-col-vals facet-col-vals
               :color-cols color-cols :shape-col shape-col :scale-mode scale-mode
               :cfg cfg}
          svg-content
@@ -1413,6 +1421,7 @@ tips
            (into [:g] (remove nil? (arrange-panels layout-type ctx)))]]]
      (wrap-plot (cond-> #{} tooltip (conj :tooltip) brush (conj :brush)) svg-content))))
 
+;;
 ;; ---
 
 ;; ## Scatter Plots
@@ -1459,6 +1468,7 @@ tips
     (lay (point {:color "steelblue" :size 6}))
     plot)
 
+;;
 ;; ---
 
 ;; ## Histograms
@@ -1565,6 +1575,7 @@ tips
     (coord :flip)
     plot)
 
+;;
 ;; ---
 
 ;; ## Line Charts
@@ -1619,6 +1630,7 @@ tips
     (lay (line {:color :region}))
     plot)
 
+;;
 ;; ---
 
 ;; ## Layers
@@ -1652,6 +1664,7 @@ tips
     (lay (point {:color :region}) (line {:color :region}))
     plot)
 
+;;
 ;; ---
 
 ;; ## Regression and Smooth Lines
@@ -1796,6 +1809,7 @@ tips
          (loess {:color :species}))
     plot)
 
+;;
 ;; ---
 
 ;; ## Categorical Charts
@@ -2078,6 +2092,7 @@ tips
     (lay (value-bar))
     plot)
 
+;;
 ;; ---
 
 ;; ## Multi-Panel Layouts
@@ -2191,29 +2206,29 @@ tips
 ;; ### ⚙️ Faceting
 
 (defn facet
-  "Split each view by a categorical column."
-  [views col]
-  (mapcat
-   (fn [v]
-     (validate-columns (:data v) :facet col)
-     (let [groups (tc/group-by (:data v) [col] {:result-type :as-map})]
-       (map (fn [[gk gds]]
-              (assoc v :data gds :facet-val (get gk col)))
-            groups)))
-   views))
+  "Split each view by a categorical column.
+  Default layout is a horizontal row of panels.
+  Pass :col as direction for a vertical column of panels."
+  ([views col] (facet views col :row))
+  ([views col direction]
+   (case direction
+     :row (facet-grid views nil col)
+     :col (facet-grid views col nil))))
 
 (defn facet-grid
-  "Split each view by two categorical columns for a row × column grid."
+  "Split each view by two categorical columns for a row × column grid.
+  Either column may be nil for a single-dimension facet."
   [views row-col col-col]
   (mapcat
    (fn [v]
-     (validate-columns (:data v) :facet-row row-col)
-     (validate-columns (:data v) :facet-col col-col)
-     (let [groups (tc/group-by (:data v) [row-col col-col] {:result-type :as-map})]
+     (when row-col (validate-columns (:data v) :facet-row row-col))
+     (when col-col (validate-columns (:data v) :facet-col col-col))
+     (let [group-cols (filterv some? [row-col col-col])
+           groups (tc/group-by (:data v) group-cols {:result-type :as-map})]
        (map (fn [[gk gds]]
               (assoc v :data gds
-                     :facet-row (get gk row-col)
-                     :facet-col (get gk col-col)))
+                     :facet-row (if row-col (get gk row-col) "_")
+                     :facet-col (if col-col (get gk col-col) "_")))
             groups)))
    views))
 
@@ -2264,18 +2279,6 @@ tips
                    :transform (str "rotate(-90," (- pw 5) "," (/ ph 2) ")")}
             (fmt-name yv)])]))))
 
-;; ### ⚙️ `arrange-panels` `:facet`
-
-(defmethod arrange-panels :facet [_ ctx]
-  (let [{:keys [non-ann-views ann-views pw ph facet-vals]} ctx]
-    (for [[ci fv] (map-indexed vector facet-vals)
-          :let [fviews (concat (filter #(= fv (:facet-val %)) non-ann-views)
-                               ann-views)]]
-      [:g {:transform (str "translate(" (* ci pw) ",0)")}
-       (panel-from-ctx ctx fviews :show-y? (zero? ci))
-       [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
-               :font-size 10 :fill "#333"} (str fv)]])))
-
 ;; ### ⚙️ `arrange-panels` `:facet-grid`
 
 (defmethod arrange-panels :facet-grid [_ ctx]
@@ -2290,10 +2293,10 @@ tips
          (panel-from-ctx ctx panel-views
                          :show-x? (= ri (dec rows))
                          :show-y? (zero? ci))
-         (when (zero? ri)
+         (when (and (zero? ri) (not= cv "_"))
            [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
                    :font-size 10 :fill "#333"} (str cv)])
-         (when (= ci (dec cols))
+         (when (and (= ci (dec cols)) (not= rv "_"))
            [:text {:x (- pw 5) :y (/ ph 2) :text-anchor "end"
                    :font-size 10 :fill "#333"
                    :transform (str "rotate(-90," (- pw 5) "," (/ ph 2) ")")}
@@ -2327,6 +2330,15 @@ tips
     (lay (point {:color :species}))
     (facet :species)
     plot)
+
+;; ### 🧪 Vertical Facet
+;;
+;; Pass `:col` to stack panels vertically instead:
+
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
+    (facet :species :col)
+    (plot {:width 400 :height 900}))
 
 ;; ### 🧪 Row × Column Faceting
 ;;
@@ -2404,6 +2416,7 @@ tips
     (facet :cyl)
     plot)
 
+;;
 ;; ---
 
 ;; ## Scales and Coordinates
@@ -2568,6 +2581,7 @@ tips
     (coord :polar)
     plot)
 
+;;
 ;; ---
 
 ;; ## Annotations and Text
@@ -2683,6 +2697,7 @@ tips
                   (lay (text :species))))
       plot))
 
+;;
 ;; ---
 
 ;; ## More Aesthetics
@@ -2705,6 +2720,7 @@ tips
     (lay (point {:color :species :shape :species}))
     plot)
 
+;;
 ;; ---
 
 ;; ## Interactivity
@@ -2855,6 +2871,7 @@ tips
     (facet :species)
     (plot {:brush true}))
 
+;;
 ;; ---
 
 ;; ## Edge Cases
@@ -2889,6 +2906,7 @@ tips
     (lay (value-bar))
     plot)
 
+;;
 ;; ---
 
 ;; ## Reflection
@@ -3050,4 +3068,5 @@ tips
 ;; Feedback is welcome. This work is part of the Scicloj
 ;; [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/).
 
+;;
 ;; ---
