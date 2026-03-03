@@ -113,6 +113,7 @@
 ;; ## Conclusion
 ;;
 
+^:kindly/hide-code
 (comment
   (clay/make! {:source-path "src/biodecahedron/civitas/cancer_through_computation.clj"
                :format [:quarto :html]}))
