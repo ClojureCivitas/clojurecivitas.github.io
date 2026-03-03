@@ -346,7 +346,7 @@ tips
 (def annotation-marks
   "Marks that are annotations rather than data layers.
   'rule' is the traditional name for a reference line in plotting libraries."
-  #{:rule-h :rule-v :band-h})
+  #{:rule-h :rule-v :band-h :band-v})
 
 (defn lay
   "Apply one or more layers to the base views. Each layer adds a mark, stat,
@@ -2289,9 +2289,11 @@ tips
 ;; Cross all columns with themselves; `resolve-view` infers histogram
 ;; for diagonal cells and scatter for off-diagonal:
 
+;; :::{.column-screen-inset-right}
 (-> (view iris (cross iris-quantities iris-quantities))
     (lay {:color :species})
     plot)
+;; :::
 
 ;; This is useful when diagonal and off-diagonal cells need different
 ;; aesthetics. Here, scatters are colored by species while the
@@ -2576,13 +2578,18 @@ tips
   "Horizontal reference band between y1 and y2."
   [y1 y2] {:mark :band-h :y1 y1 :y2 y2})
 
+(defn vband
+  "Vertical reference band between x1 and x2."
+  [x1 x2] {:mark :band-v :x1 x1 :x2 x2})
+
 ;; ### 🧪 Annotation Specs
 ;;
 ;; Each annotation constructor returns a plain map:
 
 [(hline 3.0)
  (vline 6.0)
- (hband 2.5 3.5)]
+ (hband 2.5 3.5)
+ (vband 5.5 6.5)]
 
 ;; ### ⚙️ `render-annotation` methods
 
@@ -2616,6 +2623,14 @@ tips
             :width (Math/abs (- x2 x1)) :height (Math/abs (- y2 y1))
             :fill (:annotation-stroke cfg) :opacity (:band-opacity cfg)}]))
 
+(defmethod render-annotation :band-v [ann {:keys [coord-fn y-domain cfg]}]
+  (let [cfg (or cfg defaults)
+        [x1 y1] (coord-fn (:x1 ann) (first y-domain))
+        [x2 y2] (coord-fn (:x2 ann) (second y-domain))]
+    [:rect {:x (min x1 x2) :y (min y1 y2)
+            :width (Math/abs (- x2 x1)) :height (Math/abs (- y2 y1))
+            :fill (:annotation-stroke cfg) :opacity (:band-opacity cfg)}]))
+
 ;; ### ⚙️ `render-mark` `:text`
 
 (defmethod render-mark :text [_ stat ctx]
@@ -2636,7 +2651,8 @@ tips
     (lay (point {:color :species})
          (hline 3.0)
          (hband 2.5 3.5)
-         (vline 6.0))
+         (vline 6.0)
+         (vband 5.5 6.5))
     plot)
 
 ;; ### 🧪 Text Labels at Group Means
@@ -2809,9 +2825,11 @@ tips
 ;;
 ;; Brush in one panel highlights the same rows across all panels:
 
+;; :::{.column-screen-inset-right}
 (-> (view iris (cross iris-quantities iris-quantities))
     (lay {:color :species})
     (plot {:brush true}))
+;; ::
 
 ;; ### 🧪 Brushable Facets
 ;;
