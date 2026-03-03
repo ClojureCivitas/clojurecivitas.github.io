@@ -2,7 +2,7 @@
   :clay             {:title  "Oakland Sound Pollution Mapping"
                      :quarto {:author   :heather-mf
                               :draft    true
-                              :type     :draft
+                              :type     :post
                               :date     "2026-02-26"
                               :category :gis
                               :tags     [:gis :sound :visualization :oakland]}}}
