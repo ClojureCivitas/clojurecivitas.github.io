@@ -92,7 +92,7 @@
 (require '[data-visualization.splom-tutorial :as splom-tut])
 
 ;; :::{.column-screen-inset-right}
-(kind/hiccup splom-tut/iris-splom-4x4)
+splom-tut/iris-splom-4x4
 ;; ::: 
 
 ;; The goal of this post is to build a composable API where
@@ -104,7 +104,7 @@
 ;;     (plot {:brush true}))
 ;; ```
 ;;
-;; Everything that the SPLOM Tutorial does manually — grid layout,
+;; Everything that the SPLOM Tutorial does — grid layout,
 ;; scale sharing, color assignment, diagonal detection —
 ;; should follow from the composed specification.
 ;; ---
@@ -183,9 +183,11 @@
 ;; ### 📖 Datasets
 
 ;;
-;; Two datasets appear throughout: **iris** (150 flowers, 4 measurements
-;; plus species) and **mpg** (234 cars, fuel economy and class).
-;; Both come from [R datasets](https://vincentarelbundock.github.io/Rdatasets/).
+;; Three datasets appear throughout: **iris** (150 flowers, 4 measurements
+;; plus species), **mpg** (234 cars, fuel economy and class),
+;; and **tips** (244 restaurant bills with tip amount, party size, day,
+;; and smoker status).
+;; All come from [R datasets](https://vincentarelbundock.github.io/Rdatasets/).
 (def iris (rdatasets/datasets-iris))
 (def iris-quantities [:sepal-length :sepal-width :petal-length :petal-width])
 
@@ -194,6 +196,10 @@ iris
 (def mpg (rdatasets/ggplot2-mpg))
 
 mpg
+
+(def tips (rdatasets/reshape2-tips))
+
+tips
 
 ;; ---
 
@@ -2309,15 +2315,10 @@ mpg
 ;;
 ;; `facet-grid` maps two columns to rows and columns of panels:
 
-;; The [tips](https://rdrr.io/cran/reshape2/man/tips.html) dataset records
-;; restaurant bills with tip amount, party size, day, and smoker status.
-
-(let [tips (tc/dataset "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv"
-                       {:key-fn keyword})]
-  (-> (view tips [[:total_bill :tip]])
-      (lay (point {:color :day}))
-      (facet-grid :smoker :sex)
-      (plot {:width 600 :height 500})))
+(-> (view tips [[:total-bill :tip]])
+    (lay (point {:color :day}))
+    (facet-grid :smoker :sex)
+    (plot {:width 600 :height 500}))
 
 ;; ### 🧪 Faceted Scatter with Free Y-Scale
 ;;
