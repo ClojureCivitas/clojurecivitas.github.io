@@ -1,16 +1,15 @@
 ^{:kindly/hide-code true
   :clay {:title "Composable Plotting in Clojure"
          :quarto {:type :post
-                  :author [:daslu :claude]
-                  :date "2026-02-22"
+                  :author [:daslu]
+                  :date "2026-03-03"
                   :description "Building a composable plotting API in Clojure, from views and layers to scatterplot matrices"
                   :category :data-visualization
                   :tags [:datavis :grammar-of-graphics :design :wadogo]
                   :keywords [:datavis]
                   :toc true
                   :toc-depth 2
-                  :image "aog_iris.png"
-                  :draft true}}}
+                  :image "composable_plotting.png"}}}
 (ns data-visualization.aog.composable-plotting
   (:require [tablecloth.api :as tc]
             [scicloj.kindly.v4.kind :as kind]))
@@ -77,6 +76,7 @@
 ;; Everything renders to [SVG](https://en.wikipedia.org/wiki/SVG) via [Hiccup](https://github.com/weavejester/hiccup). The post builds up incrementally:
 ;; scatter plots, histograms, regression lines, bars,
 ;; multi-panel layouts, polar coordinates, and interactivity.
+;;
 ;; ---
 
 ;; ## Motivation
@@ -92,7 +92,7 @@
 (require '[data-visualization.splom-tutorial :as splom-tut])
 
 ;; :::{.column-screen-inset-right}
-(kind/hiccup splom-tut/iris-splom-4x4)
+splom-tut/iris-splom-4x4
 ;; ::: 
 
 ;; The goal of this post is to build a composable API where
@@ -104,9 +104,10 @@
 ;;     (plot {:brush true}))
 ;; ```
 ;;
-;; Everything that the SPLOM Tutorial does manually — grid layout,
+;; Everything that the SPLOM Tutorial does — grid layout,
 ;; scale sharing, color assignment, diagonal detection —
 ;; should follow from the composed specification.
+;;
 ;; ---
 
 ;; ## Glossary
@@ -150,6 +151,7 @@
 ;;
 ;; **Layout** -- how panels are arranged: a single plot,
 ;; a scatterplot matrix, or a faceted grid.
+;;
 ;; ---
 
 ;; ## Setup
@@ -183,9 +185,11 @@
 ;; ### 📖 Datasets
 
 ;;
-;; Two datasets appear throughout: **iris** (150 flowers, 4 measurements
-;; plus species) and **mpg** (234 cars, fuel economy and class).
-;; Both come from [R datasets](https://vincentarelbundock.github.io/Rdatasets/).
+;; Three datasets appear throughout: **iris** (150 flowers, 4 measurements
+;; plus species), **mpg** (234 cars, fuel economy and class),
+;; and **tips** (244 restaurant bills with tip amount, party size, day,
+;; and smoker status).
+;; All come from [R datasets](https://vincentarelbundock.github.io/Rdatasets/).
 (def iris (rdatasets/datasets-iris))
 (def iris-quantities [:sepal-length :sepal-width :petal-length :petal-width])
 
@@ -195,6 +199,11 @@ iris
 
 mpg
 
+(def tips (rdatasets/reshape2-tips))
+
+tips
+
+;;
 ;; ---
 
 ;; ## Composing Views
@@ -226,18 +235,24 @@ mpg
     (map? spec) spec
     :else {:x (first spec) :y (second spec)}))
 
+(defn column-ref?
+  "True if v is a column reference (keyword), false if it's a fixed constant (string, number)."
+  [v]
+  (keyword? v))
+
 (def column-keys
   "View keys whose values are column names in the dataset."
   #{:x :y :color :size :shape})
 
 (defn validate-columns
   "Check that every column-referencing key in view-map names a real column in ds.
+  Non-keyword values (strings, numbers) are fixed constants and skip validation.
   Also usable as (validate-columns ds :facet col) for a single named check."
   ([ds view-map]
    (let [col-names (set (tc/column-names ds))]
      (doseq [k column-keys
              :let [col (get view-map k)]
-             :when (and col (not (col-names col)))]
+             :when (and col (column-ref? col) (not (col-names col)))]
        (throw (ex-info (str "Column " col " (from " k ") not found in dataset. Available: " (sort col-names))
                        {:key k :column col :available (sort col-names)})))))
   ([ds role col]
@@ -282,9 +297,24 @@ mpg
 
 ;; ### 🧪 What a View Looks Like
 ;;
-;; Two keywords — one scatter view:
+;; `view` coerces its first argument to a
+;; [Tablecloth](https://scicloj.github.io/tablecloth/) dataset --
+;; a columnar table built on [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset).
+;; You can pass a Clojure map of columns, a sequence of row maps,
+;; a CSV path, a URL, or an existing dataset.
+;; The `:data` value in each view prints as a table rather than
+;; a plain map -- that's normal.
+;;
+;; Two keywords — one scatter view.
+;; Here, data is a map of columns (key → vector of values):
 
 (-> (view {:a [1 2 3] :b [4 5 6]} :a :b)
+    kind/pprint)
+
+;; A sequence of row maps works too -- Tablecloth pivots the rows
+;; into columns automatically:
+
+(-> (view [{:a 1 :b 4} {:a 2 :b 5} {:a 3 :b 6}] :a :b)
     kind/pprint)
 
 ;; A pair as a vector — same result:
@@ -334,7 +364,7 @@ mpg
 (def annotation-marks
   "Marks that are annotations rather than data layers.
   'rule' is the traditional name for a reference line in plotting libraries."
-  #{:rule-h :rule-v :band-h})
+  #{:rule-h :rule-v :band-h :band-v})
 
 (defn lay
   "Apply one or more layers to the base views. Each layer adds a mark, stat,
@@ -381,6 +411,11 @@ mpg
 ;; The two phases compose through threading:
 ;; `(-> data (view pairs) (lay (point)))` reads as
 ;; "these column pairings, drawn as points" -- what, then how.
+;;
+;; > *The next sections build the rendering pipeline piece by piece.
+;; > To see results first and return for the implementation,
+;; > skip to [Scatter Plots](#scatter-plots).*
+;;
 ;; ---
 
 ;; ## Theme and Colors
@@ -473,6 +508,7 @@ mpg
 
 (mapv fmt-name [:sepal-length :petal_width :species])
 
+;;
 ;; ---
 
 ;; ## Inference and Defaults
@@ -507,6 +543,9 @@ mpg
    ;; Statistics
    :bin-method :sturges ;; Sturges' rule: bin count = ceil(log2(n) + 1)
    :domain-padding 0.05
+   ;; Labels and titles
+   :label-font-size 11 :title-font-size 13
+   :label-offset 18 :title-offset 18
    ;; Fallback
    :default-color "#333"})
 
@@ -532,7 +571,9 @@ mpg
 
 (defn resolve-view
   "Fill in derived properties: :x-type, :y-type, :color-type, :group, :mark, :stat.
-  User-specified values always win."
+  User-specified values always win.
+  Fixed aesthetic values (strings, numbers) are split into :fixed-color, :fixed-size
+  so downstream code only sees column references in :color, :size."
   [v]
   (if-not (:data v)
     v
@@ -540,10 +581,19 @@ mpg
           x-type (or (:x-type v) (column-type ds (:x v)))
           y-type (or (:y-type v) (when (and (:y v) (not= (:x v) (:y v)))
                                    (column-type ds (:y v))))
-          c-type (when (:color v)
-                   (or (:color-type v) (column-type ds (:color v))))
+          ;; Color: only resolve column type for keyword (column) colors
+          color-val (:color v)
+          color-is-col? (and color-val (column-ref? color-val))
+          c-type (when color-is-col?
+                   (or (:color-type v) (column-type ds color-val)))
+          fixed-color (when (and color-val (not color-is-col?)) color-val)
+          ;; Size: split into column-ref vs fixed
+          size-val (:size v)
+          size-is-col? (and size-val (column-ref? size-val))
+          fixed-size (when (and size-val (not size-is-col?)) size-val)
+          ;; Group only by column-ref colors
           group (or (:group v)
-                    (when (= c-type :categorical) [(:color v)])
+                    (when (= c-type :categorical) [color-val])
                     [])
           ;; Infer mark and stat from column types when not specified
           diagonal? (= (:x v) (:y v))
@@ -555,14 +605,19 @@ mpg
               [:rect :count]
               [:bar :bin])
             ;; one categorical, one numerical → strip plot
-            (or (not= x-type y-type))
+            (not= x-type y-type)
             [:point :identity]
             ;; both numerical → scatter
             :else [:point :identity])
           mark (or (:mark v) default-mark)
           stat (or (:stat v) default-stat)]
       (assoc v :x-type x-type :y-type y-type :color-type c-type
-             :group group :mark mark :stat stat))))
+             :group group :mark mark :stat stat
+             ;; Normalize: column-ref stays, fixed goes to :fixed-*
+             :color (when color-is-col? color-val)
+             :fixed-color fixed-color
+             :size (when size-is-col? size-val)
+             :fixed-size fixed-size))))
 
 ;; ### 🧪 What `resolve-view` Produces
 ;;
@@ -608,6 +663,7 @@ mpg
 
 (select-keys (merge defaults {:point-radius 5 :bar-opacity 0.9})
              [:point-radius :bar-opacity :line-width])
+;;
 ;; ---
 
 ;; ## Computing Statistics
@@ -661,9 +717,10 @@ mpg
 
 (defn prepare-points
   "Clean data, compute domains, group by columns, extract color/size/shape values.
-  Expects a resolved view (with :x-type, :group already filled in)."
+  Expects a resolved view (with :x-type, :group already filled in).
+  When mark is :rect, the y-domain includes 0 so bars have a baseline."
   [view]
-  (let [{:keys [data x y color size shape text-col x-type y-type group]} view
+  (let [{:keys [data x y color size shape text-col x-type y-type group mark]} view
         data-idx (tc/add-column data :__row-idx (range (tc/row-count data)))
         clean (cond-> (tc/drop-missing data-idx [x y])
                 (= x-type :categorical) (tc/map-columns x [x] str))]
@@ -674,7 +731,12 @@ mpg
             cat-x? (= x-type :categorical)
             cat-y? (= y-type :categorical)
             x-dom (if cat-x? (distinct xs-col) (numeric-extent xs-col))
-            y-dom (if cat-y? (distinct ys-col) (numeric-extent ys-col))
+            y-dom (if cat-y?
+                    (distinct ys-col)
+                    (let [[lo hi] (numeric-extent ys-col)]
+                      (if (= mark :rect)
+                        [(min 0 lo) (max 0 hi)]
+                        [lo hi])))
             point-group (fn [ds group-val]
                           (cond-> {:xs (ds x) :ys (ds y)
                                    :row-indices (ds :__row-idx)}
@@ -692,6 +754,7 @@ mpg
 (defmethod compute-stat :identity [view]
   (prepare-points view))
 
+;;
 ;; ---
 
 ;; ## Scales -- Data to Pixels
@@ -759,6 +822,7 @@ mpg
   {:A-position (s "A")
    :B-band-info (s "B" true)
    :ticks (ws/ticks s)})
+;;
 ;; ---
 
 ;; ## Coordinate Systems
@@ -797,7 +861,6 @@ mpg
   (fn [coord-type] coord-type))
 
 (defmethod show-ticks? :default [_] true)
-(defmethod show-ticks? :polar [_] false)
 
 (defmethod make-coord :cartesian [_ sx sy pw ph m]
   (fn [dx dy] [(sx dx) (sy dy)]))
@@ -813,70 +876,10 @@ mpg
    :center (coord-fn 5 50)
    :top-right (coord-fn 10 100)})
 
-;; ### ⚙️ Flip
-;;
-;; Swaps x and y axes. Histograms become horizontal, bar charts grow sideways.
-
-(defmethod make-coord :flip [_ sx sy pw ph m]
-  (fn [dx dy] [(sx dy) (sy dx)]))
-
-(defmethod render-grid :flip [_ sx sy pw ph m cfg]
-  (render-grid :cartesian sx sy pw ph m cfg))
-
 (defmethod render-grid :default [_ sx sy pw ph m cfg]
   (render-grid :cartesian sx sy pw ph m cfg))
 
-;; ### ⚙️ Polar
 ;;
-;; [Polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system)
-;; map x to angle and y to radius. Bars become wedges, scatters wrap into a disc.
-
-(defmethod make-coord :polar [_ sx sy pw ph m]
-  (let [cx (/ pw 2.0) cy (/ ph 2.0)
-        r-max (- (min cx cy) m)
-        x-lo (double m) x-span (double (- pw m m))
-        y-lo (double m) y-span (double (- ph m m))]
-    (fn [dx dy]
-      (let [px (sx dx) py (sy dy)
-            ;; Normalize to [0,1]: t-angle sweeps the full circle,
-            ;; t-radius goes from center (0) to edge (1).
-            t-angle (/ (- px x-lo) (max 1.0 x-span))
-            t-radius (/ (- (+ y-lo y-span) py) (max 1.0 y-span))
-            angle (* 2.0 Math/PI t-angle)
-            radius (* r-max t-radius)]
-        [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
-         (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
-
-(defmethod make-coord-px :polar [_ sx sy pw ph m]
-  (let [cx (/ pw 2.0) cy (/ ph 2.0)
-        r-max (- (min cx cy) m)
-        x-lo (double m) x-span (double (- pw m m))
-        y-lo (double m) y-span (double (- ph m m))]
-    (fn [px py]
-      (let [t-angle (/ (- px x-lo) (max 1.0 x-span))
-            t-radius (/ (- (+ y-lo y-span) py) (max 1.0 y-span))
-            angle (* 2.0 Math/PI t-angle)
-            radius (* r-max t-radius)]
-        [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
-         (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
-
-(defmethod render-grid :polar [_ sx sy pw ph m cfg]
-  (let [cfg (or cfg defaults)
-        cx (/ pw 2.0) cy (/ ph 2.0)
-        r-max (- (min cx cy) m)]
-    (into [:g]
-          (concat
-           (for [i (range 1 6)
-                 :let [r (* r-max (/ i 5.0))]]
-             [:circle {:cx cx :cy cy :r r :fill "none"
-                       :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])
-           (for [i (range 8)
-                 :let [a (* i (/ Math/PI 4))]]
-             [:line {:x1 cx :y1 cy
-                     :x2 (+ cx (* r-max (Math/cos a)))
-                     :y2 (+ cy (* r-max (Math/sin a)))
-                     :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])))))
-
 ;; ---
 
 ;; ## Drawing Marks
@@ -903,10 +906,10 @@ mpg
                                           shape-categories)))]
     (into [:g]
           (mapcat (fn [{:keys [color xs ys sizes shapes row-indices]}]
-                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
+                    (let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))]
                       (for [i (range (count xs))
                             :let [[px py] (coord-fn (nth xs i) (nth ys i))
-                                  r (if sizes (size-scale (nth sizes i)) (:point-radius cfg))
+                                  r (if sizes (size-scale (nth sizes i)) (or (:fixed-size ctx) (:point-radius cfg)))
                                   sh (if shapes (get shape-map (nth shapes i) :circle) :circle)
                                   row-idx (when row-indices (nth row-indices i))
                                   tip (when tooltip-fn
@@ -940,6 +943,7 @@ mpg
                 [:rect {:x 0 :y 0 :width 600 :height 400 :fill (:bg theme)}]
                 marks]))
 
+;;
 ;; ---
 
 ;; ## Axes and Grid Lines
@@ -993,7 +997,7 @@ mpg
         n (tick-count (- pw (* 2 m)) (:tick-spacing-x cfg))
         ticks (ws/ticks sx n)
         labels (format-ticks sx ticks)]
-    (into [:g {:font-size (:font-size theme) :fill "#666"}]
+    (into [:g {:font-size (:font-size theme) :fill "#666" :font-family "sans-serif"}]
           (map (fn [t label]
                  [:text {:x (sx t) :y (- ph 2) :text-anchor "middle"} label])
                ticks labels))))
@@ -1007,7 +1011,7 @@ mpg
         n (tick-count (- ph (* 2 m)) (:tick-spacing-y cfg))
         ticks (ws/ticks sy n)
         labels (format-ticks sy ticks)]
-    (into [:g {:font-size (:font-size theme) :fill "#666"}]
+    (into [:g {:font-size (:font-size theme) :fill "#666" :font-family "sans-serif"}]
           (map (fn [t label]
                  [:text {:x (- m 3) :y (+ (sy t) 3) :text-anchor "end"} label])
                ticks labels))))
@@ -1027,6 +1031,7 @@ mpg
     (render-x-ticks :numeric sx pw ph m defaults)
     (render-y-ticks :numeric sy pw ph m defaults)]))
 
+;;
 ;; ---
 
 ;; ## Assembling a Panel
@@ -1077,12 +1082,14 @@ mpg
         stat-y-domains (keep #(get-in % [:stat :y-domain]) view-stats)
 
         merged-x-dom (or x-domain
+                         (:domain x-scale-spec) ;; user-specified domain
                          (if (categorical-domain? (first stat-x-domains))
                            (distinct (mapcat identity stat-x-domains))
                            (let [lo (reduce min (map first stat-x-domains))
                                  hi (reduce max (map second stat-x-domains))]
                              (pad-domain [lo hi] x-scale-spec))))
         merged-y-dom (or y-domain
+                         (:domain y-scale-spec) ;; user-specified domain
                          (if (categorical-domain? (first stat-y-domains))
                            (distinct (mapcat identity stat-y-domains))
                            (let [lo (reduce min (map first stat-y-domains))
@@ -1146,7 +1153,9 @@ mpg
      (into [:g]
            (mapcat (fn [{:keys [view stat]}]
                      (let [mark (:mark view)
-                           mark-ctx (assoc ctx :position (or (:position view) :dodge))]
+                           mark-ctx (cond-> (assoc ctx :position (or (:position view) :dodge))
+                                      (:fixed-color view) (assoc :fixed-color (:fixed-color view))
+                                      (:fixed-size view) (assoc :fixed-size (:fixed-size view)))]
                        [(render-mark mark stat mark-ctx)]))
                    view-stats))
 
@@ -1168,6 +1177,7 @@ mpg
        (view [[:x :y]])
        (lay (point)))
    600 400 25)])
+;;
 ;; ---
 
 ;; ## Rendering the Plot
@@ -1196,11 +1206,9 @@ mpg
 
 (defn infer-layout [views]
   (let [facet-rows (seq (remove nil? (map :facet-row views)))
-        facet-cols (seq (remove nil? (map :facet-col views)))
-        facet-vals (seq (remove nil? (map :facet-val views)))]
+        facet-cols (seq (remove nil? (map :facet-col views)))]
     (cond
-      (and facet-rows facet-cols) :facet-grid
-      facet-vals :facet
+      (or facet-rows facet-cols) :facet-grid
       :else (let [x-vars (distinct (map :x views))
                   y-vars (distinct (map :y views))]
               (if (or (> (count x-vars) 1) (> (count y-vars) 1))
@@ -1227,8 +1235,9 @@ mpg
 
 ;; ### ⚙️ `wrap-plot`
 ;;
-;; Wraps SVG as hiccup. Tooltip and brush interactions are added later
-;; in the [Interactivity](#interactivity) section.
+;; Wraps SVG as hiccup. This initial definition is a passthrough;
+;; it is **redefined** in the [Interactivity](#interactivity) section
+;; to add tooltip and brush support.
 
 (defn wrap-plot
   "Wrap SVG content as hiccup. Interaction modes are added later."
@@ -1288,9 +1297,11 @@ mpg
 ;; `aes` + `geom` from `theme` and rendering options.
 
 (defn plot
-  "Render views as SVG. Options: :width :height :scales :coord :tooltip :brush :config"
+  "Render views as SVG. Options: :width :height :scales :coord :tooltip :brush :config
+  :x-label :y-label :title — axis labels auto-infer from column names, override here."
   ([views] (plot views {}))
-  ([views {:keys [width height scales coord tooltip brush config]}]
+  ([views {:keys [width height scales coord tooltip brush config
+                  x-label y-label title] :as opts}]
    (let [cfg (merge defaults config)
          width (or width (:width cfg))
          height (or height (:height cfg))
@@ -1301,16 +1312,13 @@ mpg
          layout-type (infer-layout non-ann-views)
          x-vars (distinct (map :x non-ann-views))
          y-vars (distinct (map :y non-ann-views))
-         facet-vals (distinct (remove nil? (map :facet-val non-ann-views)))
          facet-row-vals (distinct (remove nil? (map :facet-row non-ann-views)))
          facet-col-vals (distinct (remove nil? (map :facet-col non-ann-views)))
          cols (case layout-type
                 :facet-grid (count facet-col-vals)
-                :facet (count facet-vals)
                 (count x-vars))
          rows (case layout-type
                 :facet-grid (count facet-row-vals)
-                :facet 1
                 (count y-vars))
          multi? (and (= layout-type :multi-variable) (> cols 1) (> rows 1))
          m (if multi? (:margin-multi cfg) (:margin cfg))
@@ -1321,13 +1329,14 @@ mpg
               (double (:panel-size cfg))
               (double (/ height rows)))
          stat-results (mapv (comp compute-stat #(assoc % :cfg cfg) resolve-view) non-ann-views)
-         all-colors (let [color-views (filter #(and (:color %) (:data %)) views)]
+         all-colors (let [color-views (filter #(and (column-ref? (:color %)) (:data %)) views)]
                       (when (seq color-views)
                         (distinct (mapcat #((:data %) (:color %)) color-views))))
-         color-cols (distinct (remove nil? (map :color views)))
-         shape-col (first (remove nil? (map :shape views)))
+         color-cols (distinct (keep #(when (column-ref? (:color %)) (:color %)) views))
+         shape-col (first (keep #(when (column-ref? (:shape %)) (:shape %)) views))
          shape-categories (when shape-col
-                            (distinct (mapcat (fn [v] (when (:data v) (map #(get % shape-col) (tc/rows (:data v) :as-maps))))
+                            (distinct (mapcat (fn [v] (when (and (:data v) (column-ref? (:shape v)))
+                                                        (map #(get % shape-col) (tc/rows (:data v) :as-maps))))
                                               views)))
          coord-type-main (or (:coord (first views)) :cartesian)
          tooltip-fn (when tooltip
@@ -1335,20 +1344,38 @@ mpg
          scale-mode (or scales :shared)
          x-scale-spec (or (:x-scale (first non-ann-views)) {:type :linear})
          y-scale-spec (or (:y-scale (first non-ann-views)) {:type :linear})
-         global-x-doms (when (#{:shared :free-y} scale-mode)
-                         (collect-domain stat-results :x-domain x-scale-spec))
-         global-y-doms (when (#{:shared :free-x} scale-mode)
-                         (compute-global-y-domain stat-results views y-scale-spec))
+         global-x-doms (or (:domain x-scale-spec)
+                           (when (#{:shared :free-y} scale-mode)
+                             (collect-domain stat-results :x-domain x-scale-spec)))
+         global-y-doms (or (:domain y-scale-spec)
+                           (when (#{:shared :free-x} scale-mode)
+                             (compute-global-y-domain stat-results views y-scale-spec)))
+         ;; Axis labels: auto-infer unless multi-variable (SPLOM) or
+         ;; coord system has no rectangular axes (e.g. polar), allow override
+         auto-label? (and (not multi?) (show-ticks? coord-type-main))
+         eff-x-label (or x-label
+                         (:label x-scale-spec)
+                         (when auto-label?
+                           (when-let [x (first x-vars)] (fmt-name x))))
+         eff-y-label (or y-label
+                         (:label y-scale-spec)
+                         (when auto-label?
+                           (when-let [y (first y-vars)] (fmt-name y))))
+         eff-title title
+         ;; Extra space for labels
+         x-label-pad (if eff-x-label (:label-offset cfg) 0)
+         y-label-pad (if eff-y-label (:label-offset cfg) 0)
+         title-pad (if eff-title (:title-offset cfg) 0)
          legend-w (if (or all-colors shape-categories) (:legend-width cfg) 0)
-         total-w (+ (* cols pw) legend-w)
-         total-h (* rows ph)
+         total-w (+ y-label-pad (* cols pw) legend-w)
+         total-h (+ title-pad (* rows ph) x-label-pad)
          ctx {:non-ann-views non-ann-views :ann-views ann-views
               :pw pw :ph ph :m m :rows rows :cols cols
               :all-colors all-colors :tooltip-fn tooltip-fn
               :shape-categories shape-categories :coord-type coord-type-main
               :global-x-doms global-x-doms :global-y-doms global-y-doms
               :x-vars x-vars :y-vars y-vars
-              :facet-vals facet-vals :facet-row-vals facet-row-vals :facet-col-vals facet-col-vals
+              :facet-row-vals facet-row-vals :facet-col-vals facet-col-vals
               :color-cols color-cols :shape-col shape-col :scale-mode scale-mode
               :cfg cfg}
          svg-content
@@ -1356,13 +1383,36 @@ mpg
                 "xmlns" "http://www.w3.org/2000/svg"
                 "xmlns:xlink" "http://www.w3.org/1999/xlink"
                 "version" "1.1"}
+          ;; Plot title
+          (when eff-title
+            [:text {:x (+ y-label-pad (/ (* cols pw) 2))
+                    :y 14
+                    :text-anchor "middle" :font-size (:title-font-size cfg)
+                    :fill "#333" :font-weight "bold" :font-family "sans-serif"}
+             eff-title])
+          ;; Y-axis label (rotated)
+          (when eff-y-label
+            (let [cy (+ title-pad (/ (* rows ph) 2))]
+              [:text {:x 12 :y cy
+                      :text-anchor "middle" :font-size (:label-font-size cfg)
+                      :fill "#333" :font-family "sans-serif"
+                      :transform (str "rotate(-90,12," cy ")")}
+               eff-y-label]))
+          ;; X-axis label
+          (when eff-x-label
+            [:text {:x (+ y-label-pad (/ (* cols pw) 2))
+                    :y (- total-h 3)
+                    :text-anchor "middle" :font-size (:label-font-size cfg)
+                    :fill "#333" :font-family "sans-serif"}
+             eff-x-label])
+          ;; Legend (offset by label padding)
           (when all-colors
             (render-legend all-colors #(color-for all-colors %)
-                           :x (+ (* cols pw) 10) :y 20
+                           :x (+ y-label-pad (* cols pw) 10) :y (+ title-pad 20)
                            :title (first color-cols)))
           (when shape-categories
-            (let [y-off (if all-colors (+ 20 (* (count all-colors) 16) 10) 20)
-                  x-off (+ (* cols pw) 10)]
+            (let [y-off (+ title-pad (if all-colors (+ 20 (* (count all-colors) 16) 10) 20))
+                  x-off (+ y-label-pad (* cols pw) 10)]
               (into [:g {:font-family "sans-serif" :font-size 10}
                      (when shape-col [:text {:x x-off :y (- y-off 5) :fill "#333" :font-size 9}
                                       (fmt-name shape-col)])]
@@ -1372,9 +1422,12 @@ mpg
                                              (if all-colors (color-for all-colors cat) "#333") {})
                        [:text {:x (+ x-off 15) :y (+ y-off (* i 16) 4) :fill "#333"}
                         (str cat)]]))))
-          (into [:g] (remove nil? (arrange-panels layout-type ctx)))]]
+          ;; Panels (offset by label padding)
+          [:g {:transform (str "translate(" y-label-pad "," title-pad ")")}
+           (into [:g] (remove nil? (arrange-panels layout-type ctx)))]]]
      (wrap-plot (cond-> #{} tooltip (conj :tooltip) brush (conj :brush)) svg-content))))
 
+;;
 ;; ---
 
 ;; ## Scatter Plots
@@ -1410,6 +1463,18 @@ mpg
     (lay (point {:color :species}))
     plot)
 
+;; ### 🧪 Fixed Aesthetics
+;;
+;; When an aesthetic is a keyword, it binds to a column.
+;; When it's a string or number, it's a fixed value —
+;; no grouping, no legend entry:
+
+(-> {:x [1 2 3 4] :y [2 4 3 5]}
+    (view [[:x :y]])
+    (lay (point {:color "steelblue" :size 6}))
+    plot)
+
+;;
 ;; ---
 
 ;; ## Histograms
@@ -1460,6 +1525,7 @@ mpg
    :y-domain (:y-domain stat)
    :first-3-bins (mapv #(select-keys % [:min :max :count])
                        (take 3 (:bin-maps (first (:bins stat)))))})
+
 ;; ### ⚙️ `render-mark` `:bar`
 ;;
 ;; Bars projected as 4-corner polygons, works with cartesian, flip, and polar.
@@ -1469,7 +1535,7 @@ mpg
         cfg (or cfg defaults)]
     (into [:g]
           (mapcat (fn [{:keys [color bin-maps]}]
-                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
+                    (let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))]
                       (for [{:keys [min max count]} bin-maps
                             :let [[x1 y1] (coord-fn min 0)
                                   [x2 y2] (coord-fn max 0)
@@ -1495,6 +1561,16 @@ mpg
     (lay (histogram {:color :species}))
     plot)
 
+;; ### ⚙️ Flip
+;;
+;; Swaps x and y axes. Histograms become horizontal, bar charts grow sideways.
+
+(defmethod make-coord :flip [_ sx sy pw ph m]
+  (fn [dx dy] [(sx dy) (sy dx)]))
+
+(defmethod render-grid :flip [_ sx sy pw ph m cfg]
+  (render-grid :cartesian sx sy pw ph m cfg))
+
 ;; ### 🧪 Flipped Histogram
 ;;
 ;; `:flip` swaps the axes -- bars grow leftward:
@@ -1505,6 +1581,7 @@ mpg
     (coord :flip)
     plot)
 
+;;
 ;; ---
 
 ;; ## Line Charts
@@ -1515,9 +1592,8 @@ mpg
 
 ;; ### ⚙️ Line Constructors
 
-(defn line-mark
-  "Line mark with identity stat. Named `line-mark` to avoid shadowing
-  SVG's [:line] element used elsewhere in this namespace."
+(defn line
+  "Line mark with identity stat."
   ([] {:mark :line :stat :identity})
   ([opts] (merge {:mark :line :stat :identity} opts)))
 
@@ -1530,14 +1606,14 @@ mpg
           (concat
            (when-let [lines (:lines stat)]
              (for [{:keys [color x1 y1 x2 y2]} lines
-                   :let [c (if color (color-for all-colors color) (:default-color cfg))
+                   :let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))
                          [px1 py1] (coord-fn x1 y1)
                          [px2 py2] (coord-fn x2 y2)]]
                [:line {:x1 px1 :y1 py1 :x2 px2 :y2 py2
                        :stroke c :stroke-width (:line-width cfg)}]))
            (when-let [pts (:points stat)]
              (for [{:keys [color xs ys]} pts
-                   :let [c (if color (color-for all-colors color) (:default-color cfg))
+                   :let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))
                          projected (sort-by first (map (fn [x y] (coord-fn x y)) xs ys))]]
                [:polyline {:points (str/join " " (map (fn [[px py]] (str px "," py)) projected))
                            :stroke c :stroke-width (:line-width cfg) :fill "none"}]))))))
@@ -1547,7 +1623,7 @@ mpg
 (-> (view {:year [2018 2019 2020 2021 2022]
            :sales [10 15 13 17 20]}
           [[:year :sales]])
-    (lay (line-mark))
+    (lay (line))
     plot)
 
 ;; ### 🧪 Colored Line Chart
@@ -1557,24 +1633,23 @@ mpg
            :region ["East" "East" "East" "East" "East"
                     "West" "West" "West" "West" "West"]}
           [[:year :sales]])
-    (lay (line-mark {:color :region}))
+    (lay (line {:color :region}))
     plot)
 
+;;
 ;; ---
 
 ;; ## Layers
 ;;
-;; `lay` (defined in [Composing Views](#composing-views)) applies one or
-;; more layers to the same base views. Multiple layers duplicate each
-;; view -- once per layer. Annotation layers (hline, vline, hband) are
-;; kept as separate views.
+;; Multiple layers duplicate the views -- here's what that looks like
+;; internally, and how it renders.
 
 ;; ### 🧪 What `lay` Produces
 ;;
-;; Base views duplicated, each copy with a different layer:
+;; Each layer gets its own copy of every base view:
 
 (-> (view iris [[:sepal-length :sepal-width]])
-    (lay (point) (line-mark))
+    (lay (point) (line))
     (->> (mapv #(select-keys % [:x :y :mark :stat]))))
 
 ;; ### 🧪 Scatter + Line Overlay
@@ -1582,7 +1657,7 @@ mpg
 (-> (view {:year [2018 2019 2020 2021 2022]
            :sales [10 15 13 17 20]}
           [[:year :sales]])
-    (lay (point) (line-mark))
+    (lay (point) (line))
     plot)
 
 ;; ### 🧪 Colored Scatter + Line
@@ -1592,9 +1667,10 @@ mpg
            :region ["East" "East" "East" "East" "East"
                     "West" "West" "West" "West" "West"]}
           [[:year :sales]])
-    (lay (point {:color :region}) (line-mark {:color :region}))
+    (lay (point {:color :region}) (line {:color :region}))
     plot)
 
+;;
 ;; ---
 
 ;; ## Regression and Smooth Lines
@@ -1653,6 +1729,7 @@ mpg
     resolve-view
     compute-stat
     kind/pprint)
+
 ;; ### ⚙️ `compute-stat` `:loess`
 ;;
 ;; Loess via fastmath.interpolation (80 sample points, x values deduplicated).
@@ -1687,6 +1764,18 @@ mpg
          :x-domain (numeric-extent (clean x))
          :y-domain (numeric-extent (clean y))}))))
 
+;; ### 🧪 What `:loess` Returns
+;;
+;; Sampled points along the fitted curve, one set per color group:
+
+(-> (view iris [[:sepal-length :petal-length]])
+    (lay (loess {:color :species}))
+    first
+    resolve-view
+    compute-stat
+    (update :points (fn [pts] (mapv #(-> % (update :xs count) (update :ys count)) pts)))
+    kind/pprint)
+
 ;; ### 🧪 Scatter + Regression
 ;;
 ;; `lay` applies two layers to the same data -- one scatter, one regression line:
@@ -1694,6 +1783,17 @@ mpg
 (-> (view iris [[:sepal-length :sepal-width]])
     (lay (point {:color :species})
          (lm {:color :species}))
+    plot)
+
+;; ### 🧪 Mixed Fixed and Column Aesthetics
+;;
+;; Column-bound color on scatter, fixed color on the regression line.
+;; The black line gets no legend entry:
+
+(-> iris
+    (view [[:sepal-length :sepal-width]])
+    (lay (point {:color :species})
+         (lm {:color "black"}))
     plot)
 
 ;; ### 🧪 Smooth Curve (Loess)
@@ -1715,6 +1815,7 @@ mpg
          (loess {:color :species}))
     plot)
 
+;;
 ;; ---
 
 ;; ## Categorical Charts
@@ -1822,7 +1923,7 @@ mpg
     (if coord-px
       [:polygon {:points (arc-polygon-points coord-px x-lo x-hi py-lo py-hi 20)
                  :fill color :opacity opacity}]
-      [:rect {:x x-lo :y (clojure.core/min py-lo py-hi)
+      [:rect {:x x-lo :y (min py-lo py-hi)
               :width (- x-hi x-lo)
               :height (Math/abs (- py-lo py-hi))
               :fill color :opacity opacity}])))
@@ -1832,7 +1933,6 @@ mpg
   (let [{:keys [all-colors sx sy coord-px position cfg]} ctx
         cfg (or cfg defaults)
         bw (ws/data sx :bandwidth)
-        n-colors (clojure.core/count (:bars stat))
         cum-y (atom {})
         active-map (when (= position :dodge)
                      (into {}
@@ -1844,29 +1944,29 @@ mpg
                                    (:bars stat))])))]
     (into [:g]
           (mapcat (fn [bi {:keys [color counts]}]
-                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
-                      (for [{:keys [category count]} counts
-                            :when (or (= position :stack) (pos? count))
-                            :let [band-info (sx category true)
+                    (let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))]
+                      (for [{cat :category cnt :count} counts
+                            :when (or (= position :stack) (pos? cnt))
+                            :let [band-info (sx cat true)
                                   band-start (:rstart band-info)
                                   band-end (:rend band-info)
                                   band-mid (/ (+ band-start band-end) 2.0)]]
                         (if (= position :stack)
-                          (let [base (get @cum-y category 0)
+                          (let [base (get @cum-y cat 0)
                                 py-lo (sy base)
-                                py-hi (sy (+ base count))
+                                py-hi (sy (+ base cnt))
                                 x-lo (- band-mid (* bw 0.4))
                                 x-hi (+ band-mid (* bw 0.4))]
-                            (swap! cum-y assoc category (+ base count))
+                            (swap! cum-y assoc cat (+ base cnt))
                             (render-bar-elem coord-px x-lo x-hi py-lo py-hi c cfg))
-                          (let [active (get active-map category)
-                                n-active (clojure.core/count active)
+                          (let [active (get active-map cat)
+                                n-active (count active)
                                 active-idx (.indexOf ^java.util.List active bi)
-                                sub-bw (/ (* bw 0.8) (clojure.core/max 1 n-active))
+                                sub-bw (/ (* bw 0.8) (max 1 n-active))
                                 x-lo (+ (- band-mid (/ (* n-active sub-bw) 2.0)) (* active-idx sub-bw))
                                 x-hi (+ x-lo sub-bw)
                                 py-lo (sy 0)
-                                py-hi (sy count)]
+                                py-hi (sy cnt)]
                             (render-bar-elem coord-px x-lo x-hi py-lo py-hi c cfg))))))
                   (range) (:bars stat)))))
 
@@ -1876,13 +1976,13 @@ mpg
         cfg (or cfg defaults)
         bw (ws/data sx :bandwidth)
         groups (:points stat)
-        n-groups (clojure.core/count groups)
-        sub-bw (/ (* bw 0.8) (clojure.core/max 1 n-groups))
+        n-groups (count groups)
+        sub-bw (/ (* bw 0.8) (max 1 n-groups))
         cum-y (atom {})]
     (into [:g]
           (mapcat (fn [gi {:keys [color xs ys]}]
-                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
-                      (for [i (range (clojure.core/count xs))
+                    (let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))]
+                      (for [i (range (count xs))
                             :let [cat (nth xs i)
                                   val (nth ys i)
                                   band-info (sx cat true)
@@ -1916,7 +2016,7 @@ mpg
 (defmethod render-x-ticks :categorical [_ sx pw ph m cfg]
   (let [ticks (ws/ticks sx)
         labels (map str ticks)]
-    (into [:g {:font-size (:font-size theme) :fill "#666"}]
+    (into [:g {:font-size (:font-size theme) :fill "#666" :font-family "sans-serif"}]
           (map (fn [t label]
                  [:text {:x (sx t) :y (- ph 2) :text-anchor "middle"} label])
                ticks labels))))
@@ -1924,7 +2024,7 @@ mpg
 (defmethod render-y-ticks :categorical [_ sy pw ph m cfg]
   (let [ticks (ws/ticks sy)
         labels (map str ticks)]
-    (into [:g {:font-size (:font-size theme) :fill "#666"}]
+    (into [:g {:font-size (:font-size theme) :fill "#666" :font-family "sans-serif"}]
           (map (fn [t label]
                  [:text {:x (- m 3) :y (+ (sy t) 3) :text-anchor "end"} label])
                ticks labels))))
@@ -1998,6 +2098,7 @@ mpg
     (lay (value-bar))
     plot)
 
+;;
 ;; ---
 
 ;; ## Multi-Panel Layouts
@@ -2079,6 +2180,15 @@ mpg
              (when-off-diagonal #(lay % (point) (lm))))]
   (mapv #(select-keys % [:x :y :mark :stat]) vs))
 
+;; `where` and `where-not` filter views by predicate -- useful for
+;; keeping only certain column pairings:
+
+(-> iris
+    (view (cross [:sepal-length :sepal-width :petal-length]
+                 [:sepal-length :sepal-width :petal-length]))
+    (where-not diagonal?)
+    count)
+
 ;; ### ⚙️ Column-Pair Helpers
 
 (defn distribution
@@ -2102,29 +2212,29 @@ mpg
 ;; ### ⚙️ Faceting
 
 (defn facet
-  "Split each view by a categorical column."
-  [views col]
-  (mapcat
-   (fn [v]
-     (validate-columns (:data v) :facet col)
-     (let [groups (tc/group-by (:data v) [col] {:result-type :as-map})]
-       (map (fn [[gk gds]]
-              (assoc v :data gds :facet-val (get gk col)))
-            groups)))
-   views))
+  "Split each view by a categorical column.
+  Default layout is a horizontal row of panels.
+  Pass :col as direction for a vertical column of panels."
+  ([views col] (facet views col :row))
+  ([views col direction]
+   (case direction
+     :row (facet-grid views nil col)
+     :col (facet-grid views col nil))))
 
 (defn facet-grid
-  "Split each view by two categorical columns for a row × column grid."
+  "Split each view by two categorical columns for a row × column grid.
+  Either column may be nil for a single-dimension facet."
   [views row-col col-col]
   (mapcat
    (fn [v]
-     (validate-columns (:data v) :facet-row row-col)
-     (validate-columns (:data v) :facet-col col-col)
-     (let [groups (tc/group-by (:data v) [row-col col-col] {:result-type :as-map})]
+     (when row-col (validate-columns (:data v) :facet-row row-col))
+     (when col-col (validate-columns (:data v) :facet-col col-col))
+     (let [group-cols (filterv some? [row-col col-col])
+           groups (tc/group-by (:data v) group-cols {:result-type :as-map})]
        (map (fn [[gk gds]]
               (assoc v :data gds
-                     :facet-row (get gk row-col)
-                     :facet-col (get gk col-col)))
+                     :facet-row (if row-col (get gk row-col) "_")
+                     :facet-col (if col-col (get gk col-col) "_")))
             groups)))
    views))
 
@@ -2175,18 +2285,6 @@ mpg
                    :transform (str "rotate(-90," (- pw 5) "," (/ ph 2) ")")}
             (fmt-name yv)])]))))
 
-;; ### ⚙️ `arrange-panels` `:facet`
-
-(defmethod arrange-panels :facet [_ ctx]
-  (let [{:keys [non-ann-views ann-views pw ph facet-vals]} ctx]
-    (for [[ci fv] (map-indexed vector facet-vals)
-          :let [fviews (concat (filter #(= fv (:facet-val %)) non-ann-views)
-                               ann-views)]]
-      [:g {:transform (str "translate(" (* ci pw) ",0)")}
-       (panel-from-ctx ctx fviews :show-y? (zero? ci))
-       [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
-               :font-size 10 :fill "#333"} (str fv)]])))
-
 ;; ### ⚙️ `arrange-panels` `:facet-grid`
 
 (defmethod arrange-panels :facet-grid [_ ctx]
@@ -2201,10 +2299,10 @@ mpg
          (panel-from-ctx ctx panel-views
                          :show-x? (= ri (dec rows))
                          :show-y? (zero? ci))
-         (when (zero? ri)
+         (when (and (zero? ri) (not= cv "_"))
            [:text {:x (/ pw 2) :y 12 :text-anchor "middle"
                    :font-size 10 :fill "#333"} (str cv)])
-         (when (= ci (dec cols))
+         (when (and (= ci (dec cols)) (not= rv "_"))
            [:text {:x (- pw 5) :y (/ ph 2) :text-anchor "end"
                    :font-size 10 :fill "#333"
                    :transform (str "rotate(-90," (- pw 5) "," (/ ph 2) ")")}
@@ -2215,9 +2313,11 @@ mpg
 ;; Cross all columns with themselves; `resolve-view` infers histogram
 ;; for diagonal cells and scatter for off-diagonal:
 
+;; :::{.column-screen-inset-right}
 (-> (view iris (cross iris-quantities iris-quantities))
     (lay {:color :species})
     plot)
+;; :::
 
 ;; This is useful when diagonal and off-diagonal cells need different
 ;; aesthetics. Here, scatters are colored by species while the
@@ -2227,6 +2327,7 @@ mpg
                       [:sepal-length :sepal-width :petal-length]))
     (when-off-diagonal {:color :species})
     plot)
+
 ;; ### 🧪 Faceted Scatter
 ;;
 ;; One panel per species -- `facet` splits views by a column:
@@ -2236,18 +2337,23 @@ mpg
     (facet :species)
     plot)
 
+;; ### 🧪 Vertical Facet
+;;
+;; Pass `:col` to stack panels vertically instead:
+
+(-> (view iris [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
+    (facet :species :col)
+    (plot {:width 400 :height 900}))
+
 ;; ### 🧪 Row × Column Faceting
 ;;
 ;; `facet-grid` maps two columns to rows and columns of panels:
 
-;; The [tips](https://rdrr.io/cran/reshape2/man/tips.html) dataset records
-;; restaurant bills with tip amount, party size, day, and smoker status.
-
-(let [tips (tc/dataset "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv")]
-  (-> (view tips [["total_bill" "tip"]])
-      (lay (point {:color "day"}))
-      (facet-grid "smoker" "sex")
-      (plot {:width 600 :height 500})))
+(-> (view tips [[:total-bill :tip]])
+    (lay (point {:color :day}))
+    (facet-grid :smoker :sex)
+    (plot {:width 600 :height 500}))
 
 ;; ### 🧪 Faceted Scatter with Free Y-Scale
 ;;
@@ -2316,6 +2422,7 @@ mpg
     (facet :cyl)
     plot)
 
+;;
 ;; ---
 
 ;; ## Scales and Coordinates
@@ -2325,8 +2432,13 @@ mpg
 ;; ### ⚙️ Scale and Coord Setters
 
 (defn scale
-  "Set a scale type for :x or :y across all views."
-  ([views channel type] (scale views channel type {}))
+  "Set scale options for :x or :y across all views.
+  Accepts (views channel type), (views channel type opts), or (views channel opts-map).
+  opts-map may include :type, :domain, and :label."
+  ([views channel type-or-opts]
+   (if (map? type-or-opts)
+     (scale views channel (or (:type type-or-opts) :linear) (dissoc type-or-opts :type))
+     (scale views channel type-or-opts {})))
   ([views channel type opts]
    (let [k (case channel :x :x-scale :y :y-scale)]
      (mapv #(assoc % k (merge {:type type} opts)) views))))
@@ -2364,6 +2476,90 @@ mpg
     (scale :y :log)
     plot)
 
+;; ### 🧪 Custom Domain
+;;
+;; The `scale` function also accepts an options map with `:domain`
+;; to clip or expand the axis range:
+
+(-> iris
+    (view [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
+    (scale :x {:domain [4 8]})
+    plot)
+
+;; ### 🧪 Axis Titles
+;;
+;; Axis labels are auto-inferred from column names.
+;; Override with plot options:
+
+(-> iris
+    (view [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
+    (plot {:x-label "Sepal Length (cm)"
+           :y-label "Sepal Width (cm)"
+           :title "Iris Measurements"}))
+
+;; Or via the scale constructor — the label travels with the scale:
+
+(-> iris
+    (view [[:sepal-length :sepal-width]])
+    (lay (point {:color :species}))
+    (scale :x {:label "Length (cm)"})
+    plot)
+
+;; ### ⚙️ Polar
+;;
+;; [Polar coordinates](https://en.wikipedia.org/wiki/Polar_coordinate_system)
+;; map x to angle and y to radius. Bars become wedges, scatters wrap into a disc.
+
+(defmethod show-ticks? :polar [_] false)
+
+(defmethod make-coord :polar [_ sx sy pw ph m]
+  (let [cx (/ pw 2.0) cy (/ ph 2.0)
+        r-max (- (min cx cy) m)
+        x-lo (double m) x-span (double (- pw m m))
+        y-lo (double m) y-span (double (- ph m m))]
+    (fn [dx dy]
+      (let [px (sx dx) py (sy dy)
+            ;; Normalize to [0,1]: t-angle sweeps the full circle,
+            ;; t-radius goes from center (0) to edge (1).
+            t-angle (/ (- px x-lo) (max 1.0 x-span))
+            t-radius (/ (- (+ y-lo y-span) py) (max 1.0 y-span))
+            angle (* 2.0 Math/PI t-angle)
+            radius (* r-max t-radius)]
+        [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
+         (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
+
+(defmethod make-coord-px :polar [_ sx sy pw ph m]
+  (let [cx (/ pw 2.0) cy (/ ph 2.0)
+        r-max (- (min cx cy) m)
+        x-lo (double m) x-span (double (- pw m m))
+        y-lo (double m) y-span (double (- ph m m))]
+    (fn [px py]
+      (let [t-angle (/ (- px x-lo) (max 1.0 x-span))
+            t-radius (/ (- (+ y-lo y-span) py) (max 1.0 y-span))
+            angle (* 2.0 Math/PI t-angle)
+            radius (* r-max t-radius)]
+        [(+ cx (* radius (Math/cos (- angle (/ Math/PI 2.0)))))
+         (+ cy (* radius (Math/sin (- angle (/ Math/PI 2.0)))))]))))
+
+(defmethod render-grid :polar [_ sx sy pw ph m cfg]
+  (let [cfg (or cfg defaults)
+        cx (/ pw 2.0) cy (/ ph 2.0)
+        r-max (- (min cx cy) m)]
+    (into [:g]
+          (concat
+           (for [i (range 1 6)
+                 :let [r (* r-max (/ i 5.0))]]
+             [:circle {:cx cx :cy cy :r r :fill "none"
+                       :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])
+           (for [i (range 8)
+                 :let [a (* i (/ Math/PI 4))]]
+             [:line {:x1 cx :y1 cy
+                     :x2 (+ cx (* r-max (Math/cos a)))
+                     :y2 (+ cy (* r-max (Math/sin a)))
+                     :stroke (:grid theme) :stroke-width (:grid-stroke-width cfg)}])))))
+
 ;; ### 🧪 Polar Scatter
 ;;
 ;; `coord :polar` wraps the same scatter into polar space:
@@ -2391,6 +2587,7 @@ mpg
     (coord :polar)
     plot)
 
+;;
 ;; ---
 
 ;; ## Annotations and Text
@@ -2399,7 +2596,7 @@ mpg
 
 ;; ### ⚙️ Annotation Constructors
 
-(defn text-label
+(defn text
   "Text labels at data positions. `col` is the column used for label text."
   ([col] {:mark :text :stat :identity :text-col col})
   ([col opts] (merge {:mark :text :stat :identity :text-col col} opts)))
@@ -2416,13 +2613,19 @@ mpg
   "Horizontal reference band between y1 and y2."
   [y1 y2] {:mark :band-h :y1 y1 :y2 y2})
 
+(defn vband
+  "Vertical reference band between x1 and x2."
+  [x1 x2] {:mark :band-v :x1 x1 :x2 x2})
+
 ;; ### 🧪 Annotation Specs
 ;;
 ;; Each annotation constructor returns a plain map:
 
 [(hline 3.0)
  (vline 6.0)
- (hband 2.5 3.5)]
+ (hband 2.5 3.5)
+ (vband 5.5 6.5)]
+
 ;; ### ⚙️ `render-annotation` methods
 
 (defmethod render-annotation :rule-h [ann {:keys [coord-fn x-domain cfg]}]
@@ -2455,6 +2658,14 @@ mpg
             :width (Math/abs (- x2 x1)) :height (Math/abs (- y2 y1))
             :fill (:annotation-stroke cfg) :opacity (:band-opacity cfg)}]))
 
+(defmethod render-annotation :band-v [ann {:keys [coord-fn y-domain cfg]}]
+  (let [cfg (or cfg defaults)
+        [x1 y1] (coord-fn (:x1 ann) (first y-domain))
+        [x2 y2] (coord-fn (:x2 ann) (second y-domain))]
+    [:rect {:x (min x1 x2) :y (min y1 y2)
+            :width (Math/abs (- x2 x1)) :height (Math/abs (- y2 y1))
+            :fill (:annotation-stroke cfg) :opacity (:band-opacity cfg)}]))
+
 ;; ### ⚙️ `render-mark` `:text`
 
 (defmethod render-mark :text [_ stat ctx]
@@ -2462,7 +2673,7 @@ mpg
         cfg (or cfg defaults)]
     (into [:g {:font-size 9 :fill (:default-color cfg) :text-anchor "middle"}]
           (mapcat (fn [{:keys [color xs ys labels]}]
-                    (let [c (if color (color-for all-colors color) (:default-color cfg))]
+                    (let [c (if color (color-for all-colors color) (or (:fixed-color ctx) (:default-color cfg)))]
                       (for [i (range (count xs))
                             :let [[px py] (coord-fn (nth xs i) (nth ys i))]]
                         [:text {:x px :y (- py 5) :fill c}
@@ -2475,7 +2686,8 @@ mpg
     (lay (point {:color :species})
          (hline 3.0)
          (hband 2.5 3.5)
-         (vline 6.0))
+         (vline 6.0)
+         (vband 5.5 6.5))
     plot)
 
 ;; ### 🧪 Text Labels at Group Means
@@ -2488,9 +2700,10 @@ mpg
   (-> (view iris [[:sepal-length :sepal-width]])
       (lay (point {:color :species}))
       (concat (-> (view means [[:sepal-length :sepal-width]])
-                  (lay (text-label :species))))
+                  (lay (text :species))))
       plot))
 
+;;
 ;; ---
 
 ;; ## More Aesthetics
@@ -2513,6 +2726,7 @@ mpg
     (lay (point {:color :species :shape :species}))
     plot)
 
+;;
 ;; ---
 
 ;; ## Interactivity
@@ -2635,6 +2849,7 @@ mpg
 (-> (view iris [[:sepal-length :sepal-width]])
     (lay (point {:color :species}))
     (plot {:tooltip true}))
+
 ;; ### 🧪 Brushable Scatter
 ;;
 ;; `:brush true` adds a drag-to-select rectangle:
@@ -2647,9 +2862,11 @@ mpg
 ;;
 ;; Brush in one panel highlights the same rows across all panels:
 
+;; :::{.column-screen-inset-right}
 (-> (view iris (cross iris-quantities iris-quantities))
     (lay {:color :species})
     (plot {:brush true}))
+;; :::
 
 ;; ### 🧪 Brushable Facets
 ;;
@@ -2660,6 +2877,7 @@ mpg
     (facet :species)
     (plot {:brush true}))
 
+;;
 ;; ---
 
 ;; ## Edge Cases
@@ -2693,6 +2911,42 @@ mpg
           [[:cat :val]])
     (lay (value-bar))
     plot)
+
+;;
+;; ---
+
+;; ## Putting It All Together
+;;
+;; The examples above introduce features one at a time. These final
+;; examples combine several at once, showing that the composition
+;; works freely -- polar with faceting, layers with facet grids --
+;; without any special-case code.
+
+;; ### 🧪 Polar Rose by Year
+;;
+;; Stacked bars in polar coordinates, faceted by year.
+;; Each wedge shows a vehicle class; color distinguishes drivetrain.
+;; Comparing the two panels reveals how class distributions shifted
+;; between 1999 and 2008:
+
+;; :::{.column-screen-inset-right}
+(-> (view mpg :class)
+    (lay (stacked-bar {:color :drv}))
+    (coord :polar)
+    (facet :year)
+    (plot {:width 800 :height 400}))
+;; :::
+
+;; ### 🧪 Scatter with Regression, Faceted Grid
+;;
+;; Tips vs. total bill, colored by meal time, with a regression
+;; line per group. `facet-grid` splits by smoker status (rows) and
+;; sex (columns) -- four panels, each with its own scatter and fit:
+
+(-> (view tips [[:total-bill :tip]])
+    (lay (point {:color :time}) (lm {:color :time}))
+    (facet-grid :smoker :sex)
+    (plot {:width 600 :height 500}))
 
 ;; ---
 
@@ -2735,6 +2989,13 @@ mpg
 ;; (x = y) becomes a histogram, a categorical column becomes a bar chart.
 ;; All visual constants -- colors, margins, radii -- live in one `defaults`
 ;; map that can be overridden per-plot via `:config`.
+;;
+;; **Axis labels from column names.**
+;; Standalone and faceted plots auto-infer axis titles from column names
+;; via `fmt-name` (e.g. `:sepal-length` → "sepal length"). SPLOM grids
+;; skip this since they already show column headers. The `scale`
+;; constructor and `plot` options both accept overrides, and custom
+;; domains work via `(scale :x {:domain [4 8]})`.
 ;;
 ;; ### 📖 Composition, reviewed
 ;;
@@ -2793,20 +3054,13 @@ mpg
 ;; the code has to hold both swaps in mind simultaneously.
 ;;
 ;; **`render-panel` does too much.**
-;; This function is the workhorse of the system: it computes statistics,
+;; This function does most of the heavy lifting: it computes statistics,
 ;; merges domains, builds scales, constructs the coord function, renders
 ;; marks, draws axes and grid lines, and assembles everything into an SVG
 ;; group. `resolve-view` and `defaults` pull out some of that complexity,
 ;; but the function is still long and touches many concerns. Breaking it
 ;; into smaller steps -- a preparation phase, a rendering phase, and an
 ;; assembly phase -- would make it easier to understand and modify.
-;;
-;; **No axis labels on standalone plots.**
-;; Single-panel plots show tick values but not axis titles like
-;; "sepal length" or "count." Multi-panel layouts use column headers above
-;; and beside the grid, which works well, but a standalone scatter plot
-;; gives no indication of what the axes represent beyond the tick values
-;; themselves.
 ;;
 ;; **Partial validation.**
 ;; `view` checks that the specified columns actually exist in the
@@ -2815,6 +3069,35 @@ mpg
 ;; will fail silently or produce a confusing error deep inside `render-panel`.
 ;; Adding Malli schemas for view maps and plot options would catch these
 ;; mistakes at the point where the user makes them.
+;;
+;; **Inference logic: code vs. data.**
+;; `resolve-view` encodes all its inference rules as ordinary `cond`
+;; branches and `or` expressions. This is easy to read and debug: you
+;; can step through it, print intermediate values, and see exactly why
+;; a view got `:mark :point` instead of `:bar`. But all rules are
+;; wired into one function, so users who want different defaults --
+;; say, boxplots instead of strip plots for categorical-vs-numerical
+;; pairings -- must either override per view or modify the source.
+;;
+;; An alternative is to represent inference as data: a graph of
+;; dependencies between properties, where each node has a rule that
+;; can be replaced. [Hanami](https://github.com/jsa-aerial/hanami)
+;; takes this approach with its substitution-key templates, which
+;; form a DAG of defaults that users can override at any node.
+;; Tableplot's current API builds on the same idea; its
+;; [Dataflow Model Walkthrough](https://scicloj.github.io/tableplot/tableplot_book.dataflow_walkthrough.html)
+;; explains the mechanism in detail.
+;; The advantage is flexibility: swapping one default doesn't require
+;; reading the whole inference function. The cost is indirection:
+;; understanding *why* a property has a particular value means tracing
+;; through a dependency graph rather than reading top-to-bottom code.
+;;
+;; This notebook chose plain code. The inference logic is short enough
+;; (~40 lines) that reading it directly is manageable. But as the
+;; number of inferred properties grows -- and it would in a real
+;; library -- a data-driven approach might pay for its indirection
+;; with better extensibility. Finding the right balance between
+;; "easy to trace" and "easy to extend" is an open tension.
 ;;
 ;; ### 📖 Design space
 ;;
@@ -2848,9 +3131,6 @@ mpg
 ;;   backends? SVG is universal and works well with Clay, but Canvas or
 ;;   WebGL would be needed for large datasets.
 ;;
-;; - **Axis labels and titles:** How should they be specified? As part of the
-;;   view map, as plot options, or inferred from column metadata?
-;;
 ;; - **Faceting:** Is faceting part of the data algebra (another way to split
 ;;   views) or a separate layout concern? Right now it sits between the two --
 ;;   `facet` modifies views, but the grid layout is handled by `plot`.
@@ -2858,4 +3138,5 @@ mpg
 ;; Feedback is welcome. This work is part of the Scicloj
 ;; [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/).
 
+;;
 ;; ---
