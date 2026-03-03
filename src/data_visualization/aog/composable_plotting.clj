@@ -9,8 +9,7 @@
                   :keywords [:datavis]
                   :toc true
                   :toc-depth 2
-                  :image "aog_iris.png"
-                  :draft true}}}
+                  :image "composable_plotting.png"}}}
 (ns data-visualization.aog.composable-plotting
   (:require [tablecloth.api :as tc]
             [scicloj.kindly.v4.kind :as kind]))
