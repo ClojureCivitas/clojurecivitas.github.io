@@ -294,9 +294,24 @@ tips
 
 ;; ### 🧪 What a View Looks Like
 ;;
-;; Two keywords — one scatter view:
+;; `view` coerces its first argument to a
+;; [Tablecloth](https://scicloj.github.io/tablecloth/) dataset --
+;; a columnar table built on [tech.ml.dataset](https://github.com/techascent/tech.ml.dataset).
+;; You can pass a Clojure map of columns, a sequence of row maps,
+;; a CSV path, a URL, or an existing dataset.
+;; The `:data` value in each view prints as a table rather than
+;; a plain map -- that's normal.
+;;
+;; Two keywords — one scatter view.
+;; Here, data is a map of columns (key → vector of values):
 
 (-> (view {:a [1 2 3] :b [4 5 6]} :a :b)
+    kind/pprint)
+
+;; A sequence of row maps works too -- Tablecloth pivots the rows
+;; into columns automatically:
+
+(-> (view [{:a 1 :b 4} {:a 2 :b 5} {:a 3 :b 6}] :a :b)
     kind/pprint)
 
 ;; A pair as a vector — same result:
