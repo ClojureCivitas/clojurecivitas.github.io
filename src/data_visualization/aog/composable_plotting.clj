@@ -2211,16 +2211,6 @@ tips
 
 ;; ### ⚙️ Faceting
 
-(defn facet
-  "Split each view by a categorical column.
-  Default layout is a horizontal row of panels.
-  Pass :col as direction for a vertical column of panels."
-  ([views col] (facet views col :row))
-  ([views col direction]
-   (case direction
-     :row (facet-grid views nil col)
-     :col (facet-grid views col nil))))
-
 (defn facet-grid
   "Split each view by two categorical columns for a row × column grid.
   Either column may be nil for a single-dimension facet."
@@ -2237,6 +2227,16 @@ tips
                      :facet-col (if col-col (get gk col-col) "_")))
             groups)))
    views))
+
+(defn facet
+  "Split each view by a categorical column.
+  Default layout is a horizontal row of panels.
+  Pass :col as direction for a vertical column of panels."
+  ([views col] (facet views col :row))
+  ([views col direction]
+   (case direction
+     :row (facet-grid views nil col)
+     :col (facet-grid views col nil))))
 
 ;; ### 🧪 Faceting in Action
 
