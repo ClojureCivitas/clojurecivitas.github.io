@@ -49,7 +49,7 @@
   dev.data-star.clojure/http-kit-malli-schemas {:mvn/version "1.0.0-RC4"}
   dev.data-star.clojure/ring-malli-schemas    {:mvn/version "1.0.0-RC4"}
   ;; required by mentat_collective/emmy/fdg_ch03
-  io.github.nextjournal/clerk                 {:mvn/version "0.18.1158"}
+  ;; io.github.nextjournal/clerk                 {:mvn/version "0.18.1158"}
 
   ;; libraries for GIS work
   org.apache.sis.storage/sis-geotiff          {:mvn/version "1.5"}
