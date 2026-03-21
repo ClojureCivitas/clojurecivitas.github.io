@@ -167,10 +167,10 @@
 ;; whether each operand is positive or negative:
 
 ^kind/table
-[{:A "+" :B "+" :union "(merge A B)" :intersect "(keep A B)"  :difference "(remove A B)"}
- {:A "-" :B "-" :union "(keep A B)"  :intersect "(merge A B)" :difference "(remove B A)"}
- {:A "+" :B "-" :union "(remove B A)" :intersect "(remove A B)" :difference "(keep A B)"}
- {:A "-" :B "+" :union "(remove A B)" :intersect "(remove B A)" :difference "(merge A B)"}]
+[{:A "+" :B "+" :union "(map-merge A B)" :intersect "(map-keep A B)"  :difference "(map-remove A B)"}
+ {:A "-" :B "-" :union "(map-keep A B)"  :intersect "(map-merge A B)" :difference "(map-remove B A)"}
+ {:A "+" :B "-" :union "(map-remove B A)" :intersect "(map-remove A B)" :difference "(map-keep A B)"}
+ {:A "-" :B "+" :union "(map-remove A B)" :intersect "(map-remove B A)" :difference "(map-merge A B)"}]
 
 ;; Read each row as: "when A has this polarity and B has that polarity,
 ;; use this map primitive."
@@ -402,5 +402,5 @@
 ;; | Empty set | `{}` |
 ;; | Universal set | `{:neg :neg}` |
 ;; | Complement | Toggle `:neg` key |
-;; | Membership | pos: `get ≠ nil` · neg: `get = nil` |
+;; | Membership | pos: `contains? = true` · neg: `contains? = false` |
 ;; | All operations | Three map primitives × four polarity cases |
