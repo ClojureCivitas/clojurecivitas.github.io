@@ -25,6 +25,12 @@
 ;; membership — reduce to three map primitives. No special types,
 ;; no wrapper objects, no case explosion.
 
+;; Clojure obviously offers sets as a built-in type — but they are just a thin
+;; wrapper around maps. For the rest of this article we will work directly with
+;; maps, since they are the underlying representation of sets. This more
+;; clearly shows that the same idea applies to any language with associative
+;; data structures.
+
 ;; ## The Key Insight
 
 ;; A **positive set** is a map where every key maps to itself:
@@ -41,8 +47,11 @@
 ;; "everything except a and b"  →  {:neg :neg, a a, b b}
 ;; ```
 
-;; The sentinel is just data. It flows through map operations like any
-;; other key. This is the entire trick.
+;; The sentinel is just data. It flows through map operations like any other
+;; key. This is the entire trick.
+
+;; Note that whichever value is used to denote negative sets is no longer
+;; available as a normal element so choose wisely.
 
 ;; ## Implementation
 
@@ -62,7 +71,7 @@
 (defn map-remove
   "Remove A's keys that are also in B."
   [a b]
-  (apply dissoc a (keys b)))
+  (reduce dissoc a (keys b)))
 
 ;; That's it for primitives. Everything else is built from these three.
 
@@ -106,8 +115,8 @@
   "Is x a member of set s?"
   [s x]
   (if (negative? s)
-    (nil? (get s x))    ;; negative: member if NOT listed
-    (some? (get s x)))) ;; positive: member if listed
+    (not (contains? s x))    ;; negative: member if NOT listed
+    (contains? s x)))
 
 ;; For positive sets, membership is the usual map lookup. For negative
 ;; sets, the logic inverts — an element is a member if it is *not*
@@ -123,8 +132,8 @@
                :member-b (member? vowels :b)
                :member-z (member? vowels :z)}
  :consonants  {:member-a (member? consonants :a)
-                :member-b (member? consonants :b)
-                :member-z (member? consonants :z)}}
+               :member-b (member? consonants :b)
+               :member-z (member? consonants :z)}}
 
 ;; `vowels` is a positive set containing `:a :e :i :o :u`.
 ;; `consonants` is a negative set excluding `:a :e :i :o :u` —
@@ -147,9 +156,8 @@
 
 ;; Verify that complement round-trips:
 
-^kind/table
-{:vowels-complement (= consonants (complement-set vowels))
- :double-complement (= vowels (complement-set (complement-set vowels)))}
+(= consonants (complement-set vowels))
+(= vowels (complement-set (complement-set vowels)))
 
 ;; ## The Operation Table
 
@@ -159,18 +167,19 @@
 ;; whether each operand is positive or negative:
 
 ^kind/table
-[{:A "pos" :B "pos" :union "merge(A,B)" :intersect "keep(A,B)"  :difference "remove(A,B)"}
- {:A "neg" :B "neg" :union "keep(A,B)"  :intersect "merge(A,B)" :difference "remove(B,A)"}
- {:A "pos" :B "neg" :union "remove(B,A)" :intersect "remove(A,B)" :difference "keep(A,B)"}
- {:A "neg" :B "pos" :union "remove(A,B)" :intersect "remove(B,A)" :difference "merge(A,B)"}]
+[{:A "+" :B "+" :union "(merge A B)" :intersect "(keep A B)"  :difference "(remove A B)"}
+ {:A "-" :B "-" :union "(keep A B)"  :intersect "(merge A B)" :difference "(remove B A)"}
+ {:A "+" :B "-" :union "(remove B A)" :intersect "(remove A B)" :difference "(keep A B)"}
+ {:A "-" :B "+" :union "(remove A B)" :intersect "(remove B A)" :difference "(merge A B)"}]
 
 ;; Read each row as: "when A has this polarity and B has that polarity,
 ;; use this map primitive."
 
-;; Notice the symmetry. Each of the three primitives appears exactly
-;; once in every column — there are no redundant cases and no gaps.
-;; The `neg` sentinel key participates in the map operations naturally,
-;; so the result automatically has the correct polarity.
+;; Notice the symmetry. merge and keep appear once and remove appears twice in
+;; a complementary pattern in each column. The four cases are exhaustive and
+;; mutually exclusive — every combination of positive and negative sets is
+;; covered. The `neg` sentinel key participates in the map operations
+;; naturally, so the result automatically has the correct polarity.
 
 ;; ### Why Does This Work?
 
@@ -347,7 +356,7 @@
 
 ;; ## Why This Matters
 
-;; **It's just maps.** No new types, no wrappers, no separate code
+;; **It's just maps.** No new types, wrappers or separate code
 ;; paths. Any system that can store and manipulate maps can represent
 ;; both finite and cofinite sets. Serialization, hashing, comparison,
 ;; indexing — they all come for free from the underlying map.
@@ -384,6 +393,8 @@
 
 ;; ## Summary
 
+;; One sentinel key. Three map primitives. Complete set algebra.
+
 ;; | Concept | Representation |
 ;; |---------|----------------|
 ;; | Positive set `{a, b}` | `{a: a, b: b}` |
@@ -393,5 +404,3 @@
 ;; | Complement | Toggle `:neg` key |
 ;; | Membership | pos: `get ≠ nil` · neg: `get = nil` |
 ;; | All operations | Three map primitives × four polarity cases |
-
-;; One sentinel key. Three map primitives. Complete set algebra.
