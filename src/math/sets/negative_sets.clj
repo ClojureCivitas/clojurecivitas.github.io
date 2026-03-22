@@ -22,14 +22,14 @@
 ;; This article presents a simpler approach: represent both finite and
 ;; cofinite sets as plain maps, distinguished by a single sentinel key.
 ;; All set operations — union, intersection, difference, complement,
-;; membership — reduce to three map primitives. No special types,
-;; no wrapper objects, no case explosion.
+;; membership — reduce to three map primitives. No special types or
+;; wrapper objects are needed.
 
 ;; Clojure obviously offers sets as a built-in type — but they are just a thin
 ;; wrapper around maps. For the rest of this article we will work directly with
-;; maps, since they are the underlying representation of sets. This more
-;; clearly shows that the same idea applies to any language with associative
-;; data structures.
+;; maps, since they are the underlying representation of sets. This approach
+;; also more clearly shows that the same idea applies to any language with
+;; associative data structures.
 
 ;; ## The Key Insight
 
@@ -205,38 +205,36 @@
 
 ;; ## Implementation of Set Operations
 
+;; Define a bonus operation: map-remove with the arguments flipped. As shown in
+;; the table, this is needed for the negative-negative case of difference:
+(defn map-remove-right
+  "Remove B's keys that are also in A."
+  [a b]
+  (map-remove b a))
+
 ;; The dispatch is a simple 2×2 case on polarity:
 
 (defn- dispatch
   "Select the map operation based on polarity of a and b.
    ops is [pos-pos, neg-neg, pos-neg, neg-pos]."
-  [[pp nn pn np] a b]
-  (let [na (negative? a)
-        nb (negative? b)]
-    (cond
-      (and (not na) (not nb)) (pp a b)
-      (and na nb)             (nn a b)
-      (and (not na) nb)       (pn a b)
-      :else                   (np a b))))
+  [[pp pn np nn] a b]
+  (condp = [(negative? a) (negative? b)]
+    [false false] (pp a b)
+    [false true] (pn a b)
+    [true false] (np a b)
+    [true true] (nn a b)))
 
 (def set-union
   "Union of two sets (positive or negative)."
-  (partial dispatch [map-merge map-keep
-                     (fn [a b] (map-remove b a))
-                     map-remove]))
+  (partial dispatch [map-merge map-remove-right map-remove map-keep]))
 
 (def set-intersection
   "Intersection of two sets (positive or negative)."
-  (partial dispatch [map-keep map-merge
-                     map-remove
-                     (fn [a b] (map-remove b a))]))
+  (partial dispatch [map-keep map-remove map-remove-right map-merge]))
 
 (def set-difference
   "Difference of two sets (positive or negative)."
-  (partial dispatch [map-remove
-                     (fn [a b] (map-remove b a))
-                     map-keep
-                     map-merge]))
+  (partial dispatch [map-remove map-keep map-merge map-remove-right]))
 
 ;; That's the entire implementation. Three primitives, three operations,
 ;; four cases each. Let's verify with examples.
@@ -265,13 +263,13 @@
 ^kind/table
 [{:operation "A ∪ B"
   :result (set-union not-ab not-bc)
-  :expected "neg{b} — everything except b"}
+  :expected "¬{b} — everything except b"}
  {:operation "A ∩ B"
   :result (set-intersection not-ab not-bc)
-  :expected "neg{a,b,c} — everything except a,b,c"}
+  :expected "¬{a b c} — everything except a,b,c"}
  {:operation "A \\ B"
   :result (set-difference not-ab not-bc)
-  :expected "pos{c} — just c"}]
+  :expected "{c} — just c"}]
 
 ;; That last one is worth pausing on. The difference of two negative
 ;; sets can produce a *positive* set! "Everything except {a,b}" minus
@@ -287,26 +285,26 @@
 ^kind/table
 [{:operation "pos ∪ neg"
   :result (set-union ab not-bc')
-  :expected "neg{c} — everything except c"}
+  :expected "¬{c} — everything except c"}
  {:operation "pos ∩ neg"
   :result (set-intersection ab not-bc')
-  :expected "pos{a} — just a"}
+  :expected "{a} — just a"}
  {:operation "pos \\ neg"
   :result (set-difference ab not-bc')
-  :expected "pos{b} — just b"}]
+  :expected "{b} — just b"}]
 
 ;; ### Mixed: Negative × Positive
 
 ^kind/table
 [{:operation "neg ∪ pos"
   :result (set-union not-bc' ab)
-  :expected "neg{c} — everything except c"}
+  :expected "¬{c} — everything except c"}
  {:operation "neg ∩ pos"
   :result (set-intersection not-bc' ab)
-  :expected "pos{a} — just a"}
+  :expected "{a} — just a"}
  {:operation "neg \\ pos"
   :result (set-difference not-bc' ab)
-  :expected "neg{a,b,c} — everything except a,b,c"}]
+  :expected "¬{a b c} — everything except a,b,c"}]
 
 ;; ## Properties
 
@@ -367,11 +365,11 @@
 ;; tracking. The polarity of the result emerges from the operation.
 
 ;; **Complement is O(1).** Toggling one key. Not rebuilding a structure,
-;; not wrapping in a `Not(...)` node, not allocating a new type.
+;; or wrapping in a `Not(...)` node or allocating a new type.
 
-;; **Three primitives are enough.** `merge`, `keep`, `remove` on maps.
-;; These are available in every language. The 4×3 dispatch table is
-;; small enough to memorize.
+;; **Three primitives are enough.** `merge`, `keep`, `remove` on maps. These
+;; are available in every language supporting associative maps. The 4×3
+;; dispatch table is small enough to memorize.
 
 ;; ## The Broader Context
 
