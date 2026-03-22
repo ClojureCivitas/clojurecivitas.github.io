@@ -205,8 +205,9 @@
 
 ;; ## Implementation of Set Operations
 
-;; Define a bonus operation: map-remove with the arguments flipped. As shown in
-;; the table, this is needed for the negative-negative case of difference:
+;; Define a bonus operation: `map-remove-right` which is just `map-remove` with
+;; the arguments flipped. As shown in the table, this is needed once per set
+;; operation:
 (defn map-remove-right
   "Remove B's keys that are also in A."
   [a b]
