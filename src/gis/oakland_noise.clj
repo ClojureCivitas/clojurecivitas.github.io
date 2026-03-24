@@ -19,68 +19,65 @@
 
 ;; # Oakland Sound Pollution Mapping
 
-;; ## Overview
-;; Creating an animation/image series mapping approximate sound pollution levels across Oakland, California throughout a 24-hour cycle.
+;; Oakland is loud. At 7am the I-880 corridor wakes up in a roar — freight trucks
+;; heading to the Port, commuters stacking up through the Fruitvale interchange.
+;; By 3am most of the city quiets to a hum, punctuated by the occasional BART train
+;; or a container ship horn drifting in off the estuary.
+;;
+;; This notebook builds an animated map of Oakland's approximate sound environment
+;; across a full 24-hour cycle. Not measured data, but *modeled* sound: derived from
+;; road and rail geometry, infrastructure type, traffic volume curves, and acoustic
+;; physics.
 
-;; ## Data Sources
-;; - **Road & Rail Geometries**: [Overpass QL API](https://wiki.openstreetmap.org/wiki/Overpass_API)
-;; - **Traffic Patterns**: Standard traffic curves for temporal modeling
-;;   - will start with basic Standard Diurnal Daily Curves
-;;   - Look into []Caltrans PeMS](https://pems.dot.ca.gov/) data for more specific patterns if time allows
-;;   - Another source for West Oakland truck traffic for the Port of Oakland: [WEST OAKLAND TRUCK SURVEY REPORT](https://www.baaqmd.gov/~/media/files/planning-and-research/care-program/final-west-oakland-truck-survey-report-dec-2009.pdf)
+;; ## The Ingredients
+;;
+;; - **Road & rail geometry** from [OpenStreetMap via Overpass QL](https://wiki.openstreetmap.org/wiki/Overpass_API) —
+;;   every highway, arterial, residential street, rail line, and runway in the city
+;; - **Diurnal traffic curves** — standard hour-by-hour volume multipliers,
+;;   with a nod to [Caltrans PeMS](https://pems.dot.ca.gov/) and the
+;;   [West Oakland Truck Survey](https://www.baaqmd.gov/~/media/files/planning-and-research/care-program/final-west-oakland-truck-survey-report-dec-2009.pdf)
+;;   for the port's unusual freight patterns
+;; - **Acoustic physics** — the inverse square law for line sources tells us how
+;;   sound attenuates with distance; logarithmic addition lets us combine
+;;   overlapping sources correctly
 
-;; ## Approach
-
-;; ### 1. Data Collection
-;; - Query Overpass QL for Oakland road and rail network geometries
-;; - Categorize road segments by type (highway, arterial, residential, etc.)
-;; - Identify rail lines and stations, freight yards, airports, etc
-
-;; ### 2. Base Decibel Mapping
-;; - Assign base decibel levels to each road segment based on road type
-;; - Factor in rail noise sources
-;; - Reference standards:
-;;   - Highway: ~70-80 dB
-;;   - Arterial roads: ~60-70 dB
-;;   - Residential streets: ~50-60 dB
-;;   - Rail: ~80-90 dB (variable)
-
-;; ### 3. Temporal Multiplier
-;; - Apply traffic curves to model hour-by-hour variations
-;; - Peak hours (7-9 AM, 5-7 PM): maximum multiplier
-;; - Midday: moderate levels
-;; - Night hours (11 PM - 5 AM): minimum multiplier
-
-;; ### 4. Sound Propagation Model
-;; Implement Inverse Square Law for line sources:
+;; ## The Model
+;;
+;; Each road segment gets a *base decibel level* by type — motorways around 80 dB,
+;; residential streets around 50 dB, rail at 85 dB, runways at 95 dB. That base
+;; level is scaled hour-by-hour by a volume multiplier drawn from traffic curves,
+;; then propagated outward using the line-source attenuation formula:
 ;;
 ;; ```
 ;; L₂ = L₁ - 10 · log₁₀(d₂/d₁)
 ;; ```
 ;;
-;; Where:
-;; - L₂ = sound level at distance d₂
-;; - L₁ = sound level at distance d₁
-;; - d₂ = target distance from source
-;; - d₁ = reference distance from source
+;; Roads behave as line sources (coefficient 10), not point sources (coefficient 20).
+;; Where a highway runs adjacent to a rail line, their contributions combine
+;; logarithmically — 70 dB + 70 dB ≈ 73 dB, not 140.
+
+;; ## Output
 ;;
-;; This calculates sound attenuation as distance increases from the road/rail source.
+;; 24 frames — one per hour — compiled into an animation. A color gradient maps
+;; decibel ranges to hue: the city breathes visually across the day, loud corridors
+;; pulsing at rush hour, residential neighborhoods dimming to near-quiet overnight.
 
-;; ### 5. Output
-;; - Generate 24 static images (one per half hour)
-;; - Compile into animation showing sound levels throughout the day
-;; - Color gradient representing decibel ranges
+;; ## Why Clojure
+;;
+;; The whole pipeline — fetch, transform, model, render — lives in one literate
+;; namespace. The physics functions are pure data transformations, easy to inspect
+;; and sanity-check at the REPL. Clay renders everything as an interactive notebook.
+;; The interesting unsolved parts — spatial propagation, grid rasterization — are
+;; the ones worth talking about.
 
-;; ## Technical Challenges
-;; - Efficient spatial queries and indexing
-;; - Handling overlapping sound sources
-;; - Realistic traffic pattern modeling
-;; - Performance optimization for city-wide calculations
-
-;; ## Future Enhancements
-
-;; ## Implementation Status
-;; 🚧 Work in progress
+;; ## Future Directions
+;;
+;; - Incorporate measured data from community sensors or the EPA monitoring network
+;; - Model building attenuation (concrete and wood absorb differently)
+;; - West Oakland deserves its own treatment: the port, the 880, and BART all
+;;   converge there, and it's a documented environmental justice issue
+;; - Synthesize an approximate soundscape for a given location and hour — hear
+;;   what the map is showing
 
 ;; ---
 
