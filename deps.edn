@@ -48,6 +48,8 @@
   dev.data-star.clojure/malli-schemas         {:mvn/version "1.0.0-RC4"}
   dev.data-star.clojure/http-kit-malli-schemas {:mvn/version "1.0.0-RC4"}
   dev.data-star.clojure/ring-malli-schemas    {:mvn/version "1.0.0-RC4"}
+  ;; required by mentat_collective/emmy
+  io.github.nextjournal/clerk                 {:mvn/version "0.18.1158"}
 
   ;; libraries for GIS work
   org.apache.sis.storage/sis-geotiff          {:mvn/version "1.5"}
@@ -61,6 +63,7 @@
 
   generateme/fastmath                         {:mvn/version "3.0.0-alpha4"}
   clojure2d/clojure2d                         {:mvn/version "1.5.0-alpha1"}
+  org.scicloj/wadogo                          {:mvn/version "1.1.0-alpha1"}
 
   com.github.psambit9791/jdsp                 {:mvn/version "3.1.0"}
 
@@ -74,8 +77,9 @@
                                                :deps/root "core"}
   com.hyperphor/multitool                     {:mvn/version "0.2.3"}
   datascript/datascript                       {:mvn/version "1.7.8"}
-  io.github.pbaille/noon                      {:git/url "https://github.com/pbaille/noon.git"
-                                               :git/sha "97677727bff20243dc15d5cafb821d4af9019842"}}
+  ;; io.github.pbaille/noon                      {:git/url "https://github.com/pbaille/noon.git"
+  ;;                                              :git/sha "97677727bff20243dc15d5cafb821d4af9019842"}
+  }
 
  :mvn/repos {"osgeo" {:url "https://repo.osgeo.org/repository/release/"}}
 

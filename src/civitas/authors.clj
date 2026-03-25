@@ -90,8 +90,7 @@
                                  :template "trestles")
                       :author  author
                       :listing {:contents  [".", "!./*.qmd"]
-                                :include   {:type   :post
-                                            :author (str "{" (:name author) "}" "*")}
+                                :include   {:author (str "{" (:name author) "}*")}
                                 :sort      ["date desc" "title desc"]
                                 :sort-ui   true
                                 :filter-ui true}}]
