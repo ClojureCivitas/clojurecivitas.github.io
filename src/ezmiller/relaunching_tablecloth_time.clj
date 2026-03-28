@@ -45,9 +45,9 @@
 ;; tree-based index is pure overhead — you'd rebuild it constantly. As Chris
 ;; Nuernberger (author of tech.ml.dataset) put it: "Just sorting the dataset and
 ;; using binary search will outperform most/all tree structures in this scenario."
-;; Notably, [Polars](https://pola.rs/) — the Rust-based DataFrame library gaining
-;; traction as a Pandas alternative — reached the same conclusion. Polars has no
-;; index by design; you always specify the column explicitly:
+;; This is the same conclusion that [Polars](https://pola.rs/) reached. The
+;; Rust-based DataFrame library — now the fastest-growing Pandas alternative —
+;; has no index by design. You always specify the column explicitly:
 ;;
 ;; ```python
 ;; # Pandas (implicit index)
