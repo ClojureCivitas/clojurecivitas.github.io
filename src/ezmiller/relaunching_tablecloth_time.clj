@@ -22,9 +22,7 @@
 
 ;; I recently relaunched an old Scicloj project called [tablecloth.time](https://github.com/scicloj/tablecloth.time). The goal of this project was to build a composable
 ;; extension for time series analysis built on top of
-;; [tablecloth](https://scicloj.github.io/tablecloth/). Throughout this post,
-;; `tct` refers to `tablecloth.time.api` and `tc` refers to `tablecloth.api`.
-;; Originally, we
+;; [tablecloth](https://scicloj.github.io/tablecloth/). Originally, we
 ;; had built this project around a dataset index mechanism that was
 ;; built into tech.ml.dataset, but after that feature was removed in
 ;; v7, the project required a rethink. This post walks through that
@@ -33,9 +31,9 @@
 
 ;; ## Why No Index?
 ;;
-;; The original tablecloth.time was built around an index two reasons:
-;; performance (tree-based indexes offer O(log n) lookups) and
-;; convenience
+;; The original tablecloth.time was built around an index for two
+;; reasons: performance (tree-based indexes offer O(log n) lookups)
+;; and convenience
 ;; (you don't have to keep specifying which column is the time
 ;; column). Anyone who has used the Python Pandas data processing
 ;; library is likely familiar with this feature.
@@ -64,12 +62,12 @@
 ;; [Composability Over Abstraction](https://humanscodes.com/tablecloth-time-relaunch)
 ;; on humanscodes.
 
-;; Now let's dig into this library's primitivs and basic functionality.
+;; Now let's dig into this library's primitives and basic functionality.
 
 ;; ## Loading the Data
 ;;
 ;; We'll use the `vic_elec` dataset: half-hourly electricity demand from Victoria,
-;; Australia, spanning 2012-2014. Let's load it and take a look.
+;; Australia, spanning 2012-2014. Let's load it and take a look. Throughout these examples the tablecloth library is aliased as `tc`, following the common conventio, and tablecloth.time is aliased as `tct`. 
 
 (def vic-elec
   (-> (tc/dataset "https://gist.githubusercontent.com/ezmiller/6edf3e0f41848f532436c15bc94c2f4d/raw/vic_elec.csv"
