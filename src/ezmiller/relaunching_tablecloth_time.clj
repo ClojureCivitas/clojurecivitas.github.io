@@ -1,5 +1,5 @@
 ^{:kindly/hide-code true
-  :clay {:title "Getting Started with tablecloth.time"
+  :clay {:title "Relaunch tablecloth.time: Composability over Abstraction"
          :quarto {:author [:ezmiller]
                   :description "A composable approach to time series analysis in Clojure"
                   :draft false
@@ -7,17 +7,27 @@
                   :date "2026-03-27"
                   :category :clojure
                   :tags [:time-series :tablecloth :data-science]}}}
-(ns time-series.tablecloth-time
+(ns ezmiller.relaunching-tablecloth-time
   (:require [tablecloth.api :as tc]
             [tablecloth.time.api :as tct]
             [scicloj.tableplot.v1.plotly :as plotly]
             [tech.v3.datatype.functional :as dfn]
             [scicloj.kindly.v4.kind :as kind]))
 
-;; [tablecloth.time](https://github.com/scicloj/tablecloth.time) is a composable
+^{:kindly/hide-code true}
+(kind/html "<figure>
+  <img src=\"vic_elec_yearly.png\" alt=\"Victoria electricity demand by day of year, colored by year\" style=\"width:100%\"/>
+  <figcaption>Half-hourly electricity demand in Victoria, Australia (2012–2014). Each line is one day, phased over the time of day (0 = midnight, 1 = midnight). Colors indicate year.</figcaption>
+</figure>")
+
+;; I recently relaunched an old Scicloj project called [tablecloth.time](https://github.com/scicloj/tablecloth.time). The goal of this project was to build a composable
 ;; extension for time series analysis built on top of
-;; [tablecloth](https://scicloj.github.io/tablecloth/). This post walks through
-;; its core primitives using the classic Victoria electricity demand dataset.
+;; [tablecloth](https://scicloj.github.io/tablecloth/). Originally, we
+;; had built this project around a dataset index mechanism that was
+;; built into tech.ml.dataset, but after that feature was removed in
+;; v7, the project required a rethink. This post walks through that
+;; rethink and the projects core core primitives today using the
+;; Victoria electricity demand dataset.
 
 ;; ## Design Philosophy
 ;;
@@ -42,9 +52,9 @@
 ;; Australia, spanning 2012-2014. Let's load it and take a look.
 
 (def vic-elec
-  (-> (tc/dataset "https://raw.githubusercontent.com/scicloj/tablecloth.time/main/data/vic_elec.csv"
+  (-> (tc/dataset "https://gist.githubusercontent.com/ezmiller/6edf3e0f41848f532436c15bc94c2f4d/raw/vic_elec.csv"
                   {:key-fn keyword})
-      (tc/convert-types :Time :instant)))
+      (tc/convert-types :Time :local-date-time)))
 
 (tc/head vic-elec)
 
@@ -110,7 +120,7 @@
 (-> vic-elec
     (tct/add-lag :Demand 48 :Demand_lag48)
     (tc/drop-missing)
-    (plotly/layer-point {:=x :Demand_lag48 
+    (plotly/layer-point {:=x :Demand_lag48
                          :=y :Demand
                          :=mark-opacity 0.3}))
 
@@ -123,14 +133,14 @@
 ;; is a composable pattern: extract the time component you want, group by it,
 ;; and aggregate.
 ;;
-;; Daily averages:
+;; Daily averages (grouping by year, month, and day):
 
 (-> vic-elec
-    (tct/add-time-columns :Time [:date])
-    (tc/group-by [:date])
+    (tct/add-time-columns :Time [:year :month :day])
+    (tc/group-by [:year :month :day])
     (tc/aggregate {:Demand #(dfn/mean (:Demand %))
                    :Temperature #(dfn/mean (:Temperature %))})
-    (tc/order-by [:date])
+    (tc/order-by [:year :month :day])
     (tc/head 10))
 
 ;; Monthly averages:
@@ -155,8 +165,8 @@
     (tc/group-by [:weekend? :hour])
     (tc/aggregate {:Demand #(dfn/mean (:Demand %))})
     (tc/order-by [:hour])
-    (plotly/layer-line {:=x :hour 
-                        :=y :Demand 
+    (plotly/layer-line {:=x :hour
+                        :=y :Demand
                         :=color :weekend?}))
 
 ;; Weekday demand shows the classic two-peak pattern (morning and evening),
