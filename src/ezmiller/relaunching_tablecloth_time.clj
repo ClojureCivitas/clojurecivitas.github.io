@@ -43,8 +43,10 @@
 ;; **On performance:** Unlike Python DataFrames, Clojure's datasets are immutable.
 ;; They're rebuilt on each transformation. Under these conditions, maintaining a
 ;; tree-based index is pure overhead — you'd rebuild it constantly. As Chris
-;; Nuernberger (author of tech.ml.dataset) put it: "Just sorting the dataset and
-;; using binary search will outperform most/all tree structures in this scenario."
+;; Nuernberger (author of tech.ml.dataset)
+;; [put it](https://clojurians.zulipchat.com/#narrow/channel/236259-tech.2Eml.2Edataset.2Edev/topic/index.20structures.20in.20Columns.20-.20scope/near/481581872):
+;; "Just sorting the dataset and using binary search will outperform most/all
+;; tree structures in this scenario."
 ;; (This is the same conclusion that [Polars](https://pola.rs/), the fastest-growing
 ;; Pandas alternative, reached — no index by design.)
 ;;
