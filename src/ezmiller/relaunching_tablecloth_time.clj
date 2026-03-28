@@ -1,5 +1,5 @@
 ^{:kindly/hide-code true
-  :clay {:title "Relaunch tablecloth.time: Composability over Abstraction"
+  :clay {:title "Relaunching tablecloth.time: Composability over Abstraction"
          :quarto {:author [:ezmiller]
                   :description "A composable approach to time series analysis in Clojure"
                   :draft false
@@ -22,14 +22,12 @@
   <figcaption>Half-hourly electricity demand in Victoria, Australia (2012–2014). Each line is one day, phased over the time of day (0 = midnight, 1 = midnight). Colors indicate year.</figcaption>
 </figure>")
 
-;; I recently relaunched an old Scicloj project called [tablecloth.time](https://github.com/scicloj/tablecloth.time). The goal of this project was to build a composable
-;; extension for time series analysis built on top of
-;; [tablecloth](https://scicloj.github.io/tablecloth/). Originally, we
-;; had built this project around a dataset index mechanism that was
-;; built into tech.ml.dataset, but after that feature was removed in
-;; v7, the project required a rethink. This post walks through that
-;; rethink and the core primitives today, using the
-;; Victoria electricity demand dataset.
+;; I recently relaunched the experimental time series processing
+;; library [tablecloth.time](https://github.com/scicloj/tablecloth.time)
+;; — this time without an index. Turns out that's a feature, not a
+;; limitation. Here's why, and a walkthrough of the composable
+;; primitives that replace it, using the Victoria electricity demand
+;; dataset.
 
 ;; ## Why No Index?
 ;;
@@ -58,13 +56,10 @@
 ;; The pipeline reads like what it does. This aligns with Clojure's broader preference
 ;; for explicit, composable operations over hidden magic.
 ;;
-;; The simplicity isn't a compromise. It's the feature.
-;;
 ;; For the full discussion of this design shift, see
 ;; [Composability Over Abstraction](https://humanscodes.com/tablecloth-time-relaunch)
 ;; on humanscodes.
-
-;; Now let's dig into this library's primitives and basic functionality.
+;;
 ;; Throughout these examples, `tc` refers to `tablecloth.api`,
 ;; `tct` refers to `tablecloth.time.api`, and `tctc` refers to
 ;; `tablecloth.time.column.api`.
@@ -92,11 +87,14 @@
 ;; manipulation happens, built on dtype-next's vectorized operations.
 ;;
 ;; Why does this matter? Because manipulating time data is notoriously fiddly.
-;; Java's `java.time` package is powerful but verbose. Working with columns
-;; of timestamps — converting, extracting, flooring — typically means writing
-;; loops or mapping functions over sequences. tablecloth.time's column API
-;; gives you operations that work on entire columns at once, using the same
-;; fast, primitive-backed machinery as the rest of tech.ml.dataset.
+;; Clojure has excellent time libraries —
+;; [tick](https://github.com/juxt/tick),
+;; [cljc.java-time](https://github.com/henryw374/cljc.java-time) —
+;; that tame java.time's verbosity. But they operate on scalars. Working with
+;; columns of timestamps still means mapping functions over sequences.
+;; tablecloth.time's column API gives you operations that work on entire
+;; columns at once, using the same fast, primitive-backed machinery as the
+;; rest of tech.ml.dataset.
 ;;
 ;; The building blocks fall into three categories:
 ;;
@@ -119,16 +117,15 @@
 ;; Floor timestamps to hour buckets:
 (tctc/down-to-nearest (:Time vic-elec) 1 :hours {:zone "UTC"})
 
-;; The key thing to notice: no Clojure seqs, no explicit loops. These
-;; operations work on primitive arrays under the hood, just like dtype-next's
-;; numeric operations. The result is a column that can be added directly
-;; to a dataset.
+;; The key thing to notice: these operations work on primitive arrays
+;; under the hood, just like dtype-next's numeric operations. The
+;; result is a column that can be added directly to a dataset.
 
 ;; ## Building Up: add-time-columns
 ;;
-;; With these column-level tools in hand, the dataset-level API is just
-;; convenience. `add-time-columns` — the function that most users reach
-;; for first — is actually a thin wrapper around the extractors we just saw.
+;; With these column-level tools in hand, the dataset-level API is
+;; just convenience. A core example is `add-time-columns`. It is just
+;; a thin wrapper around the extractors we just saw.
 ;;
 ;; Here's what it does internally:
 ;;
@@ -179,7 +176,7 @@
 ;; The same pattern scales to different granularities. Here are daily and
 ;; monthly averages:
 
-;; Daily averages:
+;; Daily averages (first 10 days):
 (-> vic-elec
     (tct/add-time-columns :Time [:year :month :day])
     (tc/group-by [:year :month :day])
@@ -188,13 +185,13 @@
     (tc/order-by [:year :month :day])
     (tc/head 10))
 
-;; Monthly averages:
+;; Monthly averages — each bar is a month, colored by year:
 (-> vic-elec
     (tct/add-time-columns :Time [:year :month])
     (tc/group-by [:year :month])
     (tc/aggregate {:Demand #(dfn/mean (:Demand %))})
     (tc/order-by [:year :month])
-    (plotly/layer-bar {:=x :month :=y :Demand :=color :year}))
+    (plotly/layer-bar {:=x :month :=y :Demand :=color :year :=color-type :nominal}))
 
 ;; Note that tablecloth.time is just a light layer here. You could do this
 ;; with tablecloth alone by manually extracting datetime components.
