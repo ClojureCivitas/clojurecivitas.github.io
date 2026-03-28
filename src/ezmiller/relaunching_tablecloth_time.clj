@@ -45,9 +45,20 @@
 ;; tree-based index is pure overhead — you'd rebuild it constantly. As Chris
 ;; Nuernberger (author of tech.ml.dataset) put it: "Just sorting the dataset and
 ;; using binary search will outperform most/all tree structures in this scenario."
-;; (Notably, [Polars](https://pola.rs/) — the Rust-based DataFrame library gaining
-;; traction as a Pandas alternative — reached the same conclusion and has no index
-;; by design.)
+;; Notably, [Polars](https://pola.rs/) — the Rust-based DataFrame library gaining
+;; traction as a Pandas alternative — reached the same conclusion. Polars has no
+;; index by design; you always specify the column explicitly:
+;;
+;; ```python
+;; # Pandas (implicit index)
+;; df = df.set_index('Time')
+;; df['2024-01']                      # slice via index
+;; df.resample('D').mean()            # resample via index
+;;
+;; # Polars (explicit column)
+;; df.filter(pl.col('Time').dt.year() == 2024, pl.col('Time').dt.month() == 1)
+;; df.group_by_dynamic('Time', every='1d').agg(pl.col('Demand').mean())
+;; ```
 ;;
 ;; **On convenience:** The index adds implicit state threaded through your data.
 ;; Tablecloth's API avoids this — you always say which columns you're operating on.
