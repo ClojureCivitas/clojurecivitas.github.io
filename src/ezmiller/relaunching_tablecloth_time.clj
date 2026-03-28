@@ -29,22 +29,33 @@
 ;; rethink and the projects core core primitives today using the
 ;; Victoria electricity demand dataset.
 
-;; ## Design Philosophy
+;; ## Why No Index?
 ;;
-;; If you've used Pandas for time series work, you're familiar with the index-based
-;; approach: set a DateTimeIndex, and operations like slicing and resampling work
-;; implicitly on it. It's convenient, but it's also hidden state threaded through
-;; your data.
+;; The original tablecloth.time was built around an index — set a time column
+;; as your dataset's index, and operations like `slice` and `resample` would
+;; work implicitly on it, just like Pandas. This seemed necessary for two reasons:
+;; performance (tree-based indexes offer O(log n) lookups) and convenience
+;; (you don't have to keep specifying which column is the time column).
 ;;
-;; tablecloth.time takes a different path. Following tablecloth's design — and
-;; Clojure's preference for explicit, composable operations — you always specify
-;; which column you're working with. Each function takes the data and the columns
-;; it operates on. The pipeline reads like what it does.
+;; But when tech.ml.dataset removed its indexing mechanism in v7, it forced a
+;; rethink. And the rethink revealed that neither rationale held up.
 ;;
-;; This isn't a compromise. As Chris Nuernberger (author of tech.ml.dataset) noted,
-;; with immutable datasets that get rebuilt on each transformation, a tree-based
-;; index offers no performance advantage over binary search on sorted data. The
-;; simplicity is the feature.
+;; **On performance:** Unlike Python DataFrames, Clojure's datasets are immutable.
+;; They're rebuilt on each transformation. Under these conditions, maintaining a
+;; tree-based index is pure overhead — you'd rebuild it constantly. As Chris
+;; Nuernberger (author of tech.ml.dataset) put it: "Just sorting the dataset and
+;; using binary search will outperform most/all tree structures in this scenario."
+;;
+;; **On convenience:** The index adds implicit state threaded through your data.
+;; Tablecloth's API avoids this — you always say which columns you're operating on.
+;; The pipeline reads like what it does. This aligns with Clojure's broader preference
+;; for explicit, composable operations over hidden magic.
+;;
+;; The simplicity isn't a compromise. It's the feature.
+;;
+;; For the full discussion of this design shift, see
+;; [Composability Over Abstraction](https://humanscodes.com/tablecloth-time-relaunch)
+;; on humanscodes.
 
 ;; ## Loading the Data
 ;;
