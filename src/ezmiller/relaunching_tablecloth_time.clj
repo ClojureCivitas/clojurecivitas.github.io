@@ -22,7 +22,9 @@
 
 ;; I recently relaunched an old Scicloj project called [tablecloth.time](https://github.com/scicloj/tablecloth.time). The goal of this project was to build a composable
 ;; extension for time series analysis built on top of
-;; [tablecloth](https://scicloj.github.io/tablecloth/). Originally, we
+;; [tablecloth](https://scicloj.github.io/tablecloth/). Throughout this post,
+;; `tct` refers to `tablecloth.time.api` and `tc` refers to `tablecloth.api`.
+;; Originally, we
 ;; had built this project around a dataset index mechanism that was
 ;; built into tech.ml.dataset, but after that feature was removed in
 ;; v7, the project required a rethink. This post walks through that
@@ -31,11 +33,12 @@
 
 ;; ## Why No Index?
 ;;
-;; The original tablecloth.time was built around an index — set a time column
-;; as your dataset's index, and operations like `slice` and `resample` would
-;; work implicitly on it, just like Pandas. This seemed necessary for two reasons:
-;; performance (tree-based indexes offer O(log n) lookups) and convenience
-;; (you don't have to keep specifying which column is the time column).
+;; The original tablecloth.time was built around an index two reasons:
+;; performance (tree-based indexes offer O(log n) lookups) and
+;; convenience
+;; (you don't have to keep specifying which column is the time
+;; column). Anyone who has used the Python Pandas data processing
+;; library is likely familiar with this feature.
 ;;
 ;; But when tech.ml.dataset removed its indexing mechanism in v7, it forced a
 ;; rethink. And the rethink revealed that neither rationale held up.
@@ -61,6 +64,8 @@
 ;; [Composability Over Abstraction](https://humanscodes.com/tablecloth-time-relaunch)
 ;; on humanscodes.
 
+;; Now let's dig into this library's primitivs and basic functionality.
+
 ;; ## Loading the Data
 ;;
 ;; We'll use the `vic_elec` dataset: half-hourly electricity demand from Victoria,
@@ -80,24 +85,29 @@
 ;;
 ;; The first primitive is `add-time-columns`. It extracts temporal fields from a
 ;; datetime column — day-of-week, month, hour, etc. — as new columns you can
-;; group or filter on.
+;; group or filter on. Here's a quick look at what it produces:
 
 (-> vic-elec
     (tct/add-time-columns :Time [:day-of-week :hour])
     (tc/head 10))
 
-;; With these extracted fields, standard tablecloth operations give you resampling
-;; and aggregation patterns. Let's compute average demand by day of week:
+(def demand-by-day
+  (-> vic-elec
+      (tct/add-time-columns :Time [:day-of-week])
+      (tc/group-by [:day-of-week])
+      (tc/aggregate {:Demand #(dfn/mean (:Demand %))})
+      (tc/order-by [:day-of-week])))
 
-(-> vic-elec
-    (tct/add-time-columns :Time [:day-of-week])
-    (tc/group-by [:day-of-week])
-    (tc/aggregate {:Demand #(dfn/mean (:Demand %))})
-    (tc/order-by [:day-of-week])
-    (plotly/layer-bar {:=x :day-of-week :=y :Demand}))
+;; Look at the aggregated data:
+(tc/head demand-by-day 7)
+
+;; Step 2: Visualize the result:
+(plotly/layer-bar demand-by-day
+                  {:=x :day-of-week :=y :Demand})
 
 ;; Weekends (days 6 and 7) clearly have lower demand. The `:day-of-week` field
-;; came from `add-time-columns`; the aggregation is pure tablecloth.
+;; came from `add-time-columns`; the group-by, aggregate, and order-by are pure
+;; tablecloth. The two libraries compose seamlessly.
 
 ;; ## Slicing Time Ranges
 ;;
@@ -142,14 +152,23 @@
 ;; The tight diagonal shows strong positive correlation — demand at any given
 ;; time is highly predictive of demand at the same time the previous day.
 
+;; `add-lead` shifts values forward — current Demand aligns with Demand 24 hours
+;; ahead. Let's see if today's demand predicts tomorrow's:
+
+(-> vic-elec
+    (tct/add-lead :Demand 48 :Demand_lead48)
+    (tc/drop-missing)
+    (plotly/layer-point {:=x :Demand
+                         :=y :Demand_lead48
+                         :=mark-opacity 0.3}))
+
 ;; ## Resampling as a Pattern
 ;;
-;; tablecloth.time doesn't have a `resample` function (yet). Instead, resampling
-;; is a composable pattern: extract the time component you want, group by it,
-;; and aggregate.
-;;
-;; Daily averages (grouping by year, month, and day):
+;; We showed the resampling pattern above: extract time fields, group, aggregate,
+;; order. The same pattern scales to different granularities. Here are daily and
+;; monthly averages using the same building blocks:
 
+;; Daily averages:
 (-> vic-elec
     (tct/add-time-columns :Time [:year :month :day])
     (tc/group-by [:year :month :day])
@@ -159,7 +178,6 @@
     (tc/head 10))
 
 ;; Monthly averages:
-
 (-> vic-elec
     (tct/add-time-columns :Time [:year :month])
     (tc/group-by [:year :month])
@@ -167,7 +185,11 @@
     (tc/order-by [:year :month])
     (plotly/layer-bar {:=x :month :=y :Demand :=color :year}))
 
-;; Each step is visible. Each step composes with the rest of your pipeline.
+;; Note that tablecloth.time is just a light layer in these
+;; expressions. You could do this with tablecloth alone by manually
+;; extracting datetime components. tablecloth.time's add-time-columns
+;; just adds concision and expressiveness — it composes naturally with
+;; the tablecloth operations.
 
 ;; ## Combining Primitives
 ;;
@@ -187,17 +209,41 @@
 ;; Weekday demand shows the classic two-peak pattern (morning and evening),
 ;; while weekend demand is flatter and lower overall.
 
+;; ## Time Utilities (Column API)
+;;
+;; tablecloth.time mirrors tablecloth's structure: a dataset API (`tct`)
+;; and a column API (`tablecloth.time.column.api`). The column API provides
+;; lower-level utilities for working with time data directly — parsing,
+;; conversion, flooring, extraction. These power the high-level functions
+;; and are available when you need finer control.
+;;
+;; **Parsing** — `tablecloth.time.parse/parse` handles ISO-8601 strings and
+;; custom formats with cached formatters for performance.
+;;
+;; **Conversion** — `convert-time` moves between representations (Instants,
+;; LocalDateTimes, LocalDates, epoch milliseconds) with timezone awareness.
+;;
+;; **Flooring** — `down-to-nearest`, `floor-to-month`, `floor-to-quarter` bucket
+;; timestamps to intervals. Useful for aggregating sub-daily data:
+
+(require '[tablecloth.time.column.api :as tctc])
+
+(-> vic-elec
+    (tc/add-column :HourBucket
+                   #(tctc/down-to-nearest (% :Time) 1 :hours {:zone "UTC"}))
+    (tc/head 5))
+
+;; The column API parallels `tablecloth.column.api` — work with columns
+;; directly, then add them to your dataset. The high-level dataset functions
+;; are convenience wrappers built from these pieces. Manipulating time data
+;; is notoriously fiddly; tablecloth.time tries to smooth the sharp edges
+;; without hiding the underlying java.time power.
+
 ;; ## What's Next
 ;;
-;; tablecloth.time is experimental. The current release provides these focused
-;; primitives:
-;;
-;; - `add-time-columns` — extract temporal fields
-;; - `slice` — select time ranges efficiently  
-;; - `add-lag` / `add-lead` — shift values for autocorrelation
-;;
-;; Planned additions include rolling windows, differencing, and higher-level
-;; patterns like `resample` that wrap the composable building blocks.
+;; tablecloth.time is experimental. Planned additions include rolling windows,
+;; differencing, and higher-level patterns like `resample` that wrap the
+;; composable building blocks.
 ;;
 ;; The [repository is on GitHub](https://github.com/scicloj/tablecloth.time).
 ;; For more worked examples, see the
