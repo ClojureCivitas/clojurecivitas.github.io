@@ -3,6 +3,7 @@
  :deps
  {org.clojure/clojure                         {:mvn/version "1.12.3"}
   org.scicloj/noj                             {:mvn/version "2-beta18"}
+  org.scicloj/tablecloth.time                 {:mvn/version "1.00-alpha-6"}
   ;; Tableplot can be removed after updating Noj:
   org.scicloj/tableplot                       {:mvn/version "1-beta14"}
   markdown-clj/markdown-clj                   {:mvn/version "1.12.4"}

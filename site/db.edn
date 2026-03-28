@@ -206,7 +206,12 @@
    :name        "Pierre Baille"
    :image       "https://avatars.githubusercontent.com/u/4739483"
    :url         "https://github.com/pbaille"
-   :links       []}]
+   :links       []}
+  {:id          :ezmiller
+   :name        "Ethan Miller"
+   :image       "https://avatars.githubusercontent.com/u/772738?v=4&size=64"
+   :url         "https://github.com/ezmiller"
+   :links       ["https://humanscodes.com"]}]
 
  :affiliation
  [{:id   :clojure.core
