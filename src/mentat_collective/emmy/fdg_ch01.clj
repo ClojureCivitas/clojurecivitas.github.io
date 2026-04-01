@@ -1,6 +1,7 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Differential Geometry Chapter One"
-                     :quarto {:type     :draft
+                     :quarto {:type        :post
+                              :draft       true
                               :sidebar  "emmy-fdg"
                               :description "First chapter of the book \"Functional Differential Geometry\", the code is on-line executable."
                               :date     "2025-11-14"

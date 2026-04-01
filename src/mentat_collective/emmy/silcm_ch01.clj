@@ -1,7 +1,8 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Lorentz Covariant Mechanics"
                      :quarto {:author   :kloimhardt
-                              :type     :draft
+                              :type        :post
+                              :draft       true
                               :description "A single particle in the four flat dimensions of Special Relativity"
                               :sidebar  "emmy-fdg"
                               :date     "2026-01-11"
