@@ -1,15 +1,21 @@
 ---
 title: "Drafts"
 listing:
-  contents: [".", "!./*.qmd"]
-  include:
-    type: post
-    draft: true
-  sort:
-    - "date desc"
-    - "title desc"
-  sort-ui: true
-  filter-ui: true
-  feed:
-    type: metadata
+  - contents: [".", "!./*.qmd"]
+    include:
+      type: post
+      draft: true
+    sort:
+      - "date desc"
+      - "title desc"
+    sort-ui: true
+    filter-ui: true
+  - contents: [".", "!./*.qmd"]
+    include:
+      type: draft
+    sort:
+      - "date desc"
+      - "title desc"
+    sort-ui: true
+    filter-ui: true
 ---

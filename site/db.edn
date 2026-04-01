@@ -24,7 +24,7 @@
    :name        "Daniel Slutsky"
    :image       "https://avatars.githubusercontent.com/u/5673102?v=4"
    :url         "https://scicloj.github.io/contributors/daslu/"
-   :affiliation [:scicloj :endor]
+   :affiliation [:scicloj]
    :links       [{:icon "github" :href "https://github.com/daslu"}]}
   {:id          :danielsz
    :name        "Daniel Szmulewicz"
@@ -206,7 +206,12 @@
    :name        "Pierre Baille"
    :image       "https://avatars.githubusercontent.com/u/4739483"
    :url         "https://github.com/pbaille"
-   :links       []}]
+   :links       []}
+  {:id          :ezmiller
+   :name        "Ethan Miller"
+   :image       "https://avatars.githubusercontent.com/u/772738?v=4&size=64"
+   :url         "https://github.com/ezmiller"
+   :links       ["https://humanscodes.com"]}]
 
  :affiliation
  [{:id   :clojure.core
