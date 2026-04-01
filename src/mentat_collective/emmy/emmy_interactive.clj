@@ -1,7 +1,8 @@
 ^{:kindly/hide-code true
   :clay             {:title  "interactive"
                      :quarto {:author   :kloimhardt
-                              :type     :draft
+                              :type        :post
+                              :draft       true
                               :description "Demo of reagent and tex"
                               :sidebar  "emmy-fdg"
                               :date     "2026-01-11"

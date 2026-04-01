@@ -1,7 +1,8 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: deBroglie wavelength"
                      :quarto {:author   :kloimhardt
-                              :type     :draft
+                              :type        :post
+                              :draft       true
                               :description "A particle riding its wave whose length depends on the former's momentum"
                               :sidebar  "emmy-fdg"
                               :date     "2026-01-27"

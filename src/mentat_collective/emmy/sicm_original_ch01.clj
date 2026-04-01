@@ -1,7 +1,8 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: SICM Chapter 1"
                      :quarto {:author   :kloimhardt
-                              :type     :draft
+                              :type        :post
+                              :draft       true
                               :description "Structure and Interpretation of Classical Mechanics: Chapter 1"
                               :sidebar  "emmy-fdg"
                               :date     "2026-01-11"

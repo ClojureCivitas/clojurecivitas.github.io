@@ -1,7 +1,8 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Differential Geometry Chapter Six"
                      :quarto {:author   :kloimhardt
-                              :type     :draft
+                              :type        :post
+                              :draft       true
                               :description "Functional Differential Geometry: Chapter 6"
                               :sidebar  "emmy-fdg"
                               :date     "2026-02-09"
