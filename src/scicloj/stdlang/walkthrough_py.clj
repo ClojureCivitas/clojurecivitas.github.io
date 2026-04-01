@@ -1,7 +1,8 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Stdlang: Python Walkthrough"
-                     :quarto {;;:author   :to-be-determined
-                              :type     :draft
+                     :quarto {:author      :kloimhardt
+                              :type        :post
+                              :draft       true
                               :date     "2025-12-06"
                               ;;:image    ""
                               :category :libs

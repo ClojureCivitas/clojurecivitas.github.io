@@ -1,6 +1,7 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Differential Geometry Chapter One"
-                     :quarto {:type        :post
+                     :quarto {:author      :kloimhardt
+                              :type        :post
                               :draft       true
                               :sidebar  "emmy-fdg"
                               :description "First chapter of the book \"Functional Differential Geometry\", the code is on-line executable."
