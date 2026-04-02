@@ -15,7 +15,7 @@
                             time infinite? abs ref partial = test])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda] :as scheme]
+            [mentat-collective.emmy.scheme :refer [let-scheme lambda] :as scheme]
             [civitas.repl :as repl]))
 
 ;; ## 8 Curvature
@@ -202,9 +202,8 @@
   (make-state ((Dsigma v) state) ((Du v) state)))
 
 (define (L v)
-  (define (l h)
-    (lambda (state)
-            (* ((D h) state) ((g v) state)))) (o/make-operator l))
+  (define ((l h) state)
+    (* ((D h) state) ((g v) state))) (o/make-operator l))
 
 (define result
   (let ((U (literal-vector-field 'U-rect R2-rect))
@@ -224,19 +223,17 @@
 
 ;; ### Geometrically
 
-(define ((curvature-from-transport Cartan) w v)
-  (lambda (u)
-          (lambda (f)
-                  (let ((CF (Cartan->forms Cartan))
-                        (basis (Cartan->basis Cartan))
-                        (fi (basis->oneform-basis basis))
-                        (ei (basis->vector-basis basis)))
-                    (* (ei f)
-                       (+ (* (- (- (w (CF v)) (v (CF w)))
-                                (CF (commutator w v)))
-                             (fi u))
-                          (- (* (CF w) (* (CF v) (fi u)))
-                             (* (CF v) (* (CF w) (fi u))))))))))
+(define ((((curvature-from-transport Cartan) w v) u) f)
+  (let ((CF (Cartan->forms Cartan))
+        (basis (Cartan->basis Cartan))
+        (fi (basis->oneform-basis basis))
+        (ei (basis->vector-basis basis)))
+    (* (ei f)
+       (+ (* (- (- (w (CF v)) (v (CF w)))
+                (CF (commutator w v)))
+             (fi u))
+          (- (* (CF w) (* (CF v) (fi u)))
+             (* (CF v) (* (CF w) (fi u))))))))
 
 (define (test coordsys Cartan)
   (let ((m (typical-point coordsys))

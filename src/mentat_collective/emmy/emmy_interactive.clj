@@ -12,7 +12,7 @@
 (ns mentat-collective.emmy.emmy_interactive
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda]]))
+            [mentat-collective.emmy.scheme :refer [let-scheme lambda]]))
 
 ^:kindly/hide-code
 (def render-mode {:browser true})
