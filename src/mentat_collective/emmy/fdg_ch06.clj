@@ -133,11 +133,8 @@
 
 ;; ### Differential of a Map
 
-;; here I use lambda, because my define does not support three nestings
-
-(define ((differential mu) v)
-  (lambda (f)
-    (v (compose f mu))))
+(define (((differential mu) v) f)
+  (v (compose f mu)))
 
 ;; ### 6.2 One-Form Fields Over a Map
 (comment
