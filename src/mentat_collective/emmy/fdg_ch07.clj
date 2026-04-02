@@ -15,7 +15,7 @@
                             time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda] :as scheme]
+            [mentat-collective.emmy.scheme :refer [let-scheme lambda] :as scheme]
             [civitas.repl :as repl]))
 
 ;; ## 7 Directional Derivatives

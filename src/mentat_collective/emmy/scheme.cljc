@@ -31,7 +31,7 @@
   (concat (list 'let (into [] (apply concat b)))
           (embrace-define e)))
 
-(defmacro define-1 [h & b]
+(defn define-1 [h b]
   (let [body (->> b
                   (postwalk-replace {'let 'let-scheme})
                   (embrace-define))]
@@ -45,10 +45,8 @@
 
 (defmacro define [h & b]
   (if (and (coll? h) (= (first h) 'tex-inspect))
-    (list 'do
-          (concat ['define-1 (second h)] b)
-          h)
-    (concat ['define-1 h] b)))
+    (list 'do (define-1 (second h) b) h)
+    (define-1 h b)))
 
 (defmacro lambda [h & b]
   (concat (list 'fn (into [] h)) (embrace-define b)))
@@ -136,5 +134,87 @@
                 (let ((b 2))
                   (+ y b z))))
       (+ (((f4 x) x) x) a)))
+
+  :end-comment)
+
+(comment
+
+(defn unnest [v]
+  (if (coll? (first v))
+    (let [[head & tail] v]
+      (conj (unnest head) (vec tail)))
+    [v]))
+
+(def unnest-tests
+  [[[[[1 2] 3 4] 5 6]
+    [[1 2] [3 4] [5 6]]]
+   [[[1 2] 3 4]
+    [[1 2] [3 4]]]])
+
+(map (fn [[d e]] (= (unnest d) e)) unnest-tests)
+
+(def cc (unnest aa))
+
+(defn d0 [h b]
+  (let [hh (list 'fn (first h))]
+    (if (seq (rest h))
+      (concat hh [(d0 (rest h) b)])
+      (concat hh b))))
+
+(map (fn [[x _]] (d0 (unnest x) [7 8])) unnest-tests)
+;; => ((fn [1 2] (fn [3 4] (fn [5 6] 7 8))) (fn [1 2] (fn [3 4] 7 8)))
+
+
+(defn d1 [h b]
+  (let [hh (list 'defn (ffirst h) (vec (rest (first h))))]
+    (if (seq (rest h))
+      (concat hh [(d0 (rest h) b)])
+      (concat hh b))))
+
+(d1 [['name 9 0] [11 12]] [1 2])
+;; => (defn name [9 0] (fn [11 12] 1 2))
+
+(d1 [['name 9 0]] [1 2])
+;; => (defn name [9 0] 1 2)
+
+(defn d2 [head & body]
+  (if (coll? head)
+    (d1 (unnest head) body)
+    (concat (list 'def head) body)))
+
+(def d2-tests
+  [[
+    '(define (a x) x)
+    '(defn a [x] x)
+    ]
+   [
+    '(define (a x) (* 3 x))
+    '(defn a [x] (* 3 x))
+    ]
+   [
+    '(define ((a x) y) (* 3 x y))
+    '(defn a [x]
+       (fn [y] (* 3 x y)))
+    ]
+   [
+    '(define ((a x z) y) (* 3 x y z))
+    '(defn a [x z]
+       (fn [y] (* 3 x y z)))
+    ]
+   [
+    '(define ((a x z) y a) (* 7 4 5))
+    '(defn a [x z]
+       (fn [y a] (* 7 4 5)))
+    ]
+   [
+    '(define (((a x z) y a) c d e) (* 7 4 5 d))
+    '(defn a [x z]
+       (fn [y a]
+         (fn [c d e]
+           (* 7 4 5 d))))
+    ]
+   ])
+
+(map (fn [[x y]] (= (apply d2 (rest x)) y)) d2-tests)
 
   :end-comment)
