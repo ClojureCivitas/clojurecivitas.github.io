@@ -153,8 +153,6 @@
 
 (map (fn [[d e]] (= (unnest d) e)) unnest-tests)
 
-(def cc (unnest aa))
-
 (defn d0 [h b]
   (let [hh (list 'fn (first h))]
     (if (seq (rest h))
@@ -163,7 +161,6 @@
 
 (map (fn [[x _]] (d0 (unnest x) [7 8])) unnest-tests)
 ;; => ((fn [1 2] (fn [3 4] (fn [5 6] 7 8))) (fn [1 2] (fn [3 4] 7 8)))
-
 
 (defn d1 [h b]
   (let [hh (list 'defn (ffirst h) (vec (rest (first h))))]
@@ -177,37 +174,42 @@
 (d1 [['name 9 0]] [1 2])
 ;; => (defn name [9 0] 1 2)
 
-(defn d2 [head & body]
+(declare b0)
+
+(defn d2 [[head & body]]
   (if (coll? head)
-    (d1 (unnest head) body)
-    (concat (list 'def head) body)))
+    (d1 (unnest head) (b0 body))
+    (concat (list 'def head) (b0 body))))
 
 (def d2-tests
-  [[
-    '(define (a x) x)
+  [['(a 7)
+    '(def a 7)
+    ]
+   [
+    '((a x) x)
     '(defn a [x] x)
     ]
    [
-    '(define (a x) (* 3 x))
+    '((a x) (* 3 x))
     '(defn a [x] (* 3 x))
     ]
    [
-    '(define ((a x) y) (* 3 x y))
+    '(((a x) y) (* 3 x y))
     '(defn a [x]
        (fn [y] (* 3 x y)))
     ]
    [
-    '(define ((a x z) y) (* 3 x y z))
+    '(((a x z) y) (* 3 x y z) (+ 4 5))
     '(defn a [x z]
-       (fn [y] (* 3 x y z)))
+       (fn [y] (* 3 x y z) (+ 4 5)))
     ]
    [
-    '(define ((a x z) y a) (* 7 4 5))
+    '(((a x z) y a) (* 7 4 5))
     '(defn a [x z]
        (fn [y a] (* 7 4 5)))
     ]
    [
-    '(define (((a x z) y a) c d e) (* 7 4 5 d))
+    '((((a x z) y a) c d e) (* 7 4 5 d))
     '(defn a [x z]
        (fn [y a]
          (fn [c d e]
@@ -215,6 +217,50 @@
     ]
    ])
 
-(map (fn [[x y]] (= (apply d2 (rest x)) y)) d2-tests)
+(map (fn [[x y]] (= (d2 x) y)) d2-tests)
+
+(def b0-test
+  [[[7]
+    [7]]
+   [['(+ 1 2)]
+    ['(+ 1 2)]
+    ]
+   [['(+ 1 2) '(+ 8 2)]
+    ['(+ 1 2) '(+ 8 2)]
+    ]
+   [['(define (f x) x) '(define (g y) (* 2 y)) '(f (g 3))]
+    ['(let [f (fn [x] x)
+           g (fn [y] (* 2 y))]
+       (f (g 3)))]
+    ]
+   ])
+
+(defn b0 [body]
+  (let [bodymap (group-by (fn [d]
+                            (and (coll? d) (= (first d) 'define)))
+                          (postwalk-replace {'let 'let-scheme-1} body))]
+    (if (seq (bodymap true))
+      (let [letvec (into []
+                         (mapcat (fn [a]
+                                   (let [a1 (rest (d2 (rest a)))]
+                                     [(first a1) (cons 'fn (rest a1))]))
+                                 (bodymap true)))]
+        [(concat
+           (list 'let letvec)
+           (bodymap false))])
+      body)))
+
+(map (fn [[x y]] (= (b0 x) y)) b0-test)
+
+(def d2-tests2
+  [['((h z) (define (f x) x) (define (g y) (* 2 y)) (* z (f (g 3))) 99)
+    '(defn h [z]
+       (let [f (fn [x] x)
+             g (fn [y] (* 2 y))]
+         (* z (f (g 3)))
+         99))]
+   ])
+
+(map (fn [[x y]] (= (d2 x) y)) d2-tests2)
 
   :end-comment)
