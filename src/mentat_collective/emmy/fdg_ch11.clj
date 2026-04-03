@@ -10,7 +10,7 @@
                               :category    :libs
                               :tags        [:emmy :physics]}}}
 
-(ns mentat-collective.emmy.fdg-ch10
+(ns mentat-collective.emmy.fdg-ch11
   (:refer-clojure :exclude [+ - * / zero? compare divide numerator denominator
                             time infinite? abs ref partial = test])
   (:require [scicloj.kindly.v4.api :as kindly]
