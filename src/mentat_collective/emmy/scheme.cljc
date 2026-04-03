@@ -56,20 +56,20 @@
     (d1 (unnest head) (b0 body))
     (concat (list 'def head) (b0 body))))
 
-(defn pr [b]
+(defn pwrp [b]
   (postwalk-replace {'let 'let-scheme} b))
 
 (defmacro define [h & b]
   (if (and (coll? h) (= (first h) 'tex-inspect))
-    (list 'do (d2 (concat [(second h)] (pr b))) h)
-    (d2 (concat [h] (pr b)))))
+    (list 'do (d2 (concat [(second h)] (pwrp b))) h)
+    (d2 (concat [h] (pwrp b)))))
 
 (defmacro let-scheme [b & e]
   (concat (list 'let (into [] (apply concat b)))
-          (b0 (pr e))))
+          (b0 (pwrp e))))
 
 (defmacro lambda [h & b]
-  (concat (list 'fn (into [] h)) (b0 (pr b))))
+  (concat (list 'fn (into [] h)) (b0 (pwrp b))))
 
 (def scittle-kitchen-hiccup
   [:div
