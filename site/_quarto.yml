@@ -53,6 +53,8 @@ website:
               text: "FDG Chapter 7"
             - href: mentat_collective/emmy/fdg_ch08.qmd
               text: "FDG Chapter 8"
+            - href: mentat_collective/emmy/fdg_ch09.qmd
+              text: "FDG Chapter 9"
             - href: mentat_collective/emmy/fdg_ch01_ys.qmd
               text: "FDG Ch01 Infix"
             - href: mentat_collective/emmy/sicm_ch01.qmd

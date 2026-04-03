@@ -22,8 +22,11 @@
     (if (seq (bodymap true))
       (let [letvec (into []
                          (mapcat (fn [a]
-                                   (let [a1 (rest (d2 (rest a)))]
-                                     [(first a1) (cons 'fn (rest a1))]))
+                                   (let [thedefn (d2 (rest a))
+                                         a1 (rest thedefn)]
+                                     (if (= (first thedefn) 'def)
+                                       (into [] a1)
+                                       [(first a1) (cons 'fn (rest a1))])))
                                  (bodymap true)))]
         [(concat
            (list 'let letvec)
@@ -212,6 +215,11 @@
            g (fn [y] (* 2 y))]
        (f (g 3)))]
     ]
+   [['(define (f x) x) '(define y 3) '(f (g y))]
+    ['(let [f (fn [x] x)
+            y 3]
+        (f (g y)))]
+    ]
    ])
 
 (map (fn [[x y]] (= (b0 x) y)) b0-test)
@@ -223,8 +231,43 @@
              g (fn [y] (* 2 y))]
          (* z (f (g 3)))
          99))]
+   ['((f x) (define y 1) 7)
+    '(defn f [x] (let [y 1] 7))]
    ])
 
 (map (fn [[x y]] (= (d2 x) y)) d2-tests2)
 
+(macroexpand-1 '(define (f x) (define (g y) (let ((a 1)) a))))
+;; => (defn f [x] (let [g (fn [y] (let-scheme ((a 1)) a))]))
+
+(clojure.walk/macroexpand-all
+  '(define (f x) (define (g y) (let ((a 1)) a))))
+;; => (def f (fn* ([x] (let* [g (fn* ([y] (let* [a 1] a)))]))))
+
+(clojure.walk/macroexpand-all
+  '(define (f x) (define (g y) (let ((a 1)) (define b a) b))))
+;; => (def f (fn* ([x] (let* [g (fn* ([y] (let* [a 1] (let* [b a] b))))]))))
+
+(clojure.walk/macroexpand-all
+  '(define (metric->Lagrangian metric coordsys)
+     (define (L state)
+       (let ((q (ref state 1)) (qd (ref state 2)))
+         (define v
+           (components->vector-field (lambda (m) qd) coordsys))
+         ((* 1/2 (metric v v)) ((point coordsys) q))))
+     L))
+;; =>
+#_(def metric->Lagrangian
+  (fn* ([metric coordsys]
+        (let* [L (fn* ([state]
+                       (let* [q (ref state 1)
+                              qd (ref state 2)]
+                         (let* [v (components->vector-field
+                                    (fn* ([m] qd)) coordsys)]
+                           ((* 1/2 (metric v v)) ((point coordsys) q))))))] L))))
   :end-comment)
+
+
+
+
+
