@@ -82,6 +82,8 @@
   datascript/datascript                       {:mvn/version "1.7.8"}
   ;; io.github.pbaille/noon                      {:git/url "https://github.com/pbaille/noon.git"
   ;;                                              :git/sha "97677727bff20243dc15d5cafb821d4af9019842"}
+
+  com.google/clojure-turtle                   {:mvn/version "0.3.0"}
   }
 
  :mvn/repos {"osgeo" {:url "https://repo.osgeo.org/repository/release/"}}
