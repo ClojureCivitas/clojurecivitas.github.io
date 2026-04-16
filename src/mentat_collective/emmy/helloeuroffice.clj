@@ -2,7 +2,6 @@
   :clay             {:title  "Emmy and the EurOffice Spreadsheet"
                      :quarto {:author      :kloimhardt
                               :type        :post
-                              :draft       true
                               :description "Coding Clojure with scittle-kitchen in the FOSS EurOffice suite"
                               :date        "2026-04-16"
                               :image       "helloemmy.gif"
@@ -14,7 +13,7 @@
                             time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define define-1 let-scheme lambda] :as scheme]
+            [mentat-collective.emmy.scheme :refer [define let-scheme lambda] :as scheme]
             [emmy.env :refer :all]))
 
 ;; [EurOffice](https://github.com/Euro-Office), the AGPL licensed collaborative document editing software which runs its spreadsheets in the browser, can be extended via plugins using JavaScript.
