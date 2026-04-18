@@ -10,4 +10,11 @@
                               :category :ml
                               :tags     [:physics :machine-learning :optimization :ppo :control]}}}
 
-(ns ppo.main)
+(ns ppo.main
+    (:require [libpython-clj2.require :refer (require-python)]))
+
+
+(require-python '[torch :as torch])
+
+
+;; ![pendulum](pendulum.png)
