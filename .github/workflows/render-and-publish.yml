@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install plotly kaleido
-          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install --index-url https://download.pytorch.org/whl/cpu torch numpy
 
       - name: Set up Java
         uses: actions/setup-java@v4
