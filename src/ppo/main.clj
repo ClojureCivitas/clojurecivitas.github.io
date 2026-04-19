@@ -342,3 +342,25 @@
                 '[torch.nn.functional :as F]
                 '[torch.optim :as optim]
                 '[torch.distributions :refer (Beta)])
+
+
+
+
+
+;; TODO
+;;
+;; $\hat{A}_{T-1} = -V(S_{T-1}) + r_{T-1} + \gamma V(S_T)$
+;;
+;; $\hat{A}_{T-2} = -V(S_{T-2}) + r_{T-2} + \gamma r_{T-1} + \gamma^2 V(S_T)$
+;;
+;; $\vdots$
+;;
+;; $\hat{A}_0 = -V(S_0) + r_0 + \gamma r_1 + \ldots + \gamma^T V(S_T)$
+;;
+;; $\hat{A}_t = -V(s_t) + r_t + \gamma r_{t+1} + \ldots + \gamma^{T-t+1} r_{T-1} + \gamma^{T-t} V(S_T)$
+;;
+;; $\hat{A}_t = \sum_{l=0}^{T-t-1} (\gamma \lambda)^l \delta_{t+l}$
+;;
+;; $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$
+;;
+;; $\hat{A}_t = \sum_{l=0}^{T-t-1} (\gamma \lambda)^l \left( r_{t+l} + \gamma V(s_{t+l+1}) - V(s_{t+l}) \right)$
