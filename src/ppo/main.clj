@@ -42,7 +42,7 @@
 ;;
 ;; ## Pendulum environment
 ;;
-;; ![pendulum](pendulum.png)
+;; ![screenshot of pendulum environment](pendulum.png)
 ;;
 ;; First we implement a simple pendulum environment to test the PPO algorithm.
 ;; In order to be able to switch environments, we define a protocol according to the environment abstract class used in OpenAI's gym.
@@ -267,6 +267,8 @@
     (async/<!! done-chan))
   (System/exit 0))
 
+;; ![manually controlled pendulum](manual.gif)
+
 ;; ## Neural networks
 ;;
 ;; PPO is a machine learning technique using backpropagation to learn the parameters of two neural networks.
@@ -332,3 +334,11 @@
 ;; ```bash
 ;; uv run clj
 ;; ```
+;;
+;; Now you should be able to import the Python modules using *require-python*.
+(require-python '[builtins :as python]
+                '[torch :as torch]
+                '[torch.nn :as nn]
+                '[torch.nn.functional :as F]
+                '[torch.optim :as optim]
+                '[torch.distributions :refer (Beta)])
