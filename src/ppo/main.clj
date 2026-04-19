@@ -11,7 +11,10 @@
                               :tags     [:physics :machine-learning :optimization :ppo :control]}}}
 
 (ns ppo.main
-    (:require [clojure.math :refer (PI cos sin)]
+    (:require [clojure.math :refer (PI cos sin to-radians)]
+              [clojure.core.async :as async]
+              [quil.core :as q]
+              [quil.middleware :as m]
               [libpython-clj2.require :refer (require-python)]))
 
 (require-python '[torch :as torch])
@@ -203,3 +206,54 @@
         max-speed (:max-speed config)
         velocity  (- (rand (* 2.0 max-speed)) max-speed)]
     (->Pendulum config (setup angle velocity))))
+
+;; ### Visualisation
+;;
+;; The following method is used to draw the pendulum and visualise the motor control input.
+(defn draw-state [{:keys [angle]} {:keys [control]}]
+  (let [origin-x   (/ (q/width) 2)
+        origin-y   (/ (q/height) 2)
+        length     (* 0.5 (q/height) (:length config))
+        pendulum-x (+ origin-x (* length (sin angle)))
+        pendulum-y (- origin-y (* length (cos angle)))
+        size       (* 0.05 (q/height))
+        arc-radius (* (abs control) 0.2 (q/height))
+        positive   (pos? control)
+        tip-angle  (if positive 225 -45)]
+    (q/frame-rate frame-rate)
+    (q/background 255)
+    (q/stroke-weight 5)
+    (q/stroke 0)
+    (q/fill 175)
+    (q/line origin-x origin-y pendulum-x pendulum-y)
+    (q/stroke-weight 1)
+    (q/ellipse pendulum-x pendulum-y size size)
+    (q/no-fill)
+    (q/arc origin-x origin-y (* 2 arc-radius) (* 2 arc-radius) (to-radians -45) (to-radians 225))
+    (q/with-translation [(+ origin-x (* (cos (to-radians tip-angle)) arc-radius)) (+ origin-y (* (sin (to-radians tip-angle)) arc-radius))]
+      (q/with-rotation [(to-radians (if positive 225 -45))]
+        (q/triangle 0 (if positive 10 -10) -5 0 5 0)))
+    (when (:save config)
+      (q/save-frame "frame-####.png"))))
+
+;; ### Animation
+;;
+;; The following method animates the pendulum and facilitates mouse control.
+(defn run []
+  (let [done-chan   (async/chan)
+        last-action (atom {:control 0.0})]
+    (q/sketch
+      :title "Inverted Pendulum with Mouse Control"
+      :size [854 480]
+      :setup #(setup PI 0.0)
+      :update (fn [state]
+                  (let [action {:control (min 1.0 (max -1.0 (- 1.0 (/ (q/mouse-x) (/ (q/width) 2.0)))))}
+                        state  (update-state state action config)]
+                    (when (done? state config) (async/close! done-chan))
+                    (reset! last-action action)
+                    state))
+      :draw #(draw-state % @last-action)
+      :middleware [m/fun-mode]
+      :on-close (fn [& _] (async/close! done-chan)))
+    (async/<!! done-chan))
+  (System/exit 0))
