@@ -3,7 +3,7 @@
                      :external-requirements []
                      :quarto {:author   [:janwedekind]
                               :draft    true
-                              :description "A Clojure port of XinJingHao's PPO implementation using Pytorch and Quil"
+                              :description "A Clojure port of XinJingHao's PPO implementation using libpython-clj2, Pytorch, and Quil"
                               :image    "pendulum.png"
                               :type     :post
                               :date     "2026-04-18"
@@ -15,9 +15,15 @@
               [clojure.core.async :as async]
               [quil.core :as q]
               [quil.middleware :as m]
-              [libpython-clj2.require :refer (require-python)]))
+              [libpython-clj2.require :refer (require-python)]
+              [libpython-clj2.python :refer (py.) :as py]))
 
-(require-python '[torch :as torch])
+(require-python '[builtins :as python]
+                '[torch :as torch]
+                '[torch.nn :as nn]
+                '[torch.nn.functional :as F]
+                '[torch.optim :as optim]
+                '[torch.distributions :refer (Beta)])
 
 ;; ## Motivation
 ;;
@@ -26,8 +32,9 @@
 ;; However I had stability issues.
 ;; The algorithm would learn a strategy and then suddenly diverge again.
 ;;
-;; More recently (2017) the Proximal Policy Optimization (PPO) algorithm was published and it has gained in popularity.
+;; More recently (2017) the [Proximal Policy Optimization (PPO) algorithm was published](https://arxiv.org/abs/1707.06347) and it has gained in popularity.
 ;; PPO is inspired by Trust Region Policy Optimization (TRPO) but is much easier to implement.
+;; Most importantly PPO can handle continuous observation and action spaces.
 ;; The [Stable Baselines3](https://github.com/DLR-RM/stable-baselines3) Python library has a implementation of PPO, TRPO, and other reinforcement learning algorithms.
 ;; However I found [XinJingHao's PPO implementation](https://github.com/XinJingHao/PPO-Continuous-Pytorch/) which I found easier to follow.
 ;;
@@ -128,6 +135,8 @@
 (observation {:angle 0.0 :velocity 0.0} config)
 (observation {:angle 0.0 :velocity 0.5} config)
 (observation {:angle (/ PI 2) :velocity 0.0} config)
+
+;; Note that the observation needs to capture all information required for achieving the objective, because it the only information available to the policy for deciding on the next action.
 
 ;; ### Action
 ;;
@@ -257,3 +266,69 @@
       :on-close (fn [& _] (async/close! done-chan)))
     (async/<!! done-chan))
   (System/exit 0))
+
+;; ## Neural networks
+;;
+;; PPO is a machine learning technique using backpropagation to learn the parameters of two neural networks.
+;;
+;; * The **actor** network takes an observation as an input and outputs the parameters of a probability distribution for sampling the next action to take.
+;; * The **critic** takes an observation as an input and outputs the expected cumulative reward for the current state.
+;;
+;; ### Pytorch
+;;
+;; For implementing the neural networks and backpropagation, I am using the Python-Clojure bridge [libpython-clj2](https://github.com/clj-python/libpython-clj) and [Pytorch](https://pytorch.org/).
+;; The Pytorch library is quite comprehensive, is free software, and you can find a lot of documentation on how to use it.
+;; The default version of [Pytorch on pypi.org](https://pypi.org/project/torch/) comes with CUDA (Nvidia) GPU support.
+;; There is also a [Pytorch wheel on AMD's website](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/3rd-party/pytorch-install.html#use-a-wheels-package) which comes with [ROCm](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html) support.
+;; Here we are going to use a CPU version of Pytorch which is a much smaller install.
+;;
+;; You need to install [Python 3.10](https://www.python.org/) or later.
+;; For package management we are going to use the [uv](https://docs.astral.sh/uv/) package manager.
+;; The following *pyproject.toml* file is used to install Pytorch and NumPy.
+;;
+;; ```toml
+;; [project]
+;; name = "ppo"
+;; version = "0.1.0"
+;; description = "Proximal Policy Optimization"
+;; authors = [{ name="Jan Wedekind", email="jan@wedesoft.de" }]
+;; requires-python = ">=3.10.0"
+;; dependencies = [
+;;     "numpy",
+;;     "torch",
+;; ]
+;;
+;; [tool.uv]
+;; python-preference = "only-system"
+;;
+;; [tool.uv.sources]
+;; torch = { index = "pytorch" }
+;; numpy = { index = "pytorch" }
+;;
+;; [[tool.uv.index]]
+;; name = "pytorch"
+;; url = "https://download.pytorch.org/whl/cpu"
+;;
+;; [build-system]
+;; requires = ["setuptools", "wheel"]
+;; build-backend = "setuptools.build_meta"
+;; ```
+;;
+;; Note that we are specifying a custom repository index to get the CPU-only version of Pytorch.
+;; Also we are using the system version of Python to prevent *uv* from trying to install its own version which lacks the *\_cython* module.
+;; To freeze the dependencies and create a *uv.lock* file, you need to run
+;;
+;; ```bash
+;; uv lock
+;; ```
+;;
+;; You can install the dependencies using
+;; ```bash
+;; uv sync
+;; ```
+;;
+;; In order to access Pytorch from Clojure you need to run the `clj` command via `uv`:
+;;
+;; ```bash
+;; uv run clj
+;; ```
