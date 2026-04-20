@@ -40,7 +40,7 @@
 ;;
 ;; In order to use PPO with a simulation environment in Clojure and also in order to get a better understanding of PPO, I dediced to do an implementation of PPO in Clojure.
 ;;
-;; ## Pendulum environment
+;; ## Pendulum Environment
 ;;
 ;; ![screenshot of pendulum environment](pendulum.png)
 ;;
@@ -82,7 +82,7 @@
 ;; Here a pendulum is initialised to be pointing down and with an angular velocity of 0.5.
 (setup (/ PI 2) 0.5)
 
-;; ### State updates
+;; ### State Updates
 ;;
 ;; The angular acceleration due to gravitation is implemented as follows.
 (defn pendulum-gravity
@@ -192,7 +192,7 @@
         (* velocity-weight (sqr velocity))
         (* control-weight (sqr control)))))
 
-;; ### Environment protocol
+;; ### Environment Protocol
 ;;
 ;; Finally we are able to implement the pendulum as a generic environment.
 (defrecord Pendulum [config state]
@@ -269,14 +269,14 @@
 
 ;; ![manually controlled pendulum](manual.gif)
 
-;; ## Neural networks
+;; ## Neural Networks
 ;;
 ;; PPO is a machine learning technique using backpropagation to learn the parameters of two neural networks.
 ;;
 ;; * The **actor** network takes an observation as an input and outputs the parameters of a probability distribution for sampling the next action to take.
 ;; * The **critic** takes an observation as an input and outputs the expected cumulative reward for the current state.
 ;;
-;; ### Pytorch
+;; ### Import Pytorch
 ;;
 ;; For implementing the neural networks and backpropagation, I am using the Python-Clojure bridge [libpython-clj2](https://github.com/clj-python/libpython-clj) and [Pytorch](https://pytorch.org/).
 ;; The Pytorch library is quite comprehensive, is free software, and you can find a lot of documentation on how to use it.
@@ -343,11 +343,144 @@
                 '[torch.optim :as optim]
                 '[torch.distributions :refer (Beta)])
 
+;; ### Tensor Conversion
+;;
+;; First we implement a few methods for converting nested Clojure vectors to Pytorch tensors and back.
+;;
+;; #### Clojure to Pytorch
+;;
+;; The method `tensor` is for converting a Clojure datatype to a Pytorch tensor.
+(defn tensor
+  "Convert nested vector to tensor"
+  ([data]
+   (tensor data torch/float32))
+  ([data dtype]
+   (torch/tensor data :dtype dtype)))
 
+(tensor PI)
+(tensor [2.0 3.0 5.0])
+(tensor [[1.0 2.0] [3.0 4.0] [5.0 6.0]])
+(tensor [1 2 3] torch/long)
 
+;; #### Pytorch to Clojure
+;;
+;; The next method is for converting a Pytorch tensor back to a Clojure datatype.
+(defn tolist
+  "Convert tensor to nested vector"
+  [tensor]
+  (py/->jvm (py. tensor tolist)))
 
+(tolist (tensor [2.0 3.0 5.0]))
+(tolist (tensor [[1.0 2.0] [3.0 4.0] [5.0 6.0]]))
 
-;; TODO
+;; #### Pytorch scalar to Clojure
+;;
+;; A tensor with no dimensions can also be converted using `toitem`
+(defn toitem
+  "Convert torch scalar value to float"
+  [tensor]
+  (py. tensor item))
+
+(toitem (tensor PI))
+
+;; ### Critic Network
+;;
+;; The critic network is a fully connected neural network with an input layer of size `observation-size` and two hidden layers of size `hidden-units` with `tanh` activation functions.
+;; The critic output is a single value (an estimate for the expected cumulative return achievable by the given observed state.
+(def Critic
+  (py/create-class
+    "Critic" [nn/Module]
+    {"__init__"
+     (py/make-instance-fn
+       (fn [self observation-size hidden-units]
+           (py. nn/Module __init__ self)
+           (py/set-attrs!
+             self
+             {"fc1" (nn/Linear observation-size hidden-units)
+              "fc2" (nn/Linear hidden-units hidden-units)
+              "fc3" (nn/Linear hidden-units 1)})
+           nil))
+     "forward"
+     (py/make-instance-fn
+       (fn [self x]
+           (let [x (py. self fc1 x)
+                 x (torch/tanh x)
+                 x (py. self fc2 x)
+                 x (torch/tanh x)
+                 x (py. self fc3 x)]
+             (torch/squeeze x -1))))}))
+
+;; When running inference, you need to run the network with gradient accumulation disabled, otherwise gradients get accumulated and can leak into a subsequent training step.
+;; In Python this looks like this.
+;;
+;; ```Python
+;; with torch.no_grad():
+;;     ...
+;; ```
+;;
+;; Here we create a Clojure macro to do the same job.
+(defmacro without-gradient
+  "Execute body without gradient calculation"
+  [& body]
+  `(let [no-grad# (torch/no_grad)]
+     (try
+       (py. no-grad# ~'__enter__)
+       ~@body
+       (finally
+         (py. no-grad# ~'__exit__ nil nil nil)))))
+
+;; Now we can create a network and try it out.
+;; Note that the network creates non-zero outputs because Pytorch performs random initialisation of ther weights for us.
+(def critic (Critic 3 64))
+(without-gradient
+  (toitem (critic (tensor [-1 0 0]))))
+
+;; We can also create a wrapper for using the neural network with Clojure datatypes.
+(defn critic-observation
+  "Use critic with Clojure datatypes"
+  [critic]
+  (fn [observation]
+      (without-gradient (toitem (critic (tensor observation))))))
+
+((critic-observation critic) [-1 0 0])
+
+;; ### Training
+;;
+;; Training a neural network is done by defining a loss function.
+;; The loss of the network then is calculated for a mini-batch of training data.
+;; One can then use Pytorch's backpropagation to compute the gradient of the loss value with respect to every single parameter of the network.
+;; The gradient then is used to perform gradient descent steps.
+;; A popular gradient descent method is the [Adam optimizer](https://en.wikipedia.org/wiki/Stochastic_gradient_descent#Adam).
+
+;; Here is a wrapper for the Adam optimizer.
+(defn adam-optimizer
+  "Adam optimizer"
+  [model learning-rate weight-decay]
+  (optim/Adam (py. model parameters) :lr learning-rate :weight_decay weight-decay))
+
+;; Pytorch also provides the mean square error (MSE) loss function.
+(defn mse-loss
+  "Mean square error cost function"
+  []
+  (nn/MSELoss))
+
+;; A training step can be performed as follows.
+(def optimizer (adam-optimizer critic 0.001 0.0))
+(def criterion (mse-loss))
+(def mini-batch [(tensor [[-1 0 0]]) (tensor [1.0])])
+(def prediction (critic (first mini-batch)))
+(def loss (criterion prediction (second mini-batch)))
+(py. optimizer zero_grad)
+(py. loss backward)
+(py. optimizer step)
+
+;; As you can see, the output of the network for the observation `[-1 0 0]` is now closer to 1.0.
+((critic-observation critic) [-1 0 0])
+
+;; # TODO
+;;
+;; * neural networks
+;; * ppo
 ;;
 ;; $\hat{A}_{T-1} = -V(S_{T-1}) + r_{T-1} + \gamma V(S_T)$
 ;;
