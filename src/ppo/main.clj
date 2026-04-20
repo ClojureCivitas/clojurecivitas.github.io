@@ -546,20 +546,35 @@
 ;; c) sample a random action from the distribution and get the associated log-probability.
 ((indeterministic-act actor) [-1 0 0])
 
+;; We can also query the current log-probability of a previously sampled action.
+(defn logprob-of-action
+  "Get log probability of action"
+  [actor]
+  (fn [observation action]
+      (let [dist (py. actor get_dist observation)]
+        (py. dist log_prob action))))
 
-(let [samples (repeatedly 256 #((indeterministic-act actor) [-1 0 0]))
-      scatter (tc/dataset {:x (map (fn [sample] (first (:action sample))) samples)
-                           :y (map (fn [sample] (exp (first (:logprob sample)))) samples)})]
-  (-> scatter
-      (plotly/base {:=title "Actor output for a single observation"})
-      (plotly/layer-point {:=x :x :=y :y})))
+;; Here is a plot of the probability density function (PDF) actor output for a single observation.
+(without-gradient
+  (let [actions (range 0.0 1.01 0.01)
+        scatter (tc/dataset {:x actions
+                             :y (map (fn [action]
+                                         (exp (first (tolist ((logprob-of-action actor) (tensor [-1 0 0]) (tensor [action]))))))
+                                     actions)})]
+    (-> scatter
+        (plotly/base {:=title "Actor output for a single observation" :=mode :lines})
+        (plotly/layer-point {:=x :x :=y :y}))))
 
+;; Finally we also can also query the entropy of the distribution.
+;; By incorporating the entropy into the loss function later on, we can encourage exploration and prevent the probability density function from collapsing.
+(defn entropy-of-distribution
+  "Get entropy of distribution"
+  [actor observation]
+  (let [dist (py. actor get_dist observation)]
+    (py. dist entropy)))
 
-;; # TODO
-;;
-;; * neural networks
-;; * ppo
-;;
+(without-gradient (entropy-of-distribution actor (tensor [-1 0 0])))
+
 ;; $\hat{A}_{T-1} = -V(S_{T-1}) + r_{T-1} + \gamma V(S_T)$
 ;;
 ;; $\hat{A}_{T-2} = -V(S_{T-2}) + r_{T-2} + \gamma r_{T-1} + \gamma^2 V(S_T)$
