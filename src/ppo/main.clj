@@ -11,8 +11,10 @@
                               :tags     [:physics :machine-learning :optimization :ppo :control]}}}
 
 (ns ppo.main
-    (:require [clojure.math :refer (PI cos sin to-radians)]
+    (:require [clojure.math :refer (PI cos sin exp to-radians)]
               [clojure.core.async :as async]
+              [tablecloth.api :as tc]
+              [scicloj.tableplot.v1.plotly :as plotly]
               [quil.core :as q]
               [quil.middleware :as m]
               [libpython-clj2.require :refer (require-python)]
@@ -442,6 +444,7 @@
   (fn [observation]
       (without-gradient (toitem (critic (tensor observation))))))
 
+;; Here is the output of the network for the observation `[-1 0 0]`.
 ((critic-observation critic) [-1 0 0])
 
 ;; ### Training
@@ -465,17 +468,92 @@
   (nn/MSELoss))
 
 ;; A training step can be performed as follows.
+;; Here we only use a single mini-batch with a single observation and an expected output of 1.0.
 (def optimizer (adam-optimizer critic 0.001 0.0))
 (def criterion (mse-loss))
 (def mini-batch [(tensor [[-1 0 0]]) (tensor [1.0])])
-(def prediction (critic (first mini-batch)))
-(def loss (criterion prediction (second mini-batch)))
-(py. optimizer zero_grad)
-(py. loss backward)
-(py. optimizer step)
+(let [prediction (critic (first mini-batch))
+      loss       (criterion prediction (second mini-batch))]
+  (py. optimizer zero_grad)
+  (py. loss backward)
+  (py. optimizer step))
 
 ;; As you can see, the output of the network for the observation `[-1 0 0]` is now closer to 1.0.
 ((critic-observation critic) [-1 0 0])
+
+;; ### Actor Network
+;;
+;; The actor network for PPO takes an observation as an input and it outputs the parameters of a probability distribution over actions.
+;; In addition to the forward pass, the actor network has a method `deterministic_act` to choose the expectation value of the distribution as a deterministic action.
+(def Actor
+  (py/create-class
+    "Actor" [nn/Module]
+    {"__init__"
+     (py/make-instance-fn
+       (fn [self observation-size hidden-units action-size]
+           (py. nn/Module __init__ self)
+           (py/set-attrs!
+             self
+             {"fc1"     (nn/Linear observation-size hidden-units)
+              "fc2"     (nn/Linear hidden-units hidden-units)
+              "fcalpha" (nn/Linear hidden-units action-size)
+              "fcbeta"  (nn/Linear hidden-units action-size)})
+           nil))
+     "forward"
+     (py/make-instance-fn
+       (fn [self x]
+           (let [x (py. self fc1 x)
+                 x (torch/tanh x)
+                 x (py. self fc2 x)
+                 x (torch/tanh x)
+                 alpha (torch/add 1.0 (F/softplus (py. self fcalpha x)))
+                 beta  (torch/add 1.0 (F/softplus (py. self fcbeta x)))]
+             [alpha beta])))
+     "deterministic_act"
+     (py/make-instance-fn
+       (fn [self x]
+            (let [[alpha beta] (py. self forward x)]
+              (torch/div alpha (torch/add alpha beta)))))
+     "get_dist"
+     (py/make-instance-fn
+       (fn [self x]
+           (let [[alpha beta] (py. self forward x)]
+             (Beta alpha beta))))}))
+
+;; Furthermore the actor network has a method `get_dist` to return a [Torch distribution](https://docs.pytorch.org/docs/stable/distributions.html) object which can be used to sample a random action or query the current log-probability of an action.
+;; Here (as the default in XinJingHao's PPO implementation) we use the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) with parameters `alpha` and `beta` both greater than 1.0.
+;; See [here](https://mathlets.org/mathlets/beta-distribution/) for an interactive visualization.
+(defn indeterministic-act
+  "Sample action using actor network returning distribution"
+  [actor]
+  (fn indeterministic-act-with-actor [observation]
+      (without-gradient
+        (let [dist    (py. actor get_dist (tensor observation))
+              sample  (py. dist sample)
+              action  (torch/clamp sample 0.0 1.0)
+              logprob (py. dist log_prob action)]
+          {:action (tolist action) :logprob (tolist logprob)}))))
+
+(def actor (Actor 3 64 1))
+;; One can then use the network to:
+;;
+;; a) get the parameters of the distribution for a given observation.
+(without-gradient (actor (tensor [-1 0 0])))
+
+;; b) choose the expectation value of the distribution as an action.
+(without-gradient (py. actor deterministic_act (tensor [-1 0 0])))
+
+;; c) sample a random action from the distribution and get the associated log-probability.
+((indeterministic-act actor) [-1 0 0])
+
+
+(let [samples (repeatedly 256 #((indeterministic-act actor) [-1 0 0]))
+      scatter (tc/dataset {:x (map (fn [sample] (first (:action sample))) samples)
+                           :y (map (fn [sample] (exp (first (:logprob sample)))) samples)})]
+  (-> scatter
+      (plotly/base {:=title "Actor output for a single observation"})
+      (plotly/layer-point {:=x :x :=y :y})))
+
 
 ;; # TODO
 ;;
