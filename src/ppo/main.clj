@@ -30,23 +30,23 @@
 ;; ## Motivation
 ;;
 ;; Recently I started to look into the problem of reentry trajectory planning in the context of developing the [sfsim](https://store.steampowered.com/app/3687560/sfsim/) space flight simulator.
-;; I had looked into reinforcement learning before and tried out Q-learning using the [lunar lander reference environment of OpenAI's gym library](https://gymnasium.farama.org/environments/box2d/lunar_lander/) (now maintained by the Farama Foundation).
-;; However I had stability issues.
-;; The algorithm would learn a strategy and then suddenly diverge again.
+;; I had looked into reinforcement learning before and even tried out Q-learning using the [lunar lander reference environment of OpenAI's gym library](https://gymnasium.farama.org/environments/box2d/lunar_lander/) (now maintained by the Farama Foundation).
+;; However it had stability issues.
+;; The algorithm would converge on a strategy and then suddenly diverge again.
 ;;
 ;; More recently (2017) the [Proximal Policy Optimization (PPO) algorithm was published](https://arxiv.org/abs/1707.06347) and it has gained in popularity.
 ;; PPO is inspired by Trust Region Policy Optimization (TRPO) but is much easier to implement.
-;; Most importantly PPO can handle continuous observation and action spaces.
+;; Also PPO handles continuous observation and action spaces which is important for control problems.
 ;; The [Stable Baselines3](https://github.com/DLR-RM/stable-baselines3) Python library has a implementation of PPO, TRPO, and other reinforcement learning algorithms.
 ;; However I found [XinJingHao's PPO implementation](https://github.com/XinJingHao/PPO-Continuous-Pytorch/) which I found easier to follow.
 ;;
-;; In order to use PPO with a simulation environment in Clojure and also in order to get a better understanding of PPO, I dediced to do an implementation of PPO in Clojure.
+;; In order to use PPO with a simulation environment implemented in Clojure and also in order to get a better understanding of PPO, I dediced to do an implementation of PPO in Clojure.
 ;;
 ;; ## Pendulum Environment
 ;;
 ;; ![screenshot of pendulum environment](pendulum.png)
 ;;
-;; First we implement a simple pendulum environment to test the PPO algorithm.
+;; To validate the implementation, we will implement the classical [pendulum](https://gymnasium.farama.org/environments/classic_control/pendulum/) environment in Clojure.
 ;; In order to be able to switch environments, we define a protocol according to the environment abstract class used in OpenAI's gym.
 (defprotocol Environment
   (environment-update [this action])
@@ -81,8 +81,8 @@
    :t              0.0})
 
 ;; Same as in OpenAI's gym the angle is zero when the pendulum is pointing up.
-;; Here a pendulum is initialised to be pointing down and with an angular velocity of 0.5.
-(setup (/ PI 2) 0.5)
+;; Here a pendulum is initialised to be pointing down and have an angular velocity of 0.5 radians per second.
+(setup PI 0.5)
 
 ;; ### State Updates
 ;;
@@ -98,7 +98,7 @@
 (pendulum-gravity 9.81 2.0 (/ PI 2))
 
 ;; The motor is controlled using an input value between -1 and 1.
-;; This value is simply multiplied with the maximum acceleration provided by the motor.
+;; This value is simply multiplied with the maximum angular acceleration provided by the motor.
 (defn motor-acceleration
   "Angular acceleration from motor"
   [control motor-acceleration]
@@ -127,7 +127,8 @@
 ;; ### Observation
 ;;
 ;; The observation of the pendulum state uses cosinus and sinus of the angle to resolve the wrap around problem of angles.
-;; The angular speed is normalized to be between -1 and 1.
+;; The angular speed is normalized to be between -1 and 1 as well.
+;; This so called [feature scaling](https://en.wikipedia.org/wiki/Feature_scaling) is done in order to improve convergence.
 (defn observation
   "Get observation from state"
   [{:keys [angle velocity]} {:keys [max-speed]}]
@@ -138,12 +139,12 @@
 (observation {:angle 0.0 :velocity 0.5} config)
 (observation {:angle (/ PI 2) :velocity 0.0} config)
 
-;; Note that the observation needs to capture all information required for achieving the objective, because it the only information available to the policy for deciding on the next action.
+;; Note that the observation needs to capture all information required for achieving the objective, because it is the only information available to the actor for deciding on the next action.
 
 ;; ### Action
 ;;
 ;; The action of a pendulum is a vector with one element between 0 and 1.
-;; The following method converts it to a action hashmap used by the pendulum environment.
+;; The following method clips it and converts it to an action hashmap used by the pendulum environment.
 (defn action
   "Convert array to action"
   [array]
@@ -249,7 +250,7 @@
 
 ;; ### Animation
 ;;
-;; The following method animates the pendulum and facilitates mouse control.
+;; With Quil we can create an animation of the pendulum and react to mouse input.
 (defn run []
   (let [done-chan   (async/chan)
         last-action (atom {:control 0.0})]
@@ -280,10 +281,10 @@
 ;;
 ;; ### Import Pytorch
 ;;
-;; For implementing the neural networks and backpropagation, I am using the Python-Clojure bridge [libpython-clj2](https://github.com/clj-python/libpython-clj) and [Pytorch](https://pytorch.org/).
+;; For implementing the neural networks and backpropagation, we can use the Python-Clojure bridge [libpython-clj2](https://github.com/clj-python/libpython-clj) and the [Pytorch](https://pytorch.org/) machine learning library.
 ;; The Pytorch library is quite comprehensive, is free software, and you can find a lot of documentation on how to use it.
 ;; The default version of [Pytorch on pypi.org](https://pypi.org/project/torch/) comes with CUDA (Nvidia) GPU support.
-;; There is also a [Pytorch wheel on AMD's website](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/3rd-party/pytorch-install.html#use-a-wheels-package) which comes with [ROCm](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html) support.
+;; There are also [Pytorch wheels provided by AMD](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/3rd-party/pytorch-install.html#use-a-wheels-package) which come with [ROCm](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html) support.
 ;; Here we are going to use a CPU version of Pytorch which is a much smaller install.
 ;;
 ;; You need to install [Python 3.10](https://www.python.org/) or later.
@@ -387,8 +388,8 @@
 
 ;; ### Critic Network
 ;;
-;; The critic network is a fully connected neural network with an input layer of size `observation-size` and two hidden layers of size `hidden-units` with `tanh` activation functions.
-;; The critic output is a single value (an estimate for the expected cumulative return achievable by the given observed state.
+;; The critic network is a neural network with an input layer of size `observation-size` and two fully connected hidden layers of size `hidden-units` with `tanh` activation functions.
+;; The critic output is a single value (an estimate for the expected cumulative return achievable by the given observed state).
 (def Critic
   (py/create-class
     "Critic" [nn/Module]
@@ -432,7 +433,7 @@
          (py. no-grad# ~'__exit__ nil nil nil)))))
 
 ;; Now we can create a network and try it out.
-;; Note that the network creates non-zero outputs because Pytorch performs random initialisation of ther weights for us.
+;; Note that the network creates non-zero outputs because Pytorch performs random initialisation of the weights for us.
 (def critic (Critic 3 64))
 (without-gradient
   (toitem (critic (tensor [-1 0 0]))))
@@ -452,7 +453,7 @@
 ;; Training a neural network is done by defining a loss function.
 ;; The loss of the network then is calculated for a mini-batch of training data.
 ;; One can then use Pytorch's backpropagation to compute the gradient of the loss value with respect to every single parameter of the network.
-;; The gradient then is used to perform gradient descent steps.
+;; The gradient then is used to perform a gradient descent step.
 ;; A popular gradient descent method is the [Adam optimizer](https://en.wikipedia.org/wiki/Stochastic_gradient_descent#Adam).
 
 ;; Here is a wrapper for the Adam optimizer.
@@ -473,7 +474,8 @@
 (def criterion (mse-loss))
 (def mini-batch [(tensor [[-1 0 0]]) (tensor [1.0])])
 (let [prediction (critic (first mini-batch))
-      loss       (criterion prediction (second mini-batch))]
+      expected   (second mini-batch)
+      loss       (criterion prediction expected)]
   (py. optimizer zero_grad)
   (py. loss backward)
   (py. optimizer step))
@@ -522,7 +524,7 @@
 
 ;; Furthermore the actor network has a method `get_dist` to return a [Torch distribution](https://docs.pytorch.org/docs/stable/distributions.html) object which can be used to sample a random action or query the current log-probability of an action.
 ;; Here (as the default in XinJingHao's PPO implementation) we use the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) with parameters `alpha` and `beta` both greater than 1.0.
-;; See [here](https://mathlets.org/mathlets/beta-distribution/) for an interactive visualization.
+;; See [here](https://mathlets.org/mathlets/beta-distribution/) for an interactive visualization of the Beta distribution.
 (defn indeterministic-act
   "Sample action using actor network returning distribution"
   [actor]
@@ -537,13 +539,13 @@
 (def actor (Actor 3 64 1))
 ;; One can then use the network to:
 ;;
-;; a) get the parameters of the distribution for a given observation.
+;; a. get the parameters of the distribution for a given observation.
 (without-gradient (actor (tensor [-1 0 0])))
 
-;; b) choose the expectation value of the distribution as an action.
+;; b. choose the expectation value of the distribution as an action.
 (without-gradient (py. actor deterministic_act (tensor [-1 0 0])))
 
-;; c) sample a random action from the distribution and get the associated log-probability.
+;; c. sample a random action from the distribution and get the associated log-probability.
 ((indeterministic-act actor) [-1 0 0])
 
 ;; We can also query the current log-probability of a previously sampled action.
@@ -557,10 +559,12 @@
 ;; Here is a plot of the probability density function (PDF) actor output for a single observation.
 (without-gradient
   (let [actions (range 0.0 1.01 0.01)
-        scatter (tc/dataset {:x actions
-                             :y (map (fn [action]
-                                         (exp (first (tolist ((logprob-of-action actor) (tensor [-1 0 0]) (tensor [action]))))))
-                                     actions)})]
+        logprob (fn [action]
+                    (tolist
+                      ((logprob-of-action actor) (tensor [-1 0 0]) (tensor action))))
+        scatter (tc/dataset
+                  {:x actions
+                   :y (map (fn [action] (exp (first (logprob [action])))) actions)})]
     (-> scatter
         (plotly/base {:=title "Actor output for a single observation" :=mode :lines})
         (plotly/layer-point {:=x :x :=y :y}))))
