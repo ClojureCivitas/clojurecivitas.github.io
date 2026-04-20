@@ -11,8 +11,10 @@
                               :tags     [:physics :machine-learning :optimization :ppo :control]}}}
 
 (ns ppo.main
-    (:require [clojure.math :refer (PI cos sin to-radians)]
+    (:require [clojure.math :refer (PI cos sin exp to-radians)]
               [clojure.core.async :as async]
+              [tablecloth.api :as tc]
+              [scicloj.tableplot.v1.plotly :as plotly]
               [quil.core :as q]
               [quil.middleware :as m]
               [libpython-clj2.require :refer (require-python)]
@@ -40,7 +42,7 @@
 ;;
 ;; In order to use PPO with a simulation environment in Clojure and also in order to get a better understanding of PPO, I dediced to do an implementation of PPO in Clojure.
 ;;
-;; ## Pendulum environment
+;; ## Pendulum Environment
 ;;
 ;; ![screenshot of pendulum environment](pendulum.png)
 ;;
@@ -82,7 +84,7 @@
 ;; Here a pendulum is initialised to be pointing down and with an angular velocity of 0.5.
 (setup (/ PI 2) 0.5)
 
-;; ### State updates
+;; ### State Updates
 ;;
 ;; The angular acceleration due to gravitation is implemented as follows.
 (defn pendulum-gravity
@@ -192,7 +194,7 @@
         (* velocity-weight (sqr velocity))
         (* control-weight (sqr control)))))
 
-;; ### Environment protocol
+;; ### Environment Protocol
 ;;
 ;; Finally we are able to implement the pendulum as a generic environment.
 (defrecord Pendulum [config state]
@@ -269,14 +271,14 @@
 
 ;; ![manually controlled pendulum](manual.gif)
 
-;; ## Neural networks
+;; ## Neural Networks
 ;;
 ;; PPO is a machine learning technique using backpropagation to learn the parameters of two neural networks.
 ;;
 ;; * The **actor** network takes an observation as an input and outputs the parameters of a probability distribution for sampling the next action to take.
 ;; * The **critic** takes an observation as an input and outputs the expected cumulative reward for the current state.
 ;;
-;; ### Pytorch
+;; ### Import Pytorch
 ;;
 ;; For implementing the neural networks and backpropagation, I am using the Python-Clojure bridge [libpython-clj2](https://github.com/clj-python/libpython-clj) and [Pytorch](https://pytorch.org/).
 ;; The Pytorch library is quite comprehensive, is free software, and you can find a lot of documentation on how to use it.
@@ -342,3 +344,249 @@
                 '[torch.nn.functional :as F]
                 '[torch.optim :as optim]
                 '[torch.distributions :refer (Beta)])
+
+;; ### Tensor Conversion
+;;
+;; First we implement a few methods for converting nested Clojure vectors to Pytorch tensors and back.
+;;
+;; #### Clojure to Pytorch
+;;
+;; The method `tensor` is for converting a Clojure datatype to a Pytorch tensor.
+(defn tensor
+  "Convert nested vector to tensor"
+  ([data]
+   (tensor data torch/float32))
+  ([data dtype]
+   (torch/tensor data :dtype dtype)))
+
+(tensor PI)
+(tensor [2.0 3.0 5.0])
+(tensor [[1.0 2.0] [3.0 4.0] [5.0 6.0]])
+(tensor [1 2 3] torch/long)
+
+;; #### Pytorch to Clojure
+;;
+;; The next method is for converting a Pytorch tensor back to a Clojure datatype.
+(defn tolist
+  "Convert tensor to nested vector"
+  [tensor]
+  (py/->jvm (py. tensor tolist)))
+
+(tolist (tensor [2.0 3.0 5.0]))
+(tolist (tensor [[1.0 2.0] [3.0 4.0] [5.0 6.0]]))
+
+;; #### Pytorch scalar to Clojure
+;;
+;; A tensor with no dimensions can also be converted using `toitem`
+(defn toitem
+  "Convert torch scalar value to float"
+  [tensor]
+  (py. tensor item))
+
+(toitem (tensor PI))
+
+;; ### Critic Network
+;;
+;; The critic network is a fully connected neural network with an input layer of size `observation-size` and two hidden layers of size `hidden-units` with `tanh` activation functions.
+;; The critic output is a single value (an estimate for the expected cumulative return achievable by the given observed state.
+(def Critic
+  (py/create-class
+    "Critic" [nn/Module]
+    {"__init__"
+     (py/make-instance-fn
+       (fn [self observation-size hidden-units]
+           (py. nn/Module __init__ self)
+           (py/set-attrs!
+             self
+             {"fc1" (nn/Linear observation-size hidden-units)
+              "fc2" (nn/Linear hidden-units hidden-units)
+              "fc3" (nn/Linear hidden-units 1)})
+           nil))
+     "forward"
+     (py/make-instance-fn
+       (fn [self x]
+           (let [x (py. self fc1 x)
+                 x (torch/tanh x)
+                 x (py. self fc2 x)
+                 x (torch/tanh x)
+                 x (py. self fc3 x)]
+             (torch/squeeze x -1))))}))
+
+;; When running inference, you need to run the network with gradient accumulation disabled, otherwise gradients get accumulated and can leak into a subsequent training step.
+;; In Python this looks like this.
+;;
+;; ```Python
+;; with torch.no_grad():
+;;     ...
+;; ```
+;;
+;; Here we create a Clojure macro to do the same job.
+(defmacro without-gradient
+  "Execute body without gradient calculation"
+  [& body]
+  `(let [no-grad# (torch/no_grad)]
+     (try
+       (py. no-grad# ~'__enter__)
+       ~@body
+       (finally
+         (py. no-grad# ~'__exit__ nil nil nil)))))
+
+;; Now we can create a network and try it out.
+;; Note that the network creates non-zero outputs because Pytorch performs random initialisation of ther weights for us.
+(def critic (Critic 3 64))
+(without-gradient
+  (toitem (critic (tensor [-1 0 0]))))
+
+;; We can also create a wrapper for using the neural network with Clojure datatypes.
+(defn critic-observation
+  "Use critic with Clojure datatypes"
+  [critic]
+  (fn [observation]
+      (without-gradient (toitem (critic (tensor observation))))))
+
+;; Here is the output of the network for the observation `[-1 0 0]`.
+((critic-observation critic) [-1 0 0])
+
+;; ### Training
+;;
+;; Training a neural network is done by defining a loss function.
+;; The loss of the network then is calculated for a mini-batch of training data.
+;; One can then use Pytorch's backpropagation to compute the gradient of the loss value with respect to every single parameter of the network.
+;; The gradient then is used to perform gradient descent steps.
+;; A popular gradient descent method is the [Adam optimizer](https://en.wikipedia.org/wiki/Stochastic_gradient_descent#Adam).
+
+;; Here is a wrapper for the Adam optimizer.
+(defn adam-optimizer
+  "Adam optimizer"
+  [model learning-rate weight-decay]
+  (optim/Adam (py. model parameters) :lr learning-rate :weight_decay weight-decay))
+
+;; Pytorch also provides the mean square error (MSE) loss function.
+(defn mse-loss
+  "Mean square error cost function"
+  []
+  (nn/MSELoss))
+
+;; A training step can be performed as follows.
+;; Here we only use a single mini-batch with a single observation and an expected output of 1.0.
+(def optimizer (adam-optimizer critic 0.001 0.0))
+(def criterion (mse-loss))
+(def mini-batch [(tensor [[-1 0 0]]) (tensor [1.0])])
+(let [prediction (critic (first mini-batch))
+      loss       (criterion prediction (second mini-batch))]
+  (py. optimizer zero_grad)
+  (py. loss backward)
+  (py. optimizer step))
+
+;; As you can see, the output of the network for the observation `[-1 0 0]` is now closer to 1.0.
+((critic-observation critic) [-1 0 0])
+
+;; ### Actor Network
+;;
+;; The actor network for PPO takes an observation as an input and it outputs the parameters of a probability distribution over actions.
+;; In addition to the forward pass, the actor network has a method `deterministic_act` to choose the expectation value of the distribution as a deterministic action.
+(def Actor
+  (py/create-class
+    "Actor" [nn/Module]
+    {"__init__"
+     (py/make-instance-fn
+       (fn [self observation-size hidden-units action-size]
+           (py. nn/Module __init__ self)
+           (py/set-attrs!
+             self
+             {"fc1"     (nn/Linear observation-size hidden-units)
+              "fc2"     (nn/Linear hidden-units hidden-units)
+              "fcalpha" (nn/Linear hidden-units action-size)
+              "fcbeta"  (nn/Linear hidden-units action-size)})
+           nil))
+     "forward"
+     (py/make-instance-fn
+       (fn [self x]
+           (let [x (py. self fc1 x)
+                 x (torch/tanh x)
+                 x (py. self fc2 x)
+                 x (torch/tanh x)
+                 alpha (torch/add 1.0 (F/softplus (py. self fcalpha x)))
+                 beta  (torch/add 1.0 (F/softplus (py. self fcbeta x)))]
+             [alpha beta])))
+     "deterministic_act"
+     (py/make-instance-fn
+       (fn [self x]
+            (let [[alpha beta] (py. self forward x)]
+              (torch/div alpha (torch/add alpha beta)))))
+     "get_dist"
+     (py/make-instance-fn
+       (fn [self x]
+           (let [[alpha beta] (py. self forward x)]
+             (Beta alpha beta))))}))
+
+;; Furthermore the actor network has a method `get_dist` to return a [Torch distribution](https://docs.pytorch.org/docs/stable/distributions.html) object which can be used to sample a random action or query the current log-probability of an action.
+;; Here (as the default in XinJingHao's PPO implementation) we use the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) with parameters `alpha` and `beta` both greater than 1.0.
+;; See [here](https://mathlets.org/mathlets/beta-distribution/) for an interactive visualization.
+(defn indeterministic-act
+  "Sample action using actor network returning distribution"
+  [actor]
+  (fn indeterministic-act-with-actor [observation]
+      (without-gradient
+        (let [dist    (py. actor get_dist (tensor observation))
+              sample  (py. dist sample)
+              action  (torch/clamp sample 0.0 1.0)
+              logprob (py. dist log_prob action)]
+          {:action (tolist action) :logprob (tolist logprob)}))))
+
+(def actor (Actor 3 64 1))
+;; One can then use the network to:
+;;
+;; a) get the parameters of the distribution for a given observation.
+(without-gradient (actor (tensor [-1 0 0])))
+
+;; b) choose the expectation value of the distribution as an action.
+(without-gradient (py. actor deterministic_act (tensor [-1 0 0])))
+
+;; c) sample a random action from the distribution and get the associated log-probability.
+((indeterministic-act actor) [-1 0 0])
+
+;; We can also query the current log-probability of a previously sampled action.
+(defn logprob-of-action
+  "Get log probability of action"
+  [actor]
+  (fn [observation action]
+      (let [dist (py. actor get_dist observation)]
+        (py. dist log_prob action))))
+
+;; Here is a plot of the probability density function (PDF) actor output for a single observation.
+(without-gradient
+  (let [actions (range 0.0 1.01 0.01)
+        scatter (tc/dataset {:x actions
+                             :y (map (fn [action]
+                                         (exp (first (tolist ((logprob-of-action actor) (tensor [-1 0 0]) (tensor [action]))))))
+                                     actions)})]
+    (-> scatter
+        (plotly/base {:=title "Actor output for a single observation" :=mode :lines})
+        (plotly/layer-point {:=x :x :=y :y}))))
+
+;; Finally we also can also query the entropy of the distribution.
+;; By incorporating the entropy into the loss function later on, we can encourage exploration and prevent the probability density function from collapsing.
+(defn entropy-of-distribution
+  "Get entropy of distribution"
+  [actor observation]
+  (let [dist (py. actor get_dist observation)]
+    (py. dist entropy)))
+
+(without-gradient (entropy-of-distribution actor (tensor [-1 0 0])))
+
+;; $\hat{A}_{T-1} = -V(S_{T-1}) + r_{T-1} + \gamma V(S_T)$
+;;
+;; $\hat{A}_{T-2} = -V(S_{T-2}) + r_{T-2} + \gamma r_{T-1} + \gamma^2 V(S_T)$
+;;
+;; $\vdots$
+;;
+;; $\hat{A}_0 = -V(S_0) + r_0 + \gamma r_1 + \ldots + \gamma^T V(S_T)$
+;;
+;; $\hat{A}_t = -V(s_t) + r_t + \gamma r_{t+1} + \ldots + \gamma^{T-t+1} r_{T-1} + \gamma^{T-t} V(S_T)$
+;;
+;; $\hat{A}_t = \sum_{l=0}^{T-t-1} (\gamma \lambda)^l \delta_{t+l}$
+;;
+;; $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$
+;;
+;; $\hat{A}_t = \sum_{l=0}^{T-t-1} (\gamma \lambda)^l \left( r_{t+l} + \gamma V(s_{t+l+1}) - V(s_{t+l}) \right)$
