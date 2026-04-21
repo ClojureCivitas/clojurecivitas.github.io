@@ -626,6 +626,19 @@
 ;; Here for example we are sampling 3 consecutives states of the pendulum.
 (sample-environment pendulum-factory (indeterministic-act actor) 3)
 
+;; ### Advantages
+;;
+;; If we are in state $s_t$ and take an action $a_t$ at timestep $t$, we end up in state $s_{t+1}$ and receive reward $r_t$.
+;; The cumulative reward for state $s_t$ is
+;;
+;; $r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \gamma^3 r_{t+3} + \ldots$
+;;
+;; The critic $V$ estimates the expected cumulative reward for starting from the specified state.
+;;
+;; $V(s_t) = \mathop{\hat{\mathbb{E}}} [ r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \gamma^3 r_{t+3} + \ldots ]$
+;;
+;; In particular, the difference between discounted rewards can be used to get an estimate for the individual reward:
+;;
 ;; $\hat{A}_{T-1} = -V(S_{T-1}) + r_{T-1} + \gamma V(S_T)$
 ;;
 ;; $\hat{A}_{T-2} = -V(S_{T-2}) + r_{T-2} + \gamma r_{T-1} + \gamma^2 V(S_T)$
