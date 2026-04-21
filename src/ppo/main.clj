@@ -1,9 +1,9 @@
 ^{:kindly/hide-code true
-  :clay             {:title  "Proximal Policy Optimization with Clojure and Pytorch"
+  :clay             {:title  "Proximal Policy Optimization with Clojure and PyTorch"
                      :external-requirements []
                      :quarto {:author   [:janwedekind]
                               :draft    true
-                              :description "A Clojure port of XinJingHao's PPO implementation using libpython-clj2, Pytorch, and Quil"
+                              :description "A Clojure port of XinJingHao's PPO implementation using libpython-clj2, PyTorch, and Quil"
                               :image    "pendulum.png"
                               :type     :post
                               :date     "2026-04-18"
@@ -25,8 +25,8 @@
                 '[torch.nn :as nn]
                 '[torch.nn.functional :as F]
                 '[torch.optim :as optim]
-                '[torch.distributions :refer (Beta)])
-
+                '[torch.distributions :refer (Beta)]
+                '[torch.nn.utils :as utils])
 ;; ## Motivation
 ;;
 ;; Recently I started to look into the problem of reentry trajectory planning in the context of developing the [sfsim](https://store.steampowered.com/app/3687560/sfsim/) space flight simulator.
@@ -188,6 +188,7 @@
   (* x x))
 
 ;; The reward function penalises deviation from the upright position, non-zero velocities, and non-zero control input.
+;; Note that it is important that the reward function is continuous because machine learning uses gradient descent.
 (defn reward
   "Reward function"
   [{:keys [angle velocity]} {:keys [angle-weight velocity-weight control-weight]} {:keys [control]}]
@@ -251,7 +252,7 @@
 ;; ### Animation
 ;;
 ;; With Quil we can create an animation of the pendulum and react to mouse input.
-(defn run []
+(defn -main [& _args]
   (let [done-chan   (async/chan)
         last-action (atom {:control 0.0})]
     (q/sketch
@@ -279,17 +280,17 @@
 ;; * The **actor** network takes an observation as an input and outputs the parameters of a probability distribution for sampling the next action to take.
 ;; * The **critic** takes an observation as an input and outputs the expected cumulative reward for the current state.
 ;;
-;; ### Import Pytorch
+;; ### Import PyTorch
 ;;
-;; For implementing the neural networks and backpropagation, we can use the Python-Clojure bridge [libpython-clj2](https://github.com/clj-python/libpython-clj) and the [Pytorch](https://pytorch.org/) machine learning library.
-;; The Pytorch library is quite comprehensive, is free software, and you can find a lot of documentation on how to use it.
-;; The default version of [Pytorch on pypi.org](https://pypi.org/project/torch/) comes with CUDA (Nvidia) GPU support.
-;; There are also [Pytorch wheels provided by AMD](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/3rd-party/pytorch-install.html#use-a-wheels-package) which come with [ROCm](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html) support.
-;; Here we are going to use a CPU version of Pytorch which is a much smaller install.
+;; For implementing the neural networks and backpropagation, we can use the Python-Clojure bridge [libpython-clj2](https://github.com/clj-python/libpython-clj) and the [PyTorch](https://pytorch.org/) machine learning library.
+;; The PyTorch library is quite comprehensive, is free software, and you can find a lot of documentation on how to use it.
+;; The default version of [PyTorch on pypi.org](https://pypi.org/project/torch/) comes with CUDA (Nvidia) GPU support.
+;; There are also [PyTorch wheels provided by AMD](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/3rd-party/pytorch-install.html#use-a-wheels-package) which come with [ROCm](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html) support.
+;; Here we are going to use a CPU version of PyTorch which is a much smaller install.
 ;;
 ;; You need to install [Python 3.10](https://www.python.org/) or later.
 ;; For package management we are going to use the [uv](https://docs.astral.sh/uv/) package manager.
-;; The following *pyproject.toml* file is used to install Pytorch and NumPy.
+;; The following *pyproject.toml* file is used to install PyTorch and NumPy.
 ;;
 ;; ```toml
 ;; [project]
@@ -319,7 +320,7 @@
 ;; build-backend = "setuptools.build_meta"
 ;; ```
 ;;
-;; Note that we are specifying a custom repository index to get the CPU-only version of Pytorch.
+;; Note that we are specifying a custom repository index to get the CPU-only version of PyTorch.
 ;; Also we are using the system version of Python to prevent *uv* from trying to install its own version which lacks the *\_cython* module.
 ;; To freeze the dependencies and create a *uv.lock* file, you need to run
 ;;
@@ -332,7 +333,7 @@
 ;; uv sync
 ;; ```
 ;;
-;; In order to access Pytorch from Clojure you need to run the `clj` command via `uv`:
+;; In order to access PyTorch from Clojure you need to run the `clj` command via `uv`:
 ;;
 ;; ```bash
 ;; uv run clj
@@ -348,11 +349,11 @@
 
 ;; ### Tensor Conversion
 ;;
-;; First we implement a few methods for converting nested Clojure vectors to Pytorch tensors and back.
+;; First we implement a few methods for converting nested Clojure vectors to PyTorch tensors and back.
 ;;
-;; #### Clojure to Pytorch
+;; #### Clojure to PyTorch
 ;;
-;; The method `tensor` is for converting a Clojure datatype to a Pytorch tensor.
+;; The method `tensor` is for converting a Clojure datatype to a PyTorch tensor.
 (defn tensor
   "Convert nested vector to tensor"
   ([data]
@@ -365,9 +366,9 @@
 (tensor [[1.0 2.0] [3.0 4.0] [5.0 6.0]])
 (tensor [1 2 3] torch/long)
 
-;; #### Pytorch to Clojure
+;; #### PyTorch to Clojure
 ;;
-;; The next method is for converting a Pytorch tensor back to a Clojure datatype.
+;; The next method is for converting a PyTorch tensor back to a Clojure datatype.
 (defn tolist
   "Convert tensor to nested vector"
   [tensor]
@@ -376,7 +377,7 @@
 (tolist (tensor [2.0 3.0 5.0]))
 (tolist (tensor [[1.0 2.0] [3.0 4.0] [5.0 6.0]]))
 
-;; #### Pytorch scalar to Clojure
+;; #### PyTorch scalar to Clojure
 ;;
 ;; A tensor with no dimensions can also be converted using `toitem`
 (defn toitem
@@ -433,7 +434,7 @@
          (py. no-grad# ~'__exit__ nil nil nil)))))
 
 ;; Now we can create a network and try it out.
-;; Note that the network creates non-zero outputs because Pytorch performs random initialisation of the weights for us.
+;; Note that the network creates non-zero outputs because PyTorch performs random initialisation of the weights for us.
 (def critic (Critic 3 64))
 (without-gradient
   (toitem (critic (tensor [-1 0 0]))))
@@ -452,7 +453,7 @@
 ;;
 ;; Training a neural network is done by defining a loss function.
 ;; The loss of the network then is calculated for a mini-batch of training data.
-;; One can then use Pytorch's backpropagation to compute the gradient of the loss value with respect to every single parameter of the network.
+;; One can then use PyTorch's backpropagation to compute the gradient of the loss value with respect to every single parameter of the network.
 ;; The gradient then is used to perform a gradient descent step.
 ;; A popular gradient descent method is the [Adam optimizer](https://en.wikipedia.org/wiki/Stochastic_gradient_descent#Adam).
 
@@ -462,7 +463,7 @@
   [model learning-rate weight-decay]
   (optim/Adam (py. model parameters) :lr learning-rate :weight_decay weight-decay))
 
-;; Pytorch also provides the mean square error (MSE) loss function.
+;; PyTorch also provides the mean square error (MSE) loss function.
 (defn mse-loss
   "Mean square error cost function"
   []
@@ -523,7 +524,7 @@
              (Beta alpha beta))))}))
 
 ;; Furthermore the actor network has a method `get_dist` to return a [Torch distribution](https://docs.pytorch.org/docs/stable/distributions.html) object which can be used to sample a random action or query the current log-probability of an action.
-;; Here (as the default in XinJingHao's PPO implementation) we use the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) with parameters `alpha` and `beta` both greater than 1.0.
+;; Here (as the default in [XinJingHao's PPO implementation](https://github.com/XinJingHao/PPO-Continuous-Pytorch/)) we use the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) with parameters `alpha` and `beta` both greater than 1.0.
 ;; See [here](https://mathlets.org/mathlets/beta-distribution/) for an interactive visualization of the Beta distribution.
 (defn indeterministic-act
   "Sample action using actor network returning distribution"
@@ -669,7 +670,7 @@
 ;; PPO uses an additional factor $\lambda\le 1$ called Generalized Advantage Estimation (GAE) which can be used to steer the training towards more immediate rewards if there are stability issues.
 ;; See [Schulman et al.](https://arxiv.org/abs/1707.06347) for more details.
 ;;
-;; #### Implementation of Delta
+;; #### Implementation of Deltas
 ;;
 ;; The code for computing the $\delta$ values follows here:
 (defn deltas
@@ -695,3 +696,302 @@
 
 ;; If the run is terminated, the current critic value is compared with the reward which in this case is the last reward received in this run.
 (deltas {:observations [[4]] :next-observations [[3]] :rewards [4] :dones [true]} linear-critic 1.0)
+
+;; #### Implementation of Advantages
+;;
+;; The advantages can be computed in an elegant way using `reductions` and the previously computed `deltas`.
+(defn advantages
+  "Compute advantages attributed to each action"
+  [{:keys [dones truncates]} deltas gamma lambda]
+  (vec
+    (reverse
+    (rest
+      (reductions
+        (fn [advantage [delta done truncate]]
+            (+ delta (if (or done truncate) 0.0 (* gamma lambda advantage))))
+        0.0
+        (reverse (map vector deltas dones truncates)))))))
+
+;; For example if using an discount factor of 0.5, the advantages approach 2.0 assymptotically when going backwards in time.
+(advantages {:dones [false false false] :truncates [false false false]} [1.0 1.0 1.0] 0.5 1.0)
+
+;; When an episode is terminated (or truncated), the accumulation of advantages starts again when going backwards in time.
+;; I.e. the computation of advantages does not distinguish between terminated and truncated episodes (unlike the deltas).
+(advantages {:dones [false false true false false true]
+             :truncates [false false false false false false]}
+            [1.0 1.0 1.0 1.0 1.0 1.0] 0.5 1.0)
+
+;; We add the advantages to the batch of samples with the following function.
+(defn assoc-advantages
+  "Associate advantages with batch of samples"
+  [critic gamma lambda batch]
+  (let [deltas     (deltas batch critic gamma)
+        advantages (advantages batch deltas gamma lambda)]
+    (assoc batch :advantages advantages)))
+
+;; ### Critic Loss Function
+;;
+;; The target values for the critic are simply the current values plus the new advantages.
+;; The target values can be computed using PyTorch's `add` function.
+(defn critic-target
+  "Determine target values for critic"
+  [{:keys [observations advantages]} critic]
+  (without-gradient (torch/add (critic observations) advantages)))
+
+;; We add the critic targets to the batch of samples with the following function.
+(defn assoc-critic-target
+  "Associate critic target values with batch of samples"
+  [critic batch]
+  (let [target (critic-target batch critic)]
+    (assoc batch :critic-target target)))
+
+;; If we add the target values to the samples, we can compute the critic loss for a batch of samples as follows.
+(defn critic-loss
+  "Compute loss value for batch of samples and critic"
+  [samples critic]
+  (let [criterion (mse-loss)
+        loss      (criterion (critic (:observations samples)) (:critic-target samples))]
+    loss))
+
+;; ### Actor Loss Function
+;;
+;; The core of the actor loss function relies on the probability ratio of the actions using the current and the updated policy.
+;; The ratio is defined as $r_t(\theta)=\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\operatorname{old}}}(a_t|s_t)}$.
+;; Note that $r_t(\theta)$ here refers to the probability ratio as opposed to the reward of the previous section.
+;; 
+;; The sampled observations, log probabilities, and actions are combined with the actor's parameter-dependent log probabilities.
+(defn probability-ratios
+  "Probability ratios for a actions using updated policy and old policy"
+  [{:keys [observations logprobs actions]} logprob-of-action]
+  (let [updated-logprobs (logprob-of-action observations actions)]
+    (torch/exp (py. (torch/sub updated-logprobs logprobs) sum 1))))
+
+;; The objective is to increase the probability of actions which lead to a positive advantage and reduce the probability of actions which lead to a negative advantage.
+;; I.e. maximising the following objective function.
+;;
+;; $L^{CPI}(\theta) = \mathop{\hat{\mathbb{E}}}_t [\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\operatorname{old}}}(a_t|s_t)} \hat{A}_t] = \mathop{\hat{\mathbb{E}}}_t [r_t(\theta) \hat{A}_t]$
+;;
+;; In order to increase stability, the loss function uses clipped probability ratios.
+;; The probability ratio is clipped to stay below $1+\epsilon$ for positive advantages and to stay above $1-\epsilon$ for negative advantages.
+;;
+;; $L^{CLIP}(\theta) = \mathop{\hat{\mathbb{E}}}_t [\min(r_t(\theta) \hat{A}_t, \mathop{\operatorname{clip}}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t)]$
+;;
+;; See [Schulman et al.](https://arxiv.org/abs/1707.06347) for more details.
+;;
+;; Because PyTorch minimizes a loss, we need to negate above objective function.
+(defn clipped-surrogate-loss
+  "Clipped surrogate loss (negative objective)"
+  [probability-ratios advantages epsilon]
+  (torch/mean
+    (torch/neg
+      (torch/min
+        (torch/mul probability-ratios advantages)
+        (torch/mul (torch/clamp probability-ratios (- 1.0 epsilon) (+ 1.0 epsilon)) advantages)))))
+
+;; We can plot the objective function for a single action and a positive advantage.
+(without-gradient
+  (let [ratios  (range 0.0 2.01 0.01)
+        loss    (fn [ratio advantage epsilon]
+                    (toitem (torch/neg (clipped-surrogate-loss (tensor ratio) (tensor advantage) epsilon))))
+        scatter (tc/dataset
+                  {:x ratios
+                   :y (map (fn [ratio] (loss ratio 0.5 0.2)) ratios)})]
+    (-> scatter
+        (plotly/base {:=title "Objective Function for Positive Advantage" :=mode :lines})
+        (plotly/layer-point {:=x :x :=y :y}))))
+
+;; And for a negative advantage.
+(without-gradient
+  (let [ratios  (range 0.0 2.01 0.01)
+        loss    (fn [ratio advantage epsilon]
+                    (toitem (torch/neg (clipped-surrogate-loss (tensor ratio) (tensor advantage) epsilon))))
+        scatter (tc/dataset
+                  {:x ratios
+                   :y (map (fn [ratio] (loss ratio -0.5 0.2)) ratios)})]
+    (-> scatter
+        (plotly/base {:=title "Objective Function for Negative Advantage" :=mode :lines})
+        (plotly/layer-point {:=x :x :=y :y}))))
+
+;; We can now implement the actor loss function which we want to minimize.
+;; The loss function uses the clipped surrogate loss function as defined above.
+;; The loss function also penalises low entropy values of the distributions output by the actor in order to encourage exploration.
+(defn actor-loss
+  "Compute loss value for batch of samples and actor"
+  [samples actor epsilon entropy-factor]
+  (let [ratios         (probability-ratios samples (logprob-of-action actor))
+        entropy        (torch/mul entropy-factor (torch/neg (torch/mean (entropy-of-distribution actor (:observations samples)))))
+        surrogate-loss (clipped-surrogate-loss ratios (:advantages samples) epsilon)]
+    (torch/add surrogate-loss entropy)))
+
+;; A notable detail in [XinJingHao's PPO implementation](https://github.com/XinJingHao/PPO-Continuous-Pytorch/) is that the advantage values used in the actor loss (not in the critic loss!) are normalized.
+(defn normalize-advantages
+  "Normalize advantages"
+  [batch]
+  (let [advantages (:advantages batch)]
+    (assoc batch :advantages (torch/div (torch/sub advantages (torch/mean advantages)) (torch/std advantages)))))
+
+;; ### Preparing Samples
+;;
+;; #### Shuffling
+;;
+;; The data required for training needs to be converted to PyTorch tensors.
+(defn tensor-batch
+  "Convert batch to Torch tensors"
+  [batch]
+  {:observations (tensor (:observations batch))
+   :logprobs (tensor (:logprobs batch))
+   :actions (tensor (:actions batch))
+   :advantages (tensor (:advantages batch))})
+
+;; Furthermore it is good practice to shuffle the samples.
+;; This ensures that samples early and late in the sequence are not threated differently.
+;; Note that you need to shuffle *after* computing the advantages, because the computation of the advantages relies on the order of the samples.
+;;
+;; We separate the generation of random indices to facilitate unit testing of the shuffling function.
+(defn random-order
+  "Create a list of randomly ordered indices"
+  [n]
+  (shuffle (range n)))
+
+(defn shuffle-samples
+  "Random shuffle of samples"
+  ([samples]
+   (shuffle-samples samples (random-order (python/len (first (vals samples))))))
+  ([samples indices]
+   (zipmap (keys samples) (map #(torch/index_select % 0 (torch/tensor indices)) (vals samples)))))
+
+;; Here is an example of shuffling observations:
+(shuffle-samples {:observations (tensor [[1] [2] [3] [4] [5] [6] [7] [8] [9] [10]])})
+
+;; #### Creating Batches
+;;
+;; Furthermore we split up the samples into smaller batches to improve training speed.
+(defn create-batches
+  "Create mini batches from environment samples"
+  [batch-size samples]
+  (apply mapv (fn [& args] (zipmap (keys samples) args)) (map #(py. % split batch-size) (vals samples))))
+
+(create-batches 5 {:observations (tensor [[1] [2] [3] [4] [5] [6] [7] [8] [9] [10]])})
+
+;; #### Putting it All Together
+;;
+;; Finally we can implement a method which
+;; * samples data
+;; * adds advantages
+;; * converts to PyTorch tensors
+;; * adds critic targets
+;; * normalizes the advantages
+;; * shuffles the samples
+;; * creates batches
+(defn sample-with-advantage-and-critic-target
+  "Create batches of samples and add add advantages and critic target values"
+  [environment-factory actor critic size batch-size gamma lambda]
+  (->> (sample-environment environment-factory (indeterministic-act actor) size)
+       (assoc-advantages (critic-observation critic) gamma lambda)
+       tensor-batch
+       (assoc-critic-target critic)
+       normalize-advantages
+       shuffle-samples
+       (create-batches batch-size)))
+
+;; ### PPO Main Loop
+;;
+;; Now we can implement the PPO main loop.
+;;
+;; The outer loop samples the environment using the current actor (i.e. policy) and computes the data required for training.
+;;
+;; The inner loop performs a small number of updates using the samples from the outer loop.
+;;
+;; Each update step performs a gradient descent update for the actor and a gradient descent update for the critic.
+;; Another detail from [XinJingHao's PPO implementation](https://github.com/XinJingHao/PPO-Continuous-Pytorch/) is that the gradient norm for the actor update is clipped.
+;;
+;; At the end of the loop, the smoothed loss values are shown and the deterministic actions and entropies for a few observations are shown which helps with parameter tuning.
+;; Furthermore the entropy factor is slowly lowered so that the policy reduces exploration over time.
+;;
+;; The actor and critic model are saved to disk after each checkpoint.
+(defn -main [& _args]
+  (let [factory          pendulum-factory
+        actor            (Actor 3 64 1)
+        critic           (Critic 3 64)
+        n-epochs         100000
+        n-updates        10
+        gamma            0.99
+        lambda           1.0
+        epsilon          0.2
+        n-batches        8
+        batch-size       50
+        checkpoint       100
+        entropy-factor   (atom 0.1)
+        entropy-decay    0.999
+        lr               5e-5
+        weight-decay     1e-4
+        smooth-actor-loss  (atom 0.0)
+        smooth-critic-loss (atom 0.0)
+        actor-optimizer  (adam-optimizer actor lr weight-decay)
+        critic-optimizer (adam-optimizer critic lr weight-decay)]
+    (doseq [epoch (range n-epochs)]
+           (let [samples         (sample-with-advantage-and-critic-target factory actor critic (* batch-size n-batches)
+                                                                          batch-size gamma lambda)]
+             (doseq [k (range n-updates)]
+                    (doseq [batch samples]
+                           (let [loss (actor-loss batch actor epsilon @entropy-factor)]
+                             (py. actor-optimizer zero_grad)
+                             (py. loss backward)
+                             (utils/clip_grad_norm_(py. actor parameters) 0.5)
+                             (py. actor-optimizer step)
+                             (swap! smooth-actor-loss (fn [x] (+ (* 0.999 x) (* 0.001 (toitem loss))))) ))
+                    (doseq [batch samples]
+                           (let [loss (critic-loss batch critic)]
+                             (py. critic-optimizer zero_grad)
+                             (py. loss backward)
+                             (py. critic-optimizer step)
+                             (swap! smooth-critic-loss (fn [x] (+ (* 0.999 x) (* 0.001 (toitem loss))))))))
+             (println "Epoch:" epoch
+                      "Actor Loss:" @smooth-actor-loss
+                      "Critic Loss:" @smooth-critic-loss
+                      "Entropy Factor:" @entropy-factor))
+           (without-gradient
+             (doseq [input [[1 0 -1.0] [1 0 1.0] [0 -1 -1.0] [0 -1 1.0] [0 1 -1.0] [0 1 1.0] [-1 0 -1.0] [-1 0 1.0]]]
+                    (println input
+                             "->" (action (tolist (py. actor deterministic_act (tensor input))))
+                             "entropy" (toitem (entropy-of-distribution actor (tensor input))))))
+           (swap! entropy-factor * entropy-decay)
+           (when (= (mod epoch checkpoint) (dec checkpoint))
+             (println "Saving models")
+             (torch/save (py. actor state_dict) "actor.pt")
+             (torch/save (py. critic state_dict) "critic.pt")))
+    (torch/save (py. actor state_dict) "actor.pt")
+    (torch/save (py. critic state_dict) "critic.pt")
+    (System/exit 0)))
+
+;; ## Automated Pendulum
+;;
+;; The pendulum implementation can now be updated to use the actor instead of the mouse position as motor input when the mouse button is pressed.
+(defn -main [& _args]
+  (let [actor       (Actor 3 64 1)
+        done-chan   (async/chan)
+        last-action (atom {:control 0.0})]
+    (when (.exists (java.io.File. "actor.pt"))
+      (py. actor load_state_dict (torch/load "actor.pt")))
+    (q/sketch
+      :title "Inverted Pendulum with Mouse Control"
+      :size [854 480]
+      :setup #(setup PI 0.0)
+      :update (fn [state]
+                  (let [observation (observation state config)
+                        action      (if (q/mouse-pressed?)
+                                      (action (tolist (py. actor deterministic_act (tensor observation))))
+                                      {:control (min 1.0 (max -1.0 (- 1.0 (/ (q/mouse-x) (/ (q/width) 2.0)))))})
+                        state       (update-state state action)]
+                    (when (done? state) (async/close! done-chan))
+                    (reset! last-action action)
+                    state))
+      :draw #(draw-state % @last-action)
+      :middleware [m/fun-mode]
+      :on-close (fn [& _] (async/close! done-chan)))
+    (async/<!! done-chan))
+  (System/exit 0))
+
+;; Here is a small demo video of the pendulum being controlled using the actor network.
+;;
+;; ![automatically controlled pendulum](automatic.gif)
