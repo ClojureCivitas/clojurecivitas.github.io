@@ -579,6 +579,53 @@
 
 (without-gradient (entropy-of-distribution actor (tensor [-1 0 0])))
 
+;; ## Proximal Policy Optimization
+;;
+;; ### Sampling data
+;;
+;; In order to perform optimization, we sample the environment using the current policy (indeterministic action using actor).
+(defn sample-environment
+  "Collect trajectory data from environment"
+  [environment-factory policy size]
+  (loop [state             (environment-factory)
+         observations      []
+         actions           []
+         logprobs          []
+         next-observations []
+         rewards           []
+         dones             []
+         truncates         []
+         i                 size]
+    (if (pos? i)
+      (let [observation      (environment-observation state)
+            sample           (policy observation)
+            action           (:action sample)
+            logprob          (:logprob sample)
+            reward           (environment-reward state action)
+            done             (environment-done? state)
+            truncate         (environment-truncate? state)
+            next-state       (if (or done truncate) (environment-factory) (environment-update state action))
+            next-observation (environment-observation next-state)]
+        (recur next-state
+               (conj observations observation)
+               (conj actions action)
+               (conj logprobs logprob)
+               (conj next-observations next-observation)
+               (conj rewards reward)
+               (conj dones done)
+               (conj truncates truncate)
+               (dec i)))
+      {:observations      observations
+       :actions           actions
+       :logprobs          logprobs
+       :next-observations next-observations
+       :rewards           rewards
+       :dones             dones
+       :truncates         truncates})))
+
+;; Here for example we are sampling 3 consecutives states of the pendulum.
+(sample-environment pendulum-factory (indeterministic-act actor) 3)
+
 ;; $\hat{A}_{T-1} = -V(S_{T-1}) + r_{T-1} + \gamma V(S_T)$
 ;;
 ;; $\hat{A}_{T-2} = -V(S_{T-2}) + r_{T-2} + \gamma r_{T-1} + \gamma^2 V(S_T)$
