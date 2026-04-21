@@ -628,8 +628,10 @@
 
 ;; ### Advantages
 ;;
-;; If we are in state $s_t$ and take an action $a_t$ at timestep $t$, we end up in state $s_{t+1}$ and receive reward $r_t$.
-;; The cumulative reward for state $s_t$ is
+;; #### Theory
+;;
+;; If we are in state $s_t$ and take an action $a_t$ at timestep $t$, we receive reward $r_t$ and end up in state $s_{t+1}$.
+;; The cumulative reward for state $s_t$ is a finite or infinite sequence using a discount factor $\gamma<1$:
 ;;
 ;; $r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \gamma^3 r_{t+3} + \ldots$
 ;;
@@ -639,18 +641,57 @@
 ;;
 ;; In particular, the difference between discounted rewards can be used to get an estimate for the individual reward:
 ;;
-;; $\hat{A}_{T-1} = -V(S_{T-1}) + r_{T-1} + \gamma V(S_T)$
+;; $V(s_t) = \mathop{\hat{\mathbb{E}}} [ r_t ] + \gamma V(s_{t+1})$ $\Leftrightarrow$ $\mathop{\hat{\mathbb{E}}} [ r_t ] = V(s_t) - \gamma V(s_{t+1})$
 ;;
-;; $\hat{A}_{T-2} = -V(S_{T-2}) + r_{T-2} + \gamma r_{T-1} + \gamma^2 V(S_T)$
+;; The deviation of the individual reward received in state $s_t$ from the expected reward is:
+;;
+;; $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$ if not $\operatorname{done}_t$
+;;
+;; The special case where a time series is "done" (and the next one is started) uses 0 as the remaining expected cumulative reward.
+;;
+;; $\delta_t = r_t - V(s_t)$ if $\operatorname{done}_{t}$
+;;
+;; If we have a sample set with a sequence of T states ($t=0,1,\ldots,T-1$), one can compute the cumulative advantage for each time step going backwards:
+;;
+;; $\hat{A}_{T-1} = -V(s_{T-1}) + r_{T-1} + \gamma V(s_T) = \delta_{T-1}$
+;;
+;; $\hat{A}_{T-2} = -V(s_{T-2}) + r_{T-2} + \gamma r_{T-1} + \gamma^2 V(s_T) = \delta_{T-2} + \gamma \delta_{T-1}$
 ;;
 ;; $\vdots$
 ;;
-;; $\hat{A}_0 = -V(S_0) + r_0 + \gamma r_1 + \ldots + \gamma^T V(S_T)$
+;; $\hat{A}_0 = -V(s_0) + r_0 + \gamma r_1 + \gamma^2 r_2 + \ldots + + \gamma^{T-1} r_{T-1} + \gamma^{T} V(s_{T}) = \delta_0 + \gamma \delta_1 + \gamma^2 \delta_2 + \ldots + \gamma^{T-1} \delta_{T-1}$
 ;;
-;; $\hat{A}_t = -V(s_t) + r_t + \gamma r_{t+1} + \ldots + \gamma^{T-t+1} r_{T-1} + \gamma^{T-t} V(S_T)$
+;; I.e. we can compute the cumulative advantages as follows:
 ;;
-;; $\hat{A}_t = \sum_{l=0}^{T-t-1} (\gamma \lambda)^l \delta_{t+l}$
+;; * Start with $\hat{A}_{T-1} = \delta_{T-1}$
+;; * Continue with $\hat{A}_t = \delta_t + \gamma \hat{A}_{t+1}$ for $t=T-2,T-3,\ldots,0$
 ;;
-;; $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$
+;; PPO uses an additional factor $\lambda\le 1$ called Generalized Advantage Estimation (GAE) which can be used to steer the training towards more immediate rewards if there are stability issues.
+;; See [Schulman et al.](https://arxiv.org/abs/1707.06347) for more details.
 ;;
-;; $\hat{A}_t = \sum_{l=0}^{T-t-1} (\gamma \lambda)^l \left( r_{t+l} + \gamma V(s_{t+l+1}) - V(s_{t+l}) \right)$
+;; #### Implementation of Delta
+;;
+;; The code for computing the $\delta$ values follows here:
+(defn deltas
+  "Compute difference between actual reward plus discounted estimate of next state and estimated value of current state"
+  [{:keys [observations next-observations rewards dones]} critic gamma]
+  (mapv (fn [observation next-observation reward done]
+            (- (+ reward (if done 0.0 (* gamma (critic next-observation)))) (critic observation)))
+        observations next-observations rewards dones))
+
+;; If the reward is zero and the critic outputs constant zero, there is no difference between the expected and received reward.
+(deltas {:observations [[4]] :next-observations [[3]] :rewards [0] :dones [false]} (constantly 0) 1.0)
+
+;; If the reward is 1.0 and the critic outputs zero for both observations, the difference is 1.0.
+(deltas {:observations [[4]] :next-observations [[3]] :rewards [1] :dones [false]} (constantly 0) 1.0)
+
+;; If the reward is 1.0 and the difference of critic outputs is also 1.0 then there is no difference between the expected and received reward (when $\gamma=1$).
+(defn linear-critic [observation] (first observation))
+(deltas {:observations [[4]] :next-observations [[3]] :rewards [1] :dones [false]} linear-critic 1.0)
+
+;; If the next critic value is 1.0 and discounted with 0.5 and the current critic value is 2.0, we expect a reward of 1.5.
+;; If we only get a reward of 1.0, the difference is -0.5.
+(deltas {:observations [[2]] :next-observations [[1]] :rewards [1] :dones [false]} linear-critic 0.5)
+
+;; If the run is terminated, the current critic value is compared with the reward which in this case is the last reward received in this run.
+(deltas {:observations [[4]] :next-observations [[3]] :rewards [4] :dones [true]} linear-critic 1.0)
