@@ -107,12 +107,16 @@
 ;; A simulation step of the pendulum is implemented as follows.
 (defn update-state
   "Perform simulation step of pendulum"
-  ([{:keys [angle velocity t]} {:keys [control]} {:keys [dt motor gravitation length max-speed]}]
+  ([{:keys [angle velocity t]}
+    {:keys [control]}
+    {:keys [dt motor gravitation length max-speed]}]
    (let [gravity        (pendulum-gravity gravitation length angle)
          motor          (motor-acceleration control motor)
          t              (+ t dt)
          acceleration   (+ motor gravity)
-         velocity       (max (- max-speed) (min max-speed (+ velocity (* acceleration dt))))
+         velocity       (max (- max-speed)
+                             (min max-speed
+                                  (+ velocity (* acceleration dt))))
          angle          (+ angle (* velocity dt))]
      {:angle          angle
       :velocity       velocity
@@ -191,7 +195,9 @@
 ;; Note that it is important that the reward function is continuous because machine learning uses gradient descent.
 (defn reward
   "Reward function"
-  [{:keys [angle velocity]} {:keys [angle-weight velocity-weight control-weight]} {:keys [control]}]
+  [{:keys [angle velocity]}
+   {:keys [angle-weight velocity-weight control-weight]}
+   {:keys [control]}]
   (- (+ (* angle-weight (sqr (normalize-angle angle)))
         (* velocity-weight (sqr velocity))
         (* control-weight (sqr control)))))
@@ -242,8 +248,11 @@
     (q/stroke-weight 1)
     (q/ellipse pendulum-x pendulum-y size size)
     (q/no-fill)
-    (q/arc origin-x origin-y (* 2 arc-radius) (* 2 arc-radius) (to-radians -45) (to-radians 225))
-    (q/with-translation [(+ origin-x (* (cos (to-radians tip-angle)) arc-radius)) (+ origin-y (* (sin (to-radians tip-angle)) arc-radius))]
+    (q/arc origin-x origin-y
+           (* 2 arc-radius) (* 2 arc-radius)
+           (to-radians -45) (to-radians 225))
+    (q/with-translation [(+ origin-x (* (cos (to-radians tip-angle)) arc-radius))
+                         (+ origin-y (* (sin (to-radians tip-angle)) arc-radius))]
       (q/with-rotation [(to-radians (if positive 225 -45))]
         (q/triangle 0 (if positive 10 -10) -5 0 5 0)))
     (when (:save config)
@@ -260,7 +269,10 @@
       :size [854 480]
       :setup #(setup PI 0.0)
       :update (fn [state]
-                  (let [action {:control (min 1.0 (max -1.0 (- 1.0 (/ (q/mouse-x) (/ (q/width) 2.0)))))}
+                  (let [action {:control (min 1.0
+                                              (max -1.0
+                                                   (- 1.0 (/ (q/mouse-x)
+                                                             (/ (q/width) 2.0)))))}
                         state  (update-state state action config)]
                     (when (done? state config) (async/close! done-chan))
                     (reset! last-action action)
@@ -605,7 +617,9 @@
             reward           (environment-reward state action)
             done             (environment-done? state)
             truncate         (environment-truncate? state)
-            next-state       (if (or done truncate) (environment-factory) (environment-update state action))
+            next-state       (if (or done truncate)
+                               (environment-factory)
+                               (environment-update state action))
             next-observation (environment-observation next-state)]
         (recur next-state
                (conj observations observation)
@@ -677,25 +691,37 @@
   "Compute difference between actual reward plus discounted estimate of next state and estimated value of current state"
   [{:keys [observations next-observations rewards dones]} critic gamma]
   (mapv (fn [observation next-observation reward done]
-            (- (+ reward (if done 0.0 (* gamma (critic next-observation)))) (critic observation)))
+            (- (+ reward
+                  (if done 0.0 (* gamma (critic next-observation))))
+               (critic observation)))
         observations next-observations rewards dones))
 
 ;; If the reward is zero and the critic outputs constant zero, there is no difference between the expected and received reward.
-(deltas {:observations [[4]] :next-observations [[3]] :rewards [0] :dones [false]} (constantly 0) 1.0)
+(deltas {:observations [[4]] :next-observations [[3]] :rewards [0] :dones [false]}
+        (constantly 0)
+        1.0)
 
 ;; If the reward is 1.0 and the critic outputs zero for both observations, the difference is 1.0.
-(deltas {:observations [[4]] :next-observations [[3]] :rewards [1] :dones [false]} (constantly 0) 1.0)
+(deltas {:observations [[4]] :next-observations [[3]] :rewards [1] :dones [false]}
+        (constantly 0)
+        1.0)
 
 ;; If the reward is 1.0 and the difference of critic outputs is also 1.0 then there is no difference between the expected and received reward (when $\gamma=1$).
 (defn linear-critic [observation] (first observation))
-(deltas {:observations [[4]] :next-observations [[3]] :rewards [1] :dones [false]} linear-critic 1.0)
+(deltas {:observations [[4]] :next-observations [[3]] :rewards [1] :dones [false]}
+        linear-critic
+        1.0)
 
 ;; If the next critic value is 1.0 and discounted with 0.5 and the current critic value is 2.0, we expect a reward of 1.5.
 ;; If we only get a reward of 1.0, the difference is -0.5.
-(deltas {:observations [[2]] :next-observations [[1]] :rewards [1] :dones [false]} linear-critic 0.5)
+(deltas {:observations [[2]] :next-observations [[1]] :rewards [1] :dones [false]}
+        linear-critic
+        0.5)
 
 ;; If the run is terminated, the current critic value is compared with the reward which in this case is the last reward received in this run.
-(deltas {:observations [[4]] :next-observations [[3]] :rewards [4] :dones [true]} linear-critic 1.0)
+(deltas {:observations [[4]] :next-observations [[3]] :rewards [4] :dones [true]}
+        linear-critic
+        1.0)
 
 ;; #### Implementation of Advantages
 ;;
@@ -713,13 +739,18 @@
         (reverse (map vector deltas dones truncates)))))))
 
 ;; For example if using an discount factor of 0.5, the advantages approach 2.0 assymptotically when going backwards in time.
-(advantages {:dones [false false false] :truncates [false false false]} [1.0 1.0 1.0] 0.5 1.0)
+(advantages {:dones [false false false] :truncates [false false false]}
+            [1.0 1.0 1.0]
+            0.5
+            1.0)
 
 ;; When an episode is terminated (or truncated), the accumulation of advantages starts again when going backwards in time.
 ;; I.e. the computation of advantages does not distinguish between terminated and truncated episodes (unlike the deltas).
 (advantages {:dones [false false true false false true]
              :truncates [false false false false false false]}
-            [1.0 1.0 1.0 1.0 1.0 1.0] 0.5 1.0)
+            [1.0 1.0 1.0 1.0 1.0 1.0]
+            0.5
+            1.0)
 
 ;; We add the advantages to the batch of samples with the following function.
 (defn assoc-advantages
@@ -786,13 +817,18 @@
     (torch/neg
       (torch/min
         (torch/mul probability-ratios advantages)
-        (torch/mul (torch/clamp probability-ratios (- 1.0 epsilon) (+ 1.0 epsilon)) advantages)))))
+        (torch/mul (torch/clamp probability-ratios (- 1.0 epsilon) (+ 1.0 epsilon))
+                   advantages)))))
 
 ;; We can plot the objective function for a single action and a positive advantage.
 (without-gradient
   (let [ratios  (range 0.0 2.01 0.01)
         loss    (fn [ratio advantage epsilon]
-                    (toitem (torch/neg (clipped-surrogate-loss (tensor ratio) (tensor advantage) epsilon))))
+                    (toitem
+                      (torch/neg
+                        (clipped-surrogate-loss (tensor ratio)
+                                                (tensor advantage)
+                                                epsilon))))
         scatter (tc/dataset
                   {:x ratios
                    :y (map (fn [ratio] (loss ratio 0.5 0.2)) ratios)})]
@@ -804,7 +840,11 @@
 (without-gradient
   (let [ratios  (range 0.0 2.01 0.01)
         loss    (fn [ratio advantage epsilon]
-                    (toitem (torch/neg (clipped-surrogate-loss (tensor ratio) (tensor advantage) epsilon))))
+                    (toitem
+                      (torch/neg
+                        (clipped-surrogate-loss (tensor ratio)
+                                                (tensor advantage)
+                                                epsilon))))
         scatter (tc/dataset
                   {:x ratios
                    :y (map (fn [ratio] (loss ratio -0.5 0.2)) ratios)})]
@@ -819,7 +859,11 @@
   "Compute loss value for batch of samples and actor"
   [samples actor epsilon entropy-factor]
   (let [ratios         (probability-ratios samples (logprob-of-action actor))
-        entropy        (torch/mul entropy-factor (torch/neg (torch/mean (entropy-of-distribution actor (:observations samples)))))
+        entropy        (torch/mul
+                         entropy-factor
+                         (torch/neg
+                           (torch/mean
+                             (entropy-of-distribution actor (:observations samples)))))
         surrogate-loss (clipped-surrogate-loss ratios (:advantages samples) epsilon)]
     (torch/add surrogate-loss entropy)))
 
@@ -828,7 +872,8 @@
   "Normalize advantages"
   [batch]
   (let [advantages (:advantages batch)]
-    (assoc batch :advantages (torch/div (torch/sub advantages (torch/mean advantages)) (torch/std advantages)))))
+    (assoc batch :advantages (torch/div (torch/sub advantages (torch/mean advantages))
+                                        (torch/std advantages)))))
 
 ;; ### Preparing Samples
 ;;
@@ -858,7 +903,8 @@
   ([samples]
    (shuffle-samples samples (random-order (python/len (first (vals samples))))))
   ([samples indices]
-   (zipmap (keys samples) (map #(torch/index_select % 0 (torch/tensor indices)) (vals samples)))))
+   (zipmap (keys samples)
+           (map #(torch/index_select % 0 (torch/tensor indices)) (vals samples)))))
 
 ;; Here is an example of shuffling observations:
 (shuffle-samples {:observations (tensor [[1] [2] [3] [4] [5] [6] [7] [8] [9] [10]])})
@@ -869,7 +915,9 @@
 (defn create-batches
   "Create mini batches from environment samples"
   [batch-size samples]
-  (apply mapv (fn [& args] (zipmap (keys samples) args)) (map #(py. % split batch-size) (vals samples))))
+  (apply mapv
+         (fn [& args] (zipmap (keys samples) args))
+         (map #(py. % split batch-size) (vals samples))))
 
 (create-batches 5 {:observations (tensor [[1] [2] [3] [4] [5] [6] [7] [8] [9] [10]])})
 
@@ -930,8 +978,10 @@
         actor-optimizer  (adam-optimizer actor lr weight-decay)
         critic-optimizer (adam-optimizer critic lr weight-decay)]
     (doseq [epoch (range n-epochs)]
-           (let [samples         (sample-with-advantage-and-critic-target factory actor critic (* batch-size n-batches)
-                                                                          batch-size gamma lambda)]
+           (let [samples (sample-with-advantage-and-critic-target factory actor critic
+                                                                  (* batch-size n-batches)
+                                                                  batch-size
+                                                                  gamma lambda)]
              (doseq [k (range n-updates)]
                     (doseq [batch samples]
                            (let [loss (actor-loss batch actor epsilon @entropy-factor)]
@@ -939,22 +989,25 @@
                              (py. loss backward)
                              (utils/clip_grad_norm_(py. actor parameters) 0.5)
                              (py. actor-optimizer step)
-                             (swap! smooth-actor-loss (fn [x] (+ (* 0.999 x) (* 0.001 (toitem loss))))) ))
+                             (swap! smooth-actor-loss
+                                    (fn [x] (+ (* 0.999 x) (* 0.001 (toitem loss))))) ))
                     (doseq [batch samples]
                            (let [loss (critic-loss batch critic)]
                              (py. critic-optimizer zero_grad)
                              (py. loss backward)
                              (py. critic-optimizer step)
-                             (swap! smooth-critic-loss (fn [x] (+ (* 0.999 x) (* 0.001 (toitem loss))))))))
+                             (swap! smooth-critic-loss
+                                    (fn [x] (+ (* 0.999 x) (* 0.001 (toitem loss))))))))
              (println "Epoch:" epoch
                       "Actor Loss:" @smooth-actor-loss
                       "Critic Loss:" @smooth-critic-loss
                       "Entropy Factor:" @entropy-factor))
            (without-gradient
              (doseq [input [[1 0 -1.0] [1 0 1.0] [0 -1 -1.0] [0 -1 1.0] [0 1 -1.0] [0 1 1.0] [-1 0 -1.0] [-1 0 1.0]]]
-                    (println input
-                             "->" (action (tolist (py. actor deterministic_act (tensor input))))
-                             "entropy" (toitem (entropy-of-distribution actor (tensor input))))))
+                    (println
+                      input
+                      "->" (action (tolist (py. actor deterministic_act (tensor input))))
+                      "entropy" (toitem (entropy-of-distribution actor (tensor input))))))
            (swap! entropy-factor * entropy-decay)
            (when (= (mod epoch checkpoint) (dec checkpoint))
              (println "Saving models")
@@ -980,8 +1033,13 @@
       :update (fn [state]
                   (let [observation (observation state config)
                         action      (if (q/mouse-pressed?)
-                                      (action (tolist (py. actor deterministic_act (tensor observation))))
-                                      {:control (min 1.0 (max -1.0 (- 1.0 (/ (q/mouse-x) (/ (q/width) 2.0)))))})
+                                      (action (tolist (py. actor
+                                                           deterministic_act
+                                                           (tensor observation))))
+                                      {:control (min 1.0
+                                                     (max -1.0
+                                                          (- 1.0 (/ (q/mouse-x)
+                                                                    (/ (q/width) 2.0)))))})
                         state       (update-state state action)]
                     (when (done? state) (async/close! done-chan))
                     (reset! last-action action)
