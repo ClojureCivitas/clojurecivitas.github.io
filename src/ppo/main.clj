@@ -2,7 +2,7 @@
   :clay             {:title  "Proximal Policy Optimization with Clojure and PyTorch"
                      :external-requirements []
                      :quarto {:author   [:janwedekind]
-                              :draft    true
+                              :draft    false
                               :description "A Clojure port of XinJingHao's PPO implementation using libpython-clj2, PyTorch, and Quil"
                               :image    "pendulum.png"
                               :type     :post
