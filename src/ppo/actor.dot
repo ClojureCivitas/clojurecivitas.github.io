@@ -8,9 +8,9 @@ digraph G {
 
     subgraph cluster_input {
         label="Input Layer";
-        i1 [label="Input 1"];
         i2 [label="Input 2"];
         i3 [label="Input 3"];
+        i1 [label="Input 1"];
     }
 
     subgraph cluster_hidden1 {
