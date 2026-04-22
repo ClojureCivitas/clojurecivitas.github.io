@@ -2,7 +2,7 @@
   :clay             {:title  "Proximal Policy Optimization with Clojure and PyTorch"
                      :external-requirements []
                      :quarto {:author   [:janwedekind]
-                              :draft    true
+                              :draft    false
                               :description "A Clojure port of XinJingHao's PPO implementation using libpython-clj2, PyTorch, and Quil"
                               :image    "pendulum.png"
                               :type     :post
@@ -168,6 +168,7 @@
 ;;
 ;; The action of a pendulum is a vector with one element between 0 and 1.
 ;; The following method clips it and converts it to an action hashmap used by the pendulum environment.
+;; Note that an action can consist of several values.
 (defn action
   "Convert array to action"
   [array]
@@ -466,8 +467,12 @@
          (py. no-grad# ~'__exit__ nil nil nil)))))
 
 ;; Now we can create a network and try it out.
+;; We create a test multilayer perceptron with three inputs, two hidden layers of 8 units each, and one output.
+(def critic (Critic 3 8))
+
+;; ![example of critic multilayer perceptron](critic.svg)
+
 ;; Note that the network creates non-zero outputs because PyTorch performs random initialisation of the weights for us.
-(def critic (Critic 3 64))
 (without-gradient
   (toitem (critic (tensor [-1 0 0]))))
 
@@ -503,7 +508,7 @@
 
 ;; A training step can be performed as follows.
 ;; Here we only use a single mini-batch with a single observation and an expected output of 1.0.
-(def optimizer (adam-optimizer critic 0.001 0.0))
+(def optimizer (adam-optimizer critic 0.01 0.0))
 (def criterion (mse-loss))
 (def mini-batch [(tensor [[-1 0 0]]) (tensor [1.0])])
 (let [prediction (critic (first mini-batch))
@@ -569,7 +574,11 @@
               logprob (py. dist log_prob action)]
           {:action (tolist action) :logprob (tolist logprob)}))))
 
-(def actor (Actor 3 64 1))
+;; We create a test multilayer perceptron with three inputs, two hidden layers of 8 units each, and two outputs which serve as parameters for the Beta distribution.
+(def actor (Actor 3 8 1))
+
+;; ![example of actor multilayer perceptron](actor.svg)
+
 ;; One can then use the network to:
 ;;
 ;; a. get the parameters of the distribution for a given observation.
@@ -1036,6 +1045,39 @@
     (torch/save (py. actor state_dict) "actor.pt")
     (torch/save (py. critic state_dict) "critic.pt")
     (System/exit 0)))
+
+;; ## Visualisation of Actor Output
+
+;; We can use [dtype-next](https://cnuernber.github.io/dtype-next/) to visualise the output of the actor.
+;; First we need to load additional modules.
+(require '[tech.v3.datatype :as dtype]
+         '[tech.v3.tensor :as dtt]
+         '[tech.v3.libs.buffered-image :as bufimg]
+         '[tech.v3.datatype.functional :as dfn])
+
+;; Here we load a pre-trained model and visualise the output of the actor.
+(def actor (Actor 3 64 1))
+(py. actor load_state_dict (torch/load "src/ppo/actor.pt"))
+
+(let [angle-values (torch/linspace (- PI) PI 854)
+      speed-values (torch/linspace 1.0 -1.0 480)
+      grid         (torch/meshgrid speed-values angle-values :indexing "ij")
+      cos-angle    (torch/cos (last grid))
+      sin-angle    (torch/sin (last grid))
+      observations (torch/stack [(py. cos-angle ravel)
+                                 (py. sin-angle ravel)
+                                 (py. (first grid) ravel)]
+                                :axis 1)
+      actions      (without-gradient
+                     (py. (py. (py. actor deterministic_act observations)
+                               reshape 480 854) numpy))
+      actions-tensor (dtype/elemwise-cast (dtt/ensure-tensor (py/->jvm actions))
+                                          :float32)]
+  (bufimg/tensor->image (dfn/* actions-tensor 255)))
+;; This image shows the motor control input as a function of pendulum angle and angular velocity.
+;; As one can see, the pendulum is decelerated when the speed is high (dark values at the top of the image).
+;; Near the centre of the image (speed zero and angle zero) one can see how the pendulum is accelerated when the angle is negative and the speed small and decelerated when the angle is positive and the speed is small.
+;; Also the image is not symmetrical because otherwise the pendulum would not start swinging up when pointing downwards.
 
 ;; ## Automated Pendulum
 ;;
