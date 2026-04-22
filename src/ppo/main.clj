@@ -466,8 +466,12 @@
          (py. no-grad# ~'__exit__ nil nil nil)))))
 
 ;; Now we can create a network and try it out.
+;; We create a test multilayer perceptron with three inputs, two hidden layers of 8 units each, and one output.
+(def critic (Critic 3 8))
+
+;; ![example of critic multilayer perceptron](critic.svg)
+
 ;; Note that the network creates non-zero outputs because PyTorch performs random initialisation of the weights for us.
-(def critic (Critic 3 64))
 (without-gradient
   (toitem (critic (tensor [-1 0 0]))))
 
@@ -503,7 +507,7 @@
 
 ;; A training step can be performed as follows.
 ;; Here we only use a single mini-batch with a single observation and an expected output of 1.0.
-(def optimizer (adam-optimizer critic 0.001 0.0))
+(def optimizer (adam-optimizer critic 0.01 0.0))
 (def criterion (mse-loss))
 (def mini-batch [(tensor [[-1 0 0]]) (tensor [1.0])])
 (let [prediction (critic (first mini-batch))
