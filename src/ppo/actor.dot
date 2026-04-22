@@ -1,6 +1,6 @@
-// build with "dot -Tsvg -ocritic.svg critic.dot"
+// build with "dot -Tsvg -oactor.svg actor.dot"
 digraph G {
-    label="Critic Network";
+    label="Actor Network";
     labelloc=bottom;
     rankdir=LR;
     node [shape=circle];
@@ -39,7 +39,8 @@ digraph G {
 
     subgraph cluster_output {
         label="Output Layer";
-        o1 [label="Output"];
+        o1 [label="Alpha"];
+        o2 [label="Beta"];
     }
 
     i1 -> {h1_1 h1_2 h1_3 h1_4 h1_5 h1_6 h1_7 h1_8};
@@ -55,12 +56,13 @@ digraph G {
     h1_7 -> {h2_1 h2_2 h2_3 h2_4 h2_5 h2_6 h2_7 h2_8};
     h1_8 -> {h2_1 h2_2 h2_3 h2_4 h2_5 h2_6 h2_7 h2_8};
 
-    h2_1 -> o1;
-    h2_2 -> o1;
-    h2_3 -> o1;
-    h2_4 -> o1;
-    h2_5 -> o1;
-    h2_6 -> o1;
-    h2_7 -> o1;
-    h2_8 -> o1;
+    h2_1 -> {o1 o2};
+    h2_2 -> {o1 o2};
+    h2_3 -> {o1 o2};
+    h2_4 -> {o1 o2};
+    h2_5 -> {o1 o2};
+    h2_6 -> {o1 o2};
+    h2_7 -> {o1 o2};
+    h2_8 -> {o1 o2};
 }
+

@@ -168,6 +168,7 @@
 ;;
 ;; The action of a pendulum is a vector with one element between 0 and 1.
 ;; The following method clips it and converts it to an action hashmap used by the pendulum environment.
+;; Note that an action can consist of several values.
 (defn action
   "Convert array to action"
   [array]
@@ -573,8 +574,10 @@
               logprob (py. dist log_prob action)]
           {:action (tolist action) :logprob (tolist logprob)}))))
 
-;; We create a test multilayer perceptron with three inputs, two hidden layers of 8 units each, and one output.
+;; We create a test multilayer perceptron with three inputs, two hidden layers of 8 units each, and two outputs which serve as parameters for the Beta distribution.
 (def actor (Actor 3 8 1))
+
+;; ![example of actor multilayer perceptron](actor.svg)
 
 ;; One can then use the network to:
 ;;
