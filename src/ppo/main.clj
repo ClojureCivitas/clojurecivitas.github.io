@@ -1046,6 +1046,32 @@
     (torch/save (py. critic state_dict) "critic.pt")
     (System/exit 0)))
 
+;; ## Visualisation of Actor Output
+
+;; We can use [dtype-next](https://cnuernber.github.io/dtype-next/) to visualise the output of the actor.
+;; First we need to load additional modules.
+(require '[tech.v3.datatype :as dtype]
+         '[tech.v3.tensor :as dtt]
+         '[tech.v3.libs.buffered-image :as bufimg]
+         '[tech.v3.datatype.functional :as dfn])
+
+;; Here we load a pre-trained model and visualise the output of the actor.
+(def actor (Actor 3 64 1))
+(py. actor load_state_dict (torch/load "src/ppo/actor.pt"))
+
+(let [angle-values (torch/linspace (- PI) PI 854)
+      speed-values (torch/linspace 1.0 -1.0 480)
+      grid (torch/meshgrid speed-values angle-values :indexing "ij")
+      cos-angle (torch/cos (last grid))
+      sin-angle (torch/sin (last grid))
+      observations (torch/stack [(py. cos-angle ravel)
+                                 (py. sin-angle ravel)
+                                 (py. (first grid) ravel)]
+                                :axis 1)
+      actions (without-gradient (py. (py. (py. actor deterministic_act observations) reshape 480 854) numpy))
+      actions-tensor (dtype/elemwise-cast (dtt/ensure-tensor (py/->jvm actions)) :float32)]
+  (bufimg/tensor->image (dfn/* actions-tensor 255)))
+
 ;; ## Automated Pendulum
 ;;
 ;; The pendulum implementation can now be updated to use the actor instead of the mouse position as motor input when the mouse button is pressed.
