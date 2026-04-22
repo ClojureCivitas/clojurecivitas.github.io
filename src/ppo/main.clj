@@ -573,7 +573,9 @@
               logprob (py. dist log_prob action)]
           {:action (tolist action) :logprob (tolist logprob)}))))
 
-(def actor (Actor 3 64 1))
+;; We create a test multilayer perceptron with three inputs, two hidden layers of 8 units each, and one output.
+(def actor (Actor 3 8 1))
+
 ;; One can then use the network to:
 ;;
 ;; a. get the parameters of the distribution for a given observation.
