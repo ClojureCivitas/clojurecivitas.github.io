@@ -1071,6 +1071,10 @@
       actions (without-gradient (py. (py. (py. actor deterministic_act observations) reshape 480 854) numpy))
       actions-tensor (dtype/elemwise-cast (dtt/ensure-tensor (py/->jvm actions)) :float32)]
   (bufimg/tensor->image (dfn/* actions-tensor 255)))
+;; This image shows the motor control input as a function of pendulum angle and angular velocity.
+;; As one can see, the pendulum is decelerated when the speed is high (dark values at the top of the image).
+;; Near the centre of the image (speed zero and angle zero) one can see how the pendulum is accelerated when the angle is negative and the speed small and decelerated when the angle is positive and the speed is small.
+;; Also the image is not symmetrical because otherwise the pendulum would not start swinging up when pointing downwards.
 
 ;; ## Automated Pendulum
 ;;
