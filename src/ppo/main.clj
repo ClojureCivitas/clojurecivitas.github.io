@@ -6,7 +6,7 @@
                               :description "A Clojure port of XinJingHao's PPO implementation using libpython-clj2, PyTorch, and Quil"
                               :image    "pendulum.png"
                               :type     :post
-                              :date     "2026-04-18"
+                              :date     "2026-04-22"
                               :category :ml
                               :tags     [:physics :machine-learning :optimization :ppo :control]}}}
 
@@ -20,13 +20,6 @@
               [libpython-clj2.require :refer (require-python)]
               [libpython-clj2.python :refer (py.) :as py]))
 
-(require-python '[builtins :as python]
-                '[torch :as torch]
-                '[torch.nn :as nn]
-                '[torch.nn.functional :as F]
-                '[torch.optim :as optim]
-                '[torch.distributions :refer (Beta)]
-                '[torch.nn.utils :as utils])
 ;; ## Motivation
 ;;
 ;; Recently I started to look into the problem of reentry trajectory planning in the context of developing the [sfsim](https://store.steampowered.com/app/3687560/sfsim/) space flight simulator.
@@ -38,10 +31,36 @@
 ;; PPO is inspired by Trust Region Policy Optimization (TRPO) but is much easier to implement.
 ;; Also PPO handles continuous observation and action spaces which is important for control problems.
 ;; The [Stable Baselines3](https://github.com/DLR-RM/stable-baselines3) Python library has a implementation of PPO, TRPO, and other reinforcement learning algorithms.
-;; However I found [XinJingHao's PPO implementation](https://github.com/XinJingHao/PPO-Continuous-Pytorch/) which I found easier to follow.
+;; However I found [XinJingHao's PPO implementation](https://github.com/XinJingHao/PPO-Continuous-Pytorch/) which is easier to follow.
 ;;
 ;; In order to use PPO with a simulation environment implemented in Clojure and also in order to get a better understanding of PPO, I dediced to do an implementation of PPO in Clojure.
 ;;
+;; ## Dependencies
+;;
+;; For this project we are using the following `deps.edn` file.
+;; The Python setup is shown further down in this article.
+;;
+;; ```Clojure
+;; {:deps
+;;  {org.clojure/clojure {:mvn/version "1.12.4"}
+;;   clj-python/libpython-clj {:mvn/version "2.026"}
+;;   quil/quil {:mvn/version "4.3.1563"}
+;;   org.clojure/core.async {:mvn/version "1.9.865"}}
+;; }
+;; ```
+;;
+;; The dependencies can be pulled in using the following statement.
+;;
+;; ```Clojure
+;; (require '[clojure.math :refer (PI cos sin exp to-radians)]
+;;          '[clojure.core.async :as async]
+;;          '[tablecloth.api :as tc]
+;;          '[scicloj.tableplot.v1.plotly :as plotly]
+;;          '[quil.core :as q]
+;;          '[quil.middleware :as m]
+;;          '[libpython-clj2.require :refer (require-python)]
+;;          '[libpython-clj2.python :refer (py.) :as py])
+;; ```
 ;; ## Pendulum Environment
 ;;
 ;; ![screenshot of pendulum environment](pendulum.png)
@@ -104,7 +123,7 @@
   [control motor-acceleration]
   (* control motor-acceleration))
 
-;; A simulation step of the pendulum is implemented as follows.
+;; A simulation step of the pendulum is implemented using Euler integration.
 (defn update-state
   "Perform simulation step of pendulum"
   ([{:keys [angle velocity t]}
@@ -357,7 +376,8 @@
                 '[torch.nn :as nn]
                 '[torch.nn.functional :as F]
                 '[torch.optim :as optim]
-                '[torch.distributions :refer (Beta)])
+                '[torch.distributions :refer (Beta)]
+                '[torch.nn.utils :as utils])
 
 ;; ### Tensor Conversion
 ;;
@@ -539,7 +559,7 @@
 ;; Here (as the default in [XinJingHao's PPO implementation](https://github.com/XinJingHao/PPO-Continuous-Pytorch/)) we use the [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) with parameters `alpha` and `beta` both greater than 1.0.
 ;; See [here](https://mathlets.org/mathlets/beta-distribution/) for an interactive visualization of the Beta distribution.
 (defn indeterministic-act
-  "Sample action using actor network returning distribution"
+  "Sample action using actor network returning random action and log-probability"
   [actor]
   (fn indeterministic-act-with-actor [observation]
       (without-gradient
@@ -582,7 +602,7 @@
         (plotly/base {:=title "Actor output for a single observation" :=mode :lines})
         (plotly/layer-point {:=x :x :=y :y}))))
 
-;; Finally we also can also query the entropy of the distribution.
+;; Finally we can also query the entropy of the distribution.
 ;; By incorporating the entropy into the loss function later on, we can encourage exploration and prevent the probability density function from collapsing.
 (defn entropy-of-distribution
   "Get entropy of distribution"
@@ -738,7 +758,7 @@
         0.0
         (reverse (map vector deltas dones truncates)))))))
 
-;; For example if using an discount factor of 0.5, the advantages approach 2.0 assymptotically when going backwards in time.
+;; For example when all rewards are 1.0 and if using an discount factor of 0.5, the advantages approach 2.0 assymptotically when going backwards in time.
 (advantages {:dones [false false false] :truncates [false false false]}
             [1.0 1.0 1.0]
             0.5
@@ -786,7 +806,7 @@
 
 ;; ### Actor Loss Function
 ;;
-;; The core of the actor loss function relies on the probability ratio of the actions using the current and the updated policy.
+;; The core of the actor loss function relies on the action probability ratio of using the updated and the old policy (actor network output).
 ;; The ratio is defined as $r_t(\theta)=\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\operatorname{old}}}(a_t|s_t)}$.
 ;; Note that $r_t(\theta)$ here refers to the probability ratio as opposed to the reward of the previous section.
 ;; 
@@ -802,7 +822,7 @@
 ;;
 ;; $L^{CPI}(\theta) = \mathop{\hat{\mathbb{E}}}_t [\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\operatorname{old}}}(a_t|s_t)} \hat{A}_t] = \mathop{\hat{\mathbb{E}}}_t [r_t(\theta) \hat{A}_t]$
 ;;
-;; In order to increase stability, the loss function uses clipped probability ratios.
+;; The core idea of PPO is to use clipped probability ratios for the loss function in order to increase stability, .
 ;; The probability ratio is clipped to stay below $1+\epsilon$ for positive advantages and to stay above $1-\epsilon$ for negative advantages.
 ;;
 ;; $L^{CLIP}(\theta) = \mathop{\hat{\mathbb{E}}}_t [\min(r_t(\theta) \hat{A}_t, \mathop{\operatorname{clip}}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t)]$
@@ -1040,8 +1060,8 @@
                                                      (max -1.0
                                                           (- 1.0 (/ (q/mouse-x)
                                                                     (/ (q/width) 2.0)))))})
-                        state       (update-state state action)]
-                    (when (done? state) (async/close! done-chan))
+                        state       (update-state state action config)]
+                    (when (done? state config) (async/close! done-chan))
                     (reset! last-action action)
                     state))
       :draw #(draw-state % @last-action)
@@ -1051,5 +1071,8 @@
   (System/exit 0))
 
 ;; Here is a small demo video of the pendulum being controlled using the actor network.
+;; You can find a repository with the code of this article as well as unit tests at [github.com/wedesoft/ppo](https://github.com/wedesoft/ppo).
 ;;
 ;; ![automatically controlled pendulum](automatic.gif)
+;;
+;; Enjoy!
