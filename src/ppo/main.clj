@@ -767,7 +767,7 @@
         0.0
         (reverse (map vector deltas dones truncates)))))))
 
-;; For example when all rewards are 1.0 and if using an discount factor of 0.5, the advantages approach 2.0 assymptotically when going backwards in time.
+;; For example when all deltas are 1.0 and if using an discount factor of 0.5, the advantages approach 2.0 assymptotically when going backwards in time.
 (advantages {:dones [false false false] :truncates [false false false]}
             [1.0 1.0 1.0]
             0.5
