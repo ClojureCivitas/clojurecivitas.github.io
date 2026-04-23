@@ -767,7 +767,7 @@
         0.0
         (reverse (map vector deltas dones truncates)))))))
 
-;; For example when all rewards are 1.0 and if using an discount factor of 0.5, the advantages approach 2.0 assymptotically when going backwards in time.
+;; For example when all deltas are 1.0 and if using an discount factor of 0.5, the advantages approach 2.0 assymptotically when going backwards in time.
 (advantages {:dones [false false false] :truncates [false false false]}
             [1.0 1.0 1.0]
             0.5
@@ -1059,25 +1059,29 @@
 (def actor (Actor 3 64 1))
 (py. actor load_state_dict (torch/load "src/ppo/actor.pt"))
 
-(let [angle-values (torch/linspace (- PI) PI 854)
-      speed-values (torch/linspace 1.0 -1.0 480)
-      grid         (torch/meshgrid speed-values angle-values :indexing "ij")
-      cos-angle    (torch/cos (last grid))
-      sin-angle    (torch/sin (last grid))
-      observations (torch/stack [(py. cos-angle ravel)
-                                 (py. sin-angle ravel)
-                                 (py. (first grid) ravel)]
-                                :axis 1)
-      actions      (without-gradient
-                     (py. (py. (py. actor deterministic_act observations)
-                               reshape 480 854) numpy))
-      actions-tensor (dtype/elemwise-cast (dtt/ensure-tensor (py/->jvm actions))
-                                          :float32)]
+(let [angle-values   (torch/linspace (- PI) PI 854)
+      speed-values   (torch/linspace 1.0 -1.0 480)
+      grid           (torch/meshgrid speed-values angle-values :indexing "ij")
+      cos-angle      (torch/cos (last grid))
+      sin-angle      (torch/sin (last grid))
+      observations   (torch/stack [(py. cos-angle ravel)
+                                   (py. sin-angle ravel)
+                                   (py. (first grid) ravel)]
+                                  :axis 1)
+      actions        (without-gradient
+                       (py. (py. (py. actor deterministic_act observations)
+                                 reshape 480 854) numpy))
+      actions-tensor (dtt/clone
+                       (dtype/elemwise-cast (dtt/ensure-tensor (py/->jvm actions))
+                                            :float32))
+      actions-trsps  (dtt/transpose actions-tensor [1 0])]
+  (dtt/mset! actions-tensor 240 (dfn/- 1.0 (actions-tensor 240)))
+  (dtt/mset! actions-trsps 427 (dfn/- 1.0 (actions-trsps 427)))
   (bufimg/tensor->image (dfn/* actions-tensor 255)))
 ;; This image shows the motor control input as a function of pendulum angle and angular velocity.
 ;; As one can see, the pendulum is decelerated when the speed is high (dark values at the top of the image).
 ;; Near the centre of the image (speed zero and angle zero) one can see how the pendulum is accelerated when the angle is negative and the speed small and decelerated when the angle is positive and the speed is small.
-;; Also the image is not symmetrical because otherwise the pendulum would not start swinging up when pointing downwards.
+;; Also the image is not symmetrical because otherwise the pendulum would not start swinging up when pointing downwards (left and right boundary of the image).
 
 ;; ## Automated Pendulum
 ;;
