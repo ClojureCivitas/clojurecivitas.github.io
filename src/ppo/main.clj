@@ -677,33 +677,45 @@
 ;; If we are in state $s_t$ and take an action $a_t$ at timestep $t$, we receive reward $r_t$ and end up in state $s_{t+1}$.
 ;; The cumulative reward for state $s_t$ is a finite or infinite sequence using a discount factor $\gamma<1$:
 ;;
-;; $r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \gamma^3 r_{t+3} + \ldots$
+;; $$
+;; r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \gamma^3 r_{t+3} + \ldots
+;; $$
 ;;
 ;; The critic $V$ estimates the expected cumulative reward for starting from the specified state.
 ;;
-;; $V(s_t) = \mathop{\hat{\mathbb{E}}} [ r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \gamma^3 r_{t+3} + \ldots ]$
+;; $$
+;; V(s_t) = \mathop{\hat{\mathbb{E}}} [ r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \gamma^3 r_{t+3} + \ldots ]
+;; $$
 ;;
 ;; In particular, the difference between discounted rewards can be used to get an estimate for the individual reward:
 ;;
-;; $V(s_t) = \mathop{\hat{\mathbb{E}}} [ r_t ] + \gamma V(s_{t+1})$ $\Leftrightarrow$ $\mathop{\hat{\mathbb{E}}} [ r_t ] = V(s_t) - \gamma V(s_{t+1})$
+;; $$
+;; V(s_t) = \mathop{\hat{\mathbb{E}}} [ r_t ] + \gamma V(s_{t+1})\Leftrightarrow\mathop{\hat{\mathbb{E}}} [ r_t ] = V(s_t) - \gamma V(s_{t+1})
+;; $$
 ;;
 ;; The deviation of the individual reward received in state $s_t$ from the expected reward is:
 ;;
-;; $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$ if not $\operatorname{done}_t$
+;; $$
+;; \delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)\mathrm{\ if\ not\ }\operatorname{done}_t
+;; $$
 ;;
 ;; The special case where a time series is "done" (and the next one is started) uses 0 as the remaining expected cumulative reward.
 ;;
-;; $\delta_t = r_t - V(s_t)$ if $\operatorname{done}_{t}$
+;; $$
+;; \delta_t = r_t - V(s_t)\mathrm{\ if\ }\operatorname{done}_{t}
+;; $$
 ;;
 ;; If we have a sample set with a sequence of T states ($t=0,1,\ldots,T-1$), one can compute the cumulative advantage for each time step going backwards:
 ;;
-;; $\hat{A}_{T-1} = -V(s_{T-1}) + r_{T-1} + \gamma V(s_T) = \delta_{T-1}$
-;;
-;; $\hat{A}_{T-2} = -V(s_{T-2}) + r_{T-2} + \gamma r_{T-1} + \gamma^2 V(s_T) = \delta_{T-2} + \gamma \delta_{T-1}$
-;;
-;; $\vdots$
-;;
-;; $\hat{A}_0 = -V(s_0) + r_0 + \gamma r_1 + \gamma^2 r_2 + \ldots + + \gamma^{T-1} r_{T-1} + \gamma^{T} V(s_{T}) = \delta_0 + \gamma \delta_1 + \gamma^2 \delta_2 + \ldots + \gamma^{T-1} \delta_{T-1}$
+;; $$
+;; \begin{aligned}
+;; \hat{A} _ {T-1} & = -V(s_{T-1}) + r_{T-1} + \gamma V(s_T) = \delta_{T-1} \\
+;; \hat{A} _ {T-2} & = -V(s_{T-2}) + r_{T-2} + \gamma r_{T-1} + \gamma^2 V(s_T) = \delta_{T-2} + \gamma \delta_{T-1} \\
+;; & \vdots \\
+;; \hat{A} _ 0 & = -V(s_0) + r_0 + \gamma r_1 + \gamma^2 r_2 + \ldots + + \gamma^{T-1} r_{T-1} + \gamma^{T} V(s_{T}) \\
+;;             & = \delta_0 + \gamma \delta_1 + \gamma^2 \delta_2 + \ldots + \gamma^{T-1} \delta_{T-1}
+;; \end{aligned}
+;; $$
 ;;
 ;; I.e. we can compute the cumulative advantages as follows:
 ;;
@@ -818,7 +830,7 @@
 ;; The core of the actor loss function relies on the action probability ratio of using the updated and the old policy (actor network output).
 ;; The ratio is defined as $r_t(\theta)=\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\operatorname{old}}}(a_t|s_t)}$.
 ;; Note that $r_t(\theta)$ here refers to the probability ratio as opposed to the reward of the previous section.
-;; 
+;;
 ;; The sampled observations, log probabilities, and actions are combined with the actor's parameter-dependent log probabilities.
 (defn probability-ratios
   "Probability ratios for a actions using updated policy and old policy"
@@ -829,12 +841,16 @@
 ;; The objective is to increase the probability of actions which lead to a positive advantage and reduce the probability of actions which lead to a negative advantage.
 ;; I.e. maximising the following objective function.
 ;;
-;; $L^{CPI}(\theta) = \mathop{\hat{\mathbb{E}}}_t [\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\operatorname{old}}}(a_t|s_t)} \hat{A}_t] = \mathop{\hat{\mathbb{E}}}_t [r_t(\theta) \hat{A}_t]$
+;; $$
+;; L^{CPI}(\theta) = \mathop{\hat{\mathbb{E}}}_t [\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\operatorname{old}}}(a_t|s_t)} \hat{A}_t] = \mathop{\hat{\mathbb{E}}}_t [r_t(\theta) \hat{A}_t]
+;; $$
 ;;
 ;; The core idea of PPO is to use clipped probability ratios for the loss function in order to increase stability, .
 ;; The probability ratio is clipped to stay below $1+\epsilon$ for positive advantages and to stay above $1-\epsilon$ for negative advantages.
 ;;
-;; $L^{CLIP}(\theta) = \mathop{\hat{\mathbb{E}}}_t [\min(r_t(\theta) \hat{A}_t, \mathop{\operatorname{clip}}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t)]$
+;; $$
+;; L^{CLIP}(\theta) = \mathop{\hat{\mathbb{E}}}_t [\min(r_t(\theta) \hat{A}_t, \mathop{\operatorname{clip}}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t)]
+;; $$
 ;;
 ;; See [Schulman et al.](https://arxiv.org/abs/1707.06347) for more details.
 ;;
