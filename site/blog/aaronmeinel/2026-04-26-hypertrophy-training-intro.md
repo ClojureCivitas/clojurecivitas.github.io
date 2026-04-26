@@ -1,3 +1,18 @@
+---
+author:
+- name: Aaron Meinel  
+type: post
+title: Workout tracking - a simple solution 
+date: 2026-04-26 
+site/group: Recent
+site/tags:
+  - fitness
+  - hypertrophy
+  - CalDAV
+  - clojure 
+  - software
+---
+
 
 # Hypertrophy training - A short intro 
 
