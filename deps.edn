@@ -3,6 +3,7 @@
  :deps
  {org.clojure/clojure                         {:mvn/version "1.12.3"}
   org.scicloj/noj                             {:mvn/version "2-beta18"}
+  org.scicloj/tablecloth.time                 {:mvn/version "1.00-alpha-6"}
   ;; Tableplot can be removed after updating Noj:
   org.scicloj/tableplot                       {:mvn/version "1-beta14"}
   markdown-clj/markdown-clj                   {:mvn/version "1.12.4"}
@@ -14,8 +15,10 @@
   metosin/malli                               {:mvn/version "0.19.1"}
   clj-fuzzy/clj-fuzzy                         {:mvn/version "0.4.1"}
   clj-thamil/clj-thamil                       {:mvn/version "0.2.0"}
-  org.scicloj/clay                            {:mvn/version "2.0.5"}
-  org.scicloj/kindly                          {:mvn/version "4-beta21"}
+  org.scicloj/clay                            {#_#_:mvn/version "2.0.5"
+                                               :git/url "https://github.com/scicloj/clay"
+                                               :git/sha "a52102ac993fa4f6b455e8f37d6a653030e69920"}
+  org.scicloj/kindly                          {:mvn/version "4-beta23"}
   thi.ng/geom                                 {:mvn/version "1.0.1"}
   org.eclipse.elk/org.eclipse.elk.core        {:mvn/version "0.10.0"}
   org.eclipse.elk/org.eclipse.elk.graph       {:mvn/version "0.10.0"}
@@ -48,6 +51,8 @@
   dev.data-star.clojure/malli-schemas         {:mvn/version "1.0.0-RC4"}
   dev.data-star.clojure/http-kit-malli-schemas {:mvn/version "1.0.0-RC4"}
   dev.data-star.clojure/ring-malli-schemas    {:mvn/version "1.0.0-RC4"}
+  ;; required by mentat_collective/emmy
+  io.github.nextjournal/clerk                 {:mvn/version "0.18.1158"}
 
   ;; libraries for GIS work
   org.apache.sis.storage/sis-geotiff          {:mvn/version "1.5"}
@@ -61,6 +66,8 @@
 
   generateme/fastmath                         {:mvn/version "3.0.0-alpha4"}
   clojure2d/clojure2d                         {:mvn/version "1.5.0-alpha1"}
+  org.scicloj/wadogo                          {:mvn/version "1.1.0-alpha1"}
+  quil/quil                                   {:mvn/version "4.3.1563"}
 
   com.github.psambit9791/jdsp                 {:mvn/version "3.1.0"}
 
@@ -74,8 +81,9 @@
                                                :deps/root "core"}
   com.hyperphor/multitool                     {:mvn/version "0.2.3"}
   datascript/datascript                       {:mvn/version "1.7.8"}
-  io.github.pbaille/noon                      {:git/url "https://github.com/pbaille/noon.git"
-                                               :git/sha "e63bb7c82671293c5610da6a02e3148a48ad71dd"}}
+  ;; io.github.pbaille/noon                      {:git/url "https://github.com/pbaille/noon.git"
+  ;;                                              :git/sha "97677727bff20243dc15d5cafb821d4af9019842"}
+  }
 
  :mvn/repos {"osgeo" {:url "https://repo.osgeo.org/repository/release/"}}
 

@@ -32,16 +32,23 @@ This article gets you started with computing and rendering volumetric clouds.
 
 ## Dependencies
 
-To download the required libraries, we use a `deps.edn` file with the following content:
+To download the required libraries, we use a `deps.edn` file with the following content.
+Replace the *natives-linux* classifier with *natives-macos* or *natives-windows* as required.
 
 ```Clojure
 {:deps
  {
-  org.clojure/clojure {:mvn/version "1.12.3"}
-  org.scicloj/noj     {:mvn/version "2-beta18"}
-  midje/midje         {:mvn/version "1.10.10"}
-  generateme/fastmath {:mvn/version "3.0.0-alpha4"}
-  comb/comb           {:mvn/version "1.0.0"}
+  org.clojure/clojure                  {:mvn/version "1.12.3"}
+  org.scicloj/noj                      {:mvn/version "2-beta18"}
+  midje/midje                          {:mvn/version "1.10.10"}
+  generateme/fastmath                  {:mvn/version "3.0.0-alpha4"}
+  org.lwjgl/lwjgl                      {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl$natives-linux        {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-opengl               {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-opengl$natives-linux {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-glfw                 {:mvn/version "3.4.0"}
+  org.lwjgl/lwjgl-glfw$natives-linux   {:mvn/version "3.4.0"}
+  comb/comb                            {:mvn/version "1.0.0"}
   }
 }
 ```

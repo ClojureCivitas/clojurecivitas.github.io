@@ -1,0 +1,66 @@
+// build with "dot -Tsvg -ocritic.svg critic.dot"
+digraph G {
+    label="Critic Network";
+    labelloc=bottom;
+    rankdir=LR;
+    node [shape=circle];
+    splines=line;
+
+    subgraph cluster_input {
+        label="Input Layer";
+        i2 [label="Input 2"];
+        i3 [label="Input 3"];
+        i1 [label="Input 1"];
+    }
+
+    subgraph cluster_hidden1 {
+        label="Hidden Layer 1";
+        h1_1 [label="H1_1"];
+        h1_2 [label="H1_2"];
+        h1_3 [label="H1_3"];
+        h1_4 [label="H1_4"];
+        h1_5 [label="H1_5"];
+        h1_6 [label="H1_6"];
+        h1_7 [label="H1_7"];
+        h1_8 [label="H1_8"];
+    }
+
+    subgraph cluster_hidden2 {
+        label="Hidden Layer 2";
+        h2_1 [label="H2_1"];
+        h2_2 [label="H2_2"];
+        h2_3 [label="H2_3"];
+        h2_4 [label="H2_4"];
+        h2_5 [label="H2_5"];
+        h2_6 [label="H2_6"];
+        h2_7 [label="H2_7"];
+        h2_8 [label="H2_8"];
+    }
+
+    subgraph cluster_output {
+        label="Output Layer";
+        o1 [label="Output"];
+    }
+
+    i1 -> {h1_1 h1_2 h1_3 h1_4 h1_5 h1_6 h1_7 h1_8};
+    i2 -> {h1_1 h1_2 h1_3 h1_4 h1_5 h1_6 h1_7 h1_8};
+    i3 -> {h1_1 h1_2 h1_3 h1_4 h1_5 h1_6 h1_7 h1_8};
+
+    h1_1 -> {h2_1 h2_2 h2_3 h2_4 h2_5 h2_6 h2_7 h2_8};
+    h1_2 -> {h2_1 h2_2 h2_3 h2_4 h2_5 h2_6 h2_7 h2_8};
+    h1_3 -> {h2_1 h2_2 h2_3 h2_4 h2_5 h2_6 h2_7 h2_8};
+    h1_4 -> {h2_1 h2_2 h2_3 h2_4 h2_5 h2_6 h2_7 h2_8};
+    h1_5 -> {h2_1 h2_2 h2_3 h2_4 h2_5 h2_6 h2_7 h2_8};
+    h1_6 -> {h2_1 h2_2 h2_3 h2_4 h2_5 h2_6 h2_7 h2_8};
+    h1_7 -> {h2_1 h2_2 h2_3 h2_4 h2_5 h2_6 h2_7 h2_8};
+    h1_8 -> {h2_1 h2_2 h2_3 h2_4 h2_5 h2_6 h2_7 h2_8};
+
+    h2_1 -> o1;
+    h2_2 -> o1;
+    h2_3 -> o1;
+    h2_4 -> o1;
+    h2_5 -> o1;
+    h2_6 -> o1;
+    h2_7 -> o1;
+    h2_8 -> o1;
+}

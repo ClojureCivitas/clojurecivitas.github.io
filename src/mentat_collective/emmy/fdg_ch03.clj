@@ -1,7 +1,8 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Differential Geometry Chapter Three"
                      :quarto {:author   :kloimhardt
-                              :type     :draft
+                              :type        :post
+                              :draft       true
                               :description "Functional Differential Geometry: Chapter 3"
                               :sidebar  "emmy-fdg"
                               :date     "2026-01-29"
@@ -14,38 +15,51 @@
                             time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda] :as scheme]
+            #_[mentat-collective.emmy.scheme :refer [let-scheme lambda] :as scheme]
             [civitas.repl :as repl]))
 
 ;; ## 3 Vector Fields and One-Form Fields
 ;; We want a way to think about how a function varies on a manifold.
 
 ^:kindly/hide-code
-(def prod true) #_"used to check Emmy in Scittle kitchen"
+(def prod false) #_"used to check Emmy in Scittle kitchen"
 
 ^:kindly/hide-code
-(kind/hiccup scheme/scittle-kitchen-hiccup)
+(def scittle-kitchen-hiccup
+  [:div
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.30-64/dist/scittle.js"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.30-64/dist/scittle.emmy.js"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.30-64/dist/scittle.cljs-ajax.js"}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js", :crossorigin ""}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js", :crossorigin ""}]
+   [:script {:src "https://cdn.jsdelivr.net/npm/scittle-kitchen@0.7.30-64/dist/scittle.reagent.js"}]
+   [:script {:type "application/x-scittle" :src "scheme.cljc"}]])
+
+^:kindly/hide-code
+(kind/hiccup scittle-kitchen-hiccup)
 
 ^:kindly/hide-code
 (defmacro define [& b]
   (list 'do
-        (cons 'mentat-collective.emmy.scheme/define b)
+        #_(cons 'mentat-collective.emmy.scheme/define b)
         (list 'kind/scittle (list 'quote (cons 'define b)))))
 
 ^:kindly/hide-code
 (define emmy-env
   '[emmy.env :as e :refer :all :exclude [print-expression Lagrangian-action find-path
-                                   Lagrange-equations r->p
-                                   R2 define-coordinates]])
+                                         Lagrange-equations r->p
+                                         R2 define-coordinates]])
 
 ^:kindly/hide-code
 (define emmy-vector-field
   '[emmy.calculus.vector-field :as vf])
 
 ^{:kindly/hide-code true :kindly/kind kind/hidden}
-(do
-  (require emmy-env)
-  (require emmy-vector-field))
+(comment
+  (do
+    (require emmy-env)
+    (require emmy-vector-field))
+  :end-comment)
 
 ^:kindly/hide-code
 (kind/scittle
@@ -56,7 +70,7 @@
 ^:kindly/hide-code
 (defmacro define-coordinates [& b]
   (list 'do
-        (cons 'emmy.env/define-coordinates b)
+        #_(cons 'emmy.env/define-coordinates b)
         (list 'kind/scittle (list 'quote (cons 'emmy.env/define-coordinates b)))))
 
 ^:kindly/hide-code
@@ -64,7 +78,7 @@
 
 ^:kindly/hide-code
 (defn reag-comp [b]
-  (let [server-erg (string-exp (eval b))]
+  (let [server-erg nil #_(string-exp (eval b))]
     (list 'kind/reagent
           [:div (list 'quote
                       (list 'let ['a (list 'string-exp b)]
@@ -72,7 +86,7 @@
                              (when (not prod)
                                [:div
                                 [:tt 'a]
-                                [:p (list 'str (list '= server-erg 'a))]])
+                                #_[:p (list 'str (list '= server-erg 'a))]])
                              [:tt server-erg]]))])))
 
 ^:kindly/hide-code
@@ -86,7 +100,7 @@
   '(def print-expression identity))
 
 ^:kindly/hide-code
-(def show-tex-fn (comp kind/tex emmy.expression.render/->TeX))
+(def show-tex-fn identity #_(comp kind/tex emmy.expression.render/->TeX))
 
 ^:kindly/hide-code
 (defmacro show-tex [e]
@@ -101,7 +115,8 @@
 
 ^:kindly/hide-code
 (defn show-expression-fn [e]
-  (kind/tex (str "\\boxed{" (emmy.expression.render/->TeX e) "}")))
+  e
+  #_(kind/tex (str "\\boxed{" (emmy.expression.render/->TeX e) "}")))
 
 ^:kindly/hide-code
 (defmacro show-expression [e]

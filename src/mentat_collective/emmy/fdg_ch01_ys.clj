@@ -1,7 +1,8 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Infix Notation"
                      :quarto {:author   :kloimhardt
-                              :type     :post
+                              :type        :post
+                              :draft       true
                               :sidebar  "emmy-fdg"
                               :description "Emmy can wear a different apparel should the occasion demand it."
                               :date     "2025-11-19"
@@ -12,10 +13,12 @@
 (ns mentat-collective.emmy.fdg-ch01-ys
     (:refer-clojure :exclude [+ - * / zero? compare divide numerator denominator
                               time infinite? abs ref partial =])
-    (:require [emmy.env :refer :all :exclude [D F->C]]
+    #_(:require [emmy.env :refer :all :exclude [D F->C]]
               [yamlscript.compiler :as ys]
               [scicloj.kindly.v4.api :as kindly]
               [scicloj.kindly.v4.kind :as kind]))
+
+(comment
 
 ^:kindly/hide-code
 (def +++ identity)
@@ -261,3 +264,5 @@ simplify:
        (L (up 't
               (up 'x 'y)
               (up 'vx 'vy))))))
+
+:end_comment)

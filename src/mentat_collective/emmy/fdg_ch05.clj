@@ -1,7 +1,8 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: Differential Geometry Chapter Five"
                      :quarto {:author   :kloimhardt
-                              :type     :draft
+                              :type        :post
+                              :draft       true
                               :description "Functional Differential Geometry: Chapter 5"
                               :sidebar  "emmy-fdg"
                               :date     "2026-02-08"
@@ -14,7 +15,7 @@
                             time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda] :as scheme]
+            [mentat-collective.emmy.scheme :refer [let-scheme] :as scheme]
             [civitas.repl :as repl]))
 
 ;; ## 5 Integration

@@ -1,7 +1,8 @@
 ^{:kindly/hide-code true
   :clay             {:title  "Emmy, the Algebra System: deBroglie wavelength"
                      :quarto {:author   :kloimhardt
-                              :type     :draft
+                              :type        :post
+                              :draft       true
                               :description "A particle riding its wave whose length depends on the former's momentum"
                               :sidebar  "emmy-fdg"
                               :date     "2026-01-27"
@@ -13,7 +14,7 @@
                             time infinite? abs ref partial =])
   (:require [scicloj.kindly.v4.api :as kindly]
             [scicloj.kindly.v4.kind :as kind]
-            [mentat-collective.emmy.scheme :refer [define-1 let-scheme lambda] :as scheme]
+            [mentat-collective.emmy.scheme :refer [let-scheme lambda] :as scheme]
             [civitas.repl :as repl]))
 
 ^:kindly/hide-code
