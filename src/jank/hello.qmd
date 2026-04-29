@@ -10,7 +10,6 @@ type: post
 date: '2026-04-30'
 category: libs
 tags: [jank, janqua, quarto, cpp]
-draft: true
 filters:
   - jank
 ---
