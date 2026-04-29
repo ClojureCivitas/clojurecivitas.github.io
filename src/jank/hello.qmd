@@ -43,11 +43,17 @@ Annotate a value with `^:kind/...` to tell Janqua how to render it:
 
 ## Random samples from `<random>`
 
-The block below uses Jank's C++ interop to draw samples from the standard library. We construct a [`std::mt19937`](https://en.cppreference.com/w/cpp/numeric/random/mersenne_twister_engine) (the [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister) PRNG) and a [`std::normal_distribution<double>`](https://en.cppreference.com/w/cpp/numeric/random/normal_distribution) from the [C++ standard library](https://en.cppreference.com/w/cpp/header/random), generate ten thousand samples, and collect them into a Jank vector. The `cpp/` forms sit inline with the ordinary Jank code:
+The blocks below use Jank's C++ interop to draw samples from the standard library. We construct a [`std::mt19937`](https://en.cppreference.com/w/cpp/numeric/random/mersenne_twister_engine) (the [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister) PRNG) and a [`std::normal_distribution<double>`](https://en.cppreference.com/w/cpp/numeric/random/normal_distribution) from the [C++ standard library](https://en.cppreference.com/w/cpp/header/random), generate ten thousand samples, and collect them into a Jank vector. The `cpp/` forms sit inline with the ordinary Jank code.
+
+First, the include:
 
 ```{.clojure .jank}
 (cpp/raw "#include <random>")
+```
 
+Then the sampling:
+
+```{.clojure .jank}
 (def samples
   (let [gen  (cpp/std.mt19937. 42)
         dist (#cpp (std.normal_distribution double) 0.0 1.0)]
@@ -61,7 +67,7 @@ The block below uses Jank's C++ interop to draw samples from the standard librar
 
 A few notes on the syntax:
 
-- `(cpp/raw "...")` injects raw C++ into the compiled module — useful for `#include`s.
+- `(cpp/raw "...")` injects raw C++ into the compiled module — typically `#include`s. It needs to live in its own `.jank` block when later code depends on the included symbols: Jank's analyzer runs over a whole block at once, so an include and its first use can't share a block.
 - `(cpp/std.mt19937. 42)` is the familiar Clojure interop shape: trailing `.` calls the constructor.
 - For [templated types](https://en.cppreference.com/w/cpp/language/templates), the `#cpp (Type arg ...)` [reader macro](https://clojure.org/reference/reader) builds the instantiated type form. `(#cpp (std.normal_distribution double) 0.0 1.0)` reads as "construct `std::normal_distribution<double>(0.0, 1.0)`".
 - [`loop`](https://clojuredocs.org/clojure.core/loop)/[`recur`](https://clojuredocs.org/clojure.core/recur) rather than [`repeatedly`](https://clojuredocs.org/clojure.core/repeatedly) because C++ values aren't (yet) automatically captured into Jank closures — explicit recursion sidesteps the issue.
