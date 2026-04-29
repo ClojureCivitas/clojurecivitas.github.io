@@ -10,11 +10,12 @@ type: post
 date: '2026-04-30'
 category: libs
 tags: [jank, janqua, quarto, cpp]
+image: jank-banner.png
 filters:
   - jank
 ---
 
-![](https://media.githubusercontent.com/media/jank-lang/jank/main/.github/img/banner.png)
+![](jank-banner.png)
 
 This is the first [Jank](https://jank-lang.org)-authored post on Clojure Civitas — and at the same time, a small walkthrough of how to author your own. The page is rendered with [Janqua](https://github.com/scicloj/janqua), a [Quarto](https://quarto.org) extension that evaluates `{.clojure .jank}` code blocks against a running Jank [nREPL](https://nrepl.org) during the render and replaces each block with its evaluated output. [Kindly](https://scicloj.github.io/kindly-noted/kindly) metadata controls how each value renders, the same convention [Clay](https://scicloj.github.io/clay/) uses for [Clojure](https://clojure.org) documents.
 
