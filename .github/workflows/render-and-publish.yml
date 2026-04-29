@@ -50,6 +50,29 @@ jobs:
       - name: Build the content notebooks
         run: clojure -M:clay -A:markdown
 
+      - name: Install lsof and apt prerequisites for Janqua
+        run: sudo apt-get update && sudo apt-get install -y lsof gnupg lsb-release
+
+      - name: Install Babashka
+        run: curl -L https://raw.githubusercontent.com/babashka/babashka/master/install | sudo bash
+
+      - name: Install bbin
+        run: |
+          sudo curl -L https://raw.githubusercontent.com/babashka/bbin/v0.2.4/bbin -o /usr/local/bin/bbin
+          sudo chmod +x /usr/local/bin/bbin
+
+      - name: Install Jank
+        run: |
+          curl -s https://ppa.jank-lang.org/KEY.gpg | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
+          sudo curl -s -o /etc/apt/sources.list.d/jank.list https://ppa.jank-lang.org/jank.list
+          sudo apt-get update
+          sudo apt-get install -y jank
+
+      - name: Install clj-nrepl-eval
+        run: |
+          bbin install https://github.com/bhauman/clojure-mcp-light.git --tag v0.2.1 --as clj-nrepl-eval --main-opts '["-m" "clojure-mcp-light.nrepl-eval"]'
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:

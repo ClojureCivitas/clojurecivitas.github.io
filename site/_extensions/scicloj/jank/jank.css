@@ -1,0 +1,15 @@
+/* Distinguish Jank output blocks from input code */
+.cell-output pre code.sourceCode {
+  background-color: transparent;
+  border-left: 3px solid #e0e0e0;
+  padding-left: 0.8em;
+}
+
+/* Cap stdout-block height so a noisy `(println …)` (e.g. a debug
+   `dotimes 1000`) doesn't push everything below it off the page.
+   Display blocks (charts, return values) and error blocks stay
+   uncapped — those need to remain fully visible. */
+.cell-output-stdout pre {
+  max-height: 30em;
+  overflow-y: auto;
+}

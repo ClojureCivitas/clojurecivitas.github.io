@@ -1,5 +1,6 @@
 /temp
-/site
+/site/*
+.claude/
 .clj-kondo/
 .quarto/
 _site/
@@ -38,6 +39,13 @@ _site/
 /src/finance/portfolio_analysis/*.edn# Created by https://www.toptal.com/developers/gitignore/api/osx
 
 !/site/_quarto.yml
+!/site/_extensions/
+!/site/_extensions/**
+
+# Janqua nREPL lifecycle files (created in the Quarto rendering directory)
+.jank-pid
+.jank-nrepl-port
+.jank-repl.log
 
 # Edit at https://www.toptal.com/developers/gitignore?templates=osx
 
