@@ -7,28 +7,158 @@ author:
     links:
       - {icon: github, href: 'https://github.com/daslu'}
 type: post
-date: '2026-04-29'
+date: '2026-04-30'
 category: libs
-tags: [jank, janqua, quarto]
-draft: true
+tags: [jank, janqua, quarto, cpp]
 filters:
   - jank
 ---
 
-This page is rendered with [Janqua](https://github.com/scicloj/janqua), a Quarto extension that evaluates [Jank](https://jank-lang.org) code blocks during rendering. It is the first Jank-authored post on Clojure Civitas.
+![](https://media.githubusercontent.com/media/jank-lang/jank/main/.github/img/banner.png)
 
-A `{.clojure .jank}` block is sent to a Jank nREPL during the render and the result replaces the block. The same Kindly conventions used by Clay apply.
+This is the first [Jank](https://jank-lang.org)-authored post on Clojure Civitas — and at the same time, a small walkthrough of how to author your own. The page is rendered with [Janqua](https://github.com/scicloj/janqua), a [Quarto](https://quarto.org) extension that evaluates `{.clojure .jank}` code blocks against a running Jank [nREPL](https://nrepl.org) during the render and replaces each block with its evaluated output. [Kindly](https://scicloj.github.io/kindly-noted/kindly) metadata controls how each value renders, the same convention [Clay](https://scicloj.github.io/clay/) uses for [Clojure](https://clojure.org) documents.
 
-## Arithmetic
+A huge thanks to Jeaye Wilkerson and the rest of the [Jank team](https://jank-lang.org) for building Jank in the open and being generous with their time as we wired this up.
+
+## Why Jank, on Civitas?
+
+[Jank](https://jank-lang.org) is a dialect of Clojure hosted on [C++](https://en.wikipedia.org/wiki/C%2B%2B) and an [LLVM](https://llvm.org/)-based [JIT](https://en.wikipedia.org/wiki/Just-in-time_compilation). One feature that makes it interesting for a notebook-style post is its C++ interop: `cpp/` forms call into C++ types and functions directly, without a separate [FFI](https://en.wikipedia.org/wiki/Foreign_function_interface) layer. Below we use that to draw random samples from the C++ standard library and chart them.
+
+## A first taste
+
+Code blocks without Kindly metadata render as code output. The simplest possible block:
 
 ```{.clojure .jank}
 (+ 1 2 3)
 ```
 
-## Hiccup
+Annotate a value with `^:kind/...` to tell Janqua how to render it:
 
 ```{.clojure .jank}
 ^:kind/hiccup
 [:div {:style "color: coral; font-size: 24px;"}
   "Hello from Jank!"]
 ```
+
+## Random samples from `<random>`
+
+The block below uses Jank's C++ interop to draw samples from the standard library. We construct a [`std::mt19937`](https://en.cppreference.com/w/cpp/numeric/random/mersenne_twister_engine) (the [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister) PRNG) and a [`std::normal_distribution<double>`](https://en.cppreference.com/w/cpp/numeric/random/normal_distribution) from the [C++ standard library](https://en.cppreference.com/w/cpp/header/random), generate ten thousand samples, and collect them into a Jank vector. The `cpp/` forms sit inline with the ordinary Jank code:
+
+```{.clojure .jank}
+(cpp/raw "#include <random>")
+
+(def samples
+  (let [gen  (cpp/std.mt19937. 42)
+        dist (#cpp (std.normal_distribution double) 0.0 1.0)]
+    (loop [i 10000 acc []]
+      (if (zero? i)
+        acc
+        (recur (dec i) (conj acc (dist gen)))))))
+
+(count samples)
+```
+
+A few notes on the syntax:
+
+- `(cpp/raw "...")` injects raw C++ into the compiled module — useful for `#include`s.
+- `(cpp/std.mt19937. 42)` is the familiar Clojure interop shape: trailing `.` calls the constructor.
+- For [templated types](https://en.cppreference.com/w/cpp/language/templates), the `#cpp (Type arg ...)` [reader macro](https://clojure.org/reference/reader) builds the instantiated type form. `(#cpp (std.normal_distribution double) 0.0 1.0)` reads as "construct `std::normal_distribution<double>(0.0, 1.0)`".
+- [`loop`](https://clojuredocs.org/clojure.core/loop)/[`recur`](https://clojuredocs.org/clojure.core/recur) rather than [`repeatedly`](https://clojuredocs.org/clojure.core/repeatedly) because C++ values aren't (yet) automatically captured into Jank closures — explicit recursion sidesteps the issue.
+
+Passing the same vector to [Plotly](https://plotly.com/javascript/) via `^:kind/plotly` renders it as a histogram — with the [bell curve](https://en.wikipedia.org/wiki/Normal_distribution) shape we'd expect for samples from a normal distribution:
+
+```{.clojure .jank}
+^:kind/plotly
+{:data [{:x      samples
+         :type   :histogram
+         :nbinsx 40
+         :marker {:color "coral"}}]
+ :layout {:title  (str (count samples)
+                       " samples ~ N(0, 1)")
+          :xaxis  {:title "value"}
+          :yaxis  {:title "count"}
+          :width 600}}
+```
+
+Janqua serializes the Jank value to JSON and Plotly.js renders it client-side; the data itself doesn't go through any conversion step beyond that.
+
+## Authoring a Jank post on Civitas
+
+The path from "I want to write a Jank post" to "PR open":
+
+### 1. Prerequisites
+
+Beyond the standard Civitas setup (Quarto, Java 21, [Clojure CLI](https://clojure.org/guides/install_clojure)), Jank posts need:
+
+- [Jank](https://jank-lang.org) itself (apt PPA on Ubuntu/Debian: `ppa.jank-lang.org`; see jank-lang.org for other systems)
+- [Babashka](https://babashka.org/) (`bb`)
+- [bbin](https://github.com/babashka/bbin)
+- `clj-nrepl-eval`, the nREPL client Janqua uses, installed via bbin:
+
+```bash
+bbin install https://github.com/bhauman/clojure-mcp-light.git \
+  --tag v0.2.1 --as clj-nrepl-eval \
+  --main-opts '["-m" "clojure-mcp-light.nrepl-eval"]'
+```
+
+If you only contribute Clojure posts and skip these, you can still build the site — Jank pages will surface in-page error blocks where evaluated output should be, and the rest of the site renders normally.
+
+### 2. Create the post
+
+Drop a `.qmd` file at `src/<topic>/<post>.qmd` with a Janqua-aware frontmatter:
+
+```yaml
+---
+title: "My Jank Post"
+author:
+  - name: Your Name
+type: post
+date: '2026-05-01'
+category: libs
+tags: [jank, ...]
+draft: true
+filters:
+  - jank
+---
+```
+
+Then write the body. `{.clojure .jank}` fenced blocks are evaluated; `.clojure` enables syntax highlighting, `.jank` triggers evaluation. Use Kindly metadata (`^:kind/hiccup`, `^:kind/plotly`, `^:kind/vega-lite`, `^:kind/mermaid`, …) to control the rendering of each value. The [Janqua docs](https://scicloj.github.io/janqua/) list the full set of supported kinds and per-block options.
+
+### 3. Iterate with fast single-file preview
+
+```bash
+quarto preview src/<topic>/<post>.qmd
+```
+
+This works because the repo is already set up for it: a `_extensions` symlink at the root pointing to `site/_extensions/` (where the Janqua extension lives), and a minimal `_quarto.yml` that lets Quarto find the filter without dragging in the full-website context. Symlinks recreate automatically on Linux/macOS; on Windows you may need `git config --global core.symlinks true` plus Developer Mode.
+
+A live-reload server starts; saves trigger a re-render. The Jank nREPL session auto-starts on first render and stays alive between renders, so subsequent re-evaluations are cheap. Three lifecycle dotfiles appear at the repo root (`.jank-pid`, `.jank-nrepl-port`, `.jank-repl.log`) — they're gitignored.
+
+The auto-start prints a framed stderr block on first render with the PID, port, log path, and the exact `stop` command. The session keeps running across renders so subsequent ones are cheap, but definitions from earlier evaluations accumulate (a renamed function may keep resolving to its old binding) and the log at `.jank-repl.log` grows over time — stop it when you're done, or set `jank.reset-on-render: true` in the frontmatter when you need a clean slate. See the [Workflow chapter of the Janqua docs](https://scicloj.github.io/janqua/workflow.html) for the full set of lifecycle controls.
+
+### 4. (Optional) Full-site preview
+
+If you want to see the post inside the actual site — theme, listings, navigation — you can render it in full-site context:
+
+```bash
+bb preview
+```
+
+This runs Clay and then `quarto preview site` on the whole website. It can be quite slow on some machines (the site has many pages); for routine iteration, step 3's single-file preview is much faster.
+
+### 5. Open a PR
+
+```bash
+git add src/<topic>/<post>.qmd
+git commit -m "blog: ..."
+git push origin <branch>
+gh pr create --base main
+```
+
+CI installs the Jank toolchain and renders every post, including yours. `draft: true` keeps it out of the public posts listing while you iterate; drop the line when you're ready to publish.
+
+## Where next?
+
+This post was the first Jank-authored page on Civitas. We'd love to see more. The Jank ecosystem is young — small, focused posts that exercise a corner of the language or a piece of C++ interop are exactly the kind of thing that helps everyone learn alongside the project.
+
+If you hit something that doesn't work, please open an issue on [Janqua](https://github.com/scicloj/janqua/issues) or on [Civitas](https://github.com/ClojureCivitas/clojurecivitas.github.io/issues). Feedback shapes both.

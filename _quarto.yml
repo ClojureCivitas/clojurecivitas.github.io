@@ -1,0 +1,8 @@
+# Local-preview marker. Lets `quarto preview src/<topic>/<post>.qmd` work
+# without dragging in the full-website context (site/_quarto.yml). Together
+# with the _extensions symlink at this same level, it makes the Janqua filter
+# discoverable from src/. CI is unaffected: it renders with `path: site`,
+# and Quarto walks up from site/ files and finds site/_quarto.yml first.
+project:
+  type: default
+  output-dir: _site
