@@ -1,0 +1,34 @@
+---
+title: "Hello, Jank"
+author:
+  - name: Daniel Slutsky
+    url: https://scicloj.github.io/contributors/daslu/
+    image: https://avatars.githubusercontent.com/u/5673102?v=4
+    links:
+      - {icon: github, href: 'https://github.com/daslu'}
+type: post
+date: '2026-04-29'
+category: libs
+tags: [jank, janqua, quarto]
+draft: true
+filters:
+  - jank
+---
+
+This page is rendered with [Janqua](https://github.com/scicloj/janqua), a Quarto extension that evaluates [Jank](https://jank-lang.org) code blocks during rendering. It is the first Jank-authored post on Clojure Civitas.
+
+A `{.clojure .jank}` block is sent to a Jank nREPL during the render and the result replaces the block. The same Kindly conventions used by Clay apply.
+
+## Arithmetic
+
+```{.clojure .jank}
+(+ 1 2 3)
+```
+
+## Hiccup
+
+```{.clojure .jank}
+^:kind/hiccup
+[:div {:style "color: coral; font-size: 24px;"}
+  "Hello from Jank!"]
+```
