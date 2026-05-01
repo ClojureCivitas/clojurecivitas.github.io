@@ -10,10 +10,13 @@ type: post
 date: '2026-05-01'
 category: libs
 tags: [babashka, babqua, quarto]
+image: babashka-logo.png
 draft: true
 filters:
   - bb
 ---
+
+![](babashka-logo.png){width=200 fig-align="center"}
 
 This is the first [Babashka](https://babashka.org)-authored post on Clojure Civitas — and at the same time, a small walkthrough of how to author your own. The page is rendered with [Babqua](https://github.com/scicloj/babqua), a [Quarto](https://quarto.org) extension that evaluates `{.clojure .bb}` code blocks with [Babashka](https://babashka.org) during the render and replaces each block with its evaluated output. [Kindly](https://scicloj.github.io/kindly-noted/kindly) metadata controls how each value renders, the same convention [Clay](https://scicloj.github.io/clay/) uses for [Clojure](https://clojure.org) documents.
 
@@ -43,48 +46,161 @@ Annotate a value with `^:kind/...` to tell Babqua how to render it:
   "Hello from Babashka!"]
 ```
 
-## A small taste of the batteries
+## Mining the git log
 
-[Cheshire](https://github.com/dakrone/cheshire) is built in. Parsing a small inline JSON blob and walking the result is one call:
+The block below uses [`babashka.process/shell`](https://github.com/babashka/process) to invoke `git log` with a custom format string, splits the output line-by-line, and turns each line into a map. The result is a vector of recent commits, ready to chart:
 
 ```{.clojure .bb}
-(require '[cheshire.core :as json])
+(require '[babashka.process :as process]
+         '[clojure.string :as str])
 
-(def cities
-  (json/parse-string
-   "[{\"city\":\"Tokyo\",      \"millions\":37},
-     {\"city\":\"Delhi\",      \"millions\":33},
-     {\"city\":\"Shanghai\",   \"millions\":29},
-     {\"city\":\"São Paulo\",  \"millions\":22},
-     {\"city\":\"Mexico City\",\"millions\":22}]"
-   true))
+(def commits
+  (->> (process/shell {:out :string}
+                      "git" "log" "-200"
+                      "--pretty=format:%h|%ad|%an"
+                      "--date=format:%Y-%m")
+       :out
+       str/split-lines
+       (map #(zipmap [:hash :month :author]
+                     (str/split % #"\|" 3)))))
 
-(map :city cities)
+(count commits)
 ```
 
-State carries across blocks the way it does in any [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop) session — `cities` defined in one block is visible in the next.
+State carries across blocks the way it does in any [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop) session — `commits` defined above is visible below.
 
-The same data can be passed to [Vega-Lite](https://vega.github.io/vega-lite/) by way of `^:kind/vega-lite`. Babqua serializes the value to JSON and Vega renders it client-side:
+Aggregating into a per-month bar chart with [Vega-Lite](https://vega.github.io/vega-lite/) is one expression. Babqua serializes the value to JSON and Vega renders it client-side:
 
 ```{.clojure .bb}
 ^:kind/vega-lite
-{:data {:values cities}
- :mark {:type "bar" :color "coral"}
- :encoding {:x {:field "city" :type "nominal" :sort "-y"}
-            :y {:field "millions" :type "quantitative"
-                :title "population (millions)"}}
- :width 360
+{:data {:values commits}
+ :mark {:type "bar" :color "#d7161b"}
+ :encoding {:x {:field "month" :type "ordinal" :title "month"}
+            :y {:aggregate "count" :title "commits"}}
+ :width 480
  :height 220}
 ```
 
-[`babashka.process`](https://github.com/babashka/process) is also built in, and shells out to system tools the way a Bash script would — useful for posts that drive `git`, `curl`, or any command-line program. A trivial example:
+## Walking the source tree
+
+The next block uses [`babashka.fs`](https://github.com/babashka/fs) to enumerate the top-level directories under `src/` and count Clojure source files (`.qmd`, `.clj`, `.cljc`, `.cljs`) in each. Anchoring on the repo root via `git rev-parse` keeps the demo working from any working directory inside the checkout:
 
 ```{.clojure .bb}
-(require '[babashka.process :as p])
+(require '[babashka.fs :as fs])
 
-(-> (p/shell {:out :string} "bb" "--version")
-    :out
-    clojure.string/trim)
+(def repo-root
+  (-> (process/shell {:out :string} "git" "rev-parse" "--show-toplevel")
+      :out str/trim))
+
+(defn count-sources [dir]
+  (->> ["qmd" "clj" "cljc" "cljs"]
+       (mapcat #(fs/glob dir (str "**/*." %)))
+       count))
+
+(def top-categories
+  (->> (fs/list-dir (fs/path repo-root "src"))
+       (filter fs/directory?)
+       (map (fn [dir] {:name  (str (fs/file-name dir))
+                       :count (count-sources dir)}))
+       (filter (comp pos? :count))
+       (sort-by (juxt (comp - :count) :name))
+       (take 8)))
+
+top-categories
+```
+
+Rendering the result as a [Mermaid](https://mermaid.js.org/) diagram is a string template away. Kindly's `:kind/mermaid` takes a vector-wrapped string:
+
+```{.clojure .bb}
+^:kind/mermaid
+[(let [;; prefix every node ID to avoid colliding with Mermaid keywords
+       ;; (a category called "graph" would otherwise clash with `graph LR`)
+       node-id (fn [category-name]
+                 (str "cat_" (str/replace category-name #"[^A-Za-z0-9_]" "_")))
+       edges   (for [{:keys [name count]} top-categories]
+                 (str "  root --> " (node-id name)
+                      "[\"" name "/ (" count ")\"]"))]
+   (str "graph LR\n  root[\"src/\"]\n" (str/join "\n" edges)))]
+```
+
+## A small fractal, for joy
+
+Hiccup happens to handle inline [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG) just as readily as HTML — the tag is a keyword, the attributes are a map, and the children are nested vectors. Recursion gives us a Sierpinski triangle in a few lines:
+
+```{.clojure .bb}
+(def sin60 (/ (Math/sqrt 3) 2))
+
+(defn sierpinski [x y size depth]
+  (if (zero? depth)
+    [[:polygon
+      {:points (str x "," y " "
+                    (+ x size) "," y " "
+                    (+ x (/ size 2)) "," (- y (* size sin60)))}]]
+    (let [half (/ size 2)]
+      (mapcat (fn [[x y]] (sierpinski x y half (dec depth)))
+              [[x y]
+               [(+ x half) y]
+               [(+ x (/ half 2)) (- y (* half sin60))]]))))
+
+^:kind/hiccup
+[:svg {:xmlns "http://www.w3.org/2000/svg"
+       :viewBox "0 0 256 224"
+       :width 560
+       :fill "#d7161b"
+       :style "display:block;margin:0 auto"}
+ (sierpinski 0.0 222.0 256.0 7)]
+```
+
+## A recursive logo tree
+
+Hiccup-as-SVG is not limited to primitive shapes. The block below builds a tree by recursion, but the leaves are `<image>` elements pointing at the same `babashka-logo.png` we embedded above. Each generation produces two children at ±32° from the parent's heading (with a small random jitter), anchored at the parent's two top corners so they spread outward like a [Pythagoras tree](https://en.wikipedia.org/wiki/Pythagoras_tree_(fractal)). Five levels deep gives 63 logos. A seeded `java.util.Random` keeps the layout identical on every render.
+
+```{.clojure .bb}
+(def ^java.util.Random random-source (java.util.Random. 42))
+
+(defn jitter
+  "A random number drawn uniformly from [-radius, radius]."
+  [radius]
+  (- (* 2 radius (.nextDouble random-source)) radius))
+
+(defn logo-tree
+  "Returns a flat seq of {:x :y :angle :scale} placements. Each call
+  yields one logo (centered above (anchor-x, anchor-y) and rotated by
+  `angle`), then recursively yields two children at the parent's
+  top-left and top-right corners, rotated ±32° from the parent's heading."
+  [anchor-x anchor-y angle scale depth]
+  (let [radians     (Math/toRadians angle)
+        sine        (Math/sin radians)
+        cosine      (Math/cos radians)
+        half-height (* 100 scale)                          ;; logo is 200×200
+        center-x    (+ anchor-x (*    half-height sine))
+        center-y    (- anchor-y (*    half-height cosine))
+        tip-x       (+ anchor-x (* 2  half-height sine))
+        tip-y       (- anchor-y (* 2  half-height cosine))
+        side-x      (* half-height cosine)                 ;; tip → top-corner
+        side-y      (* half-height sine)
+        child-scale (* scale (+ 0.55 (jitter 0.05)))]
+    (cons {:x center-x :y center-y :angle angle :scale scale}
+          (when (pos? depth)
+            (concat
+             (logo-tree (- tip-x side-x) (- tip-y side-y)
+                        (+ angle -32 (jitter 5)) child-scale (dec depth))
+             (logo-tree (+ tip-x side-x) (+ tip-y side-y)
+                        (+ angle  32 (jitter 5)) child-scale (dec depth)))))))
+
+(defn logo-svg
+  "Wrap one logo placement in an SVG `<g>` that translates, rotates, and
+  scales a `<image>` reference to the shared logo file."
+  [{:keys [x y angle scale]}]
+  [:g {:transform (str "translate(" x " " y ") rotate(" angle ") scale(" scale ")")}
+   [:image {:href "babashka-logo.png" :x -100 :y -100 :width 200 :height 200}]])
+
+^:kind/hiccup
+[:svg {:xmlns "http://www.w3.org/2000/svg"
+       :viewBox "-280 50 560 360"
+       :width 560
+       :style "display:block;margin:0 auto"}
+ (map logo-svg (logo-tree 0 380 0 0.6 5))]
 ```
 
 ## Authoring a Babashka post on Civitas
