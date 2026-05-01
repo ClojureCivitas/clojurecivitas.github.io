@@ -32,7 +32,7 @@ For a notebook-style post, the appeal is reproducibility: a `.qmd` file plus a `
 
 ## Examples
 
-Five small demonstrations, working up from a primitive expression to a recursive SVG fractal. Each one fits in a single block and exercises a different corner of Babashka's standard library or Babqua's rendering.
+Here are a few small demonstrations, working up from a primitive expression to recursive SVG fractals. Each one fits in a single block and exercises a different corner of Babashka's standard library or Babqua's rendering.
 
 ### A first taste
 
@@ -129,7 +129,7 @@ Rendering the result as a [Mermaid](https://mermaid.js.org/) diagram is a string
 
 ### A small fractal, for joy
 
-Hiccup happens to handle inline [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG) just as readily as HTML — the tag is a keyword, the attributes are a map, and the children are nested vectors. Recursion gives us a Sierpinski triangle in a few lines:
+Hiccup happens to handle inline [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG) just as readily as HTML — the tag is a keyword, the attributes are a map, and the children are nested vectors. Recursion gives us a [Sierpinski triangle](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle) in a few lines:
 
 ```{.clojure .bb}
 (def sin60 (/ (Math/sqrt 3) 2))
@@ -157,7 +157,7 @@ Hiccup happens to handle inline [SVG](https://developer.mozilla.org/en-US/docs/W
 
 ### A recursive logo tree
 
-Hiccup-as-SVG is not limited to primitive shapes. The block below builds a tree by recursion, but the leaves are `<image>` elements pointing at the same `babashka-logo.png` we embedded above. Each generation produces two children at ±32° from the parent's heading (with a small random jitter), anchored at the parent's two top corners so they spread outward like a [Pythagoras tree](https://en.wikipedia.org/wiki/Pythagoras_tree_(fractal)). Five levels deep gives 63 logos. A seeded `java.util.Random` keeps the layout identical on every render.
+Hiccup-as-SVG is not limited to primitive shapes. The block below builds a tree by recursion, but the leaves are `<image>` elements pointing at the same `babashka-logo.png` we embedded above. Each generation produces two children at about 32 degrees from the parent's heading (with a small random jitter), anchored at the parent's two top corners so they spread outward like a [Pythagoras tree](https://en.wikipedia.org/wiki/Pythagoras_tree_(fractal)). Five levels deep gives 63 logos. A seeded `java.util.Random` keeps the layout identical on every render.
 
 ```{.clojure .bb}
 (def ^java.util.Random random-source (java.util.Random. 42))
@@ -165,7 +165,10 @@ Hiccup-as-SVG is not limited to primitive shapes. The block below builds a tree 
 (defn jitter
   "A random number drawn uniformly from [-radius, radius]."
   [radius]
-  (- (* 2 radius (.nextDouble random-source)) radius))
+  (- (* 2
+        radius
+        (.nextDouble random-source))
+     radius))
 
 (defn logo-tree
   "Returns a flat seq of {:x :y :angle :scale} placements. Each call
@@ -250,23 +253,29 @@ quarto preview src/<topic>/<post>.qmd
 
 This works because the repo is already set up for it: a `_extensions` symlink at the root pointing to `site/_extensions/` (where the Babqua extension lives), and a minimal `_quarto.yml` that lets Quarto find the filter without dragging in the full-website context. Symlinks recreate automatically on Linux/macOS; on Windows you may need `git config --global core.symlinks true` plus Developer Mode.
 
-A live-reload server starts; saves trigger a re-render. Each render spawns a fresh `bb` process by default — fast enough for most posts. If your post does expensive setup (loads a pod, fetches data), you can opt into a persistent Babashka session that keeps state warm across saves:
+A live-reload server starts; saves trigger a re-render. Each render spawns a fresh `bb` process — fast enough for most posts.
+
+### 4. (Optional) Persistent Babashka session
+
+For most posts, step 3 is all you need: a fresh `bb` process per render is plenty fast. If your post does expensive setup, though — loading a heavy pod, fetching a dataset, computing something slow — you can opt into a long-lived Babashka [nREPL](https://nrepl.org) session that keeps state warm across renders. Babqua only uses it when it's already running; without it, `quarto preview` behaves exactly as in step 3.
+
+You start, then stop, the session yourself with the lifecycle script that ships in the extension:
 
 ```bash
-# Start once per session, before `quarto preview`
+# Start once per session.
 bb site/_extensions/scicloj/bb/babqua-lifecycle.bb start
 
-# Run preview as normal — the filter detects the live REPL and routes
-# evaluations through it.
+# Now run preview as usual — Babqua detects the live nREPL and routes
+# block evaluations through it.
 quarto preview src/<topic>/<post>.qmd
 
 # When you're done, stop it.
 bb site/_extensions/scicloj/bb/babqua-lifecycle.bb stop
 ```
 
-While a persistent session is running, `def`s and `require`s carry across renders the way they would in any Clojure REPL. The session creates three lifecycle dotfiles at the repo root (`.babqua-pid`, `.babqua-nrepl-port`, `.babqua-bb.log`) — they're gitignored. See the [Workflow chapter of the Babqua docs](https://scicloj.github.io/babqua/workflow.html) for the full set of lifecycle controls.
+While the session is running, `def`s and `require`s carry across renders the way they would in any Clojure REPL. The script creates three lifecycle dotfiles at the repo root (`.babqua-pid`, `.babqua-nrepl-port`, `.babqua-bb.log`) — they're gitignored, and `stop` cleans up the first two. See the [Workflow chapter of the Babqua docs](https://scicloj.github.io/babqua/workflow.html) for the full set of lifecycle controls.
 
-### 4. (Optional) Full-site preview
+### 5. (Optional) Full-site preview
 
 If you want to see the post inside the actual site — theme, listings, navigation — you can render it in full-site context:
 
@@ -276,7 +285,7 @@ bb preview
 
 This runs Clay and then `quarto preview site` on the whole website. It can be quite slow on some machines (the site has many pages); for routine iteration, step 3's single-file preview is much faster.
 
-### 5. Open a PR
+### 6. Open a PR
 
 ```bash
 git add src/<topic>/<post>.qmd
