@@ -30,7 +30,11 @@ A huge thanks to [Michiel Borkent](https://github.com/borkdude) and the wider Ba
 
 For a notebook-style post, the appeal is reproducibility: a `.qmd` file plus a `bb.edn` (when it needs extra deps) is enough to render anywhere `bb` is installed. No JVM warm-up, no project skeleton.
 
-## A first taste
+## Examples
+
+Five small demonstrations, working up from a primitive expression to a recursive SVG fractal. Each one fits in a single block and exercises a different corner of Babashka's standard library or Babqua's rendering.
+
+### A first taste
 
 Code blocks without Kindly metadata render as code output. The simplest possible block:
 
@@ -46,7 +50,7 @@ Annotate a value with `^:kind/...` to tell Babqua how to render it:
   "Hello from Babashka!"]
 ```
 
-## Mining the git log
+### Mining the git log
 
 The block below uses [`babashka.process/shell`](https://github.com/babashka/process) to invoke `git log` with a custom format string, splits the output line-by-line, and turns each line into a map. The result is a vector of recent commits, ready to chart:
 
@@ -81,7 +85,7 @@ Aggregating into a per-month bar chart with [Vega-Lite](https://vega.github.io/v
  :height 220}
 ```
 
-## Walking the source tree
+### Walking the source tree
 
 The next block uses [`babashka.fs`](https://github.com/babashka/fs) to enumerate the top-level directories under `src/` and count Clojure source files (`.qmd`, `.clj`, `.cljc`, `.cljs`) in each. Anchoring on the repo root via `git rev-parse` keeps the demo working from any working directory inside the checkout:
 
@@ -123,7 +127,7 @@ Rendering the result as a [Mermaid](https://mermaid.js.org/) diagram is a string
    (str "graph LR\n  root[\"src/\"]\n" (str/join "\n" edges)))]
 ```
 
-## A small fractal, for joy
+### A small fractal, for joy
 
 Hiccup happens to handle inline [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG) just as readily as HTML — the tag is a keyword, the attributes are a map, and the children are nested vectors. Recursion gives us a Sierpinski triangle in a few lines:
 
@@ -151,7 +155,7 @@ Hiccup happens to handle inline [SVG](https://developer.mozilla.org/en-US/docs/W
  (sierpinski 0.0 222.0 256.0 7)]
 ```
 
-## A recursive logo tree
+### A recursive logo tree
 
 Hiccup-as-SVG is not limited to primitive shapes. The block below builds a tree by recursion, but the leaves are `<image>` elements pointing at the same `babashka-logo.png` we embedded above. Each generation produces two children at ±32° from the parent's heading (with a small random jitter), anchored at the parent's two top corners so they spread outward like a [Pythagoras tree](https://en.wikipedia.org/wiki/Pythagoras_tree_(fractal)). Five levels deep gives 63 logos. A seeded `java.util.Random` keeps the layout identical on every render.
 
