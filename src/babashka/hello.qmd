@@ -1,0 +1,174 @@
+---
+title: "Hello, Babashka"
+author:
+  - name: Daniel Slutsky
+    url: https://scicloj.github.io/contributors/daslu/
+    image: https://avatars.githubusercontent.com/u/5673102?v=4
+    links:
+      - {icon: github, href: 'https://github.com/daslu'}
+type: post
+date: '2026-05-01'
+category: libs
+tags: [babashka, babqua, quarto]
+draft: true
+filters:
+  - bb
+---
+
+This is the first [Babashka](https://babashka.org)-authored post on Clojure Civitas — and at the same time, a small walkthrough of how to author your own. The page is rendered with [Babqua](https://github.com/scicloj/babqua), a [Quarto](https://quarto.org) extension that evaluates `{.clojure .bb}` code blocks with [Babashka](https://babashka.org) during the render and replaces each block with its evaluated output. [Kindly](https://scicloj.github.io/kindly-noted/kindly) metadata controls how each value renders, the same convention [Clay](https://scicloj.github.io/clay/) uses for [Clojure](https://clojure.org) documents.
+
+Babqua is a sibling of [Janqua](https://github.com/scicloj/janqua), which does the same for [Jank](https://jank-lang.org). The two extensions deliberately share authoring conventions — fence syntax, Kindly kinds, frontmatter shape — so a post can move between languages without rewriting its scaffolding.
+
+A huge thanks to [Michiel Borkent](https://github.com/borkdude) and the wider Babashka community for the runtime that makes this possible.
+
+## Why Babashka, on Civitas?
+
+[Babashka](https://babashka.org) is a [Clojure](https://clojure.org) interpreter aimed at scripting and shell tasks. It starts in milliseconds, runs as a single binary, and includes a wide set of built-in libraries — [JSON](https://github.com/dakrone/cheshire), [Hiccup](https://github.com/weavejester/hiccup), [HTTP](https://github.com/babashka/http-client), [filesystem](https://github.com/babashka/fs), [process](https://github.com/babashka/process), and more. The [pods ecosystem](https://github.com/babashka/babashka/blob/master/doc/projects.md#pods) extends it further (SQLite, AWS, HTML parsing, …) without changing the deployment story.
+
+For a notebook-style post, the appeal is reproducibility: a `.qmd` file plus a `bb.edn` (when it needs extra deps) is enough to render anywhere `bb` is installed. No JVM warm-up, no project skeleton.
+
+## A first taste
+
+Code blocks without Kindly metadata render as code output. The simplest possible block:
+
+```{.clojure .bb}
+(+ 1 2 3)
+```
+
+Annotate a value with `^:kind/...` to tell Babqua how to render it:
+
+```{.clojure .bb}
+^:kind/hiccup
+[:div {:style "color: coral; font-size: 24px;"}
+  "Hello from Babashka!"]
+```
+
+## A small taste of the batteries
+
+[Cheshire](https://github.com/dakrone/cheshire) is built in. Parsing a small inline JSON blob and walking the result is one call:
+
+```{.clojure .bb}
+(require '[cheshire.core :as json])
+
+(def cities
+  (json/parse-string
+   "[{\"city\":\"Tokyo\",      \"millions\":37},
+     {\"city\":\"Delhi\",      \"millions\":33},
+     {\"city\":\"Shanghai\",   \"millions\":29},
+     {\"city\":\"São Paulo\",  \"millions\":22},
+     {\"city\":\"Mexico City\",\"millions\":22}]"
+   true))
+
+(map :city cities)
+```
+
+State carries across blocks the way it does in any [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop) session — `cities` defined in one block is visible in the next.
+
+The same data can be passed to [Vega-Lite](https://vega.github.io/vega-lite/) by way of `^:kind/vega-lite`. Babqua serializes the value to JSON and Vega renders it client-side:
+
+```{.clojure .bb}
+^:kind/vega-lite
+{:data {:values cities}
+ :mark {:type "bar" :color "coral"}
+ :encoding {:x {:field "city" :type "nominal" :sort "-y"}
+            :y {:field "millions" :type "quantitative"
+                :title "population (millions)"}}
+ :width 360
+ :height 220}
+```
+
+[`babashka.process`](https://github.com/babashka/process) is also built in, and shells out to system tools the way a Bash script would — useful for posts that drive `git`, `curl`, or any command-line program. A trivial example:
+
+```{.clojure .bb}
+(require '[babashka.process :as p])
+
+(-> (p/shell {:out :string} "bb" "--version")
+    :out
+    clojure.string/trim)
+```
+
+## Authoring a Babashka post on Civitas
+
+The path from "I want to write a Babashka post" to "PR open":
+
+### 1. Prerequisites
+
+Beyond the standard Civitas setup (Quarto, Java 21, [Clojure CLI](https://clojure.org/guides/install_clojure)), Babashka posts need only one extra tool:
+
+- [Babashka](https://babashka.org/) (`bb`) — see the [install instructions](https://github.com/babashka/babashka#installation) for your system.
+
+If your post needs extra Clojure libraries or [pods](https://github.com/babashka/babashka/blob/master/doc/projects.md#pods), drop a `bb.edn` next to the post (or at the project root) — Babashka picks it up automatically.
+
+If you only contribute Clojure posts and skip Babashka, you can still build the site — Babashka pages will surface in-page error blocks where evaluated output should be, and the rest of the site renders normally.
+
+### 2. Create the post
+
+Drop a `.qmd` file at `src/<topic>/<post>.qmd` with a Babqua-aware frontmatter:
+
+```yaml
+---
+title: "My Babashka Post"
+author:
+  - name: Your Name
+type: post
+date: '2026-05-01'
+category: libs
+tags: [babashka, ...]
+draft: true
+filters:
+  - bb
+---
+```
+
+Then write the body. `{.clojure .bb}` fenced blocks are evaluated; `.clojure` enables syntax highlighting, `.bb` triggers evaluation. Use Kindly metadata (`^:kind/hiccup`, `^:kind/vega-lite`, `^:kind/plotly`, `^:kind/mermaid`, `^:kind/table`, …) to control the rendering of each value. The [Babqua docs](https://scicloj.github.io/babqua/) list the full set of supported kinds and per-block options.
+
+### 3. Iterate with fast single-file preview
+
+```bash
+quarto preview src/<topic>/<post>.qmd
+```
+
+This works because the repo is already set up for it: a `_extensions` symlink at the root pointing to `site/_extensions/` (where the Babqua extension lives), and a minimal `_quarto.yml` that lets Quarto find the filter without dragging in the full-website context. Symlinks recreate automatically on Linux/macOS; on Windows you may need `git config --global core.symlinks true` plus Developer Mode.
+
+A live-reload server starts; saves trigger a re-render. Each render spawns a fresh `bb` process by default — fast enough for most posts. If your post does expensive setup (loads a pod, fetches data), you can opt into a persistent Babashka session that keeps state warm across saves:
+
+```bash
+# Start once per session, before `quarto preview`
+bb site/_extensions/scicloj/bb/babqua-lifecycle.bb start
+
+# Run preview as normal — the filter detects the live REPL and routes
+# evaluations through it.
+quarto preview src/<topic>/<post>.qmd
+
+# When you're done, stop it.
+bb site/_extensions/scicloj/bb/babqua-lifecycle.bb stop
+```
+
+While a persistent session is running, `def`s and `require`s carry across renders the way they would in any Clojure REPL. The session creates three lifecycle dotfiles at the repo root (`.babqua-pid`, `.babqua-nrepl-port`, `.babqua-bb.log`) — they're gitignored. See the [Workflow chapter of the Babqua docs](https://scicloj.github.io/babqua/workflow.html) for the full set of lifecycle controls.
+
+### 4. (Optional) Full-site preview
+
+If you want to see the post inside the actual site — theme, listings, navigation — you can render it in full-site context:
+
+```bash
+bb preview
+```
+
+This runs Clay and then `quarto preview site` on the whole website. It can be quite slow on some machines (the site has many pages); for routine iteration, step 3's single-file preview is much faster.
+
+### 5. Open a PR
+
+```bash
+git add src/<topic>/<post>.qmd
+git commit -m "blog: ..."
+git push origin <branch>
+gh pr create --base main
+```
+
+CI already has Babashka installed (Janqua needed it for `clj-nrepl-eval`, and Babqua reuses the same binary), so no extra workflow changes are needed. `draft: true` keeps the post out of the public posts listing while you iterate; drop the line when you're ready to publish.
+
+## Where next?
+
+This post was the first Babashka-authored page on Civitas. We'd love to see more. Babashka is well suited to small, scriptable demonstrations — fetching data, walking a directory, calling a pod, parsing a log — and posts that exercise one of those corners are exactly the kind of thing that makes the language and its ecosystem more discoverable.
+
+If you hit something that doesn't work, please open an issue on [Babqua](https://github.com/scicloj/babqua/issues) or on [Civitas](https://github.com/ClojureCivitas/clojurecivitas.github.io/issues). Feedback shapes both.
