@@ -47,6 +47,11 @@ _site/
 .jank-nrepl-port
 .jank-repl.log
 
+# Babqua nREPL lifecycle files (created in the Quarto rendering directory)
+.babqua-pid
+.babqua-nrepl-port
+.babqua-bb.log
+
 # Edit at https://www.toptal.com/developers/gitignore?templates=osx
 
 ### OSX ###
