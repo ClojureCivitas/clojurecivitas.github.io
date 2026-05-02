@@ -1,0 +1,285 @@
+---
+title: "Datavis in Babashka: analysing our calendar feed"
+author:
+  - name: Daniel Slutsky
+    url: https://scicloj.github.io/contributors/daslu/
+    image: https://avatars.githubusercontent.com/u/5673102?v=4
+    links:
+      - {icon: github, href: 'https://github.com/daslu'}
+type: post
+date: '2026-05-02'
+category: data_analysis
+tags: [babashka, babqua, data, clojure-events]
+image: clojure-events-feed.png
+draft: true
+filters:
+  - bb
+---
+
+[Babashka](https://babashka.org) recently joined the set of languages supported on Clojure Civitas, thanks to [Babqua](https://github.com/scicloj/babqua) — a [Quarto](https://quarto.org) extension that evaluates `{.clojure .bb}` code blocks during render. The [introductory post](hello.html) covers the setup. Here we want to push a little further and see how far Babashka goes beyond its familiar home in scripting and shell automation — in particular, whether it works comfortably as a tool for interactive data analysis.
+
+This post is a small experiment in that direction. It is a Babashka-flavored adaptation of [a Noj tutorial](https://github.com/scicloj/noj-v2-getting-started) that walks through the same dataset using [tablecloth](https://scicloj.github.io/tablecloth/) and [tableplot](https://scicloj.github.io/tableplot/). Babashka does not ship those libraries, so we lean on what is already at hand: Clojure's core seq operations (`map`, `filter`, `group-by`, `sort-by`) over sequences of maps, plus a few of [Babashka's bundled facilities](https://book.babashka.org/#libraries) — `slurp` for fetching over HTTP, `clojure.string` for tokenizing, `java.time` for parsing timestamps — and [Plotly.js](https://plotly.com/javascript/) for the charts. The shape of the analysis is the same; only the toolbox is lighter.
+
+The early signs are promising. Writing data-analysis posts in Babashka with `quarto preview` watching the file feels close to a live notebook: each save re-renders within a second or two — fresh `bb` process, fresh data, refreshed plots — and that tight loop is what makes the workflow look genuinely viable for data analysis. Babashka's millisecond startup is doing most of the work.
+
+## The dataset
+
+The [Clojure events calendar feed](https://www.clojurians-zulip.org/feeds/events.ics) is an [ICS](https://en.wikipedia.org/wiki/ICalendar) file that lists meetups, conferences, study groups, and CFP deadlines from organizers across the Clojure community. It is maintained by [Gert Goet](https://github.com/eval), who started it in 2020 and has been steadily curating it since. Gert wrote a short [retrospective on Clojureverse](https://clojureverse.org/t/the-clojure-events-calendar-feed-turns-2/) when the feed turned two — that post is a good starting point if you want to understand what the feed is and how it grew.
+
+The feed is one of the few places where the rhythm of Clojure community activity is visible in one structured form. Reading it tells you about how user groups have been meeting, when conferences cluster in the calendar year, and how new initiatives appear and pick up. None of that information is hard to gather by hand, but having it as a single ICS file makes it tractable.
+
+A sincere thank-you to Gert for keeping the feed alive, and to the organizers whose events flow into it.
+
+## Setup
+
+Only the `java.time` classes need an explicit `import`. Babashka pre-aliases `clojure.string` as `str` in user code, so the familiar `str/split`, `str/replace`, and friends are already on hand without a `require`.
+
+```{.clojure .bb}
+(import '[java.time LocalDateTime]
+        '[java.time.format DateTimeFormatter])
+```
+
+## Fetching the feed
+
+Babashka's `slurp` accepts URLs directly, so a single call retrieves the live feed. Each render of this post fetches it again; if you want to keep state warm across renders, see the [persistent-session option](https://scicloj.github.io/babqua/workflow.html) in the Babqua docs.
+
+```{.clojure .bb}
+(def feed-string
+  (slurp "https://www.clojurians-zulip.org/feeds/events.ics"))
+
+(count feed-string)
+```
+
+A peek at the raw ICS — the first slice is enough to see the structure. The `^:kind/...` metadata used in the blocks below follows the [Kindly](https://scicloj.github.io/kindly-noted/kindly) convention for annotating values with how they should be rendered; Babqua's [kindly kinds page](https://scicloj.github.io/babqua/kindly-kinds.html) lists which kinds are currently supported.
+
+```{.clojure .bb}
+^:kind/hiccup
+[:pre {:style "max-height: 320px; overflow-y: auto; font-size: 12px;"}
+ (subs feed-string 0 (min 1500 (count feed-string)))]
+```
+
+Each event is wrapped in `BEGIN:VEVENT` / `END:VEVENT` and contains lines like `SUMMARY:`, `DTSTART:`, `URL:`. We only need those three fields.
+
+## Parsing
+
+We split the file on the boundary between events, then for each event we keep the lines that start with one of our three keys. The result of parsing one event is a small map; the result of parsing the file is a sequence of such maps.
+
+```{.clojure .bb}
+(defn parse-event
+  "Return {:summary ... :dtstart ... :url ...} for a single VEVENT chunk."
+  [event-text]
+  (->> event-text
+       str/split-lines
+       (keep (fn [line]
+               (when-let [field (re-find #"URL:|SUMMARY:|DTSTART:" line)]
+                 [(-> field (str/replace ":" "") str/lower-case keyword)
+                  (str/replace line field "")])))
+       (into {})))
+
+(def raw-events
+  (->> (str/split feed-string #"END:VEVENT\nBEGIN:VEVENT")
+       (map parse-event)
+       (filter :dtstart)))
+
+(count raw-events)
+```
+
+A look at one parsed event:
+
+```{.clojure .bb}
+(first raw-events)
+```
+
+## Enriching
+
+The `:dtstart` field is a string like `20240315T120000Z`. We parse it into a `LocalDateTime`, derive the year (handy for filtering), and keep an ISO-formatted string for charting (Plotly auto-detects date axes from ISO timestamps).
+
+```{.clojure .bb}
+(def ics-formatter
+  (DateTimeFormatter/ofPattern "yyyyMMdd'T'HHmmss'Z'"))
+
+(defn enrich [event]
+  (let [datetime (LocalDateTime/parse (:dtstart event) ics-formatter)]
+    (assoc event
+           :datetime datetime
+           :iso      (str datetime)
+           :year     (.getYear datetime))))
+
+(def events
+  (->> raw-events
+       (map enrich)
+       (sort-by :datetime)))
+
+(count events)
+```
+
+A small table of the first few rows, just to confirm the shape:
+
+```{.clojure .bb}
+^:kind/table
+{:column-names [:iso :summary :url]
+ :row-vectors  (->> events
+                    (take 5)
+                    (mapv (juxt :iso :summary :url)))}
+```
+
+## A first plot
+
+Adding a running index gives us a y-coordinate. Each event is a point at `(date, total-events-so-far)`, so the line traces the feed's growth.
+
+```{.clojure .bb}
+(def with-cumulative-count
+  (map-indexed (fn [index event]
+                 (assoc event :count (inc index)))
+               events))
+
+^:kind/plotly
+{:data [{:type "scatter"
+         :mode "lines+markers"
+         :x       (mapv :iso     with-cumulative-count)
+         :y       (mapv :count   with-cumulative-count)
+         :text    (mapv :summary with-cumulative-count)
+         :hovertemplate "%{text}<br>%{x|%Y-%m-%d}<extra></extra>"
+         :line   {:width 1     :color "#5e81ac"}
+         :marker {:size  5     :color "#5e81ac"}}]
+ :layout {:xaxis  {:title "date"}
+          :yaxis  {:title "events so far"}
+          :width  740
+          :height 340
+          :margin {:t 20 :r 20}}}
+```
+
+The plot shows a noticeable gap around 2022 — a stretch where the feed has very few entries. The reasons are historical and beyond the scope of this analysis; for the questions we want to ask here (which groups have been active, and how often they have been meeting), the cleaner thing to do is to restrict attention to 2023 and later, where the feed is densely populated.
+
+## Recent years
+
+```{.clojure .bb}
+(def recent-events
+  (filter #(>= (:year %) 2023) with-cumulative-count))
+
+(count recent-events)
+```
+
+The cumulative count is preserved, so the y-axis still measures global "events so far" — we are simply zooming in on the right-hand portion of the timeline.
+
+```{.clojure .bb}
+^:kind/plotly
+{:data [{:type "scatter"
+         :mode "lines+markers"
+         :x       (mapv :iso     recent-events)
+         :y       (mapv :count   recent-events)
+         :text    (mapv :summary recent-events)
+         :hovertemplate "%{text}<br>%{x|%Y-%m-%d}<extra></extra>"
+         :line   {:width 1     :color "#5e81ac"}
+         :marker {:size  5     :color "#5e81ac"}}]
+ :layout {:xaxis  {:title "date"}
+          :yaxis  {:title "events so far"}
+          :width  740
+          :height 340
+          :margin {:t 20 :r 20}}}
+```
+
+## Recognizing groups
+
+Many event URLs contain a slug that identifies the organizing group — `london-clojurians`, `los-angeles-clojure`, `data-recur`, and so on. A small alternation regex covers the groups whose names appear frequently in the feed; everything else falls into an `"other"` bucket.
+
+```{.clojure .bb}
+(def groups-pattern
+  #"london-clojurians|los-angeles-clojure|visual-tools|data-recur|real-world-data|scicloj-llm|scicloj-ai|macroexpand|clojure-dsp")
+
+(defn assign-group [event]
+  (assoc event :group
+         (or (some->> (:url event) str/lower-case (re-find groups-pattern))
+             "other")))
+
+(def grouped-events
+  (->> recent-events
+       (filter :url)
+       (map assign-group)))
+
+(->> grouped-events
+     (map :group)
+     frequencies
+     (sort-by key))
+```
+
+## Coloring by group
+
+Re-using the global `:count` and adding `:group` as a color channel: each group's events scatter along the same growth curve, and the colors give a sense of how the community's activity has been spread over time.
+
+```{.clojure .bb}
+^:kind/plotly
+{:data (->> (group-by :group grouped-events)
+            (sort-by key)
+            (mapv (fn [[group events-in-group]]
+                    {:type "scatter"
+                     :mode "markers"
+                     :name group
+                     :x       (mapv :iso     events-in-group)
+                     :y       (mapv :count   events-in-group)
+                     :text    (mapv :summary events-in-group)
+                     :hovertemplate "%{text}<br>%{x|%Y-%m-%d}<extra>%{fullData.name}</extra>"
+                     :marker {:size 7}})))
+ :layout {:xaxis  {:title "date"}
+          :yaxis  {:title "events so far"}
+          :width  780
+          :height 400
+          :legend {:title {:text "group"}}
+          :margin {:t 20 :r 20}}}
+```
+
+## A per-group time series
+
+The previous plot uses a single global counter, so each group's points lie on the overall curve. To follow how each group has been evolving on its own — when it picked up, when it went quiet, when something new started — we want a per-group running count: how many events that group has held up to each date. In tablecloth this is `group-by` + `add-column` + `ungroup`; in plain Clojure it is `group-by` + `mapcat` over the partitions.
+
+```{.clojure .bb}
+(def per-group-series
+  (->> grouped-events
+       (group-by :group)
+       (mapcat (fn [[_ events-in-group]]
+                 (->> events-in-group
+                      (sort-by :datetime)
+                      (map-indexed (fn [index event]
+                                     (assoc event :group-count (inc index)))))))))
+
+(->> per-group-series
+     (filter #(= "london-clojurians" (:group %)))
+     (take 3)
+     (map #(select-keys % [:iso :group :group-count :summary])))
+```
+
+Layering points on top of lines gives a per-group trajectory. Each line tells its own story — periods of momentum, pauses, fresh starts — and together they sketch where the community has been heading.
+
+```{.clojure .bb}
+^:kind/plotly
+{:data (->> (group-by :group per-group-series)
+            (sort-by key)
+            (mapv (fn [[group events-in-group]]
+                    {:type "scatter"
+                     :mode "lines+markers"
+                     :name group
+                     :x       (mapv :iso         events-in-group)
+                     :y       (mapv :group-count events-in-group)
+                     :text    (mapv :summary    events-in-group)
+                     :hovertemplate "%{text}<br>%{x|%Y-%m-%d}<extra>%{fullData.name}</extra>"
+                     :line   {:width 1.5}
+                     :marker {:size 6}})))
+ :layout {:xaxis  {:title "date"}
+          :yaxis  {:title "events per group"}
+          :width  780
+          :height 440
+          :legend {:title {:text "group"}}
+          :margin {:t 20 :r 20}}}
+```
+
+The `real-world-data` line in particular is worth pointing at. The [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/), recently reinitiated by [Timothy Pratley](https://github.com/timothypratley), has been meeting on a steady weekly rhythm — each point on that line is a session that took preparation, hosting, and follow-through. The slope is a record of persistent work, and a thank-you is due to Tim and the participants who have kept it going.
+
+## Closing notes
+
+The substance of this analysis lives in the feed itself, not in the code that reads it. The feed exists because Gert decided to maintain it and because organizers around the Clojure world keep listing their events. Counting and plotting are easy; the curation that produces the underlying data is the work that makes the rest possible.
+
+If you organize a Clojure event and it is not yet in the feed, the [Clojureverse thread](https://clojureverse.org/t/the-clojure-events-calendar-feed-turns-2/) is a good place to start; submitting an event is a single CLI call.
+
+If you are curious about Babashka for data analysis — or interested in how far this lighter toolbox can be pushed — we would be glad to hear from you. The [Real-World Data dev group](https://scicloj.github.io/docs/community/groups/real-world-data/) is one of the spaces where this kind of exploration is happening, and visitors and collaborators are welcome.
+
+For more on writing Babashka posts on Civitas, see the [introductory post](hello.html) and the [Babqua docs](https://scicloj.github.io/babqua/).
