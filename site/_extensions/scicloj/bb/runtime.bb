@@ -48,8 +48,16 @@
   [v]
   (str/replace (json/generate-string v) "<" "\\u003c"))
 
-(defn- render-table-html
-  "Render tabular data as a plain HTML table.
+(defn- escape-cell
+  "Escape a value for use inside a Pandoc pipe-table cell."
+  [v]
+  (-> (str v)
+      (str/replace "|" "\\|")
+      (str/replace "\n" "<br>")))
+
+(defn- render-table-md
+  "Render tabular data as a Pandoc pipe-table markdown string.
+  Targets markdown so Quarto's table styling applies natively.
 
   Accepts two shapes:
     {:column-names [...] :row-vectors [[...] ...]}    (Tablecloth-ish)
@@ -65,11 +73,11 @@
                (let [ks (vec (distinct (mapcat keys v)))]
                  (cons ks (map (fn [m] (mapv #(get m %) ks)) v))))]
     (when rows
-      (str (hiccup/html
-            [:table
-             [:thead [:tr (for [c (first rows)] [:th (str c)])]]
-             [:tbody (for [r (rest rows)]
-                       [:tr (for [c r] [:td (str c)])])]])))))
+      (let [row-md (fn [r] (str "| " (str/join " | " (map escape-cell r)) " |"))
+            sep    (str "|" (str/join "|" (repeat (count (first rows)) "---")) "|")]
+        (str/join "\n"
+                  (concat [(row-md (first rows)) sep]
+                          (map row-md (rest rows))))))))
 
 (defn render-by-kind
   "Pick a Lua-side rendering format for `v` based on `kind`.
@@ -125,8 +133,8 @@
     {:format "chart" :lib "highcharts" :rendered (script-safe-json v)}
 
     :kind/table
-    (if-let [html (render-table-html v)]
-      {:format "raw-html" :rendered html}
+    (if-let [md (render-table-md v)]
+      {:format "markdown" :rendered md}
       {:error (str ":kind/table: value is not recognized as table data. "
                    "Expected {:column-names [...] :row-vectors [[...] ...]} "
                    "or a sequence of maps. Got: " (pr-str v))})

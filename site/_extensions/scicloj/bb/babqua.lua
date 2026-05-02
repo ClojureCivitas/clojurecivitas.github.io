@@ -340,7 +340,7 @@ end
 
 local function emit_mermaid(blocks, source, width, height)
   local div_id = next_div_id()
-  local html = '<div id="' .. div_id .. '"' .. dim_style(width, height) .. '></div>'
+  local html = '<div id="' .. div_id .. '" class="mermaid"' .. dim_style(width, height) .. '></div>'
     .. script_tag("mermaid")
     .. '<script>'
     .. 'mermaid.initialize({ startOnLoad: false });'
