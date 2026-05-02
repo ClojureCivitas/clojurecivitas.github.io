@@ -10,7 +10,7 @@ type: post
 date: '2026-05-02'
 category: data_analysis
 tags: [babashka, babqua, data, clojure-events]
-image: babashka-logo.png
+image: clojure-events-feed.png
 draft: true
 filters:
   - bb
