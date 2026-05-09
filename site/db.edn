@@ -211,7 +211,11 @@
    :name        "Ethan Miller"
    :image       "https://avatars.githubusercontent.com/u/772738?v=4&size=64"
    :url         "https://github.com/ezmiller"
-   :links       ["https://humanscodes.com"]}]
+   :links       ["https://humanscodes.com"]}
+  {:id          :llyons
+   :name        "Lorelai Lyons"
+   :url         "https://lorelailyons.me/"
+   :links       [{:icon "github" :href "https://github.com/thefakelorlyons"}]}]
 
  :affiliation
  [{:id   :clojure.core
