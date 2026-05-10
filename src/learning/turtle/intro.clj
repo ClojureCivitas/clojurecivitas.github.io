@@ -51,5 +51,65 @@
 ;;       * can we adapat cban to be a plugin for deps.edn as we did for Leiningen (lein-cban)?
 ;;     * Maria Cloud makes it easy to create
 ;;     * Maria Cloud doesn't distinguish between creating & publishing & editing mode
+;; * Lessons
+
+* What are we doing here?
+  - Premise
+  - Objective / encouragement of exploratory attitude
+    * secretly in service of effective learning, but don't tell the kids
+
+* Syntax
+
+* Basic commands
+  - notion of pen: penup pendown
+  - walking while drawing with pen down: fd rt lt bk
+    * start rt & lt angles with 90
+  - screen commands: clear home
+  - at this point, the student has full control over the canvas equivalent to an Etch a Sketch
+  - then explore things beyond Etch a Sketch -> basic math
+  - in fact, give students an Etch a Sketch to play with in case they have not done so before
+    * this helps break down the distinction between physical world & computer
+    * important point in the whole Mindstorms theorization of turtle's intent & scope
+  - explore
+    * draw a rectangle, square
+    * what else can you draw?
+  - basic math
+    * rt lt angles 180, 270, 360
+    * what if you want turn only halfway right?
+    * how did you compute that?
+    * what if you want to turn just 1/4 or 1/8 the way right?
+      - secretly, now we have non-integer numbers, and that's less fun and harder to figure out, assuming 45 wasn't already tricky for some
+    * can you get the computer to compute that for you?
+    * syntax for division
+    * syntax for addition, subtraction, multiplication
+      - although these are not yet super motivated in an obvious way
+  - explore
+    * draw other shapes
+      * show an image and have them match it. kind of like Tangrams, but super simple
+      * first: right triangle
+      * next: diamond (square on its side) - Western students understand "baseball diamond"
+      * universal (Western-oriented?) house shape
+      * any other universal pictures / icons that are recognizable
+    * introduce arc
+      * draw a circle
+      * draw a semicircle
+      * draw an "eye" (2 touching quarter circles)
+    * open explore more shapes
+    * locale specific shapes
+      * Tamil - kolam
+      * dreamcatchers
+      * letters in the language (ex: first letter of your name)
+      * etc.
+
+* Repetition
+
+* Functions
+
+* HOFs
+  * repeat
+
+* Recursion
+  * Stick, twig, branch, tree exercise
+
 
 
