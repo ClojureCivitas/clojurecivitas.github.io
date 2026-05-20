@@ -215,10 +215,53 @@
   {:id          :llyons
    :name        "Lorelai Lyons"
    :url         "https://lorelailyons.me/"
-   :links       [{:icon "github" :href "https://github.com/thefakelorlyons"}]}]
-
+   :links       [{:icon "github" :href "https://github.com/thefakelorlyons"}]}
+  {:id :pez
+   :name "Peter Strömberg"
+   :url "https://github.com/pez"
+   :links [{:href "https://calva.io/"}]
+   :image "https://avatars.githubusercontent.com/u/30010?v=4"
+   :affiliation [:agical]}
+  {:id :antonzhyliuk
+   :name "Anton Zhyliuk"
+   :url "https://github.com/antonzhyliuk"
+   :image "https://avatars.githubusercontent.com/u/5443338?v=4"
+   :affiliation [:domik-systems]}
+  {:id :tomas81508
+   :name "Tomas Ekholm"
+   :url "https://github.com/tomas81508"
+   :image "https://avatars.githubusercontent.com/u/471055?v=4"
+   :affiliation [:kth :conjoin-it]}
+  {:id :chrysophylax
+   :name "Billy Jaime Beltran"
+   :url "https://github.com/chrysophylax"
+   :image "https://avatars.githubusercontent.com/u/10576351?v=4"
+   :affiliation [:redpill-linpro]}
+  {:id :dts
+   :name "Dirk Schweiger"
+   :url "https://github.com/dirkschweiger"
+   :image "https://avatars.githubusercontent.com/u/22668917?v=4"
+   :affiliation [:textsound.io]}]
  :affiliation
- [{:id   :clojure.core
+ [{:id :textsound.io
+   :name "textsound.io"
+   :url "https://textsound.io/"}
+  {:id :redpill-linpro
+   :name "Redpill Linpro"
+   :url "https://redpill-linpro.com"}
+  {:id :kth
+   :name "Royal Institute of Technology"
+   :url "https://www.kth.se/"}
+  {:id :conjoin-it
+   :name "conjoin-it"
+   :url "https://conjoin-it.se/"}
+  {:id :domik-systems
+   :name "Domik Systems"
+   :url "https://domik-systems.com/"}
+  {:id :agical
+   :name "Agical"
+   :url "https://www.agical.se/"}
+  {:id   :clojure.core
    :name "Clojure.core"
    :url  "https://clojure.org"}
   {:id   :scicloj
