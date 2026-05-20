@@ -10,8 +10,8 @@
                               :type     :post
                               :date     "2026-05-20"
                               :category :gis
-                              :tags     [:gis]}
-                     :draft true}}
+                              :tags     [:gis]
+                              :draft true}}}
 (ns gis.pedestrian-counts)
 
 
