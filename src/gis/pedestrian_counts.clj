@@ -6,13 +6,17 @@
                                          :tomas81508
                                          :chrysophylax
                                          :dts
-                                         :daslu]
+                                         :daslu
+                                         :dzepat]
                               :type     :post
                               :date     "2026-05-20"
                               :category :gis
                               :tags     [:gis]
                               :draft true}}}
 (ns gis.pedestrian-counts)
+
+
+;; This is a draft from Stockholm Clojure Café, May 20th 2026.
 
 
 
