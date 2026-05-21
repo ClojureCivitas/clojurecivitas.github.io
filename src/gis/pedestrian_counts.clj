@@ -124,7 +124,7 @@ ped-data
                                                              14))]
                                          (-> js/L
                                              .-tileLayer
-                                             (.provider "Stadia.AlidadeSmooth")
+                                             (.provider "CartoDB.Positron")
                                              (.addTo m))
                                          (-> js/L
                                              (.marker (clj->js input-center))
