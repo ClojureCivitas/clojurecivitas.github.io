@@ -115,6 +115,7 @@
    :name        "Jan Wedekind"
    :url         "https://www.wedesoft.de/"
    :image       "https://avatars.githubusercontent.com/u/28663?v=4"
+   :email       "jan@wedesoft.de"
    :links       [{:icon "github" :href "https://github.com/wedesoft"}]}
   {:id          :kloimhardt
    :name        "Markus Agwin Kloimwieder"
