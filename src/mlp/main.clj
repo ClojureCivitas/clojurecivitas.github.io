@@ -37,7 +37,8 @@
              self
              {"fc1" (nn/Linear 1 n-hidden)
               "fc2" (nn/Linear n-hidden n-hidden)
-              "fc3" (nn/Linear n-hidden 1)})
+              "fc3" (nn/Linear n-hidden n-hidden)
+              "fc4" (nn/Linear n-hidden 1)})
            nil))
      "forward"
      (py/make-instance-fn
@@ -46,7 +47,9 @@
                  x (F/sigmoid x)
                  x (py. self fc2 x)
                  x (F/sigmoid x)
-                 x (py. self fc3 x)]
+                 x (py. self fc3 x)
+                 x (F/sigmoid x)
+                 x (py. self fc4 x)]
              x)))}))
 
 (defmacro without-gradient
@@ -58,10 +61,11 @@
        (finally
          (py. no-grad# ~'__exit__ nil nil nil)))))
 
-(def model (ParabolaNet 20))
-(def n 1000)
-(def features (torch/sub (torch/mul (torch/rand [n 1]) 6) 3))
-(def labels (torch/mul features features))
+(def extent 6.0)
+(def n 32)
+(def noise 1.0)
+(def features (torch/sub (torch/mul (torch/rand [n 1]) (* 2 extent)) extent))
+(def labels (torch/add (torch/mul features features) (torch/mul noise (torch/randn [n 1]))))
 
 (def dataset (data/TensorDataset features labels))
 
@@ -74,28 +78,77 @@
 (def dev-ds (nth splits 1))
 (def test-ds (nth splits 2))
 
-(def data-loader (data/DataLoader train-ds :batch_size 16 :shuffle true))
+(def train-data-loader (data/DataLoader train-ds :batch_size 4 :shuffle true))
+(def dev-data-loader (data/DataLoader dev-ds :batch_size 4 :shuffle true))
 
-(def criterion (nn/MSELoss))
-(def optimizer (optim/SGD (py. model "parameters") :lr 0.01 :weight_decay 0.0))
+(defn average [numbers]
+  (/ (reduce + numbers) (count numbers)))
 
-(py. model train)
-(doseq [epoch (range 1000)]
-       (doseq [[features labels] data-loader]
-              (py. optimizer zero_grad)
-              (let [prediction (py. model __call__ features)
-                    loss       (py. criterion __call__ prediction labels)]
-                (py. loss backward)
-                (py. optimizer step)))
-       ; (when (= (mod (inc epoch) 100) 0)
-       ;   (println (str "epoch: " (inc epoch) " loss: " (py. loss item))))
-       )
+(defn train-epoch
+  [train-data-loader criterion model optimizer]
+  (py. model train)
+  (for [[features labels] train-data-loader]
+       (do
+         (py. optimizer zero_grad)
+         (let [prediction (py. model __call__ features)
+               loss       (py. criterion __call__ prediction labels)]
+           (py. loss backward)
+           (py. optimizer step)
+           (py. loss item)))))
+
+(defn dev-epoch
+  [dev-data-loader criterion model]
+  (py. model eval)
+  (without-gradient
+    (for [[features labels] dev-data-loader]
+         (let [prediction (py. model __call__ features)
+               loss       (py. criterion __call__ prediction labels)]
+           (py. loss item)))))
+
+(defn training-run
+  [train-data-loader dev-data-loader epochs n-hidden lr]
+  (let [model     (ParabolaNet n-hidden)
+        optimizer (optim/SGD (py. model "parameters") :lr lr :weight_decay 0.0)
+        criterion (nn/MSELoss)]
+    (loop [epoch 1 train-losses [] dev-losses []]
+          (let [train-loss (average (train-epoch train-data-loader criterion model optimizer))
+                dev-loss   (average (dev-epoch dev-data-loader criterion model))]
+            (if (< epoch epochs)
+              (recur (inc epoch) (conj train-losses train-loss) (conj dev-losses dev-loss))
+              {:model model :train-losses (conj train-losses train-loss) :dev-losses (conj dev-losses dev-loss)})))))
+
+(def result (training-run train-data-loader dev-data-loader 5000 200 0.01))
+
+(defn plot-model
+  [features labels {:keys [model]}]
+  (without-gradient
+    (let [x   (range (- extent) (+ extent 0.01) 0.01)
+          y   (map (fn [x] (py. (first (py. model __call__ (torch/tensor [x]))) item)) x)
+          ds  (tc/dataset {:x x :y y})
+          pts (tc/dataset {:x (map first (py/->jvm (py. features tolist)))
+                           :y (map first (py/->jvm (py. labels tolist)))})]
+      (-> ds
+          (plotly/base {:=title "Model"})
+          (plotly/layer-point {:=dataset pts :=x :x :=y :y})
+          (plotly/layer-line {:=x :x :=y :y})))))
 
 
-(without-gradient
-  (let [x  (range -3.0 3.01 0.01)
-        y  (map (fn [x] (py. (first (py. model __call__ (torch/tensor [x]))) item)) x)
-        ds (tc/dataset {:x x :y y})]
-   (-> ds
-      (plotly/base {:=title "Model" :=mode "lines"})
-      (plotly/layer-point {:=x :x :=y :y}))))
+
+(defn smoothing
+  [alpha]
+  (fn [coll]
+      (reductions (fn [prev-avg current] (+ (* alpha prev-avg) (* (- 1 alpha) current)))
+                  (first coll)
+                  (rest coll))))
+
+
+(plot-model features labels result)
+
+(defn plot-losses
+  [{:keys [train-losses dev-losses]} smoothing-fn]
+  (-> (tc/dataset {:x (range 1 (count train-losses)) :y (smoothing-fn train-losses)})
+      (plotly/base {:=title "Losses"})
+      (plotly/layer-line {:=x :x :=y :y})
+      (plotly/layer-line {:=dataset (tc/dataset {:x (range 1 (count dev-losses)) :y (smoothing-fn dev-losses)}) :=x :x :=y :y})))
+
+(plot-losses result (smoothing 0.99))
