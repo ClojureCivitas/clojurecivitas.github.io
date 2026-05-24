@@ -129,8 +129,8 @@
                            :y (map first (py/->jvm (py. labels tolist)))})]
       (-> ds
           (plotly/base {:=title "Model"})
-          (plotly/layer-point {:=dataset pts :=x :x :=y :y})
-          (plotly/layer-line {:=x :x :=y :y})))))
+          (plotly/layer-point {:=dataset pts :=x :x :=y :y :=name "data"})
+          (plotly/layer-line {:=x :x :=y :y :=name "prediction"})))))
 
 
 
@@ -148,7 +148,8 @@
   [{:keys [train-losses dev-losses]} smoothing-fn]
   (-> (tc/dataset {:x (range 1 (count train-losses)) :y (smoothing-fn train-losses)})
       (plotly/base {:=title "Losses"})
-      (plotly/layer-line {:=x :x :=y :y})
-      (plotly/layer-line {:=dataset (tc/dataset {:x (range 1 (count dev-losses)) :y (smoothing-fn dev-losses)}) :=x :x :=y :y})))
+      (plotly/layer-line {:=x :x :=y :y :=name "training loss"})
+      (plotly/layer-line {:=dataset (tc/dataset {:x (range 1 (count dev-losses)) :y (smoothing-fn dev-losses)})
+                          :=x :x :=y :y :=name "dev loss"})))
 
 (plot-losses result (smoothing 0.99))
