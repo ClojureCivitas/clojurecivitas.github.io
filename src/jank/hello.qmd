@@ -43,7 +43,7 @@ Annotate a value with `^:kind/...` to tell Janqua how to render it:
 
 ## Random samples from `<random>`
 
-The blocks below use Jank's C++ interop to draw samples from the standard library. We construct a [`std::mt19937`](https://en.cppreference.com/w/cpp/numeric/random/mersenne_twister_engine) (the [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister) PRNG) and a [`std::normal_distribution<double>`](https://en.cppreference.com/w/cpp/numeric/random/normal_distribution) from the [C++ standard library](https://en.cppreference.com/w/cpp/header/random), generate ten thousand samples, and collect them into a Jank vector. The `cpp/` forms sit inline with the ordinary Jank code.
+The blocks below use Jank's C++ interop to draw samples from the standard library. We construct a [`std::mt19937`](https://en.cppreference.com/w/cpp/numeric/random/mersenne_twister_engine) (the [Mersenne Twister](https://en.wikipedia.org/wiki/Mersenne_Twister) PRNG) and a [`std::normal_distribution<double>`](https://en.cppreference.com/w/cpp/numeric/random/normal_distribution) from the [C++ standard library](https://en.cppreference.com/w/cpp/header/random), generate a thousand samples, and collect them into a Jank vector. The `cpp/` forms sit inline with the ordinary Jank code.
 
 First, the include:
 
@@ -57,7 +57,7 @@ Then the sampling:
 (def samples
   (let [gen  (cpp/std.mt19937. 42)
         dist (#cpp (std.normal_distribution double) 0.0 1.0)]
-    (loop [i 10000 acc []]
+    (loop [i 1000 acc []]
       (if (zero? i)
         acc
         (recur (dec i) (conj acc (dist gen)))))))
