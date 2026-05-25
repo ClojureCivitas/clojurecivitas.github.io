@@ -638,6 +638,11 @@ local function eval_jank_raw(code, timeout)
   local timeout_ms = timeout or "10000"
   local cmd = "clj-nrepl-eval -p " .. shell_quote(jank_port) .. " --timeout " .. shell_quote(tostring(timeout_ms)) .. " " .. shell_quote(code) .. " 2>&1"
   local handle = io.popen(cmd)
+
+  if not handle then
+    return nil, "opening `" .. cmd .. "` returned nil handle."
+  end
+
   local raw = handle:read("*a")
   handle:close()
 
