@@ -96,9 +96,9 @@
 (torch/manual_seed 1)
 
 ;; We are going to sample a small set of points from the interval $[-6, 6]$ and add Gaussian noise to the labels.
-(def extent 6.0)
+(def extent 2.0)
 (def n 64)
-(def noise 1.0)
+(def noise 0.25)
 (def features (torch/sub (torch/mul (torch/rand [n 1]) (* 2 extent)) extent))
 (def labels (torch/add (torch/mul features features) (torch/mul noise (torch/randn [n 1]))))
 features
@@ -262,7 +262,10 @@ labels
               {:model model :train-losses (conj train-losses train-loss) :dev-losses (conj dev-losses dev-loss)})))))
 
 ;; Let's train a model.
-(def result (training-run train-data-loader dev-data-loader 5000 100 0.01 0.0))
+(def learning-rate 0.1)
+(def num-epochs 20000)
+(def n-hidden 64)
+(def result (training-run train-data-loader dev-data-loader num-epochs n-hidden learning-rate 0.0))
 
 ;; ## Hyperparameter tuning
 ;;
@@ -311,7 +314,7 @@ labels
 ;; In practice one uses smoothing to make the trend of the curves more visible.
 (plot-losses result (smoothing 0.99))
 
-;; As one can see, the dev set loss is much higher than the training loss.
+;; As one can see, the dev set loss is more than twice the amount of the training loss.
 ;; This is a sign that the model is overfitting (high variance).
 ;;
 ;; **High variance** can be resolved using the following techniques:
@@ -320,7 +323,7 @@ labels
 ;; * neural network architecture search
 ;;
 ;; Let's see what underfitting looks like.
-(def result2 (training-run train-data-loader dev-data-loader 5000 1 0.01 0.0))
+(def result2 (training-run train-data-loader dev-data-loader num-epochs 1 learning-rate 0.0))
 (plot-model features labels result2)
 
 ;; Let's look at the losses.
@@ -339,8 +342,8 @@ labels
 ;; Instead of tuning the number of hidden units and layers (which can only be done in discrete steps), one can use regularization to tune the network.
 ;;
 ;; Here we are using *weight decay* (which is equivalent to L2 regularization).
-;; For example when using a weight decay of 0.001, we get the following model.
-(def result3 (training-run train-data-loader dev-data-loader 5000 100 0.01 0.001))
+;; For example when using  non-zero weight decay, we get the following model.
+(def result3 (training-run train-data-loader dev-data-loader num-epochs n-hidden learning-rate 0.0005))
 
 ;; Here is the model output.
 (plot-model features labels result3)
@@ -351,6 +354,6 @@ labels
 ;; We did not explore different learning rates, but this hyperparameter is usually straightforward to tune:
 ;;
 ;; * The learning rate is too low if the model converges very slowly.
-;; * The learning rate is too high if the loss becomes unstable or the parameters diverge.
+;; * The learning rate is too high if the loss becomes unstable and the parameters diverge.
 ;;
 ;; Enjoy!
