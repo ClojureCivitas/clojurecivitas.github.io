@@ -14,7 +14,7 @@
     (:require [tablecloth.api :as tc]
               [scicloj.tableplot.v1.plotly :as plotly]
               [libpython-clj2.require :refer (require-python)]
-              [libpython-clj2.python :refer (py.) :as py]))
+              [libpython-clj2.python :refer (py. py.-) :as py]))
 
 ;; ## Motivation
 ;;
@@ -148,8 +148,10 @@ labels
 ;;     def forward(self, x):
 ;;         x = self.fc1(x)
 ;;         x = F.sigmoid(x)
+;;         x = F.dropout(x, p=self.dropout_rate, training=self.training)
 ;;         x = self.fc2(x)
 ;;         x = F.sigmoid(x)
+;;         x = F.dropout(x, p=self.dropout_rate, training=self.training)
 ;;         x = self.fc3(x)
 ;;         return x
 ;; ```
@@ -160,11 +162,12 @@ labels
     "ParabolaNet" [nn/Module]
     {"__init__"
      (py/make-instance-fn
-       (fn [self n-hidden]
+       (fn [self n-hidden dropout-rate]
            (py. nn/Module __init__ self)
            (py/set-attrs!
              self
-             {"fc1" (nn/Linear 1 n-hidden)
+             {"dropout_rate" dropout-rate
+              "fc1" (nn/Linear 1 n-hidden)
               "fc2" (nn/Linear n-hidden n-hidden)
               "fc3" (nn/Linear n-hidden 1)})
            nil))
@@ -173,8 +176,10 @@ labels
        (fn [self x]
            (let [x (py. self fc1 x)
                  x (F/sigmoid x)
+                 x (F/dropout x :p (py.- self dropout_rate) :training (py.- self training))
                  x (py. self fc2 x)
                  x (F/sigmoid x)
+                 x (F/dropout x :p (py.- self dropout_rate) :training (py.- self training))
                  x (py. self fc3 x)]
              x)))}))
 
@@ -206,8 +211,9 @@ labels
          (py. no-grad# ~'__exit__ nil nil nil)))))
 
 ;; Now one can perform a model prediction as follows:
-(def model (ParabolaNet 10))
+(def model (ParabolaNet 10 0.0))
 (without-gradient
+  (py. model eval)
   (model (torch/tensor [0.0])))
 
 ;; Note that the output is not zero.
@@ -256,9 +262,9 @@ labels
 ;; Note that usually the Adam optimizer is used, because it is more efficient.
 ;; As a loss function we simply use the mean squared error.
 (defn training-run
-  [train-data-loader dev-data-loader epochs n-hidden lr weight-decay]
-  (let [model     (ParabolaNet n-hidden)
-        optimizer (optim/SGD (py. model "parameters") :lr lr :weight_decay weight-decay)
+  [train-data-loader dev-data-loader epochs n-hidden lr dropout-rate]
+  (let [model     (ParabolaNet n-hidden dropout-rate)
+        optimizer (optim/SGD (py. model "parameters") :lr lr)
         criterion (nn/MSELoss)]
     (loop [epoch 1 train-losses [] dev-losses []]
           (let [train-loss (average (train-epoch train-data-loader criterion model optimizer))
@@ -279,6 +285,7 @@ labels
 (defn plot-model
   [features labels {:keys [model]}]
   (without-gradient
+    (py. model eval)
     (let [x   (range (- extent) (+ extent 0.01) 0.01)
           y   (map (fn [x] (py. (first (model (torch/tensor [x]))) item)) x)
           ds  (tc/dataset {:x x :y y})
@@ -343,13 +350,12 @@ labels
 ;; * train longer
 ;; * neural network architecture search
 ;;
-;; ### Regularization
+;; ## Regularization
 ;;
 ;; Instead of tuning the number of hidden units and layers (which can only be done in discrete steps), one can use regularization to tune the network.
 ;;
-;; Here we are using *weight decay* (which is equivalent to L2 regularization).
-;; For example when using non-zero weight decay, we get the following model.
-(def result3 (training-run train-data-loader dev-data-loader num-epochs n-hidden learning-rate 0.0005))
+;; Here we are using dropout regularization which randomly sets some activations to zero during training.
+(def result3 (training-run train-data-loader dev-data-loader num-epochs n-hidden learning-rate 0.5))
 
 ;; Here is the model output.
 (plot-model features labels result3)
@@ -357,6 +363,8 @@ labels
 ;; And the losses are as follows.
 (plot-losses result3 (smoothing 0.99))
 
+;; ## Learning Rate
+;;
 ;; We did not explore different learning rates, but this hyperparameter is usually straightforward to tune:
 ;;
 ;; * The learning rate is too low if the model converges very slowly.
