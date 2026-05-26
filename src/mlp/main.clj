@@ -11,8 +11,7 @@
                               :tags     [:machine-learning]}}}
 
 (ns mlp.main
-    (:require [clojure.math :refer (PI cos sin exp to-radians)]
-              [tablecloth.api :as tc]
+    (:require [tablecloth.api :as tc]
               [scicloj.tableplot.v1.plotly :as plotly]
               [libpython-clj2.require :refer (require-python)]
               [libpython-clj2.python :refer (py.) :as py]))
@@ -84,6 +83,13 @@
 ;; ```
 ;;
 ;; Now you should be able to import the Python modules using *require-python*.
+;;
+;; ```Clojure
+;; (require '[tablecloth.api :as tc]
+;;          '[scicloj.tableplot.v1.plotly :as plotly]
+;;          '[libpython-clj2.require :refer (require-python)]
+;;          '[libpython-clj2.python :refer (py.) :as py])
+;; ```
 (require-python '[torch :as torch]
                 '[torch.nn :as nn]
                 '[torch.utils.data :as data]
@@ -95,7 +101,7 @@
 ;; First we are going to set the random seed for reproducibility of this article.
 (torch/manual_seed 1)
 
-;; We are going to sample a small set of points from the interval $[-6, 6]$ and add Gaussian noise to the labels.
+;; We are going to sample a small set of points from the interval $[-2, +2]$ and add Gaussian noise to the labels.
 (def extent 2.0)
 (def n 64)
 (def noise 0.25)
