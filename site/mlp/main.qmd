@@ -4,7 +4,7 @@ category: ml
 tags: [machine-learning]
 format:
   html: {title: 'Machine learning using Clojure, libpython-clj2, and Pytorch'}
-date: '2026-05-24'
+date: '2026-05-26'
 type: post
 author:
 - name: Jan Wedekind
@@ -13,7 +13,7 @@ author:
   email: jan@wedesoft.de
   links:
   - {icon: github, href: 'https://github.com/wedesoft'}
-draft: true
+draft: false
 image: parabola.png
 
 ---
@@ -133,7 +133,7 @@ First we are going to set the random seed for reproducibility of this article.
 
 ::: {.printedClojure}
 ```clojure
-<torch._C.Generator object at 0x7f400bfa0e10>
+<torch._C.Generator object at 0x7f28bf9a0e10>
 
 ```
 :::

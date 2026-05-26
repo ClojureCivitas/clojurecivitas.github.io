@@ -2,11 +2,11 @@
   :clay             {:title  "Machine learning using Clojure, libpython-clj2, and Pytorch"
                      :external-requirements ["slow computation"]
                      :quarto {:author   [:janwedekind]
-                              :draft    true
+                              :draft    false
                               :description "Machine learning explained using the parabola example"
                               :image    "parabola.png"
                               :type     :post
-                              :date     "2026-05-24"
+                              :date     "2026-05-26"
                               :category :ml
                               :tags     [:machine-learning]}}}
 
