@@ -356,4 +356,4 @@ labels
 ;; * The learning rate is too low if the model converges very slowly.
 ;; * The learning rate is too high if the loss becomes unstable and the parameters diverge.
 ;;
-;; Enjoy!
+;; Enjoy! :)
