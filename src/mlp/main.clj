@@ -88,9 +88,10 @@
 ;; (require '[tablecloth.api :as tc]
 ;;          '[scicloj.tableplot.v1.plotly :as plotly]
 ;;          '[libpython-clj2.require :refer (require-python)]
-;;          '[libpython-clj2.python :refer (py.) :as py])
+;;          '[libpython-clj2.python :refer (py. py.-) :as py])
 ;; ```
-(require-python '[torch :as torch]
+(require-python '[builtins :as python]
+                '[torch :as torch]
                 '[torch.nn :as nn]
                 '[torch.utils.data :as data]
                 '[torch.nn.functional :as F]
@@ -107,8 +108,8 @@
 (def noise 0.25)
 (def features (torch/sub (torch/mul (torch/rand [n 1]) (* 2 extent)) extent))
 (def labels (torch/add (torch/mul features features) (torch/mul noise (torch/randn [n 1]))))
-features
-labels
+(torch/squeeze features 1)
+(torch/squeeze labels 1)
 
 ;; Next we are going to combine features and labels into a PyTorch dataset.
 (def dataset (data/TensorDataset features labels))
@@ -133,6 +134,7 @@ labels
 ;; Next we are going to use PyTorch DataLoaders to split training and development data into mini-batches.
 (def train-data-loader (data/DataLoader train-ds :batch_size 4 :shuffle true))
 (def dev-data-loader (data/DataLoader dev-ds :batch_size 4 :shuffle true))
+(def test-data-loader (data/DataLoader test-ds :batch_size test-size :shuffle true))
 
 ;; ## The Model
 ;;
@@ -216,6 +218,39 @@ labels
   (py. model eval)
   (model (torch/tensor [0.0])))
 
+;; The following function plots all data points (training, development, and test set) and the model predictions for different inputs.
+(defn plot-model
+  [features labels model]
+  (without-gradient
+    (py. model eval)
+    (let [x   (range (- extent) (+ extent 0.01) 0.01)
+          y   (map (fn [x] (py. (first (model (torch/tensor [x]))) item)) x)
+          ds  (tc/dataset {:x x :y y})
+          pts (tc/dataset {:x (map first (py/->jvm (py. features tolist)))
+                           :y (map first (py/->jvm (py. labels tolist)))})]
+      (-> ds
+          (plotly/base {:=title "Model"})
+          (plotly/layer-point {:=dataset pts :=x :x :=y :y :=name "data"})
+          (plotly/layer-line {:=x :x :=y :y :=name "prediction"})))))
+
+;; Before training, the model should just be a random function.
+(plot-model features labels model)
+
+;; Using the test set, we can report the performance of the model.
+;; Note that it is good practice to use a separate test set to report performance, because hyperparameter tuning using the dev set can overfit the model to the dev set.
+(defn report-perf
+  [model test-data-loader]
+  (without-gradient
+    (let [[features labels] (first test-data-loader)
+          prediction        (model features)
+          errors            (torch/sub prediction labels)]
+      {:n (builtins/len errors)
+       :min (py. (torch/min errors) item)
+       :mean (py. (torch/mean errors) item)
+       :max (py. (torch/max errors) item)
+       :std (py. (torch/std errors) item)})))
+(report-perf model test-data-loader)
+
 ;; Note that the output is not zero.
 ;; PyTorch performs random initialisation of the weights for us.
 ;; Breaking the symmetry like this is important, otherwise all activations and gradients will be the same and the model will not be able to learn.
@@ -281,30 +316,15 @@ labels
 
 ;; ## Hyperparameter tuning
 ;;
-;; The following function plots all data points (training, development, and test set) and the model predictions for different inputs.
-(defn plot-model
-  [features labels {:keys [model]}]
-  (without-gradient
-    (py. model eval)
-    (let [x   (range (- extent) (+ extent 0.01) 0.01)
-          y   (map (fn [x] (py. (first (model (torch/tensor [x]))) item)) x)
-          ds  (tc/dataset {:x x :y y})
-          pts (tc/dataset {:x (map first (py/->jvm (py. features tolist)))
-                           :y (map first (py/->jvm (py. labels tolist)))})]
-      (-> ds
-          (plotly/base {:=title "Model"})
-          (plotly/layer-point {:=dataset pts :=x :x :=y :y :=name "data"})
-          (plotly/layer-line {:=x :x :=y :y :=name "prediction"})))))
-
 ;; Let's plot our model.
-(plot-model features labels result)
+(plot-model features labels (:model result))
 
 ;; As one can see, the model is overfitting the training set.
 ;; I.e. the model fits the training data closely but does not generalize well.
 ;; This makes the model sensitive to noise.
 ;;
 ;; Here one can observe overfitting directly.
-;; In general however one uses the dev set to detect if the model is overfitting.
+;; In general however one uses the training and dev loss to detect if the model is overfitting.
 ;;
 ;; First we define a smoothing function which smoothes a sequence of loss values.
 (defn smoothing
@@ -327,20 +347,29 @@ labels
 ;; In practice one uses smoothing to make the trend of the curves more visible.
 (plot-losses result (smoothing 0.99))
 
-;; As one can see, the dev set loss is more than twice the amount of the training loss.
+;; Of particular interest are the loss values at the end of the training process.
+(last (:train-losses result))
+(last (:dev-losses result))
+
+;; As one can see, the final dev set loss is more than twice the amount of the training loss.
 ;; This is a sign that the model is overfitting (high variance).
 ;;
 ;; **High variance** can be resolved using the following techniques:
 ;; * use more data
 ;; * regularization
 ;; * neural network architecture search
-;;
+
+;; We can report the performance using the test set.
+(report-perf (:model result) test-data-loader)
+
 ;; Let's see what underfitting looks like.
 (def result2 (training-run train-data-loader dev-data-loader num-epochs 1 learning-rate 0.0))
-(plot-model features labels result2)
+(plot-model features labels (:model result2))
 
 ;; Let's look at the losses.
 (plot-losses result2 (smoothing 0.99))
+(last (:train-losses result2))
+(last (:dev-losses result2))
 
 ;; As one can see, both the training and dev set loss are high.
 ;; This is a sign that the model is underfitting (high bias).
@@ -349,19 +378,28 @@ labels
 ;; * bigger network
 ;; * train longer
 ;; * neural network architecture search
-;;
+
+;; We can report the performance using the test set.
+(report-perf (:model result2) test-data-loader)
+
 ;; ## Regularization
 ;;
-;; Instead of tuning the number of hidden units and layers (which can only be done in discrete steps), one can use regularization to tune the network.
+;; Instead of tuning the number of hidden units and layers (which can only be done in discrete steps), one can use regularization to tune the 
 ;;
 ;; Here we are using dropout regularization which randomly sets some activations to zero during training.
-(def result3 (training-run train-data-loader dev-data-loader num-epochs n-hidden learning-rate 0.5))
+;; After trying out a few values, I found 0.05 to be a good dropout rate for this dataset size and model.
+(def result3 (training-run train-data-loader dev-data-loader num-epochs n-hidden learning-rate 0.05))
 
 ;; Here is the model output.
-(plot-model features labels result3)
+(plot-model features labels (:model result3))
 
 ;; And the losses are as follows.
 (plot-losses result3 (smoothing 0.99))
+(last (:train-losses result3))
+(last (:dev-losses result3))
+
+;; Again we can report the performance using the test set.
+(report-perf (:model result3) test-data-loader)
 
 ;; ## Learning Rate
 ;;
