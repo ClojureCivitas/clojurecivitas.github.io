@@ -843,7 +843,7 @@ This is a sign that the model is underfitting (high bias).
 Instead of tuning the number of hidden units and layers (which can only be done in discrete steps), one can use regularization to tune the network.
 
 Here we are using *weight decay* (which is equivalent to L2 regularization).
-For example when using  non-zero weight decay, we get the following model.
+For example when using non-zero weight decay, we get the following model.
 
 
 ::: {.sourceClojure}

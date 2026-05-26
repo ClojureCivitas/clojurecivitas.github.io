@@ -342,7 +342,7 @@ labels
 ;; Instead of tuning the number of hidden units and layers (which can only be done in discrete steps), one can use regularization to tune the network.
 ;;
 ;; Here we are using *weight decay* (which is equivalent to L2 regularization).
-;; For example when using  non-zero weight decay, we get the following model.
+;; For example when using non-zero weight decay, we get the following model.
 (def result3 (training-run train-data-loader dev-data-loader num-epochs n-hidden learning-rate 0.0005))
 
 ;; Here is the model output.
