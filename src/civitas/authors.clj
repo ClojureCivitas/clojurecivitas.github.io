@@ -23,7 +23,7 @@
   (let [colors (cycle (take 11 color/palette))
         r 6]
     [:g
-     [:g {:transform "scale(0.8)"}
+     [:g {:transform "scale(0.6)"}
       (for [[{:keys [image name]} [x y] color] (map vector authors (geom/spiral 100) colors)]
         [:a {:href (str "/" (csk/->Camel_Snake_Case name) ".html")}
          [:title name]
