@@ -18,7 +18,7 @@
 
 ;; ## Motivation
 ;;
-;; The Clojure programming language has desirable properties for software engineering such as immutabilitty and strong support for implementing parallel algorithms.
+;; The Clojure programming language has desirable properties for software engineering such as immutability and strong support for implementing parallel algorithms.
 ;; Currently Python is popular for machine learning due to Pytorch and other machine learning libraries targeting the Python programming language.
 ;; However using [libpython-clj2](https://github.com/clj-python/libpython-clj) one can invoke Pytorch for machine learning from within Clojure.
 ;;
@@ -37,9 +37,9 @@
 ;;
 ;; ```toml
 ;; [project]
-;; name = "ppo"
+;; name = "mlp"
 ;; version = "0.1.0"
-;; description = "Proximal Policy Optimization"
+;; description = "Provision Pytorch CPU"
 ;; authors = [{ name="Jan Wedekind", email="jan@wedesoft.de" }]
 ;; requires-python = ">=3.10.0"
 ;; dependencies = [
@@ -119,8 +119,7 @@
 (def dev-size (int (* 0.2 n)))
 (def test-size (- n train-size dev-size))
 
-;; The `random_split` function is used to shuffle and split the dataset.
-;; Shuffling can be quite important for stability of the training process.
+;; The `random_split` function is used to randomly split the dataset.
 (def splits (data/random_split dataset [train-size dev-size test-size]))
 (def train-ds (nth splits 0))
 (def dev-ds (nth splits 1))
@@ -132,6 +131,8 @@
 ;; * *test data* is used to report the performance of the model
 
 ;; Next we are going to use PyTorch DataLoaders to split training and development data into mini-batches.
+;; The data loaders are also used to shuffle the data sets.
+;; Shuffling can be quite important for stability of the training process.
 (def train-data-loader (data/DataLoader train-ds :batch_size 4 :shuffle true))
 (def dev-data-loader (data/DataLoader dev-ds :batch_size 4 :shuffle true))
 (def test-data-loader (data/DataLoader test-ds :batch_size test-size :shuffle true))
@@ -293,9 +294,9 @@
 
 ;; Now we can implement a training run.
 ;; A training run basically consists of many training epochs.
-;; Here we are using the stochastic gradient descent method.
+;; Here we are using the stochastic gradient descent method (SGD).
 ;; Note that usually the Adam optimizer is used, because it is more efficient.
-;; As a loss function we simply use the mean squared error.
+;; As a loss function we simply use the mean squared error (MSE).
 (defn training-run
   [train-data-loader dev-data-loader epochs n-hidden lr dropout-rate]
   (let [model     (ParabolaNet n-hidden dropout-rate)
@@ -384,7 +385,7 @@
 
 ;; ## Regularization
 ;;
-;; Instead of tuning the number of hidden units and layers (which can only be done in discrete steps), one can use regularization to tune the 
+;; Instead of tuning the number of hidden units and layers (which can only be done in discrete steps), one can use regularization.
 ;;
 ;; Here we are using dropout regularization which randomly sets some activations to zero during training.
 ;; After trying out a few values, I found 0.05 to be a good dropout rate for this dataset size and model.
