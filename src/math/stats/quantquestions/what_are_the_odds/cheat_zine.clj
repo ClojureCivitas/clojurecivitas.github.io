@@ -18,6 +18,7 @@
                            :description "A printable PDF of an 8-panel foldable probability zine built with Clay."
                            :abstract    "This zine sheet folds into 8 small pages. Space is tight, so it focuses on a few core ideas instead of full definitions; counting outcomes, choosing the right denominator, using AND/OR/NOT, and conditional probability. The layout and fold structure are handled by the zen-zine Typst plugin. The zine is for quick learning and quick checks of understanding, such as a short discussion with a nephew or niece."
                            :date        "2026-06-20"
+                           :type        :post
                            :category    :stats
                            :tags        [:stats :probability :zine :print :typst]}}}
   ;; NOTE: Plotje output is SVG, which is perfect to use with `:static true` for PDF.
