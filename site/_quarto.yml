@@ -80,6 +80,12 @@ format:
       - text: |
           <script data-goatcounter="https://clojurecivitas.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
+format-links:
+  - html
+  - format: typst
+    text: "PDF"
+    icon: file-pdf
+
 brand:
   light: brand-light.yml
   dark: brand-dark.yml
