@@ -11,11 +11,18 @@
 
 (defonce state (r/atom initial-state))
 
+(defn log-factorial [n]
+  (reduce + 0 (map #(js/Math.log %) (range 2 (inc n)))))
+
 (defn beta-density
-  "Unnormalized Beta density; enough for comparing shapes in the teaching SVG."
+  "Normalized Beta density for positive integer alpha and beta."
   [alpha beta p]
-  (* (js/Math.pow p (dec alpha))
-     (js/Math.pow (- 1 p) (dec beta))))
+  (let [log-beta (- (+ (log-factorial (dec alpha))
+                       (log-factorial (dec beta)))
+                    (log-factorial (dec (+ alpha beta))))]
+    (js/Math.exp (- (+ (* (dec alpha) (js/Math.log p))
+                       (* (dec beta) (js/Math.log (- 1 p))))
+                    log-beta))))
 
 (defn likelihood
   [response p]
@@ -82,8 +89,7 @@
         [:text {:x x :y 256 :text-anchor "middle" :font-size 13 :fill "currentColor"} label]])
      [:text {:x 360 :y 280 :text-anchor "middle" :font-size 14 :fill "currentColor"}
       "Knowing rate p"]
-     [:text {:x 16 :y 140 :text-anchor "middle" :font-size 14 :fill "currentColor"
-             :transform "rotate(-90 16 140)"}
+     [:text {:x 52 :y 30 :text-anchor "start" :font-size 14 :fill "currentColor"}
       "Relative density"]
      (for [{:keys [label color dash f]} curves]
        ^{:key label}
@@ -140,6 +146,10 @@
       (str "Current posterior Beta(" alpha "," beta "); mean knowing rate "
            (.toFixed posterior-mean 3) ".")]
      [density-chart current]
+     [:p {:style {:font-size ".85rem"
+                  :color "var(--bs-secondary-color, #5c636a)"
+                  :margin ".35rem 0 0"}}
+      "The Beta curves are normalized densities on one shared scale. The response likelihood uses its natural 0–1 scale; compare its shape, not its height, with the densities."]
      [:div {:style {:display "flex" :gap ".65rem" :flex-wrap "wrap" :margin-top "1rem"}}
       [control-button "Correct" #(record-response! :correct) "ve-correct"]
       [control-button "Don't know" #(record-response! :dont-know) "ve-dont-know"]

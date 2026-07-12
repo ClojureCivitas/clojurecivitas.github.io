@@ -5,7 +5,6 @@
                   :description "A learning-in-public first pass at estimating receptive vocabulary from stratified responses with a Beta–binomial model."
                   :type :post
                   :date "2026-07-12"
-                  :draft true
                   :category :concepts
                   :tags [:bayesian-statistics :language-learning :clojure :scittle]
                   :keywords [:vocabulary-estimation :beta-binomial :posterior-predictive :stratified-sampling]}}}
@@ -17,12 +16,12 @@
 ^:kindly/hide-code
 (kind/hiccup
  [:style
-  ".ve-callout{border-left:4px solid #2780e3;background:#f2f7fc;color:#17202a;padding:1rem 1.15rem;margin:1.4rem 0;border-radius:.25rem}.ve-callout.provisional{border-color:#e69f00;background:#fff8e6}.ve-callout strong{display:block;margin-bottom:.3rem}.ve-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem;margin:1.25rem 0}.ve-card{min-width:0;border:1px solid #dee2e6;border-radius:.5rem;padding:1rem;background:var(--bs-body-bg,#fff)}.ve-card h3{font-size:1rem;margin-top:0}.ve-table-wrap{overflow-x:auto;margin:1.25rem 0}.ve-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}.ve-table th,.ve-table td{padding:.55rem .7rem;border-bottom:1px solid #dee2e6;text-align:right;white-space:nowrap}.ve-table th:first-child,.ve-table td:first-child{text-align:left}.ve-table thead th{border-bottom:2px solid #adb5bd}.ve-figure{margin:1.5rem 0;padding:1rem;border:1px solid #dee2e6;border-radius:.5rem}.ve-figure svg{display:block;width:100%;height:auto}.ve-caption{font-size:.9rem;color:var(--bs-secondary-color,#5c636a);margin:.75rem 0 0}.ve-simulator{margin:1.5rem 0}.ve-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:575px){.ve-table th,.ve-table td{padding:.45rem}.ve-figure{padding:.65rem}}"])
+  "#title-block-header{padding-top:.75rem}#title-block-header h1{line-height:1.15;overflow-wrap:anywhere}.ve-callout{border-left:4px solid #2780e3;background:#f2f7fc;color:#17202a;padding:1rem 1.15rem;margin:1.4rem 0;border-radius:.25rem}.ve-callout.provisional{border-color:#e69f00;background:#fff8e6}.ve-callout strong{display:block;margin-bottom:.3rem}.ve-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem;margin:1.25rem 0}.ve-card{min-width:0;border:1px solid #dee2e6;border-radius:.5rem;padding:1rem;background:var(--bs-body-bg,#fff)}.ve-card h3{font-size:1rem;margin-top:0}.ve-table-wrap{overflow-x:auto;margin:1.25rem 0}.ve-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}.ve-table th,.ve-table td{padding:.55rem .7rem;border-bottom:1px solid #dee2e6;text-align:right;white-space:nowrap}.ve-table th:first-child,.ve-table td:first-child{text-align:left}.ve-table thead th{border-bottom:2px solid #adb5bd}.ve-figure{margin:1.5rem 0;padding:1rem;border:1px solid #dee2e6;border-radius:.5rem}.ve-figure svg{display:block;width:100%;height:auto}.ve-caption{font-size:.9rem;color:var(--bs-secondary-color,#5c636a);margin:.75rem 0 0}.ve-simulator{margin:1.5rem 0}.ve-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:575px){.ve-table th,.ve-table td{padding:.45rem}.ve-figure{padding:.65rem}}"])
 
-;; I am building **Lexibench**, a vocabulary-testing product. Much of its user
-;; interface is already in place, but its scorer is being replaced. The model in
-;; this post is a deliberately small first pass: it is **not deployed in
-;; Lexibench**.
+;; I am building [**Lexibench**](https://lexibench.com/), a vocabulary-testing
+;; product. Much of its user interface is already in place, but its scorer is
+;; being replaced. The model in this post is a deliberately small first pass: it
+;; is **not deployed in Lexibench**.
 ;;
 ;; I reached it through an unusually useful learning loop. Codex acts as a tutor
 ;; and makes visual explanations; I annotate those explanations in Lavish; then
@@ -77,6 +76,18 @@
 ;; strata with the same number of pairs. A round samples one item uniformly at
 ;; random from each stratum. Later answers do not change which item is selected:
 ;; **selection remains non-adaptive**.
+;;
+;; An adaptive test does change later item selection in response to earlier
+;; answers. In principle, it can choose the next question expected to be most
+;; informative about the learner's current knowledge, avoiding many questions
+;; that look much too easy or much too hard. That can shorten a test, but only if
+;; the item-difficulty model is trustworthy.
+;;
+;; I therefore want to keep selection non-adaptive while collecting response
+;; data from real learners. Those data should reveal the relative difficulty of
+;; the actual questions—including context effects and departures from frequency
+;; rank—before I implement an adaptive test. Adapting sooner would risk steering
+;; the test with assumptions that have not yet been checked against learners.
 
 ^:kindly/hide-code
 (kind/mermaid
