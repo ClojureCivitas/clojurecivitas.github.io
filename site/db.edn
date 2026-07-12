@@ -243,6 +243,11 @@
    :url "https://github.com/dirkschweiger"
    :image "https://avatars.githubusercontent.com/u/22668917?v=4"
    :affiliation [:textsound.io]}
+  {:id :jamiep
+   :name "Jamie Pratt"
+   :url "https://jamiep.org/"
+   :image "https://avatars.githubusercontent.com/jamiepratt"
+   :links [{:icon "github" :href "https://github.com/jamiepratt"}]}
   {:id :dzepat
    :name "Dzedas Patapovas"
    :url "https://github.com/dzepat"}]
