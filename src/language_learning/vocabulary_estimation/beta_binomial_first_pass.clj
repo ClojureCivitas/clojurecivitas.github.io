@@ -18,6 +18,39 @@
  [:style
   "#title-block-header{padding-top:.75rem}#title-block-header h1{line-height:1.15;overflow-wrap:anywhere}.ve-callout{border-left:4px solid #2780e3;background:#f2f7fc;color:#17202a;padding:1rem 1.15rem;margin:1.4rem 0;border-radius:.25rem}.ve-callout.provisional{border-color:#e69f00;background:#fff8e6}.ve-callout strong{display:block;margin-bottom:.3rem}.ve-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem;margin:1.25rem 0}.ve-card{min-width:0;border:1px solid #dee2e6;border-radius:.5rem;padding:1rem;background:var(--bs-body-bg,#fff)}.ve-card h3{font-size:1rem;margin-top:0}.ve-table-wrap{overflow-x:auto;margin:1.25rem 0}.ve-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}.ve-table th,.ve-table td{padding:.55rem .7rem;border-bottom:1px solid #dee2e6;text-align:right;white-space:nowrap}.ve-table th:first-child,.ve-table td:first-child{text-align:left}.ve-table thead th{border-bottom:2px solid #adb5bd}.ve-figure{margin:1.5rem 0;padding:1rem;border:1px solid #dee2e6;border-radius:.5rem}.ve-figure svg{display:block;width:100%;height:auto}.ve-caption{font-size:.9rem;color:var(--bs-secondary-color,#5c636a);margin:.75rem 0 0}.ve-simulator{margin:1.5rem 0}.ve-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:575px){.ve-table th,.ve-table td{padding:.45rem}.ve-figure{padding:.65rem}}"])
 
+^:kindly/hide-code
+(kind/hiccup
+ [:style
+  ".series-toc{min-width:0;border:1px solid #ced4da;border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:1.4rem 0;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem 0}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--bs-secondary-color,#5c636a)}"])
+
+^:kindly/hide-code
+(kind/hiccup
+ [:nav.series-toc {:aria-labelledby "series-contents-heading"}
+  [:h2#series-contents-heading "Series contents"]
+  [:p
+   [:strong "Revisiting basic Bayes' theorem and applying it to a real word problem: estimating vocabulary size from "]
+   [:a {:href "https://lexibench.com/"} "Lexibench.com"]
+   [:strong " quiz responses."]]
+  [:ol
+   [:li [:a {:href "bayes_theorem_simulations.html"}
+         "Bayes' Theorem, Revisited: Three Interactive Simulations"]
+    [:span.series-status "published"]]
+   [:li [:a {:href "beta_binomial_first_pass.html"}
+         "Estimating Vocabulary Size with a Simple Bayesian Model"]
+    [:span.series-status "published"]]
+   [:li "Does Pair Frequency Predict Learner Responses?"
+    [:span.series-status "planned"]]
+   [:li "From Self-Reported CEFR to a Versioned Lemma–Form-Pair Pool"
+    [:span.series-status "planned"]]
+   [:li "From Correlated Form Pairs to Latent Lemma Knowledge"
+    [:span.series-status "planned"]]
+   [:li "Modelling Correct, Wrong, and Don't-Know Separately"
+    [:span.series-status "planned"]]
+   [:li "Calibrating Items Before IRT and Adaptive Selection"
+    [:span.series-status "planned"]]
+   [:li "When Contexts and Senses Become Identifiable"
+    [:span.series-status "planned"]]]])
+
 ;; I am building [**Lexibench**](https://lexibench.com/), a vocabulary-testing
 ;; product. Much of its user interface is already in place, but its scorer is
 ;; being replaced. The model in this post is a deliberately small first pass: it
