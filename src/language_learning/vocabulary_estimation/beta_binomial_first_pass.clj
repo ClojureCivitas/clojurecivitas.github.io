@@ -18,6 +18,39 @@
  [:style
   "#title-block-header{padding-top:.75rem}#title-block-header h1{line-height:1.15;overflow-wrap:anywhere}.ve-callout{border-left:4px solid #2780e3;background:#f2f7fc;color:#17202a;padding:1rem 1.15rem;margin:1.4rem 0;border-radius:.25rem}.ve-callout.provisional{border-color:#e69f00;background:#fff8e6}.ve-callout strong{display:block;margin-bottom:.3rem}.ve-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem;margin:1.25rem 0}.ve-card{min-width:0;border:1px solid #dee2e6;border-radius:.5rem;padding:1rem;background:var(--bs-body-bg,#fff)}.ve-card h3{font-size:1rem;margin-top:0}.ve-table-wrap{overflow-x:auto;margin:1.25rem 0}.ve-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}.ve-table th,.ve-table td{padding:.55rem .7rem;border-bottom:1px solid #dee2e6;text-align:right;white-space:nowrap}.ve-table th:first-child,.ve-table td:first-child{text-align:left}.ve-table thead th{border-bottom:2px solid #adb5bd}.ve-figure{margin:1.5rem 0;padding:1rem;border:1px solid #dee2e6;border-radius:.5rem}.ve-figure svg{display:block;width:100%;height:auto}.ve-caption{font-size:.9rem;color:var(--bs-secondary-color,#5c636a);margin:.75rem 0 0}.ve-simulator{margin:1.5rem 0}.ve-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:575px){.ve-table th,.ve-table td{padding:.45rem}.ve-figure{padding:.65rem}}"])
 
+^:kindly/hide-code
+(kind/hiccup
+ [:style
+  ".series-toc{min-width:0;border:1px solid #ced4da;border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:1.4rem 0;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem 0}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--bs-secondary-color,#5c636a)}"])
+
+^:kindly/hide-code
+(kind/hiccup
+ [:nav.series-toc {:aria-labelledby "series-contents-heading"}
+  [:h2#series-contents-heading "Series contents"]
+  [:p
+   [:strong "Revisiting basic Bayes' theorem and applying it to a real word problem: estimating vocabulary size from "]
+   [:a {:href "https://lexibench.com/"} "Lexibench.com"]
+   [:strong " quiz responses."]]
+  [:ol
+   [:li [:a {:href "bayes_theorem_simulations.html"}
+         "Bayes' Theorem, Revisited: Three Interactive Simulations"]
+    [:span.series-status "published"]]
+   [:li [:a {:href "beta_binomial_first_pass.html"}
+         "Estimating Vocabulary Size with a Simple Bayesian Model"]
+    [:span.series-status "published"]]
+   [:li "Does Pair Frequency Predict Learner Responses?"
+    [:span.series-status "planned"]]
+   [:li "From Self-Reported CEFR to a Versioned Lemma–Form-Pair Pool"
+    [:span.series-status "planned"]]
+   [:li "From Correlated Form Pairs to Latent Lemma Knowledge"
+    [:span.series-status "planned"]]
+   [:li "Modelling Correct, Wrong, and Don't-Know Separately"
+    [:span.series-status "planned"]]
+   [:li "Calibrating Items Before IRT and Adaptive Selection"
+    [:span.series-status "planned"]]
+   [:li "When Contexts and Senses Become Identifiable"
+    [:span.series-status "planned"]]]])
+
 ;; I am building [**Lexibench**](https://lexibench.com/), a vocabulary-testing
 ;; product. Much of its user interface is already in place, but its scorer is
 ;; being replaced. The model in this post is a deliberately small first pass: it
@@ -183,9 +216,7 @@
  [:div.ve-simulator
   [:div#beta-binomial-simulator
    [:p "Loading the Bayesian update simulator…"]]
-  [:noscript "This simulator needs JavaScript. The statistical core above remains readable without it."]
-  [:script {:type "application/x-scittle"
-            :src "beta_binomial_first_pass_interactive.cljs"}]])
+  [:noscript "This simulator needs JavaScript. The statistical core above remains readable without it."]])
 
 ;; ## From a knowing rate to a vocabulary total
 ;;
@@ -303,7 +334,7 @@ worked-analytic-mean
 ^:kindly/hide-code
 (kind/hiccup
  [:figure.ve-figure
-  [:svg {:viewBox "0 0 800 150"
+  [:svg {:viewBox "-24 -24 848 198"
          :role "img"
          :aria-labelledby "worked-ci-title worked-ci-desc"}
    [:title#worked-ci-title "Worked-example posterior mean and 95 percent credible interval"]
@@ -325,6 +356,36 @@ worked-analytic-mean
     "3,404 — 4,334 — 5,249"]]
   [:figcaption.ve-caption
    "Blue: central 95% credible interval. Red: posterior-predictive mean. Scale: pairs known in the fixed 8,000-pair pool."]])
+
+;; ### Watch complete posterior-predictive draws accumulate
+;;
+;; One **complete draw** below passes through all eight strata. In each stratum
+;; it draws a knowing rate from that stratum's Beta posterior, predicts the
+;; known count among its 996 untested pairs, adds the observed correct pairs,
+;; and finally sums the eight counts.
+;;
+;; The first view exposes the newest complete draw rather than showing only its
+;; total. The second retains every complete draw as one dot. Its live mean and
+;; interval therefore use exactly the dots you can see—none are hidden in an
+;; aggregate. Choose 10, 20, or 50 draws per second; changing speed does not
+;; change the seeded sequence.
+
+^:kindly/hide-code
+(kind/hiccup
+ [:style
+  ".ve-posterior-sampler{border:1px solid #ced4da;border-radius:.65rem;padding:clamp(.8rem,3vw,1.3rem);min-width:0}.ve-sampling-intro{max-width:50rem}.ve-sampling-controls{display:flex;align-items:end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:1rem 0}.ve-rate-fieldset{border:0;padding:0;margin:0;min-width:0}.ve-rate-fieldset legend{font-size:.85rem;font-weight:700;margin-bottom:.4rem}.ve-button-row{display:flex;gap:.5rem;flex-wrap:wrap}.ve-sampling-button{border:1px solid #6c757d;border-radius:.35rem;padding:.55rem .85rem;font-weight:600;cursor:pointer;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}.ve-sampling-button[aria-pressed=true],.ve-sampling-button.ve-primary{border-color:#2780e3;background:#2780e3;color:#fff}.ve-sampling-button:focus-visible{outline:3px solid color-mix(in srgb,#2780e3 45%,transparent);outline-offset:2px}.ve-sampling-progress{width:100%;height:.55rem;accent-color:#2780e3}.ve-sampling-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:1rem;margin-top:1rem}.ve-sample-panel{min-width:0;border:1px solid #dee2e6;border-radius:.5rem;padding:clamp(.65rem,2vw,1rem);margin:0}.ve-sample-panel h4{font-size:1rem;margin:0 0 .25rem}.ve-sample-panel svg{display:block;width:100%;height:auto}.ve-sample-stat{font-variant-numeric:tabular-nums;margin:.2rem 0 .65rem}.ve-sample-note{font-size:.85rem;color:var(--bs-secondary-color,#5c636a);margin:.5rem 0 0}.ve-empty-sample{display:grid;place-items:center;min-height:13rem;border:1px dashed #adb5bd;border-radius:.35rem;color:var(--bs-secondary-color,#5c636a);text-align:center;padding:1rem}.ve-sampling-status{font-variant-numeric:tabular-nums;margin:.4rem 0}.ve-dot{fill:#2780e3;fill-opacity:.72}.ve-dot-latest{fill:#c44536;stroke:var(--bs-body-bg,#fff);stroke-width:1.5}.ve-sample-axis{stroke:currentColor;stroke-opacity:.45}.ve-sample-guide{stroke:currentColor;stroke-opacity:.1}.ve-latest-line{stroke:#2780e3;stroke-width:5;stroke-linecap:round}.ve-latest-dot{fill:#c44536;stroke:var(--bs-body-bg,#fff);stroke-width:2}@media(max-width:575px){.ve-sampling-controls{align-items:stretch}.ve-sampling-controls>.ve-button-row{width:100%}.ve-sampling-controls>.ve-button-row .ve-sampling-button{flex:1}.ve-sampling-button{padding:.55rem .7rem}}"])
+
+^:kindly/hide-code
+(kind/hiccup
+ [:div.ve-simulator
+  [:div#posterior-sampling-simulator
+   [:p "Loading the posterior-predictive sampling simulator…"]]
+  [:noscript "This simulator needs JavaScript. The seeded numerical check below remains available without it."]
+  [:script {:type "application/x-scittle"
+            :src "beta_binomial_first_pass_interactive.cljs"}]])
+
+;; The 500 browser draws are for seeing the mechanism, not for replacing the
+;; larger verification run. Early live intervals are especially noisy.
 
 ;; ### A seeded numerical check
 ;;
