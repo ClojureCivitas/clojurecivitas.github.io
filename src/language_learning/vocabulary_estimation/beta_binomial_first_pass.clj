@@ -303,7 +303,7 @@ worked-analytic-mean
 ^:kindly/hide-code
 (kind/hiccup
  [:figure.ve-figure
-  [:svg {:viewBox "0 0 800 150"
+  [:svg {:viewBox "-24 -24 848 198"
          :role "img"
          :aria-labelledby "worked-ci-title worked-ci-desc"}
    [:title#worked-ci-title "Worked-example posterior mean and 95 percent credible interval"]
