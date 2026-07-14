@@ -466,7 +466,8 @@
            (.toFixed posterior-mean 3) ".")]
      [density-chart current]
      [:p {:style {:font-size ".85rem"
-                  :color "var(--bs-secondary-color, #5c636a)"
+                  :color "var(--bs-body-color, #212529)"
+                  :opacity 0.75
                   :margin ".35rem 0 0"}}
       "The Beta curves are normalized densities on one shared scale. The response likelihood uses its natural 0–1 scale; compare its shape, not its height, with the densities."]
      [:div {:style {:display "flex" :gap ".65rem" :flex-wrap "wrap" :margin-top "1rem"}}
@@ -474,7 +475,8 @@
       [control-button "Don't know" #(record-response! :dont-know) "ve-dont-know"]
       [control-button "Reset" #(reset! state initial-state) "ve-reset"]]
      [:p {:style {:font-size ".9rem"
-                  :color "var(--bs-secondary-color, #5c636a)"
+                  :color "var(--bs-body-color, #212529)"
+                  :opacity 0.75
                   :margin-bottom 0}}
       "Keyboard: Tab to a button, then press Enter or Space. “Don't know” contributes the same stage-one likelihood as a wrong answer, while the raw value remains distinct."]]))
 

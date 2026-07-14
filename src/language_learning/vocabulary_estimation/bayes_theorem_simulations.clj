@@ -10,7 +10,8 @@
                   :keywords [:bayes-theorem :grid-approximation :posterior-sampling :normal-distribution :data-visualisation]}}}
 
 (ns language-learning.vocabulary-estimation.bayes-theorem-simulations
-  (:require [scicloj.kindly.v4.kind :as kind]))
+  (:require [language-learning.vocabulary-estimation.math-explanations :as math]
+            [scicloj.kindly.v4.kind :as kind]))
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -32,7 +33,7 @@
    ".bp-controls label,.bp-field label{font-weight:700;font-size:.88rem}"
    ".bp-controls input[type=range]{width:min(15rem,100%);accent-color:#2780e3}"
    ".bp-button{border:1px solid #6c757d;border-radius:.35rem;padding:.55rem .85rem;font-weight:600;cursor:pointer;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}"
-   ".bp-button.bp-primary,.bp-button[aria-pressed=true]{border-color:#2780e3;background:#2780e3;color:#fff}"
+   ".bp-button.bp-primary,.bp-button[aria-pressed=true]{border-color:#1464b5;background:#1464b5;color:#fff}"
    ".bp-button:disabled{opacity:.45;cursor:not-allowed}"
    ".bp-button:focus-visible,.bp-select:focus-visible,.bp-controls input:focus-visible{outline:3px solid color-mix(in srgb,#2780e3 45%,transparent);outline-offset:2px}"
    ".bp-select{border:1px solid #6c757d;border-radius:.35rem;padding:.5rem;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}"
@@ -40,9 +41,9 @@
    ".bp-chart{min-width:0;border:1px solid #dee2e6;border-radius:.5rem;padding:.7rem;margin:0;background:var(--bs-body-bg,#fff)}"
    ".bp-chart h4{margin:.1rem 0 .2rem;font-size:.95rem;line-height:1.25}"
    ".bp-chart svg{display:block;width:100%;height:auto}"
-   ".bp-caption,.bp-note{font-size:.86rem;color:var(--bs-secondary-color,#5c636a);margin:.4rem 0 0}"
+   ".bp-caption,.bp-note{font-size:.86rem;color:#4f5b66;margin:.4rem 0 0}"
    ".bp-stat{font-variant-numeric:tabular-nums;margin:.4rem 0}"
-   ".bp-sample-sequence{font-family:var(--bs-font-monospace,monospace);font-size:.82rem;overflow-wrap:anywhere;max-height:6rem;overflow:auto;padding:.55rem;border-radius:.35rem;background:var(--bs-tertiary-bg,#f4f4f4)}"
+   ".bp-sample-sequence{font-family:var(--bs-font-monospace,monospace);font-size:.82rem;overflow-wrap:anywhere;max-height:6rem;overflow:auto;padding:.55rem;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.35rem;background:var(--bs-body-bg,#fff);background:color-mix(in srgb,var(--bs-body-bg,#fff) 92%,#2780e3 8%);color:var(--bs-body-color,#212529)}"
    ".bp-axis{stroke:currentColor;stroke-opacity:.5}"
    ".bp-guide{stroke:currentColor;stroke-opacity:.11}"
    ".bp-line{fill:none;stroke:#2780e3;stroke-width:3;vector-effect:non-scaling-stroke}"
@@ -53,14 +54,18 @@
    ".bp-progress{width:100%;height:.55rem;accent-color:#2780e3}"
    ".bp-formula{font-family:var(--bs-font-monospace,monospace);overflow-wrap:anywhere}"
    ".bp-heat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:1rem}"
-   ".bp-empty{display:grid;place-items:center;min-height:11rem;border:1px dashed #adb5bd;border-radius:.35rem;color:var(--bs-secondary-color,#5c636a);text-align:center;padding:1rem}"
+   ".bp-empty{display:grid;place-items:center;min-height:11rem;border:1px dashed #adb5bd;border-radius:.35rem;color:#4f5b66;text-align:center;padding:1rem}"
    ".bp-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}"
+   ".quarto-dark .bp-caption,.quarto-dark .bp-note,.quarto-dark .bp-empty{color:#b9c7d2}"
    "@media(max-width:575px){.bp-shell{padding:.75rem}.bp-controls{align-items:stretch}.bp-button{flex:1}.bp-chart{padding:.5rem}}")])
+
+^:kindly/hide-code
+(math/styles)
 
 ^:kindly/hide-code
 (kind/hiccup
  [:style
-  ".series-toc{min-width:0;border:1px solid #ced4da;border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:1.4rem 0;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem 0}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--bs-secondary-color,#5c636a)}.bp-change-details>summary{font-size:1.3rem;line-height:1.2}.bp-change-details ul{margin-bottom:0}"])
+  ".series-toc{min-width:0;border:1px solid #ced4da;border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:1.4rem 0;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem 0}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#4f5b66}.quarto-dark .series-status{color:#b9c7d2}.bp-change-details>summary{font-size:1.3rem;line-height:1.2}.bp-change-details ul{margin-bottom:0}"])
 
 ;; I thought I'd reproduce my previous learning about [Bayes' theorem
 ;; simulations](https://jointprob.github.io/jointprob-shadow-cljs/#normal-distribution)
@@ -102,6 +107,9 @@
     [:span.series-status "planned"]]]])
 
 ^:kindly/hide-code
+(math/global-controls)
+
+^:kindly/hide-code
 (kind/hiccup
  [:details.bp-details.bp-change-details
   [:summary "What I changed in this recreation"]
@@ -136,6 +144,17 @@
 ;; I approximate the continuous range of $p$ using 201 candidates:
 ;;
 ;; $$p \in \{0, 0.005, 0.010, \ldots, 0.995, 1\}.$$
+
+^:kindly/hide-code
+(math/explanation
+ "math-grid-candidates"
+ "The discrete grid of candidate water proportions"
+ [["p" "A candidate value for the unknown proportion of the globe covered by water; it must lie between 0 and 1."]
+  ["∈" "“Is an element of” or “is one of the values in.”"]
+  ["{…}" "Braces list the allowed candidate values rather than one continuous interval."]
+  ["0.005" "The distance between adjacent candidates. Including both 0 and 1 gives 201 grid points."]
+  ["…" "The same 0.005 step continues through the omitted values."]]
+ "This grid is a numerical approximation: the underlying water proportion is treated conceptually as continuous.")
 
 (def probability-grid
   (mapv #(/ % 200.0) (range 201)))
@@ -187,18 +206,64 @@
 ;; particular ordered sequence is
 ;;
 ;; $$p^W(1-p)^L.$$
+
+^:kindly/hide-code
+(math/explanation
+ "math-ordered-sequence"
+ "Probability of one particular water–land sequence"
+ [["p" "The probability that one independent toss lands on water."]
+  ["1 − p" "The complementary probability that one toss lands on land."]
+  ["W" "The number of water observations in the sequence."]
+  ["L" "The number of land observations in the sequence."]
+  ["p^W" "The probability contribution from the W water observations."]
+  ["(1 − p)^L" "The probability contribution from the L land observations."]
+  ["multiplication" "Independent observations let their probabilities be multiplied."]]
+ "This is for one specified ordering, such as W–L–W, not yet for every ordering with the same counts.")
 ;;
 ;; There are
 ;;
 ;; $$\binom{W+L}{W}=\frac{(W+L)!}{W!L!}$$
+
+^:kindly/hide-code
+(math/explanation
+ "math-binomial-coefficient"
+ "Number of orderings with the same water and land counts"
+ [["W + L" "The total number of observations."]
+  ["(W + L choose W)" "Choose which W of the W + L positions contain water; land fills the remaining positions."]
+  ["n!" "“n factorial”: multiply every positive integer from n down to 1."]
+  ["(W + L)! / (W!L!)" "The factorial formula for the same count; dividing removes rearrangements among identical water and identical land observations."]]
+ "This binomial coefficient is a count, not a probability. For W = 2 and L = 1, it counts WWL, WLW, and LWW: three orderings.")
 ;;
 ;; orderings with the same counts, giving the binomial likelihood
 ;;
 ;; $$\Pr(W,L\mid p)=\binom{W+L}{W}p^W(1-p)^L.$$
+
+^:kindly/hide-code
+(math/explanation
+ "math-binomial-likelihood"
+ "The binomial likelihood"
+ [["Pr(W,L | p)" "The probability of observing W water and L land outcomes, conditional on a proposed water proportion p."]
+  ["|" "“Given” or “conditional on.” Here p is treated as fixed while the possible data vary."]
+  ["(W + L choose W)" "The number of distinct sequences having these same counts."]
+  ["p^W(1 − p)^L" "The probability of any one such sequence."]
+  ["likelihood" "The same expression viewed as a function of p after the observed W and L have been fixed."]]
+ "The ordering count multiplies the probability of one ordering to obtain the probability of all orderings with these counts.")
 ;;
 ;; Bayes' theorem combines that likelihood with the prior:
 ;;
 ;; $$\Pr(p\mid W,L)=\frac{\Pr(W,L\mid p)\Pr(p)}{\Pr(W,L)},$$
+
+^:kindly/hide-code
+(math/explanation
+ "math-bayes-theorem"
+ "Bayes’ theorem for the water proportion"
+ [["Pr(p | W,L)" "The posterior: the updated plausibility of p after observing W water and L land outcomes."]
+  ["Pr(W,L | p)" "The likelihood: how compatible the observed counts are with candidate p."]
+  ["Pr(p)" "The prior plausibility assigned to p before these observations."]
+  ["Pr(W,L)" "The evidence or marginal probability of the observations, averaged across the prior; it normalises the posterior."]
+  ["likelihood × prior" "The unnormalised posterior weight for candidate p."]
+  ["|" "“Given.” Reversing the quantities around the bar changes the conditional probability."]]
+ "On the finite grid, divide every likelihood-times-prior weight by their total. That numerical normalisation plays the denominator’s role.")
 ;;
 ;; where the denominator is the average probability of the data across the
 ;; prior. On a grid, normalising the products performs the same job.
@@ -235,6 +300,18 @@
 ;; decision $d$, the expected absolute loss is
 ;;
 ;; $$E[|d-p|\mid W,L] = \sum_p |d-p|\Pr(p\mid W,L).$$
+
+^:kindly/hide-code
+(math/explanation
+ "math-expected-absolute-loss"
+ "Posterior expected absolute loss"
+ [["d" "A candidate decision: the water proportion you choose for the bet."]
+  ["p" "One possible true water proportion on the grid."]
+  ["|d − p|" "Absolute error: the non-negative distance between the decision and that possible truth."]
+  ["E[… | W,L]" "Expected value after conditioning on the observed water and land counts."]
+  ["Σ_p" "Sum over every candidate p on the probability grid."]
+  ["Pr(p | W,L)" "The posterior probability weight assigned to candidate p."]]
+ "Each possible error is weighted by its posterior plausibility. The decision d with the smallest resulting average is preferred under absolute loss.")
 
 (defn expected-absolute-loss
   "Expected absolute error at decision d for grid weights."
@@ -288,6 +365,21 @@
 ;; $$f(h\mid\mu,\sigma)=
 ;; \frac{1}{\sigma\sqrt{2\pi}}
 ;; \exp\left(-\frac{(h-\mu)^2}{2\sigma^2}\right).$$
+
+^:kindly/hide-code
+(math/explanation
+ "math-gaussian-density"
+ "Gaussian density for one observed height"
+ [["f(h | μ,σ)" "The probability density at height h for the candidate Gaussian described by μ and σ; a density is not the probability of one exact height."]
+  ["h" "The observed adult height."]
+  ["μ" "The candidate mean, which locates the centre of the distribution."]
+  ["σ" "The candidate standard deviation, which controls the distribution’s spread and must be positive."]
+  ["π" "Pi, the circle constant, appearing in the Gaussian normalising factor."]
+  ["exp(a)" "The exponential function e raised to the power a."]
+  ["(h − μ)^2" "The squared distance of the observation from the candidate mean."]
+  ["1 / (σ√(2π))" "The normalising factor that makes the total area under the density curve equal 1."]
+  ["−(h − μ)^2 / (2σ^2)" "The exponent makes density fall as h moves farther from μ, relative to spread σ."]]
+ "For fixed h, this density is also the observation’s likelihood across candidate μ and σ pairs.")
 
 (defn normal-density
   "Gaussian probability density at x."

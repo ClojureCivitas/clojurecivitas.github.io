@@ -2,6 +2,7 @@ project:
   type: website
   resources:
     - "*.cljs"
+    - "*.cljc"
     - "*.svg"
     - "*.png"
     - "*.tif"

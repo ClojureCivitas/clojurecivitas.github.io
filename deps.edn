@@ -1,4 +1,4 @@
-{:paths ["src"]
+{:paths ["src" "resources"]
 
  :deps
  {org.clojure/clojure                         {:mvn/version "1.12.3"}
@@ -100,4 +100,11 @@
                                org.scicloj/kindly-advice {:local/root "../kindly-advice"}
                                org.scicloj/kindly-render {:local/root "../kindly-render"}}}
   :neil       {:project {:name io.github.timothypratley/clojurecivitas}}
-  :dev        {:jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"]}}}
+  :dev        {:jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"]}
+  :test-clj   {:extra-paths ["test"]
+               :main-opts ["-m" "language-learning.vocabulary-estimation.test-runner"]}
+  :test-cljs  {:extra-paths ["test"]
+               :extra-deps {org.clojure/clojurescript {:mvn/version "1.12.42"}}
+               :main-opts ["-m" "cljs.main"
+                           "-re" "node"
+                           "-m" "language-learning.vocabulary-estimation.cljs-test-runner"]}}}
