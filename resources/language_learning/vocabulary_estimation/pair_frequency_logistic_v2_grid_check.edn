@@ -1,0 +1,83 @@
+{:doubled
+ {:mean 4971.5120420264,
+  :lower 4064,
+  :upper 5868,
+  :credible-mass 0.95,
+  :draw-count 20000,
+  :seed 2026071304},
+ :fixture-sha256
+ "72f8a84b6e98fb15c868e046afa209035d405b1cdcb3906c25949ca99bdd579a",
+ :observations
+ [{:pair-index 1167, :response :correct}
+  {:pair-index 4769, :response :correct}
+  {:pair-index 230, :response :correct}
+  {:pair-index 7387, :response :dont-know}
+  {:pair-index 5862, :response :dont-know}
+  {:pair-index 3575, :response :correct}
+  {:pair-index 2353, :response :correct}
+  {:pair-index 6219, :response :dont-know}
+  {:pair-index 3988, :response :correct}
+  {:pair-index 6245, :response :dont-know}
+  {:pair-index 571, :response :correct}
+  {:pair-index 2189, :response :correct}
+  {:pair-index 7259, :response :correct}
+  {:pair-index 4831, :response :correct}
+  {:pair-index 1752, :response :correct}
+  {:pair-index 5246, :response :dont-know}
+  {:pair-index 6138, :response :correct}
+  {:pair-index 181, :response :correct}
+  {:pair-index 1134, :response :correct}
+  {:pair-index 4878, :response :dont-know}
+  {:pair-index 3114, :response :correct}
+  {:pair-index 7758, :response :dont-know}
+  {:pair-index 2451, :response :correct}
+  {:pair-index 5698, :response :dont-know}
+  {:pair-index 5726, :response :correct}
+  {:pair-index 6118, :response :dont-know}
+  {:pair-index 2562, :response :correct}
+  {:pair-index 7977, :response :correct}
+  {:pair-index 1537, :response :correct}
+  {:pair-index 4326, :response :correct}
+  {:pair-index 856, :response :correct}
+  {:pair-index 3159, :response :dont-know}
+  {:pair-index 4010, :response :correct}
+  {:pair-index 5150, :response :dont-know}
+  {:pair-index 1639, :response :correct}
+  {:pair-index 2365, :response :correct}
+  {:pair-index 713, :response :correct}
+  {:pair-index 6284, :response :dont-know}
+  {:pair-index 7152, :response :dont-know}
+  {:pair-index 3518, :response :dont-know}
+  {:pair-index 5418, :response :dont-know}
+  {:pair-index 6031, :response :dont-know}
+  {:pair-index 3981, :response :dont-know}
+  {:pair-index 2128, :response :correct}
+  {:pair-index 4969, :response :dont-know}
+  {:pair-index 1400, :response :correct}
+  {:pair-index 7949, :response :correct}
+  {:pair-index 568, :response :correct}],
+ :doubled-grid
+ {:threshold-points 321,
+  :width-points 161,
+  :minimum-width 0.25,
+  :maximum-width 8.0},
+ :posterior-draws 20000,
+ :default-grid
+ {:threshold-points 161,
+  :width-points 81,
+  :minimum-width 0.25,
+  :maximum-width 8.0},
+ :seed 2026071304,
+ :convergence
+ {:mean-difference 4.342706097304472E-4,
+  :lower-difference 2,
+  :upper-difference 10,
+  :passes? true},
+ :coarse
+ {:mean 4971.5116077557905,
+  :lower 4062,
+  :upper 5858,
+  :credible-mass 0.95,
+  :draw-count 20000,
+  :seed 2026071304},
+ :fixture-id "subtlex-pl-pair-frequency-source-ranks-1-8000-v1"}

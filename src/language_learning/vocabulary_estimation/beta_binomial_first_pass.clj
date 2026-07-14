@@ -11,17 +11,21 @@
 
 (ns language-learning.vocabulary-estimation.beta-binomial-first-pass
   (:require [fastmath.random :as random]
+            [language-learning.vocabulary-estimation.math-explanations :as math]
             [scicloj.kindly.v4.kind :as kind]))
 
 ^:kindly/hide-code
 (kind/hiccup
  [:style
-  "#title-block-header{padding-top:.75rem}#title-block-header h1{line-height:1.15;overflow-wrap:anywhere}.ve-callout{border-left:4px solid #2780e3;background:#f2f7fc;color:#17202a;padding:1rem 1.15rem;margin:1.4rem 0;border-radius:.25rem}.ve-callout.provisional{border-color:#e69f00;background:#fff8e6}.ve-callout strong{display:block;margin-bottom:.3rem}.ve-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem;margin:1.25rem 0}.ve-card{min-width:0;border:1px solid #dee2e6;border-radius:.5rem;padding:1rem;background:var(--bs-body-bg,#fff)}.ve-card h3{font-size:1rem;margin-top:0}.ve-table-wrap{overflow-x:auto;margin:1.25rem 0}.ve-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}.ve-table th,.ve-table td{padding:.55rem .7rem;border-bottom:1px solid #dee2e6;text-align:right;white-space:nowrap}.ve-table th:first-child,.ve-table td:first-child{text-align:left}.ve-table thead th{border-bottom:2px solid #adb5bd}.ve-figure{margin:1.5rem 0;padding:1rem;border:1px solid #dee2e6;border-radius:.5rem}.ve-figure svg{display:block;width:100%;height:auto}.ve-caption{font-size:.9rem;color:var(--bs-secondary-color,#5c636a);margin:.75rem 0 0}.ve-simulator{margin:1.5rem 0}.ve-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:575px){.ve-table th,.ve-table td{padding:.45rem}.ve-figure{padding:.65rem}}"])
+  "#title-block-header{padding-top:.75rem}#title-block-header h1{line-height:1.15;overflow-wrap:anywhere}.ve-callout{border-left:4px solid #2780e3;background:#f2f7fc;color:#17202a;padding:1rem 1.15rem;margin:1.4rem 0;border-radius:.25rem}.ve-callout.provisional{border-color:#e69f00;background:#fff8e6}.ve-callout strong{display:block;margin-bottom:.3rem}.ve-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem;margin:1.25rem 0}.ve-card{min-width:0;border:1px solid #dee2e6;border-radius:.5rem;padding:1rem;background:var(--bs-body-bg,#fff)}.ve-card h3{font-size:1rem;margin-top:0}.ve-table-wrap{overflow-x:auto;margin:1.25rem 0}.ve-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}.ve-table th,.ve-table td{padding:.55rem .7rem;border-bottom:1px solid #dee2e6;text-align:right;white-space:nowrap}.ve-table th:first-child,.ve-table td:first-child{text-align:left}.ve-table thead th{border-bottom:2px solid #adb5bd}.ve-figure{margin:1.5rem 0;padding:1rem;border:1px solid #dee2e6;border-radius:.5rem}.ve-figure svg{display:block;width:100%;height:auto}.ve-caption{font-size:.9rem;color:#4f5b66;margin:.75rem 0 0}.quarto-dark .ve-caption{color:#b9c7d2}.ve-simulator{margin:1.5rem 0}.ve-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:575px){.ve-table th,.ve-table td{padding:.45rem}.ve-figure{padding:.65rem}}"])
+
+^:kindly/hide-code
+(math/styles)
 
 ^:kindly/hide-code
 (kind/hiccup
  [:style
-  ".series-toc{min-width:0;border:1px solid #ced4da;border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:1.4rem 0;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem 0}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--bs-secondary-color,#5c636a)}"])
+  ".series-toc{min-width:0;border:1px solid #ced4da;border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:1.4rem 0;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem 0}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#4f5b66}.quarto-dark .series-status{color:#b9c7d2}"])
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -38,8 +42,9 @@
    [:li [:a {:href "beta_binomial_first_pass.html"}
          "Estimating Vocabulary Size with a Simple Bayesian Model"]
     [:span.series-status "published"]]
-   [:li "Does Pair Frequency Predict Learner Responses?"
-    [:span.series-status "planned"]]
+   [:li [:a {:href "pair_frequency_logistic_v2_article.html"}
+         "Does Pair Frequency Predict Learner Responses?"]
+    [:span.series-status "published"]]
    [:li "From Self-Reported CEFR to a Versioned Lemma–Form-Pair Pool"
     [:span.series-status "planned"]]
    [:li "From Correlated Form Pairs to Latent Lemma Knowledge"
@@ -51,21 +56,28 @@
    [:li "When Contexts and Senses Become Identifiable"
     [:span.series-status "planned"]]]])
 
+^:kindly/hide-code
+(math/global-controls)
+
 ;; I am building [**Lexibench**](https://lexibench.com/), a vocabulary-testing
 ;; product. Much of its user interface is already in place, but its scorer is
 ;; being replaced. The model in this post is a deliberately small first pass: it
 ;; is **not deployed in Lexibench**.
 ;;
 ;; I reached it through an unusually useful learning loop. Codex acts as a tutor
-;; and makes visual explanations; I annotate those explanations in Lavish; then
+;; and makes visual explanations; I annotate those explanations in Codex's
+;; internal browser; then
 ;; we repeat. Each pass exposes a mistaken assumption or a word I was using too
 ;; casually.
+;;
+;; I find it very pleasant and easier to interact with HTML explanations,
+;; including diagrams, instead of a wall of text.
 
 ^:kindly/hide-code
 (kind/mermaid
  "flowchart LR
     Q[Jamie asks a question] --> T[Codex tutors and builds a visual explanation]
-    T --> A[Jamie annotates it in Lavish]
+    T --> A[Jamie annotates it in Codex's internal browser]
     A --> R[Codex revises the explanation]
     R --> U[Understanding improves]
     U --> Q")
@@ -87,7 +99,20 @@
 ;; canonical item in context. The context and translation select an intended
 ;; meaning for that item, but they remain **measurement metadata**; this model
 ;; does not pretend it has estimated sense-specific knowledge.
-;;
+
+^:kindly/hide-code
+(math/terminology
+ "language-terminology"
+ :lexical
+ "Language terms"
+ "Lexical terms used in this model"
+ [["Receptive knowledge" "Recognising and understanding a form when it is encountered, rather than being able to produce it unaided."]
+  ["Lemma" "A dictionary headword used to group related inflected forms. For example, the English lemma run groups forms such as run, runs, ran, and running."]
+  ["Surface form" "The exact written form that appears in text or in a question, such as ran or running."]
+  ["Lemma–surface-form pair" "One lemma ID linked to one surface-form ID—the countable unit in this model. For example: lemma run + surface form ran."]
+  ["Sense" "One distinct meaning of a lemma, such as run meaning “move quickly” versus a machine that “runs.” The frequency table has no sense IDs, so the model cannot estimate sense-specific knowledge."]
+  ["Canonical item" "One fixed, versioned quiz question for a pair. Its context selects the intended meaning for measurement, but does not create a sense-specific frequency count."]])
+
 ;; This is narrower than “How many words do you know?” That narrowing is useful:
 ;; it gives the count a denominator, a pool version, and a repeatable item.
 
@@ -101,14 +126,28 @@
 (kind/hiccup
  [:div.ve-callout.provisional
   [:strong "Provisional modelling choice"]
-  "The pair inventory, canonical contexts, frequency strata, response mapping, prior, and stopping threshold all need empirical validation."])
+  "Provisional means chosen as a testable starting assumption, not established by the data. The pair inventory, canonical contexts, frequency strata, response mapping, prior, and stopping threshold all need empirical validation."])
 
 ;; ## A simplified non-adaptive test
 ;;
-;; For exposition, imagine a cumulative pool split by frequency rank into eight
+;; For exposition, imagine a fixed, versioned pool split by frequency rank into eight
 ;; strata with the same number of pairs. A round samples one item uniformly at
 ;; random from each stratum. Later answers do not change which item is selected:
 ;; **selection remains non-adaptive**.
+
+^:kindly/hide-code
+(math/terminology
+ "test-design-terminology"
+ :design
+ "Test-design terms"
+ "Terms used in the selection schedule"
+ [["Pool" "The complete fixed, versioned set of lemma–surface-form pairs that this test is allowed to estimate."]
+  ["Pair" "Shorthand here for one lemma–surface-form pair—not two arbitrary words and not a word sense."]
+  ["Frequency rank" "The position of a pair after ordering the source corpus data from most frequent to least frequent. Rank 1 is most frequent; rank is a proxy, not calibrated learner difficulty."]
+  ["Stratum" "One of eight equal-count bands formed from adjacent frequency ranks." "strata"]
+  ["Item" "A versioned quiz question for one pair, including its context, intended answer, and distractors."]
+  ["Non-adaptive" "Earlier answers update the estimate but do not change which later items are selected."]
+  ["Adaptive" "Later items are selected using earlier answers or the learner’s current estimated knowledge."]])
 ;;
 ;; An adaptive test does change later item selection in response to earlier
 ;; answers. In principle, it can choose the next question expected to be most
@@ -182,6 +221,17 @@
 ;; stratum the same prior:
 ;;
 ;; $$p_s \sim \operatorname{Beta}(1,1).$$
+
+^:kindly/hide-code
+(math/explanation
+ "math-beta-prior"
+ "The prior knowing-rate distribution for one stratum"
+ [["p_s" "The learner’s unknown knowing rate in stratum s: the proportion of that stratum’s fixed pairs the learner knows."]
+  ["s" "The stratum index. This first model has eight separate frequency-rank strata."]
+  ["∼" "“Is distributed as.” It describes uncertainty about p_s, not an equality to one number."]
+  ["Beta(1,1)" "A Beta distribution with shape parameters α = 1 and β = 1. Its density is uniform from 0 to 1."]
+  ["α, β" "The Beta distribution’s two positive shape parameters. In this Bernoulli model they update like prior correct and not-correct counts."]]
+ "Beta(1,1) is the deliberately simple v1 prior; calling it uniform does not make it universally uninformative.")
 ;;
 ;; That density is uniform over rates from zero to one. I am **not** claiming
 ;; that it is universally “uninformative”; parameterization and context matter.
@@ -189,6 +239,20 @@
 ;; proportional to $p_s^k(1-p_s)^{n-k}$, so:
 ;;
 ;; $$p_s \mid k,n \sim \operatorname{Beta}(1+k,1+n-k).$$
+
+^:kindly/hide-code
+(math/explanation
+ "math-beta-posterior"
+ "The updated knowing-rate distribution"
+ [["p_s | k,n" "The knowing rate in stratum s after conditioning on the observed response counts k and n."]
+  ["|" "“Given” or “conditional on.” Everything to its right is treated as observed information."]
+  ["k" "The number of correct responses in this stratum."]
+  ["n" "The total number of tested pairs in this stratum."]
+  ["n − k" "The number of tested responses treated as not known by the v1 inference model."]
+  ["1 + k" "The posterior α parameter: prior α = 1 plus correct responses."]
+  ["1 + n − k" "The posterior β parameter: prior β = 1 plus not-correct responses."]
+  ["Beta(…)" "The posterior stays in the Beta family because the Beta prior is conjugate to the Bernoulli/binomial likelihood."]]
+ "The complete response history reduces to k and n for this update, although the original correct, wrong, and don’t-know events remain stored separately.")
 
 (defn posterior-parameters
   "Beta posterior parameters for a Beta(alpha,beta) prior and k of n correct."
@@ -373,7 +437,7 @@ worked-analytic-mean
 ^:kindly/hide-code
 (kind/hiccup
  [:style
-  ".ve-posterior-sampler{border:1px solid #ced4da;border-radius:.65rem;padding:clamp(.8rem,3vw,1.3rem);min-width:0}.ve-sampling-intro{max-width:50rem}.ve-sampling-controls{display:flex;align-items:end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:1rem 0}.ve-rate-fieldset{border:0;padding:0;margin:0;min-width:0}.ve-rate-fieldset legend{font-size:.85rem;font-weight:700;margin-bottom:.4rem}.ve-button-row{display:flex;gap:.5rem;flex-wrap:wrap}.ve-sampling-button{border:1px solid #6c757d;border-radius:.35rem;padding:.55rem .85rem;font-weight:600;cursor:pointer;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}.ve-sampling-button[aria-pressed=true],.ve-sampling-button.ve-primary{border-color:#2780e3;background:#2780e3;color:#fff}.ve-sampling-button:focus-visible{outline:3px solid color-mix(in srgb,#2780e3 45%,transparent);outline-offset:2px}.ve-sampling-progress{width:100%;height:.55rem;accent-color:#2780e3}.ve-sampling-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:1rem;margin-top:1rem}.ve-sample-panel{min-width:0;border:1px solid #dee2e6;border-radius:.5rem;padding:clamp(.65rem,2vw,1rem);margin:0}.ve-sample-panel h4{font-size:1rem;margin:0 0 .25rem}.ve-sample-panel svg{display:block;width:100%;height:auto}.ve-sample-stat{font-variant-numeric:tabular-nums;margin:.2rem 0 .65rem}.ve-sample-note{font-size:.85rem;color:var(--bs-secondary-color,#5c636a);margin:.5rem 0 0}.ve-empty-sample{display:grid;place-items:center;min-height:13rem;border:1px dashed #adb5bd;border-radius:.35rem;color:var(--bs-secondary-color,#5c636a);text-align:center;padding:1rem}.ve-sampling-status{font-variant-numeric:tabular-nums;margin:.4rem 0}.ve-dot{fill:#2780e3;fill-opacity:.72}.ve-dot-latest{fill:#c44536;stroke:var(--bs-body-bg,#fff);stroke-width:1.5}.ve-sample-axis{stroke:currentColor;stroke-opacity:.45}.ve-sample-guide{stroke:currentColor;stroke-opacity:.1}.ve-latest-line{stroke:#2780e3;stroke-width:5;stroke-linecap:round}.ve-latest-dot{fill:#c44536;stroke:var(--bs-body-bg,#fff);stroke-width:2}@media(max-width:575px){.ve-sampling-controls{align-items:stretch}.ve-sampling-controls>.ve-button-row{width:100%}.ve-sampling-controls>.ve-button-row .ve-sampling-button{flex:1}.ve-sampling-button{padding:.55rem .7rem}}"])
+  ".ve-posterior-sampler{border:1px solid #ced4da;border-radius:.65rem;padding:clamp(.8rem,3vw,1.3rem);min-width:0}.ve-sampling-intro{max-width:50rem}.ve-sampling-controls{display:flex;align-items:end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:1rem 0}.ve-rate-fieldset{border:0;padding:0;margin:0;min-width:0}.ve-rate-fieldset legend{font-size:.85rem;font-weight:700;margin-bottom:.4rem}.ve-button-row{display:flex;gap:.5rem;flex-wrap:wrap}.ve-sampling-button{border:1px solid #6c757d;border-radius:.35rem;padding:.55rem .85rem;font-weight:600;cursor:pointer;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}.ve-sampling-button[aria-pressed=true],.ve-sampling-button.ve-primary{border-color:#1464b5;background:#1464b5;color:#fff}.ve-sampling-button:focus-visible{outline:3px solid color-mix(in srgb,#2780e3 45%,transparent);outline-offset:2px}.ve-sampling-progress{width:100%;height:.55rem;accent-color:#2780e3}.ve-sampling-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:1rem;margin-top:1rem}.ve-sample-panel{min-width:0;border:1px solid #dee2e6;border-radius:.5rem;padding:clamp(.65rem,2vw,1rem);margin:0}.ve-sample-panel h4{font-size:1rem;margin:0 0 .25rem}.ve-sample-panel svg{display:block;width:100%;height:auto}.ve-sample-stat{font-variant-numeric:tabular-nums;margin:.2rem 0 .65rem}.ve-sample-note{font-size:.85rem;color:#4f5b66;margin:.5rem 0 0}.ve-empty-sample{display:grid;place-items:center;min-height:13rem;border:1px dashed #adb5bd;border-radius:.35rem;color:#4f5b66;text-align:center;padding:1rem}.quarto-dark .ve-sample-note,.quarto-dark .ve-empty-sample{color:#b9c7d2}.ve-sampling-status{font-variant-numeric:tabular-nums;margin:.4rem 0}.ve-dot{fill:#2780e3;fill-opacity:.72}.ve-dot-latest{fill:#c44536;stroke:var(--bs-body-bg,#fff);stroke-width:1.5}.ve-sample-axis{stroke:currentColor;stroke-opacity:.45}.ve-sample-guide{stroke:currentColor;stroke-opacity:.1}.ve-latest-line{stroke:#2780e3;stroke-width:5;stroke-linecap:round}.ve-latest-dot{fill:#c44536;stroke:var(--bs-body-bg,#fff);stroke-width:2}@media(max-width:575px){.ve-sampling-controls{align-items:stretch}.ve-sampling-controls>.ve-button-row{width:100%}.ve-sampling-controls>.ve-button-row .ve-sampling-button{flex:1}.ve-sampling-button{padding:.55rem .7rem}}"])
 
 ^:kindly/hide-code
 (kind/hiccup
