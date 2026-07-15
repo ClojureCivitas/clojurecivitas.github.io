@@ -11,52 +11,33 @@
                   :keywords [:vocabulary-estimation :beta-binomial :posterior-predictive :stratified-sampling]}}}
 
 (ns language-learning.vocabulary-estimation.beta-binomial-first-pass
-  (:require [fastmath.random :as random]
+  (:require [clojure.java.io :as io]
+            [fastmath.random :as random]
             [language-learning.vocabulary-estimation.math-explanations :as math]
             [scicloj.kindly.v4.kind :as kind]))
 
+(defn- resource-text [filename]
+  (let [text (slurp
+              (io/resource
+               (str "language_learning/vocabulary_estimation/" filename)))]
+    (if (= \newline (last text))
+      (subs text 0 (dec (count text)))
+      text)))
+
 ^:kindly/hide-code
 (kind/hiccup
- [:style
-  (str
-   ":root{--ve-accent:#1464b5;--ve-accent-soft:#e5f1fb;--ve-warm:#9a4b00;--ve-warm-soft:#fff0df;--ve-purple:#694aa6;--ve-muted:#4f5b66}"
-   ".quarto-dark{--ve-accent:#73b7ff;--ve-accent-soft:#173653;--ve-warm:#ffc27a;--ve-warm-soft:#4a2d12;--ve-purple:#c5a7ff;--ve-muted:#b9c7d2}"
-   "#title-block-header{padding-top:.75rem}#title-block-header h1{line-height:1.15;overflow-wrap:anywhere}"
-   "mjx-container[display=true]{max-width:100%;overflow-x:auto;overflow-y:hidden}"
-   ".ve-callout{border:1px solid color-mix(in srgb,var(--ve-accent) 45%,var(--bs-border-color,#dee2e6));border-left:4px solid var(--ve-accent);background:color-mix(in srgb,var(--bs-body-bg,#fff) 90%,var(--ve-accent) 10%);color:var(--bs-body-color,#212529);padding:1rem 1.15rem;margin:1.4rem 0;border-radius:.35rem}"
-   ".ve-callout.provisional{border-color:color-mix(in srgb,var(--ve-warm) 60%,var(--bs-border-color,#dee2e6));border-left-color:var(--ve-warm);background:color-mix(in srgb,var(--bs-body-bg,#fff) 90%,var(--ve-warm) 10%)}"
-   ".ve-callout strong{display:block;margin-bottom:.3rem}.ve-callout p:last-child{margin-bottom:0}"
-   ".ve-grid,.ve-definition-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:.75rem;margin:1.25rem 0}"
-   ".ve-card,.ve-definition{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.5rem;padding:.85rem;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529);overflow-wrap:anywhere}"
-   ".ve-card h3{font-size:1rem;margin-top:0}.ve-definition dt{font-weight:800;color:var(--ve-accent)}.ve-definition dd{margin:.25rem 0 0}"
-   ".ve-table-wrap{max-width:100%;overflow-x:auto;margin:1.25rem 0}.ve-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}"
-   ".ve-table th,.ve-table td{padding:.55rem .7rem;border-bottom:1px solid var(--bs-border-color,#dee2e6);text-align:right;white-space:nowrap}.ve-table th:first-child,.ve-table td:first-child{text-align:left}.ve-table thead th{border-bottom:2px solid var(--bs-border-color,#adb5bd)}"
-   ".ve-figure{margin:1.5rem 0;padding:1rem;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.5rem;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}.ve-figure svg{display:block;width:100%;height:auto}"
-   ".ve-caption,.ve-note{font-size:.9rem;color:var(--ve-muted);margin:.75rem 0 0}.ve-simulator{margin:1.5rem 0}"
-   ".ve-reading-guide{border-left:4px solid var(--ve-accent);padding:.2rem 0 .2rem 1rem;margin:1rem 0}.ve-reading-guide h3{font-size:1rem;margin:.1rem 0 .35rem}.ve-reading-guide ul{margin-bottom:.2rem}"
-   ".ve-hierarchy{display:grid;grid-template-columns:minmax(8rem,.7fr) auto minmax(0,1.5fr);gap:.7rem;align-items:center}.ve-hierarchy-node{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.7rem;text-align:center;background:var(--bs-body-bg,#fff);overflow-wrap:anywhere}.ve-hierarchy-node strong{display:block;color:var(--ve-accent)}"
-   ".ve-hierarchy-arrow{font-size:1.5rem;color:var(--ve-accent);font-weight:800}.ve-form-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}.ve-sense-gap{grid-column:1/-1;border:2px dashed var(--ve-warm);border-radius:.45rem;padding:.65rem;text-align:center;color:var(--bs-body-color,#212529);background:color-mix(in srgb,var(--bs-body-bg,#fff) 92%,var(--ve-warm) 8%)}"
-   ".ve-workflow-caption{text-align:center;color:var(--ve-muted);font-size:.88rem}.ve-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}"
-   "@media(max-width:767px){.ve-hierarchy{grid-template-columns:minmax(0,1fr)}.ve-hierarchy-arrow{transform:rotate(90deg);text-align:center}.ve-form-list{grid-template-columns:minmax(0,1fr)}}"
-   "@media(max-width:575px){.ve-table th,.ve-table td{padding:.45rem}.ve-figure{padding:.65rem}}")])
+ [:style (resource-text "beta_binomial_first_pass_base.css")])
 
 ^:kindly/hide-code
 (math/styles)
 
 ^:kindly/hide-code
 (kind/hiccup
- [:style
-  (str
-   ".ve-round-shell,.ve-stop-shell{min-width:0;border:1px solid var(--bs-border-color,#ced4da);border-radius:.65rem;padding:clamp(.8rem,3vw,1.3rem);background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}"
-   ".ve-round-shell h3,.ve-stop-shell h3{margin-top:0}.ve-round-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.55rem;margin:1rem 0}.ve-round-card{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.65rem;background:color-mix(in srgb,var(--bs-body-bg,#fff) 94%,var(--ve-accent) 6%);overflow-wrap:anywhere}.ve-round-card strong,.ve-round-card span,.ve-round-card small{display:block}.ve-round-card small{color:var(--ve-muted);margin-top:.25rem}.ve-round-progress{width:100%;height:.55rem;accent-color:var(--ve-accent)}.ve-round-status{min-height:2.8rem;font-variant-numeric:tabular-nums}"
-   ".ve-stop-banner{display:flex;align-items:baseline;gap:.35rem;flex-wrap:wrap;border-left:4px solid var(--ve-accent);border-radius:.35rem;padding:.65rem .8rem;margin:.8rem 0;background:color-mix(in srgb,var(--bs-body-bg,#fff) 90%,var(--ve-accent) 10%)}.ve-stop-banner.is-counterfactual{border-left-color:var(--ve-warm);background:color-mix(in srgb,var(--bs-body-bg,#fff) 90%,var(--ve-warm) 10%)}"
-   ".ve-stop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr));gap:.8rem;margin:1rem 0}.ve-stop-field{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.65rem}.ve-stop-field>div{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}.ve-stop-field label{font-weight:700}.ve-stop-field output{font-variant-numeric:tabular-nums;color:var(--ve-muted);text-align:right}.ve-stop-field input{width:100%;accent-color:var(--ve-accent)}.ve-stop-result{border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.75rem;margin:1rem 0}.ve-stop-result ul{margin:.5rem 0 0}.ve-sampling-button:disabled{opacity:.5;cursor:not-allowed}.ve-stop-field input:focus-visible{outline:3px solid color-mix(in srgb,var(--ve-accent) 50%,transparent);outline-offset:3px}"
-   "@media(max-width:767px){.ve-round-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:400px){.ve-round-grid{grid-template-columns:minmax(0,1fr)}}")])
+ [:style (resource-text "beta_binomial_first_pass_round.css")])
 
 ^:kindly/hide-code
 (kind/hiccup
- [:style
-  ".series-toc{min-width:0;border:1px solid var(--bs-border-color,#ced4da);border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:0 0 1.4rem;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem .45rem}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ve-muted)}.series-current{margin:.35rem 0 .35rem -.7rem;border-left:4px solid var(--ve-accent);border-radius:.4rem;padding:.6rem .75rem!important;background:color-mix(in srgb,var(--bs-body-bg,#fff) 84%,var(--ve-accent) 16%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ve-accent) 35%,transparent);font-weight:700}.series-current>a{color:var(--ve-accent)}.series-current .series-status{border-radius:999px;padding:.18rem .48rem;background:var(--ve-accent);color:#fff}.quarto-dark .series-current .series-status{color:#10212b}"])
+ [:style (resource-text "beta_binomial_first_pass_series.css")])
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -662,8 +643,7 @@
 
 ^:kindly/hide-code
 (kind/hiccup
- [:style
-  ".ve-posterior-sampler{border:1px solid var(--bs-border-color,#ced4da);border-radius:.65rem;padding:clamp(.8rem,3vw,1.3rem);min-width:0;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}.ve-sampling-intro{max-width:50rem}.ve-sampling-controls{display:flex;align-items:end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:1rem 0}.ve-rate-fieldset{border:0;padding:0;margin:0;min-width:0}.ve-rate-fieldset legend{font-size:.85rem;font-weight:700;margin-bottom:.4rem}.ve-button-row{display:flex;gap:.5rem;flex-wrap:wrap}.ve-sampling-button{border:1px solid var(--bs-border-color,#6c757d);border-radius:.35rem;padding:.55rem .85rem;font-weight:600;cursor:pointer;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}.ve-sampling-button[aria-pressed=true],.ve-sampling-button.ve-primary{border-color:#1464b5;background:#1464b5;color:#fff}.quarto-dark .ve-sampling-button[aria-pressed=true],.quarto-dark .ve-sampling-button.ve-primary{border-color:#73b7ff;background:#73b7ff;color:#10212b}.ve-sampling-button:focus-visible{outline:3px solid color-mix(in srgb,var(--ve-accent) 45%,transparent);outline-offset:2px}.ve-sampling-progress{width:100%;height:.55rem;accent-color:var(--ve-accent)}.ve-sampling-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:1rem;margin-top:1rem}.ve-sample-panel{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.5rem;padding:clamp(.65rem,2vw,1rem);margin:0;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}.ve-sample-panel h4{font-size:1rem;margin:0 0 .25rem}.ve-sample-panel svg{display:block;width:100%;height:auto}.ve-sample-stat{font-variant-numeric:tabular-nums;margin:.2rem 0 .65rem}.ve-sample-note{font-size:.85rem;color:var(--ve-muted);margin:.5rem 0 0}.ve-empty-sample{display:grid;place-items:center;min-height:13rem;border:1px dashed var(--bs-border-color,#adb5bd);border-radius:.35rem;color:var(--ve-muted);text-align:center;padding:1rem}.ve-sampling-status{font-variant-numeric:tabular-nums;margin:.4rem 0}.ve-dot{fill:var(--ve-accent);fill-opacity:.72}.ve-dot-latest{fill:var(--ve-warm);stroke:var(--bs-body-bg,#fff);stroke-width:1.5}.ve-sample-axis{stroke:currentColor;stroke-opacity:.45}.ve-sample-guide{stroke:currentColor;stroke-opacity:.1}.ve-latest-line{stroke:var(--ve-accent);stroke-width:5;stroke-linecap:round}.ve-latest-dot{fill:var(--ve-warm);stroke:var(--bs-body-bg,#fff);stroke-width:2}.ve-draw-breakdown{width:100%;border-collapse:collapse;font-size:.82rem;font-variant-numeric:tabular-nums;margin-top:.75rem}.ve-draw-breakdown th,.ve-draw-breakdown td{padding:.35rem .45rem;border-bottom:1px solid var(--bs-border-color,#dee2e6);text-align:right;white-space:nowrap}.ve-draw-breakdown th:first-child{text-align:left}.ve-draw-breakdown-wrap{max-width:100%;overflow-x:auto}@media(max-width:575px){.ve-sampling-controls{align-items:stretch}.ve-sampling-controls>.ve-button-row{width:100%}.ve-sampling-controls>.ve-button-row .ve-sampling-button{flex:1}.ve-sampling-button{padding:.55rem .7rem}}"])
+ [:style (resource-text "beta_binomial_first_pass_sampler.css")])
 
 ^:kindly/hide-code
 (kind/hiccup
