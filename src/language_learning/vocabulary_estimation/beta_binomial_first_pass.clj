@@ -56,7 +56,7 @@
 ^:kindly/hide-code
 (kind/hiccup
  [:style
-  ".series-toc{min-width:0;border:1px solid #ced4da;border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:1.4rem 0;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem 0}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#4f5b66}.quarto-dark .series-status{color:#b9c7d2}"])
+  ".series-toc{min-width:0;border:1px solid var(--bs-border-color,#ced4da);border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:0 0 1.4rem;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem .45rem}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ve-muted)}.series-current{margin:.35rem 0 .35rem -.7rem;border-left:4px solid var(--ve-accent);border-radius:.4rem;padding:.6rem .75rem!important;background:color-mix(in srgb,var(--bs-body-bg,#fff) 84%,var(--ve-accent) 16%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ve-accent) 35%,transparent);font-weight:700}.series-current>a{color:var(--ve-accent)}.series-current .series-status{border-radius:999px;padding:.18rem .48rem;background:var(--ve-accent);color:#fff}.quarto-dark .series-current .series-status{color:#10212b}"])
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -67,12 +67,13 @@
    [:li [:a {:href "bayes_theorem_simulations.html"}
          "Bayes' theorem from uncertainty to decision"]
     [:span.series-status "published"]]
-   [:li [:a {:href "beta_binomial_first_pass.html"}
-         "Estimating vocabulary size: a stratified Beta–binomial first pass"]
+   [:li.series-current [:a {:href "beta_binomial_first_pass.html"
+                            :aria-current "page"}
+                        "Estimating vocabulary size: a stratified Beta–binomial first pass"]
     [:span.series-status "you are here"]]
    [:li [:a {:href "pair_frequency_logistic_v2_article.html"}
          "Does pair frequency predict learner responses?"]
-    [:span.series-status "next"]]
+    [:span.series-status "published"]]
    [:li "From Self-Reported CEFR to a Versioned Lemma–Form-Pair Pool"
     [:span.series-status "planned"]]
    [:li "From Correlated Form Pairs to Latent Lemma Knowledge"

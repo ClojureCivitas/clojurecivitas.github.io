@@ -68,13 +68,32 @@
    ".bp-definition{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.75rem;background:var(--bs-body-bg,#fff)}"
    ".bp-definition dt{font-weight:800;color:var(--bp-accent)}.bp-definition dd{margin:.25rem 0 0}"
    ".bp-engineering-caption{text-align:center;color:var(--bp-muted);font-size:.88rem}"
-   ".series-toc{min-width:0;border:1px solid var(--bs-border-color,#ced4da);border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:1.4rem 0;background:var(--bs-body-bg,#fff)}"
-   ".series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem 0}"
+   ".series-toc{min-width:0;border:1px solid var(--bs-border-color,#ced4da);border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:0 0 1.4rem;background:var(--bs-body-bg,#fff)}"
+   ".series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem .45rem}"
    ".series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--bp-muted)}"
+   ".series-current{margin:.35rem 0 .35rem -.7rem;border-left:4px solid var(--bp-accent);border-radius:.4rem;padding:.6rem .75rem!important;background:color-mix(in srgb,var(--bs-body-bg,#fff) 84%,var(--bp-accent) 16%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bp-accent) 35%,transparent);font-weight:700}.series-current>a{color:var(--bp-accent)}.series-current .series-status{border-radius:999px;padding:.18rem .48rem;background:var(--bp-accent);color:#fff}.quarto-dark .series-current .series-status{color:#10212b}"
    "@media(max-width:767px){.bp-process-strip{grid-template-columns:minmax(0,1fr)}.bp-process-symbol{min-height:1.2rem}.bp-shell{padding:.75rem}.bp-controls{align-items:stretch}.bp-button{flex:1}.bp-chart{padding:.5rem}}")])
 
 ^:kindly/hide-code
 (math/styles)
+
+^:kindly/hide-code
+(kind/hiccup
+ [:nav.series-toc {:aria-labelledby "series-contents-heading"}
+  [:h2#series-contents-heading "Bayes-to-Lexibench series"]
+  [:p "This article supplies the probability tools used by the later vocabulary-estimation articles."]
+  [:ol
+   [:li.series-current
+    [:a {:href "bayes_theorem_simulations.html" :aria-current "page"}
+     "Bayes' theorem from uncertainty to decision"]
+    [:span.series-status "you are here"]]
+   [:li [:a {:href "beta_binomial_first_pass.html"} "Estimating vocabulary size with a simple Bayesian model"] [:span.series-status "published"]]
+   [:li [:a {:href "pair_frequency_logistic_v2_article.html"} "Does pair frequency predict learner responses?"] [:span.series-status "published"]]
+   [:li "From Self-Reported CEFR to a Versioned Lemma–Form-Pair Pool" [:span.series-status "planned"]]
+   [:li "From Correlated Form Pairs to Latent Lemma Knowledge" [:span.series-status "planned"]]
+   [:li "Modelling Correct, Wrong, and Don't-Know Separately" [:span.series-status "planned"]]
+   [:li "Calibrating Items Before IRT and Adaptive Selection" [:span.series-status "planned"]]
+   [:li "When Contexts and Senses Become Identifiable" [:span.series-status "planned"]]]])
 
 ;; A probability model is a disciplined way to reason when one answer is
 ;; unknown. It does not remove uncertainty. It records candidate answers,
@@ -94,16 +113,6 @@
   [:li [:strong "Sample and decide"] [:br] "How can a distribution guide an action?"]
   [:li [:strong "Scale up"] [:br] "How does the same update work with two unknown parameters?"]
   [:li [:strong "Reproduce"] [:br] "How do code, seeds, tests, and rendering make the lesson checkable?"]])
-
-^:kindly/hide-code
-(kind/hiccup
- [:nav.series-toc {:aria-labelledby "series-contents-heading"}
-  [:h2#series-contents-heading "Bayes-to-Lexibench series"]
-  [:p "This article supplies the probability tools used by the later vocabulary-estimation articles."]
-  [:ol
-   [:li [:a {:href "bayes_theorem_simulations.html"} "Bayes' theorem from uncertainty to decision"] [:span.series-status "you are here"]]
-   [:li [:a {:href "beta_binomial_first_pass.html"} "Estimating vocabulary size with a simple Bayesian model"] [:span.series-status "next"]]
-   [:li [:a {:href "pair_frequency_logistic_v2_article.html"} "Does pair frequency predict learner responses?"] [:span.series-status "then"]]]])
 
 ^:kindly/hide-code
 (math/global-controls)
