@@ -80,9 +80,13 @@
 ^:kindly/hide-code
 (kind/hiccup
  [:nav.series-toc {:aria-labelledby "series-contents-heading"}
-  [:h2#series-contents-heading "Bayes-to-Lexibench series"]
-  [:p "This article supplies the probability tools used by the later vocabulary-estimation articles."]
-  [:ol
+  [:h2#series-contents-heading "Theory to vocabulary-estimation series"]
+  [:p "Article 0 explains the workflow; this article supplies probability tools used by the later vocabulary-estimation articles."]
+  [:ol {:start 0}
+   [:li
+    [:a {:href "managing_brilliant_but_uneven_minds.html"}
+     "Managing brilliant but uneven minds: my theory-to-algorithm workflow"]
+    [:span.series-status "published"]]
    [:li.series-current
     [:a {:href "bayes_theorem_simulations.html" :aria-current "page"}
      "Bayes' theorem from uncertainty to decision"]

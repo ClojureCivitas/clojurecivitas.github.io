@@ -16,6 +16,7 @@
             [language-learning.vocabulary-estimation.math-explanations :as math]
             [scicloj.kindly.v4.kind :as kind]))
 
+^:kindly/hide-code
 (defn- resource-text [filename]
   (let [text (slurp
               (io/resource
@@ -42,15 +43,18 @@
 ^:kindly/hide-code
 (kind/hiccup
  [:nav.series-toc {:aria-labelledby "series-contents-heading"}
-  [:h2#series-contents-heading "Series contents"]
-  [:p "The second article applies the previous Bayesian tools to one deliberately narrow measurement problem."]
-  [:ol
+  [:h2#series-contents-heading "Theory to vocabulary-estimation series"]
+  [:p "Article 0 explains the workflow; this article applies the previous Bayesian tools to one deliberately narrow measurement problem."]
+  [:ol {:start 0}
+   [:li [:a {:href "managing_brilliant_but_uneven_minds.html"}
+         "Managing brilliant but uneven minds: my theory-to-algorithm workflow"]
+    [:span.series-status "published"]]
    [:li [:a {:href "bayes_theorem_simulations.html"}
          "Bayes' theorem from uncertainty to decision"]
     [:span.series-status "published"]]
    [:li.series-current [:a {:href "beta_binomial_first_pass.html"
                             :aria-current "page"}
-                        "Estimating vocabulary size: a stratified Beta–binomial first pass"]
+                        "Estimating vocabulary size with a simple Bayesian model"]
     [:span.series-status "you are here"]]
    [:li [:a {:href "pair_frequency_logistic_v2_article.html"}
          "Does pair frequency predict learner responses?"]
@@ -784,7 +788,7 @@
   [:span.article-marker "Build / Check / Decide"]
   [:p "Build: compute the exact finite-pool distribution and a qualified estimate. Check: reproduce it with a seeded simulation and inspect stopping only at round boundaries. Decide: stop for voluntary choice, adequate precision after the minimum, or the soft maximum—without changing the rule after seeing one learner's result."]])
 ;;
-;; ## 8. Reproduce: keep the model separate from the machinery
+;; ## 8. Reproduce: protect this model's evidence
 ;;
 ;; A trustworthy calculation needs a boundary between the mathematical model
 ;; and software that reads files, draws charts, or responds to clicks. A **pure
@@ -804,28 +808,11 @@
 
 ^:kindly/hide-code
 (kind/hiccup
- [:dl.ve-definition-grid
-  [:div.ve-definition [:dt "Parity test"] [:dd "The same fixture is scored in Clojure on the JVM and ClojureScript in the browser; both implementations must agree on the protected behavior."]]
-  [:div.ve-definition [:dt "Build"] [:dd "Transform source and dependencies into artifacts that another tool can execute or publish."]]
-  [:div.ve-definition [:dt "Render"] [:dd "Evaluate the executable article and turn its structured source into the final page readers see."]]
-  [:div.ve-definition [:dt "CI"] [:dd "Continuous integration: automated builds and tests run on repository changes rather than relying only on one workstation."]]
-  [:div.ve-definition [:dt "Release gate"] [:dd "A required check that must pass before publication; here the final gate includes a full-site render."]]])
-
-^:kindly/hide-code
-(kind/mermaid
- "flowchart LR
-    E[Estimand] --> V[Versioned pool<br/>and raw events]
-    V --> P[Pure scorer]
-    P --> S[Seeded prediction]
-    S --> T[CLJ and CLJS<br/>parity tests]
-    T --> R[Rendered article]
-    R --> B[Browser checks]
-    B --> G[Publication gate]")
-
-^:kindly/hide-code
-(kind/hiccup
- [:p.ve-workflow-caption
-  "Model/software workflow. Every arrow carries explicit, versioned evidence forward; a later presentation layer does not redefine the estimand or scorer."])
+ [:div.ve-callout
+  [:strong "The wider workflow lives in Article 0"]
+  [:p "This section keeps the evidence specific to v1: pure scoring, immutable fixtures and response events, seeded replay, and CLJ/CLJS parity. "
+   [:a {:href "managing_brilliant_but_uneven_minds.html#the-research-cycle-in-public"}
+    "Article 0 explains the complete theory-to-algorithm cycle and its separate model, software, and publication gates."]]])
 
 ^:kindly/hide-code
 (def worked-fixture
@@ -852,12 +839,11 @@
   [:p "Calling this function twice with the same fixture must return equal maps; the final regression checks enforce that deterministic replay."]
   [:p.article-code-source [:a {:href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/beta_binomial_first_pass.clj"} "View the fixture, scorer, and assertions"]]])
 
-;; The article itself is a separate presentation path: Clay evaluates the
-;; Clojure source, writes QMD, Quarto renders HTML, and Scittle/Reagent supplies
-;; browser interactions. Browser checks cover accessible labels, both colour
-;; themes, responsive widths, control behavior, and console errors. **CI** can
-;; automate repeatable tests, but a passing software build is not evidence that
-;; a provisional measurement assumption is true.
+;; Clay evaluates this article's Clojure source, writes QMD, and hands it to
+;; Quarto; Scittle/Reagent supplies the bounded browser interactions. Browser
+;; checks cover labels, both colour themes, responsive widths, control behaviour,
+;; and console errors. Those checks protect this explanation without changing
+;; the model or turning a provisional measurement assumption into a fact.
 ;;
 ;; ## What this model postpones
 ;;
