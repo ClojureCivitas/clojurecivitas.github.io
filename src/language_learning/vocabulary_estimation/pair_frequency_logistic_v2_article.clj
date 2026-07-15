@@ -35,8 +35,8 @@
    ".pf-explain-table th,.pf-explain-table td{white-space:normal;text-align:left;vertical-align:top;min-width:9rem}"
    ".pf-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.pf-code{overflow-wrap:anywhere}.pf-lab{border:1px solid var(--bs-border-color,#ced4da);border-radius:.65rem;padding:clamp(.8rem,3vw,1.3rem);min-width:0}"
    ".pf-pipeline{display:grid;grid-template-columns:repeat(9,minmax(0,auto));align-items:stretch;gap:.4rem;margin:1.25rem 0}.pf-stage{display:grid;align-content:center;min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.7rem;background:var(--bs-body-bg,#fff);text-align:center;overflow-wrap:anywhere}.pf-stage strong{display:block;color:var(--pf-accent)}.pf-stage small{color:var(--pf-muted)}.pf-arrow{display:grid;place-items:center;color:var(--pf-accent);font-size:1.35rem;font-weight:800}"
-   ".pf-diagram{min-width:0;margin:1.25rem 0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.55rem;padding:clamp(.75rem,2vw,1rem);background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}.pf-diagram-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr));gap:.65rem;margin:0;padding:0;list-style:none;counter-reset:pf-step}.pf-diagram-steps li{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.65rem;background:color-mix(in srgb,var(--bs-body-bg,#fff) 94%,var(--pf-accent) 6%);overflow-wrap:anywhere;counter-increment:pf-step}.pf-diagram-steps li::before{content:counter(pf-step);display:grid;place-items:center;width:1.55rem;height:1.55rem;margin-bottom:.4rem;border-radius:50%;background:var(--pf-accent);color:var(--bs-body-bg,#fff);font-weight:800}.quarto-dark .pf-diagram-steps li::before{color:#10212b}.pf-diagram-steps strong,.pf-lane strong{display:block;color:var(--pf-accent)}"
-   ".pf-phase-diagram{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:.65rem;align-items:center}.pf-phase-node,.pf-phase-branch{min-width:0}.pf-phase-node{border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.75rem;background:color-mix(in srgb,var(--bs-body-bg,#fff) 94%,var(--pf-accent) 6%);overflow-wrap:anywhere}.pf-phase-node strong{display:block;color:var(--pf-accent)}.pf-phase-branch{display:grid;gap:.55rem}.pf-workflow-lanes{display:grid;gap:.8rem}.pf-lane{min-width:0;border-left:4px solid var(--pf-accent);padding:.2rem 0 .2rem .8rem}.pf-lane h3{font-size:1rem;margin:.1rem 0 .55rem}"
+   ".pf-diagram{min-width:0;margin:1.25rem 0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.55rem;padding:clamp(.75rem,2vw,1rem);background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}.pf-diagram-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr));gap:.65rem;margin:0;padding:0;list-style:none;counter-reset:pf-step}.pf-diagram-steps li{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.65rem;background:color-mix(in srgb,var(--bs-body-bg,#fff) 94%,var(--pf-accent) 6%);overflow-wrap:anywhere;counter-increment:pf-step}.pf-diagram-steps li::before{content:counter(pf-step);display:grid;place-items:center;width:1.55rem;height:1.55rem;margin-bottom:.4rem;border-radius:50%;background:var(--pf-accent);color:var(--bs-body-bg,#fff);font-weight:800}.quarto-dark .pf-diagram-steps li::before{color:#10212b}.pf-diagram-steps strong{display:block;color:var(--pf-accent)}"
+   ".pf-phase-diagram{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:.65rem;align-items:center}.pf-phase-node,.pf-phase-branch{min-width:0}.pf-phase-node{border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.75rem;background:color-mix(in srgb,var(--bs-body-bg,#fff) 94%,var(--pf-accent) 6%);overflow-wrap:anywhere}.pf-phase-node strong{display:block;color:var(--pf-accent)}.pf-phase-branch{display:grid;gap:.55rem}"
    ".pf-odds-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;margin:1rem 0}.pf-odds-card{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.7rem;background:var(--bs-body-bg,#fff);text-align:center}.pf-odds-card strong,.pf-odds-card span{display:block}.pf-odds-card strong{color:var(--pf-accent)}.pf-odds-card span{font-variant-numeric:tabular-nums}"
    ".pf-status-pass{color:var(--pf-success);font-weight:800}.pf-status-fail{color:var(--pf-fail);font-weight:800}.pf-caption,.pf-note{font-size:.9rem;color:var(--pf-muted)}"
    ".series-toc{min-width:0;border:1px solid var(--bs-border-color,#ced4da);border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:0 0 1.4rem;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem .45rem}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--pf-muted)}.series-current{margin:.35rem 0 .35rem -.7rem;border-left:4px solid var(--pf-accent);border-radius:.4rem;padding:.6rem .75rem!important;background:color-mix(in srgb,var(--bs-body-bg,#fff) 84%,var(--pf-accent) 16%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pf-accent) 35%,transparent);font-weight:700}.series-current>a{color:var(--pf-accent)}.series-current .series-status{border-radius:999px;padding:.18rem .48rem;background:var(--pf-accent);color:#fff}.quarto-dark .series-current .series-status{color:#10212b}"
@@ -48,15 +48,18 @@
 ^:kindly/hide-code
 (kind/hiccup
  [:nav.series-toc {:aria-labelledby "series-contents-heading"}
-  [:h2#series-contents-heading "Series contents"]
-  [:p [:strong "Learning the theory and developing a scorer for "]
-   [:a {:href "https://lexibench.com/"} "Lexibench.com"]]
-  [:ol
+  [:h2#series-contents-heading "Theory to vocabulary-estimation series"]
+  [:p "Article 0 explains the workflow for learning the theory and developing a scorer for "
+   [:a {:href "https://lexibench.com/"} "Lexibench.com"] "."]
+  [:ol {:start 0}
+   [:li [:a {:href "managing_brilliant_but_uneven_minds.html"}
+         "Managing brilliant but uneven minds: my theory-to-algorithm workflow"]
+    [:span.series-status "published"]]
    [:li [:a {:href "bayes_theorem_simulations.html"}
-         "Bayes' Theorem, Revisited: Three Interactive Simulations"]
+         "Bayes' theorem from uncertainty to decision"]
     [:span.series-status "published"]]
    [:li [:a {:href "beta_binomial_first_pass.html"}
-         "Estimating Vocabulary Size with a Simple Bayesian Model"]
+         "Estimating vocabulary size with a simple Bayesian model"]
     [:span.series-status "published"]]
    [:li.series-current [:a {:href "pair_frequency_logistic_v2_article.html"
                             :aria-current "page"}
@@ -1170,44 +1173,17 @@
 ;;
 ;; ## Model validation is not a software build
 ;;
-;; The **model-validation gate** asks whether simulated measurement performance
-;; justifies promotion. An **automated test** asks whether code still behaves as
-;; specified; Clojure's `clojure.test` framework records such assertions. A
-;; **targeted render** rebuilds only this article for fast review. The
-;; **full-site publication gate** renders the complete site immediately before
-;; publishing, catching cross-page and shared-configuration failures. These are
-;; different forms of evidence: perfect software tests cannot turn a failed
-;; coverage check into a pass.
+;; This article's automated CLJ/CLJS checks establish parity, deterministic
+;; replay, and the declared implementation behaviour. Its render and browser
+;; checks establish that readers can inspect the evidence. Neither answers the
+;; model question: did v2 satisfy every frozen coverage, error, and test-length
+;; threshold? It did not. Perfect software and publication checks cannot turn
+;; that failed model gate into a pass.
 ;;
-;; The executable source is evaluated by
-;; [Clay](https://scicloj.github.io/clay/), which emits the article input;
-;; [Quarto](https://quarto.org/docs/cli/render.html) renders one page or a whole
-;; project; and [Scittle](https://github.com/babashka/scittle) runs the bounded
-;; ClojureScript interactions in the browser. The CLJ and CLJS suites check
-;; parity and deterministic replay before visual checks cover controls,
-;; accessibility, responsive layout, themes, and console errors.
-
-^:kindly/hide-code
-(kind/hiccup
- [:figure.pf-diagram
-  [:div.pf-workflow-lanes
-   {:role "img"
-    :aria-label "Two evidence lanes meet at a versioned publication decision. The model lane moves from immutable fixture and seeded artifacts through the five-part validation gate to either promotion if every check passes or non-promotion if any check fails. The software lane moves from Clojure and ClojureScript source through automated tests, targeted rendering, separate-tab browser checks, and the full-site publication gate. Software success cannot override model-gate failure."}
-   [:section.pf-lane
-    [:h3 "Model evidence"]
-    [:ol.pf-diagram-steps
-     [:li [:strong "Versioned evidence"] "Immutable fixture, seeds, scenarios, and result artifacts."]
-     [:li [:strong "Validation gate"] "Coverage, MAE, and length; all five checks required."]
-     [:li [:strong "Decision"] "Promote only if all pass; otherwise retain v1."]]]
-   [:section.pf-lane
-    [:h3 "Software and publication evidence"]
-    [:ol.pf-diagram-steps
-     [:li [:strong "Automated tests"] "CLJ, CLJS, parity, and executable assertions."]
-     [:li [:strong "Targeted render"] "Clay and Quarto rebuild the affected article."]
-     [:li [:strong "Browser checks"] "Controls, console, layout, themes, and accessibility in a separate tab."]
-     [:li [:strong "Publication gate"] "Render the full site immediately before push."]]]]
-  [:figcaption.pf-caption
-   "Both lanes must be trustworthy, but they answer different questions. Passing software checks cannot override failed model evidence."]])
+;; [Article 0](managing_brilliant_but_uneven_minds.html#the-research-cycle-in-public)
+;; defines the full theory-to-algorithm cycle and the three validation lanes.
+;; This article keeps the local consequence visible because it determines the
+;; result: v2 remains a non-promoted checkpoint.
 ;;
 ;; A later promoted scorer would still retain its versioned predecessor so a
 ;; **rollback** could restore the earlier target without rewriting old events or
