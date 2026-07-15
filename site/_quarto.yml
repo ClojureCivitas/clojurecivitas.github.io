@@ -25,8 +25,10 @@ website:
       - civitas/explorer.qmd
       - icon: github
         href: "https://github.com/ClojureCivitas/clojurecivitas.github.io"
+        aria-label: "Clojure Civitas on GitHub"
       - icon: rss
         href: posts.xml
+        aria-label: "Clojure Civitas RSS feed"
   sidebar:
     - id: emmy-fdg
       title: "Functional Differential Geometry in Emmy"
