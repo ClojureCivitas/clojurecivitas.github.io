@@ -43,6 +43,7 @@
   [response p]
   (case response
     :correct p
+    :wrong (- 1 p)
     :dont-know (- 1 p)
     1))
 
@@ -62,6 +63,7 @@
 (defn response-label [response]
   (case response
     :correct "correct"
+    :wrong "wrong"
     :dont-know "don't know"
     "none yet"))
 
@@ -69,19 +71,19 @@
   [{:keys [alpha beta previous last-response]}]
   (let [[previous-alpha previous-beta] previous
         curves [{:label "Prior Beta(1,1)"
-                 :color "#6c757d"
+                 :color "var(--ve-muted)"
                  :dash "6 5"
                  :f #(beta-density 1 1 %)}
                 {:label (str "Previous Beta(" previous-alpha "," previous-beta ")")
-                 :color "#7b61a8"
+                 :color "var(--ve-purple)"
                  :dash "3 4"
                  :f #(beta-density previous-alpha previous-beta %)}
                 {:label (str "Last-response likelihood (" (response-label last-response) ")")
-                 :color "#e69f00"
+                 :color "var(--ve-warm)"
                  :dash "8 4"
                  :f #(likelihood last-response %)}
                 {:label (str "Current Beta(" alpha "," beta ")")
-                 :color "#2780e3"
+                 :color "var(--ve-accent)"
                  :dash nil
                  :f #(beta-density alpha beta %)}]
         max-y (apply max 1 (mapcat (fn [{:keys [f]}] (map f plot-points)) curves))]
@@ -111,7 +113,7 @@
        [:path {:d (scaled-path f max-y)
                :fill "none"
                :stroke color
-               :stroke-width (if (= color "#2780e3") 4 2.5)
+               :stroke-width (if (= color "var(--ve-accent)") 4 2.5)
                :stroke-dasharray dash
                :vector-effect "non-scaling-stroke"}])
      (for [[i {:keys [label color dash]}] (map-indexed vector curves)
@@ -144,6 +146,73 @@
                     :background "var(--bs-body-bg, white)"
                     :color "var(--bs-body-color, #212529)"}}
    label])
+
+(def balanced-response-sequence
+  [:correct :wrong :dont-know :correct :correct :dont-know :wrong :correct
+   :dont-know :correct :wrong :wrong :correct :dont-know :correct :correct])
+
+(def balanced-selection-limit 16)
+(defonce balanced-state (r/atom {:revealed 0}))
+
+(defn scheduled-selection [index]
+  (let [stratum (inc (mod index 8))
+        round (inc (quot index 8))]
+    {:stratum stratum
+     :round round
+     :item-id (str "S" stratum "-R" round)
+     :response (nth balanced-response-sequence index)}))
+
+(defn reveal-next-selection! []
+  (swap! balanced-state update :revealed
+         #(min balanced-selection-limit (inc %))))
+
+(defn reset-balanced-rounds! []
+  (reset! balanced-state {:revealed 0}))
+
+(defn balanced-round-simulator []
+  (let [revealed (:revealed @balanced-state)
+        selections (mapv scheduled-selection (range revealed))
+        latest (peek selections)
+        complete? (= revealed balanced-selection-limit)]
+    [:section.ve-round-shell {:aria-labelledby "balanced-round-heading"}
+     [:h3#balanced-round-heading "Balanced non-adaptive rounds"]
+     [:p
+      "Two fixed demonstration rounds are queued. Each click reveals the next scheduled item and its sample response."]
+     [:div.ve-round-grid
+      (for [stratum (range 1 9)
+            :let [seen (filterv #(= stratum (:stratum %)) selections)
+                  most-recent (peek seen)
+                  next-round (inc (count seen))]]
+        ^{:key stratum}
+        [:div.ve-round-card
+         [:strong (str "Stratum " stratum)]
+         [:span (if most-recent
+                  (str "Latest: " (:item-id most-recent)
+                       " · " (response-label (:response most-recent)))
+                  "Latest: none")]
+         [:small (if (< next-round 3)
+                   (str "Next queued: S" stratum "-R" next-round)
+                   "Two demonstration items used")]])]
+     [:progress.ve-round-progress
+      {:value revealed :max balanced-selection-limit
+       :aria-label "Scheduled demonstration items revealed"}]
+     [:p.ve-round-status
+      {:aria-live "polite"}
+      (cond
+        complete? "Two complete rounds: every stratum supplied two unseen items."
+        latest (str "Revealed " (:item-id latest) " as "
+                    (response-label (:response latest))
+                    ". The response did not alter any next-item queue.")
+        :else "Ready. No response has altered the fixed queues.")]
+     [:div.ve-button-row
+      [:button.ve-sampling-button.ve-primary
+       {:type "button" :on-click reveal-next-selection! :disabled complete?}
+       (if complete? "Two rounds complete" "Reveal next scheduled item")]
+      [:button.ve-sampling-button
+       {:type "button" :on-click reset-balanced-rounds!}
+       "Reset"]]
+     [:p.ve-sample-note
+      "The response labels are illustrative. Schedule order is S1 through S8 in every round, independent of all answers."]]))
 
 (defn make-rng [seed]
   #js {:state (mod seed 2147483647)})
@@ -183,10 +252,16 @@
     (sample-low-p-binomial! rng trials p)))
 
 (defn sample-stratum! [rng {:keys [pool-size k n alpha beta] :as stratum}]
-  (let [p (sample-integer-beta! rng alpha beta)]
+  (let [p (sample-integer-beta! rng alpha beta)
+        untested (- pool-size n)
+        predicted-untested (sample-binomial! rng untested p)]
     (assoc stratum
            :p p
-           :known (+ k (sample-binomial! rng (- pool-size n) p)))))
+           :tested-correct k
+           :tested-not-correct (- n k)
+           :untested untested
+           :predicted-untested predicted-untested
+           :known (+ k predicted-untested))))
 
 (defn sample-complete-draw! [rng]
   (let [strata (mapv #(sample-stratum! rng %) worked-sampling-strata)]
@@ -331,8 +406,29 @@
            (str (format-rate p) " → " known)]])
        [:text {:x 382 :y 350 :text-anchor "middle" :font-size 13 :fill "currentColor"}
         "Known pairs in each 1,000-pair stratum"]]
+      [:div.ve-draw-breakdown-wrap
+       [:table.ve-draw-breakdown
+        [:caption.ve-sr-only
+         "Newest posterior-predictive draw split into tested correct, tested not-correct, predicted untested, and total known pairs"]
+        [:thead
+         [:tr
+          [:th {:scope "col"} "Stratum"]
+          [:th {:scope "col"} "Tested correct"]
+          [:th {:scope "col"} "Tested not-correct"]
+          [:th {:scope "col"} "Predicted untested"]
+          [:th {:scope "col"} "Known total"]]]
+        [:tbody
+         (for [{:keys [index tested-correct tested-not-correct
+                       predicted-untested known]} (:strata latest)]
+           ^{:key index}
+           [:tr
+            [:th {:scope "row"} (str "S" index)]
+            [:td tested-correct]
+            [:td tested-not-correct]
+            [:td predicted-untested]
+            [:td known]])]]]
       [:figcaption.ve-sample-note
-       "Each row shows p drawn from that stratum's Beta posterior, then the resulting finite-pool known count (observed correct + simulated untested known)."]]
+       "Tested-correct pairs are added once. Tested-not-correct pairs remain zero. Only the 996 untested pairs receive a predictive draw."]]
      [:div.ve-empty-sample
       "Press Start to reveal each complete eight-stratum draw."])])
 
@@ -449,6 +545,109 @@
       [latest-draw-chart latest draw-count]
       [all-draws-chart draws]]]))
 
+(def authoritative-stopping-settings
+  {:minimum 32
+   :target-percent 10
+   :soft-cap 96})
+
+(def initial-stopping-state
+  (merge authoritative-stopping-settings
+         {:items-tested 40
+          :half-width 750}))
+
+(defonce stopping-state (r/atom initial-stopping-state))
+
+(defn event-number [event]
+  (js/Number (.. event -target -value)))
+
+(defn update-stopping-setting! [key event]
+  (swap! stopping-state assoc key (event-number event)))
+
+(defn reset-stopping-settings! []
+  (reset! stopping-state initial-stopping-state))
+
+(defn explorer-stopping-check
+  [{:keys [minimum target-percent soft-cap items-tested half-width]}]
+  (let [complete-round? (zero? (mod items-tested 8))
+        assess? (and complete-round? (>= items-tested minimum))
+        target-count (* (/ target-percent 100.0) 8000)
+        target? (and assess? (<= half-width target-count))
+        soft-max? (and assess? (>= items-tested soft-cap))]
+    {:complete-round? complete-round?
+     :assess? assess?
+     :target-count target-count
+     :target? target?
+     :soft-max? soft-max?
+     :stop? (or target? soft-max?)}))
+
+(defn stopping-range
+  [{:keys [id label value min max step suffix on-change]}]
+  [:div.ve-stop-field
+   [:div
+    [:label {:for id} label]
+    [:output {:for id} (str value suffix)]]
+   [:input {:id id :type "range" :value value :min min :max max :step step
+            :on-input on-change
+            :on-change on-change}]])
+
+(defn stopping-rule-explorer []
+  (let [{:keys [minimum target-percent soft-cap items-tested half-width]
+         :as settings} @stopping-state
+        {:keys [complete-round? assess? target-count target? soft-max? stop?]}
+        (explorer-stopping-check settings)
+        observed-percent (* 100.0 (/ half-width 8000))
+        defaults? (= authoritative-stopping-settings
+                     (select-keys settings [:minimum :target-percent :soft-cap]))
+        decision (cond
+                   (not complete-round?) "Not assessed: this is not an eight-item round boundary."
+                   (< items-tested minimum) "Not assessed: the selected minimum has not been reached."
+                   (and target? soft-max?) "Recommend stop: both precision target and soft cap are met."
+                   target? "Recommend stop: the precision target is met."
+                   soft-max? "Recommend stop: the soft cap is reached."
+                   :else "Continue: assessed, but neither stopping condition is met.")]
+    [:section.ve-stop-shell {:aria-labelledby "stopping-explorer-heading"}
+     [:h3#stopping-explorer-heading "Teaching-only stopping-rule explorer"]
+     [:div {:class (str "ve-stop-banner "
+                        (if defaults? "is-default" "is-counterfactual"))}
+      [:strong (if defaults?
+                 "Authoritative v1 defaults"
+                 "Counterfactual teaching settings")]
+      [:span (if defaults?
+               " Minimum 32 · target 10% · soft cap 96."
+               " These controls do not rewrite the article's v1 rule.")]]
+     [:div.ve-stop-grid
+      [stopping-range {:id "stop-minimum" :label "Minimum items"
+                       :value minimum :min 8 :max 64 :step 8 :suffix ""
+                       :on-change #(update-stopping-setting! :minimum %)}]
+      [stopping-range {:id "stop-target" :label "Interval half-width target"
+                       :value target-percent :min 5 :max 25 :step 1 :suffix "% of pool"
+                       :on-change #(update-stopping-setting! :target-percent %)}]
+      [stopping-range {:id "stop-cap" :label "Soft cap"
+                       :value soft-cap :min 64 :max 160 :step 8 :suffix " items"
+                       :on-change #(update-stopping-setting! :soft-cap %)}]
+      [stopping-range {:id "stop-items" :label "Observed items"
+                       :value items-tested :min 8 :max 160 :step 4 :suffix ""
+                       :on-change #(update-stopping-setting! :items-tested %)}]
+      [stopping-range {:id "stop-width" :label "Observed interval half-width"
+                       :value half-width :min 200 :max 2000 :step 50 :suffix " pairs"
+                       :on-change #(update-stopping-setting! :half-width %)}]]
+     [:div.ve-stop-result {:aria-live "polite"}
+      [:strong decision]
+      [:ul
+       [:li (str "Complete round: " (if complete-round? "yes" "no"))]
+       [:li (str "Eligible to assess: " (if assess? "yes" "no"))]
+       [:li (str "Precision threshold: ±" (js/Math.round target-count)
+                 " pairs (" target-percent "% of pool).")]
+       [:li (str "Observed precision: ±" half-width " pairs ("
+                 (.toFixed observed-percent 1) "% of pool).")]
+       [:li (str "Soft cap reached: " (if soft-max? "yes" "no"))]]]
+     [:div.ve-button-row
+      [:button.ve-sampling-button
+       {:type "button" :on-click reset-stopping-settings!}
+       "Reset v1 defaults"]]
+     [:p.ve-sample-note
+      "Voluntary stopping remains available in every scenario and is intentionally outside this statistical recommendation."]]))
+
 (defn simulator []
   (let [{:keys [alpha beta responses] :as current} @state
         n (count responses)
@@ -472,19 +671,24 @@
       "The Beta curves are normalized densities on one shared scale. The response likelihood uses its natural 0–1 scale; compare its shape, not its height, with the densities."]
      [:div {:style {:display "flex" :gap ".65rem" :flex-wrap "wrap" :margin-top "1rem"}}
       [control-button "Correct" #(record-response! :correct) "ve-correct"]
+      [control-button "Wrong" #(record-response! :wrong) "ve-wrong"]
       [control-button "Don't know" #(record-response! :dont-know) "ve-dont-know"]
       [control-button "Reset" #(reset! state initial-state) "ve-reset"]]
      [:p {:style {:font-size ".9rem"
                   :color "var(--bs-body-color, #212529)"
                   :opacity 0.75
                   :margin-bottom 0}}
-      "Keyboard: Tab to a button, then press Enter or Space. “Don't know” contributes the same stage-one likelihood as a wrong answer, while the raw value remains distinct."]]))
+      "Keyboard: Tab to a button, then press Enter or Space. Wrong and “don't know” contribute the same stage-one likelihood, while their raw values remain distinct."]]))
 
 (defn ^:export mount []
+  (when-let [root (js/document.getElementById "balanced-round-simulator")]
+    (rdom/render [balanced-round-simulator] root))
   (when-let [root (js/document.getElementById "beta-binomial-simulator")]
     (rdom/render [simulator] root))
   (when-let [root (js/document.getElementById "posterior-sampling-simulator")]
-    (rdom/render [posterior-sampling-simulator] root)))
+    (rdom/render [posterior-sampling-simulator] root))
+  (when-let [root (js/document.getElementById "stopping-rule-explorer")]
+    (rdom/render [stopping-rule-explorer] root)))
 
 (if (= "loading" js/document.readyState)
   (.addEventListener js/document "DOMContentLoaded" mount)
