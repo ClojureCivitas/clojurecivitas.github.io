@@ -5,14 +5,28 @@
   (kind/hiccup
    [:style
     (str
-     ".article-explanations-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.8rem;min-width:0;border:1px solid color-mix(in srgb,var(--bs-body-color,#212529) 22%,transparent);border-left:4px solid #2780e3;border-radius:.35rem;padding:.8rem 1rem;margin:1.25rem 0;background:var(--bs-body-bg,#fff);background:color-mix(in srgb,var(--bs-body-bg,#fff) 88%,#2780e3 12%);color:var(--bs-body-color,#212529)}"
+     ".article-explanations-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:.8rem;min-width:0;border:1px solid color-mix(in srgb,var(--bs-body-color,#212529) 22%,transparent);border-left:4px solid #2780e3;border-radius:.35rem;padding:.8rem 1rem;margin:1.25rem 0;background:var(--bs-body-bg,#fff);background:color-mix(in srgb,var(--bs-body-bg,#fff) 88%,#2780e3 12%);color:var(--bs-body-color,#212529)}"
      ".article-explanations-toolbar p{min-width:0;margin:0;overflow-wrap:anywhere}"
      ".article-explanations-toolbar strong{color:inherit}"
-     ".article-explanations-toggle{border:1px solid #2780e3;border-radius:.35rem;padding:.5rem .8rem;font-weight:700;cursor:pointer;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}"
-     ".article-explanations-toggle[aria-pressed=true]{background:#1464b5;color:#fff}"
-     ".article-explanations-toggle:focus-visible{outline:3px solid color-mix(in srgb,#2780e3 50%,transparent);outline-offset:3px}"
-     ".article-help-icon:focus-visible,.article-explanation summary:focus-visible{outline:3px solid color-mix(in srgb,var(--explanation-accent,#2780e3) 55%,transparent);outline-offset:3px}"
-     ".article-explanations-description,.article-explanations-status{display:block;margin-top:.2rem;font-size:.84rem;color:#3f4b55}"
+     ".article-explanations-toggle,.article-code-toggle{border:1px solid #2780e3;border-radius:.35rem;padding:.5rem .8rem;font-weight:700;cursor:pointer;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}"
+     ".article-explanations-toggle[aria-pressed=true],.article-code-toggle[aria-pressed=true]{background:#1464b5;color:#fff}"
+     ".article-explanations-toggle:focus-visible,.article-code-toggle:focus-visible{outline:3px solid color-mix(in srgb,#2780e3 50%,transparent);outline-offset:3px}"
+     ".article-help-icon:focus-visible,.article-explanation summary:focus-visible,.article-code-detail summary:focus-visible{outline:3px solid color-mix(in srgb,var(--explanation-accent,#2780e3) 55%,transparent);outline-offset:3px}"
+     ".article-explanations-description,.article-explanations-status,.article-code-status{display:block;margin-top:.2rem;font-size:.84rem;color:#3f4b55}"
+     ".article-reading-action{display:grid;gap:.2rem;min-width:min(100%,12rem)}"
+     ".article-code-detail{min-width:0;margin:1rem 0;border:1px solid color-mix(in srgb,#6f42c1 45%,var(--bs-border-color,#dee2e6));border-radius:.55rem;background:var(--bs-body-bg,#fff);background:color-mix(in srgb,var(--bs-body-bg,#fff) 94%,#6f42c1 6%);color:var(--bs-body-color,#212529)}"
+     "details.article-code-detail>summary{padding:.72rem .85rem;font-weight:750;cursor:pointer;color:var(--bs-body-color,#212529)!important;overflow-wrap:anywhere}"
+     ".article-code-detail[open] summary{border-bottom:1px solid color-mix(in srgb,#6f42c1 35%,transparent)}"
+     ".article-code-detail-body{min-width:0;padding:.8rem .9rem 1rem}"
+     ".article-code-detail-body>*:first-child{margin-top:0}.article-code-detail-body>*:last-child{margin-bottom:0}"
+     ".article-code-detail pre{max-width:100%;overflow:auto;margin:.75rem 0;padding:.75rem;border-radius:.4rem;background:color-mix(in srgb,var(--bs-body-bg,#fff) 84%,var(--bs-body-color,#212529) 16%)}"
+     ".article-code-detail code{white-space:pre-wrap;overflow-wrap:anywhere}"
+     ".article-code-source{font-size:.86rem}"
+     ".article-chapter-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr));gap:.65rem;margin:1.25rem 0;padding:0;list-style:none;counter-reset:chapter-map}"
+     ".article-chapter-map li{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.5rem;padding:.75rem;background:var(--bs-body-bg,#fff);overflow-wrap:anywhere;counter-increment:chapter-map}"
+     ".article-chapter-map li::before{content:counter(chapter-map);display:grid;place-items:center;width:1.6rem;height:1.6rem;margin-bottom:.45rem;border-radius:50%;background:#1464b5;color:#fff;font-weight:800}"
+     ".article-marker{display:inline-block;margin:.2rem .35rem .2rem 0;border-radius:999px;padding:.18rem .58rem;background:color-mix(in srgb,var(--bs-body-bg,#fff) 82%,#2780e3 18%);color:var(--bs-body-color,#212529);font-size:.78rem;font-weight:800;letter-spacing:.03em;text-transform:uppercase}"
+     ".article-recap{min-width:0;border:1px solid color-mix(in srgb,#0f695f 45%,var(--bs-border-color,#dee2e6));border-left:4px solid #0f695f;border-radius:.5rem;padding:1rem 1.1rem;margin:1.35rem 0;background:var(--bs-body-bg,#fff);background:color-mix(in srgb,var(--bs-body-bg,#fff) 91%,#0f695f 9%);color:var(--bs-body-color,#212529)}"
      ".article-explanation-layout,.article-explanation-anchor,.article-explanation-slot{min-width:0}"
      ".article-explanation-layout{margin:0 0 .35rem}"
      ".article-help-icon{--explanation-accent:#155f9f;display:inline-grid;place-items:center;width:1.2rem;height:1.2rem;margin-left:.25rem;padding:0;border:1px solid var(--explanation-accent);border-radius:50%;background:var(--bs-body-bg,#fff);color:var(--explanation-accent);font:800 .75rem/1 system-ui,sans-serif;vertical-align:.14em;cursor:pointer}"
@@ -47,7 +61,7 @@
      ".quarto-dark .article-help-icon.accent-4,.quarto-dark .article-explanation.accent-4{--explanation-accent:#40c9b7}"
      ".quarto-dark .article-help-icon.accent-5,.quarto-dark .article-explanation.accent-5{--explanation-accent:#ff8fbd}"
      ".quarto-dark .article-help-icon.accent-6,.quarto-dark .article-explanation.accent-6{--explanation-accent:#e2cf5b}"
-     ".quarto-dark .article-explanations-description,.quarto-dark .article-explanations-status{color:#b9c7d2}"
+     ".quarto-dark .article-explanations-description,.quarto-dark .article-explanations-status,.quarto-dark .article-code-status{color:#b9c7d2}"
      ".quarto-dark .article-help-icon[aria-expanded=true]{color:#10212b}"
      "#quarto-document-content{transition:transform .2s ease}"
      "@media(min-width:1280px){"
@@ -61,7 +75,7 @@
      ".equation-help-anchor>.equation-help-icon{position:absolute;left:calc(100% + .15rem);top:50%;z-index:3;margin:0;transform:translateY(-50%)}"
      "}"
      "@media(max-width:1279px){.article-explanation-slot.has-open{margin:.55rem 0 1.25rem}.equation-help-icon{display:grid;margin:.35rem auto 0}}"
-     "@media(max-width:767px){.article-explanations-toolbar{grid-template-columns:minmax(0,1fr);align-items:stretch}.article-explanations-toggle{width:100%}}")]))
+     "@media(max-width:767px){.article-explanations-toolbar{grid-template-columns:minmax(0,1fr);align-items:stretch}.article-explanations-toggle,.article-code-toggle{width:100%}.article-reading-action{width:100%}}")]))
 
 (def ^:private explanation-controls-script
   "(() => {
@@ -73,6 +87,10 @@
     const marginQuery = window.matchMedia('(min-width: 1280px)');
     const mathRegistries = Array.from(document.querySelectorAll('.math-explanation-registry'));
     const termRegistries = Array.from(document.querySelectorAll('.term-explanation-registry'));
+    const codeDetails = Array.from(document.querySelectorAll('details.article-code-detail'));
+    const codeAction = document.getElementById('article-code-action');
+    const codeButton = document.getElementById('article-code-toggle');
+    const codeStatus = document.getElementById('article-code-status');
 
     const makeHelpButton = ({label, controls, classes = []}) => {
       const help = document.createElement('button');
@@ -109,8 +127,12 @@
     const precedingEquation = (registry) => {
       let cursor = registry;
       for (let depth = 0; cursor && cursor.parentElement && depth < 4; depth += 1) {
-        const candidate = cursor.previousElementSibling;
-        if (containsDisplayEquation(candidate)) return candidate;
+        let candidate = cursor.previousElementSibling;
+        while (candidate) {
+          if (containsDisplayEquation(candidate)) return candidate;
+          candidate = candidate.previousElementSibling;
+        }
+        if (cursor.parentElement.matches('section')) break;
         cursor = cursor.parentElement;
       }
       return null;
@@ -304,7 +326,7 @@
       if (articleMain) articleMain.classList.toggle('article-explanations-open', openItems.length > 0);
       globalButton.setAttribute('aria-pressed', String(allOpen));
       globalButton.textContent = `${allOpen ? 'Hide' : 'Show'} all help`;
-      if (heading) heading.textContent = 'Optional explanations';
+      if (heading) heading.textContent = 'Reading controls';
       const bothKinds = mathExplanations.length > 0 && terminologyExplanations.length > 0;
       const countParts = [];
       const progressParts = [];
@@ -317,17 +339,29 @@
         progressParts.push(`${openTerms} of ${terminologyExplanations.length} terminology item${terminologyExplanations.length === 1 ? '' : 's'}`);
       }
       if (description) {
-        description.textContent = bothKinds
-          ? 'Use the ? beside a term or equation. An equation icon can reveal several related definitions.'
+        const helpInstruction = bothKinds
+          ? 'Use the ? beside a term or equation for optional explanations.'
           : mathExplanations.length > 0
-            ? 'Use the ? beside an equation to reveal its related definitions.'
-            : 'Use the ? beside a term to reveal its definition.';
+            ? 'Use the ? beside an equation for optional explanations.'
+            : 'Use the ? beside a term for an optional definition.';
+        description.textContent = codeDetails.length > 0
+          ? `${helpInstruction} Code details remain inline and independent.`
+          : helpInstruction;
       }
       if (status) {
         status.textContent = openItems.length === 0
           ? `${countParts.join(' and ')} ${explanations.length === 1 ? 'is' : 'are'} hidden.`
           : `${progressParts.join(' and ')} shown.`;
       }
+
+      const openCodeCount = codeDetails.filter((item) => item.open).length;
+      const allCodeOpen = codeDetails.length > 0 && openCodeCount === codeDetails.length;
+      if (codeAction) codeAction.hidden = codeDetails.length === 0;
+      if (codeButton) {
+        codeButton.setAttribute('aria-pressed', String(allCodeOpen));
+        codeButton.textContent = allCodeOpen ? 'Hide all code details' : 'Show all code details';
+      }
+      if (codeStatus) codeStatus.textContent = `${openCodeCount}/${codeDetails.length} code details open.`;
     };
 
     globalButton.addEventListener('click', () => {
@@ -336,6 +370,13 @@
       sync();
       schedulePlacement();
     });
+    if (codeButton) {
+      codeButton.addEventListener('click', () => {
+        const shouldOpen = !codeDetails.every((item) => item.open);
+        codeDetails.forEach((item) => setOpen(item, shouldOpen));
+        sync();
+      });
+    }
     railHideAll.addEventListener('click', () => {
       explanations.forEach((item) => setOpen(item, false));
       sync();
@@ -364,6 +405,7 @@
         schedulePlacement();
       });
     });
+    codeDetails.forEach((item) => item.addEventListener('toggle', sync));
     marginQuery.addEventListener('change', () => {
       arrangeForViewport();
       sync();
@@ -392,20 +434,49 @@
    [:div.article-explanations-toolbar
     {:role "region" :aria-labelledby "article-explanations-heading"}
     [:p
-     [:strong#article-explanations-heading "Optional explanations"]
+     [:strong#article-explanations-heading "Reading controls"]
      [:span.article-explanations-description
       {:id "article-explanations-description"}
-      "Use the ? beside a term or equation. An equation icon can reveal several related definitions."]
+      "Help explains symbols and terms. Code details show how the examples were built. These controls are independent."]
      [:span.article-explanations-status
       {:id "article-explanations-status" :aria-live "polite"}
       "All explanation items are hidden by default."]]
-    [:button.article-explanations-toggle
-     {:id "article-explanations-toggle"
-      :type "button"
-      :aria-pressed "false"
-      :aria-describedby "article-explanations-description article-explanations-status"}
-     "Show all help"]
+    [:div.article-reading-action
+     [:button.article-explanations-toggle
+      {:id "article-explanations-toggle"
+       :type "button"
+       :aria-pressed "false"
+       :aria-describedby "article-explanations-description article-explanations-status"}
+      "Show all help"]]
+    [:div.article-reading-action
+     {:id "article-code-action"}
+     [:button.article-code-toggle
+      {:id "article-code-toggle"
+       :type "button"
+       :aria-pressed "false"
+       :aria-describedby "article-explanations-description article-code-status"}
+      "Show all code details"]
+     [:span.article-code-status
+      {:id "article-code-status" :aria-live "polite"}
+      "0/0 code details open."]]
     [:script explanation-controls-script]]))
+
+(defn code-detail
+  "Render one closed, inline implementation detail with an independent native
+  disclosure control. Body is arbitrary Hiccup, so callers may mix prose,
+  preformatted code, and a source link."
+  [id purpose body]
+  (let [summary-id (str id "--summary")
+        body-id (str id "--body")]
+    (kind/hiccup
+     [:details.article-code-detail
+      {:id id}
+      [:summary
+       {:id summary-id :aria-controls body-id}
+       (str "Code detail: " purpose)]
+      [:div.article-code-detail-body
+       {:id body-id :role "region" :aria-labelledby summary-id}
+       body]])))
 
 (defn- math-item
   [id term definition]

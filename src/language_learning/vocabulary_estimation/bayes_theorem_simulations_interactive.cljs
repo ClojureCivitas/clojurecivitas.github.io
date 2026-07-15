@@ -83,6 +83,10 @@
 (defn counted-label [number singular]
   (str number " " singular (when (not= number 1) "s")))
 
+(defn modal-grid-value [values]
+  (let [index (first (apply max-key second (map-indexed vector values)))]
+    (nth probability-grid index)))
+
 ;; Accessible SVG primitives. The old application delegated these marks to
 ;; Vega; this recreation keeps the transformation visible in ClojureScript.
 
@@ -243,6 +247,39 @@
   (swap! update-state update :samples
          #(vec (drop-last (min amount (count %)) %))))
 
+(defn update-process-strip
+  [{:keys [prior latest counts likelihood raw-weights posterior]}]
+  (let [likelihood-mode (modal-grid-value likelihood)
+        raw-mode (modal-grid-value raw-weights)
+        posterior-mode (modal-grid-value posterior)
+        latest-label (case latest
+                       :water "latest: water"
+                       :land "latest: land"
+                       "waiting for data")]
+    [:div.bp-process-strip
+     {:role "img"
+      :aria-label
+      (str prior " prior multiplied by likelihood from " (:water counts)
+           " water and " (:land counts) " land observations; raw weights "
+           "are normalised to form a posterior peaking near p equals "
+           (format-decimal posterior-mode 3) ".")}
+     [:div.bp-process-step
+      [:strong "Prior"]
+      [:small prior]]
+     [:div.bp-process-symbol {:aria-hidden "true"} "×"]
+     [:div.bp-process-step
+      [:strong "Likelihood"]
+      [:small (str (:water counts) " W · " (:land counts) " L")]
+      [:small (str latest-label " · peak p ≈ " (format-decimal likelihood-mode 3))]]
+     [:div.bp-process-symbol {:aria-hidden "true"} "="]
+     [:div.bp-process-step
+      [:strong "Raw weights"]
+      [:small (str "peak p ≈ " (format-decimal raw-mode 3))]]
+     [:div.bp-process-symbol {:aria-label "then normalise"} "→"]
+     [:div.bp-process-step
+      [:strong "Posterior"]
+      [:small (str "normalised · peak p ≈ " (format-decimal posterior-mode 3))]]]))
+
 (defn globe-update-simulator []
   (let [{:keys [prior samples speed running?]} @update-state
         selected-prior (get priors-by-label prior)
@@ -264,6 +301,7 @@
         any-order-likelihood (normalize-mean-one
                               (mapv #(binomial-likelihood % (:water counts) (:land counts))
                                     probability-grid))
+        raw-posterior-weights (mapv * selected-prior any-order-likelihood)
         combination-count (binomial-coefficient (:n counts) (:water counts))]
     [:section.bp-shell {:aria-labelledby "globe-simulator-heading"}
      [:h3#globe-simulator-heading "Calculate a posterior distribution"]
@@ -310,6 +348,13 @@
       (if (seq samples)
         (str/join " " (map #(if (= % :water) "W" "L") samples))
         "No observations yet.")]
+     [update-process-strip
+      {:prior prior
+       :latest latest
+       :counts counts
+       :likelihood any-order-likelihood
+       :raw-weights raw-posterior-weights
+       :posterior current-posterior}]
      [:details.bp-details
       [:summary "Formulae for the current observations"]
       [:div
@@ -499,7 +544,7 @@
           ^{:key index}
           [:rect {:x x :y (- 220 height)
                   :width (max 1.2 (- (/ 550 posterior-bin-count) 0.2))
-                  :height height :fill "#2780e3" :fill-opacity 0.78}])
+                  :height height :fill "var(--bp-accent, #1464b5)" :fill-opacity 0.78}])
         (for [[p label] [[0 "0"] [0.25 ".25"] [0.5 ".50"] [0.75 ".75"] [1 "1"]]
               :let [x (+ 50 (* 550 p))]]
           ^{:key p}
@@ -685,7 +730,7 @@
                   y (+ 28 (* (- 40 row) cell-size))]]
         ^{:key index}
         [:rect {:x x :y y :width cell-size :height cell-size
-                :fill "#2780e3" :fill-opacity (heat-opacity value maximum)}])
+                :fill "var(--bp-accent, #1464b5)" :fill-opacity (heat-opacity value maximum)}])
       [:rect {:x 54 :y 28 :width (* 41 cell-size) :height (* 41 cell-size)
               :fill "none" :stroke "currentColor" :stroke-opacity 0.45}]
       (for [[mean label] [[150 "150"] [155 "155"] [160 "160"]]
@@ -706,7 +751,7 @@
       (for [index (range 10)
             :let [x (+ 297 (* index 9))]]
         ^{:key index}
-        [:rect {:x x :y 386 :width 9 :height 8 :fill "#2780e3"
+        [:rect {:x x :y 386 :width 9 :height 8 :fill "var(--bp-accent, #1464b5)"
                 :fill-opacity (+ 0.035 (* 0.965 (/ index 9)))}])
       [:text {:x 293 :y 393 :text-anchor "end" :font-size 9 :fill "currentColor"} "low"]
       [:text {:x 390 :y 393 :font-size 9 :fill "currentColor"} "high"]]]))
