@@ -307,19 +307,28 @@
 
 ^:kindly/hide-code
 (kind/mermaid
- "flowchart LR
-    U[User expectation<br/>as a hypothesis] --> E[Explicit estimand<br/>and exclusions]
-    E --> T[Relevant theory<br/>and assumptions]
-    T --> B[Executable<br/>baseline]
-    B --> C[One versioned<br/>candidate]
-    C --> G[Precommitted<br/>validation gate]
-    G --> D{All required<br/>checks pass?}
-    D -->|yes| P[Promote with<br/>replay + rollback]
-    D -->|no| N[Do not promote;<br/>preserve evidence]
-    P --> R[Publish reasoning,<br/>code, evidence, decision]
-    N --> R
-    R --> L[Learner interpretation<br/>and feedback]
-    L --> U")
+ "flowchart TB
+    subgraph Frame[\"1. Frame the claim\"]
+      direction TB
+      U[User expectation<br/>as a hypothesis] --> E[Explicit estimand<br/>and exclusions]
+      E --> T[Relevant theory<br/>and assumptions]
+    end
+    subgraph Test[\"2. Build and test\"]
+      direction TB
+      B[Executable<br/>baseline] --> C[One versioned<br/>candidate]
+      C --> G[Precommitted<br/>validation gate]
+      G --> D{All required<br/>checks pass?}
+    end
+    subgraph Learn[\"3. Decide and learn\"]
+      direction TB
+      P[Promote with<br/>replay + rollback] --> R[Publish reasoning,<br/>code, evidence, decision]
+      N[Do not promote;<br/>preserve evidence] --> R
+      R --> L[Learner interpretation<br/>and feedback]
+    end
+    T --> B
+    D -->|yes| P
+    D -->|no| N
+    L -. next cycle .-> U")
 
 ^:kindly/hide-code
 (kind/hiccup
