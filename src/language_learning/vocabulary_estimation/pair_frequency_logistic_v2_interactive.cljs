@@ -57,6 +57,9 @@
         [:g [:line {:x1 41 :x2 48 :y1 y :y2 y :stroke "currentColor"}]
          [:text {:x 35 :y (+ y 5) :text-anchor "end" :font-size 13
                  :fill "currentColor"} label]])
+      [:text {:x 14 :y 130 :text-anchor "middle" :font-size 14
+              :transform "rotate(-90 14 130)" :fill "currentColor"}
+       "Knowing probability pᵢ"]
       [:path {:d (curve-path threshold width) :fill "none" :stroke "#2780e3"
               :stroke-width 4 :vector-effect "non-scaling-stroke"}]
       [:text {:x 343 :y 250 :text-anchor "middle" :font-size 14
