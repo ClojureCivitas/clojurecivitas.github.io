@@ -16,7 +16,7 @@
             [language-learning.vocabulary-estimation.math-explanations :as math]
             [scicloj.kindly.v4.kind :as kind]))
 
-^:kindly/hide-code
+^:kindly/hide-code ^:kind/hidden
 (defn- resource-text [filename]
   (let [text (slurp
               (io/resource
