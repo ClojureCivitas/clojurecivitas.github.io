@@ -11,7 +11,8 @@
                   :keywords [:bayes-theorem :grid-approximation :posterior-sampling :normal-distribution :data-visualisation]}}}
 
 (ns language-learning.vocabulary-estimation.bayes-theorem-simulations
-  (:require [language-learning.vocabulary-estimation.math-explanations :as math]
+  (:require [language-learning.vocabulary-estimation.article-controls :as controls]
+            [language-learning.vocabulary-estimation.math-explanations :as math]
             [scicloj.kindly.v4.kind :as kind]))
 
 ^:kindly/hide-code
@@ -75,9 +76,6 @@
    "@media(max-width:767px){.bp-process-strip{grid-template-columns:minmax(0,1fr)}.bp-process-symbol{min-height:1.2rem}.bp-shell{padding:.75rem}.bp-controls{align-items:stretch}.bp-button{flex:1}.bp-chart{padding:.5rem}}")])
 
 ^:kindly/hide-code
-(math/styles)
-
-^:kindly/hide-code
 (kind/hiccup
  [:nav.series-toc {:aria-labelledby "series-contents-heading"}
   [:h2#series-contents-heading "Theory to vocabulary-estimation series"]
@@ -119,7 +117,7 @@
   [:li [:strong "Reproduce"] [:br] "How do code, seeds, tests, and rendering make the lesson checkable?"]])
 
 ^:kindly/hide-code
-(math/global-controls)
+(controls/install)
 
 ;; ## The five ideas under every update
 ;;
@@ -165,9 +163,14 @@
   (mapv #(/ % 200.0) (range 201)))
 
 ^:kindly/hide-code
-(math/code-detail
+(math/equation-code-detail
  "code-probability-grid"
  "Constructing the 201-point probability grid"
+ {:kind :source
+  :label "bayes_theorem_simulations.clj — probability-grid"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/bayes_theorem_simulations.clj"
+  :symbols [["probability-grid" "The code name for the ordered collection of candidate values represented by p in the equation."]
+            ["range" "Produces the integer numerators 0 through 200; dividing by 200.0 creates the 0.005 spacing."]]}
  [:div
   [:p "Clojure's " [:code "range"] " produces the integers 0 through 200. Dividing each by 200 gives 0, 0.005, …, 1. The result is stored as a vector so its order is stable."]
   [:pre [:code "(def probability-grid\n  (mapv #(/ % 200.0) (range 201)))"]]
@@ -219,6 +222,25 @@
  "This expression describes one specified ordering, such as W–L–W.")
 
 ^:kindly/hide-code
+(defn ordered-sequence-probability [p water land]
+  (* (Math/pow p water)
+     (Math/pow (- 1.0 p) land)))
+
+^:kindly/hide-code
+(math/equation-code-detail
+ "code-ordered-sequence-probability"
+ "Probability of one ordered water–land sequence"
+ {:kind :source
+  :label "bayes_theorem_simulations.clj — ordered-sequence-probability"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/bayes_theorem_simulations.clj"
+  :symbols [["p" "The candidate water probability p from the equation."]
+            ["water" "The code name for W, the number of water observations."]
+            ["land" "The code name for L, the number of land observations."]]}
+ [:div
+  [:pre [:code "(defn ordered-sequence-probability [p water land]\n  (* (Math/pow p water)\n     (Math/pow (- 1.0 p) land)))"]]
+  [:p "The implementation uses descriptive count names while preserving " [:code "p"] " exactly."]])
+
+^:kindly/hide-code
 (defn binomial-coefficient
   "Number of orderings containing k successes among n observations."
   [n k]
@@ -232,6 +254,20 @@
 ;; When only the counts matter, there are
 ;;
 ;; $$\binom{W+L}{W}=\frac{(W+L)!}{W!L!}$$
+
+^:kindly/hide-code
+(math/equation-code-detail
+ "code-binomial-coefficient"
+ "Counting water–land orderings"
+ {:kind :source
+  :label "bayes_theorem_simulations.clj — binomial-coefficient"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/bayes_theorem_simulations.clj"
+  :symbols [["n" "The code name for W + L, the total number of observations."]
+            ["k" "The code name for W, the positions chosen for water observations."]
+            ["acc" "The running product used to compute the coefficient without expanding three factorials."]]}
+ [:div
+  [:pre [:code "(defn binomial-coefficient [n k]\n  (let [k (min k (- n k))]\n    (reduce (fn [acc i]\n              (* acc (/ (- (inc n) i) i)))\n            1.0\n            (range 1 (inc k)))))"]]
+  [:p "This product is algebraically equivalent to the factorial ratio in the equation."]])
 ;;
 ;; possible orderings. Read this as: choose which $W$ of the $W+L$ positions
 ;; contain water. The exclamation mark means factorial—for example,
@@ -269,8 +305,23 @@
   "Likelihood of water and land counts for one candidate p."
   [p water land]
   (* (binomial-coefficient (+ water land) water)
-     (Math/pow p water)
-     (Math/pow (- 1.0 p) land)))
+     (ordered-sequence-probability p water land)))
+
+^:kindly/hide-code
+(math/equation-code-detail
+ "code-binomial-likelihood"
+ "Evaluating the binomial likelihood"
+ {:kind :source
+  :label "bayes_theorem_simulations.clj — binomial-likelihood"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/bayes_theorem_simulations.clj"
+  :symbols [["p" "The candidate water probability p_i evaluated by the grid."]
+            ["water" "The code name for W in the likelihood equation."]
+            ["land" "The code name for L in the likelihood equation."]
+            ["binomial-coefficient" "Computes the number of orderings with the observed counts."]
+            ["ordered-sequence-probability" "Computes p^W(1-p)^L for one ordering."]]}
+ [:div
+  [:pre [:code "(defn binomial-likelihood [p water land]\n  (* (binomial-coefficient (+ water land) water)\n     (ordered-sequence-probability p water land)))"]]
+  [:p "The two named factors correspond to the two factors in the displayed likelihood."]])
 
 ^:kindly/hide-code
 (defn grid-posterior
@@ -322,9 +373,17 @@
  "On a finite grid, divide each likelihood-times-prior product by the sum of all products.")
 
 ^:kindly/hide-code
-(math/code-detail
+(math/equation-code-detail
  "code-normalise-posterior"
  "Normalising likelihood-times-prior weights"
+ {:kind :source
+  :label "bayes_theorem_simulations.clj — grid-posterior"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/bayes_theorem_simulations.clj"
+  :symbols [["prior" "The vector containing Pr(p) for every candidate p."]
+            ["water" "The code name for W, the observed water count."]
+            ["land" "The code name for L, the observed land count."]
+            ["binomial-likelihood" "Computes Pr(W,L | p) for each candidate."]
+            ["normalize-mean-one" "Applies the common normalising scale represented by Pr(W,L)."]]}
  [:div
   [:p "The pipeline evaluates the likelihood at every candidate, multiplies candidate by candidate with the prior, then applies one common scale factor. Scaling to mean 1 rather than sum 1 preserves the same posterior shape used by the charts."]
   [:pre [:code "(defn grid-posterior [prior water land]\n  (->> probability-grid\n       (mapv #(binomial-likelihood % water land))\n       (mapv * prior)\n       normalize-mean-one))"]]
@@ -419,6 +478,22 @@
                       probability-grid
                       posterior))
        weight-total)))
+
+^:kindly/hide-code
+(math/equation-code-detail
+ "code-expected-absolute-loss"
+ "Computing posterior expected absolute loss"
+ {:kind :source
+  :label "bayes_theorem_simulations.clj — expected-absolute-loss"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/bayes_theorem_simulations.clj"
+  :symbols [["posterior" "The code collection containing the weights Pr(p | W,L)."]
+            ["d" "The candidate decision d whose expected loss is evaluated."]
+            ["p" "One candidate water proportion p from probability-grid."]
+            ["weight" "The posterior weight paired with the current p."]
+            ["weight-total" "The normaliser; the article stores mean-one rather than sum-one weights."]]}
+ [:div
+  [:pre [:code "(defn expected-absolute-loss [posterior d]\n  (let [weight-total (reduce + posterior)]\n    (/ (reduce + (map (fn [p weight]\n                        (* (Math/abs (- d p)) weight))\n                      probability-grid posterior))\n       weight-total)))"]]
+  [:p "The map multiplies each absolute error by its posterior weight; the reduction implements the sum."]])
 
 ^:kindly/hide-code
 (def example-losses
@@ -534,6 +609,22 @@
 ^:kindly/hide-code
 (def example-height-density
   (normal-density 151.765 155.0 8.0))
+
+^:kindly/hide-code
+(math/equation-code-detail
+ "code-normal-density"
+ "Evaluating the Gaussian density"
+ {:kind :source
+  :label "bayes_theorem_simulations.clj — normal-density"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/bayes_theorem_simulations.clj"
+  :symbols [["x" "The implementation name for observed height h."]
+            ["mean" "The implementation name for candidate mean μ."]
+            ["sd" "The implementation name for candidate standard deviation σ."]
+            ["Math/PI" "The implementation constant for π."]
+            ["Math/exp" "The exponential function exp used by the density."]]}
+ [:div
+  [:pre [:code "(defn normal-density [x mean sd]\n  (/ (Math/exp (/ (* -0.5 (Math/pow (- x mean) 2.0))\n                  (Math/pow sd 2.0)))\n     (* (Math/sqrt (* 2.0 Math/PI)) sd)))"]]
+  [:p "The names " [:code "x"] ", " [:code "mean"] ", and " [:code "sd"] " are the executable counterparts of h, μ, and σ."]])
 
 ;; The preserved grid contains 41 means from 150 to 160 cm crossed with 41
 ;; standard deviations from 7 to 9 cm: $41\times41=1{,}681$ candidate models.

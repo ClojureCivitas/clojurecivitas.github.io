@@ -1,4 +1,7 @@
 ^{:kindly/hide-code true
+  :kindly/options
+  {:html/deps
+   [{:js ["https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.js"]}]}
   :clay {:hide-info-line true
          :title "Managing Brilliant but Uneven Minds: My Theory-to-Algorithm Workflow"
          :quarto {:author :jamiep
@@ -10,7 +13,9 @@
                   :keywords [:coding-agents :theory-to-algorithm :executable-research :model-validation]}}}
 
 (ns language-learning.vocabulary-estimation.managing-brilliant-but-uneven-minds
-  (:require [scicloj.kindly.v4.kind :as kind]))
+  (:require [language-learning.vocabulary-estimation.article-controls :as controls]
+            [language-learning.vocabulary-estimation.math-explanations :as math]
+            [scicloj.kindly.v4.kind :as kind]))
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -62,6 +67,9 @@
     [:span.series-status "planned"]]
    [:li "When Contexts and Senses Become Identifiable"
     [:span.series-status "planned"]]]])
+
+^:kindly/hide-code
+(controls/install)
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -415,9 +423,13 @@
 ;; and the tests that protect replay.
 
 ^:kindly/hide-code
-(kind/hiccup
- [:pre.mw-code
-  [:code "git clone --recurse-submodules https://github.com/jamiepratt/theory-to-algorithm-workflow.git\ncd theory-to-algorithm-workflow\npython3 .agents/scripts/research_workflow.py validate"]])
+(math/code-detail
+ "code-clone-workflow"
+ "Cloning and validating the complete workflow"
+ [:div
+  [:p "Clone the workflow with its publication submodule, then validate the versioned repository profile before using its commands."]
+  [:pre.mw-code
+   [:code "git clone --recurse-submodules https://github.com/jamiepratt/theory-to-algorithm-workflow.git\ncd theory-to-algorithm-workflow\npython3 .agents/scripts/research_workflow.py validate"]]])
 
 ;; ## Two practical influences
 ;;

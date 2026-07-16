@@ -1,0 +1,4 @@
+format:
+  html:
+      include-after-body:
+        - ../../zulip_script.html
