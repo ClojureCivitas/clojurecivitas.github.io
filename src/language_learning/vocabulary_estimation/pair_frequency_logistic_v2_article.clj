@@ -574,6 +574,29 @@
 ;; random seed makes the endpoints reproducible. The interval is not a
 ;; guarantee that the learner's true total lies inside it.
 ;;
+;; ### See the hidden state, sparse evidence, and two fitted models together
+;;
+;; The simulation makes latent knowledge visible only because it generated that
+;; hidden state. Each panel below uses the same 8,000 frequency values, a
+;; nominal 4,000-pair target, and the same balanced 64-item schedule. Reading
+;; left to right moves from more frequent to rarer pairs. Reading top to bottom
+;; separates the realised latent state, the small observed sample, and the
+;; predictions fitted from that sample.
+;;
+;; The v1 line has one posterior knowing rate per frequency stratum. The v2 line
+;; averages knowing probability over a bounded 41×21 posterior grid, producing
+;; one continuous curve. Tested outcomes are fixed before totals are predicted;
+;; the displayed v2 total uses the chart's 64-bin approximation so this
+;; three-scenario comparison remains responsive in the browser. “Not correct”
+;; is the binary inference value shared by raw wrong and don't-know events.
+
+^:kindly/hide-code
+(kind/hiccup
+ [:div.pf-lab
+  [:div#pair-frequency-model-scenarios
+   [:p "Loading the latent-state, evidence, and prediction comparisons…"]]
+  [:noscript "These paired scenario comparisons need JavaScript."]])
+;;
 ;; ### Residual variation and misspecification
 ;;
 ;; A **residual** is the difference left after the frequency curve has made its
