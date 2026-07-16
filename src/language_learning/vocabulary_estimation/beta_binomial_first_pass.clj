@@ -13,6 +13,7 @@
 (ns language-learning.vocabulary-estimation.beta-binomial-first-pass
   (:require [clojure.java.io :as io]
             [fastmath.random :as random]
+            [language-learning.vocabulary-estimation.article-controls :as controls]
             [language-learning.vocabulary-estimation.math-explanations :as math]
             [scicloj.kindly.v4.kind :as kind]))
 
@@ -28,9 +29,6 @@
 ^:kindly/hide-code
 (kind/hiccup
  [:style (resource-text "beta_binomial_first_pass_base.css")])
-
-^:kindly/hide-code
-(math/styles)
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -71,7 +69,7 @@
     [:span.series-status "planned"]]]])
 
 ^:kindly/hide-code
-(math/global-controls)
+(controls/install)
 
 ;; A test result is meaningful only after its target is defined. **Measurement**
 ;; is the disciplined act of connecting recorded observations to that target.

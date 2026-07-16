@@ -2,5 +2,3 @@ format:
   html:
       include-after-body:
         - ../../zulip_script.html
-        - ../../vocabulary_article_controls_style.html
-        - ../../vocabulary_article_controls_script.html

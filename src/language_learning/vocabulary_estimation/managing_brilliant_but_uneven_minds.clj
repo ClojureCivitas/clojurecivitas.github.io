@@ -1,4 +1,7 @@
 ^{:kindly/hide-code true
+  :kindly/options
+  {:html/deps
+   [{:js ["https://cdn.jsdelivr.net/npm/scittle@0.7.23/dist/scittle.js"]}]}
   :clay {:hide-info-line true
          :title "Managing Brilliant but Uneven Minds: My Theory-to-Algorithm Workflow"
          :quarto {:author :jamiep
@@ -10,7 +13,8 @@
                   :keywords [:coding-agents :theory-to-algorithm :executable-research :model-validation]}}}
 
 (ns language-learning.vocabulary-estimation.managing-brilliant-but-uneven-minds
-  (:require [language-learning.vocabulary-estimation.math-explanations :as math]
+  (:require [language-learning.vocabulary-estimation.article-controls :as controls]
+            [language-learning.vocabulary-estimation.math-explanations :as math]
             [scicloj.kindly.v4.kind :as kind]))
 
 ^:kindly/hide-code
@@ -63,6 +67,9 @@
     [:span.series-status "planned"]]
    [:li "When Contexts and Senses Become Identifiable"
     [:span.series-status "planned"]]]])
+
+^:kindly/hide-code
+(controls/install)
 
 ^:kindly/hide-code
 (kind/hiccup

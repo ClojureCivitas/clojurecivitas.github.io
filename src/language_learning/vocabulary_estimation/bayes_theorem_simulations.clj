@@ -11,7 +11,8 @@
                   :keywords [:bayes-theorem :grid-approximation :posterior-sampling :normal-distribution :data-visualisation]}}}
 
 (ns language-learning.vocabulary-estimation.bayes-theorem-simulations
-  (:require [language-learning.vocabulary-estimation.math-explanations :as math]
+  (:require [language-learning.vocabulary-estimation.article-controls :as controls]
+            [language-learning.vocabulary-estimation.math-explanations :as math]
             [scicloj.kindly.v4.kind :as kind]))
 
 ^:kindly/hide-code
@@ -75,9 +76,6 @@
    "@media(max-width:767px){.bp-process-strip{grid-template-columns:minmax(0,1fr)}.bp-process-symbol{min-height:1.2rem}.bp-shell{padding:.75rem}.bp-controls{align-items:stretch}.bp-button{flex:1}.bp-chart{padding:.5rem}}")])
 
 ^:kindly/hide-code
-(math/styles)
-
-^:kindly/hide-code
 (kind/hiccup
  [:nav.series-toc {:aria-labelledby "series-contents-heading"}
   [:h2#series-contents-heading "Theory to vocabulary-estimation series"]
@@ -119,7 +117,7 @@
   [:li [:strong "Reproduce"] [:br] "How do code, seeds, tests, and rendering make the lesson checkable?"]])
 
 ^:kindly/hide-code
-(math/global-controls)
+(controls/install)
 
 ;; ## The five ideas under every update
 ;;

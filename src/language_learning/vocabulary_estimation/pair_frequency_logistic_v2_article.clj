@@ -13,6 +13,7 @@
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as str]
+            [language-learning.vocabulary-estimation.article-controls :as controls]
             [language-learning.vocabulary-estimation.math-explanations :as math]
             [language-learning.vocabulary-estimation.pair-frequency-logistic-v2 :as v2]
             [scicloj.kindly.v4.kind :as kind]))
@@ -41,9 +42,6 @@
    ".pf-status-pass{color:var(--pf-success);font-weight:800}.pf-status-fail{color:var(--pf-fail);font-weight:800}.pf-caption,.pf-note{font-size:.9rem;color:var(--pf-muted)}"
    ".series-toc{min-width:0;border:1px solid var(--bs-border-color,#ced4da);border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:0 0 1.4rem;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem .45rem}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--pf-muted)}.series-current{margin:.35rem 0 .35rem -.7rem;border-left:4px solid var(--pf-accent);border-radius:.4rem;padding:.6rem .75rem!important;background:color-mix(in srgb,var(--bs-body-bg,#fff) 84%,var(--pf-accent) 16%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pf-accent) 35%,transparent);font-weight:700}.series-current>a{color:var(--pf-accent)}.series-current .series-status{border-radius:999px;padding:.18rem .48rem;background:var(--pf-accent);color:#fff}.quarto-dark .series-current .series-status{color:#10212b}"
    "@media(max-width:767px){.pf-pipeline,.pf-phase-diagram{grid-template-columns:minmax(0,1fr)}.pf-arrow{min-height:1rem}.pf-odds-strip{grid-template-columns:minmax(0,1fr)}}@media(max-width:575px){.pf-table th,.pf-table td{padding:.45rem}.pf-card{padding:.8rem}}")])
-
-^:kindly/hide-code
-(math/styles)
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -77,7 +75,7 @@
     [:span.series-status "planned"]]]])
 
 ^:kindly/hide-code
-(math/global-controls)
+(controls/install)
 
 ;; ## The result first: useful, but not promoted
 ;;
@@ -268,6 +266,18 @@
 ;;
 ;; $$x_i =
 ;; \frac{\log_{10}(f_i)-\mu_{\log f}}{\sigma_{\log f}}.$$
+
+^:kindly/hide-code
+(math/explanation
+ "math-standardized-frequency"
+ "The standardised pair-frequency predictor"
+ [["x_i" "The resulting standardised log-frequency predictor for pair i, measured in standard-deviation units."]
+  ["i" "The index identifying one lemma–surface-form pair."]
+  ["f_i" "The pair_frequency_sn_sum value for pair i: its allocated linear corpus-frequency proxy."]
+  ["log₁₀(f_i)" "The base-10 logarithm of f_i. It compresses the large, skewed differences between raw pair frequencies."]
+  ["μ_log f" "The fixture-wide mean of the 8,000 log₁₀ pair-frequency values."]
+  ["σ_log f" "The fixture-wide population standard deviation of those log₁₀ pair-frequency values."]]
+ "Subtracting μ_log f centres the logged frequencies; dividing by σ_log f expresses them in fixture-relative standard-deviation units. Higher x_i still means higher pair frequency, not calibrated item difficulty.")
 ;;
 ;; Here $\mu_{\log f}$ and $\sigma_{\log f}$ are the mean and population SD
 ;; shown in the Transform card. Higher $x_i$ means a more frequent pair within
@@ -531,6 +541,12 @@
 (math/code-detail
  "code-parameter-grid-likelihood"
  "Weighting the deterministic parameter grid by response likelihood"
+ {:symbols [["parameters" "Every threshold-and-width candidate together with its log prior."]
+            ["log-prior" "The prior log density assigned to one grid candidate before learner responses are used."]
+            ["log-likelihood" "The summed response evidence for one threshold-and-width candidate."]
+            ["log-weights" "Unnormalised log posterior weights: log prior plus log likelihood."]
+            ["normalize-log-weights" "Exponentiates the stabilised log weights and makes them sum to one."]
+            [":weight" "The normalized posterior probability mass stored on one grid point."]]}
  [:div
   [:p "Each grid candidate receives its log prior plus the sum of Bernoulli log likelihoods. Normalisation is performed only after all candidates have been scored."]
   [:pre [:code "(defn posterior-grid [xs observations grid prior]\n  (let [parameters (parameter-grid xs grid prior)\n        log-weights\n        (mapv (fn [{:keys [threshold width log-prior]}]\n                (+ log-prior\n                   (log-likelihood observations threshold width)))\n              parameters)\n        weights (normalize-log-weights log-weights)]\n    (mapv #(assoc %1 :weight %2) parameters weights)))"]]
@@ -606,20 +622,36 @@
 ;; ## Selection remains v1
 ;;
 ;; Every attempt still creates eight response-independent queues from equal-count
-;; rank strata. Each complete round selects one unseen pair per stratum and
-;; records its inclusion probability. Responses update inference only; they do
-;; not alter item order. Adaptive selection remains a non-goal.
+;; rank strata. Together, these queues determine the response-independent
+;; selection **schedule**. Each complete round selects one unseen pair per stratum
+;; and records its inclusion probability. Responses update inference only; they
+;; do not alter item order. Adaptive selection remains a non-goal.
+;;
+;; ### Try the posterior update
+;;
+;; Press **Correct**, **Wrong**, or **Don't know** for the next prequeued item.
+;; The heatmap shows the joint threshold-and-width posterior; the two charts
+;; project that same distribution onto one parameter at a time, comparing the
+;; prior, the posterior before the latest answer, and the current posterior. A
+;; correct response contributes $p_i$; wrong and don't-know remain distinct
+;; stored events but both contribute $1-p_i$ to this v2 binary likelihood.
 
 ^:kindly/hide-code
 (kind/hiccup
  [:div#pair-frequency-response-inference-simulator
-  [:p "Loading the response-and-schedule demonstration…"]
-  [:noscript "This demonstration needs JavaScript. The seeded schedule remains response-independent."]])
+  [:p "Loading the posterior-update simulator…"]
+  [:noscript "This simulator needs JavaScript. The fixed schedule and posterior equations remain readable above."]])
 
 ^:kindly/hide-code
 (math/code-detail
  "code-response-independent-schedule"
  "Creating a balanced schedule before any responses exist"
+ {:symbols [["selection-queues" "Builds one seeded, shuffled queue for each frequency stratum."]
+            ["rounds" "The number of complete eight-stratum rounds available from every queue."]
+            ["round-index" "The zero-based round currently being assembled."]
+            ["stratum-index" "Identifies which of the eight equal-count frequency strata supplied an item."]
+            [":selection-probability" "The recorded chance of selecting this item from its remaining stratum queue."]
+            ["shuffle-vector" "Deterministically randomises presentation order within a complete round."]]}
  [:div
   [:p "Each stratum is shuffled from the explicit seed. A round takes the next item from every queue, records its selection probability, then shuffles those eight items for presentation."]
   [:pre [:code "(defn selection-schedule [pairs strata-count seed]\n  (let [queues (selection-queues pairs strata-count seed)\n        rounds (apply min (map count queues))]\n    (loop [round-index 0\n           state (normalize-seed (+ seed 104729))\n           result []]\n      (if (= round-index rounds)\n        result\n        (let [selected\n              (mapv (fn [stratum-index queue]\n                      (assoc (nth queue round-index)\n                             :stratum-index stratum-index\n                             :round-index round-index\n                             :selection-probability\n                             (/ 1.0 (- (count queue) round-index))))\n                    (range strata-count) queues)\n              [ordered next-state] (shuffle-vector selected state)]\n          (recur (inc round-index) next-state\n                 (conj result ordered)))))))"]]
@@ -640,8 +672,9 @@
    (str "[" (str/join "," fixture-xs) "]")]])
 
 ;; The browser uses a bounded 41×21 grid and 300 predictive draws so the
-;; mechanism stays interactive. The authoritative checks and large simulation
-;; run in CLJ.
+;; mechanism stays interactive. After a completed quiz, the same joint heatmap
+;; and marginal charts show the fitted posterior. The authoritative checks and
+;; large simulation run in CLJ.
 ;;
 ;; ## Simulating a scorer before trusting it
 ;;
@@ -787,6 +820,14 @@
 (math/code-detail
  "code-simulated-replicate"
  "Generating one complete latent learner-pool and its measured responses"
+ {:symbols [["known" "The byte array containing one simulated latent known-or-unknown outcome per pair."]
+            ["true-total" "The sum of all 8,000 latent outcomes before any quiz responses are measured."]
+            ["latent-probability" "Computes the scenario's knowing probability for one pair."]
+            ["responses" "The byte array of measured outcomes for scheduled quiz items only."]
+            ["measured-outcome" "Applies the declared false-positive and false-negative measurement mechanism."]
+            ["false-positive" "The probability that a latent unknown pair is recorded as correct."]
+            ["false-negative" "The probability that a latent known pair is recorded as not correct."]
+            ["rank-error-maximum" "The largest additional measurement-error rate at the rarest rank."]]}
  [:div
   [:p "The runner first draws every latent pair outcome and saves their sum. Only then does it look up the scheduled pair indexes and optionally flip measured outcomes."]
   [:pre [:code "(defn simulate-replicate\n  [xs selected\n   {:keys [threshold residual-sd false-positive false-negative\n           rank-error-maximum]\n    :or {false-positive 0.0 false-negative 0.0\n         rank-error-maximum 0.0}\n    :as scenario}\n   seed]\n  (let [rng (Random. (long seed))\n        known (byte-array pool-size)\n        true-total\n        (loop [index 0 total 0]\n          (if (= index pool-size)\n            total\n            (let [residual (if (zero? residual-sd)\n                             0.0\n                             (* residual-sd (.nextGaussian rng)))\n                  probability\n                  (latent-probability (nth xs index) scenario\n                                      threshold residual)\n                  outcome (if (< (.nextDouble rng) probability) 1 0)]\n              (aset-byte known index (byte outcome))\n              (recur (inc index) (+ total outcome)))))\n        responses (byte-array maximum-items)]\n    (dotimes [index maximum-items]\n      (let [pair-index (:pair-index (nth selected index))\n            known? (= 1 (aget known pair-index))\n            rank-error (* rank-error-maximum (/ pair-index 7999.0))]\n        (aset-byte responses index\n                   (byte (measured-outcome\n                          rng known?\n                          (+ false-positive rank-error)\n                          (+ false-negative rank-error))))))\n    {:truth true-total :responses responses}))"]]
@@ -903,6 +944,10 @@
 (math/code-detail
  "code-read-edn-artifacts"
  "Reading immutable simulation-result artifacts at render time"
+ {:symbols [["tuning-result" "The immutable map containing the historical tuning evidence used by the article."]
+            ["io/resource" "Resolves a versioned classpath resource without depending on the current directory."]
+            ["slurp" "Reads the frozen EDN resource as text."]
+            ["edn/read-string" "Parses the resource text as Clojure data rather than executing it as code."]]}
  [:div
   [:p "The article does not rerun 232,500 learner-pools during publication. It reads frozen EDN data produced by the separately seeded validation runs."]
   [:pre [:code "(def tuning-result\n  (edn/read-string\n   (slurp (io/resource\n           \"language_learning/vocabulary_estimation/\n            pair_frequency_logistic_v2_tuning.edn\"))))"]]
@@ -976,6 +1021,12 @@
 (math/code-detail
  "code-stopping-rule-predicate"
  "Applying one candidate stopping rule at complete rounds"
+ {:symbols [["precision?" "True when the current interval half-width meets the rule's requested pool-relative target."]
+            ["soft-maximum?" "True when the rule has reached its declared item cap."]
+            ["target-half-width-ratio" "The largest accepted interval half-width as a fraction of the 8,000-pair pool."]
+            ["items-tested" "The number of responses included in the current inference update."]
+            ["pool-size" "The fixed number of lemma–surface-form pairs in the versioned fixture."]
+            [":stopping-reason" "Records whether precision or the soft maximum ended the quiz."]]}
  [:div
   [:p "Starting at the rule's minimum, the runner checks eight-item boundaries until precision is reached or the soft cap is reached."]
   [:pre [:code "(let [precision?\n      (<= (/ (- upper lower) 2.0)\n          (* target-half-width-ratio pool-size))\n      soft-maximum?\n      (>= items-tested soft-maximum-items)]\n  (if (or precision? soft-maximum?)\n    {:items-tested items-tested\n     :stopping-reason\n     (if precision? :precision-target :soft-maximum)}\n    (recur (+ items-tested strata-count))))"]]
@@ -1019,6 +1070,12 @@
 (math/code-detail
  "code-five-part-gate"
  "Requiring all five promotion checks with logical AND"
+ {:symbols [["and" "Returns true only when every promotion requirement is satisfied."]
+            ["aggregate" "Metrics pooled across all supported tuning cells."]
+            ["cells" "The separate ability-by-width-by-residual tuning results protected by cellwise checks."]
+            ["v1-aggregate" "The pooled baseline metrics used for the aggregate comparison."]
+            ["v1-cells" "Baseline metrics aligned cell by cell with the v2 candidate results."]
+            ["every?" "Requires the stated comparison to hold in every individual cell."]]}
  [:div
   [:p "The aggregate and cellwise checks are evaluated together. Clojure's and returns true only when every clause is true."]
   [:pre [:code "(and (>= (:coverage aggregate) 0.945)\n     (every? #(>= (:coverage %) 0.94) cells)\n     (< (:mae aggregate) (:mae v1-aggregate))\n     (every? true?\n             (map #(<= (:mae %1) (* 1.05 (:mae %2)))\n                  cells v1-cells))\n     (<= (:median-items aggregate)\n         (:median-items v1-aggregate)))"]]
@@ -1040,6 +1097,11 @@
 (math/code-detail
  "code-passing-rule-selection"
  "Selecting only among rules that already passed"
+ {:symbols [["choose-rule" "Returns the preferred eligible stopping rule, or nil when no rule passed the gate."]
+            [":passes?" "The precomputed all-requirements gate result for one candidate rule."]
+            ["sort-by" "Orders only eligible rules using the declared preference keys."]
+            ["juxt" "Builds the ordered tuple of median length, mean length, and deterministic tie-breakers."]
+            ["tuning-result" "The immutable historical tuning artifact containing every evaluated rule."]]}
  [:div
   [:p "Selection first filters to passes? rules, then prefers the shortest by median and mean length with deterministic tie-breakers. With no passes, it returns nil."]
   [:pre [:code "(defn choose-rule [tuning]\n  (first\n   (sort-by\n    (juxt #(get-in % [:aggregate :median-items])\n          #(get-in % [:aggregate :mean-items])\n          #(get-in % [:rule :minimum-items])\n          #(get-in % [:rule :soft-maximum-items])\n          #(get-in % [:rule :target-half-width-ratio]))\n    (filter :passes? (:rules tuning)))))\n\n;; Historical result:\n(choose-rule tuning-result) ;=> nil"]]
@@ -1139,6 +1201,10 @@
 (math/code-detail
  "code-recorded-numerical-shortcut"
  "Recording the large-run approximation and refusing to excuse a near miss"
+ {:symbols [[":interval-method" "Names the complete numerical method recorded with the simulation result."]
+            [":parameter-mixture" "States how uncertainty over threshold-and-width grid points was sampled."]
+            [":untested-pair-total" "States the approximation used for each grid point's untested-pair total."]
+            [":draws" "The fixed number of deterministic systematic grid samples used per interval."]]}
  [:div
   [:p "Every result artifact names the approximation and draw count, so a future rerun can reproduce or replace it without pretending the computation was exact."]
   [:pre [:code ":interval-method\n{:parameter-mixture :deterministic-systematic-grid-sampling\n :untested-pair-total :moment-matched-poisson-binomial-normal\n :draws 512}"]]
