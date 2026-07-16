@@ -325,6 +325,21 @@
   ["Beta(1,1)" "A Beta distribution with shape parameters α = 1 and β = 1. Its density is uniform from 0 to 1."]
   ["α, β" "The Beta distribution’s two positive shape parameters. In this Bernoulli model they update like prior correct and not-correct counts."]]
  "Beta(1,1) is the deliberately simple v1 prior; calling it uniform does not make it universally uninformative.")
+
+^:kindly/hide-code
+(math/equation-code-detail
+ "code-beta-prior"
+ "Representing the Beta(1,1) prior"
+ {:kind :source
+  :label "beta_binomial_first_pass.clj — posterior-parameters default arity"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/beta_binomial_first_pass.clj"
+  :symbols [["alpha" "The code name for the prior shape α; its default is 1.0."]
+            ["beta" "The code name for the prior shape β; its default is 1.0."]
+            ["k" "The observed correct count, omitted conceptually before data."]
+            ["n" "The observed attempt count, omitted conceptually before data."]]}
+ [:div
+  [:pre [:code "(defn posterior-parameters\n  ([k n] (posterior-parameters 1.0 1.0 k n))\n  ([alpha beta k n]\n   {:alpha (+ alpha k)\n    :beta (+ beta (- n k))}))"]]
+  [:p "The default arity supplies " [:code "alpha = 1.0"] " and " [:code "beta = 1.0"] ", the two parameters in the displayed prior."]])
 ;;
 ;; That density is uniform over rates from zero to one. I am **not** claiming
 ;; that it is universally “uninformative”; parameterization and context matter.
@@ -362,9 +377,16 @@
     :beta (+ beta (- n k))}))
 
 ^:kindly/hide-code
-(math/code-detail
+(math/equation-code-detail
  "code-beta-posterior-parameters"
  "Updating the two Beta shape parameters"
+ {:kind :source
+  :label "beta_binomial_first_pass.clj — posterior-parameters"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/beta_binomial_first_pass.clj"
+  :symbols [["alpha" "The code name for the prior α shape; 1.0 in v1."]
+            ["beta" "The code name for the prior β shape; 1.0 in v1."]
+            ["k" "The correct count k added to alpha."]
+            ["n" "The attempt count n; n - k is added to beta."]]}
  [:div
   [:p "This function is pure: the same prior and counts always return the same posterior parameters, and no external state changes."]
   [:pre [:code "(defn posterior-parameters\n  ([k n] (posterior-parameters 1.0 1.0 k n))\n  ([alpha beta k n]\n   {:pre [(<= 0 k n) (pos? alpha) (pos? beta)]}\n   {:alpha (+ alpha k)\n    :beta (+ beta (- n k))}))"]]
@@ -458,9 +480,18 @@
      (reduce + (mapv #(posterior-predictive-stratum rng %) strata)))))
 
 ^:kindly/hide-code
-(math/code-detail
+(math/equation-code-detail
  "code-finite-pool-draw"
  "Making one finite-pool posterior-predictive draw"
+ {:kind :source
+  :label "beta_binomial_first_pass.clj — posterior-predictive-stratum and posterior-predictive-total"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/beta_binomial_first_pass.clj"
+  :symbols [["pool-size" "The code name for N_s, the fixed number of pairs in one stratum."]
+            ["n" "The code name for n_s, the tested count."]
+            ["k" "The code name for k_s, the observed correct count added once."]
+            ["p" "One sampled p_s from the stratum's Beta posterior."]
+            ["untested" "The code name for N_s - n_s."]
+            ["predicted" "One sampled U_s for the untested remainder."]]}
  [:div
   [:p "The draw keeps the three groups separate: observed correct, observed not-correct, and untested. Only the untested group is simulated."]
   [:pre [:code "(defn posterior-predictive-stratum\n  [rng {:keys [pool-size k n]}]\n  (let [{:keys [alpha beta]} (posterior-parameters k n)\n        p (random/sample\n           (random/distribution :beta\n             {:alpha alpha :beta beta :rng rng}))\n        untested (- pool-size n)\n        predicted (random/sample\n                   (random/distribution :binomial\n                     {:trials untested :p p :rng rng}))]\n    (+ k predicted)))"]]
@@ -587,6 +618,22 @@
   ["B(·,·)" "The Beta function; the ratio integrates over uncertainty in p_s rather than plugging in one rate."]
   ["α_s, β_s" "The two posterior Beta parameters for stratum s."]]
  "Calculating all x values and adding the eight independent stratum distributions yields the exact finite-pool total distribution.")
+
+^:kindly/hide-code
+(math/equation-code-detail
+ "code-beta-binomial-mass"
+ "Translating the exact Beta–binomial mass"
+ {:kind :explanation
+  :label "Direct Clojure translation using the article implementation's pool-size, k, n, alpha, and beta names."
+  :symbols [["pool-size" "The code name for N_s, the complete stratum size."]
+            ["m" "The local code name for m_s = N_s - n_s, the untested remainder."]
+            ["x" "One possible value of U_s, the known count among untested pairs."]
+            ["alpha" "The code name for posterior shape α_s."]
+            ["beta" "The code name for posterior shape β_s."]
+            ["beta-function" "A direct code name for the mathematical Beta function B(a,b); this explanatory snippet does not add a new production dependency."]]}
+ [:div
+  [:pre [:code "(defn beta-binomial-mass\n  [{:keys [pool-size k n]} x]\n  (let [{:keys [alpha beta]} (posterior-parameters k n)\n        m (- pool-size n)]\n    (* (binomial-coefficient m x)\n       (/ (beta-function (+ x alpha)\n                         (+ (- m x) beta))\n          (beta-function alpha beta)))))"]]
+  [:p "This is explanatory code, not copied implementation: the article's reference interval is preserved evidence, while the snippet names each factor in the equation."]])
 ;;
 ;; Reader-facing, I would report:
 ;;

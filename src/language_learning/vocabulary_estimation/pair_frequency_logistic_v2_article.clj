@@ -276,9 +276,17 @@
 ;; the versioned pool used to calculate the mean and SD.
 
 ^:kindly/hide-code
-(math/code-detail
+(math/equation-code-detail
  "code-frequency-transform"
  "Constructing the standardised pair-frequency predictor"
+ {:kind :source
+  :label "pair_frequency_logistic_v2.cljc — frequency-transform"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/pair_frequency_logistic_v2.cljc"
+  :symbols [["log-frequency" "The code name for log10(f_i), one pair's logged frequency."]
+            ["location" "The implementation name for μ_log f, the fixture-wide mean log frequency."]
+            ["scale" "The implementation name for σ_log f, the fixture-wide population SD."]
+            [":x" "The record key storing x_i, the resulting standardised predictor."]
+            [":pair-frequency-sn-sum" "The fixture field containing f_i."]]}
  [:div
   [:p "The transform logs every positive pair score, calculates the fixture-wide mean and population SD, then attaches x to each immutable pair record."]
   [:pre [:code "(defn frequency-transform [pairs]\n  (let [logs (mapv #(Math/log10 (:pair-frequency-sn-sum %)) pairs)\n        location (mean logs)\n        scale (population-sd logs)]\n    {:log10-mean location\n     :log10-population-sd scale\n     :pairs (mapv (fn [pair log-frequency]\n                    (assoc pair :x (/ (- log-frequency location) scale)))\n                  pairs logs)}))"]]
@@ -349,9 +357,17 @@
 ;; This checks the curve's parameterisation; it is not fitted learner data.
 ;;
 ^:kindly/hide-code
-(math/code-detail
+(math/equation-code-detail
  "code-logistic-probability"
  "Turning predictor position into knowing probability"
+ {:kind :source
+  :label "pair_frequency_logistic_v2.cljc — logistic and knowledge-probability"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/pair_frequency_logistic_v2.cljc"
+  :symbols [["x" "The implementation name for x_i, pair i's standardised predictor."]
+            ["threshold" "The implementation name for t, the learner's 50% point."]
+            ["width" "The implementation name for w, the 10%-to-90% transition width."]
+            ["transition-logit-span" "The code constant equal to 2 log(9)."]
+            ["logistic" "Maps the linear predictor to p_i between zero and one."]]}
  [:div
   [:p "The stable logistic implementation avoids overflow for very large positive or negative log odds. Width must be positive."]
   [:pre [:code "(defn logistic [z]\n  (if (neg? z)\n    (let [e (Math/exp z)] (/ e (+ 1.0 e)))\n    (/ 1.0 (+ 1.0 (Math/exp (- z))))))\n\n(defn knowledge-probability [x threshold width]\n  (when-not (pos? width)\n    (throw (ex-info \"Transition width must be positive\" {:width width})))\n  (logistic (/ (* transition-logit-span (- x threshold)) width)))"]]
@@ -390,6 +406,20 @@
   ["0" "The centre of the prior, equal to the pool’s mean log frequency after z-standardisation."]
   ["2.5" "The prior standard deviation; its large size allows thresholds well beyond the observed predictor range."]]
  "This is a provisional modelling choice, not a threshold distribution learned from Lexibench users.")
+
+^:kindly/hide-code
+(math/equation-code-detail
+ "code-threshold-prior"
+ "Encoding the threshold prior"
+ {:kind :source
+  :label "pair_frequency_logistic_v2.cljc — default-prior threshold fields"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/pair_frequency_logistic_v2.cljc"
+  :symbols [[":threshold-mean" "The implementation field for the prior mean of t; its value is 0.0."]
+            [":threshold-sd" "The implementation field for the prior standard deviation of t; its value is 2.5."]
+            ["default-prior" "The versioned map containing both prior distributions used by v2."]]}
+ [:div
+  [:pre [:code "(def default-prior\n  {:threshold-mean 0.0\n   :threshold-sd 2.5\n   :log-width-mean (Math/log 2.0)\n   :log-width-sd 0.6})"]]
+  [:p "The two threshold fields are the executable parameters of Normal(0, 2.5)."]])
 ;;
 ;; $$\log(w) \sim \operatorname{Normal}(\log(2), 0.6).$$
 
@@ -404,6 +434,21 @@
   ["log(2)" "The prior centre on the log scale, corresponding to median width w = 2 on the original scale."]
   ["0.6" "The prior standard deviation in log-width units."]]
  "On the original scale this is a log-normal prior: widths are asymmetric around 2 and can never be zero or negative.")
+
+^:kindly/hide-code
+(math/equation-code-detail
+ "code-width-prior"
+ "Encoding the log-width prior"
+ {:kind :source
+  :label "pair_frequency_logistic_v2.cljc — default-prior log-width fields"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/pair_frequency_logistic_v2.cljc"
+  :symbols [[":log-width-mean" "The implementation field for the prior mean of log(w); its value is log(2)."]
+            [":log-width-sd" "The implementation field for the prior standard deviation of log(w); its value is 0.6."]
+            ["Math/log" "The natural logarithm used for log(2)."]
+            ["default-prior" "The versioned map containing the prior parameters."]]}
+ [:div
+  [:pre [:code "(def default-prior\n  {:threshold-mean 0.0\n   :threshold-sd 2.5\n   :log-width-mean (Math/log 2.0)\n   :log-width-sd 0.6})"]]
+  [:p "The implementation models width on the log scale, so every width returned to the original scale is positive."]])
 ;;
 ;; These are provisional. The posterior is evaluated on 161 threshold points
 ;; from `min(x)-2` to `max(x)+2`, crossed with 81 log-spaced widths from `0.25`
@@ -427,6 +472,23 @@
   ["yᵢ" "The observed binary outcome: 1 for correct and 0 for wrong or don’t-know in v2."]
   ["pᵢʸⁱ(1−pᵢ)¹⁻ʸⁱ" "Selects pᵢ after a correct response and 1−pᵢ otherwise."]]
  "In plain English: candidates that assign higher probability to the responses actually seen receive more likelihood weight.")
+
+^:kindly/hide-code
+(math/equation-code-detail
+ "code-grid-likelihood"
+ "Accumulating the response likelihood"
+ {:kind :source
+  :label "pair_frequency_logistic_v2.cljc — log-likelihood, log-bernoulli-eta, and linear-predictor"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/pair_frequency_logistic_v2.cljc"
+  :symbols [["observations" "The implementation collection indexed by i in the product."]
+            ["x" "The stored x_i predictor for one observation."]
+            ["response" "The raw response collapsed to y_i for this v2 likelihood."]
+            ["threshold" "The implementation name for t."]
+            ["width" "The implementation name for w."]
+            ["log-bernoulli-eta" "Returns log(p_i) when y_i = 1 and log(1-p_i) otherwise."]]}
+ [:div
+  [:pre [:code "(defn log-likelihood [observations threshold width]\n  (reduce + 0.0\n    (map (fn [{:keys [x response]}]\n           (log-bernoulli-eta\n             (collapse-response response)\n             (linear-predictor x threshold width)))\n         observations)))"]]
+  [:p "The equation multiplies probabilities; the implementation adds their logarithms for numerical stability. These operations are algebraically equivalent."]])
 ;;
 ;; The implementation adds log likelihoods to log prior weights, then uses
 ;; **log-sum-exp** to normalise them safely into posterior probabilities that
@@ -877,6 +939,24 @@
   ["p̂(1−p̂)" "The Bernoulli variance implied by the observed coverage."]
   ["square root" "Converts the variance of the estimated fraction into a standard error."]]
  "MCSE measures simulation noise, not uncertainty about whether the simulated scenarios resemble real learners.")
+
+^:kindly/hide-code
+(defn coverage-mcse [coverage replicates]
+  (Math/sqrt (/ (* coverage (- 1.0 coverage)) replicates)))
+
+^:kindly/hide-code
+(math/equation-code-detail
+ "code-coverage-mcse"
+ "Computing coverage Monte Carlo standard error"
+ {:kind :source
+  :label "pair_frequency_logistic_v2_article.clj — coverage-mcse"
+  :href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/pair_frequency_logistic_v2_article.clj"
+  :symbols [["coverage" "The implementation name for p-hat, the observed coverage fraction."]
+            ["replicates" "The implementation name for n, the number of independent simulation replicates."]
+            ["Math/sqrt" "The square-root operation shown in the equation."]]}
+ [:div
+  [:pre [:code "(defn coverage-mcse [coverage replicates]\n  (Math/sqrt\n   (/ (* coverage (- 1.0 coverage))\n      replicates)))"]]
+  [:p "The descriptive code names map directly to p-hat and n while leaving the equation's calculation unchanged."]])
 ;;
 ;; ## Precommitment: choose rules before results
 ;;
