@@ -54,6 +54,14 @@
     (is (re-find #"\^\{:kindly/hide-code true\s+:kindly/kind :kind/hidden\}\s+\(defn- resource-text" source)
         "The CSS resource helper code and returned Var must not render as article content")))
 
+(deftest merged-article-code-uses-namespace-controls
+  (let [source (slurp (io/file authored-root
+                               "managing_brilliant_but_uneven_minds.clj"))]
+    (is (str/includes? source
+                       "[language-learning.vocabulary-estimation.math-explanations :as math]"))
+    (is (re-find #"(?s)\(math/code-detail.*?\[:pre\.mw-code" source)
+        "Article 0's clone commands must participate in the namespace code controls")))
+
 (deftest reading-controls-only-show-available-actions
   (let [script (slurp (io/file "site" "vocabulary_article_controls_script.html"))]
     (is (str/includes? script "const hasManageableContent ="))

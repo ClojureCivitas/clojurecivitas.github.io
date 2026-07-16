@@ -10,7 +10,8 @@
                   :keywords [:coding-agents :theory-to-algorithm :executable-research :model-validation]}}}
 
 (ns language-learning.vocabulary-estimation.managing-brilliant-but-uneven-minds
-  (:require [scicloj.kindly.v4.kind :as kind]))
+  (:require [language-learning.vocabulary-estimation.math-explanations :as math]
+            [scicloj.kindly.v4.kind :as kind]))
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -415,9 +416,13 @@
 ;; and the tests that protect replay.
 
 ^:kindly/hide-code
-(kind/hiccup
- [:pre.mw-code
-  [:code "git clone --recurse-submodules https://github.com/jamiepratt/theory-to-algorithm-workflow.git\ncd theory-to-algorithm-workflow\npython3 .agents/scripts/research_workflow.py validate"]])
+(math/code-detail
+ "code-clone-workflow"
+ "Cloning and validating the complete workflow"
+ [:div
+  [:p "Clone the workflow with its publication submodule, then validate the versioned repository profile before using its commands."]
+  [:pre.mw-code
+   [:code "git clone --recurse-submodules https://github.com/jamiepratt/theory-to-algorithm-workflow.git\ncd theory-to-algorithm-workflow\npython3 .agents/scripts/research_workflow.py validate"]]])
 
 ;; ## Two practical influences
 ;;
