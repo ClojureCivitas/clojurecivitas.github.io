@@ -41,8 +41,6 @@ _site/
 !/site/_quarto.yml
 !/site/_extensions/
 !/site/_extensions/**
-!/site/vocabulary_article_controls_style.html
-!/site/vocabulary_article_controls_script.html
 !/site/language_learning/
 !/site/language_learning/vocabulary_estimation/
 /site/language_learning/vocabulary_estimation/*
