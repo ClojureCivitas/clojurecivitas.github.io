@@ -1045,6 +1045,13 @@
 (math/code-detail
  "code-response-stream-to-metrics"
  "Turning one simulated response stream into checkpoint scores and replicate metrics"
+ {:symbols [["xs" "The complete vector of standardised pair-frequency predictors."]
+            ["selected" "The response-independent balanced item schedule shared by both scorers."]
+            ["responses" "The preserved simulated response stream consumed in complete-round prefixes."]
+            ["item-counts" "The complete-round checkpoints scored before a stopping rule chooses one."]
+            ["truth" "The simulated learner's latent known-pair total, retained only for validation."]
+            ["result" "One selected scorer result containing its estimate, interval, log score, and quiz length."]
+            ["result-metrics" "Converts a selected result and latent truth into validation metrics."]]}
  [:div
   [:p "Every required prefix is scored once for both models. A rule then chooses one of those already-computed checkpoints, and only that selected result is compared with latent truth."]
   [:pre [:code "(defn checkpoint-scores [xs selected cache responses seed item-counts]\n  (into {}\n        (for [items-tested item-counts\n              :let [{:keys [correct sum-correct-x]}\n                    (observed-statistics\n                     xs selected responses items-tested)]]\n          [items-tested\n           {:v1 (score-v1 selected responses items-tested)\n            :v2 (score-v2 cache items-tested correct sum-correct-x\n                          (+ seed items-tested))}])))\n\n(defn result-metrics [truth result]\n  {:covered? (<= (:lower result) truth (:upper result))\n   :error (- (:estimate result) truth)\n   :absolute-error\n   (Math/abs (double (- (:estimate result) truth)))\n   :interval-width (:interval-width result)\n   :log-score (:log-score result)\n   :items-tested (:items-tested result)})"]]
