@@ -38,10 +38,11 @@
    ".pf-pipeline{display:grid;grid-template-columns:repeat(9,minmax(0,auto));align-items:stretch;gap:.4rem;margin:1.25rem 0}.pf-stage{display:grid;align-content:center;min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.7rem;background:var(--bs-body-bg,#fff);text-align:center;overflow-wrap:anywhere}.pf-stage strong{display:block;color:var(--pf-accent)}.pf-stage small{color:var(--pf-muted)}.pf-arrow{display:grid;place-items:center;color:var(--pf-accent);font-size:1.35rem;font-weight:800}"
    ".pf-diagram{min-width:0;margin:1.25rem 0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.55rem;padding:clamp(.75rem,2vw,1rem);background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#212529)}.pf-diagram-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr));gap:.65rem;margin:0;padding:0;list-style:none;counter-reset:pf-step}.pf-diagram-steps li{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.65rem;background:color-mix(in srgb,var(--bs-body-bg,#fff) 94%,var(--pf-accent) 6%);overflow-wrap:anywhere;counter-increment:pf-step}.pf-diagram-steps li::before{content:counter(pf-step);display:grid;place-items:center;width:1.55rem;height:1.55rem;margin-bottom:.4rem;border-radius:50%;background:var(--pf-accent);color:var(--bs-body-bg,#fff);font-weight:800}.quarto-dark .pf-diagram-steps li::before{color:#10212b}.pf-diagram-steps strong{display:block;color:var(--pf-accent)}"
    ".pf-phase-diagram{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:.65rem;align-items:center}.pf-phase-node,.pf-phase-branch{min-width:0}.pf-phase-node{border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.75rem;background:color-mix(in srgb,var(--bs-body-bg,#fff) 94%,var(--pf-accent) 6%);overflow-wrap:anywhere}.pf-phase-node strong{display:block;color:var(--pf-accent)}.pf-phase-branch{display:grid;gap:.55rem}"
+   ".pf-observation-record{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem;margin:1rem 0}.pf-observation-record>div{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.65rem;background:color-mix(in srgb,var(--bs-body-bg,#fff) 95%,var(--pf-accent) 5%);overflow-wrap:anywhere}.pf-observation-record dt{font-weight:800;color:var(--pf-accent)}.pf-observation-record dd{margin:.2rem 0 0}.pf-observation-record code{white-space:normal;overflow-wrap:anywhere}"
    ".pf-odds-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;margin:1rem 0}.pf-odds-card{min-width:0;border:1px solid var(--bs-border-color,#dee2e6);border-radius:.45rem;padding:.7rem;background:var(--bs-body-bg,#fff);text-align:center}.pf-odds-card strong,.pf-odds-card span{display:block}.pf-odds-card strong{color:var(--pf-accent)}.pf-odds-card span{font-variant-numeric:tabular-nums}"
    ".pf-status-pass{color:var(--pf-success);font-weight:800}.pf-status-fail{color:var(--pf-fail);font-weight:800}.pf-caption,.pf-note{font-size:.9rem;color:var(--pf-muted)}"
    ".series-toc{min-width:0;border:1px solid var(--bs-border-color,#ced4da);border-radius:.6rem;padding:clamp(.85rem,3vw,1.2rem);margin:0 0 1.4rem;background:var(--bs-body-bg,#fff)}.series-toc h2{font-size:1.2rem;margin:0 0 .55rem}.series-toc p{margin:0 0 .7rem}.series-toc ol{margin:0;padding-left:1.45rem}.series-toc li{padding:.18rem .45rem}.series-status{display:inline-block;margin-left:.35rem;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--pf-muted)}.series-current{margin:.35rem 0 .35rem -.7rem;border-left:4px solid var(--pf-accent);border-radius:.4rem;padding:.6rem .75rem!important;background:color-mix(in srgb,var(--bs-body-bg,#fff) 84%,var(--pf-accent) 16%);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--pf-accent) 35%,transparent);font-weight:700}.series-current>a{color:var(--pf-accent)}.series-current .series-status{border-radius:999px;padding:.18rem .48rem;background:var(--pf-accent);color:#fff}.quarto-dark .series-current .series-status{color:#10212b}"
-   "@media(max-width:767px){.pf-pipeline,.pf-phase-diagram{grid-template-columns:minmax(0,1fr)}.pf-arrow{min-height:1rem}.pf-odds-strip{grid-template-columns:minmax(0,1fr)}}@media(max-width:575px){.pf-table th,.pf-table td{padding:.45rem}.pf-card{padding:.8rem}}")])
+   "@media(max-width:767px){.pf-pipeline,.pf-phase-diagram,.pf-observation-record{grid-template-columns:minmax(0,1fr)}.pf-arrow{min-height:1rem}.pf-odds-strip{grid-template-columns:minmax(0,1fr)}}@media(max-width:575px){.pf-table th,.pf-table td{padding:.45rem}.pf-card{padding:.8rem}}")])
 
 ^:kindly/hide-code
 (kind/hiccup
@@ -596,6 +597,74 @@
   [:div#pair-frequency-model-scenarios
    [:p "Loading the latent-state, evidence, and prediction comparisons…"]]
   [:noscript "These paired scenario comparisons need JavaScript."]])
+;; ### What `observations` contains—and where it comes from
+;;
+;; In the likelihood, `observations` is the ordered collection of tested-pair
+;; response records indexed by $i$. One record connects a selected pair to the
+;; predictor and outcome used by the scorer:
+
+^:kindly/hide-code
+(kind/hiccup
+ [:figure.pf-diagram
+  [:dl.pf-observation-record
+   [:div
+    [:dt [:code ":pair-index"]]
+    [:dd "The selected pair’s zero-based position in the fixed 8,000-pair fixture."]]
+   [:div
+    [:dt [:code ":x"]]
+    [:dd "That pair’s log frequency, standardised using the complete fixture."]]
+   [:div
+    [:dt [:code ":response"]]
+    [:dd [:code ":correct"] ", " [:code ":wrong"] ", or "
+     [:code ":dont-know"] "."]]
+   [:div
+    [:dt [:code "y"]]
+    [:dd "The v2 likelihood’s derived binary value: correct = 1; both other responses = 0."]]]
+  [:figcaption.pf-caption
+   "A representative in-memory record is {:pair-index 1167, :x (nth xs 1167), :response :correct}. The raw response is preserved even though v2 derives a binary value for inference."]])
+
+;; In a deployed quiz, the response field would come from a learner’s recorded
+;; answer event. **No Lexibench learner responses were used in this article.**
+;; Here the two halves of an observation have different provenance:
+
+^:kindly/hide-code
+(kind/hiccup
+ [:figure.pf-diagram
+  [:div.pf-phase-diagram
+   {:role "img"
+    :aria-label "Two sources join to form each model observation. A real corpus-derived fixture supplies the pair index and standardised log-frequency predictor. A seeded synthetic learner supplies a correct or non-correct response, with optional declared measurement error. Together they form the observation record passed to the likelihood."}
+   [:div.pf-phase-branch
+    [:div.pf-phase-node
+     [:strong "Real predictor input"]
+     "Frozen SUBTLEX-PL/BS–NCP-derived pair-frequency fixture → log10 → fixture-wide standardisation → x."]
+    [:div.pf-phase-node
+     [:strong "Synthetic outcome input"]
+     "Scenario probability → seeded latent Bernoulli draw → optional measurement-error flip → raw response."]]
+   [:div.pf-arrow {:aria-hidden "true"} "→"]
+   [:div.pf-phase-node
+    [:strong "Observation used by the scorer"]
+    "Pair index + x + raw response. Only scheduled pairs become observations; the other latent outcomes remain hidden from the scorer."]]
+  [:figcaption.pf-caption
+   "The fixture makes the predictor distribution realistic. The response stream remains simulated, so the experiment tests algorithm behaviour under declared assumptions—not performance on real learners."]])
+
+;; The grid-resolution example immediately below uses one small, replayable
+;; stream rather than the later validation runs. It selects six complete
+;; eight-stratum rounds—48 pairs—with schedule seed `20260713`. The generator
+;; uses a width of `1.5`, chooses the threshold whose expected total is 4,000,
+;; and draws responses with seed `2026071303`. The frozen grid-check resource
+;; stores each pair index and raw response; replay reconstructs $x$ from the
+;; hashed fixture. Seed `2026071304` then drives 20,000 posterior-predictive
+;; draws on both the default and doubled grids. These 48 observations exist to
+;; check numerical grid resolution. They are not the tuning or held-out data.
+
+^:kindly/hide-code
+(kind/hiccup
+ [:div.pf-callout.provisional
+  [:strong "The simulations do not model wrong and don’t-know separately"]
+  [:p "The small generator emits " [:code ":correct"] " for a binary 1 and "
+   [:code ":dont-know"] " for a binary 0. The browser lab alternates some displayed zero labels between "
+   [:code ":wrong"] " and " [:code ":dont-know"]
+   " only to demonstrate that v2 collapses both. The large gate runner stores the same measured distinction as bytes 1 and 0. None of these mechanisms claims to reproduce separate guessing, wrong-answer, and don’t-know processes."]])
 ;;
 ;; ### Residual variation and misspecification
 ;;
@@ -865,6 +934,146 @@
 ;; different schedules. A limitation is that each phase is still conditional
 ;; on one item schedule; these runs did not average over many independently
 ;; drawn selection schedules.
+;;
+;; ### What happened after a response stream existed
+;;
+;; The large validation runner represents the 160 scheduled measured outcomes
+;; as a byte array of `1` and `0`. That is an efficient representation of a
+;; binary simulation—not a production learner-event schema. The ordinary scorer
+;; accepts the preserved raw response keywords described above; the gate runner
+;; can use bytes because its declared scenarios generate only binary measured
+;; outcomes.
+;;
+;; The runner did **not** generate a new learner for every stopping rule. It
+;; generated one complete latent pool and one 160-response stream for a
+;; replicate, then repeatedly exposed prefixes of that same stream. At 24, 32,
+;; 40, …, 160 responses, depending on the candidate rules being evaluated, it
+;; computed paired v1 and v2 results. Every checkpoint ended after a complete
+;; eight-item round.
+
+^:kindly/hide-code
+(kind/hiccup
+ [:figure.pf-diagram
+  [:div.pf-phase-diagram
+   {:role "img"
+    :aria-label "One simulated response prefix is sent to both scorers. V1 groups correct counts within the eight fixed frequency strata and applies eight Beta-binomial updates. V2 combines correct count and correct-item frequency information with its weighted threshold-and-width grid. Both return an estimate, interval, and response log score for the same simulated learner and tested items."}
+   [:div.pf-phase-node
+    [:strong "Same response prefix"]
+    "The first n scheduled outcomes from one simulated learner, where n ends a complete eight-item round."]
+   [:div.pf-arrow {:aria-hidden "true"} "→"]
+   [:div.pf-phase-branch
+    [:div.pf-phase-node
+     [:strong "v1 checkpoint"]
+     "Count correct answers in each of eight strata → update eight Beta distributions → combine tested and untested totals."]
+    [:div.pf-phase-node
+     [:strong "v2 checkpoint"]
+     "Count correct answers and their x values → reweight the threshold × width grid → combine observed correct pairs with predictions for untested pairs."]]]
+  [:figcaption.pf-caption
+   "Pairing removes learner and question-stream variation from the v1-versus-v2 comparison. Only the scoring assumptions differ."]])
+
+;; For v2, `observed-statistics` reduces a prefix to two quantities: the number
+;; correct and the sum of $x$ over correct responses. The scorer had already
+;; cached, for every parameter-grid point and checkpoint, the contributions
+;; from the selected $x$ values and the moments of the untested pairs. It then:
+;;
+;; 1. combines those cached terms with the observed correct count and
+;;    correct-$x$ sum to obtain one log posterior weight per grid point;
+;; 2. normalises the weights and calculates the weighted expected whole-pool
+;;    total;
+;; 3. constructs a 95% interval by mixing grid uncertainty with uncertainty in
+;;    the untested-pair total; and
+;; 4. records the average response log score at that checkpoint.
+;;
+;; The large-run interval used 512 deterministic systematic samples from the
+;; weighted grid and a moment-matched normal approximation for each grid
+;; point’s untested Poisson-binomial total. The smaller grid check above used
+;; pair-level posterior-predictive Bernoulli draws. The later numerical-shortcut
+;; callout records why these are different.
+
+^:kindly/hide-code
+(kind/hiccup
+ [:figure.pf-diagram
+  [:ol.pf-diagram-steps
+   {:role "img"
+    :aria-label "Seven downstream steps after simulating responses. Take complete-round prefixes. Score the same prefix with v1 and v2. Apply each stopping rule to select its first qualifying checkpoint. Compare the selected estimate and interval with the saved latent truth. Compute replicate metrics. Aggregate those metrics within each scenario cell. Finally apply all five precommitted promotion checks across aggregate and cellwise results."}
+   [:li
+    [:strong "Expose prefixes"]
+    "Use 24, 32, 40, … responses as required; never look beyond a checkpoint when scoring it."]
+   [:li
+    [:strong "Score both models"]
+    "Produce paired estimates, 95% intervals, interval widths, and response log scores."]
+   [:li
+    [:strong "Apply one rule"]
+    "Starting at its minimum, select the first checkpoint meeting the precision target or soft cap."]
+   [:li
+    [:strong "Recover hidden truth"]
+    "Use the saved sum of all 8,000 latent outcomes only for evaluation—not as scorer input."]
+   [:li
+    [:strong "Measure one replicate"]
+    "Record coverage, signed error, absolute error, interval width, log score, length, and stopping reason."]
+   [:li
+    [:strong "Aggregate one cell"]
+    "Across independent learners, calculate coverage, bias, MAE, mean width, mean log score, and quiz-length summaries."]
+   [:li
+    [:strong "Judge the gate"]
+    "Compare every rule with v1 overall and in every supported cell; all five frozen checks must pass."]]
+  [:figcaption.pf-caption
+   "The scorer sees only the selected response prefix. The validation runner retains latent truth so it can judge the scorer after the stopping decision."]])
+
+^:kindly/hide-code
+(math/code-detail
+ "code-response-stream-to-metrics"
+ "Turning one simulated response stream into checkpoint scores and replicate metrics"
+ [:div
+  [:p "Every required prefix is scored once for both models. A rule then chooses one of those already-computed checkpoints, and only that selected result is compared with latent truth."]
+  [:pre [:code "(defn checkpoint-scores [xs selected cache responses seed item-counts]\n  (into {}\n        (for [items-tested item-counts\n              :let [{:keys [correct sum-correct-x]}\n                    (observed-statistics\n                     xs selected responses items-tested)]]\n          [items-tested\n           {:v1 (score-v1 selected responses items-tested)\n            :v2 (score-v2 cache items-tested correct sum-correct-x\n                          (+ seed items-tested))}])))\n\n(defn result-metrics [truth result]\n  {:covered? (<= (:lower result) truth (:upper result))\n   :error (- (:estimate result) truth)\n   :absolute-error\n   (Math/abs (double (- (:estimate result) truth)))\n   :interval-width (:interval-width result)\n   :log-score (:log-score result)\n   :items-tested (:items-tested result)})"]]
+  [:p "The implementation calculates coverage and error only after a stopping rule has selected one checkpoint result."]
+  [:p.article-code-source
+   [:a {:href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/pair_frequency_logistic_v2_gate.clj"}
+    "View checkpoint scoring, stopping, replicate metrics, and cell aggregation"]]])
+
+;; The result changes level as it moves through the validation. A checkpoint is
+;; evidence about one prefix; a replicate is evidence about one simulated
+;; learner; a cell summary is evidence about one declared condition; and the
+;; gate is the decision across all supported conditions.
+
+^:kindly/hide-code
+(kind/hiccup
+ [:div.pf-table-wrap
+  [:table.pf-table.pf-explain-table
+   [:caption.pf-sr-only "How simulated responses become validation evidence"]
+   [:thead
+    [:tr
+     [:th {:scope "col"} "Level"]
+     [:th {:scope "col"} "Input"]
+     [:th {:scope "col"} "Output"]
+     [:th {:scope "col"} "What remains hidden"]]]
+   [:tbody
+    [:tr
+     [:th {:scope "row"} "Checkpoint"]
+     [:td "One complete-round response prefix"]
+     [:td "v1 and v2 estimate, interval, width, and log score"]
+     [:td "Future responses and the 8,000-pair truth"]]
+    [:tr
+     [:th {:scope "row"} "Stopping rule"]
+     [:td "Ordered checkpoint results"]
+     [:td "First qualifying result and stopping reason"]
+     [:td "Later checkpoints"]]
+    [:tr
+     [:th {:scope "row"} "Replicate"]
+     [:td "Stopped result + saved latent truth"]
+     [:td "Coverage and error metrics for one simulated learner"]
+     [:td "Nothing needed for that replicate’s evaluation"]]
+    [:tr
+     [:th {:scope "row"} "Scenario cell"]
+     [:td "Metrics from 500 or 2,000 independent learners"]
+     [:td "Coverage, bias, MAE, width, log score, and length summaries"]
+     [:td "Other cells"]]
+    [:tr
+     [:th {:scope "row"} "Promotion gate"]
+     [:td "Aggregate and every-cell summaries for v1 and each v2 rule"]
+     [:td "Pass/fail for all five precommitted requirements"]
+     [:td "Held-out and stress diagnostics, until the rule is frozen"]]]]])
 
 ;; ### What varied in the 45 supported cells
 ;;
