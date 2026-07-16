@@ -3,7 +3,6 @@
   (:require [clojure.edn :as edn]
             [clojure.pprint :as pprint]
             [clojure.walk :as walk]
-            [scicloj.kindly.v4.api :as kindly]
             [tablecloth.api :as tc]
             [clj-yaml.core :as yaml]))
 
@@ -41,29 +40,10 @@
       (->> (index-by :id))
       (update-vals #(dissoc % :id))))
 
-(defn- ns-clay-config [ns-form]
-  (let [[_ sym ?doc ?attr] ns-form]
-    (kindly/deep-merge
-     (some-> ns-form meta :clay)
-     (some-> sym meta :clay)
-     (:clay (cond
-              (map? ?doc) ?doc
-              (map? ?attr) ?attr)))))
-
-(defn- restore-replaced-quarto-config [config]
-  (let [quarto (:quarto config)
-        ns-quarto (some-> config :ns-form ns-clay-config :quarto)]
-    (if (and ns-quarto (-> quarto meta :replace))
-      (assoc config :quarto
-             (kindly/deep-merge ns-quarto (with-meta quarto nil)))
-      config)))
-
 (defn expand-authors
   "Hook for Clay to update ns metadata configuration"
   [config]
-  (-> config
-      restore-replaced-quarto-config
-      (update :quarto #(walk/prewalk-replace (author-replacements) %))))
+  (update config :quarto #(walk/prewalk-replace (author-replacements) %)))
 
 ;; TODO: what if the front matter doesn't match existing?
 
