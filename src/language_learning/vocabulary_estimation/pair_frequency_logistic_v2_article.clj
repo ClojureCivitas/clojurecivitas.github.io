@@ -109,17 +109,38 @@
 ;; The outcome is deliberately asymmetric: a candidate may teach us something
 ;; and still fail to earn operational trust. Here the historical gate used
 ;; logical **AND**: passing four checks would still have meant non-promotion.
+;; The numbered map previews the seven stages explained below; each card links
+;; to its corresponding section.
 
 ^:kindly/hide-code
 (kind/hiccup
- [:ol.article-chapter-map
-  [:li [:strong "Construct"] [:br] "Turn corpus counts into one predictor per pair."]
-  [:li [:strong "Curve"] [:br] "Connect frequency to probability through odds and log odds."]
-  [:li [:strong "Infer"] [:br] "Use priors and a deterministic grid while separating latent and observed outcomes."]
-  [:li [:strong "Select"] [:br] "Keep the balanced response-independent schedule unchanged."]
-  [:li [:strong "Simulate"] [:br] "Separate replicates, phases, metrics, and seeds."]
-  [:li [:strong "Gate"] [:br] "Apply all five precommitted checks."]
-  [:li [:strong "Decide"] [:br] "Diagnose the failure and retain v1."]])
+ [:style
+  ".pair-frequency-process-map li>a{display:block;color:inherit;text-decoration:none}.pair-frequency-process-map li:has(>a):hover{border-color:#2780e3;box-shadow:0 0 0 2px color-mix(in srgb,#2780e3 22%,transparent)}.pair-frequency-process-map li>a:focus-visible{outline:3px solid color-mix(in srgb,#2780e3 50%,transparent);outline-offset:4px}"])
+
+^:kindly/hide-code
+(kind/hiccup
+ [:ol.article-chapter-map.pair-frequency-process-map
+  [:li [:a {:href "#step-1-construct"}
+        [:strong "Construct"] [:br]
+        "Turn corpus counts into one predictor per pair."]]
+  [:li [:a {:href "#step-2-curve"}
+        [:strong "Curve"] [:br]
+        "Connect frequency to probability through odds and log odds."]]
+  [:li [:a {:href "#step-3-infer"}
+        [:strong "Infer"] [:br]
+        "Use priors and a deterministic grid while separating latent and observed outcomes."]]
+  [:li [:a {:href "#step-4-select"}
+        [:strong "Select"] [:br]
+        "Keep the balanced response-independent schedule unchanged."]]
+  [:li [:a {:href "#step-5-simulate"}
+        [:strong "Simulate"] [:br]
+        "Separate replicates, phases, metrics, and seeds."]]
+  [:li [:a {:href "#step-6-gate"}
+        [:strong "Gate"] [:br]
+        "Apply all five precommitted checks."]]
+  [:li [:a {:href "#step-7-decide"}
+        [:strong "Decide"] [:br]
+        "Diagnose the failure and retain v1."]]])
 
 ;; External evidence makes frequency a reasonable provisional predictor, but
 ;; does not calibrate Lexibench's Polish lemma–surface-form pairs:
@@ -143,7 +164,7 @@
 ;; The defensible claim is therefore modest: **frequency is a plausible proxy,
 ;; not a calibrated item-difficulty scale**.
 ;;
-;; ## Real frequency values, not a real vocabulary pool
+;; ## 1. Construct: real frequency values, not a real vocabulary pool {#step-1-construct}
 
 ^:kindly/hide-code
 (def fixture-text
@@ -306,7 +327,7 @@
    [:a {:href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/pair_frequency_logistic_v2.cljc"}
     "View the transform and fixture validation"]]])
 ;;
-;; ## From probability to a logistic curve
+;; ## 2. Curve: from probability to a logistic curve {#step-2-curve}
 ;;
 ;; A **probability** $p$ describes expected successes out of all comparable
 ;; cases. **Odds** compare successes with failures: $p/(1-p)$. A probability of
@@ -401,7 +422,7 @@
    [:p "Loading the curve explorer…"]]
   [:noscript "This explorer needs JavaScript."]])
 ;;
-;; ## Priors and deterministic grid
+;; ## 3. Infer: priors and deterministic grid {#step-3-infer}
 ;;
 ;; The versioned defaults are:
 ;;
@@ -711,7 +732,7 @@
                (get-in grid-check [:convergence :upper-difference]))]
    [:p [:strong "Passes <10 / <25 tolerances"]]]])
 
-;; ## Selection remains v1
+;; ## 4. Select: selection remains v1 {#step-4-select}
 ;;
 ;; Every attempt still creates eight response-independent queues from equal-count
 ;; rank strata. Together, these queues determine the response-independent
@@ -768,7 +789,7 @@
 ;; and marginal charts show the fitted posterior. The authoritative checks and
 ;; large simulation run in CLJ.
 ;;
-;; ## Simulating a scorer before trusting it
+;; ## 5. Simulate: a scorer before trusting it {#step-5-simulate}
 ;;
 ;; Simulation makes the hidden truth available because the program creates it.
 ;; A **scenario** states how knowledge and measurement are generated. A
@@ -1235,7 +1256,7 @@
   [:pre [:code "(defn coverage-mcse [coverage replicates]\n  (Math/sqrt\n   (/ (* coverage (- 1.0 coverage))\n      replicates)))"]]
   [:p "The descriptive code names map directly to p-hat and n while leaving the equation's calculation unchanged."]])
 ;;
-;; ## Precommitment: choose rules before results
+;; ## 6. Gate: precommitment before results {#step-6-gate}
 ;;
 ;; **Precommitment** means declaring candidate rules, metrics, thresholds, and
 ;; the all-checks-must-pass logic before seeing their results. It prevents a
@@ -1316,7 +1337,7 @@
    [:a {:href "https://github.com/ClojureCivitas/clojurecivitas.github.io/blob/main/src/language_learning/vocabulary_estimation/pair_frequency_logistic_v2_gate.clj"}
     "View the gate calculation"]]])
 
-;; ## Gate result: no rule passed
+;; ### Gate result: no rule passed
 ;;
 ;; No rule satisfied all five checks. The rule with the best worst-cell
 ;; coverage started at 48 items, targeted a 7.5%-of-pool half-width, and capped
@@ -1367,7 +1388,7 @@
 ;; overall decision is therefore **not promoted**: two passes out of five are
 ;; not enough, and even four would not have been enough.
 ;;
-;; ## Held-out diagnosis after the failed gate
+;; ## 7. Decide: diagnose the failure and retain v1 {#step-7-decide}
 ;;
 ;; Because there was no eligible rule, the 2,000-replicate-per-cell run below is
 ;; a **held-out diagnostic**, not a promotion gate. Following the declared
