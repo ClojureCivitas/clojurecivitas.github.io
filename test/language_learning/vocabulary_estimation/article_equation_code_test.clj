@@ -157,7 +157,7 @@
 
 (deftest article-only-helpers-are-hidden-from-published-output
   (let [source (slurp (io/file authored-root "beta_binomial_first_pass.clj"))]
-    (is (re-find #"\^\{:kindly/hide-code true\s+:kindly/kind :kind/hidden\}\s+\(defn- resource-text" source)
+    (is (re-find #"\^:kindly/hide-code\s+\^:kind/hidden\s+\(defn- resource-text" source)
         "The CSS resource helper code and returned Var must not render as article content")))
 
 (deftest merged-article-code-uses-namespace-controls
