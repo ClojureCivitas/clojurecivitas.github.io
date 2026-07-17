@@ -310,6 +310,13 @@ Goal: Minimize friction in authoring while ensuring publishable reproducibility.
 
 The site is built and deployed using GitHub Actions with two workflows:
 
+Before opening a pull request, run `scripts/pre-publish-gate.sh` from the
+repository root. The same strict Clay renderer is used locally and in the full
+GitHub Pages workflow. It requires Java 21, uses the runner's 1 MiB JVM thread
+stack, fails when any source prints `Clay FAILED:`, then renders the full site
+with Quarto. `scripts/test-render-clay-strict.sh` reproduces the historical
+stack-overflow signal and checks that CI rejects it with an error annotation.
+
 - **Full Build and Publish**: Triggered on pushes to `main`.
   Rebuilds all notebooks with Clay, renders the entire site with Quarto, and deploys to GitHub Pages.
   See [.github/workflows/render-and-publish.yml](.github/workflows/render-and-publish.yml).

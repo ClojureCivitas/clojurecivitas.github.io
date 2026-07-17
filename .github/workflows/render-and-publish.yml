@@ -1,4 +1,7 @@
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -49,8 +52,11 @@ jobs:
           key: cljdeps-${{ hashFiles('deps.edn') }}
           restore-keys: cljdeps-
 
+      - name: Test strict Clay failure detection
+        run: scripts/test-render-clay-strict.sh
+
       - name: Build the content notebooks
-        run: clojure -M:clay -A:markdown
+        run: scripts/render-clay-strict.sh
 
       - name: Install lsof and apt prerequisites for Janqua
         run: sudo apt-get update && sudo apt-get install -y lsof gnupg lsb-release
@@ -91,6 +97,7 @@ jobs:
           path: site/_site
 
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     permissions:
       pages: write
