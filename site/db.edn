@@ -53,11 +53,17 @@
    :links       [{:icon "github" :href "https://github.com/seancorfield"}
                  {:icon "mastodon" :text "Mastodon" :href "https://tech.lgbt/@seancorfield"}]}
   {:id          :timschafer
+
    :name        "Tim Schafer"
    :image       "https://media.licdn.com/dms/image/v2/D4E03AQGuYEubu1rpeA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1681232451970?e=1764201600&v=beta&t=BaGJr3SSrKLFVm2yoZOX-tJgdPUyD3LR6rGTPQqWAvQ"
    :url         "https://github.com/srcerer"
    :affiliation [:clojurecamp]
    :links       [{:icon "github" :href "https://github.com/srcerer"}]}
+  {:id :ameinel
+   :name "Aaron Meinel"
+   :image "https://avatars.githubusercontent.com/u/14258825?s=96&v=4"
+   :url "https://github.com/schroedingberg"}
+
   {:id          :timothypratley
    :name        "Timothy Pratley"
    :url         "https://timothypratley.blogspot.com/p/httpswww.html"
