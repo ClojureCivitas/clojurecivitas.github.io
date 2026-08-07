@@ -49,9 +49,6 @@ jobs:
           key: cljdeps-${{ hashFiles('deps.edn') }}
           restore-keys: cljdeps-
 
-      - name: Build the content notebooks
-        run: clojure -M:clay -A:markdown
-
       - name: Install lsof and apt prerequisites for Janqua
         run: sudo apt-get update && sudo apt-get install -y lsof gnupg lsb-release
 
@@ -66,7 +63,7 @@ jobs:
       - name: Install Jank
         run: |
           curl -s https://ppa.jank-lang.org/KEY.gpg | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
-          sudo curl -s -o /etc/apt/sources.list.d/jank.list https://ppa.jank-lang.org/jank.list
+          echo "deb [signed-by=/etc/apt/trusted.gpg.d/jank.gpg] https://ppa.jank-lang.org noble main" | sudo tee /etc/apt/sources.list.d/jank.list
           sudo apt-get update
           sudo apt-get install -y jank
 
@@ -79,6 +76,9 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@v2
         with:
           tinytex: true
+
+      - name: Build the content notebooks
+        run: clojure -M:clay -A:markdown
 
       - name: Render Quarto
         uses: quarto-dev/quarto-actions/render@v2
