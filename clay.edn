@@ -1,9 +1,5 @@
 {:base-target-path   "temp"
  :base-source-path   "src"
- :watch-dirs         ["src"]
- :format             [:quarto :html]
- :run-quarto         true
- :browse             false
  :quarto-target-path "site"
  :quarto             ^:replace {}
  :subdirs-to-sync    ["src"]

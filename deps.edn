@@ -91,7 +91,7 @@
  :aliases
  {;; Build the site with `clojure -M:clay -A:markdown`
   ;; Run Clay in watch mode with `clojure -M:clay`
-  :clay       {:main-opts ["-m" "civitas.clay-main"]
+  :clay       {:main-opts ["-m" "scicloj.clay.v2.main"]
                :jvm-opts  ["-Dclojure.main.report=stderr"
                            "--add-opens=java.base/java.nio=ALL-UNNAMED"]}
   ;; When debugging libraries
@@ -100,11 +100,4 @@
                                org.scicloj/kindly-advice {:local/root "../kindly-advice"}
                                org.scicloj/kindly-render {:local/root "../kindly-render"}}}
   :neil       {:project {:name io.github.timothypratley/clojurecivitas}}
-  :dev        {:jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"]}
-  :test-clj   {:extra-paths ["test"]
-               :main-opts ["-m" "language-learning.vocabulary-estimation.test-runner"]}
-  :test-cljs  {:extra-paths ["test"]
-               :extra-deps {org.clojure/clojurescript {:mvn/version "1.12.42"}}
-               :main-opts ["-m" "cljs.main"
-                           "-re" "node"
-                           "-m" "language-learning.vocabulary-estimation.cljs-test-runner"]}}}
+  :dev        {:jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"]}}}
