@@ -41,10 +41,6 @@ _site/
 !/site/_quarto.yml
 !/site/_extensions/
 !/site/_extensions/**
-!/site/language_learning/
-!/site/language_learning/vocabulary_estimation/
-/site/language_learning/vocabulary_estimation/*
-!/site/language_learning/vocabulary_estimation/_metadata.yml
 
 # Janqua nREPL lifecycle files (created in the Quarto rendering directory)
 .jank-pid
