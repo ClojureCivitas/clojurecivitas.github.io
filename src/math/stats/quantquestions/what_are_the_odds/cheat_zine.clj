@@ -340,7 +340,7 @@
     {:temperature "90-104F" :days 0}
     {:temperature "105-119F" :days 0}
     {:temperature "120-134F" :days 0}]
-  (pj/lay-value-bar :temperature :days)
+  (pj/lay-bar :temperature :days)
   (pj/options {:title "Island A"}))
 
 ^:kindly/hide-code
@@ -351,7 +351,7 @@
   {:temperature "90-104F" :days 7}
   {:temperature "105-119F" :days 4}
   {:temperature "120-134F" :days 2}]
-  (pj/lay-value-bar :temperature :days)
+  (pj/lay-bar :temperature :days)
   (pj/options {:title "Island B"}))
 ;; :::
 
