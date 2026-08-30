@@ -34,6 +34,7 @@ _site/
 /target
 .calva/repl.calva-repl
 .calva/mcp-server/port
+.repl.calva-repl
 .portal/vs-code.edn
 **/password.edn
 /src/finance/portfolio_analysis/*.edn# Created by https://www.toptal.com/developers/gitignore/api/osx

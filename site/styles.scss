@@ -30,8 +30,18 @@ figcaption {
   text-align: center;
 }
 
-body.quarto-dark .js-plotly-plot,
-body.quarto-dark .mermaid {
+.plotje-plot, .js-plotly-plot {
+  width: 100%;
+  height: auto;
+}
+
+body.quarto-dark .js-plotly-plot:not(.js-plotly-plot .js-plotly-plot),
+body.quarto-dark .plotje-plot:not(.plotje-plot .plotje-plot),
+body.quarto-dark .mermaid:not(.mermaid .mermaid) {
+  filter: invert(100%) hue-rotate(180deg);
+}
+
+body.quarto-dark .plotje-plot image {
   filter: invert(100%) hue-rotate(180deg);
 }
 
