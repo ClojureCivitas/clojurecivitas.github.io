@@ -42,7 +42,7 @@
 
 ^:kind/hiccup ^:kindly/hide-code
 [:svg
- {:xlmns   "http://www.w3.org/2000/svg"
+ {:xmlns   "http://www.w3.org/2000/svg"
   :viewBox "-30 -30 60 60"
   :width   "100%"}
  [:defs
