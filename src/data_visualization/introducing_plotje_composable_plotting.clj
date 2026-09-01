@@ -653,8 +653,9 @@ abandonment
 ;; call a second layer function, does the new layer join the plot you
 ;; were building, or start a new one?
 ;;
-;; The rule is that a layer call naming columns looks for the most recent
-;; pose whose x and y mappings match, and attaches to it. In the two calls
+;; The rule is that a layer call naming columns in its argument slots
+;; looks for the most recent pose whose x and y mappings match, and
+;; attaches to it. In the two calls
 ;; below the columns match, so the points and the smoothed trend land on
 ;; one set of axes:
 
