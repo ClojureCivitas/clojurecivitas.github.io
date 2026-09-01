@@ -109,6 +109,19 @@
    ;; Plotje -- composable plotting
    [scicloj.plotje.api :as pj]))
 
+^{:kindly/hide-code true
+  :kindly/kind :kind/hiccup}
+[:style
+ ".clay-dataset {
+  max-height: 400px;
+  overflow-y: auto;
+}
+.sourceCode.clojure {
+  max-height: 500px;
+  overflow-y: auto;
+}
+"]
+
 ;; ## Starting small
 ;;
 ;; Before any real data, the smallest useful thing: six Clojure libraries
