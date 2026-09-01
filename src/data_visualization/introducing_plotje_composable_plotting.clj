@@ -9,7 +9,8 @@
                   :keywords [:datavis]
                   :toc true
                   :toc-depth 2
-                  :draft true}}}
+                  :draft true
+                  :image "facet.png"}}}
 (ns data-visualization.introducing-plotje-composable-plotting)
 
 ;; [Plotje](https://github.com/scicloj/plotje) is a plotting library for
