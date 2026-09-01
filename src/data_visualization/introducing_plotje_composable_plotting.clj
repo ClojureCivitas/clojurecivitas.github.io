@@ -9,7 +9,7 @@
                   :keywords [:datavis]
                   :toc true
                   :toc-depth 2
-                  :draft true}}}
+                  :image "facet.png"}}}
 (ns data-visualization.introducing-plotje-composable-plotting)
 
 ;; [Plotje](https://github.com/scicloj/plotje) is a plotting library for
@@ -108,6 +108,19 @@
    [scicloj.kindly.v4.kind :as kind]
    ;; Plotje -- composable plotting
    [scicloj.plotje.api :as pj]))
+
+^{:kindly/hide-code true
+  :kindly/kind :kind/hiccup}
+[:style
+ ".clay-dataset {
+  max-height: 400px;
+  overflow-y: auto;
+}
+.sourceCode.clojure {
+  max-height: 500px;
+  overflow-y: auto;
+}
+"]
 
 ;; ## Starting small
 ;;
