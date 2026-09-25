@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="270pt" height="424pt" viewBox="0.00 0.00 270.00 424.00">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 420)">
+<title>support_to_law</title>
+<!-- support -->
+<g id="node1" class="node">
+<title>support</title>
+<polygon fill="lightgrey" stroke="black" points="74.17,-380 187.68,-380 228.1,-416 33.75,-416 74.17,-380"></polygon>
+<text xml:space="preserve" text-anchor="middle" x="130.93" y="-393.8" font-family="Times,serif" font-size="14.00">Public Support</text>
+</g>
+<!-- priority -->
+<g id="node2" class="node">
+<title>priority</title>
+<polygon fill="lightgrey" stroke="black" points="54.46,-304 207.39,-304 261.85,-340 0,-340 54.46,-304"></polygon>
+<text xml:space="preserve" text-anchor="middle" x="130.93" y="-317.8" font-family="Times,serif" font-size="14.00">Priority in Campaign</text>
+</g>
+<!-- support&#45;&gt;priority -->
+<g id="edge1" class="edge">
+<title>support-&gt;priority</title>
+<path fill="none" stroke="black" d="M130.93,-379.84C130.93,-371.49 130.93,-361.23 130.93,-351.74"></path>
+<polygon fill="black" stroke="black" points="134.43,-351.84 130.93,-341.84 127.43,-351.84 134.43,-351.84"></polygon>
+</g>
+<!-- vote -->
+<g id="node3" class="node">
+<title>vote</title>
+<polygon fill="lightgrey" stroke="black" points="103.2,-228 158.65,-228 178.4,-264 83.46,-264 103.2,-228"></polygon>
+<text xml:space="preserve" text-anchor="middle" x="130.93" y="-241.8" font-family="Times,serif" font-size="14.00">Votes</text>
+</g>
+<!-- priority&#45;&gt;vote -->
+<g id="edge2" class="edge">
+<title>priority-&gt;vote</title>
+<path fill="none" stroke="black" d="M130.93,-303.84C130.93,-295.49 130.93,-285.23 130.93,-275.74"></path>
+<polygon fill="black" stroke="black" points="134.43,-275.84 130.93,-265.84 127.43,-275.84 134.43,-275.84"></polygon>
+</g>
+<!-- pressure -->
+<g id="node4" class="node">
+<title>pressure</title>
+<polygon fill="lightgrey" stroke="black" points="72.41,-152 189.44,-152 231.12,-188 30.73,-188 72.41,-152"></polygon>
+<text xml:space="preserve" text-anchor="middle" x="130.93" y="-165.8" font-family="Times,serif" font-size="14.00">Public Pressure</text>
+</g>
+<!-- vote&#45;&gt;pressure -->
+<g id="edge3" class="edge">
+<title>vote-&gt;pressure</title>
+<path fill="none" stroke="black" d="M130.93,-227.84C130.93,-219.49 130.93,-209.23 130.93,-199.74"></path>
+<polygon fill="black" stroke="black" points="134.43,-199.84 130.93,-189.84 127.43,-199.84 134.43,-199.84"></polygon>
+</g>
+<!-- majority -->
+<g id="node5" class="node">
+<title>majority</title>
+<polygon fill="lightgrey" stroke="black" points="56.47,-76 205.38,-76 258.42,-112 3.43,-112 56.47,-76"></polygon>
+<text xml:space="preserve" text-anchor="middle" x="130.93" y="-89.8" font-family="Times,serif" font-size="14.00">Legislative Majority</text>
+</g>
+<!-- pressure&#45;&gt;majority -->
+<g id="edge4" class="edge">
+<title>pressure-&gt;majority</title>
+<path fill="none" stroke="black" d="M130.93,-151.84C130.93,-143.49 130.93,-133.23 130.93,-123.74"></path>
+<polygon fill="black" stroke="black" points="134.43,-123.84 130.93,-113.84 127.43,-123.84 134.43,-123.84"></polygon>
+</g>
+<!-- law -->
+<g id="node6" class="node">
+<title>law</title>
+<polygon fill="#bfdbfe" stroke="black" points="79.96,0 181.89,0 218.19,-36 43.66,-36 79.96,0"></polygon>
+<text xml:space="preserve" text-anchor="middle" x="130.93" y="-13.8" font-family="Times,serif" font-size="14.00">Enacted Law</text>
+</g>
+<!-- majority&#45;&gt;law -->
+<g id="edge5" class="edge">
+<title>majority-&gt;law</title>
+<path fill="none" stroke="black" d="M130.93,-75.84C130.93,-67.49 130.93,-57.23 130.93,-47.74"></path>
+<polygon fill="black" stroke="black" points="134.43,-47.84 130.93,-37.84 127.43,-47.84 134.43,-47.84"></polygon>
+</g>
+</g>
+</svg>
