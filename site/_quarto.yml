@@ -32,7 +32,7 @@ website:
   sidebar:
     - id: unbounded
       title: "Unbounded"
-      contents: auto
+      contents: economics/wealth_distribution/unbounded/
     - id: emmy-fdg
       title: "Functional Differential Geometry in Emmy"
       logo: "https://raw.githubusercontent.com/mentat-collective/emmy/main/doc/img/logo.png"
