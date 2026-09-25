@@ -1,0 +1,15 @@
+Date: Quarterly observations  
+Category: Wealth Percentile Group (Top 0.1%, Next 0.9%, Next 9%, Next 40%, Bottom 50%)      
+Net worth: Total assets less total liabilites     
+Assets: Total nonfinancial and financial assets 
+Real estate: Owner-occupied real estate including vacant land and mobile homes at market value
+Consumer durables:  Consumer durable goods, current cost basis (automobiles,  trucks/motor vehicles,  furniture,  carpet/rugs,light fixtures, household appliances, audio/video/photo equipment, computers, boats, books,jewelry/watches, health and therapeutic equipment, and luggage, among others)
+Corporate equities and mutual fund shares: Holdings of corporate equities and mutual fund shares excluding equities and mutual fund shares owned through DC pensions
+Defined benefit pension entitlements: Accrued benefits to be paid in the future from defined benefit (DB) plans. Included in the Pension Entitlements instrument in the Financial Accounts
+Defined contribution pension entitlements: Defined contribution (DC) pension plans, and  annuities  sold  by  life  insurers  directly to individuals. Included in the Pension Entitlements instrument in the Financial Accounts
+Unincorporated Business: Proprietors' equity in noncorporate business (Includes non-publicly traded businesses and real estate owned by households for renting out to others) and equity investment in funding corporations under PPIP
+Other Assets: Total assets less real estate, consumer durables, corporate equities and mutual fund shares, pension entitlements and private business
+Liabilites: Total liabilities
+Home mortgages: Residential home mortgage loans as reported by lenders
+Consumer credit: Consumer credit including credit card, student loan, and vehicle loan balances, as well as other loans extended to consumers
+Other liabilities: Total liabilities less home mortgages and consumer credit

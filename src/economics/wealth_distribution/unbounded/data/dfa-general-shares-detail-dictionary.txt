@@ -1,0 +1,59 @@
+Label	Description
+Date	Quarterly observation
+Share of Total Assets.	Percent of Aggregate.
+Share of Nonfinancial Assets.	Percent of Aggregate.
+Share of Real Estate.	Percent of Aggregate.
+Share of Consumer Durables.	Percent of Aggregate.
+Share of Financial Assets. Percent of Aggregate.
+Share of Deposits (Checkable Deposits and Currency plus Time Deposits and Short-term Investments).	Percent of Aggregate.
+Share of Money Market Fund Shares.	Percent of Aggregate.
+Share of Debt Securities. 	Percent of Aggregate.
+Share of U.S. Government Securities and Municipal Securities.	Percent of Aggregate.
+Share of Corporate and Foreign Bonds. Percent of Aggregate.
+Share of Loans (Assets).	Percent of Aggregate.
+Share of Other Loans and Advances (Assets).	Percent of Aggregate.
+Share of Mortgages owed.	Percent of Aggregate.
+Share of Corporate Equities and Mutual Fund Shares.	Percent of Aggregate.
+Share of Life Insurance Reserves.	Percent of Aggregate.
+Share of Defined Benefit Pension Entitlements.	Percent of Aggregate.
+Share of Defined Contribution Pension Entitlements.	Percent of Aggregate.
+Share of Annuities.		Percent of Aggregate.
+Share of Miscellaneous Other Equity.	Percent of Aggregate.
+Share of Miscellaneous Assets.	Percent of Aggregate.
+Share of Total Liabilities.	Percent of Aggregate.
+Share of Loans (Liabilities).	Percent of Aggregate.
+Share of Home mortgages.	Percent of Aggregate.
+Share of Consumer Credit.	Percent of Aggregate.
+Share of Depository Institutions Loans n.e.c.	Percent of Aggregate.
+Share of Other Loans and Advances (Liabilities).	Percent of Aggregate.
+Share of Deferred and Unpaid Life Insurance Premiums.	Percent of Aggregate.
+Share of Total Net Worth.	Percent of Aggregate.
+Household Count.	Number of Households. 
+Minimum Wealth Cutoff.	Dollars.  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

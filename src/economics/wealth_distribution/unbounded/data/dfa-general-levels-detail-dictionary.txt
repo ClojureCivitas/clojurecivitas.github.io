@@ -1,0 +1,59 @@
+Label	Description
+Date	Quarterly observation
+Holdings of Total Assets.	Millions of Dollars.
+Holdings of Nonfinancial Assets.	Millions of Dollars.
+Holdings of Real Estate.	Millions of Dollars.
+Holdings of Consumer Durables.	Millions of Dollars.
+Holdings of Financial Assets. Millions of Dollars.
+Holdings of Deposits (Checkable Deposits and Currency plus Time Deposits and Short-term Investments).	Millions of Dollars.
+Holdings of Money Market Fund Holdings.	Millions of Dollars.
+Holdings of Debt Securities. 	Millions of Dollars.
+Holdings of U.S. Government Securities and Municipal Securities.	Millions of Dollars.
+Holdings of Corporate and Foreign Bonds. Millions of Dollars.
+Holdings of Loans (Assets).	Millions of Dollars.
+Holdings of Other Loans and Advances (Assets).	Millions of Dollars.
+Holdings of Mortgages owed.	Millions of Dollars.
+Holdings of Corporate Equities and Mutual Fund Holdings.	Millions of Dollars.
+Holdings of Life Insurance Reserves.	Millions of Dollars.
+Holdings of Defined Benefit Pension Entitlements.	Millions of Dollars.
+Holdings of Defined Contribution Pension Entitlements.	Millions of Dollars.
+Holdings of Annuities.		Millions of Dollars.
+Holdings of Miscellaneous Other Equity.	Millions of Dollars.
+Holdings of Miscellaneous Assets.	Millions of Dollars.
+Holdings of Total Liabilities.	Millions of Dollars.
+Holdings of Loans (Liabilities).	Millions of Dollars.
+Holdings of Home mortgages.	Millions of Dollars.
+Holdings of Consumer Credit.	Millions of Dollars.
+Holdings of Depository Institutions Loans n.e.c.	Millions of Dollars.
+Holdings of Other Loans and Advances (Liabilities).	Millions of Dollars.
+Holdings of Deferred and Unpaid Life Insurance Premiums.	Millions of Dollars.
+Holdings of Total Net Worth.	Millions of Dollars.
+Household Count.	Number of Households. 
+Minimum Wealth Cutoff.	Dollars.  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
