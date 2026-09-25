@@ -30,6 +30,9 @@ website:
         href: posts.xml
         aria-label: "Clojure Civitas RSS feed"
   sidebar:
+    - id: unbounded
+      title: "Unbounded"
+      contents: auto
     - id: emmy-fdg
       title: "Functional Differential Geometry in Emmy"
       logo: "https://raw.githubusercontent.com/mentat-collective/emmy/main/doc/img/logo.png"

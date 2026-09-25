@@ -296,7 +296,7 @@
 ;; as explored in [Who Pays Tax?](u1_who_pays_tax.html).
 ;; Through this lens, 60% of adult individuals have negative net worth.
 
-;; It's truely dizzying to try to imagine 500000x zoom.
+;; It's truely dizzying to try to imagine 1000000x zoom.
 ;; The wealth curve spans several orders of magnitude, making its scale difficult to grasp.
 ;; A video visualization by politizane,
 ;; [Wealth Inequality in America](https://www.youtube.com/watch?v=2GxlL5-0m_g),
@@ -529,9 +529,9 @@
 ;; economists Saez and Zucman estimate that the top 0.1%'s relative wealth share growth is actually closer to 100% to 200% over the same period.[^5]
 
 ;; While the top 0.1% has experienced immense gains,
-;; the concentration at the absolute apex 0.00001% (representing roughly the 20 to 35 wealthiest individuals) has grown even more exponentially.
-;; According to analysis by Gabriel Zucman published via the World Inequality Database and reported by the Wall Street Journal, this hyper-elite tier saw their share of total U.S. household wealth skyrocket from 0.1% in 1982 to 1.8%.
-;; This is a 17x increase in their total relative wealth share.[^6]
+;; the concentration at the apex 0.00001% (representing roughly the 20 to 35 wealthiest individuals) has grown even more exponentially.
+;; According to analysis by Gabriel Zucman, this elite tier saw their share of total U.S. household wealth skyrocket,
+;; growing their share by 15x over the last 45 years, as shown in @fig-top-20-wealth.
 
 (def latest-networth
   (-> networth
@@ -707,10 +707,9 @@
 ;; Most discussions about wealth concentration revolve around percentages and statistics.
 ;; I find that hard to connect with.
 
-;; It wasn't until I started plotting growth and asking different questions that something clicked.
+;; It wasn't until I started plotting growth shares that something clicked.
 ;; I realized what was actually happening.
 ;; Every system rewards something.
-;; The interesting question is what.
 ;; Our game rewards snowballing wealth.
 ;; And the winners are pulling away.
 ;; :::
@@ -729,4 +728,3 @@
 ;; [^3]: [Forbes' annual real-time billionaire list](https://www.forbes.com/real-time-billionaires/) provides the source for the U.S. billionaire count and the top-end wealth values used in the chart.
 ;; [^4]: The Federal Reserve's [Distributional Financial Accounts](https://www.federalreserve.gov/releases/z1/dataviz/dfa.htm) provide the cohort-level wealth-share series.
 ;; [^5]: Tax-capitalization studies by [Saez and Zucman](https://eml.berkeley.edu/~saez/saez-zucmanNBER14wealth.pdf) estimate that top-end wealth shares grew even faster than survey-based measures suggest over the same period.
-;; [^6]: Gabriel Zucman's analysis, summarized in the [World Inequality Database](https://wid.world/) and reported in the [Wall Street Journal](https://www.wsj.com/), estimates that the ultra-elite tier around the 0.00001% level grew from roughly 0.1% to 1.8% of U.S. household wealth.
