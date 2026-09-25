@@ -7,7 +7,7 @@
                            :author      [:timothypratley]
                            :description "A systems view of wealth concentration, growth, stability, governance, and opportunity."
                            :abstract    "Knowledge sharing is the positive feedback loop behind growth, resilience, and living standards. Wealth concentration is a negative feedback loop that concentrates both economic and political power."
-                           :date        "2026-06-20"
+                           :date        "2026-09-24"
                            :type        :post
                            :category    :economics
                            :tags        [:tax :economics :growth]}}})

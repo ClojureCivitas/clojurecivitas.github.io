@@ -8,7 +8,7 @@
                            :author      [:timothypratley]
                            :description "How pressure can lead to wealth tax legislation."
                            :abstract    "Wealth tax legislation needs single policy political pressure."
-                           :date        "2026-06-20"
+                           :date        "2026-09-27"
                            :type        :post
                            :category    :economics
                            :tags        [:tax :economics :growth]}}})

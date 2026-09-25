@@ -8,7 +8,7 @@
                            :author      [:timothypratley]
                            :description "What is the current distribution of wealth in the United States, and how is it changing."
                            :abstract    "Wealth concentration is accelerating. Policy choices are allowing top end wealth to compound faster than the rest."
-                           :date        "2026-06-20"
+                           :date        "2026-09-25"
                            :type        :post
                            :category    :economics
                            :tags        [:tax :economics :growth]}}}

@@ -7,7 +7,7 @@
                            :author      [:timothypratley]
                            :description "How rising prices and weak wage growth push more households into survival mode."
                            :abstract    "Rising prices and weak wage growth are turning full-time work into survival maintenance, leaving less security, mobility, and time to build a better life."
-                           :date        "2026-06-20"
+                           :date        "2026-09-23"
                            :type        :post
                            :category    :economics
                            :tags        [:tax :economics :growth]}}}

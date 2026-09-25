@@ -8,7 +8,7 @@
                            :author      [:timothypratley]
                            :description "Who pays how much tax, and why labor income is taxed more than asset growth."
                            :abstract    "The tax system taxes labor income, not asset growth. The wealthiest pay less tax than you do."
-                           :date        "2026-06-20"
+                           :date        "2026-09-21"
                            :type        :post
                            :category    :economics
                            :tags        [:tax :economics :growth]}}}

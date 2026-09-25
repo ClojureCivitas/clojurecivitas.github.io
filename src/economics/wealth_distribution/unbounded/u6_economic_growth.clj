@@ -7,7 +7,7 @@
                            :author      [:timothypratley]
                            :description "How concentrated wealth weakens demand, participation, and long-run economic growth."
                            :abstract    "Long-run prosperity depends on broad participation. When wealth stops circulating, economic growth slows."
-                           :date        "2026-06-20"
+                           :date        "2026-09-26"
                            :type        :post
                            :category    :economics
                            :tags        [:tax :economics :growth]}}})

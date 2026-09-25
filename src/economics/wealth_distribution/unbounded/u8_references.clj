@@ -7,7 +7,7 @@
                            :author      [:timothypratley]
                            :description "Sources on economics, wealth, taxation, and progress"
                            :abstract    "Economic progress, wealth distribution, and taxation are connected questions that require careful research."
-                           :date        "2026-06-20"
+                           :date        "2026-09-28"
                            :type        :post
                            :category    :economics
                            :tags        [:tax :economics :growth]}}})

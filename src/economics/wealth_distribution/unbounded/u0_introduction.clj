@@ -6,7 +6,7 @@
                            :author      [:timothypratley]
                            :description "How wealth concentration prevents innovation, productivity, and long-run social progress."
                            :abstract    "Progress grows through the circulation of ideas, resources, and opportunity. Extreme wealth concentration disrupts circulation and limits our economic growth."
-                           :date        "2026-06-20"
+                           :date        "2026-09-20"
                            :type        :post
                            :category    :economics
                            :tags        [:tax :economics :growth]}}})

@@ -7,7 +7,7 @@
                            :author      [:timothypratley]
                            :description "How wealth tax proposals work, who would pay, and how much."
                            :abstract    "Taxing wealth above $50M restores tax parity between labor income and asset compounding."
-                           :date        "2026-06-20"
+                           :date        "2026-09-22"
                            :type        :post
                            :category    :economics
                            :tags        [:tax :economics :growth]}}}
