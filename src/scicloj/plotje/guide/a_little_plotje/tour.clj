@@ -245,6 +245,9 @@ base
 ;; (require '[babashka.fs :as fs])
 ;; ```
 
+^:kind/hidden ^:kindly/hide-code
+(fs/create-dirs "temp")
+
 (-> {:x [1 2 3 4 5]
      :y [1 2 4 8 16]}
     (pj/lay-line)
