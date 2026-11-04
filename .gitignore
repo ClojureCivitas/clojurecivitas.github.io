@@ -42,6 +42,14 @@ _site/
 !/site/_quarto.yml
 !/site/_extensions/
 !/site/_extensions/**
+!/site/*.sccs
+!/site/*.yml
+!/site/db.edn
+!/site/about.qmd
+!/site/drafts.qmd
+!/site/posts.qmd
+!/site/index.qmd
+!/site/favicon.ico
 
 # Janqua nREPL lifecycle files (created in the Quarto rendering directory)
 .jank-pid
