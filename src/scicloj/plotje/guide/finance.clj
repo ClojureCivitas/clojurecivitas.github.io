@@ -6,6 +6,7 @@
           :quarto         {:author      [:timothypratley]
                            :description "A chart dashboard in Clojure"
                            :date        "2026-11-05"
+                           :image       "finance.png"
                            :type        :post
                            :category    :clay
                            :tags        [:clay :dashboard :layout :finance :clj-yfinance :plotje]}}}
@@ -114,7 +115,8 @@
     (for [[label ticker] tickerm]
       (list
        [:div
-        [:span {:style {:display :inline-block
+        [:span {:class "plotje-plot"
+                :style {:display :inline-block
                         :width "0.5rem"
                         :height "0.15rem"
                         :background (hex-for (vals tickerm) ticker)
